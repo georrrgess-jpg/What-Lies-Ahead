@@ -832,12 +832,20 @@ func _fence_run(parent: Node3D, run_name: String, a: Vector3, b: Vector3, player
 	body.add_child(shape)
 	if player_wall:
 		_player_wall(body, "PlayerWall", Vector3(-length * 0.5, 0, 0), Vector3(length * 0.5, 0, 0), 4.0)
+	# The modules of a run are drawn as one MultiMesh.
 	var module_len := 2.5
 	var count := maxi(1, int(round(length / module_len)))
 	var step := length / count
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = _model_mesh("frost_fence")
+	mm.instance_count = count
 	for i in count:
-		var m := _prop(body, "frost_fence", "Module%02d" % i, Vector3(-length * 0.5 + step * (i + 0.5), 0, 0), 0.0, Vector3(step - 0.1, 1.0, 0.15))
-		m.scale = Vector3(step / module_len, 1, 1)
+		mm.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(step / module_len, 1, 1)), Vector3(-length * 0.5 + step * (i + 0.5), 0, 0)))
+	var modules := MultiMeshInstance3D.new()
+	modules.name = "Modules"
+	modules.multimesh = mm
+	body.add_child(modules)
 
 
 # ---------------------------------------------------------------------------
@@ -1035,18 +1043,23 @@ func _build_backdrop() -> void:
 	_late(weather, "res://scripts/props/frost_weather.gd", {})
 
 
-## Pines scattered over the slopes outside the arena (one MultiMesh per surface).
-func _build_forest(parent: Node3D) -> void:
-	var path := MODELS + "frost_pine_far.glb"
-	if not ResourceLoader.exists(path):
-		return
-	var source: Node3D = (load(path) as PackedScene).instantiate()
-	var meshes := source.find_children("*", "MeshInstance3D", true, false)
-	if meshes.is_empty():
-		source.free()
-		return
-	var mesh: Mesh = (meshes[0] as MeshInstance3D).mesh
+var _mesh_cache := {}
+
+
+## The (single) mesh of art/models/<model>.glb, for MultiMesh batching.
+func _model_mesh(model: String) -> Mesh:
+	if _mesh_cache.has(model):
+		return _mesh_cache[model]
+	var source: Node3D = (load(MODELS + model + ".glb") as PackedScene).instantiate()
+	var mesh: Mesh = (source.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D).mesh
 	source.free()
+	_mesh_cache[model] = mesh
+	return mesh
+
+
+## Low-detail pines scattered over the slopes outside the arena (one MultiMesh).
+func _build_forest(parent: Node3D) -> void:
+	var mesh := _model_mesh("frost_pine_far")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 99
 	var xforms: Array[Transform3D] = []

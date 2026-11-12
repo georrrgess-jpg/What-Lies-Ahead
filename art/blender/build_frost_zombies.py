@@ -351,7 +351,7 @@ def build():
         camera_lens=mat("CameraLens", "#5fd9ff", rough=0.15, emit=0.4),
         ice=ice_mat(),
     )
-    yeti_m = dict(m, eye=mat("FrostEyeAmber", "#ffd25a", rough=0.3, emit=3.2))
+    yeti_m = dict(m, eye=mat("FrostEyeAmber", "#ffb43a", rough=0.3, emit=1.8))
     armature = bz.build_armature()
     meshes = [
         bz.skin("Outfit_Skier", skier(m), armature),
