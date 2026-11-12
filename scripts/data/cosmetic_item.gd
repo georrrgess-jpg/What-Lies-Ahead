@@ -5,7 +5,8 @@ extends Resource
 ##
 ## Items are discovered by scanning data/cosmetics/ (any subfolder), so adding
 ## a skin is: drop a new .tres in there. Unlocks come from `requirement`
-## (null = owned by default).
+## (null = owned by default), or from the shop: an item with a `price` is
+## bought with Sparks (see Cosmetics.buy) once its requirement, if any, is met.
 
 enum Rarity { COMMON, RARE, EPIC, LEGENDARY, MASTERY }
 
@@ -14,13 +15,16 @@ enum Rarity { COMMON, RARE, EPIC, LEGENDARY, MASTERY }
 @export var display_name := ""
 @export_multiline var description := ""
 ## Where it goes. Weapon slots (per weapon): "weapon_finish", "weapon_cell",
-## "weapon_decal", "weapon_charm". Global slots: "gloves", "kill_effect",
+## "weapon_decal", "weapon_charm", "weapon_sight". Global slots: "gloves", "kill_effect",
 ## "tracer", "banner", "title", "avatar". New slots can be added freely.
 @export var slot: StringName = &"weapon_finish"
 ## For weapon slots: the weapon this is for. Empty = fits every weapon.
 @export var weapon_id: StringName
 @export var rarity: Rarity = Rarity.COMMON
 @export var requirement: Requirement
+## Price in Sparks. 0 = not for sale (owned through `requirement` alone).
+## A priced item is owned once bought; its requirement only gates the purchase.
+@export var price := 0
 ## Main colours (meaning depends on slot; finishes use [shell, trim, accent]).
 @export var colors: PackedColorArray = PackedColorArray()
 ## Free-form parameters for the renderer of this slot, e.g.
@@ -47,6 +51,7 @@ func slot_label() -> String:
 		"weapon_cell": return "Energy cell"
 		"weapon_decal": return "Decal"
 		"weapon_charm": return "Charm"
+		"weapon_sight": return "Sight"
 		"gloves": return "Gloves"
 		"kill_effect": return "Kill effect"
 		"tracer": return "Tracer"

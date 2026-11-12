@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS := {
 	"flashes": 1.0,
 	"graphics": "high",
 	"fullscreen": false,
+	"difficulty": "standard",
 }
 
 var save_path := DEFAULT_PATH

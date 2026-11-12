@@ -7,6 +7,7 @@ extends RefCounted
 const CATEGORIES := [
 	{"slot": &"avatar", "label": "Operators", "noun": "Operator", "sound": &"cos_equip_operator"},
 	{"slot": &"weapon_finish", "label": "Weapon skins", "noun": "Weapon skin", "sound": &"cos_equip_finish"},
+	{"slot": &"weapon_sight", "label": "Sights", "noun": "Sight", "sound": &"cos_equip_decal"},
 	{"slot": &"weapon_charm", "label": "Charms", "noun": "Charm", "sound": &"cos_equip_charm"},
 	{"slot": &"weapon_cell", "label": "Cells", "noun": "Energy cell", "sound": &"cos_equip_cell"},
 	{"slot": &"weapon_decal", "label": "Decals", "noun": "Decal", "sound": &"cos_equip_decal"},

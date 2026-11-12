@@ -14,6 +14,8 @@ extends Node
 ## A newly owned item (detected by check_new_unlocks()).
 signal unlocked(item: CosmeticItem)
 signal equipped_changed(slot: StringName, weapon_id: StringName)
+## The player bought `item` with Sparks.
+signal purchased(item: CosmeticItem)
 
 var _by_id := {}
 var _owned_at_run_start := {}
@@ -64,7 +66,37 @@ func is_owned(it: CosmeticItem, weapon_id: StringName = &"") -> bool:
 		return false
 	if Unlocks.is_granted(StringName("cosmetic:" + String(it.id))):
 		return true
+	# Items for sale are owned only once bought (or granted).
+	if it.price > 0:
+		return false
 	return it.requirement == null or it.requirement.is_met(weapon_id)
+
+
+## True for an item sold for Sparks that the player does not own yet.
+func is_for_sale(it: CosmeticItem) -> bool:
+	return it != null and it.price > 0 and not Unlocks.is_granted(StringName("cosmetic:" + String(it.id)))
+
+
+## True when the item's requirement (if any) allows buying it. `weapon_id`
+## gives context for "mastery rank on this weapon" requirements.
+func can_unlock_purchase(it: CosmeticItem, weapon_id: StringName = &"") -> bool:
+	return it != null and (it.requirement == null or it.requirement.is_met(weapon_id))
+
+
+## For sale, unlocked for purchase and affordable right now.
+func can_buy(it: CosmeticItem, weapon_id: StringName = &"") -> bool:
+	return is_for_sale(it) and can_unlock_purchase(it, weapon_id) and Wallet.can_afford(it.price)
+
+
+## Buys `it` with Sparks. Returns false (changing nothing) if it is not for
+## sale, still locked or too expensive.
+func buy(it: CosmeticItem, weapon_id: StringName = &"") -> bool:
+	if not can_buy(it, weapon_id) or not Wallet.spend(it.price, it.id):
+		return false
+	grant(it)
+	Profile.save_profile()
+	purchased.emit(it)
+	return true
 
 
 ## Owned for at least one weapon (for weapon-agnostic mastery items) or globally.
@@ -134,6 +166,7 @@ func weapon_loadout(weapon_id: StringName) -> Dictionary:
 		"cell": equipped(&"weapon_cell", weapon_id),
 		"decal": equipped(&"weapon_decal", weapon_id),
 		"charm": equipped(&"weapon_charm", weapon_id),
+		"sight": equipped(&"weapon_sight", weapon_id),
 		"arms": arms if arms else equipped_or_default(&"avatar"),
 	}
 

@@ -99,7 +99,10 @@ func _ready() -> void:
 		get_viewport().gui_release_focus()
 		var intro := IntroOverlay.new()
 		add_child(intro)
-		intro.finished.connect(func(): _animate_title_in())
+		intro.finished.connect(func():
+			_animate_title_in()
+			if Onboarding.wants_first_run():
+				Onboarding.begin_first_run(self))
 	else:
 		_show(Game.menu_page if _pages.has(Game.menu_page) else "title")
 	Game.menu_page = ""
