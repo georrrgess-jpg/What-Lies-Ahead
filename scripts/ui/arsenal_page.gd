@@ -402,7 +402,8 @@ func _build_traits(w: WeaponData) -> void:
 	for c in _traits.get_children():
 		c.queue_free()
 	var tags: Array[String] = []
-	tags.append("AUTO" if w.automatic or w.beam else "SEMI")
+	if w.charge_time <= 0.0:
+		tags.append("AUTO" if w.automatic or w.beam else "SEMI")
 	if w.burst_count > 1:
 		tags.append("BURST ×%d" % w.burst_count)
 	if w.charge_time > 0.0:
