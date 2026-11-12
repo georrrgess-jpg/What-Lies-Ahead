@@ -19,7 +19,8 @@ it exists.
 ## Unlocks: `Requirement`
 
 `scripts/data/requirement.gd`. Kinds: `PLAYER_LEVEL`, `LEVEL_CLEARED`,
-`WEAPON_RANK`, `TOTAL_KILLS`, `BEST_SCORE`, `GRANTED`, plus `all_of` to chain.
+`WEAPON_RANK` (an empty `target` means "the weapon this item is equipped
+on"), `TOTAL_KILLS`, `BEST_SCORE`, `GRANTED`, `CHALLENGE`, plus `all_of` to chain.
 `is_met()` and `describe()` ("Reach player level 5") are all most UIs need.
 
 ## Profile data
@@ -41,7 +42,12 @@ pause menu (`result["abandoned"] == true`). `result` is `RunDirector.result()`.
   signal `level_up`. Account XP lives in `Profile.section("progression")`.
 * `Mastery` autoload: per-weapon `xp/rank/kills`, `total_kills()`,
   `rewards(weapon_id)` (cosmetics gated on that weapon's rank), `grant()`.
-  Ranks come from `WeaponData.rank_xp`.
+  Ranks (10, in Bronze/Silver/Gold/Diamond/Prismatic tiers) come from the shared
+  curve in `data/progression/mastery_curve.tres`, copied into every weapon's
+  `rank_xp` at startup, so new weapons need no rank table of their own.
+* Account XP rules (per kill, wave, clear, first clear) are in
+  `data/progression/rules.tres`; challenges are `.tres` files in
+  `data/progression/challenges/` (WEAPON challenges exist once per weapon).
 
 ## Cosmetics
 
@@ -78,7 +84,9 @@ UI style lives in `UiKit` (`scripts/ui/ui_kit.gd`): palette constants,
 * `EnemyData.behaviours`: `EnemyBehaviour` resources (`scripts/enemies/enemy_behaviour.gd`)
   with hooks `on_ready`, `on_physics` (return true to take over movement),
   `on_hit` (return damage to take), `on_attack`, `on_death`, and optional
-  `is_winding_up()` so the HUD threat ring warns about it. Example:
+  `is_winding_up()` so the HUD threat ring warns about it, and `interrupt()`
+  (cancel a windup that has not been released yet; called by a cryo freeze or
+  a heavy shotgun stagger through `Zombie.interrupt()`). Example:
   `scripts/enemies/behaviours/ranged_spit.gd`.
 * `EnemyProjectile.launch(parent, from, target_pos, speed, damage, color, arc, size, shooter)`
   for slow, dodgeable projectiles.
@@ -106,7 +114,11 @@ scene using `scripts/props/prize_kiosk.gd` with `Zone`, `Body`, optional
 `scripts/run/run_director.gd`. Give the root `scripts/run/level_environment.gd`
 and add a `WorldEnvironment` and `DirectionalLight3D` named `Sun`. Physics
 layers: 1 world, 2 player, 3 enemies, 4 triggers, 5 player-only walls.
-The easiest start is a generator like `tools/build_prize_pier.gd`.
+The easiest start is a generator like `tools/build_prize_pier.gd`. Run
+generators **with a renderer** (`xvfb-run -a godot --rendering-driver opengl3
+--path . --script res://tools/<generator>.gd`), never `--headless`: the
+headless renderer keeps no MultiMesh instance data, so every MultiMesh in the
+saved scene would be empty.
 
 `LevelData` sets the scene, wave set, music, ambience, accent colour and
 unlock requirement.
