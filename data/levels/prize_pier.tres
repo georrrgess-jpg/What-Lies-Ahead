@@ -15,3 +15,6 @@ sort_order = 10
 music = &"boardwalk_loop"
 ambience = &"pier_ambience"
 accent_color = Color(1, 0.247, 0.643, 1)
+menu_camera_from = Vector3(29, 7.5, 6)
+menu_camera_to = Vector3(-4, 3.5, -6)
+loading_tips = PackedStringArray("Right mouse aims down sights: tighter shots, more zoom.", "Headshots multiply your score. Chain kills for a combo bonus.", "Sprint, then press C to slide. Jump out of a slide to keep the speed.", "The Bruiser roars before it charges. Step aside.", "Between waves, follow the marker to the Loadout Station.")

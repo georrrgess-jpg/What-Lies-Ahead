@@ -77,6 +77,12 @@ static func confetti(parent: Node, position: Vector3) -> void:
 	_burst(parent, position, Vector3.UP, colors, 60, 5.0, 1.4, 0.2, 55.0, Vector3(0, -5.0, 0))
 
 
+## The full kill effect (the instant burst plus anything the equipped
+## "kill_effect" cosmetic adds). Zombies call this when they die.
+static func kill_effect(parent: Node, position: Vector3) -> void:
+	kill_burst(parent, position)
+
+
 ## Instant reward on the killing blow: a ring of stars and a bright flash.
 static func kill_burst(parent: Node, position: Vector3) -> void:
 	var colors := [Color(1.0, 0.85, 0.25), Color(1.0, 0.45, 0.8), Color.WHITE]

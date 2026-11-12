@@ -7,7 +7,7 @@ enum Kind {
 	NONE,            ## always met
 	PLAYER_LEVEL,    ## Progression.level() >= amount
 	LEVEL_CLEARED,   ## level `target` cleared at least once
-	WEAPON_RANK,     ## Mastery.rank(target) >= amount
+	WEAPON_RANK,     ## Mastery.rank(target) >= amount; empty target = the weapon in context
 	TOTAL_KILLS,     ## lifetime kills across all weapons >= amount
 	BEST_SCORE,      ## best score on level `target` >= amount
 	GRANTED,         ## explicitly granted by code (Unlocks.grant(target))
@@ -21,9 +21,11 @@ enum Kind {
 @export var all_of: Array[Requirement] = []
 
 
-func is_met() -> bool:
+## `weapon_ctx`: the weapon being asked about (for weapon cosmetics), used by
+## WEAPON_RANK requirements with an empty target ("rank N on this weapon").
+func is_met(weapon_ctx: StringName = &"") -> bool:
 	for r in all_of:
-		if r and not r.is_met():
+		if r and not r.is_met(weapon_ctx):
 			return false
 	match kind:
 		Kind.PLAYER_LEVEL:
@@ -31,7 +33,8 @@ func is_met() -> bool:
 		Kind.LEVEL_CLEARED:
 			return Profile.is_level_completed(target)
 		Kind.WEAPON_RANK:
-			return Mastery.rank(target) >= amount
+			var wid := target if target != &"" else weapon_ctx
+			return wid != &"" and Mastery.rank(wid) >= amount
 		Kind.TOTAL_KILLS:
 			return Mastery.total_kills() >= amount
 		Kind.BEST_SCORE:
@@ -52,7 +55,7 @@ func describe() -> String:
 			text = "Clear %s" % (l.display_name if l else String(target))
 		Kind.WEAPON_RANK:
 			var w := GameData.weapon(target)
-			text = "%s mastery rank %d" % [w.display_name if w else String(target), amount]
+			text = "%s mastery rank %d" % [w.display_name, amount] if w else "Weapon mastery rank %d" % amount
 		Kind.TOTAL_KILLS:
 			text = "%d total kills" % amount
 		Kind.BEST_SCORE:

@@ -40,8 +40,19 @@ func items_for(slot: StringName, weapon_id: StringName = &"") -> Array[CosmeticI
 	return out
 
 
-func is_owned(it: CosmeticItem) -> bool:
-	return it != null and (it.requirement == null or it.requirement.is_met())
+## `weapon_id` gives context for weapon cosmetics whose requirement is
+## "mastery rank N on the weapon it is equipped on".
+func is_owned(it: CosmeticItem, weapon_id: StringName = &"") -> bool:
+	if it == null:
+		return false
+	if Unlocks.is_granted(StringName("cosmetic:" + String(it.id))):
+		return true
+	return it.requirement == null or it.requirement.is_met(weapon_id)
+
+
+## Grants an item outright (e.g. a reward), regardless of its requirement.
+func grant(it: CosmeticItem) -> void:
+	Unlocks.grant(StringName("cosmetic:" + String(it.id)))
 
 
 static func _key(slot: StringName, weapon_id: StringName) -> String:
@@ -50,7 +61,7 @@ static func _key(slot: StringName, weapon_id: StringName) -> String:
 
 ## Equip `it` in its slot (null clears the slot). Saves the profile.
 func equip(slot: StringName, it: CosmeticItem, weapon_id: StringName = &"") -> bool:
-	if it != null and (not is_owned(it) or it.slot != slot):
+	if it != null and (not is_owned(it, weapon_id) or it.slot != slot or not it.fits_weapon(weapon_id) and weapon_id != &""):
 		return false
 	var key := _key(slot, weapon_id if slot.begins_with("weapon_") else &"")
 	var eq: Dictionary = _sec()["equipped"]
@@ -69,7 +80,7 @@ func equipped(slot: StringName, weapon_id: StringName = &"") -> CosmeticItem:
 	if id == &"":
 		return null
 	var it := item(id)
-	return it if is_owned(it) else null
+	return it if is_owned(it, weapon_id) else null
 
 
 ## Weapon cosmetics in the shape WeaponCosmetics.apply expects.
@@ -88,10 +99,19 @@ func check_new_unlocks() -> Array[CosmeticItem]:
 	var seen: Array = _sec()["seen"]
 	var fresh: Array[CosmeticItem] = []
 	for it in GameData.cosmetics():
-		if it.requirement == null or seen.has(String(it.id)):
+		if it.requirement == null:
 			continue
-		if it.requirement.is_met():
-			seen.append(String(it.id))
-			fresh.append(it)
-			unlocked.emit(it)
+		# Weapon-agnostic mastery items unlock separately for every weapon.
+		var per_weapon := it.requirement.kind == Requirement.Kind.WEAPON_RANK and it.requirement.target == &""
+		var contexts: Array = [&""]
+		if per_weapon:
+			contexts = GameData.weapons().map(func(w): return w.id)
+		for ctx in contexts:
+			var key := String(it.id) + ("@" + String(ctx) if per_weapon else "")
+			if seen.has(key):
+				continue
+			if it.requirement.is_met(ctx):
+				seen.append(key)
+				fresh.append(it)
+				unlocked.emit(it)
 	return fresh

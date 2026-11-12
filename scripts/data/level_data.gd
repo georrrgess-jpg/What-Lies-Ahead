@@ -21,6 +21,11 @@ extends Resource
 @export var ambience_volume_db := -8.0
 ## Accent colour for menus and loading screens.
 @export var accent_color := Color("ff3fa4")
+## Main-menu / world-select backdrop camera for this level's scene.
+@export var menu_camera_from := Vector3(28, 9, 18)
+@export var menu_camera_to := Vector3(-2, 3, -4)
+## Shown on the loading screen.
+@export var loading_tips: PackedStringArray = PackedStringArray()
 
 ## Set by GameData at load: the world that lists this level.
 var world: WorldData
