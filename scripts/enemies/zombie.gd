@@ -49,7 +49,10 @@ const GAIT_RATE_MAX := 2.2
 ## Seconds a corpse stays down after its death clip before it pops.
 const CORPSE_HOLD := 0.3
 ## Extra reach (m) around the head volume for a hit to count.
-const HEAD_SLOP := 0.04
+const HEAD_SLOP := 0.03
+## Per-instance size variety (fractions): overall scale and extra width.
+const SIZE_JITTER := 0.06
+const GIRTH_JITTER := 0.03
 
 var data: EnemyData
 var target: Player
@@ -817,8 +820,8 @@ func _has_clip(clip: StringName) -> bool:
 
 # --- head hitbox -----------------------------------------------------------------
 
-## Builds the head volume from the head mesh (outfit plus head accessories,
-## which only raise its top) and a collision shape that follows the Head
+## Builds the head volume from the head mesh (outfit and face; head accessories
+## only raise its top) and a collision shape that follows the Head
 ## bone, so a head that leans or ducks out of the body capsule can still be hit.
 func _setup_head() -> void:
 	if _skeleton == null:
@@ -835,7 +838,9 @@ func _setup_head() -> void:
 		var b := _bone_bounds(mi, _head_bone)
 		if b.size == Vector3.ZERO:
 			continue
-		if String(mi.name).begins_with("Outfit_"):
+		# The body and its face make the head; accessories (hats, hair) only
+		# raise its top.
+		if String(mi.name).begins_with("Outfit_") or String(mi.name).begins_with("Face_"):
 			box = b if not has_box else box.merge(b)
 			has_box = true
 		else:
@@ -847,9 +852,9 @@ func _setup_head() -> void:
 		box.size.y = top - box.position.y
 	# A capsule a touch wider than the head box and reaching a little past its
 	# top and bottom, so the rounded corners (ears, brows) still count.
-	var r := 0.53 * maxf(box.size.x, box.size.z) * data.head_hit_scale
+	var r := 0.5 * maxf(box.size.x, box.size.z) * data.head_hit_scale
 	var c := box.get_center()
-	var half := maxf(0.0, box.size.y * 0.5 * data.head_hit_scale - 0.85 * r)
+	var half := maxf(0.0, box.size.y * 0.5 * data.head_hit_scale - 0.9 * r)
 	# Rest skeleton space -> head bone space.
 	var to_bone := _skeleton.get_bone_global_rest(_head_bone).affine_inverse()
 	_head_a = to_bone * (c - Vector3.UP * half)
@@ -958,6 +963,7 @@ func _radial(p: Vector3) -> Vector3:
 
 func _build_model() -> void:
 	model_root.scale = Vector3.ONE
+	data = data.for_world(_world_id())
 	var model_scene: PackedScene = data.model_scene
 	if model_scene == null and ResourceLoader.exists(MODEL_PATH):
 		model_scene = load(MODEL_PATH)
@@ -983,14 +989,44 @@ func _build_model() -> void:
 				mi.visible = mesh_name == "Outfit_" + String(data.outfit)
 			elif mesh_name.begins_with("Acc_"):
 				mi.visible = chosen.has(mesh_name)
+		_vary_look()
 		if not data.shirt_colors.is_empty():
 			_tint("Shirt", data.shirt_colors[randi() % data.shirt_colors.size()])
 		if not data.skin_colors.is_empty():
-			var skin: Color = data.skin_colors[randi() % data.skin_colors.size()]
+			var skin: Color = _vary_skin(data.skin_colors[randi() % data.skin_colors.size()])
 			_tint("Skin", skin)
 			_tint("SkinDark", skin.darkened(0.3))
 	else:
 		_build_placeholder()
+
+
+## The current level's world, for EnemyData.world_outfits (none in the menus).
+static func _world_id() -> StringName:
+	var level: LevelData = Game.level
+	return level.world.id if level and level.world else &""
+
+
+## Per-instance variety: shows one of the outfit's faces (meshes named
+## Face_<outfit>_<preset>) and jitters the body size, so a crowd never looks cloned.
+func _vary_look() -> void:
+	var prefix := "Face_" + String(data.outfit) + "_"
+	var faces: Array[MeshInstance3D] = []
+	for mi in _meshes:
+		var mesh_name := String(mi.name)
+		if mesh_name.begins_with("Face_"):
+			mi.visible = false
+			if mesh_name.begins_with(prefix):
+				faces.append(mi)
+	if not faces.is_empty():
+		faces[randi() % faces.size()].visible = true
+	var girth := randf_range(1.0 - GIRTH_JITTER, 1.0 + GIRTH_JITTER)
+	_model.scale = Vector3(girth, 1.0, girth) * data.body_scale * randf_range(1.0 - SIZE_JITTER, 1.0 + SIZE_JITTER)
+
+
+## A slightly different shade of the chosen skin colour for every zombie.
+func _vary_skin(skin: Color) -> Color:
+	return Color.from_hsv(wrapf(skin.h + randf_range(-0.025, 0.025), 0.0, 1.0), clampf(skin.s * randf_range(0.88, 1.08), 0.0, 1.0),
+			clampf(skin.v * randf_range(0.92, 1.06), 0.0, 1.0))
 
 
 func _collect_meshes(node: Node) -> void:

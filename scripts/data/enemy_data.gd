@@ -97,3 +97,27 @@ extends Resource
 @export var voice_interval := Vector2(3.0, 6.5)
 @export var voice_pitch := 1.0
 @export var attack_sound: StringName = &"zombie_swipe"
+
+@export_group("World outfits")
+## Looks for other worlds: in a level of a listed world this enemy wears that
+## look (model, accessories, colours) instead of its own. The Tourist Shambler
+## and the Lifeguard Runner dress for every world this way.
+@export var world_outfits: Array[EnemyLook] = []
+
+var _world_variants := {}
+
+
+## This enemy as it looks in `world` (itself when no world outfit applies).
+## Each variant is a copy made once and shared by every zombie of that world.
+func for_world(world: StringName) -> EnemyData:
+	if world == &"" or world_outfits.is_empty():
+		return self
+	if not _world_variants.has(world):
+		var variant := self
+		for look in world_outfits:
+			if look and look.world == world:
+				variant = duplicate() as EnemyData
+				look.apply_to(variant)
+				break
+		_world_variants[world] = variant
+	return _world_variants[world]

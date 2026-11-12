@@ -189,7 +189,9 @@ def resolve(rig, spec, plant=False):
     """Turn a pose spec (see the module notes) into a Pose (FK + IK). With
     `plant`, a foot target at ground height (REST_ANKLE) is a planted foot:
     its ankle rises on the heel/toe rocker as the shin tilts, so the sole
-    never sinks into the ground."""
+    never sinks into the ground. With spec["flat"] (skis bound to the shins)
+    each foot instead goes wherever keeps its shin upright under the knee, so
+    the ski lies flat; the feet slide (glide) as the hips move."""
     rot = {}
     for b in rig.order:
         e = spec.get(b)
@@ -200,7 +202,9 @@ def resolve(rig, spec, plant=False):
         if "foot." + s in spec:
             thigh, shin = LEG[s]
             target = B(*spec["foot." + s])
-            if plant and target.z <= REST_ANKLE + 0.003:
+            if spec.get("flat", 0.0) > 0.5:
+                target = _flat_ankle(rig, pos, thigh, shin, target)
+            elif plant and target.z <= REST_ANKLE + 0.003:
                 target, _, _ = _stance_ankle(rig, pos, world, s, side, -target.y - FOOT[0], target.x, FOOT)
             elif plant:
                 # A lifted foot never dips its toe or heel into the ground.
@@ -221,6 +225,16 @@ def resolve(rig, spec, plant=False):
             rot[upper], rot[fore], _ = rig.two_bone(pos, world, upper, fore, B(*spec["hand." + s]), B(*ep), Vector((0, 1, 0)))
     scale = {k[6:]: v for k, v in spec.items() if k.startswith("scale.")}
     return Pose(rot, hips, scale)
+
+
+def _flat_ankle(rig, pos, thigh, shin, target):
+    """The ankle at `target`'s height and side, moved forward or back so the
+    shin stands upright with the knee right above it (skis stay flat)."""
+    l1, l2 = rig.length(thigh), rig.length(shin)
+    hip = pos[thigh]
+    dz = hip.z - (target.z + l2)
+    dx = math.sqrt(max(0.0, (l1 * 0.995) ** 2 - dz * dz))
+    return Vector((target.x, hip.y - dx, target.z))
 
 
 def feet(spread=0.16, l_fwd=0.0, r_fwd=0.0, l_up=REST_ANKLE, r_up=REST_ANKLE, r_spread=None):
@@ -290,14 +304,14 @@ class Clip:
         self.meta["length"] = round((len(poses) - 1) / KEY_FPS, 4)
 
 
-def keyed(rig, name, keys, loop=False, plant=True, **meta):
+def keyed(rig, name, keys, loop=False, plant=True, flat=False, **meta):
     """Dense clip from sparse keys. `keys` is a list of (frame, changes) or
     (frame, changes, ease); each key's spec is the previous key's spec updated
     with `changes`, and the segment arriving at a key uses its ease ("io" by
     default; "lin", "in", "out", "snap", "back", "hold"). Feet targeted at
     ground height are planted (see `resolve`)."""
     specs, frames, eases = [], [], []
-    current = {}
+    current = {"flat": 1.0} if flat else {}
     for k in keys:
         frame, changes = k[0], k[1]
         ease = k[2] if len(k) > 2 else "io"
@@ -785,14 +799,26 @@ def stiff_shuffle():
                                            lurch=0.6), front=0.5, bob=0.02, limp=0.3)
 
 
-def skate():
-    """Ski Racer: low skating strides on the snow, arms swinging across."""
-    def arms_fn(ph):
-        c, s = _cs(ph)
-        return arms(-30 + 40 * c, -50, -30 - 40 * c, -50, spread=18)
-    return Gait(0.72, 0.6, 1.64, 0.07, runner(lean=24, hips_pitch=18, yaw=10, head=-36, arms_fn=arms_fn),
-                front=0.5, width=0.04, bob=0.03, skate=0.6, crouch=0.1)
-
+def skate(rig, name="Run_Skier", speed=3.75):
+    """Ski Racer's skating stride on skis bound to its shins: crouched, butt
+    back, each ski in turn pushes out to the side and glides back while the
+    arms swing across; the shins stay upright so the skis lie flat. The skis
+    glide, so the clip's ground speed is simply the racer's own pace."""
+    n = 18
+    keys = []
+    for i in range(n + 1):
+        ph = i / n
+        c, s_ = _cs(ph)
+        push_l = max(0.0, s_)            # left ski out during the first half
+        push_r = max(0.0, -s_)
+        lift_l = max(0.0, -s_) ** 2 * 0.05
+        lift_r = max(0.0, s_) ** 2 * 0.05
+        keys.append((i, {"Hips": (20, -4 * s_, -8 * c), "Spine": (24, 3 * s_, 12 * c), "Head": (-38, 0, -5 * c),
+                         "hips": (0.05 * s_, -0.1, -0.12 + 0.02 * abs(c)),
+                         "foot.L": (0.16 + 0.22 * push_l, 0.0, REST_ANKLE + lift_l),
+                         "foot.R": (-0.16 - 0.22 * push_r, 0.0, REST_ANKLE + lift_r),
+                         **arms(-30 + 40 * c, -50, -30 - 40 * c, -50, spread=18)}, "lin"))
+    return keyed(rig, name, keys, loop=True, flat=True, speed=speed)
 
 def riot_stomp():
     """Riot Bruiser: heavy stomp behind the shield, baton arm swinging."""
@@ -836,7 +862,7 @@ def ready(heavy=False, hands=True):
     return s
 
 
-def idle(rig, name="Idle", heavy=False, arms_fn=None):
+def idle(rig, name="Idle", heavy=False, arms_fn=None, flat=False):
     """Breathing sway: chest rises and falls, weight shifts foot to foot, the
     head lolls; feet stay planted (IK). Two-second loop."""
     n = 48
@@ -855,7 +881,7 @@ def idle(rig, name="Idle", heavy=False, arms_fn=None):
         else:
             sp.update(arms(-30 - 4 * b + 5 * c, -26, -22 - 4 * b - 5 * c, -30, spread=10 + 2 * b))
         keys.append((round(ph * n), sp, "io"))
-    return keyed(rig, name, keys, loop=True)
+    return keyed(rig, name, keys, loop=True, flat=flat)
 
 
 # ---------------------------------------------------------------------------
@@ -871,7 +897,7 @@ def _attack_ready(heavy=False):
     return r
 
 
-def attack(rig, name="Attack", height=1.55):
+def attack(rig, name="Attack", height=1.55, flat=False):
     """Two-handed claw swipe. Windup (frames 0-5): arms flung up and out, body
     coiled back, chin up; held, trembling, to frame 12; strike (55%, frame
     14.3): both hands sweep in and cross at `height` about 0.8 m in front,
@@ -891,7 +917,7 @@ def attack(rig, name="Attack", height=1.55):
                              "hand.R": (0.1, 0.62, height - 0.3)})
     return keyed(rig, name, [
         (0, r), (5, up, "out"), (9, shake), (12, hold), (15, strike, "snap"), (18, follow, "out"), (26, r)],
-        strike=round(STRIKE * 26 / FPS, 4))
+        flat=flat, strike=round(STRIKE * 26 / FPS, 4))
 
 
 def attack_heavy(rig, name="Attack_Heavy", height=1.2):
@@ -1004,7 +1030,7 @@ def roar(rig, name="Roar"):
 # Full-body hit reactions (light hits are an additive layer in the game)
 # ---------------------------------------------------------------------------
 
-def stagger(rig, name="Stagger", heavy=False):
+def stagger(rig, name="Stagger", heavy=False, flat=False):
     """Heavy hit / interrupted windup: jolted upright, arms flung up, one
     stumbling step back, hunch, recover. 15 frames (0.6 s)."""
     r = ready(heavy, hands=False)
@@ -1016,7 +1042,7 @@ def stagger(rig, name="Stagger", heavy=False):
     step = dict(jolt, **{"Hips": (10, 0, 4), "Spine": (24, 0, 6), "Head": (-30, 0, 0), "hips": (0, -0.2 * k, -0.1),
                          "foot.R": (-w, -0.34 * k, REST_ANKLE), **arms(-40, -40, -30, -50, spread=18)})
     settle = dict(r, **{"hips": (0, -0.1 * k, -0.06), "foot.R": (-w, -0.24 * k, REST_ANKLE)})
-    return keyed(rig, name, [(0, r), (3, jolt, "snap"), (6, lift), (9, step, "in"), (12, settle), (15, r)])
+    return keyed(rig, name, [(0, r), (3, jolt, "snap"), (6, lift), (9, step, "in"), (12, settle), (15, r)], flat=flat)
 
 
 def hit_head(rig, name="Hit_Head"):
@@ -1144,7 +1170,7 @@ def deaths(rig):
 # Entrance
 # ---------------------------------------------------------------------------
 
-def emerge(rig, name="Emerge", heavy=False):
+def emerge(rig, name="Emerge", heavy=False, flat=False):
     """Spawn entrance: starts low, one knee and both hands down as if hauling
     itself up over an edge, pushes up, rises with a head shake and lifts its
     arms into the reach. 22 frames (0.92 s), ends in the ready stance."""
@@ -1165,7 +1191,7 @@ def emerge(rig, name="Emerge", heavy=False):
                           "foot.L": (w, 0.06, REST_ANKLE), "foot.R": (-w, -0.06, REST_ANKLE),
                           "hand.L": (0.3, 0.55, 1.08), "hand.R": (-0.3, 0.48, 1.02)})
     return keyed(rig, name, [(0, low), (3, low), (8, push, "in"), (13, rise, "out"), (16, shake1), (19, shake2),
-                             (22, end, "io")])
+                             (22, end, "io")], flat=flat)
 
 
 # ---------------------------------------------------------------------------
@@ -1253,10 +1279,10 @@ def tuck(rig, name="Tuck"):
     keys = []
     for i in range(5):
         _, s = _cs(i / 4)
-        keys.append((i * 3, {"Hips": (34, 0, 0), "Spine": (30 + 3 * s, 0, 0), "Head": (-48, 0, 0),
-                             "hips": (0, -0.05, -0.3 + 0.015 * s), **feet(0.15, 0.04, -0.04),
+        keys.append((i * 3, {"Hips": (40, 0, 0), "Spine": (28 + 3 * s, 0, 0), "Head": (-52, 0, 0),
+                             "hips": (0, -0.14, -0.3 + 0.015 * s), **feet(0.15, 0.0, 0.0),
                              **arms(-62, -60, -62, -60, spread=6)}, "io"))
-    return keyed(rig, name, keys, loop=True)
+    return keyed(rig, name, keys, loop=True, flat=True)
 
 
 def throw(rig, name="Throw"):
@@ -1336,5 +1362,8 @@ def frost_clips(rig):
     """frost_zombies.glb: Frozen Tourist (stiff shuffle), Ski Racer (style
     "Skier": skate, tuck), Yeti (style "Heavy": stomp, slam, throw)."""
     return [idle(rig), gait(rig, "Walk", stiff_shuffle()), gait(rig, "Run", flail_sprint()),
-            gait(rig, "Run_Skier", skate()), tuck(rig), idle(rig, "Idle_Heavy", heavy=True),
+            skate(rig), skate(rig, "Walk_Skier"), tuck(rig), idle(rig, "Idle_Skier", flat=True),
+            attack(rig, "Attack_Skier", flat=True),
+            stagger(rig, "Stagger_Skier", flat=True), emerge(rig, "Emerge_Skier", flat=True),
+            idle(rig, "Idle_Heavy", heavy=True),
             gait(rig, "Walk_Heavy", stomp()), attack(rig), attack_heavy(rig), throw(rig), *_common(rig, heavy=True)]

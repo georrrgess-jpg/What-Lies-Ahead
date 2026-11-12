@@ -15,7 +15,7 @@ const DEFAULT_SETTINGS := {
 	"reticle_color": "white",
 	"fov": 72.0,
 	"master_volume": 0.9,
-	"music_volume": 0.55,
+	"music_volume": 0.7,
 	"sfx_volume": 0.9,
 	"camera_shake": 1.0,
 	"flashes": 1.0,

@@ -1,6 +1,43 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/enemy_look.gd" id="look"]
+[ext_resource type="PackedScene" path="res://art/models/zombie_neon.glb" id="model_neon"]
+[ext_resource type="PackedScene" path="res://art/models/zombie_aqua.glb" id="model_aqua"]
+[ext_resource type="PackedScene" path="res://art/models/zombie_dune.glb" id="model_dune"]
+[ext_resource type="PackedScene" path="res://art/models/zombie_frost.glb" id="model_frost"]
+
+[sub_resource type="Resource" id="look_neon"]
+script = ExtResource("look")
+world = &"neon_rooftops"
+model_scene = ExtResource("model_neon")
+shirt_colors = Array[Color]([Color(0.7, 1, 0.2, 1), Color(0.2, 0.9, 1, 1), Color(1, 0.25, 0.65, 1), Color(1, 0.55, 0.15, 1)])
+skin_colors = Array[Color]([Color(0.5, 0.92, 0.48, 1), Color(0.42, 0.88, 0.58, 1), Color(0.62, 0.95, 0.42, 1), Color(0.46, 0.86, 0.66, 1)])
+accessory_slots = PackedStringArray("Acc_Lifeguard_Headphones||", "Acc_Lifeguard_Visor||", "Acc_Lifeguard_Armband|", "Acc_Lifeguard_Bottle||")
+
+[sub_resource type="Resource" id="look_aqua"]
+script = ExtResource("look")
+world = &"abyss_aquarium"
+model_scene = ExtResource("model_aqua")
+shirt_colors = Array[Color]([Color(0.12, 0.64, 0.71, 1), Color(0.2, 0.42, 0.78, 1), Color(0.2, 0.6, 0.42, 1)])
+skin_colors = Array[Color]([Color(0.62, 0.81, 0.29, 1), Color(0.52, 0.77, 0.4, 1), Color(0.7, 0.78, 0.34, 1), Color(0.5, 0.8, 0.5, 1)])
+accessory_slots = PackedStringArray("Acc_Lifeguard_Bucket|Acc_Lifeguard_Net||", "Acc_Lifeguard_Radio|", "Acc_Lifeguard_Gloves||")
+
+[sub_resource type="Resource" id="look_dune"]
+script = ExtResource("look")
+world = &"dune_spaceport"
+model_scene = ExtResource("model_dune")
+shirt_colors = Array[Color]([Color(0.17, 0.24, 0.5, 1), Color(0.13, 0.55, 0.55, 1), Color(0.38, 0.42, 0.52, 1), Color(0.5, 0.18, 0.22, 1)])
+skin_colors = Array[Color]([Color(0.64, 0.82, 0.29, 1), Color(0.5, 0.78, 0.38, 1), Color(0.72, 0.8, 0.33, 1), Color(0.48, 0.74, 0.5, 1)])
+accessory_slots = PackedStringArray("Acc_Lifeguard_Wands|Acc_Lifeguard_Wands|Acc_Lifeguard_Clipboard", "Acc_Lifeguard_Headset|Acc_Lifeguard_CrewHelmet|Acc_Lifeguard_Headset+Acc_Lifeguard_CrewHelmet|")
+
+[sub_resource type="Resource" id="look_frost"]
+script = ExtResource("look")
+world = &"frostpeak_resort"
+model_scene = ExtResource("model_frost")
+shirt_colors = Array[Color]([])
+skin_colors = Array[Color]([Color(0.56, 0.78, 0.69, 1), Color(0.6, 0.78, 0.85, 1), Color(0.65, 0.82, 0.76, 1), Color(0.52, 0.76, 0.62, 1)])
+accessory_slots = PackedStringArray("Acc_Lifeguard_Goggles|Acc_Lifeguard_Helmet|", "Acc_Lifeguard_Pack|Acc_Lifeguard_Pack|", "Acc_Lifeguard_Radio||")
 
 [resource]
 script = ExtResource("1")
@@ -26,7 +63,7 @@ body_scale = 0.88
 capsule_radius = 0.4
 capsule_height = 1.9
 head_height = 1.2
-accessory_slots = PackedStringArray("Acc_Lifeguard_Whistle|", "Acc_Lifeguard_Shades||", "Acc_Lifeguard_Zinc||", "Acc_Lifeguard_Tube||")
+accessory_slots = PackedStringArray("Acc_Lifeguard_Whistle|", "Acc_Lifeguard_Shades||", "Acc_Lifeguard_Zinc||", "Acc_Lifeguard_Tube|Acc_Lifeguard_Towel||")
 skin_colors = Array[Color]([Color(0.64, 0.82, 0.29, 1), Color(0.5, 0.78, 0.38, 1), Color(0.72, 0.8, 0.33, 1), Color(0.48, 0.74, 0.5, 1)])
 move_animation = &"Run"
 animation_reference_speed = 5.9
@@ -35,3 +72,4 @@ voice_sounds = Array[StringName]([&"runner_screech_1", &"runner_screech_2"])
 voice_interval = Vector2(2, 4.5)
 voice_pitch = 1.0
 attack_sound = &"zombie_swipe"
+world_outfits = Array[ExtResource("look")]([SubResource("look_neon"), SubResource("look_aqua"), SubResource("look_dune"), SubResource("look_frost")])
