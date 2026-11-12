@@ -1,0 +1,118 @@
+{
+	"last_weapon": "ion_carbine",
+	"levels": {
+		"launch_pad": {
+			"best_score": 52000,
+			"best_wave": 8,
+			"clears": 3,
+			"completed": true
+		},
+		"neon_skyline": {
+			"best_score": 52000,
+			"best_wave": 8,
+			"clears": 3,
+			"completed": true
+		},
+		"prize_pier": {
+			"best_score": 52000,
+			"best_wave": 8,
+			"clears": 3,
+			"completed": true
+		},
+		"summit_lodge": {
+			"best_score": 52000,
+			"best_wave": 8,
+			"clears": 3,
+			"completed": true
+		},
+		"tidal_tunnels": {
+			"best_score": 52000,
+			"best_wave": 8,
+			"clears": 3,
+			"completed": true
+		}
+	},
+	"mastery": {
+		"arc_coil": {
+			"kills": 800,
+			"xp": 40000
+		},
+		"bumper_lobber": {
+			"kills": 800,
+			"xp": 40000
+		},
+		"comet_cannon": {
+			"kills": 800,
+			"xp": 40000
+		},
+		"cryo_beam": {
+			"kills": 800,
+			"xp": 40000
+		},
+		"ion_carbine": {
+			"kills": 800,
+			"xp": 40000
+		},
+		"pulse_pistol": {
+			"kills": 800,
+			"xp": 40000
+		},
+		"rail_lancer": {
+			"kills": 800,
+			"xp": 40000
+		},
+		"scatter_blaster": {
+			"kills": 800,
+			"xp": 40000
+		}
+	},
+	"sections": {
+		"cosmetics": {
+			"equipped": {
+				"avatar": "op_arcade_champion",
+				"banner": "banner_glitch",
+				"gloves": "glove_golden",
+				"kill_effect": "kfx_coins",
+				"title": "title_midway_legend",
+				"tracer": "tracer_comet",
+				"weapon_decal@rail_lancer": "decal_holo_heart",
+				"weapon_finish@rail_lancer": "fin_glitch"
+			},
+			"seen": [],
+			"viewed": []
+		},
+		"progression": {
+			"challenges": {},
+			"completed": [
+				"combo_artist",
+				"keep_it_together",
+				"clean_sweep",
+				"pier_regular",
+				"high_roller",
+				"headhunter",
+				"spotless_shift",
+				"zombie_sweeper",
+				"gold_standard",
+				"well_rounded",
+				"wave_rider",
+				"close_shave"
+			],
+			"first_clears": [
+				"prize_pier",
+				"neon_skyline",
+				"tidal_tunnels",
+				"launch_pad",
+				"summit_lodge"
+			],
+			"runs_played": 12,
+			"xp": 600000
+		},
+		"unlocks": {
+			"granted": []
+		}
+	},
+	"settings": {
+		"fov": 80.0
+	},
+	"version": 2
+}

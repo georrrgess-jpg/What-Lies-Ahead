@@ -4,14 +4,15 @@
 
 [resource]
 script = ExtResource("1")
-id = &"clean_sweep"
-display_name = "Clean Sweep"
-description = "Clear a wave without taking damage"
+id = &"c_pop"
+display_name = "Pop Quiz"
+description = "Pop %s zombies"
 scope = 0
-stat = &"flawless_waves"
+stat = &"kills"
 mode = 0
-goal = 1
+goal = 100
 param = 0
-xp = 400
+xp = 300
+sparks = 40
 mastery_xp = 0
 sort_order = 10

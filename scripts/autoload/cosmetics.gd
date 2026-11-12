@@ -2,7 +2,9 @@ extends Node
 ## Cosmetics: what the player owns and has equipped, and applying it.
 ##
 ## Items are CosmeticItem resources found under data/cosmetics/. An item is
-## owned when its requirement is met (or it has none). Equipped items are
+## owned when its requirement is met (or it has none); an item with a price is
+## owned once it has been bought with Sparks (buy(); the shop's sections,
+## featured selection and discounts are in ShopCatalog). Equipped items are
 ## stored per slot in Profile.section("cosmetics")["equipped"], keyed
 ## "slot" for global slots or "slot@weapon_id" for weapon slots.
 ##
@@ -23,6 +25,8 @@ var _owned_at_run_start := {}
 
 func _ready() -> void:
 	Events.run_started.connect(func(_director): _owned_at_run_start = _owned_snapshot())
+	# A save from before the Sparks economy keeps everything it owned.
+	LegacyGrant.apply_if_pending()
 	# Items already owned when the game starts are not news: only unlocks
 	# earned from here on are reported by check_new_unlocks() (HUD toasts).
 	check_new_unlocks()
@@ -83,15 +87,20 @@ func can_unlock_purchase(it: CosmeticItem, weapon_id: StringName = &"") -> bool:
 	return it != null and (it.requirement == null or it.requirement.is_met(weapon_id))
 
 
+## What `it` costs right now: its price, less today's featured discount.
+func price_of(it: CosmeticItem) -> int:
+	return ShopCatalog.price(it)
+
+
 ## For sale, unlocked for purchase and affordable right now.
 func can_buy(it: CosmeticItem, weapon_id: StringName = &"") -> bool:
-	return is_for_sale(it) and can_unlock_purchase(it, weapon_id) and Wallet.can_afford(it.price)
+	return is_for_sale(it) and can_unlock_purchase(it, weapon_id) and Wallet.can_afford(price_of(it))
 
 
-## Buys `it` with Sparks. Returns false (changing nothing) if it is not for
-## sale, still locked or too expensive.
+## Buys `it` with Sparks (at price_of(it)). Returns false (changing nothing)
+## if it is not for sale, still locked or too expensive.
 func buy(it: CosmeticItem, weapon_id: StringName = &"") -> bool:
-	if not can_buy(it, weapon_id) or not Wallet.spend(it.price, it.id):
+	if not can_buy(it, weapon_id) or not Wallet.spend(price_of(it), it.id):
 		return false
 	grant(it)
 	Profile.save_profile()
@@ -177,7 +186,9 @@ func check_new_unlocks() -> Array[CosmeticItem]:
 	var seen: Array = _sec()["seen"]
 	var fresh: Array[CosmeticItem] = []
 	for it in GameData.cosmetics():
-		if it.requirement == null:
+		# Items for sale are bought, not unlocked: meeting their requirement
+		# only opens them in the shop (ShopCatalog.is_new).
+		if it.requirement == null or it.price > 0:
 			continue
 		# Weapon-agnostic mastery items unlock separately for every weapon.
 		var per_weapon := it.requirement.kind == Requirement.Kind.WEAPON_RANK and it.requirement.target == &""

@@ -654,11 +654,15 @@ func _after_run() -> void:
 			for u in row["unlocks"]:
 				unlocks.append(String(u.id))
 			rows.append("%s +%dxp %dkills rank %d->%d unlocks=%s" % [row["weapon"].id, row["xp_gained"], row["kills"], row["rank_before"], row["rank_after"], unlocks])
-		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d cashed=%d score=%d headshots=%d best_combo=%d switches=%d/%d" % [
+		var sparks := Wallet.settle(r)
+		var career := Progression.settle(r)
+		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d cashed=%d score=%d headshots=%d best_combo=%d switches=%d/%d sparks=%d wallet=%d xp=%d level=%d" % [
 			r["victory"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_min_health), _director.tickets, int(r.get("tickets_cashed", 0)),
-			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0)), _switch_cancels, _switches])
+			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0)), _switch_cancels, _switches,
+			int(sparks.get("total", 0)), Wallet.balance(), int(career.get("total", 0)), Progression.level()])
 		for line in rows:
 			print("[dev]   ", line)
+		print("[dev]   sparks: ", sparks.get("lines", []), " contracts done: ", (career.get("contracts", []) as Array).map(func(e): return e["id"]))
 		print("[dev] profile: ", JSON.stringify(Profile.data["mastery"]), " levels=", JSON.stringify(Profile.data["levels"]))
 		_wait_for_results()
 

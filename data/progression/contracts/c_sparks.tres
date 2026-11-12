@@ -4,14 +4,15 @@
 
 [resource]
 script = ExtResource("1")
-id = &"w_long_shot"
-display_name = "Long Shot"
-description = "Get %s longshot kills (28 m or more)"
-scope = 1
-stat = &"longshots"
+id = &"c_sparks"
+display_name = "Spark Collector"
+description = "Free %s Sparks from zombies"
+scope = 0
+stat = &"sparks"
 mode = 0
-goal = 5
+goal = 300
 param = 0
-xp = 500
-mastery_xp = 400
-sort_order = 220
+xp = 300
+sparks = 40
+mastery_xp = 0
+sort_order = 70

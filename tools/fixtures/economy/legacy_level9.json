@@ -1,0 +1,51 @@
+{
+	"last_weapon": "ion_carbine",
+	"levels": {
+		"neon_skyline": {
+			"best_score": 26000,
+			"best_wave": 8,
+			"clears": 3,
+			"completed": true
+		},
+		"prize_pier": {
+			"best_score": 26000,
+			"best_wave": 8,
+			"clears": 3,
+			"completed": true
+		}
+	},
+	"mastery": {
+		"ion_carbine": {
+			"kills": 450,
+			"xp": 3000
+		},
+		"rail_lancer": {
+			"kills": 450,
+			"xp": 650
+		}
+	},
+	"sections": {
+		"cosmetics": {
+			"equipped": {},
+			"seen": [],
+			"viewed": []
+		},
+		"progression": {
+			"challenges": {},
+			"completed": [],
+			"first_clears": [
+				"prize_pier",
+				"neon_skyline"
+			],
+			"runs_played": 12,
+			"xp": 36600
+		},
+		"unlocks": {
+			"granted": []
+		}
+	},
+	"settings": {
+		"fov": 80.0
+	},
+	"version": 2
+}

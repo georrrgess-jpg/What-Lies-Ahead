@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"c_clear"
+display_name = "Exit Strategy"
+description = "Clear a level"
+scope = 0
+stat = &"clears"
+mode = 0
+goal = 1
+param = 0
+xp = 500
+sparks = 60
+mastery_xp = 0
+sort_order = 60

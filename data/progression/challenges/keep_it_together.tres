@@ -13,5 +13,6 @@ mode = 0
 goal = 1
 param = 0
 xp = 1250
+sparks = 100
 mastery_xp = 0
 sort_order = 30

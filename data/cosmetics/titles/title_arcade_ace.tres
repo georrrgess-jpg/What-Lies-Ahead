@@ -5,8 +5,9 @@
 
 [sub_resource type="Resource" id="req"]
 script = ExtResource("2")
-kind = 1
-amount = 35
+kind = 5
+target = &"prize_pier"
+amount = 35000
 
 [resource]
 script = ExtResource("1")
