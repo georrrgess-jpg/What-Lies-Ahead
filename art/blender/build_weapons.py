@@ -175,7 +175,7 @@ def build_ion_carbine():
         box("RearTopPlate", (0.09, 0.12, 0.012), (0, -0.01, 0.137), bevel=0.004, m=M["shell"]),
         # Cables: a pink power line on the right, a glowing feed into the chamber on the left.
         tube("CableR", [(0.08, -0.05, 0.08), (0.1, 0.12, 0.1), (0.1, 0.3, 0.1), (0.085, 0.42, 0.08)], 0.011, m=M["pink"], segs=6),
-        tube("CableL", [(-0.07, -0.05, -0.032), (-0.088, 0.02, -0.038), (-0.088, 0.08, -0.03), (-0.082, 0.115, 0.0)], 0.009, m=M["cell"], segs=6),
+        tube("CableL", [(-0.07, -0.05, -0.04), (-0.088, 0.02, -0.044), (-0.088, 0.08, -0.034), (-0.082, 0.115, 0.0)], 0.009, m=M["cell"], segs=6),
     ]
     shell += top_rail("TopRail", 0.07, 0.37, rail_top, M)
     for i in range(5):
@@ -191,8 +191,8 @@ def build_ion_carbine():
                             (-0.088, 0.37, -0.03), (-0.078, 0.07, -0.02)], M["steel"])
     shell += bolts("BoltTop", [(-0.05, 0.4, 0.141), (0.05, 0.4, 0.141), (-0.05, 0.51, 0.141), (0.05, 0.51, 0.141)], M["steel"], axis="z", radius=0.006)
     shell += panel_lines("SeamR", 0.0862, [(0.1, 0.035, 0.34, 0.035), (0.22, -0.03, 0.22, 0.1)], M["dark"])
-    shell += panel_lines("SeamRear", -0.0762, [(-0.07, -0.02, 0.07, -0.02)], M["dark"])
-    lug, charm_point = charm_lug(-0.075, -0.058, 0.094, M)
+    shell += panel_lines("SeamRear", -0.0762, [(-0.07, -0.032, 0.07, -0.032)], M["dark"])
+    lug, charm_point = charm_lug(-0.075, -0.058, 0.103, M)
     shell += lug
     sight_rear, sight_front = sights_ghost_ring(0.0, 0.085, 0.5, rail_top, 0.14, z_line, M)
 
@@ -259,11 +259,11 @@ def build_scatter_blaster():
     bore_z = 0.068
     hinge = (0, 0.215, -0.01)
     grip_loc = (0, -0.05, -0.145)
-    grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.08, 0.1, 0.2), body_bottom=-0.06)
+    grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.08, 0.1, 0.2), body_bottom=-0.067)
     drum_c = (0, -0.005, 0.114)
     rail_top = 0.186
     z_line = rail_top + SIGHT_HEIGHT
-    pump_c = (0, 0.36, -0.022)
+    pump_c = (0, 0.385, -0.022)
     shell = grip_parts + [
         box("Body", (0.21, 0.27, 0.18), (0, 0.04, 0.03), bevel=0.05, segs=3, m=M["trim"]),
         box("TopPlate", (0.17, 0.09, 0.04), (0, 0.122, 0.118), bevel=0.014, m=M["shell"]),
@@ -275,9 +275,9 @@ def build_scatter_blaster():
         box("Breech", (0.2, 0.03, 0.15), (0, 0.19, 0.045), bevel=0.02, m=M["dark"]),
         # The drum sits in a well behind the breech, under the sight bridge.
         box("DrumSeat", (0.196, 0.13, 0.03), (0, -0.005, 0.11), bevel=0.01, m=M["dark"]),
-        box("ShieldL", (0.012, 0.16, 0.1), (-0.11, 0.085, 0.03), bevel=0.006, m=M["shell"]),
+        box("ShieldL", (0.012, 0.15, 0.1), (-0.11, 0.097, 0.03), bevel=0.006, m=M["shell"]),
         box("ShieldR", (0.012, 0.18, 0.1), (0.11, 0.06, 0.03), bevel=0.006, m=M["shell"]),
-        box("SideLight", (0.006, 0.1, 0.012), (-0.117, 0.085, 0.09), bevel=0.002, m=M["cell"]),
+        box("SideLight", (0.006, 0.1, 0.012), (-0.117, 0.097, 0.09), bevel=0.002, m=M["cell"]),
         # Sight bridge over the drum: a post on the stock, a post on the top plate.
         box("BridgePostR", (0.036, 0.03, rail_top - 0.085), (0, -0.108, (rail_top + 0.07) / 2), bevel=0.008, m=M["trim"]),
         box("BridgePostF", (0.036, 0.03, rail_top - 0.14), (0, 0.11, (rail_top + 0.125) / 2), bevel=0.008, m=M["trim"]),
@@ -289,11 +289,11 @@ def build_scatter_blaster():
     ]
     shell += top_rail("TopRail", -0.125, 0.125, rail_top, M)
     for i in range(3):
-        shell.append(box(f"ShieldSlit{i}", (0.006, 0.03, 0.06), (-0.118, 0.04 + i * 0.045, 0.02), bevel=0.002, m=M["cell"]))
+        shell.append(box(f"ShieldSlit{i}", (0.006, 0.03, 0.06), (-0.118, 0.052 + i * 0.045, 0.02), bevel=0.002, m=M["cell"]))
         shell.append(cyl(f"Spare{i}", 0.015, 0.06, (0.09, -0.175 + i * 0.035, 0.03), segs=10, bevel=0.005, m=M["cell"]))
         shell.append(cyl(f"SpareCap{i}", 0.017, 0.01, (0.09, -0.175 + i * 0.035, 0.062), segs=10, bevel=0.003, m=M["steel"]))
     shell += bolts("Bolt", [(0.1165, -0.01, 0.065), (0.1165, 0.13, 0.065), (0.1165, -0.01, -0.005), (0.1165, 0.13, -0.005),
-                            (-0.1165, 0.02, -0.01), (-0.1165, 0.15, -0.01)], M["steel"])
+                            (-0.1165, 0.035, -0.012), (-0.1165, 0.16, -0.012)], M["steel"])
     shell += bolts("StockBolt", [(-0.076, -0.17, 0.06), (-0.076, -0.17, -0.02), (0.076, -0.2, -0.03)], M["steel"], radius=0.006)
     lug, charm_point = charm_lug(-0.105, -0.05, 0.078, M)
     shell += lug
@@ -320,8 +320,8 @@ def build_scatter_blaster():
     ]
     barrels += bolts("BandBolt", [(-0.126, 0.49, bore_z), (-0.121, 0.25, bore_z)], M["steel"])
     barrels += bolts("BandBoltR", [(0.126, 0.49, bore_z), (0.121, 0.25, bore_z)], M["steel"])
-    pump = [box("PumpBody", (0.2, 0.17, 0.075), pump_c, bevel=0.028, m=M["shell"])]
-    for i, y in enumerate((0.283, 0.437)):
+    pump = [box("PumpBody", (0.2, 0.14, 0.075), pump_c, bevel=0.028, m=M["shell"])]
+    for i, y in enumerate((0.3225, 0.4475)):
         pump.append(box(f"PumpRib{i}", (0.208, 0.012, 0.08), (0, y, pump_c[2]), bevel=0.004, m=M["dark"]))
     drum = [
         xcyl("DrumBody", 0.046, 0.14, drum_c, m=M["cell"], segs=18, bevel=0.01),
@@ -344,7 +344,7 @@ def build_scatter_blaster():
     capsules_holo = holo_copy(capsules)
     teeth = [(-0.065, 0.022), (0.065, 0.022), (0.065, 0.0), (0.049, -0.028), (0.033, 0.0), (0.016, -0.028), (0.0, 0.0),
              (-0.016, -0.028), (-0.033, 0.0), (-0.049, -0.028), (-0.065, 0.0)]
-    decal = [side_emblem("Emblem", teeth, -0.119, 0.085, 0.045, M["decal"])]
+    decal = [side_emblem("Emblem", teeth, -0.119, 0.097, 0.045, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
     arm_l, elbow_l = support_hand(pump_c, 0.104, 0.0405, M, (-0.52, -0.12, -0.46), corner=0.028, s_web=2.3, thumb_len=0.065)
     groups = {

@@ -521,12 +521,7 @@ func _weapon_model(w: WeaponData) -> Node3D:
 	if w == null or w.viewmodel == null:
 		return null
 	var model: Node3D = w.viewmodel.instantiate()
-	for part_name in ["ArmL", "ArmR"]:
-		var part := model.find_child(part_name, true, false) as Node3D
-		if part:
-			part.visible = false
-	for holo in model.find_children("*Holo", "Node3D", true, false):
-		(holo as Node3D).visible = false
+	WeaponCosmetics.prepare_preview(model)
 	WeaponCosmetics.apply(model, w, Cosmetics.weapon_loadout(w.id))
 	return model
 
@@ -543,24 +538,4 @@ func _tint_locked(node: Node) -> void:
 
 
 func _bounds(node: Node3D) -> AABB:
-	var result := AABB()
-	var first := true
-	for mi in node.find_children("*", "MeshInstance3D", true, false):
-		var m := mi as MeshInstance3D
-		if not m.visible or m.mesh == null:
-			continue
-		var xf := _relative(node, m)
-		var box := xf * m.mesh.get_aabb()
-		result = box if first else result.merge(box)
-		first = false
-	return result
-
-
-## `child`'s transform in `root`'s space (works before the nodes enter the tree).
-func _relative(root: Node3D, child: Node3D) -> Transform3D:
-	var xf := Transform3D.IDENTITY
-	var n: Node = child
-	while n and n != root:
-		xf = (n as Node3D).transform * xf
-		n = n.get_parent()
-	return xf
+	return WeaponCosmetics.visible_bounds(node)

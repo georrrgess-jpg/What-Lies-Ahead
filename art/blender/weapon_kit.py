@@ -664,10 +664,10 @@ def firing_hand(G, M, toward, prefix="R"):
     a, b, _c = bar
     ri = 0.0105
     root = fpt(fr, a + GAP + 0.014, b * 0.35, min(web(a, b * 0.35) - 0.014, z_mid + pitch + 0.004))
-    yt = y_trig + 0.0055 + GAP + ri + 0.003
+    yt = y_trig + 0.0175 + GAP + ri
     index = [root, Vector((a + GAP + ri, G["loc"][1] + b + 0.02, z_trig + 0.004)), Vector((0.03, yt, z_trig)), Vector((-0.003, yt, z_trig))]
     thumb = dict(z=lambda x, y: web(x, y) - 0.0165, length=0.085)
-    return hand(prefix, fr, bar, M, toward, finger_z, (z0, web), s_web=2.8, palm_len=0.132, finger_len=0.1,
+    return hand(prefix, fr, bar, M, toward, finger_z, (z0, web), s_web=2.8, palm_len=0.132, finger_len=0.12,
                 thumb=thumb, wrist_s=3.42, wrist_z=z0 + 0.05, extra_fingers=[("Index", index, ri)])
 
 

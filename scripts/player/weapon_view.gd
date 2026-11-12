@@ -536,8 +536,9 @@ func register_part(part: String) -> void:
 		_rest[part] = {"node": node, "transform": node.transform}
 
 
-## Pulse Pistol "holo-print": the spent cell spins out of the grip, a new one
-## is printed in as a hologram, solidifies with a flare, and the slide snaps home.
+## Pulse Pistol "holo-print": the support hand lets go, the spent cell drops
+## out of the grip and spins away, a new one is printed as a hologram and
+## slides up into the grip, solidifies with a flare, and the slide snaps home.
 func _reload_holo_print(d: float) -> void:
 	_track("Root", d, [[0.14, Vector3(0, 0.02, 0), Vector3(14, 6, -26)], [0.78, Vector3(0, 0.02, 0), Vector3(14, 6, -26)],
 		[1.0, Vector3.ZERO, Vector3.ZERO]])
@@ -545,15 +546,20 @@ func _reload_holo_print(d: float) -> void:
 		[0.86, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_BACK, Tween.EASE_IN)
 	_track("Hammer", d, [[0.1, Vector3.ZERO, Vector3(-40, 0, 0)], [0.82, Vector3.ZERO, Vector3(-40, 0, 0)], [0.9, Vector3.ZERO, Vector3.ZERO]])
 	_glow_ramp(0.08, 0.2, d, 1.0, 0.15)
-	_track("Cell", d, [[0.14, Vector3.ZERO, Vector3.ZERO], [0.42, Vector3(0, -0.34, 0.08), Vector3(540, 0, 90), 0.7]],
-		Tween.TRANS_QUAD, Tween.EASE_IN)
+	# Straight down the grip first (the grip leans 14 degrees), then it tumbles away.
+	_track("Cell", d, [[0.14, Vector3.ZERO, Vector3.ZERO], [0.27, Vector3(0, -0.2, 0.05), Vector3.ZERO],
+		[0.42, Vector3(0, -0.46, 0.16), Vector3(360, 0, 90), 0.7]], Tween.TRANS_QUAD, Tween.EASE_IN)
 	_burst(0.16, d, "EjectPoint", "sparks")
 	_at(0.42, d, func(): var c := _part("Cell"); if c: c.visible = false)
-	_holo_build("CellHolo", 0.44, 0.74, d)
+	_track("CellHolo", d, [[0.44, Vector3(0, -0.2, 0.05), Vector3.ZERO, 1.0, "hold"], [0.62, Vector3(0, -0.2, 0.05), Vector3.ZERO],
+		[0.74, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_CUBIC, Tween.EASE_OUT)
+	_holo_build("CellHolo", 0.44, 0.7, d)
 	_solidify("CellHolo", "Cell", 0.76, d)
 	_burst(0.84, d, "VentPoint", "steam")
-	_track("ArmL", d, [[0.18, Vector3(-0.05, -0.12, 0.08), Vector3(0, 0, -12)], [0.7, Vector3(-0.05, -0.12, 0.08), Vector3(0, 0, -12)],
-		[0.92, Vector3.ZERO, Vector3.ZERO]])
+	# The support hand slides forward off the firing hand, drops away, and comes back the same way.
+	_track("ArmL", d, [[0.1, Vector3(-0.03, -0.012, -0.085), Vector3.ZERO], [0.22, Vector3(-0.15, -0.16, 0.0), Vector3(0, 0, -12)],
+		[0.72, Vector3(-0.15, -0.16, 0.0), Vector3(0, 0, -12)], [0.84, Vector3(-0.03, -0.012, -0.085), Vector3.ZERO],
+		[0.94, Vector3.ZERO, Vector3.ZERO]])
 
 
 ## Ion Carbine "vent purge": vents flip up and blow steam, the cage swings
@@ -570,8 +576,10 @@ func _reload_vent_purge(d: float) -> void:
 	_track("Panel", d, [[0.2, Vector3.ZERO, Vector3.ZERO], [0.34, Vector3.ZERO, Vector3(0, 0, 115)], [0.78, Vector3.ZERO, Vector3(0, 0, 115)],
 		[0.84, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_BACK, Tween.EASE_OUT)
 	_track("Cell", d, [[0.36, Vector3.ZERO, Vector3.ZERO], [0.56, Vector3(-0.34, -0.05, 0.0), Vector3(0, 0, 0), 0.8]], Tween.TRANS_QUAD, Tween.EASE_IN)
-	_track("ArmL", d, [[0.34, Vector3(-0.1, -0.06, 0.06), Vector3.ZERO], [0.52, Vector3(-0.32, -0.05, 0.04), Vector3.ZERO],
-		[0.74, Vector3(-0.1, -0.04, 0.04), Vector3.ZERO], [0.92, Vector3.ZERO, Vector3.ZERO]])
+	# The support hand drops off the foregrip, reaches out under the cell, and returns the same way.
+	_track("ArmL", d, [[0.2, Vector3.ZERO, Vector3.ZERO], [0.3, Vector3(0, -0.11, 0.02), Vector3.ZERO], [0.42, Vector3(-0.22, -0.13, 0.05), Vector3.ZERO],
+		[0.54, Vector3(-0.3, -0.07, 0.05), Vector3.ZERO], [0.74, Vector3(-0.22, -0.13, 0.05), Vector3.ZERO],
+		[0.86, Vector3(0, -0.11, 0.02), Vector3.ZERO], [0.95, Vector3.ZERO, Vector3.ZERO]])
 	_burst(0.42, d, "EjectPoint", "sparks")
 	_at(0.56, d, func(): var c := _part("Cell"); if c: c.visible = false)
 	_track("CellHolo", d, [[0.57, Vector3(-0.22, 0, 0), Vector3.ZERO, 1.0, "hold"], [0.74, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_CUBIC, Tween.EASE_OUT)
@@ -585,7 +593,8 @@ func _reload_vent_purge(d: float) -> void:
 
 ## Scatter Blaster "break open": the barrels drop on their hinge, both spent
 ## capsules kick out, new ones print in, the drum spins up, the action slams
-## shut and the pump racks twice.
+## shut and the pump racks twice (the support hand rides the pump: ArmL is
+## its child).
 func _reload_break_open(d: float) -> void:
 	_track("Root", d, [[0.12, Vector3(0, 0.03, 0.02), Vector3(10, 10, -14)], [0.66, Vector3(0, 0.03, 0.02), Vector3(10, 10, -14)],
 		[0.8, Vector3.ZERO, Vector3.ZERO]])
@@ -603,9 +612,7 @@ func _reload_break_open(d: float) -> void:
 	_burst(0.71, d, "VentPoint", "steam")
 	for i in 2:
 		var t0 := 0.74 + i * 0.12
-		_track("Pump", d, [[t0, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [t0 + 0.05, Vector3(0, 0, 0.13), Vector3.ZERO], [t0 + 0.11, Vector3.ZERO, Vector3.ZERO]],
-			Tween.TRANS_QUAD, Tween.EASE_OUT)
-		_track("ArmL", d, [[t0, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [t0 + 0.05, Vector3(0, 0, 0.13), Vector3.ZERO], [t0 + 0.11, Vector3.ZERO, Vector3.ZERO]],
+		_track("Pump", d, [[t0, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [t0 + 0.05, Vector3(0, 0, 0.068), Vector3.ZERO], [t0 + 0.11, Vector3.ZERO, Vector3.ZERO]],
 			Tween.TRANS_QUAD, Tween.EASE_OUT)
 
 

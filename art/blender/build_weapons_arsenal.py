@@ -40,14 +40,14 @@ def build_comet_cannon():
     cyl_c = (0, 0.06, 0.066)
     grip_loc = (0, -0.034, -0.1)
     grip_parts, G = grip("", grip_loc, M, tilt=-17, size=(0.072, 0.094, 0.185), body_bottom=-0.028)
-    rail_top = 0.146
+    rail_top = 0.142
     z_line = rail_top + SIGHT_HEIGHT
     shell = grip_parts + [
         # Frame: rear block, lower bridge under the cylinder, top strap over it.
         box("FrameRear", (0.066, 0.05, 0.12), (0, -0.04, 0.058), bevel=0.018, m=M["trim"]),
         box("FrameLow", (0.07, 0.2, 0.036), (0, 0.055, -0.01), bevel=0.016, m=M["trim"]),
-        box("TopStrap", (0.056, 0.17, 0.02), (0, 0.055, 0.128), bevel=0.008, m=M["trim"]),
-        box("FramePlate", (0.072, 0.05, 0.05), (0, -0.04, 0.03), bevel=0.012, m=M["shell"]),
+        box("TopStrap", (0.056, 0.17, 0.02), (0, 0.055, 0.136), bevel=0.008, m=M["trim"]),
+        box("FramePlate", (0.067, 0.05, 0.05), (0, -0.04, 0.03), bevel=0.012, m=M["shell"]),
         box("RecoilShield", (0.064, 0.012, 0.11), (0, -0.004, 0.066), bevel=0.004, m=M["dark"]),
         side_profile("Beavertail", [(-0.03, 0.02), (-0.03, -0.024), (-0.06, -0.024), (-0.088, -0.006), (-0.088, 0.008), (-0.064, 0.02)],
                      0.054, (0, 0, 0), M["trim"], bevel=0.006),
@@ -81,9 +81,9 @@ def build_comet_cannon():
         shell.append(box(f"TailFin{i}", (0.01, 0.07, 0.03), (math.cos(r) * 0.042, 0.41, bore_z + math.sin(r) * 0.042),
                          rot=(math.radians(14), -r + math.pi / 2, 0), bevel=0.004, m=M["shell"]))
     shell += bolts("Pin", [(-0.036, -0.05, 0.03), (-0.036, -0.05, 0.1), (-0.036, 0.12, -0.01), (0.036, -0.05, 0.03), (0.036, 0.12, -0.01)], M["steel"], radius=0.006, height=0.007)
-    lug, charm_point = charm_lug(-0.032, 0.3, 0.07, M)
+    lug, charm_point = charm_lug(-0.032, 0.28, 0.07, M)
     shell += lug
-    sight_rear, sight_front = sights_notch(0.0, -0.018, 0.384, 0.138, 0.128, z_line, M, gap=0.014)
+    sight_rear, sight_front = sights_notch(0.0, -0.018, 0.384, 0.144, 0.128, z_line, M, gap=0.014)
 
     hammer = [
         box("HammerBody", (0.024, 0.032, 0.04), (0, -0.075, 0.12), bevel=0.006, m=M["dark"]),
@@ -91,7 +91,8 @@ def build_comet_cannon():
         sphere("HammerGlow", 0.007, (0, -0.088, 0.122), m=M["cell"], segs=8, rings=5),
     ]
     crane_pivot = (-0.028, 0.06, 0.012)
-    crane = [box("CraneArm", (0.016, 0.1, 0.022), (-0.022, 0.06, 0.02), bevel=0.005, m=M["steel"])]
+    crane = [box("CraneYoke", (0.016, 0.006, 0.07), (-0.014, 0.1145, 0.04), bevel=0.002, m=M["steel"]),
+             ycyl("CranePin", 0.007, 0.115, 0.06, z=crane_pivot[2], x=crane_pivot[0], m=M["steel"], segs=8, bevel=0.002)]
     cylinder = [
         ycyl("CylBody", 0.06, 0.1, cyl_c[1], z=cyl_c[2], m=M["trim"], segs=24, bevel=0.014),
         ycyl("CylCore", 0.016, 0.116, cyl_c[1], z=cyl_c[2], m=M["steel"], segs=12),
@@ -118,7 +119,7 @@ def build_comet_cannon():
     arm_l, elbow_l = cup_hand(G, M, (-0.55, -0.32, -0.32))
     groups = {
         "Shell": (shell, (0, 0, 0), None),
-        "IronSightRear": (sight_rear, (0, -0.018, 0.138), None),
+        "IronSightRear": (sight_rear, (0, -0.018, 0.144), None),
         "IronSightFront": (sight_front, (0, 0.384, 0.128), None),
         "Hammer": (hammer, (0, -0.07, 0.1), None),
         "Crane": (crane, crane_pivot, None),
@@ -156,7 +157,7 @@ def build_arc_coil():
     tower = (-0.128, 0.075, -0.034)
     grip_loc = (0, -0.03, -0.115)
     grip_parts, G = grip("", grip_loc, M, tilt=-13, size=(0.075, 0.095, 0.19), body_bottom=-0.025, guard_len=0.09)
-    rail_top = 0.12
+    rail_top = 0.119
     z_line = rail_top + SIGHT_HEIGHT
     fore = (0, 0.2, -0.05)
     shell = grip_parts + [
@@ -184,7 +185,7 @@ def build_arc_coil():
         box("DialMark", (0.004, 0.018, 0.003), (-0.048, 0.03, 0.1155), bevel=0.0, m=M["cell"]),
         # Cables: a pink power line and a glowing feed into the cradle.
         tube("CableR", [(0.07, -0.06, 0.06), (0.095, 0.05, 0.09), (0.094, 0.2, 0.08), (0.06, 0.27, 0.07)], 0.011, m=M["pink"], segs=6),
-        tube("CableL", [(-0.055, -0.07, 0.01), (-0.082, -0.03, -0.035), (-0.1, 0.02, -0.048), (tower[0] + 0.01, tower[1] - 0.03, tower[2] - 0.006)], 0.009, m=M["cell"], segs=6),
+        tube("CableL", [(-0.076, 0.022, 0.004), (-0.095, 0.03, -0.012), (tower[0] + 0.012, tower[1] - 0.03, tower[2] + 0.002)], 0.008, m=M["cell"], segs=6),
     ]
     shell += top_rail("TopRail", -0.025, 0.245, rail_top, M)
     for i in range(4):
@@ -229,7 +230,7 @@ def build_arc_coil():
     decal = [side_emblem("Emblem", bolt, -0.081, 0.175, 0.032, M["decal"])]
     cap_pivot = (tower[0], tower[1], tower[2] + 0.08)
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
-    arm_l, elbow_l = support_hand(fore, 0.05, 0.03, M, (-0.52, -0.16, -0.46), corner=0.02, finger_len=0.06, thumb_len=0.045)
+    arm_l, elbow_l = support_hand(fore, 0.05, 0.03, M, (-0.52, -0.16, -0.46), corner=0.02, finger_len=0.046, thumb_len=0.045)
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "IronSightRear": (sight_rear, (0, -0.012, rail_top), None),
@@ -337,7 +338,7 @@ def build_bumper_lobber():
     swirl = [(math.cos(math.tau * k / 10) * (0.02 + 0.008 * (k % 2)), math.sin(math.tau * k / 10) * (0.02 + 0.008 * (k % 2))) for k in range(10)]
     decal = [side_emblem("Emblem", swirl, -0.089, 0.04, 0.035, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
-    arm_l, elbow_l = support_hand(fore, 0.045, 0.035, M, (-0.52, -0.12, -0.46), corner=0.02, finger_len=0.07, thumb_len=0.05)
+    arm_l, elbow_l = support_hand(fore, 0.045, 0.035, M, (-0.52, -0.12, -0.46), corner=0.02, finger_len=0.052, thumb_len=0.05)
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "IronSightRear": (sight_rear, (rail_x, -0.03, rail_top), None),
@@ -403,8 +404,8 @@ def build_cryo_beam():
         # Vertical foregrip (the support hand holds it).
         box("Foregrip", (0.05, 0.06, 0.15), fore, rot=rad(fore_tilt, 0, 0), bevel=0.016, m=M["trim"]),
         box("ForegripMount", (0.074, 0.1, 0.03), (0, 0.3, -0.018), bevel=0.01, m=M["dark"]),
-        box("ForegripCap", (0.056, 0.066, 0.014), (0, 0.3 + 0.0105, -0.169), rot=rad(fore_tilt, 0, 0), bevel=0.005, m=M["steel"]),
-        tube("Hose", [(-0.05, -0.05, -0.02), (-0.085, -0.012, -0.022), (-0.098, 0.02, 0.022)], 0.009, m=M["cell"], segs=6),
+        box("ForegripCap", (0.05, 0.06, 0.014), (0, 0.3 + 0.0105, -0.169), rot=rad(fore_tilt, 0, 0), bevel=0.004, m=M["steel"]),
+        tube("Hose", [(-0.068, 0.0, -0.012), (-0.09, 0.008, 0.0), (-0.098, 0.022, 0.024)], 0.009, m=M["cell"], segs=6),
         tube("HoseTop", [(0.045, 0.31, 0.1), (0.06, 0.35, 0.09), (0.03, 0.4, 0.075)], 0.008, m=M["cell"], segs=6),
     ]
     shell += top_rail("TopRail", 0.02, 0.28, rail_top, M)
@@ -480,16 +481,16 @@ def build_rail_lancer():
     grip_parts, G = grip("", grip_loc, M, tilt=-12, size=(0.074, 0.094, 0.19), body_bottom=-0.01)
     rail_top = 0.148
     z_line = rail_top + SIGHT_HEIGHT
-    fore = (0, 0.31, -0.03)
+    fore = (0, 0.31, -0.045)
     shell = grip_parts + [
         side_profile("Receiver", [(-0.09, -0.01), (0.33, -0.01), (0.35, 0.02), (0.35, 0.1), (0.31, 0.118), (-0.05, 0.118), (-0.09, 0.09)],
                      0.12, (0, 0, 0), M["trim"], bevel=0.02),
         box("SidePanel", (0.126, 0.24, 0.06), (0, 0.14, 0.05), bevel=0.02, m=M["shell"]),
         box("TopCover", (0.08, 0.3, 0.02), (0, 0.14, 0.124), bevel=0.008, m=M["shell"]),
         # Handguard (the support hand holds it).
-        box("Handguard", (0.084, 0.15, 0.066), fore, bevel=0.018, m=M["shell"]),
-        box("HandguardRibF", (0.092, 0.01, 0.072), (0, 0.38, -0.03), bevel=0.004, m=M["dark"]),
-        box("HandguardRibR", (0.092, 0.01, 0.072), (0, 0.24, -0.03), bevel=0.004, m=M["dark"]),
+        box("Handguard", (0.084, 0.15, 0.08), fore, bevel=0.018, m=M["shell"]),
+        box("HandguardRibF", (0.092, 0.01, 0.086), (0, 0.38, -0.045), bevel=0.004, m=M["dark"]),
+        box("HandguardRibR", (0.092, 0.01, 0.086), (0, 0.24, -0.045), bevel=0.004, m=M["dark"]),
         # Skeleton stock.
         box("StockTop", (0.05, 0.22, 0.032), (0, -0.19, 0.08), bevel=0.012, m=M["shell"]),
         box("StockLow", (0.05, 0.2, 0.03), (0, -0.19, 0.022), rot=rad(-9, 0, 0), bevel=0.012, m=M["shell"]),
@@ -510,7 +511,7 @@ def build_rail_lancer():
         for j in range(2):
             shell.append(box(f"ShotPip{i}{j}", (0.012, 0.012, 0.006), (-0.016 + i * 0.016, -0.062 + j * 0.024, 0.128), bevel=0.002, m=M["cell"]))
     shell += bolts("Bolt", [(-0.0615, 0.3, 0.0), (-0.0615, 0.3, 0.085), (0.0615, 0.0, 0.0), (0.0615, 0.3, 0.0)], M["steel"])
-    lug, charm_point = charm_lug(-0.0605, -0.04, 0.094, M)
+    lug, charm_point = charm_lug(-0.0255, -0.19, 0.08, M)
     shell += lug
     # Charge rings around the rail gap.
     for i in range(3):
@@ -539,7 +540,7 @@ def build_rail_lancer():
     decal = [side_emblem("Emblem", [(u * 0.8, v * 0.8) for u, v in chevron], -0.064, 0.292, 0.05, M["decal"])]
     cap_pivot = (-0.074, 0.17, 0.035)
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
-    arm_l, elbow_l = support_hand(fore, 0.042, 0.033, M, (-0.52, -0.14, -0.46), corner=0.018, finger_len=0.055, thumb_len=0.042)
+    arm_l, elbow_l = support_hand(fore, 0.042, 0.04, M, (-0.52, -0.14, -0.46), corner=0.018, finger_len=0.05, thumb_len=0.042)
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "IronSightRear": (sight_rear, (0, 0.005, rail_top), None),
