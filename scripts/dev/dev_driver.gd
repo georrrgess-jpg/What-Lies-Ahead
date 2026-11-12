@@ -242,7 +242,7 @@ func _route_test(delta: float) -> void:
 	if not _route_started:
 		_route_started = true
 		_director.set_process(false)
-		_player.global_position = Vector3(0.5, 0.1, 13.0)
+		_player.global_position = Vector3(0.5, 0.1, 15.8)
 		_player.set_look(0.0, 0.0)
 		var scene: PackedScene = load(RunDirector.ZOMBIE_SCENE)
 		for i in 16:

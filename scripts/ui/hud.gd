@@ -93,7 +93,7 @@ func _build() -> void:
 	# Damage vignette (behind everything else).
 	var grad := Gradient.new()
 	grad.offsets = PackedFloat32Array([0.62, 1.0])
-	grad.colors = PackedColorArray([Color(0.55, 0.0, 0.1, 0.0), Color(0.5, 0.0, 0.12, 0.95)])
+	grad.colors = PackedColorArray([Color(0.55, 0.0, 0.1, 0.0), Color(0.5, 0.0, 0.12, 0.85)])
 	var tex := GradientTexture2D.new()
 	tex.gradient = grad
 	tex.fill = GradientTexture2D.FILL_RADIAL
@@ -146,7 +146,7 @@ func _build() -> void:
 	_reload_arc.custom_minimum_size = Vector2(120, 120)
 	_anchor(_reload_arc, Control.PRESET_CENTER, Vector2.ZERO, Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
 	_threats = ThreatRing.new()
-	_threats.custom_minimum_size = Vector2(420, 420)
+	_threats.custom_minimum_size = Vector2(560, 560)
 	_anchor(_threats, Control.PRESET_CENTER, Vector2.ZERO, Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
 	_status = UiKit.arcade_label("", 30, UiKit.AMBER)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

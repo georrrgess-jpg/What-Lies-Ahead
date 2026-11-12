@@ -6,6 +6,8 @@ extends Control
 ##    winding up an attack, so the player can turn or step away in time.
 
 const RADIUS := 150.0
+## Warnings sit further out than damage arcs so the two never overlap.
+const WARN_RADIUS := 200.0
 const DAMAGE_LIFE := 1.1
 const WARN_DISTANCE := 7.0
 
@@ -58,17 +60,18 @@ func _draw() -> void:
 		var t := float(h["age"]) / DAMAGE_LIFE
 		var alpha := (1.0 - t) * (1.0 - t)
 		_arc(c, _screen_angle(h["pos"]), 0.55, Color(1.0, 0.12, 0.28, alpha * 0.95), 16.0 + 6.0 * (1.0 - t))
-	var pulse := 0.6 + 0.4 * sin(_time * 18.0)
+	var pulse := 0.8 + 0.2 * sin(_time * 18.0)
 	for angle in _warnings:
-		_arc(c, angle, 0.42, Color(1.0, 0.78, 0.15, pulse), 12.0)
-		var tip := c + Vector2(sin(angle), -cos(angle)) * (RADIUS + 26.0)
-		var side := Vector2(cos(angle), sin(angle)) * 12.0
-		var out := Vector2(sin(angle), -cos(angle)) * 16.0
+		_arc(c, angle, 0.42, Color(1.0, 0.78, 0.15, pulse), 20.0, WARN_RADIUS)
+		var tip := c + Vector2(sin(angle), -cos(angle)) * (WARN_RADIUS + 34.0)
+		var side := Vector2(cos(angle), sin(angle)) * 18.0
+		var out := Vector2(sin(angle), -cos(angle)) * 24.0
+		draw_colored_polygon(PackedVector2Array([tip + out * 1.25, tip + side * 1.3, tip - side * 1.3]), Color(0.05, 0.0, 0.08, pulse * 0.6))
 		draw_colored_polygon(PackedVector2Array([tip + out, tip + side, tip - side]), Color(1.0, 0.78, 0.15, pulse))
 
 
-func _arc(c: Vector2, angle: float, half_width: float, color: Color, thickness: float) -> void:
+func _arc(c: Vector2, angle: float, half_width: float, color: Color, thickness: float, radius := RADIUS) -> void:
 	# Godot's draw_arc measures from +X; screen "up" is -90 degrees.
 	var centre := angle - PI * 0.5
-	draw_arc(c, RADIUS, centre - half_width, centre + half_width, 24, Color(0.05, 0.0, 0.08, color.a * 0.6), thickness + 6.0, true)
-	draw_arc(c, RADIUS, centre - half_width, centre + half_width, 24, color, thickness, true)
+	draw_arc(c, radius, centre - half_width, centre + half_width, 24, Color(0.05, 0.0, 0.08, color.a * 0.6), thickness + 6.0, true)
+	draw_arc(c, radius, centre - half_width, centre + half_width, 24, color, thickness, true)

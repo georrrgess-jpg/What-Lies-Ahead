@@ -59,6 +59,15 @@ High/Low graphics preset and fullscreen are under **Settings** (main menu or pau
   slowly recharges on its own, so you are never left helpless.
 - After the final wave the portal opens and the exit lights switch on. You must step
   through the portal to clear the level.
+- **Three enemy types.** Tourist Shamblers (wide, slow, obvious windup), Lifeguard Runners
+  (lean and fast, from wave 3) and the Boardwalk Bruiser (hulking, tough, hits hard, from
+  wave 5). Every zombie rolls its own look from the accessory slots in its data (hats,
+  hair, sunglasses, cameras, rescue tubes) and a skin tint.
+- **Reading a fight.** A zombie's attack is telegraphed (arms thrown up, then a lunging
+  swipe) and only lands in front of it, so stepping aside or circling behind is a dodge.
+  Hits push zombies back; a heavy volley (the Scatter Blaster) staggers one out of its
+  windup. Taking damage shows a red arc pointing at the attacker, and an amber arc warns
+  about a zombie winding up off-screen. Below 30% health a heartbeat plays.
 - **Mastery** is per weapon and permanent: XP for finishing blows, plus a wave-clear bonus
   for every weapon that scored a kill that wave. Ranks unlock three cosmetic rewards per
   weapon (decal, energy-cell colour, shell finish), equipped in the **Armory**. Progress is
@@ -72,7 +81,7 @@ Inspector, or edit the `.tres` text directly.
 | What | Where |
 | --- | --- |
 | Weapons (damage, fire rate, magazine, reserve, spread, recoil, reload time, mastery ranks and rewards, viewmodel placement) | `data/weapons/pulse_pistol.tres`, `ion_carbine.tres`, `scatter_blaster.tres` |
-| Enemy variants (health, speed, damage, attack timing, tickets, XP, outfit, sounds) | `data/enemies/tourist_shambler.tres`, `lifeguard_runner.tres` |
+| Enemy variants (health, speed, damage, attack timing, lunge, mass, tickets, XP, outfit, accessory slots, skin and shirt colours, sounds) | `data/enemies/tourist_shambler.tres`, `lifeguard_runner.tres`, `boardwalk_bruiser.tres` |
 | Waves for Prize Pier (enemy counts per wave, spawn pacing, speed scale, banners) **and** the kiosk economy (prices, heal amount, break length, free refill, wave XP bonus) | `data/levels/prize_pier_waves.tres` |
 | Level entry (name, scene, wave set, unlock requirement) | `data/levels/prize_pier.tres` |
 | World entry (name and its list of levels) | `data/worlds/boardwalk_breakout.tres` |
@@ -217,6 +226,7 @@ godot --headless --fixed-fps 60 --path . -- --autoplay=clear --swap           # 
 godot --headless --fixed-fps 60 --path . -- --autoplay=route                  # crowd routing test
 godot --path . -- --autoplay=pause                                           # pause menu flow (needs a window)
 godot --path . --resolution 1672x941 -- --shot=out.png                        # reference-angle screenshot
+godot --path . -- --shot=hit.png --shot-near=1 --shot-fire=2 --shot-weapon=scatter_blaster --shot-frames=30
 ```
 
 Add `--profile=/some/file.json` to keep test runs away from your real save. All options are
@@ -249,17 +259,22 @@ used Mesa llvmpipe, a software rasteriser):
 
 - Project import and scene start-up with Godot 4.7.1, no script errors.
 - Bot-played **full clears** with each starter weapon (all 141 zombies killed, portal
-  entered, results shown, back to menu), and a clear that swaps weapon every break.
+  entered, results shown, back to menu), plus six balance runs after the last wave
+  tuning (Pulse Pistol and Ion Carbine, three each): six clears, finishing with 32–68
+  health.
 - Bot **defeat**, then **Retry** (new run starts with no tickets, wave 0, full health).
 - **Pause menu** on a virtual display: mouse released on pause, recaptured on resume,
   restart and main menu both clean.
 - **Persistence**: mastery, level completion and settings read back after a relaunch;
   unreadable, partial and missing save files all start cleanly.
-- **Crowd routing**: 16 zombies clumped behind the kiosk split 8/8 between the two lanes and
-  all reached the player.
-- **Late-wave load** (final two waves, up to 11 zombies alive): scripts under 6 ms and
-  physics 1–4 ms per frame; about 850–1,400 draw calls and 240k–490k triangles per frame at
-  1920×1080.
+- **Crowd routing**: 16 zombies clumped behind the kiosk used both lanes (10 and 6) and all
+  reached the player without shoving them.
+- **Late-wave load** (final wave, up to 10 zombies alive): scripts and physics each under
+  about 5 ms per frame (one 10.5 ms spike); about 580–1,160 draw calls and 200k–480k
+  triangles per frame at 1920×1080.
+- **Visual checks** of every weapon in hand, both zombie close-ups, the attack windup,
+  firing, hits, kills, damage and threat indicators, from a reproducible set of staged
+  screenshots (`scripts/dev/screenshot.gd`).
 - **Export smoke test**: the exported Linux build ran a full bot clear, defeat → retry, a
   rendered frame and a relaunch that read the saved progress.
 
@@ -270,9 +285,10 @@ Not verified, or limited:
   and triangle counts above are modest, but smooth 1080p play is untested on real hardware.
 - **Audio by ear.** Every sound is synthesised by `tools/gen_audio.py` and was checked for
   length and level only. Nobody has listened to the mix; expect to adjust volumes.
-- **Human playtesting.** Difficulty and pacing were tuned against a bot (clears take it
-  about 5–7 minutes because it starts waves early; it finishes with 8–100 health depending
-  on the run and occasionally dies). A person has not played it, so mouse feel, the 8–12
+- **Human playtesting.** Difficulty and pacing were tuned against a bot with near-perfect
+  aim (clears take it about 5–7 minutes because it starts waves early and finish with
+  32–68 health; before the final-wave tuning it was overrun about one run in three).
+  A person has not played it, so mouse feel, the 8–12
   minute target and first-run fairness still need a human pass.
 - **Windows build** was exported but never run.
 - **No Godot or Blender MCP connection** was available. Blender was driven through its
@@ -280,7 +296,6 @@ Not verified, or limited:
 
 Placeholders and simplifications:
 
-- Background shops on the beach are plain coloured boxes.
 - Reload animations are code-driven tweens on the viewmodel parts (three distinct styles),
   not authored animation clips.
 - UI layouts (HUD, menus) are built in code by their scripts rather than laid out as nodes
@@ -289,3 +304,7 @@ Placeholders and simplifications:
   `.glb` files.
 - A zombie that gets wedged is moved back to an entrance by the stall failsafe; this is
   rare but can be seen if you are looking at it.
+- Hit sparks and confetti use a small script-driven particle system
+  (`scripts/fx/fx_burst.gd`), because `CPUParticles3D` did not render with this
+  renderer and driver. Bulb glow is faked with additive halo quads
+  (`art/shaders/bulb_halo.gdshader`) for the same reason: post-process glow barely shows.

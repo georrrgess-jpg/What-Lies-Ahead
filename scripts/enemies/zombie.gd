@@ -43,6 +43,7 @@ var _struck := false
 var _stall_anchor := Vector3.ZERO
 var _stall_timer := 0.0
 var _lost_timer := 0.0
+var _clear_line := false
 var _flash_left := 0.0
 ## Knockback velocity from hits; decays quickly.
 var _knock := Vector3.ZERO
@@ -177,7 +178,8 @@ func _physics_process(delta: float) -> void:
 				# The swipe lunges forward and only connects in front of the zombie,
 				# so circling behind a windup is a real dodge.
 				var forward := Vector3(sin(rotation.y), 0.0, cos(rotation.y))
-				_knock += forward * data.lunge_speed
+				# Lunge to close the gap, but never far enough to shove the player.
+				_knock += forward * data.lunge_speed * clampf((distance - 1.1) / 1.2, 0.0, 1.0)
 				var facing := forward.dot(to_target.normalized()) if distance > 0.01 else 1.0
 				if target.alive and distance <= data.attack_reach and facing >= 0.3:
 					target.take_damage(data.damage, global_position)
@@ -200,16 +202,19 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 	if _repath <= 0.0:
 		_repath = REPATH_INTERVAL
 		nav.target_position = target.global_position
+		_clear_line = distance <= 3.5 and _has_clear_line()
 	var dir := to_target.normalized()
-	# Close in directly for the last few metres; otherwise follow the navmesh.
-	if distance > 3.0 and not nav.is_navigation_finished():
+	# Close in directly for the last few metres when nothing is in the way;
+	# otherwise follow the navmesh (e.g. around a planter).
+	if (distance > 3.0 or not _clear_line) and not nav.is_navigation_finished():
 		var next := nav.get_next_path_position()
 		var step := next - global_position
 		step.y = 0.0
 		if step.length() > 0.05:
 			dir = step.normalized()
 	var move_speed := speed * (0.45 if _slow > 0.0 else 1.0)
-	var desired := dir * move_speed + _knock
+	# Stop at arm's length instead of walking into (and shoving) the player.
+	var desired := (dir * move_speed if distance > 1.15 else Vector3.ZERO) + _knock
 	_face(dir, delta, 1.0)
 	if nav.avoidance_enabled:
 		nav.velocity = desired
@@ -217,6 +222,15 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 		_on_velocity_computed(desired)
 	if _anim:
 		_anim.speed_scale = clampf(move_speed / maxf(0.1, data.animation_reference_speed), 0.5, 1.8)
+
+
+## True if nothing solid stands between this zombie and its target at knee height.
+func _has_clear_line() -> bool:
+	var from := global_position + Vector3.UP * 0.5
+	var to := target.global_position + Vector3.UP * 0.5
+	var query := PhysicsRayQueryParameters3D.create(from, to, 1)
+	query.exclude = [get_rid()]
+	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 
 func _on_velocity_computed(safe_velocity: Vector3) -> void:
