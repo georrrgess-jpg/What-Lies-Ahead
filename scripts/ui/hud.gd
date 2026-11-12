@@ -516,7 +516,7 @@ func _on_enemy_killed(enemy: Node, _weapon_id: StringName, headshot: bool, point
 		return
 	var flavour := "HEADSHOT" if headshot else ""
 	if director.score and director.score.combo > 1:
-		flavour = ("%s  x%.1f" % [flavour, director.score.multiplier()]).strip_edges()
+		flavour = "HEADSHOT  x%.1f" % director.score.multiplier() if headshot else "COMBO x%.1f" % director.score.multiplier()
 	var color := HEADSHOT_COLOR if headshot else UiKit.CYAN
 	var head := z.global_position + Vector3.UP * (1.1 * z.data.body_scale + 0.9)
 	KillPopup.spawn(z.get_parent(), head, points, z.data.tickets, flavour, color)

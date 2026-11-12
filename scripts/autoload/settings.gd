@@ -3,12 +3,6 @@ extends Node
 
 signal changed
 
-## Defaults for options Profile.DEFAULT_SETTINGS does not list (menus pass).
-const EXTRA_DEFAULTS := {
-	"invert_y": false,
-	"ambience_volume": 1.0,
-}
-
 var _headless := false
 
 
@@ -18,7 +12,7 @@ func _ready() -> void:
 
 
 func value(key: String):
-	return Profile.data["settings"].get(key, Profile.DEFAULT_SETTINGS.get(key, EXTRA_DEFAULTS.get(key)))
+	return Profile.data["settings"].get(key, Profile.DEFAULT_SETTINGS.get(key))
 
 
 func set_value(key: String, v, persist := false) -> void:

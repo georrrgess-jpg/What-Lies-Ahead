@@ -11,7 +11,7 @@ const SCORE_COLOR := Color(1.0, 0.8, 0.25)
 const TICKET_COLOR := Color(1.0, 0.95, 0.85)
 const OUTLINE := Color(0.12, 0.05, 0.2)
 
-static var _pool: Array[KillPopup] = []
+static var _pool: Array = []
 
 var _flavour: Label3D
 var _points: Label3D
@@ -20,13 +20,13 @@ var _tween: Tween
 
 
 ## Shows a popup at `at` (world space) under `parent`.
-static func spawn(parent: Node, at: Vector3, points: int, tickets: int, flavour := "", flavour_color := Color.WHITE) -> void:
+static func spawn(parent: Node, at: Vector3, points: int, tickets: int, flavour := "", flavour_color := Color.WHITE) -> KillPopup:
 	if parent == null or not parent.is_inside_tree():
-		return
+		return null
 	var popup: KillPopup = null
 	while not _pool.is_empty() and popup == null:
 		# The pool outlives the level (Retry frees the old popups), so check first.
-		var candidate: KillPopup = _pool.pop_back()
+		var candidate = _pool.pop_back()
 		if is_instance_valid(candidate) and candidate.is_inside_tree():
 			popup = candidate
 	if popup == null:
@@ -36,12 +36,18 @@ static func spawn(parent: Node, at: Vector3, points: int, tickets: int, flavour 
 			popup.get_parent().remove_child(popup)
 		parent.add_child(popup)
 	popup._play(at, points, tickets, flavour, flavour_color)
+	return popup
 
 
-## Rasterises every glyph the popups use, at their sizes, behind the level
-## fade-in (the first kill would hitch otherwise).
+## Rasterises every glyph the popups use, at their sizes, while the level is
+## still black behind its fade-in (the first kill would hitch otherwise).
 static func warm_up(parent: Node, at: Vector3) -> void:
-	spawn(parent, at, 1234567890, 1234567890, "HEADSHOT COMBO x.", Color.WHITE)
+	var popup := spawn(parent, at, 1234567890, 1234567890, "HEADSHOT COMBO x.", Color.WHITE)
+	if popup:
+		popup._tween.kill()
+		popup._tween = popup.create_tween()
+		popup._tween.tween_interval(0.1)
+		popup._tween.tween_callback(popup._release)
 
 
 func _init() -> void:
