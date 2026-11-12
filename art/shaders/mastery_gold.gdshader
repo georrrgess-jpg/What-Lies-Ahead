@@ -4,7 +4,7 @@ shader_type spatial;
 // glint that sweeps down the weapon every few seconds, and tiny sparkles.
 // Shell = bright gold, trim = antique gold. Contract: weapon_cosmetics.gd.
 uniform vec3 shell_color : source_color = vec3(1.0, 0.76, 0.23);
-uniform vec3 trim_color : source_color = vec3(0.48, 0.29, 0.06);
+uniform vec3 trim_color : source_color = vec3(0.75, 0.53, 0.16);
 uniform bool is_trim = false;
 uniform float glint_speed = 0.55;
 uniform float brush_scale = 180.0;
