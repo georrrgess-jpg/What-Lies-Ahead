@@ -490,6 +490,11 @@ func _on_reward_unlocked(weapon: WeaponData, reward: CosmeticItem) -> void:
 	v.add_child(UiKit.label("MASTERY UNLOCK", 24, UiKit.CYAN, true))
 	v.add_child(UiKit.label("%s — %s" % [weapon.display_name, reward.display_name], 28, Color.WHITE))
 	v.add_child(UiKit.label("%s · equip it in the Locker" % reward.slot_label(), 22, UiKit.CREAM))
+	# At most three at once; the oldest makes room.
+	while _toasts.get_child_count() >= 3:
+		var oldest := _toasts.get_child(0)
+		_toasts.remove_child(oldest)
+		oldest.queue_free()
 	_toasts.add_child(panel)
 	panel.modulate.a = 0.0
 	var tw := panel.create_tween()

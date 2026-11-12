@@ -43,10 +43,11 @@ func _ready() -> void:
 func bind(weapons: WeaponController) -> void:
 	_weapons = weapons
 	weapons.slots_changed.connect(func(_s, _a): refresh())
-	weapons.ammo_changed.connect(func(_m, _r): refresh())
+	weapons.ammo_changed.connect(func(_m, _r): _refresh_ammo())
 	refresh()
 
 
+## Restyles both rows (slot or active weapon changed).
 func refresh() -> void:
 	if _weapons == null:
 		return
@@ -69,5 +70,15 @@ func refresh() -> void:
 		_names[i].add_theme_color_override("font_color", accent.lerp(Color.WHITE, 0.55) if active else Color(1, 1, 1, 0.8))
 		# The held weapon's ammo is the big counter; the other shows its own here.
 		_ammo[i].visible = not active
-		var a := _weapons.ammo_of(w.id)
-		_ammo[i].text = "%d/%d" % [a.x, a.y]
+	_refresh_ammo()
+
+
+## Updates only the ammo text (every shot).
+func _refresh_ammo() -> void:
+	if _weapons == null:
+		return
+	for i in 2:
+		var w := _weapons.slot_weapon(i)
+		if w and _ammo[i].visible:
+			var a := _weapons.ammo_of(w.id)
+			_ammo[i].text = "%d/%d" % [a.x, a.y]

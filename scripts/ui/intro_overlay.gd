@@ -73,11 +73,8 @@ func _on_letter(_i: int) -> void:
 	_glitch = 0.18
 
 
-func _gui_input(event: InputEvent) -> void:
-	_handle(event)
-
-
-func _unhandled_input(event: InputEvent) -> void:
+## Takes every key, click and button before the menu underneath sees it.
+func _input(event: InputEvent) -> void:
 	_handle(event)
 
 

@@ -45,6 +45,10 @@ static func slot(slot_index: int) -> StringName:
 	if _usable(saved) and (slot_index == PRIMARY or saved != _resolved_primary()):
 		return saved
 	if slot_index == PRIMARY:
+		# Saves from before the two-slot loadout remember one starter weapon.
+		var last := StringName(String(Profile.data.get("last_weapon", "")))
+		if saved == &"" and _usable(last):
+			return last
 		return _first_available([])
 	return _first_available([_resolved_primary(), other])
 

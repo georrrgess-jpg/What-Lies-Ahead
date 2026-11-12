@@ -47,6 +47,8 @@ var health := 100.0
 var alive := true
 ## False while a menu or results screen owns the input.
 var controls_enabled := true
+## Set when the run is over: lingering clouds and projectiles cannot hurt any more.
+var invulnerable := false
 var sprinting := false
 var sliding := false
 ## 0 = hip, 1 = fully aimed down sights. Eased by the weapon's ads_time.
@@ -296,7 +298,7 @@ func look_pitch() -> float:
 
 
 func take_damage(amount: float, source_position: Vector3) -> void:
-	if not alive or amount <= 0.0:
+	if not alive or invulnerable or amount <= 0.0:
 		return
 	health = maxf(0.0, health - amount)
 	add_shake(0.65)

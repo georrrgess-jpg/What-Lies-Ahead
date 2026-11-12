@@ -16,6 +16,10 @@ var _time := 0.0
 var _title: Label
 var _tag: Label
 var _status: Label
+## Reused every frame (the card redraws while it animates).
+var _bg := StyleBoxFlat.new()
+var _bar := StyleBoxFlat.new()
+var _unlocked := -1
 
 
 func _ready() -> void:
@@ -81,7 +85,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var accent := world.accent_color
 	var r := Rect2(Vector2.ZERO, size)
-	var bg := StyleBoxFlat.new()
+	var bg := _bg
 	bg.bg_color = world.backdrop_color.darkened(0.2)
 	bg.set_corner_radius_all(26)
 	bg.border_color = accent if selected else Color(accent, 0.45 + 0.4 * _hover)
@@ -100,12 +104,14 @@ func _draw() -> void:
 			clip.append(Vector2(clampf(p.x, size.x * 0.55, size.x - 12), p.y))
 		draw_colored_polygon(clip, Color(c, 0.18))
 	# Accent bar along the bottom.
-	var bar := StyleBoxFlat.new()
+	var bar := _bar
 	bar.bg_color = accent
 	bar.corner_radius_bottom_left = 26
 	bar.corner_radius_bottom_right = 26
 	draw_style_box(bar, Rect2(0, size.y - 12, size.x, 12))
-	if not GameData.is_world_unlocked(world):
+	if _unlocked < 0:
+		_unlocked = 1 if GameData.is_world_unlocked(world) else 0
+	if _unlocked == 0:
 		draw_rect(r, Color(0.02, 0.0, 0.06, 0.45))
 		# Padlock.
 		var c := Vector2(size.x - 70, 60)

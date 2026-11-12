@@ -169,6 +169,9 @@ func _notification(what: int) -> void:
 	# Alt-tabbing away mid-wave pauses the run instead of leaving the player to die.
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and player != null and not _finished and DisplayServer.get_name() != "headless":
 		pause()
+	# Closing the window mid-run keeps what was earned, like quitting from the pause menu.
+	elif what == NOTIFICATION_WM_CLOSE_REQUEST and player != null:
+		_settle_abandoned()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -601,8 +604,9 @@ func _finish(victory: bool) -> void:
 	if _finished:
 		return
 	_finished = true
-	player.controls_enabled = false
-	player.weapons.enabled = false
+	_freeze_player()
+	# A multi-kill still counting down belongs to this run's score.
+	score.flush()
 	_new_best = Profile.record_score(level.id, score.score)
 	Profile.save_profile()
 	var data := result()
@@ -615,6 +619,24 @@ func _finish(victory: bool) -> void:
 	screen.show_result(data)
 
 
+func _freeze_player() -> void:
+	player.controls_enabled = false
+	player.weapons.enabled = false
+	player.invulnerable = true
+
+
+## Progress earned so far still counts (XP, unlocks) when a run ends early.
+func _settle_abandoned() -> void:
+	if _finished:
+		return
+	_finished = true
+	_freeze_player()
+	var data := result()
+	data["abandoned"] = true
+	Events.run_finished.emit(data)
+	_commit()
+
+
 func pause() -> void:
 	if _finished or get_tree().paused:
 		return
@@ -625,12 +647,9 @@ func pause() -> void:
 
 ## Leaves the run early (from the pause menu). Earned mastery is kept.
 func abandon(retry: bool) -> void:
-	_finished = true
-	# Progress earned so far still counts (XP, unlocks) when quitting mid-run.
-	var data := result()
-	data["abandoned"] = true
-	Events.run_finished.emit(data)
-	_commit()
+	_settle_abandoned()
+	# The level stays on screen under the loading card: stop it playing on.
+	get_parent().process_mode = Node.PROCESS_MODE_DISABLED
 	if retry:
 		Game.retry()
 	else:

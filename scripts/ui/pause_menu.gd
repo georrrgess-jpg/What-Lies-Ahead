@@ -5,6 +5,7 @@ var _director: RunDirector
 var _root: Control
 var _main: Control
 var _settings: SettingsPanel
+var _settings_scroll: ScrollContainer
 var _resume_button: Button
 
 
@@ -58,17 +59,22 @@ func open(director: RunDirector) -> void:
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_main.add_child(note)
 
+	# Settings scroll like on the main menu, so they fit any window height.
+	_settings_scroll = ScrollContainer.new()
+	_settings_scroll.custom_minimum_size = Vector2(960, 860)
+	_settings_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_settings_scroll.visible = false
+	panel.add_child(_settings_scroll)
 	_settings = SettingsPanel.new()
-	_settings.visible = false
 	_settings.closed.connect(_close_settings)
-	panel.add_child(_settings)
+	_settings_scroll.add_child(_settings)
 	resume.grab_focus.call_deferred()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause"):
 		get_viewport().set_input_as_handled()
-		if _settings and _settings.visible:
+		if _settings_scroll and _settings_scroll.visible:
 			_settings.close()
 		else:
 			_resume()
@@ -76,14 +82,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _open_settings() -> void:
 	_main.visible = false
-	_settings.visible = true
+	_settings_scroll.visible = true
 	var first := _settings.find_child("FirstFocus", true, false) as Control
 	if first:
 		first.grab_focus()
 
 
 func _close_settings() -> void:
-	_settings.visible = false
+	_settings_scroll.visible = false
 	_main.visible = true
 	_resume_button.grab_focus()
 

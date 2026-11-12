@@ -36,7 +36,12 @@ func setup(fade_rect: ColorRect) -> void:
 
 ## Shows `level` (cross-fading if something is already shown).
 func show_level(level: LevelData, instant := false) -> void:
-	if level == null or level == current and _scene != null:
+	if level == null:
+		return
+	if level == current and _scene != null:
+		# Back to what is on screen: drop any newer request still loading.
+		_pending = level
+		_pending_path = level.scene_path
 		return
 	if not ResourceLoader.exists(level.scene_path):
 		return
@@ -101,7 +106,6 @@ func _swap_now(level: LevelData, packed: PackedScene) -> void:
 			break
 	add_child(_scene)
 	current = level
-	_pending = level
 	_from = level.menu_camera_from
 	_to = level.menu_camera_to
 	_time = 0.0

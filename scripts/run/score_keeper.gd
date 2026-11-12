@@ -92,6 +92,11 @@ func _style(label: String, points: int) -> int:
 	return points
 
 
+## Settles a multi-kill still counting down (the run is ending).
+func flush() -> void:
+	_close_multi()
+
+
 func _close_multi() -> void:
 	if _multi_count >= 2:
 		var label: String = MULTI_NAMES[mini(_multi_count, MULTI_NAMES.size() - 1)]

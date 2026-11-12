@@ -7,6 +7,8 @@ extends SubViewport
 ##   thumbs.request(item, func(tex: Texture2D): rect.texture = tex)
 
 const SIZE := 192
+## Oldest thumbnails are dropped beyond this many (each is about 150 KB).
+const MAX_CACHED := 160
 const BAKED_SLOTS := [&"avatar", &"weapon_finish", &"weapon_charm", &"weapon_decal", &"gloves"]
 
 static var _cache := {}
@@ -90,6 +92,8 @@ func _process(_delta: float) -> void:
 	var image := get_texture().get_image()
 	if image:
 		_cache[_job[3]] = ImageTexture.create_from_image(image)
+		while _cache.size() > MAX_CACHED:
+			_cache.erase(_cache.keys()[0])
 	_stage.queue_free()
 	_stage = null
 	_deliver(_job)

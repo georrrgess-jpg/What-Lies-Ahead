@@ -16,6 +16,10 @@ extends EnemyBehaviour
 @export var rush_seconds := 2.5
 @export var rush_speed := 1.4
 
+## Minimum gap between hit sparks/sounds, so beams and fast weapons don't stack them.
+const HIT_FX_GAP_MS := 120
+
+var _next_fx_ms := 0
 var _hp := 0.0
 var _helmet: MeshInstance3D
 var _rush := 0.0
@@ -29,7 +33,7 @@ func on_ready(z: Zombie) -> void:
 func on_physics(z: Zombie, delta: float) -> bool:
 	if _rush > 0.0:
 		_rush -= delta
-		z.speed_multiplier = rush_speed
+		z.speed_multiplier *= rush_speed
 	return false
 
 
@@ -39,8 +43,11 @@ func on_hit(z: Zombie, amount: float, hit_position: Vector3, headshot: bool) -> 
 	_hp -= amount
 	var out := (hit_position - (z.global_position + Vector3.UP * 1.6)).normalized()
 	if _hp > 0.0:
-		Sfx.play_at(clank_sound, hit_position, -2.0, randf_range(0.92, 1.12))
-		Fx.impact(z.get_parent(), hit_position, out, Color(1.0, 0.78, 0.3))
+		var now := Time.get_ticks_msec()
+		if now >= _next_fx_ms:
+			_next_fx_ms = now + HIT_FX_GAP_MS
+			Sfx.play_at(clank_sound, hit_position, -2.0, randf_range(0.92, 1.12))
+			Fx.impact(z.get_parent(), hit_position, out, Color(1.0, 0.78, 0.3))
 		return amount * head_armor
 	_break(z, hit_position, out)
 	return amount * head_armor

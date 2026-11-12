@@ -152,11 +152,16 @@ func is_head_hit(world_position: Vector3) -> bool:
 
 ## Applies damage. Returns true if this hit was the finishing blow.
 ## `push` is a knockback impulse in m/s along `direction`.
-func take_hit(amount: float, hit_position: Vector3, direction: Vector3, weapon_id: StringName, headshot: bool, push := 0.0) -> bool:
+## `head_part` >= 0 marks a blast that hit both head and body: that much of
+## `amount` hit the head (at `hit_position`) and the rest the body (at
+## `body_position`), and behaviours such as armour see each part separately.
+func take_hit(amount: float, hit_position: Vector3, direction: Vector3, weapon_id: StringName, headshot: bool, push := 0.0, head_part := -1.0, body_position := Vector3.ZERO) -> bool:
 	if state == State.DEAD:
 		return false
-	for b in behaviours:
-		amount = b.on_hit(self, amount, hit_position, headshot)
+	if head_part >= 0.0:
+		amount = _filter_hit(amount - head_part, body_position, false) + _filter_hit(head_part, hit_position, true)
+	else:
+		amount = _filter_hit(amount, hit_position, headshot)
 	health -= amount
 	last_hit_weapon = weapon_id
 	_lost_timer = 0.0
@@ -180,6 +185,14 @@ func take_hit(amount: float, hit_position: Vector3, direction: Vector3, weapon_i
 	elif state == State.CHASE and (_knock.length() >= STAGGER_PUSH or randf() < 0.4):
 		_play_hit_reaction()
 	return false
+
+
+## Runs a hit through the behaviours (armour, shields...) and returns the
+## damage actually taken.
+func _filter_hit(amount: float, at: Vector3, head: bool) -> float:
+	for b in behaviours:
+		amount = b.on_hit(self, amount, at, head)
+	return amount
 
 
 ## Knocks the zombie out of any windup that has not landed yet: its melee

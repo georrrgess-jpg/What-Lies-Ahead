@@ -14,6 +14,8 @@ var player: Player
 ## The ammo counter, so the heat bar can sit right above it.
 var ammo_label: Control
 var _time := 0.0
+var _heat_back := StyleBoxFlat.new()
+var _heat_fill := StyleBoxFlat.new()
 
 
 func _ready() -> void:
@@ -75,7 +77,7 @@ func _draw_heat(heat: float, venting: bool, data: WeaponData) -> void:
 	rect.position -= get_global_rect().position
 	# A vertical gauge just left of the ammo counter, filling from the bottom.
 	var bar := Rect2(rect.position.x - 30.0, rect.position.y + 18.0, 16.0, rect.size.y - 34.0)
-	var back := StyleBoxFlat.new()
+	var back := _heat_back
 	back.bg_color = Color(UiKit.INK, 0.75)
 	back.set_corner_radius_all(8)
 	back.set_expand_margin_all(4)
@@ -85,7 +87,7 @@ func _draw_heat(heat: float, venting: bool, data: WeaponData) -> void:
 		col = UiKit.RED.lerp(Color.WHITE, 0.5 + 0.5 * sin(_time * 20.0))
 	var k := 1.0 if venting else heat
 	if k > 0.01:
-		var fill := StyleBoxFlat.new()
+		var fill := _heat_fill
 		fill.bg_color = col
 		fill.set_corner_radius_all(8)
 		var h := maxf(16.0, bar.size.y * k)

@@ -126,7 +126,7 @@ func _physics_process(delta: float) -> void:
 	var mult := lerpf(1.0, CHILL_MIN_SPEED, chill)
 	if shock_left > 0.0:
 		mult *= SHOCK_SPEED
-	zombie.speed_multiplier = mult
+	zombie.speed_multiplier *= mult
 	_update_visuals(delta)
 	if chill <= 0.0 and shock_left <= 0.0 and frozen_left <= 0.0:
 		_clear_overlay()

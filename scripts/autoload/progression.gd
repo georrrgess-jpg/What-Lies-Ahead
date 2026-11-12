@@ -185,6 +185,9 @@ func _on_run_started(director: Node) -> void:
 	# Whatever is owned before the run is not a reward of this run.
 	Cosmetics.check_new_unlocks()
 	tracker = RunTracker.new(director) if director is RunDirector else null
+	# Rank-based challenges a returning save already meets count from the start.
+	if tracker:
+		tracker.complete(ChallengeBook.refresh_computed())
 
 
 func _on_enemy_killed(enemy: Node, weapon_id: StringName, headshot: bool, _points: int) -> void:

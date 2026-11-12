@@ -44,7 +44,7 @@ func show_result(result: Dictionary) -> void:
 	outer.add_child(body)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
-	col.custom_minimum_size = Vector2(1000, 0)
+	col.custom_minimum_size = Vector2(940, 0)
 	body.add_child(col)
 	var sections: Array[Control] = []
 	for ext in GameData.ui_extensions(UiExtension.Kind.RESULTS_SECTION):
@@ -128,15 +128,14 @@ func show_result(result: Dictionary) -> void:
 	rows_box.add_theme_constant_override("separation", 8)
 	for row in rows:
 		rows_box.add_child(_weapon_row(row))
-	if rows.size() > 2:
-		var rs := ScrollContainer.new()
-		rs.custom_minimum_size = Vector2(0, 300)
-		rs.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		rs.add_child(rows_box)
-		col.add_child(rs)
-	else:
-		col.add_child(rows_box)
+	# Fixed height, scrolling: weapons and unlock lines never push the buttons
+	# off screen.
+	var rs := ScrollContainer.new()
+	rs.custom_minimum_size = Vector2(0, 300)
+	rs.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rs.add_child(rows_box)
+	col.add_child(rs)
 
 	outer.add_child(UiKit.spacer(6))
 	var buttons := HBoxContainer.new()
@@ -215,7 +214,10 @@ func _weapon_row(row: Dictionary) -> Control:
 	xp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	bar_row.add_child(xp_label)
 
-	for reward in row["unlocks"]:
-		var unlock := UiKit.label("UNLOCKED  %s  (%s)" % [reward.display_name, reward.slot_label()], 26, UiKit.AMBER, true)
-		v.add_child(unlock)
+	var unlocks: Array = row["unlocks"]
+	for i in mini(unlocks.size(), 2):
+		var reward: CosmeticItem = unlocks[i]
+		v.add_child(UiKit.label("UNLOCKED  %s  (%s)" % [reward.display_name, reward.slot_label()], 26, UiKit.AMBER, true))
+	if unlocks.size() > 2:
+		v.add_child(UiKit.label("and %d more in the Locker" % (unlocks.size() - 2), 22, UiKit.AMBER))
 	return box

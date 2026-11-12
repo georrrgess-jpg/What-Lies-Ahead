@@ -7,6 +7,7 @@ extends Button
 var accent := UiKit.PINK
 var _hover := 0.0
 var _shine := -1.0
+var _ring := StyleBoxFlat.new()
 
 
 static func make(text_value: String, color: Color, font_size: int, min_size: Vector2) -> MenuButtonFx:
@@ -74,7 +75,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	if _hover > 0.01:
 		var r := Rect2(Vector2(-4, -4), size + Vector2(8, 8))
-		var sb := StyleBoxFlat.new()
+		var sb := _ring
 		sb.bg_color = Color(0, 0, 0, 0)
 		sb.border_color = Color(1, 1, 1, 0.85 * _hover)
 		sb.set_border_width_all(3)

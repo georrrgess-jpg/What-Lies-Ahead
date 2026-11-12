@@ -18,6 +18,10 @@ extends EnemyBehaviour
 ## Movement speed multiplier for the player inside the cloud.
 @export var cloud_slow := 0.55
 
+## Minimum gap between hit sparks/sounds, so beams and fast weapons don't stack them.
+const HIT_FX_GAP_MS := 120
+
+var _next_fx_ms := 0
 var _shell := 0.0
 var _meshes: Array[Node] = []
 
@@ -33,11 +37,14 @@ func on_hit(z: Zombie, amount: float, hit_position: Vector3, headshot: bool) -> 
 	if _shell <= 0.0:
 		return amount
 	_shell -= amount
-	_shards(z.get_parent(), hit_position, 6, 3.5)
 	if _shell <= 0.0:
 		_shatter(z, hit_position)
 	else:
-		Sfx.play_at(&"frost_ice_chip", hit_position, -4.0, randf_range(0.9, 1.15))
+		var now := Time.get_ticks_msec()
+		if now >= _next_fx_ms:
+			_next_fx_ms = now + HIT_FX_GAP_MS
+			_shards(z.get_parent(), hit_position, 6, 3.5)
+			Sfx.play_at(&"frost_ice_chip", hit_position, -4.0, randf_range(0.9, 1.15))
 	return amount * (head_damage_scale if headshot else body_damage_scale)
 
 

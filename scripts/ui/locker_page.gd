@@ -15,7 +15,7 @@ var _weapon_id: StringName
 var _selected: CosmeticItem
 var _tabs := {}
 var _tab_badges := {}
-var _weapon_row: HBoxContainer
+var _weapon_row: VBoxContainer
 var _weapon_buttons := {}
 var _weapon_rank: Label
 var _grid: GridContainer
@@ -140,10 +140,18 @@ func _grid_column() -> Control:
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", 10)
 	left.custom_minimum_size = Vector2(GRID_COLUMNS * LockerCard.CARD_SIZE.x + (GRID_COLUMNS - 1) * 14 + 24, 0)
-	_weapon_row = HBoxContainer.new()
-	_weapon_row.add_theme_constant_override("separation", 10)
+	# Weapon picker: caption and mastery rank on one line, the weapon chips
+	# wrapping underneath (the list grows with every weapon added).
+	_weapon_row = VBoxContainer.new()
+	_weapon_row.add_theme_constant_override("separation", 6)
 	left.add_child(_weapon_row)
-	_weapon_row.add_child(UiKit.label("WEAPON", 24, UiKit.CYAN, true))
+	var caption_row := HBoxContainer.new()
+	_weapon_row.add_child(caption_row)
+	caption_row.add_child(UiKit.label("WEAPON", 24, UiKit.CYAN, true))
+	var chips := HFlowContainer.new()
+	chips.add_theme_constant_override("h_separation", 8)
+	chips.add_theme_constant_override("v_separation", 8)
+	_weapon_row.add_child(chips)
 	var group := ButtonGroup.new()
 	for weapon in GameData.weapons():
 		var b := UiKit.soft_button(weapon.display_name, 22)
@@ -154,14 +162,14 @@ func _grid_column() -> Control:
 		b.add_theme_stylebox_override("pressed", on)
 		b.add_theme_stylebox_override("hover_pressed", on)
 		b.pressed.connect(select_weapon.bind(weapon.id))
-		_weapon_row.add_child(b)
+		chips.add_child(b)
 		_weapon_buttons[weapon.id] = b
 	_weapon_rank = UiKit.label("", 22, UiKit.CREAM)
 	_weapon_rank.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_weapon_rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_weapon_row.add_child(_weapon_rank)
+	caption_row.add_child(_weapon_rank)
 	_scroll = ScrollContainer.new()
-	_scroll.custom_minimum_size = Vector2(0, 700)
+	_scroll.custom_minimum_size = Vector2(0, 560)
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	left.add_child(_scroll)

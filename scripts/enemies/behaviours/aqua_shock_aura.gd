@@ -69,7 +69,7 @@ func on_physics(z: Zombie, delta: float) -> bool:
 			_ring.visible = false
 	if _charge > 0.0:
 		_charge -= delta
-		z.speed_multiplier = slow_while_charging
+		z.speed_multiplier *= slow_while_charging
 		var k := 1.0 - _charge / charge_time
 		var flicker := 0.75 + 0.25 * sin(Time.get_ticks_msec() * 0.05)
 		_ring.visible = true

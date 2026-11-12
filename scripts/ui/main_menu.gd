@@ -20,6 +20,9 @@ const TIPS := [
 
 var _pages := {}
 var _current_page := ""
+## Where Back (and Esc) leads from a page opened from somewhere other than the title.
+var _back_to := {}
+var _page_tweens: Array[Tween] = []
 var _selected_level: LevelData
 var _selected_weapon: StringName
 var _world_index := 0
@@ -73,7 +76,7 @@ func _ready() -> void:
 		var page: Control = ext.script_ref.new()
 		page.name = String(ext.id)
 		if page.has_signal("back"):
-			page.back.connect(_show.bind("title"))
+			page.back.connect(_go_back)
 		if page.has_signal("open_page"):
 			page.open_page.connect(func(id: StringName): _show(String(id)))
 		_pages[String(ext.id)] = page
@@ -81,7 +84,9 @@ func _ready() -> void:
 	for key in _pages:
 		add_child(_pages[key])
 		_pages[key].visible = false
+	# Below the pages: backdrop cross-fades dim the 3D scene, not the UI.
 	add_child(_fade)
+	move_child(_fade, _atmosphere.get_index() + 1)
 
 	_show_world_backdrop(true)
 	Sfx.play_music(MENU_MUSIC, -9.0)
@@ -90,7 +95,8 @@ func _ready() -> void:
 	if not Game.intro_played and not dev and DisplayServer.get_name() != "headless":
 		Game.intro_played = true
 		_show("title", false)
-		_pages["title"].modulate.a = 0.0
+		_pages["title"].visible = false
+		get_viewport().gui_release_focus()
 		var intro := IntroOverlay.new()
 		add_child(intro)
 		intro.finished.connect(func(): _animate_title_in())
@@ -107,13 +113,31 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") and _current_page != "title":
 		if _current_page == "settings":
 			Settings.save()
-		_show("title")
+		_go_back()
 		get_viewport().set_input_as_handled()
-	elif _current_page == "play":
-		if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
-			_step_world(-1)
-		elif event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
-			_step_world(1)
+
+
+func _input(event: InputEvent) -> void:
+	# The world carousel takes left/right before focus navigation does, so the
+	# arrows and d-pad always browse worlds on the Play page.
+	if _current_page != "play" or not _pages["play"].visible:
+		return
+	if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
+		_step_world(-1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
+		_step_world(1)
+		get_viewport().set_input_as_handled()
+
+
+func _go_back() -> void:
+	_show(_back_to.get(_current_page, "title"))
+
+
+## Opens `page` so that Back returns to the page showing now.
+func _open_from_here(page: String) -> void:
+	_back_to[page] = _current_page
+	_show(page)
 
 
 ## Switches page with a quick slide/fade. `animate` false = instant.
@@ -121,8 +145,16 @@ func _show(page: String, animate := true) -> void:
 	if not _pages.has(page):
 		return
 	var old: Control = _pages.get(_current_page)
+	if page == "title":
+		_back_to.clear()
 	_current_page = page
+	for tw in _page_tweens:
+		if tw and tw.is_valid():
+			tw.kill()
+	_page_tweens.clear()
 	for key in _pages:
+		_pages[key].position.x = 0.0
+		_pages[key].modulate.a = 1.0
 		if key != page and _pages[key] != old:
 			_pages[key].visible = false
 	var new_page: Control = _pages[page]
@@ -137,6 +169,7 @@ func _show(page: String, animate := true) -> void:
 		var dir := -1.0 if page == "title" else 1.0
 		old.visible = true
 		var tw := create_tween().set_parallel(true)
+		_page_tweens.append(tw)
 		tw.tween_property(old, "modulate:a", 0.0, 0.18)
 		tw.tween_property(old, "position:x", -60.0 * dir, 0.18)
 		tw.chain().tween_callback(func():
@@ -146,6 +179,7 @@ func _show(page: String, animate := true) -> void:
 		new_page.modulate.a = 0.0
 		new_page.position.x = 60.0 * dir
 		var tw2 := create_tween().set_parallel(true)
+		_page_tweens.append(tw2)
 		tw2.tween_property(new_page, "modulate:a", 1.0, 0.25).set_delay(0.08)
 		tw2.tween_property(new_page, "position:x", 0.0, 0.3).set_delay(0.08).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		Sfx.play(&"ui_whoosh", -14.0, 1.3)
@@ -287,6 +321,7 @@ func _rotate_tip() -> void:
 ## After the intro: the title page fades in, logo letters drop, buttons slide in.
 func _animate_title_in() -> void:
 	var page: Control = _pages["title"]
+	page.visible = true
 	page.modulate.a = 1.0
 	_logo.appear(0.0, 0.04)
 	for i in _title_buttons.size():
@@ -401,7 +436,7 @@ func _build_play() -> Control:
 	sv.add_child(_loadout_box)
 	if GameData.ui_extensions(UiExtension.Kind.MENU_PAGE).any(func(e): return e.id == &"arsenal"):
 		_arsenal_button = MenuButtonFx.make("OPEN ARSENAL", UiKit.TEAL, 26, Vector2(0, 52))
-		_arsenal_button.pressed.connect(_show.bind("arsenal"))
+		_arsenal_button.pressed.connect(_open_from_here.bind("arsenal"))
 		sv.add_child(_arsenal_button)
 	sv.add_child(UiKit.spacer(6))
 	_start_button = MenuButtonFx.make("DEPLOY", UiKit.PINK, 60, Vector2(0, 100))

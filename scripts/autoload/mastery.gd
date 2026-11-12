@@ -137,9 +137,11 @@ func grant(weapon_id: StringName, amount: int, kill_count := 0) -> Array[Cosmeti
 	xp_changed.emit(weapon_id)
 	for r in range(old_rank + 1, new_rank + 1):
 		rank_up.emit(w, r)
-	# Any cosmetic whose requirement just became true. Rank rewards for this
-	# weapon are reported here; anything else (total kills, ...) is an account
-	# reward and goes to the Career instead.
+	# Rank rewards are reported as soon as the rank is reached; other unlocks
+	# (total kills, ...) are account rewards, collected by Progression at wave
+	# clears and the end of the run (or here, if a rank-up noticed them first).
+	if new_rank <= old_rank:
+		return unlocked
 	for it in Cosmetics.check_new_unlocks():
 		if _is_rank_reward_for(it, weapon_id):
 			unlocked.append(it)

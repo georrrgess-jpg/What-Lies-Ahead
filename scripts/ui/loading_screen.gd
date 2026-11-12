@@ -12,7 +12,12 @@ var _time := 0.0
 var _done := false
 
 
+## Ignored while a load is already showing (a double-pressed Deploy or Retry).
 static func start(tree: SceneTree, target: LevelData) -> void:
+	if tree.root.get_children().any(func(n): return n is LoadingScreen):
+		return
+	# The button that started this keeps focus otherwise; Enter would press it again.
+	tree.root.gui_release_focus()
 	var screen := LoadingScreen.new()
 	screen.level = target
 	tree.root.add_child(screen)

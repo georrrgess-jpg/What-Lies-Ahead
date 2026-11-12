@@ -63,13 +63,29 @@ func load_profile() -> void:
 	data = defaults()
 	recovered_from_bad_save = false
 	if not FileAccess.file_exists(save_path):
+		# A save interrupted between writing and replacing leaves only these.
+		for alt in [save_path + ".tmp", save_path + ".bak"]:
+			var raw = _read_json(alt)
+			if raw is Dictionary:
+				data = _migrate(raw)
+				return
 		return
-	var text := FileAccess.get_file_as_string(save_path)
-	var json := JSON.new()
-	if text.is_empty() or json.parse(text) != OK or typeof(json.data) != TYPE_DICTIONARY:
+	var parsed = _read_json(save_path)
+	if not parsed is Dictionary:
 		_set_aside_bad_save()
 		return
-	data = _migrate(json.data)
+	data = _migrate(parsed)
+
+
+## The JSON dictionary in `path`, or null if missing or unreadable.
+static func _read_json(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		return null
+	var text := FileAccess.get_file_as_string(path)
+	var json := JSON.new()
+	if text.is_empty() or json.parse(text) != OK or typeof(json.data) != TYPE_DICTIONARY:
+		return null
+	return json.data
 
 
 ## Writes to a temp file first so a crash mid-write cannot corrupt the save.
@@ -82,9 +98,15 @@ func save_profile() -> bool:
 		return false
 	f.store_string(JSON.stringify(data, "\t"))
 	f.close()
-	if FileAccess.file_exists(save_path):
-		DirAccess.remove_absolute(save_path)
+	# Replace in one step where the OS allows; otherwise keep the old save as
+	# .bak until the new one is in place (load_profile falls back to it).
 	var err := DirAccess.rename_absolute(tmp, save_path)
+	if err != OK and FileAccess.file_exists(save_path):
+		var bak := save_path + ".bak"
+		if FileAccess.file_exists(bak):
+			DirAccess.remove_absolute(bak)
+		DirAccess.rename_absolute(save_path, bak)
+		err = DirAccess.rename_absolute(tmp, save_path)
 	if err != OK:
 		push_warning("Profile: cannot replace %s (error %d)" % [save_path, err])
 		return false

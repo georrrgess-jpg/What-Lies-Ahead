@@ -585,7 +585,7 @@ func _trace(origin: Vector3, dir: Vector3, data: WeaponData, scale: float, hits:
 	if not hit_any and data.seek_cone_degrees > 0.0:
 		var target := seek(origin, dir, data)
 		if target:
-			end = _chest(target)
+			end = _facing_point(target, origin)
 			_record_ray_hit(hits, target, end, dir, data, origin.distance_to(end), scale)
 	return end
 
@@ -602,14 +602,17 @@ func _record_ray_hit(hits: Dictionary, z: Zombie, point: Vector3, dir: Vector3, 
 func _record(hits: Dictionary, z: Zombie, point: Vector3, dir: Vector3, dmg: float, push: float, head: bool) -> void:
 	var key := z.get_instance_id()
 	if not hits.has(key):
-		hits[key] = {"zombie": z, "damage": 0.0, "push": 0.0, "head": false, "heads": 0, "count": 0, "point": point, "dir": dir}
+		hits[key] = {"zombie": z, "damage": 0.0, "head_damage": 0.0, "push": 0.0, "head": false, "heads": 0, "count": 0, "point": point, "body_point": point, "dir": dir}
 	var entry: Dictionary = hits[key]
 	entry["damage"] = float(entry["damage"]) + dmg
 	entry["push"] = float(entry["push"]) + push
 	entry["count"] = int(entry["count"]) + 1
 	if head:
 		entry["heads"] = int(entry["heads"]) + 1
+		entry["head_damage"] = float(entry["head_damage"]) + dmg
 		entry["point"] = point
+	elif int(entry["heads"]) == int(entry["count"]) - 1:
+		entry["body_point"] = point
 	# A blast counts as a headshot when at least a third of its hits are to the head.
 	entry["head"] = int(entry["heads"]) * 3 >= int(entry["count"])
 
@@ -643,7 +646,7 @@ func _chain(hits: Dictionary, data: WeaponData, scale: float) -> void:
 		if next == null:
 			return
 		var a := _chest(from)
-		var b := _chest(next)
+		var b := _facing_point(next, a)
 		LightningBolt.spawn(_level(), a, b, data.tracer_color, data.tracer_width * 0.75, 0.16, 0.22)
 		Sfx.play_at(data.chain_sound, b, -6.0, randf_range(0.95, 1.15))
 		_record(hits, next, b, (b - a).normalized(), dmg, data.knockback * 0.5, false)
@@ -675,8 +678,12 @@ func _apply_hits(hits: Dictionary, data: WeaponData) -> Array:
 		var zombie: Zombie = entry["zombie"]
 		if not is_instance_valid(zombie) or zombie.is_dead():
 			continue
-		var dmg := float(entry["damage"]) * StatusEffects.damage_scale(zombie)
-		var killed := zombie.take_hit(dmg, entry["point"], entry["dir"], data.id, bool(entry["head"]), float(entry["push"]))
+		var scale := StatusEffects.damage_scale(zombie)
+		var dmg := float(entry["damage"]) * scale
+		# A blast that hit both head and body: armour sees each part separately.
+		var heads := int(entry["heads"])
+		var head_part := float(entry["head_damage"]) * scale if heads > 0 and heads < int(entry["count"]) else -1.0
+		var killed := zombie.take_hit(dmg, entry["point"], entry["dir"], data.id, bool(entry["head"]), float(entry["push"]), head_part, entry["body_point"])
 		if not killed and data.status_effect != &"":
 			StatusEffects.of(zombie).apply(data, data.status_amount * int(entry["count"]))
 		any_hit = true
@@ -713,7 +720,7 @@ func projectile_detonated(data: WeaponData, at: Vector3, direct: Zombie, dir: Ve
 		var away := z.global_position - at
 		away.y = 0.0
 		away = away.normalized() if away.length() > 0.05 else dir
-		_record(hits, z, chest, away, data.damage * lerpf(data.splash_edge_scale, 1.0, k), data.splash_push * (0.4 + 0.6 * k), false)
+		_record(hits, z, _facing_point(z, at), away, data.damage * lerpf(data.splash_edge_scale, 1.0, k), data.splash_push * (0.4 + 0.6 * k), false)
 	_confirm(_apply_hits(hits, data))
 
 
@@ -807,6 +814,14 @@ func _level() -> Node:
 
 static func _chest(z: Zombie) -> Vector3:
 	return z.global_position + Vector3.UP * 1.05 * z.data.body_scale
+
+
+## A chest-height point on the side of `z` facing `from`, so hits that are not
+## ray casts (seek, chain, splash) still have a direction (riot shields use it).
+static func _facing_point(z: Zombie, from: Vector3) -> Vector3:
+	var flat := Vector3(from.x - z.global_position.x, 0.0, from.z - z.global_position.z)
+	var side := flat.normalized() * 0.3 * z.data.body_scale if flat.length() > 0.01 else Vector3.ZERO
+	return _chest(z) + side
 
 
 func _clear_line(from: Vector3, to: Vector3) -> bool:

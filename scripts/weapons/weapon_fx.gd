@@ -71,11 +71,21 @@ static func add_ribbon(im: ImmediateMesh, points: PackedVector3Array, width: flo
 
 
 static func _quad(im: ImmediateMesh, a_l: Vector3, a_r: Vector3, b_l: Vector3, b_r: Vector3, u0: float, u1: float, color: Color) -> void:
-	for v in [[a_l, u0, 0.0], [a_r, u0, 1.0], [b_r, u1, 1.0], [a_l, u0, 0.0], [b_r, u1, 1.0], [b_l, u1, 0.0]]:
-		im.surface_set_color(color)
-		im.surface_set_uv(Vector2(v[1], v[2]))
-		im.surface_add_vertex(v[0])
+	# Written out (no temporary arrays): beams and trails call this hundreds of
+	# times a frame.
+	_vert(im, a_l, u0, 0.0, color)
+	_vert(im, a_r, u0, 1.0, color)
+	_vert(im, b_r, u1, 1.0, color)
+	_vert(im, a_l, u0, 0.0, color)
+	_vert(im, b_r, u1, 1.0, color)
+	_vert(im, b_l, u1, 0.0, color)
 	_verts += 6
+
+
+static func _vert(im: ImmediateMesh, at: Vector3, u: float, v: float, color: Color) -> void:
+	im.surface_set_color(color)
+	im.surface_set_uv(Vector2(u, v))
+	im.surface_add_vertex(at)
 
 
 # --- shots ----------------------------------------------------------------------

@@ -20,6 +20,8 @@ const STATS := [
 var _weapon: WeaponData
 var _cards := {}
 var _thumbs: Array[SubViewport] = []
+## Card thumbnail pivots by weapon id (rebuilt when cosmetics change).
+var _thumb_pivots := {}
 var _name: Label
 var _category: Label
 var _rank: Label
@@ -64,6 +66,9 @@ func _process(delta: float) -> void:
 
 
 func refresh() -> void:
+	# Skins may have changed in the Locker since the cards were drawn.
+	for id in _thumb_pivots:
+		_fill_thumb(_thumb_pivots[id], GameData.weapon(id))
 	for t in _thumbs:
 		t.render_target_update_mode = SubViewport.UPDATE_ONCE
 	_select(_weapon if _weapon else GameData.weapon(Loadout.primary()))
@@ -162,22 +167,31 @@ func _thumbnail(w: WeaponData, holder: Node) -> Texture2D:
 	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 	holder.add_child(vp)
 	_add_lights(vp)
-	var model := _weapon_model(w)
-	if model:
-		var bounds := _bounds(model)
-		model.position = -bounds.get_center()
-		var pivot := Node3D.new()
-		pivot.add_child(model)
-		# Side-on, slightly from above, filling the card.
-		pivot.rotation_degrees = Vector3(8, 82, 0)
-		pivot.scale = Vector3.ONE * (1.0 / maxf(0.01, maxf(bounds.size.z, bounds.size.y * 2.2)))
-		vp.add_child(pivot)
+	var pivot := Node3D.new()
+	vp.add_child(pivot)
+	_thumb_pivots[w.id] = pivot
+	_fill_thumb(pivot, w)
 	var cam := Camera3D.new()
 	cam.position = Vector3(0, 0.02, 1.25)
 	cam.fov = 26.0
 	vp.add_child(cam)
 	_thumbs.append(vp)
 	return vp.get_texture()
+
+
+## Puts a fresh model of `w` (with its equipped cosmetics) in a card's pivot.
+func _fill_thumb(pivot: Node3D, w: WeaponData) -> void:
+	for c in pivot.get_children():
+		c.queue_free()
+	var model := _weapon_model(w)
+	if model == null:
+		return
+	var bounds := _bounds(model)
+	model.position = -bounds.get_center()
+	pivot.add_child(model)
+	# Side-on, slightly from above, filling the card.
+	pivot.rotation_degrees = Vector3(8, 82, 0)
+	pivot.scale = Vector3.ONE * (1.0 / maxf(0.01, maxf(bounds.size.z, bounds.size.y * 2.2)))
 
 
 func _build_preview() -> Control:

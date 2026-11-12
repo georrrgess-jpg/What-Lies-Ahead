@@ -67,9 +67,19 @@ static func _ribbon(st: SurfaceTool, pts: PackedVector3Array, cols: PackedColorA
 			var b := pts[i + 1]
 			var wa: Vector3 = side * widths[i]
 			var wb: Vector3 = side * widths[i + 1]
-			for v in [[a - wa, i], [b - wb, i + 1], [b + wb, i + 1], [a - wa, i], [b + wb, i + 1], [a + wa, i]]:
-				st.set_color(cols[v[1]])
-				st.add_vertex(v[0])
+			var ca := cols[i]
+			var cb := cols[i + 1]
+			_rv(st, a - wa, ca)
+			_rv(st, b - wb, cb)
+			_rv(st, b + wb, cb)
+			_rv(st, a - wa, ca)
+			_rv(st, b + wb, cb)
+			_rv(st, a + wa, ca)
+
+
+static func _rv(st: SurfaceTool, at: Vector3, c: Color) -> void:
+	st.set_color(c)
+	st.add_vertex(at)
 
 
 static func _helix(from: Vector3, to: Vector3, width: float, c0: Color, c1: Color) -> Mesh:
