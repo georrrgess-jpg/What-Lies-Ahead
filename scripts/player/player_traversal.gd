@@ -251,8 +251,8 @@ static func _is_enemy(collider: Object) -> bool:
 
 # --- the move -------------------------------------------------------------------
 
-## Starts the last planned move. `velocity` is the body's velocity before it.
-func begin(velocity: Vector3) -> void:
+## Starts the last planned move. `run_up` is the speed toward the ledge.
+func begin(run_up: float) -> void:
 	kind = _plan_kind
 	_dir = _plan_dir
 	_start = _body.global_position
@@ -262,7 +262,7 @@ func begin(velocity: Vector3) -> void:
 	_forward = _plan_forward
 	_elapsed = 0.0
 	_over_time = -1.0
-	var toward := maxf(0.0, velocity.dot(_dir))
+	var toward := maxf(0.0, run_up)
 	if kind == Kind.VAULT:
 		_speed = maxf(toward * VAULT_KEEP, VAULT_MIN_SPEED)
 		_rise_time = 0.07 + 0.07 * _rise

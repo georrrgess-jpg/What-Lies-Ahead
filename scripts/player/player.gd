@@ -328,7 +328,8 @@ func _try_traversal(input: Vector2, wish: Vector3, on_floor: bool) -> bool:
 	if _traverse_cool > 0.0 or input.y > -LEDGE_INPUT:
 		return false
 	var dir := Vector3(wish.x, 0.0, wish.z).normalized()
-	var toward := maxf(0.0, velocity.dot(dir))
+	# The run-up: brushing the obstacle a tick early must not turn a sprint into a crawl.
+	var toward := maxf(velocity.dot(dir), sprint_amount * sprint_speed * weapons.move_scale())
 	var grounded := on_floor or _coyote > 0.0
 	var kind := PlayerTraversal.Kind.NONE
 	if grounded and _jump_buffer > 0.0:
@@ -345,18 +346,18 @@ func _try_traversal(input: Vector2, wish: Vector3, on_floor: bool) -> bool:
 			kind = PlayerTraversal.Kind.NONE
 	if kind == PlayerTraversal.Kind.NONE:
 		return false
-	_begin_traversal(kind == PlayerTraversal.Kind.VAULT)
+	_begin_traversal(kind == PlayerTraversal.Kind.VAULT, toward)
 	return true
 
 
-func _begin_traversal(vault: bool) -> void:
+func _begin_traversal(vault: bool, run_up: float) -> void:
 	if sliding:
 		_end_slide()
 	_traverse_vault = vault
 	_jump_buffer = 0.0
 	_coyote = 0.0
 	_jump_rising = false
-	_traverse.begin(velocity)
+	_traverse.begin(run_up)
 	Sfx.play(&"move_vault" if vault else &"move_mantle", -5.0 if vault else -7.0, randf_range(0.95, 1.05))
 	traversal_started.emit(vault)
 
