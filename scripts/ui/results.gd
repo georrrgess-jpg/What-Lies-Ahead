@@ -30,20 +30,48 @@ func show_result(result: Dictionary) -> void:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.NAVY, 0.95), UiKit.CYAN if victory else UiKit.PINK, 30, 5, 36))
 	center.add_child(panel)
+	# Layout: header across the top, then the run summary on the left and the
+	# registered sections (progression, player card...) scrolling on the right,
+	# buttons along the bottom.
+	var outer := VBoxContainer.new()
+	outer.add_theme_constant_override("separation", 10)
+	panel.add_child(outer)
+	var header := VBoxContainer.new()
+	header.add_theme_constant_override("separation", 2)
+	outer.add_child(header)
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 28)
+	outer.add_child(body)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
-	col.custom_minimum_size = Vector2(1040, 0)
-	panel.add_child(col)
+	col.custom_minimum_size = Vector2(1000, 0)
+	body.add_child(col)
+	var sections: Array[Control] = []
+	for ext in GameData.ui_extensions(UiExtension.Kind.RESULTS_SECTION):
+		if ext.script_ref and ext.script_ref.has_method("build"):
+			var section: Control = ext.script_ref.build(result)
+			if section:
+				sections.append(section)
+	if not sections.is_empty():
+		var scroll := ScrollContainer.new()
+		scroll.custom_minimum_size = Vector2(640, 640)
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		body.add_child(scroll)
+		var side := VBoxContainer.new()
+		side.add_theme_constant_override("separation", 14)
+		side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll.add_child(side)
+		for section in sections:
+			side.add_child(section)
 
 	var title := UiKit.arcade_label("LEVEL CLEARED!" if victory else "OVERRUN!", 92, UiKit.CYAN if victory else UiKit.PINK_LIGHT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(title)
+	header.add_child(title)
 	var outcome := "You escaped %s through the portal." % level.display_name if victory \
 		else "The zombies got you on wave %d of %s." % [int(result["wave_reached"]), level.display_name]
 	var sub := UiKit.label(outcome, 30, UiKit.CREAM)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(sub)
-	col.add_child(UiKit.spacer(6))
+	header.add_child(sub)
 
 	# Score: big number that counts up, with NEW BEST and a breakdown.
 	var score_box := VBoxContainer.new()
@@ -96,21 +124,25 @@ func show_result(result: Dictionary) -> void:
 	var rows: Array = result["weapons"]
 	if rows.is_empty():
 		col.add_child(UiKit.label("No mastery earned this run. Land a finishing blow to earn XP.", 26, Color(1, 1, 1, 0.75)))
+	var rows_box := VBoxContainer.new()
+	rows_box.add_theme_constant_override("separation", 8)
 	for row in rows:
-		col.add_child(_weapon_row(row))
+		rows_box.add_child(_weapon_row(row))
+	if rows.size() > 2:
+		var rs := ScrollContainer.new()
+		rs.custom_minimum_size = Vector2(0, 300)
+		rs.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		rs.add_child(rows_box)
+		col.add_child(rs)
+	else:
+		col.add_child(rows_box)
 
-	# Extra sections registered in data/ui/ (progression, unlocks, ...).
-	for ext in GameData.ui_extensions(UiExtension.Kind.RESULTS_SECTION):
-		if ext.script_ref and ext.script_ref.has_method("build"):
-			var section: Control = ext.script_ref.build(result)
-			if section:
-				col.add_child(section)
-
-	col.add_child(UiKit.spacer(14))
+	outer.add_child(UiKit.spacer(6))
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override("separation", 36)
-	col.add_child(buttons)
+	outer.add_child(buttons)
 	var retry := UiKit.button("RETRY", 52)
 	retry.custom_minimum_size = Vector2(380, 96)
 	retry.pressed.connect(func(): Game.retry())
