@@ -6,7 +6,7 @@ extends RefCounted
 static var _tracer_mesh: BoxMesh
 static var _beam_mesh: CylinderMesh
 static var _flash_mesh: Mesh
-static var _popup_pool: Array[Label3D] = []
+static var _popup_pool: Array = []
 static var _spark_mesh: Mesh
 static var _materials := {}
 
@@ -116,8 +116,9 @@ static func ticket_popup(parent: Node, position: Vector3, tickets: int, text_ove
 		return
 	var label: Label3D = null
 	while not _popup_pool.is_empty() and label == null:
-		var candidate: Label3D = _popup_pool.pop_back()
-		if is_instance_valid(candidate):
+		# The pool outlives the level (Retry frees the old labels), so check first.
+		var candidate = _popup_pool.pop_back()
+		if is_instance_valid(candidate) and candidate.is_inside_tree():
 			label = candidate
 	if label == null:
 		label = Label3D.new()
