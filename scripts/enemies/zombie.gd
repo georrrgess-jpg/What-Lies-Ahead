@@ -31,6 +31,9 @@ const ATTACK_STRIKE_FRACTION := 0.55
 ## Knockback this strong (m/s, summed over a volley) staggers a zombie out of its windup.
 const STAGGER_PUSH := 3.2
 const KNOCK_MAX := 7.0
+## Per-instance size variety (fractions): overall scale and extra width.
+const SIZE_JITTER := 0.06
+const GIRTH_JITTER := 0.03
 
 var data: EnemyData
 var target: Player
@@ -501,6 +504,7 @@ func reset_stall() -> void:
 
 func _build_model() -> void:
 	model_root.scale = Vector3.ONE
+	data = data.for_world(_world_id())
 	var model_scene: PackedScene = data.model_scene
 	if model_scene == null and ResourceLoader.exists(MODEL_PATH):
 		model_scene = load(MODEL_PATH)
@@ -524,14 +528,44 @@ func _build_model() -> void:
 				mi.visible = mesh_name == "Outfit_" + String(data.outfit)
 			elif mesh_name.begins_with("Acc_"):
 				mi.visible = chosen.has(mesh_name)
+		_vary_look()
 		if not data.shirt_colors.is_empty():
 			_tint("Shirt", data.shirt_colors[randi() % data.shirt_colors.size()])
 		if not data.skin_colors.is_empty():
-			var skin: Color = data.skin_colors[randi() % data.skin_colors.size()]
+			var skin: Color = _vary_skin(data.skin_colors[randi() % data.skin_colors.size()])
 			_tint("Skin", skin)
 			_tint("SkinDark", skin.darkened(0.3))
 	else:
 		_build_placeholder()
+
+
+## The current level's world, for EnemyData.world_outfits (none in the menus).
+static func _world_id() -> StringName:
+	var level: LevelData = Game.level
+	return level.world.id if level and level.world else &""
+
+
+## Per-instance variety: shows one of the outfit's faces (meshes named
+## Face_<outfit>_<preset>) and jitters the body size, so a crowd never looks cloned.
+func _vary_look() -> void:
+	var prefix := "Face_" + String(data.outfit) + "_"
+	var faces: Array[MeshInstance3D] = []
+	for mi in _meshes:
+		var mesh_name := String(mi.name)
+		if mesh_name.begins_with("Face_"):
+			mi.visible = false
+			if mesh_name.begins_with(prefix):
+				faces.append(mi)
+	if not faces.is_empty():
+		faces[randi() % faces.size()].visible = true
+	var girth := randf_range(1.0 - GIRTH_JITTER, 1.0 + GIRTH_JITTER)
+	_model.scale = Vector3(girth, 1.0, girth) * data.body_scale * randf_range(1.0 - SIZE_JITTER, 1.0 + SIZE_JITTER)
+
+
+## A slightly different shade of the chosen skin colour for every zombie.
+func _vary_skin(skin: Color) -> Color:
+	return Color.from_hsv(wrapf(skin.h + randf_range(-0.025, 0.025), 0.0, 1.0), clampf(skin.s * randf_range(0.88, 1.08), 0.0, 1.0),
+			clampf(skin.v * randf_range(0.92, 1.06), 0.0, 1.0))
 
 
 func _collect_meshes(node: Node) -> void:
