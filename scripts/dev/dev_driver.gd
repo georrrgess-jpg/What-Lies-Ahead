@@ -22,6 +22,14 @@ extends Node
 ##   --dump-profile       print the loaded profile and settings, then quit
 ##   --start-wave=<n>     jump straight to wave n (testing late waves)
 ##   --perf               print frame statistics every few seconds during waves
+##   --difficulty=<id>    play on casual, standard or hard (default: the profile's choice)
+##   --continue           checkpoint test: lose the first run on purpose, continue
+##                        from the checkpoint, then play the continued run to the end
+##                        (use with --start-wave at or past the level's checkpoint wave)
+##   --snap=<prefix>      save stills of rounds events while the bot plays (needs a
+##                        renderer): <prefix>_banner_<wave>.png, _surge, _boss, _bounty,
+##                        _slam, _clear, _continue
+##   --snap-until=<event> quit after that still (banner, surge, boss, bounty, slam, clear, continue)
 ##
 ## The bot plays through the real input pipeline (InputEventAction), so the
 ## same code paths run as for a human player.
@@ -45,6 +53,13 @@ var start_wave := 1
 var level_id := &""
 var ring_radius := 11.0
 var perf := false
+var continue_test := false
+var snap_prefix := ""
+var snap_until := ""
+var _snaps := {}
+var _damage_by := {}
+var _snap_hold := 0
+var _slam_watch := false
 var _perf_timer := 0.0
 var _perf_samples: Array = []
 
@@ -107,6 +122,14 @@ func _ready() -> void:
 			start_wave = int(arg.trim_prefix("--start-wave="))
 		elif arg == "--perf":
 			perf = true
+		elif arg.begins_with("--difficulty="):
+			Profile.data["settings"]["difficulty"] = arg.trim_prefix("--difficulty=")
+		elif arg == "--continue":
+			continue_test = true
+		elif arg.begins_with("--snap="):
+			snap_prefix = arg.trim_prefix("--snap=")
+		elif arg.begins_with("--snap-until="):
+			snap_until = arg.trim_prefix("--snap-until=")
 		elif arg == "--dump-profile":
 			print("[dev] PROFILE recovered_from_bad_save=%s data=%s" % [Profile.recovered_from_bad_save, JSON.stringify(Profile.data)])
 			get_tree().quit.call_deferred()
@@ -166,14 +189,29 @@ func _physics_process(delta: float) -> void:
 			print("[dev] damage boost %s: damage x%.2f" % [RunDirector.Boost.keys()[b], _player.weapons.damage_multiplier]))
 		if start_wave > 1 and _runs == 1:
 			_director.wave_number = start_wave - 1
+			_director.waves_cleared = start_wave - 1
 			_director.tickets = 400
+		_watch_rounds()
 		_result_logged = false
 		_break_done = false
 		_ring_index = 0
 		_min_health = 100.0
-		print("[dev] run %d started: state=%s tickets=%d wave=%d health=%d weapon=%s mag=%d" % [
+		print("[dev] run %d started: state=%s tickets=%d wave=%d health=%d weapon=%s mag=%d difficulty=%s resumed_from=%d" % [
 			_runs, RunDirector.State.keys()[_director.state], _director.tickets, _director.wave_number,
-			int(_player.health), _player.weapons.current.id, _player.weapons.magazine()])
+			int(_player.health), _player.weapons.current.id, _player.weapons.magazine(), _director.difficulty,
+			_director.resumed_from])
+		if continue_test and _runs == 2:
+			var waves := _director.waves
+			var ok := _director.resumed_from == waves.checkpoint_wave and _director.wave_number == waves.checkpoint_wave - 1 \
+				and _director.tickets == waves.checkpoint_tickets and _player.health == _player.max_health \
+				and Game.checkpoint_wave == 0 and Game.resume_wave == 0
+			print("[dev] CONTINUE check: resumed at wave %d with %d tickets, %d health, energy %d/%d, reward scale %.2f: %s" % [
+				_director.resumed_from, _director.tickets, int(_player.health), _player.weapons.magazine(),
+				_player.weapons.reserve(), Difficulty.reward_scale(), "OK" if ok else "FAILED"])
+			_snap("continue", 90)
+			if not ok:
+				_quit(1)
+				return
 		if _runs > 1 and then == "next":
 			print("[dev] next world started: %s" % _director.level.id)
 			_quit(0)
@@ -196,6 +234,15 @@ func _physics_process(delta: float) -> void:
 	if god and _player.health < _player.max_health and _player.alive:
 		_player.health = _player.max_health
 	_min_health = minf(_min_health, _player.health)
+	# A still is being framed: leave the camera where _snap() pointed it.
+	if _snap_hold > 0:
+		_snap_hold -= 1
+		return
+	if _slam_watch and is_instance_valid(_director.boss):
+		for b in _director.boss.behaviours:
+			if b is AlphaBossBehaviour and b._slam_left > 0.0:
+				_slam_watch = false
+				_snap("slam", 40, _director.boss)
 
 	_log_timer -= delta
 	if _log_timer <= 0.0:
@@ -214,7 +261,7 @@ func _physics_process(delta: float) -> void:
 		RunDirector.State.WAVE:
 			_break_done = false
 			_break_timer = 0.0
-			if mode == Mode.DEFEAT:
+			if mode == Mode.DEFEAT or (continue_test and _runs == 1):
 				_stop_moving()
 				_release("fire")
 			else:
@@ -226,6 +273,73 @@ func _physics_process(delta: float) -> void:
 			_stop_moving()
 			_release("fire")
 			_after_run()
+
+
+## Logs the rounds events (wave kinds, surges, alphas, bounties, grades) and,
+## with --snap, saves a still of each.
+func _watch_rounds() -> void:
+	_director.wave_started.connect(func(number: int, _total: int, banner: String):
+		var wave := _director.current_wave()
+		print("[dev] WAVE %d kind=%s twist=%s enemies=%d cap=%d banner=\"%s\"" % [number, wave.kind, wave.twist,
+			_director.enemies_remaining(), _director._wave_cap, banner])
+		_snap("banner_%d" % number, 50))
+	_director.surge_warning.connect(func(point: Node3D, seconds: float):
+		print("[dev] SURGE warning at %s in %.1fs" % [SpawnPlanner.label(point), seconds])
+		_snap("surge", 60, point))
+	_director.boss_changed.connect(func(boss: Zombie):
+		print("[dev] BOSS %s" % ("%s arrived with %d health" % [boss.data.display_name, int(boss.health)] if boss else "down"))
+		_slam_watch = boss != null
+		if boss:
+			_snap("boss", 260, boss))
+	_director.bounty_changed.connect(func(target: Zombie):
+		print("[dev] BOUNTY %s" % ("on the run" if target else ("claimed" if _director._bounties_claimed > 0 else "gone")))
+		if target:
+			_snap("bounty", 150, target))
+	_director.wave_graded.connect(func(number: int, grade: String, paid: int):
+		print("[dev] GRADE wave %d: %s (+%d tickets) hp=%d pace=%.2f stress=%.2f t=%.0fs damage=%s" % [number, grade, paid,
+			int(_player.health), _director.pacing.pace, _director.pacing.stress, _director.elapsed, _damage_by])
+		_damage_by.clear()
+		_snap("clear", 40))
+	_player.damaged.connect(_on_player_damaged)
+	_player.shield_hit.connect(_on_player_damaged)
+
+
+## Books damage to the enemy standing nearest to where it came from (balance log).
+func _on_player_damaged(amount: float, source: Vector3) -> void:
+	var who := "?"
+	var best := 4.0
+	for z in _director.alive_enemies():
+		if is_instance_valid(z) and z.global_position.distance_to(source) < best:
+			best = z.global_position.distance_to(source)
+			who = String(z.data.id)
+	_damage_by[who] = int(_damage_by.get(who, 0)) + int(round(amount))
+
+
+## Turns the camera to a world point (for stills).
+func _look_at(point: Vector3) -> void:
+	var to := point - _player.camera.global_position
+	_player.set_look(atan2(-to.x, -to.z), atan2(to.y, Vector2(to.x, to.z).length()))
+
+
+## Saves <snap_prefix>_<event>.png after `frames` frames (once per event),
+## looking at `subject` if one is given.
+func _snap(event: String, frames: int, subject: Node3D = null) -> void:
+	if snap_prefix == "" or _snaps.has(event):
+		return
+	_snaps[event] = true
+	for i in frames:
+		await get_tree().process_frame
+	if is_instance_valid(subject):
+		_look_at(subject.global_position + Vector3.UP * 1.6)
+		_snap_hold = 4
+		for i in 3:
+			await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var path := "%s_%s.png" % [snap_prefix, event]
+	var err := get_viewport().get_texture().get_image().save_png(path)
+	print("[dev] SNAP %s error=%d" % [path, err])
+	if snap_until != "" and event.begins_with(snap_until):
+		_quit(0)
 
 
 func _on_enemy_recovered(z: Zombie, removed: bool) -> void:
@@ -528,6 +642,10 @@ func _pick_target() -> Zombie:
 			continue
 		var chest := z.global_position + Vector3(0, 1.0, 0)
 		var d := eye.distance_to(chest)
+		# A bounty target is worth a detour: it counts as closer than it is,
+		# unless something is already in the bot's face.
+		if z.rank == Zombie.RANK_BOUNTY:
+			d *= 0.5
 		if d >= best_d:
 			continue
 		var q := PhysicsRayQueryParameters3D.create(eye, chest, 1)
@@ -654,9 +772,15 @@ func _after_run() -> void:
 			for u in row["unlocks"]:
 				unlocks.append(String(u.id))
 			rows.append("%s +%dxp %dkills rank %d->%d unlocks=%s" % [row["weapon"].id, row["xp_gained"], row["kills"], row["rank_before"], row["rank_after"], unlocks])
-		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d cashed=%d score=%d headshots=%d best_combo=%d switches=%d/%d" % [
-			r["victory"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_min_health), _director.tickets, int(r.get("tickets_cashed", 0)),
-			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0)), _switch_cancels, _switches])
+		print("[dev] RESULT victory=%s difficulty=%s waves=%d/%d kills=%d time=%.0fs hp_left=%d min_hp=%d tickets_left=%d cashed=%d score=%d headshots=%d best_combo=%d switches=%d/%d grades=%s bosses=%d bounties=%d resumed_from=%d can_continue=%s pace=%.2f relief=%.1fs" % [
+			r["victory"], r["difficulty"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_player.health), int(_min_health), _director.tickets, int(r.get("tickets_cashed", 0)),
+			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0)), _switch_cancels, _switches,
+			"".join(r["grades"]), r["bosses_defeated"], r["bounties_claimed"], r["resumed_from"], r["can_continue"],
+			_director.pacing.average_pace(), _director.pacing.relief_used])
+		if not r["victory"]:
+			print("[dev] DEFEAT on wave %d: damage=%s boss=%s left=%d" % [r["wave_reached"], _damage_by,
+				"%d%%" % int(_director.boss.health_fraction() * 100.0) if is_instance_valid(_director.boss) else "none",
+				_director.enemies_remaining()])
 		for line in rows:
 			print("[dev]   ", line)
 		print("[dev] profile: ", JSON.stringify(Profile.data["mastery"]), " levels=", JSON.stringify(Profile.data["levels"]))
@@ -677,7 +801,14 @@ func _wait_for_results() -> void:
 	if screen == null:
 		_quit(1)
 		return
-	if then == "retry":
+	if continue_test and _runs == 1:
+		var offered := Game.can_continue_run()
+		print("[dev] CONTINUE offered: %s (checkpoint wave %d, lost on wave %d)" % [offered, Game.checkpoint_wave, _director.wave_number])
+		if not offered:
+			_quit(1)
+			return
+		Game.continue_run()
+	elif then == "retry":
 		_then_done = true
 		print("[dev] pressing Retry")
 		Game.retry()

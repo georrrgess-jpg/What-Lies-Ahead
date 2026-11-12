@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WaveSet" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
@@ -6,126 +6,137 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"deep_diver": 3,
-"tourist_shambler": 4
+"deep_diver": 5,
+"tourist_shambler": 5
 }
-spawn_interval = 2.2
+spawn_interval = 2.1
 burst = 1
-max_alive = 5
+max_alive = 6
 speed_scale = 1.0
 late_types_after = 0.4
-banner = "TIDAL TUNNELS — DEEP DIVERS: CRACK THE VISOR"
+banner = ""
+kind = &"standard"
+title = "DEEP DIVERS"
+hint = "Crack the visor: headshots break the helmet."
 
 [sub_resource type="Resource" id="wave_2"]
 script = ExtResource("2")
 spawns = {
-"deep_diver": 7,
+"mascot_inker": 9,
+"deep_diver": 4,
 "tourist_shambler": 3
 }
-spawn_interval = 2.0
+spawn_interval = 1.44
 burst = 1
-max_alive = 6
+max_alive = 9
 speed_scale = 1.0
-late_types_after = 0.2
+late_types_after = 0.0
 banner = ""
+kind = &"ranged"
+title = "INK BATTERY"
+hint = "Strafe when the ink sac glows."
 
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"mascot_inker": 5,
-"deep_diver": 3,
-"lifeguard_runner": 3,
-"tourist_shambler": 1
+"jelly_head": 15,
+"lifeguard_runner": 4
 }
-spawn_interval = 1.9
+spawn_interval = 1.1
 burst = 1
-max_alive = 7
+max_alive = 10
 speed_scale = 1.0
-late_types_after = 0.3
-banner = "WAVE 3 — MASCOT INKERS: DODGE THE INK"
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "JELLY BLOOM"
+hint = "Back off when they crackle."
 
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
+"deep_diver": 9,
 "mascot_inker": 6,
-"deep_diver": 5,
-"tourist_shambler": 3
+"jelly_head": 8
 }
-spawn_interval = 1.7
-burst = 1
-max_alive = 8
-speed_scale = 1.03
-late_types_after = 0.2
+spawn_interval = 3.74
+burst = 5
+max_alive = 12
+speed_scale = 1.0
+late_types_after = 0.0
 banner = ""
+kind = &"ambush"
+title = "PRESSURE BREACH"
+hint = "Every hatch at once: keep your back to a wall."
 
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"jelly_head": 7,
-"mascot_inker": 4,
-"deep_diver": 3,
+"jelly_head": 9,
+"mascot_inker": 7,
+"deep_diver": 7,
 "tourist_shambler": 3
 }
-spawn_interval = 1.6
+spawn_interval = 1.27
 burst = 1
-max_alive = 9
-speed_scale = 1.05
-late_types_after = 0.3
-banner = "WAVE 5 — JELLY HEADS: BACK OFF WHEN THEY CRACKLE"
+max_alive = 11
+speed_scale = 1.03
+late_types_after = 0.2
+banner = ""
+kind = &"bounty"
+title = "THE GOLDEN JELLY"
+hint = "Pop the golden jelly before it gets away."
+surge_at = 0.55
+surge_count = 5
+bounty = &"jelly_head"
+bounty_tickets = 200
 
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"jelly_head": 6,
-"mascot_inker": 4,
-"deep_diver": 4,
-"tourist_shambler": 3,
-"lifeguard_runner": 2
+"deep_diver": 11,
+"jelly_head": 9,
+"mascot_inker": 6
 }
-spawn_interval = 2.2
-burst = 2
-max_alive = 10
-speed_scale = 1.06
-late_types_after = 0.15
+spawn_interval = 1.36
+burst = 1
+max_alive = 12
+speed_scale = 1.03
+late_types_after = 0.3
 banner = ""
+kind = &"siege"
+title = "FEEDING FRENZY"
+hint = "Feeding time: the whole horde is enraged."
+twist = &"frenzy"
 
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"jelly_head": 8,
-"mascot_inker": 4,
-"deep_diver": 4,
-"lifeguard_runner": 3,
-"tourist_shambler": 3
-}
-spawn_interval = 2.2
-burst = 2
-max_alive = 11
-speed_scale = 1.08
-late_types_after = 0.15
-banner = ""
-
-[sub_resource type="Resource" id="wave_8"]
-script = ExtResource("2")
-spawns = {
+"jelly_head": 14,
 "deep_diver": 9,
-"jelly_head": 10,
 "mascot_inker": 5,
-"lifeguard_runner": 3,
-"tourist_shambler": 1
+"lifeguard_runner": 4
 }
-spawn_interval = 2.6
-burst = 3
+spawn_interval = 2.1
+burst = 2
 max_alive = 12
-speed_scale = 1.08
-late_types_after = 0.15
-banner = "FINAL WAVE — FEEDING TIME"
+speed_scale = 1.06
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "INKY THE GREAT"
+hint = "Slip between the ink rings, and stay out of the slam."
+boss = &"alpha_inker"
+boss_at = 0.45
+rest_before = 24.0
 
 [resource]
 script = ExtResource("1")
-waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7"), SubResource("wave_8")])
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
 prep_seconds = 12.0
-break_seconds = 20.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 400
 break_refill_fraction = 0.25
 ammo_topup_price = 170
 heal_price = 270
