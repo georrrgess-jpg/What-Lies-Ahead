@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/cryo_beam.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/cryo_beam_reload.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 8
+
+[resource]
+script = ExtResource("1")
+id = &"cryo_beam"
+sort_order = 70
+category = "Beam"
+display_name = "Frostbite Cryo Beam"
+role = "A freezing beam. Hold it on a zombie to slow it to a crawl, then freeze it solid: frozen zombies cannot attack, take +60% damage from every weapon and shatter when they fall. Overheats; let it cool."
+unlock = SubResource("unlock")
+magazine_size = 50
+reserve_start = 300
+reserve_max = 450
+reload_time = 1.6
+emergency_recharge_interval = 0.25
+automatic = true
+fire_interval = 0.1
+damage = 8.0
+pellets = 1
+spread_degrees = 0.0
+spread_bloom = 0.0
+spread_bloom_max = 0.0
+max_range = 22.0
+falloff_start = 16.0
+falloff_end = 22.0
+falloff_min_scale = 0.6
+headshot_multiplier = 1.2
+knockback = 0.06
+ads_fov_scale = 0.8
+ads_time = 0.18
+ads_spread_scale = 0.5
+ads_depth = 0.11
+first_shot_accurate = true
+reticle_style = "dot"
+recoil_kick = 0.04
+recoil_yaw = 0.0
+view_kick = 0.004
+shake = 0.01
+tracer_color = Color(0.5, 0.82, 1, 1)
+tracer_width = 0.06
+view_position = Vector3(0.27, -0.27, -0.68)
+view_rotation_degrees = Vector3(0, 0, -3)
+fire_sound = &"weap_cryo_start"
+reload_sound = &"weap_cryo_vent"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.0
+move_speed_scale = 0.94
+equip_time = 0.34
+beam = true
+beam_loop_sound = &"weap_cryo_loop"
+seek_cone_degrees = 3.0
+status_effect = &"chill"
+status_amount = 0.12
+status_duration = 1.8
+frozen_damage_scale = 1.6
+shatter_damage = 40.0
+status_sound = &"weap_cryo_freeze"
+regen_rate = 14.0
+regen_delay = 0.45
+tracer_style = &"beam"
+impact_style = &"frost"
+viewmodel = ExtResource("3")
+reload_script = ExtResource("4")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

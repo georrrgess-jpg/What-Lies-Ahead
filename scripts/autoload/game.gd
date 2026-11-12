@@ -28,7 +28,10 @@ func start_level(level_id: StringName, starter_weapon: StringName) -> bool:
 		push_warning("Game: level '%s' is not available" % level_id)
 		return false
 	level = data
-	weapon_id = starter_weapon if GameData.weapon(starter_weapon) else GameData.default_weapon_id()
+	# The given weapon becomes the primary (the dev tools may pick a locked
+	# one); an empty id starts with the saved Loadout.
+	var starter := GameData.weapon(starter_weapon)
+	weapon_id = starter_weapon if starter and (dev or GameData.is_weapon_unlocked(starter)) else Loadout.primary()
 	Profile.data["last_weapon"] = String(weapon_id)
 	get_tree().paused = false
 	get_tree().change_scene_to_file(data.scene_path)

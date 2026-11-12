@@ -77,6 +77,7 @@ var _crouch := 0.0          # 0 standing, 1 slide height (camera only)
 
 func _ready() -> void:
 	add_to_group("player")
+	Loadout.ensure_input_actions()
 	_head_height = head.position.y
 	health = max_health
 	Settings.changed.connect(_apply_settings)
@@ -95,6 +96,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		rotate_y(-event.relative.x * sens)
 		_pitch = clampf(_pitch - event.relative.y * sens, -1.45, 1.45)
 		view.add_sway(event.relative * lerpf(1.0, 0.35, ads))
+	elif controls_enabled and alive:
+		_weapon_switch_input(event)
+
+
+## 1 / 2 pick the primary / secondary slot; the mouse wheel flips between them.
+func _weapon_switch_input(event: InputEvent) -> void:
+	if event.is_action_pressed("weapon_1"):
+		weapons.switch_to_slot(0)
+	elif event.is_action_pressed("weapon_2"):
+		weapons.switch_to_slot(1)
+	elif event.is_action_pressed("weapon_next") or event.is_action_pressed("weapon_prev"):
+		weapons.switch_next()
 
 
 func _ads_fov_scale() -> float:
@@ -155,7 +168,7 @@ func _physics_process(delta: float) -> void:
 			_slide_cool = slide_cooldown
 	else:
 		var speed := sprint_speed if sprinting else walk_speed
-		speed = lerpf(speed, aim_speed, ads)
+		speed = lerpf(speed, aim_speed, ads) * weapons.move_scale()
 		var target := wish * speed
 		var rate := acceleration if target.length() > 0.01 else deceleration
 		if not on_floor:

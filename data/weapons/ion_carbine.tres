@@ -47,5 +47,7 @@ reload_style = &"side_swap"
 fire_sound = &"carbine_fire"
 reload_sound = &"carbine_reload"
 empty_sound = &"empty_click"
+move_speed_scale = 0.97
+equip_time = 0.32
 fire_pitch_variance = 0.06
 rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

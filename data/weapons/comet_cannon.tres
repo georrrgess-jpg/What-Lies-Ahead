@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/comet_cannon.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/comet_cannon_reload.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 2
+
+[resource]
+script = ExtResource("1")
+id = &"comet_cannon"
+sort_order = 40
+category = "Hand Cannon"
+display_name = "Comet Hand Cannon"
+role = "Three-round burst revolver. One clean burst drops a tourist, and the heavy kick staggers zombies out of their swing. Rewards headshots at mid range."
+unlock = SubResource("unlock")
+magazine_size = 18
+reserve_start = 72
+reserve_max = 126
+reload_time = 1.7
+emergency_recharge_interval = 0.8
+automatic = false
+fire_interval = 0.4
+burst_count = 3
+burst_interval = 0.075
+damage = 34.0
+pellets = 1
+spread_degrees = 0.3
+spread_bloom = 0.7
+spread_bloom_max = 2.2
+max_range = 75.0
+falloff_start = 30.0
+falloff_end = 75.0
+falloff_min_scale = 0.65
+headshot_multiplier = 1.7
+knockback = 1.4
+ads_fov_scale = 0.76
+ads_time = 0.15
+ads_spread_scale = 0.35
+ads_depth = 0.1
+first_shot_accurate = true
+reticle_style = "cross"
+recoil_kick = 1.15
+recoil_yaw = 0.35
+view_kick = 0.06
+shake = 0.15
+tracer_color = Color(1, 0.72, 0.22, 1)
+tracer_width = 0.075
+view_position = Vector3(0.22, -0.21, -0.56)
+view_rotation_degrees = Vector3(0, 0, -2.5)
+fire_sound = &"weap_cannon_fire"
+reload_sound = &"weap_cannon_reload"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.04
+move_speed_scale = 1.0
+equip_time = 0.28
+viewmodel = ExtResource("3")
+reload_script = ExtResource("4")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

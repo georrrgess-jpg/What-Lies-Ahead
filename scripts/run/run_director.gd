@@ -82,7 +82,7 @@ func _ready() -> void:
 			level = GameData.worlds()[0].levels[0]
 		Game.level = level
 		if Game.weapon_id == &"":
-			Game.weapon_id = GameData.default_weapon_id()
+			Game.weapon_id = Loadout.primary()
 	waves = level.wave_set
 	_zombie_scene = load(ZOMBIE_SCENE)
 	_begin.call_deferred()
@@ -112,7 +112,8 @@ func _begin() -> void:
 	player.died.connect(_on_player_died)
 	player.damaged.connect(func(amount: float, _src: Vector3): score.on_player_damaged(amount))
 	player.weapons.begin_run()
-	player.weapons.equip(Game.weapon_id)
+	var carried := Loadout.run_slots(Game.weapon_id)
+	player.weapons.set_loadout(carried[0], carried[1])
 
 	hud = (load(HUD_SCENE) as PackedScene).instantiate()
 	root.add_child(hud)
@@ -185,16 +186,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		buy_ammo()
 	elif event.is_action_pressed("interact_alt"):
 		buy_heal()
-	elif event.is_action_pressed("weapon_1"):
-		swap_weapon_index(0)
-	elif event.is_action_pressed("weapon_2"):
-		swap_weapon_index(1)
-	elif event.is_action_pressed("weapon_3"):
-		swap_weapon_index(2)
-	elif event.is_action_pressed("weapon_next"):
-		_cycle_weapon(1)
-	elif event.is_action_pressed("weapon_prev"):
-		_cycle_weapon(-1)
+	elif event.is_action_pressed("kiosk_next"):
+		cycle_station_weapon(1)
+	elif event.is_action_pressed("kiosk_prev"):
+		cycle_station_weapon(-1)
 
 
 # --- queries -------------------------------------------------------------------
@@ -500,16 +495,10 @@ func _spend(price: int) -> bool:
 	return true
 
 
-func swap_weapon_index(index: int) -> bool:
-	var list := GameData.weapons()
-	if index < 0 or index >= list.size():
-		return false
-	return swap_weapon(list[index].id)
-
-
-## Free at the kiosk during breaks. Each weapon keeps its own ammo for the run.
+## Free at the loadout station during breaks: puts `weapon_id` in the held
+## slot. Each weapon keeps its own ammo for the run.
 func swap_weapon(weapon_id: StringName) -> bool:
-	if not kiosk_available():
+	if not kiosk_available() or not GameData.is_weapon_unlocked(GameData.weapon(weapon_id)):
 		return false
 	if player.weapons.equip(weapon_id):
 		Sfx.play(&"swap", -3.0)
@@ -517,10 +506,25 @@ func swap_weapon(weapon_id: StringName) -> bool:
 	return false
 
 
-func _cycle_weapon(step: int) -> void:
-	var list := GameData.weapons()
-	var index := list.find(player.weapons.current)
-	swap_weapon_index(posmod(index + step, list.size()))
+## Weapons the held slot can be swapped to at the station (every unlocked
+## weapon except the one in the other slot), in menu order.
+func station_weapons() -> Array[WeaponData]:
+	var other := player.weapons.slots[1 - player.weapons.active_slot]
+	var out: Array[WeaponData] = []
+	for w in Loadout.available():
+		if w.id != other:
+			out.append(w)
+	return out
+
+
+## Loadout station: swaps the held slot to the next (step 1) or previous
+## (step -1) weapon of station_weapons().
+func cycle_station_weapon(step: int) -> bool:
+	var options := station_weapons()
+	if options.size() <= 1:
+		return false
+	var index := options.find(player.weapons.current)
+	return swap_weapon(options[posmod(index + step, options.size())].id)
 
 
 # --- mastery -------------------------------------------------------------------

@@ -14,6 +14,8 @@ var _wave_sub: Label
 var _health: SegmentBar
 var _ammo: Label
 var _weapon_name: Label
+var _slots: WeaponSlots
+var _weapon_hud: WeaponHud
 var _tickets: Label
 var _reticle: Reticle
 var _score_panel: ScorePanel
@@ -70,6 +72,8 @@ func bind(run: RunDirector, p: Player) -> void:
 	p.damaged.connect(_on_damaged)
 	p.weapons.ammo_changed.connect(_on_ammo_changed)
 	p.weapons.weapon_changed.connect(_on_weapon_changed)
+	_slots.bind(p.weapons)
+	_weapon_hud.bind(p, _ammo)
 	p.weapons.hit_confirmed.connect(_reticle.show_hit)
 	p.weapons.fired.connect(p.view.on_fired)
 	p.weapons.reload_started.connect(p.view.play_reload)
@@ -178,10 +182,20 @@ func _build() -> void:
 	_health.custom_minimum_size = Vector2(390, 50)
 	_anchor(_health, Control.PRESET_BOTTOM_LEFT, Vector2(MARGIN + 8, -MARGIN - 8), Control.GROW_DIRECTION_END, Control.GROW_DIRECTION_BEGIN)
 
-	# Lower right: ammo.
+	# Lower right: the two carried weapons beside the ammo counter.
+	var ammo_row := HBoxContainer.new()
+	ammo_row.add_theme_constant_override("separation", 28)
+	ammo_row.alignment = BoxContainer.ALIGNMENT_END
+	_slots = WeaponSlots.new()
+	_slots.size_flags_vertical = Control.SIZE_SHRINK_END
+	ammo_row.add_child(_slots)
 	_ammo = UiKit.arcade_label("12 / 60", 92)
 	_ammo.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_anchor(_ammo, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN, -26), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
+	ammo_row.add_child(_ammo)
+	_anchor(ammo_row, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN, -26), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
+	# Charge ring, heat bar, burst pips and seek lock (drawn over everything).
+	_weapon_hud = WeaponHud.new()
+	_root.add_child(_weapon_hud)
 	_weapon_name = UiKit.arcade_label("", 30, UiKit.CYAN)
 	_weapon_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_anchor(_weapon_name, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN - 4, -138), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
@@ -214,7 +228,8 @@ func _build() -> void:
 	_anchor(_notice, Control.PRESET_CENTER_BOTTOM, Vector2(0, -200), Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BEGIN)
 
 	# Controls reminder, shown only before the first wave.
-	_controls = UiKit.label("WASD move  ·  Shift sprint  ·  Mouse aim  ·  LMB fire  ·  R reload  ·  F start wave  ·  Esc pause\nAt the Loadout Station between waves:  E energy  ·  Q snack  ·  1 2 3 swap weapon", 26, UiKit.CREAM)
+	_controls = UiKit.label("WASD move  ·  Shift sprint  ·  LMB fire  ·  RMB aim  ·  R reload  ·  1 / 2 or wheel switch weapon  ·  F start wave  ·  Esc pause\nAt the Loadout Station between waves:  E energy  ·  Q snack  ·  %s / %s swap the held weapon" % [
+		Loadout.key_hint(&"kiosk_prev").get_slice(" / ", 0), Loadout.key_hint(&"kiosk_next").get_slice(" / ", 0)], 26, UiKit.CREAM)
 	_controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_controls.add_theme_color_override("font_outline_color", Color(UiKit.INK, 0.9))
 	_controls.add_theme_constant_override("outline_size", 8)
@@ -287,7 +302,7 @@ func _process(delta: float) -> void:
 	if w.current == null:
 		_status.text = ""
 	elif w.is_reloading():
-		_status.text = "RELOADING"
+		_status.text = "VENTING HEAT" if w.current.uses_heat() else "RELOADING"
 	elif w.is_emergency_recharging():
 		_status.text = "EMERGENCY RECHARGE" if w.magazine() > 0 else "OUT OF ENERGY — RECHARGING"
 	elif w.magazine() <= maxi(1, w.current.magazine_size / 4) and w.reserve() > 0:
@@ -315,7 +330,7 @@ func _process(delta: float) -> void:
 		_kiosk.visible = show_kiosk
 	if show_kiosk:
 		# Rebuild the panel only when something it shows has changed.
-		var signature := [director.tickets, player.weapons.current, director.heals_left(),
+		var signature := [director.tickets, player.weapons.current, player.weapons.active_slot, director.heals_left(),
 			player.health >= player.max_health, player.weapons.is_ammo_full()]
 		if signature != _kiosk_signature:
 			_kiosk_signature = signature
@@ -342,23 +357,58 @@ func _refresh_kiosk() -> void:
 		heal_note = "full"
 	_kiosk_rows.add_child(_kiosk_row("Q", "Boardwalk snack (+%d health)" % int(waves.heal_amount), heal_note, can_heal))
 	_kiosk_rows.add_child(UiKit.spacer(8))
-	_kiosk_rows.add_child(UiKit.label("FREE WEAPON SWAP", 26, UiKit.CYAN, true))
-	var index := 1
-	for weapon in GameData.weapons():
-		var held := weapon == player.weapons.current
-		_kiosk_rows.add_child(_kiosk_row(str(index), weapon.display_name, "equipped" if held else "", not held))
-		index += 1
+	_kiosk_rows.add_child(_kiosk_swap())
+
+
+## Free swap: cycle the held slot through every unlocked weapon.
+func _kiosk_swap() -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	var w := player.weapons
+	var options := director.station_weapons()
+	var slot_name := String(Loadout.SLOT_NAMES[w.active_slot]).to_upper()
+	box.add_child(UiKit.label("FREE WEAPON SWAP  ·  %s" % slot_name, 26, UiKit.CYAN, true))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var can := options.size() > 1
+	row.add_child(_key_chip(Loadout.key_hint(&"kiosk_prev").get_slice(" / ", 0), can))
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.8), w.current.tracer_color, 12, 3, 6))
+	var name_row := HBoxContainer.new()
+	card.add_child(name_row)
+	var arrow_l := UiKit.label("◀", 24, UiKit.CREAM if can else Color(1, 1, 1, 0.3))
+	name_row.add_child(arrow_l)
+	var title := UiKit.label(w.current.display_name.to_upper(), 30, Color.WHITE, true)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_row.add_child(title)
+	var arrow_r := UiKit.label("▶", 24, UiKit.CREAM if can else Color(1, 1, 1, 0.3))
+	name_row.add_child(arrow_r)
+	row.add_child(card)
+	row.add_child(_key_chip(Loadout.key_hint(&"kiosk_next").get_slice(" / ", 0), can))
+	box.add_child(row)
+	var index := options.find(w.current) + 1
+	var note := "%s  ·  %d of %d unlocked" % [w.current.category, index, options.size()] if can else "Unlock more weapons by levelling up"
+	box.add_child(UiKit.label(note, 24, UiKit.AMBER))
+	box.add_child(UiKit.label("1 / 2 picks the slot to swap", 22, Color(1, 1, 1, 0.6)))
+	return box
+
+
+func _key_chip(key: String, enabled: bool) -> Label:
+	var chip := UiKit.label(key, 26, UiKit.INK, true)
+	chip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	chip.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	chip.custom_minimum_size = Vector2(44, 40)
+	chip.add_theme_stylebox_override("normal", UiKit.box(UiKit.CREAM if enabled else Color(0.6, 0.58, 0.7), Color.TRANSPARENT, 8, 0, 2))
+	chip.add_theme_constant_override("shadow_offset_y", 0)
+	return chip
 
 
 func _kiosk_row(key: String, text: String, note: String, enabled: bool) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	var chip := UiKit.label(key, 26, UiKit.INK, true)
-	chip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	chip.custom_minimum_size = Vector2(44, 40)
-	chip.add_theme_stylebox_override("normal", UiKit.box(UiKit.CREAM if enabled else Color(0.6, 0.58, 0.7), Color.TRANSPARENT, 8, 0, 2))
-	chip.add_theme_constant_override("shadow_offset_y", 0)
-	row.add_child(chip)
+	row.add_child(_key_chip(key, enabled))
 	var l := UiKit.label(text, 28, Color.WHITE if enabled else Color(1, 1, 1, 0.55))
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(l)
