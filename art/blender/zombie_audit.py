@@ -57,8 +57,15 @@ EXCLUSIVE = {"Spit": {"Octo"}, "Throw": {"Yeti"}, "Tuck": {"Skier"}, "Spray": {"
              "Roar": {"Bruiser", "Yeti", "Riot"}, "Bound": {"Cadet"}, "Hover": {"Mechanic"},
              "Crouch": {"Cadet", "Mechanic", "Courier"}}
 FEATURE = re.compile(r"(Collar|Hood|Lapel|Strap|String|Chain|Pouch|Tank|Pack|Can|Baton|Holster|Badge|Scarf|Label|Hose|Valve|Box)")
-# Crossings that are part of the design: (regex on "A|B" part names) -> why.
+# Crossings that are part of the design: (regex on "mesh/part|mesh/part", tried
+# both ways round, why).
 INTENDED = [
+    (r"Acc_Frozen_Ice/", "the ice block encases the frozen tourist and all he wears"),
+    (r"Acc_Cadet_(Antenna|Pennant)/.*\|Outfit_Cadet/C_(Pack|Tank)", "mounted on the backpack"),
+    (r"Acc_Lifeguard_Gloves/.*\|Acc_Lifeguard_Net/", "the glove holds the net"),
+    (r"Acc_Lifeguard_(Towel|Tube)/.*\|Outfit_Lifeguard/L_Strap", "worn over the tank top's straps"),
+    (r"Acc_\w+_Camera/\w+Strap\w*\|Outfit_\w+/\w+Collar", "the camera strap runs under the collar"),
+    (r"Acc_\w+_Scarf/.*\|Outfit_\w+/\w+Collar", "a scarf wraps the collar"),
 ]
 
 
@@ -133,8 +140,8 @@ def crossing(p, q):
 
 
 def intended(a, b):
-    key = a + "|" + b
-    return any(re.search(rx, key) or re.search(rx, b + "|" + a) for rx, _ in INTENDED)
+    x, y = f"{a.group}/{a.name}", f"{b.group}/{b.name}"
+    return any(re.search(rx, x + "|" + y) or re.search(rx, y + "|" + x) for rx, _ in INTENDED)
 
 
 # ---------------------------------------------------------------------------
@@ -220,7 +227,7 @@ def static_audit(outfit, groups, slots):
         return p.group if p.group.startswith("Acc_") else re.sub(r"-?\d+$", "", p.name)
 
     def add(kind, a, b, ext):
-        if not intended(a.name, b.name):
+        if not intended(a, b):
             out.append(dict(kind=kind, a=f"{a.group}/{a.name}", b=f"{b.group}/{b.name}", size=round(ext, 3),
                             key=f"{kind}: {label(a)} x {label(b)}"))
 
@@ -333,7 +340,7 @@ def clip_audit(outfit, groups, slots, clips, rig):
                 key = (a.name, b.name)
                 if key not in rest_depth:
                     rest_depth[key] = pair_depth(a, b, eye, zero, eye, zero)
-                if dep - rest_depth[key] >= DEPTH and not intended(a.name, b.name):
+                if dep - rest_depth[key] >= DEPTH and not intended(a, b):
                     fk = (cname, f"{a.group}:{a.bone}", f"{b.group}:{b.bone}")
                     if dep - rest_depth[key] > found.get(fk, (0.0, ""))[0]:
                         found[fk] = (dep - rest_depth[key], f"{a.name} x {b.name}")
