@@ -129,8 +129,8 @@ func refresh() -> void:
 			for level in world.levels:
 				if level and Profile.is_level_completed(level.id):
 					cleared += 1
-		_stats.text = "%s zombies popped   ·   %d levels cleared   ·   %d / %d locker items" % [
-			_thousands(Mastery.total_kills()), cleared, _owned_count(), GameData.cosmetics().size()]
+		_stats.text = "%s zombies popped   ·   %d level%s cleared   ·   %d / %d locker items" % [
+			_thousands(Mastery.total_kills()), cleared, "" if cleared == 1 else "s", _owned_count(), GameData.cosmetics().size()]
 
 
 func _owned_count() -> int:
