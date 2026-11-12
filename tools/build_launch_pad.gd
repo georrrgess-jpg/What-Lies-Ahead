@@ -14,8 +14,8 @@ extends SceneTree
 ##   - Arena X -26..26, Z -32..26 on a sand-blown concrete apron.
 ##   - Launch mount (20 x 14 m, deck at 2 m) centred at (0, -9): rocket on the
 ##     launch table, gantry on its west end. Ramps: south-east (up from the
-##     plaza) and north-west (down to the back yard), so the deck is a third
-##     route between the west and east lanes.
+##     plaza) and north (down to the back yard), so the deck is a third route
+##     between the west and east lanes.
 ##   - Supply-pod loadout station in the south plaza at (0, 9).
 ##   - Zombie entrances beyond the walls: Hangar A doors (west), Hangar B doors
 ##     (north-west), maintenance tunnel (north-east), cargo lift (east) and the

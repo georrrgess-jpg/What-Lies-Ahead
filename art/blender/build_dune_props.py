@@ -301,6 +301,13 @@ def build_sign():
     for s in (-1, 1):
         parts.append(beam(f"Leg{s}", (s * 2.6, 0.2, 0.0), (s * 2.4, 0.2, 4.0), 0.25, m=sdark))
     parts.append(box("Board", (7.0, 0.3, 2.6), (0, 0, 4.9), bevel=0.15, m=teal))
+    # Back: a rust panel on a braced steel frame.
+    parts.append(box("BackPanel", (6.6, 0.08, 2.2), (0, 0.19, 4.9), bevel=0.03, m=rust))
+    for z in (4.0, 5.8):
+        parts.append(beam(f"BackRail{z}", (-3.2, 0.3, z), (3.2, 0.3, z), 0.14, m=sdark))
+    for x0, x1 in ((-3.2, -0.2), (0.2, 3.2)):
+        parts.append(beam(f"BackBrace{x0}", (x0, 0.3, 4.0), (x1, 0.3, 5.8), 0.1, m=sdark))
+    parts.append(text("BackText", "LP-9", 0.6, 0.04, (0, 0.25, 4.9), rot=(0, 0, math.pi), m=cream))
     parts.append(box("Panel", (6.4, 0.32, 2.0), (0, -0.02, 4.9), bevel=0.08, m=cream))
     parts.append(text("Line1", "LAUNCH PAD 9", 0.7, 0.06, (0, -0.2, 5.3), m=rust))
     parts.append(text("Line2", "STAND CLEAR OF THE BLAST ZONE", 0.28, 0.04, (0, -0.2, 4.55), m=navy))

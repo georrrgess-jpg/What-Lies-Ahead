@@ -289,9 +289,11 @@ def build_tunnel():
     for i in range(3):
         parts.append(fbox(f"TunnelLight{i}", (0.6, 0.3, 0.1), (0, 3.0 + i * 3.5, OPEN_H - 0.55 - i * 0.6), m=lamp))
     # Sand berm heaped over the tunnel and drifting around the portal.
-    parts.append(sphere("Berm", 1.0, (0, 7.0, -1.0), scale=(11.0, 9.0, 6.6), m=sand, segs=28, rings=14))
-    parts.append(sphere("BermL", 1.0, (-W / 2 - 1.5, 1.5, -0.6), scale=(4.0, 4.5, 2.6), m=sdk, segs=18, rings=10))
-    parts.append(sphere("BermR", 1.0, (W / 2 + 1.5, 2.0, -0.7), scale=(4.5, 4.0, 2.4), m=sand, segs=18, rings=10))
+    # (The mounds stay clear of the tunnel corridor, so its dark interior reads.)
+    parts.append(sphere("BermTop", 1.0, (0, 7.0, 6.4), scale=(8.5, 7.5, 2.6), m=sand, segs=28, rings=14))
+    parts.append(sphere("BermL", 1.0, (-9.5, 5.0, -0.6), scale=(6.0, 7.5, 5.6), m=sdk, segs=24, rings=12))
+    parts.append(sphere("BermR", 1.0, (9.5, 5.5, -0.7), scale=(6.0, 7.0, 5.2), m=sand, segs=24, rings=12))
+    parts.append(sphere("BermBack", 1.0, (0, 17.0, -0.5), scale=(10.0, 4.0, 6.0), m=sand, segs=24, rings=12))
     save("dune_tunnel", [merge("Tunnel", parts)])
 
 
