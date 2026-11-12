@@ -357,22 +357,31 @@ What was run for this update, on a headless Linux container (4 vCPU, **no GPU**;
 used Mesa llvmpipe, a software rasteriser):
 
 - Project import with Godot 4.7.1: no script errors.
-- **Bot clears on every level.** Final regression after all changes, with the two starter
-  weapons:
+- **Bot clears with every weapon on every level** (final regression on the finished
+  update, one run each; health left at the end, out of 100):
 
-  | Level | Pulse Pistol | Ion Carbine |
-  | --- | --- | --- |
-  | Prize Pier | Cleared, 64 health left | Cleared, 44 |
-  | Neon Skyline | Cleared, 45 | Cleared, 20 |
-  | Tidal Tunnels | Lost on wave 6; two re-runs cleared (40, 70) | Cleared, 38 |
-  | Launch Pad 9 | Cleared, 86 | Cleared, 54 |
-  | Summit Lodge | Cleared, 16 | Lost on wave 6; two re-runs cleared (44, 68) |
+  | Weapon | Prize Pier | Neon Skyline | Tidal Tunnels | Launch Pad 9 | Summit Lodge |
+  | --- | --- | --- | --- | --- | --- |
+  | Pulse Pistol | 100 | 61 | 48 | 56 | 95 |
+  | Ion Carbine | 100 | 73 | 70 | 79 | 81 |
+  | Scatter Blaster | 18 | 48 | 28 | 66 | lost on wave 7 |
+  | Comet Hand Cannon | 100 | 57 | 77 | 71 | 78 |
+  | Arc Coil | 100 | 64 | 27 | 71 | 16 |
+  | Bumper Lobber | 88 | 54 | 58 | 36 | 46 |
+  | Frostbite Cryo Beam | 100 | 41 | 82 | 89 | 14 |
+  | Rail Lancer | 100 | 5 | 70 | 54 | 22 |
 
-  During integration the bot also cleared Neon Skyline with every one of the eight weapons
-  (finishing with 20–68 health; the Arc Coil lost one of its three runs), and the new weapons on other worlds (Arc Coil in Tidal
-  Tunnels, Bumper Lobber in Launch Pad 9 and Tidal Tunnels, Rail Lancer in Summit Lodge,
-  Scatter Blaster in Tidal Tunnels). Those runs drove a balance pass: Neon Punks swipe up
-  close instead of spraying point-blank, and the Scatter Blaster and Cryo Beam were buffed.
+  39 of 40 cleared, with no crashes or hangs. Before that, the balance pass ran about
+  360 bot runs on the combined game; single runs swing by about ±30 health. The bot buys
+  an overshield whenever it can, never aims down sights and never dodges, so the later
+  worlds' projectiles and rushes hit it harder than they would a player.
+- **Measured improvements** (probes and analysis scripts): zombie foot slip on walks
+  1.7–2.4 → 0.27–0.41 m/s; head hits that count in crouch/tuck poses 32–58% → 88–100%;
+  fire rates now exactly as specified (were 8–17% slow); mouse look identical at every
+  window size (was 2x apart between 960x540 and 1080p); slide-hopping no longer beats
+  sprinting (31.0 → 22.7 m in 3 s vs 22.1 m sprinting); 0 player-wall crossings in 492
+  mantle/vault/slide-hop attempts; Tidal Tunnels luminance 0.16–0.22 → 0.24–0.39; the
+  music re-voiced and the hit marker about 10 dB louder relative to gunfire.
 - **Flows**: defeat → Retry (fresh run state), clear → results → main menu, and the pause
   menu on a virtual display (resume recaptures the mouse; restart and main menu are clean).
 - **Saves**: a save interrupted between writing and replacing is recovered from its
@@ -381,8 +390,9 @@ used Mesa llvmpipe, a software rasteriser):
   camera, the HUD mid-wave, the intro, title, Play, Arsenal, Locker and results screens,
   and (by the agents who built them) every weapon's hip, aim and reload poses, every
   enemy, kill effect, tracer and operator.
-- **Code review**: two independent reviews of the merged update (gameplay runtime; menus
-  and meta-progression). Their findings were fixed (see the git history).
+- **Reviews**: two independent code reviews after the content update, then a scored
+  quality review (zombies, movement, weapon balance, levels/UI/audio/pacing) that drove
+  the latest update. Their findings were fixed (see the git history).
 - **Export smoke test**: the exported Linux build played Neon Skyline from wave 6 to the
   portal with the bot, showed the results and returned to the menu, and rendered Launch
   Pad 9 on a virtual display.
@@ -392,8 +402,13 @@ Not verified, or limited:
 - **Real frame rate.** With no GPU here, the software rasteriser runs at a few frames per
   second. Draw calls (about 1,000–1,400) and triangles (150k–480k) per frame are modest,
   but smooth play is untested on real hardware.
-- **Audio by ear.** Every sound and music loop is synthesised and was checked for length
-  and level only. Nobody has listened to the mix; expect to adjust volumes.
+- **Audio by ear.** Every sound and music loop is synthesised and was checked by
+  measurement only (`tools/audio_mix_report.py`). Nobody has listened to the mix; expect
+  to adjust volumes in `audio/mix.tres`.
+- **Engine audio race.** Godot 4.7 can crash (signal 11 in `AudioServer::_mix_step`) when
+  many short 3D sound players rewrite their bus routing while the mixer reads it. It hit
+  about 1 bot run in 60 before the game started playing its high-rate feedback sounds
+  flat; none of the 40 final runs crashed, but the underlying engine race remains.
 - **Human playtesting.** Difficulty was tuned against a bot with near-perfect aim that never
   dodges projectiles. Results vary from run to run (the same level and weapon can finish
   on 20 or 60 health, and occasionally lose), and the later worlds are meant to be harder.
