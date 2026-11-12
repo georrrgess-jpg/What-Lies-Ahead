@@ -1,0 +1,24 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/clips = {
+"Idle-loop": {"length": 2},
+"Walk-loop": {"length": 0.7083, "speed": 2.045},
+"Run-loop": {"length": 0.4167, "speed": 5.467},
+"Idle_Heavy-loop": {"length": 2},
+"Walk_Heavy-loop": {"length": 0.9583, "speed": 1.548},
+"Run_Heavy-loop": {"length": 0.5417, "speed": 4.132},
+"Attack": {"length": 1.083, "strike": 0.5958},
+"Attack_Heavy": {"length": 1.25, "strike": 0.6875},
+"Roar": {"length": 0.7083},
+"Stagger": {"length": 0.625},
+"Hit_Head": {"length": 0.3333},
+"Die_Back": {"impact": 0.5417, "length": 1.083},
+"Die_Front": {"impact": 0.625, "length": 1.083},
+"Die_Spin": {"impact": 0.7083, "length": 1.167},
+"Die_Heavy": {"impact": 1.125, "length": 1.5, "thud": 0.5},
+"Die_HeadPop": {"impact": 1, "length": 1.333, "pop": 0.3542},
+"Emerge": {"length": 0.9167},
+"Stagger_Heavy": {"length": 0.625},
+"Emerge_Heavy": {"length": 0.9167}
+}

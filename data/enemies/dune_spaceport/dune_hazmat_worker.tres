@@ -41,6 +41,7 @@ capsule_height = 1.95
 head_height = 1.25
 accessory_slots = PackedStringArray("Acc_Hazmat_Tank|", "Acc_Hazmat_Geiger||")
 move_animation = &"Walk"
+clip_style = &"Hazmat"
 animation_reference_speed = 2.0
 avoidance_radius = 0.65
 behaviours = Array[ExtResource("3")]([SubResource("burst")])

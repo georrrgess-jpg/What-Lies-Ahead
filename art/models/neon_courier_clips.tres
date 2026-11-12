@@ -1,0 +1,19 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/clips = {
+"Idle-loop": {"length": 2},
+"Walk-loop": {"length": 0.7083, "speed": 2.093},
+"Run-loop": {"length": 0.75, "speed": 4.848},
+"Attack": {"length": 1.083, "strike": 0.5958},
+"Crouch": {"length": 0.5833},
+"Leap": {"length": 0.6667},
+"Stagger": {"length": 0.625},
+"Hit_Head": {"length": 0.3333},
+"Die_Back": {"impact": 0.5417, "length": 1.083},
+"Die_Front": {"impact": 0.625, "length": 1.083},
+"Die_Spin": {"impact": 0.7083, "length": 1.167},
+"Die_Heavy": {"impact": 1.125, "length": 1.5, "thud": 0.5},
+"Die_HeadPop": {"impact": 1, "length": 1.333, "pop": 0.3542},
+"Emerge": {"length": 0.9167}
+}

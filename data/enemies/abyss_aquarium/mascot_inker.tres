@@ -48,6 +48,7 @@ shirt_colors = Array[Color]([Color(1, 0.37, 0.71, 1), Color(1, 0.44, 0.31, 1), C
 skin_colors = Array[Color]([Color(0.62, 0.81, 0.29, 1), Color(0.52, 0.77, 0.4, 1), Color(0.7, 0.78, 0.34, 1)])
 accessory_slots = PackedStringArray("Acc_Octo_InkSac", "Acc_Octo_Lanyard|", "Acc_Octo_Bow||")
 move_animation = &"Walk"
+clip_style = &"Octo"
 animation_reference_speed = 2.25
 avoidance_radius = 0.6
 behaviours = Array[ExtResource("3")]([SubResource("ink")])

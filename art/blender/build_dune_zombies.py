@@ -12,8 +12,9 @@ Accessories (Acc_<Outfit>_<Name>, rolled per zombie from EnemyData.accessory_slo
     Acc_Mechanic_Cap, Acc_Mechanic_Goggles, Acc_Mechanic_Wrench
     Acc_Hazmat_Tank, Acc_Hazmat_Geiger
 
-Same bones and clips as build_zombie.py (Idle-loop, Walk-loop, Run-loop, Attack, Hit,
-Die), plus three extra clips for the Dune behaviours:
+Same bones as build_zombie.py; the clips come from zombie_anim.dune_clips (the
+Mechanic's march and wrench chop, the Hazmat trudge and shove, the shared set),
+plus three extra clips for the Dune behaviours:
     Bound-loop   the cadet's hopping gait (airborne between 20% and 80% of the cycle)
     Crouch       a deep squat with the arms swept back (leap / jetpack windup)
     Hover-loop   jetpack flight: legs dangling, arms out for balance
@@ -27,8 +28,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dune_kit import *  # noqa: F401,F403
-from build_zombie import (FPS, arms, bind, build_armature, clip_attack, clip_die, clip_hit, clip_idle, clip_run,  # noqa: E402
-                          clip_walk, head_parts, set_pose, skin)
+from build_zombie import FPS, bind, build_armature, head_parts, skin  # noqa: E402
+import zombie_anim  # noqa: E402
 
 
 def glass_mat(name, color, alpha=0.3, emit=0.15):
@@ -260,62 +261,6 @@ def hazmat_accessories(m):
     }
 
 
-# ---------------------------------------------------------------------------
-# Extra clips
-# ---------------------------------------------------------------------------
-
-def clip_bound():
-    """Low-gravity hop: squash, push off, float with arms up, land."""
-    def pose(spine, thigh, shin, upper, fore, spread, head=-6):
-        p = {"Hips": (spine * 0.3, 0, 0), "Spine": (spine, 0, 0), "Head": (head, 0, 0),
-             "Thigh.L": (thigh, 0, 0), "Thigh.R": (thigh + 6, 0, 0), "Shin.L": (shin, 0, 0), "Shin.R": (shin + 4, 0, 0)}
-        p.update(arms(upper, fore, upper + 6, fore, spread=spread))
-        return p
-    return "Bound-loop", [
-        (0, pose(26, -46, 70, -30, -30, 18), (0, 0, -0.22)),
-        (5, pose(4, 6, 6, -110, -20, 30, -14), (0, -0.04, 0.04)),
-        (10, pose(10, -24, 40, -130, -14, 38, -10), (0, -0.06, 0.06)),
-        (16, pose(14, -36, 52, -70, -24, 20), (0, -0.03, 0.0)),
-        (20, pose(26, -46, 70, -30, -30, 18), (0, 0, -0.22)),
-    ]
-
-
-def clip_crouch():
-    p = {"Hips": (12, 0, 0), "Spine": (34, 0, 0), "Head": (-24, 0, 0),
-         "Thigh.L": (-62, 0, 0), "Thigh.R": (-56, 0, 0), "Shin.L": (88, 0, 0), "Shin.R": (84, 0, 0)}
-    p.update(arms(36, -20, 40, -20, spread=24))
-    rest = {"Hips": (6, 0, 0), "Spine": (14, 0, 0), "Head": (-8, 0, 0)}
-    rest.update(arms(-40, -20, -36, -20, spread=10))
-    return "Crouch", [(0, rest, (0, 0, -0.02)), (6, p, (0, 0.04, -0.3)), (12, p, (0, 0.04, -0.32))]
-
-
-def clip_hover():
-    def pose(phase):
-        s = math.sin(phase * math.tau)
-        p = {"Hips": (4, 0, 3 * s), "Spine": (8, 0, -4 * s), "Head": (-12, 4 * s, 0),
-             "Thigh.L": (-14 + 10 * s, 0, 0), "Thigh.R": (-6 - 10 * s, 0, 0), "Shin.L": (24 + 8 * s, 0, 0), "Shin.R": (30 - 8 * s, 0, 0)}
-        p.update(arms(-30 + 6 * s, -40, -30 - 6 * s, -40, spread=62))
-        return p, (0, 0, 0.02 * s)
-    return "Hover-loop", [(round(i * 24 / 8), *pose(i / 8)) for i in range(9)]
-
-
-def build_animations(armature):
-    ad = armature.animation_data_create()
-    for make in (clip_idle, clip_walk, clip_run, clip_attack, clip_hit, clip_die, clip_bound, clip_crouch, clip_hover):
-        name, keys = make()
-        action = bpy.data.actions.new(name)
-        ad.action = action
-        for frame, pose, hips_loc in keys:
-            set_pose(armature, frame, pose, hips_loc)
-        track = ad.nla_tracks.new()
-        track.name = name
-        track.strips.new(name, 0, action)
-        ad.action = None
-    for pb in armature.pose.bones:
-        pb.rotation_quaternion = (1, 0, 0, 0)
-        pb.location = (0, 0, 0)
-
-
 def build():
     scene = reset_scene()
     scene.render.fps = FPS
@@ -367,7 +312,7 @@ def build():
     acc.update(hazmat_accessories(m))
     for name, parts in acc.items():
         meshes.append(skin(name, parts, armature))
-    build_animations(armature)
+    zombie_anim.bake(armature, zombie_anim.dune_clips, "dune_zombies")
     save("dune_zombies", [armature] + meshes, animations=True)
 
 

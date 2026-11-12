@@ -65,7 +65,7 @@ func _break(z: Zombie, at: Vector3, out: Vector3) -> void:
 			Color(0.55, 0.95, 1.0) if i % 2 == 0 else Color(1.0, 0.8, 0.35))
 	Fx.hit_pop(z.get_parent(), at, out, true)
 	z.knockback(-Vector3(sin(z.rotation.y), 0.0, cos(z.rotation.y)) * 2.0)
-	z.play_animation(&"Hit", 0.05)
+	z.play_animation(&"Hit_Head", 0.05)
 	_rush = rush_seconds
 	if _helmet == null:
 		return

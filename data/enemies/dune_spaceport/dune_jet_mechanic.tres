@@ -55,6 +55,7 @@ shirt_colors = Array[Color]([Color(1, 0.48, 0.16, 1), Color(0.13, 0.62, 0.6, 1),
 skin_colors = Array[Color]([Color(0.64, 0.82, 0.29, 1), Color(0.5, 0.78, 0.38, 1), Color(0.48, 0.74, 0.5, 1)])
 accessory_slots = PackedStringArray("Acc_Mechanic_Cap|Acc_Mechanic_Goggles|Acc_Mechanic_Cap+Acc_Mechanic_Goggles|", "Acc_Mechanic_Wrench||")
 move_animation = &"Walk"
+clip_style = &"Mechanic"
 animation_reference_speed = 2.4
 avoidance_radius = 0.6
 behaviours = Array[ExtResource("3")]([SubResource("hop")])

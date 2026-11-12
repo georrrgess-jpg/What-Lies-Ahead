@@ -9,9 +9,10 @@
                    under Acc_Jelly_Hat, a glowing jellyfish hat that charges
                    an electric aura.
 
-Rig, bone names and clips (Idle-loop, Walk-loop, Run-loop, Attack, Hit, Die)
-come straight from build_zombie.py, so EnemyData can use this model with the
-shared zombie script. Materials named "Shirt", "Skin" and "SkinDark" are
+Rig and bone names come straight from build_zombie.py and the clips from
+zombie_anim.aqua_clips (the Diver's waddle and shove, the Inker's squelch and
+Spit, the Jelly's sprint, plus the shared set), so EnemyData can use this
+model with the shared zombie script. Materials named "Shirt", "Skin" and "SkinDark" are
 tinted per zombie by the game. Faces -Y in Blender (+Z in Godot).
 """
 import math
@@ -20,7 +21,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from aqua_common import *  # noqa: F401,F403
-from build_zombie import FPS, bind, build_animations, build_armature, head_parts, limb_parts, skin  # noqa: E402
+from build_zombie import FPS, bind, build_armature, head_parts, limb_parts, skin  # noqa: E402
+import zombie_anim  # noqa: E402
 
 
 def materials():
@@ -275,7 +277,7 @@ def build():
     for group in (diver_accessories(m), octo_accessories(m), jelly_accessories(m)):
         for name, parts in group.items():
             meshes.append(skin(name, parts, armature))
-    build_animations(armature)
+    zombie_anim.bake(armature, zombie_anim.aqua_clips, "aqua_zombies")
     save("aqua_zombies", [armature] + meshes, animations=True)
 
 

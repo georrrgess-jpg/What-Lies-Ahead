@@ -40,6 +40,7 @@ shirt_colors = Array[Color]([Color(1, 0.48, 0.12, 1), Color(1, 0.36, 0.16, 1), C
 skin_colors = Array[Color]([Color(0.62, 0.81, 0.29, 1), Color(0.52, 0.77, 0.4, 1), Color(0.7, 0.78, 0.34, 1)])
 accessory_slots = PackedStringArray("Acc_Diver_Helmet", "Acc_Diver_Torch|", "Acc_Diver_Knife|")
 move_animation = &"Walk"
+clip_style = &"Diver"
 animation_reference_speed = 2.0
 avoidance_radius = 0.6
 behaviours = Array[ExtResource("3")]([SubResource("helmet")])
