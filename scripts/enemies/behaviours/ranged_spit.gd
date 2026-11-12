@@ -31,14 +31,14 @@ func on_physics(z: Zombie, delta: float) -> bool:
 			var lead := z.target.velocity * clampf(z.distance_to_target() / projectile_speed, 0.0, 1.0) * 0.6
 			EnemyProjectile.launch(z.get_parent(), from, z.target.global_position + Vector3.UP * 1.0 + lead,
 				projectile_speed, damage, color, arc, 0.22, z)
-			z.play_animation(&"Walk", 0.2)
+			z.play_animation(z.data.move_animation, 0.2)
 		return true
 	if _cool <= 0.0 and z.state == Zombie.State.CHASE:
 		var d := z.distance_to_target()
 		if d >= min_range and d <= max_range and z.has_line_of_sight():
 			_cool = cooldown
 			_winding = windup
-			z.play_animation(&"Attack", 0.1)
+			z.play_animation(&"Spit", 0.1)
 			Sfx.play_at(sound, z.global_position + Vector3.UP, -2.0, 1.3)
 			return true
 	return false
@@ -51,4 +51,4 @@ func is_winding_up() -> bool:
 func interrupt(z: Zombie) -> void:
 	if _winding > 0.0:
 		_winding = 0.0
-		z.play_animation(&"Walk", 0.2)
+		z.play_animation(z.data.move_animation, 0.2)

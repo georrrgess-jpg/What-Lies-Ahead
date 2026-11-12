@@ -49,16 +49,27 @@ extends Resource
 @export_group("Body")
 ## Model scene for this enemy. Empty = the shared boardwalk zombie
 ## (art/models/zombie.glb). A custom model needs an AnimationPlayer with clips
-## named Idle, Walk, Run, Attack, Hit and Die (a "-loop" suffix is fine) and
-## meshes named Outfit_<outfit> for the body.
+## named Idle, Walk, Run and Attack (a "-loop" suffix is fine), ideally the
+## rest of the zombie_anim.py set (Stagger, Die_*, Emerge...), a skeleton with
+## a "Head" bone, and meshes named Outfit_<outfit> for the body. Its clip
+## table (<model>_clips.tres next to it) gives each gait's ground speed.
 @export var model_scene: PackedScene
 ## Outfit mesh shown from the shared zombie model ("Tourist", "Lifeguard" or "Bruiser").
 @export var outfit: StringName = &"Tourist"
 @export var body_scale := 1.0
 @export var capsule_radius := 0.45
+## Keep the whole head (hats, costume eyes) inside the capsule: shots that
+## miss the capsule miss the zombie.
 @export var capsule_height := 1.9
-## Hits above this height (metres, before body_scale) count as headshots.
+## Fallback head cut for models without a Head bone: hits above this height
+## (metres, before body_scale) count as headshots. Models with a Head bone use
+## a hitbox that follows the head (sized from the head mesh).
 @export var head_height := 1.25
+## Scales the head hitbox built from the head mesh.
+@export var head_hit_scale := 1.0
+## Accessory that guards the head from the front while it is shown (the riot
+## shield): frontal shots entering the head below its top edge are blocked.
+@export var head_guard_mesh := ""
 ## Random shirt colours for variety (empty = keep the model's colour).
 @export var shirt_colors: Array[Color] = []
 @export var skin_colors: Array[Color] = []
@@ -66,7 +77,13 @@ extends Resource
 ## an empty option means nothing. e.g. "Acc_Tourist_Cap|Acc_Tourist_Hair+Acc_Tourist_Shades|"
 @export var accessory_slots: PackedStringArray = PackedStringArray()
 @export var move_animation: StringName = &"Walk"
-## Movement speed at which the move animation plays at 1x.
+## Clip variant suffix tried first for every clip: "Heavy" plays
+## Walk_Heavy, Attack_Heavy, Idle_Heavy... where the model has them.
+@export var clip_style: StringName = &""
+## Big enemies: heavy deaths (Die_Heavy) and heavy staggers.
+@export var heavy := false
+## Fallback for models without a clip table: the movement speed at which the
+## move animation plays at 1x (the table's ground speed wins).
 @export var animation_reference_speed := 1.8
 @export var avoidance_radius := 0.55
 

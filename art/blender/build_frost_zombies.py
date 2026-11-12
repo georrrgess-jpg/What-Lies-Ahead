@@ -1,5 +1,5 @@
-"""Frostpeak Resort zombies: one rig (the same bones and clips as
-build_zombie.py, which this script reuses), three outfits.
+"""Frostpeak Resort zombies: one rig (the same bones as build_zombie.py, which
+this script reuses), three outfits.
 
     Outfit_Skier    Ski Racer: skin-tight tintable race suit, helmet with a glowing
                     visor, chunky ski boots; skis on its feet (Acc_Skier_Skis)
@@ -13,7 +13,8 @@ build_zombie.py, which this script reuses), three outfits.
 Bodies, heads and faces come from zombie_kit.py; each outfit has several faces
 (Face_<Outfit>_<Preset>), one shown per zombie.
 
-Clips: the shared Idle-loop, Walk-loop, Run-loop, Attack, Hit, Die plus
+Clips (zombie_anim.frost_clips): the Frozen Tourist's stiff shuffle, the Ski
+Racer's skate, the Yeti's stomp and slam ("_Heavy"), the shared set, plus
     Tuck-loop   the Ski Racer's crouched downhill tuck (telegraph and rush)
     Throw       the Yeti's two-handed overhead snowball heave
 
@@ -30,6 +31,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from frost_common import *  # noqa: F401,F403
 import build_zombie as bz
+import zombie_anim  # noqa: E402
 from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, torso)
 
@@ -327,60 +329,6 @@ def frozen_accessories(m):
     return acc
 
 
-# ---------------------------------------------------------------------------
-# Extra clips
-# ---------------------------------------------------------------------------
-
-def clip_tuck():
-    """Downhill tuck: crouched, chest over the knees, fists forward; a slight bob."""
-    def pose(phase):
-        s = math.sin(phase * math.tau)
-        p = {
-            "Hips": (34, 0, 0), "Spine": (30 + 3 * s, 0, 0), "Head": (-48, 0, 0),
-            "Thigh.L": (-62, 0, 0), "Thigh.R": (-62, 0, 0), "Shin.L": (86, 0, 0), "Shin.R": (86, 0, 0),
-        }
-        p.update(bz.arms(-62, -60, -62, -60, spread=6))
-        return p, (0, -0.05, -0.3 + 0.015 * s)
-    return "Tuck-loop", [(round(i * 12 / 4), *pose(i / 4)) for i in range(5)]
-
-
-def clip_throw():
-    """Two-handed overhead heave: rear back (frames 0-12), release at ~15, follow through."""
-    legs = {"Thigh.L": (-18, 0, 0), "Thigh.R": (14, 0, 0), "Shin.L": (14, 0, 0), "Shin.R": (18, 0, 0)}
-
-    def pose(spine, head, upper, fore, hips=4, spread=10):
-        p = {"Hips": (hips, 0, 0), "Spine": (spine, 0, 0), "Head": (head, 0, 0)}
-        p.update(legs)
-        p.update(bz.arms(upper, fore, upper, fore, spread=spread))
-        return p
-    return "Throw", [
-        (0, pose(12, -8, -40, -20), (0, 0, -0.02)),
-        (7, pose(-14, -22, -165, -70, hips=-4, spread=-20), (0, 0.06, 0.02)),
-        (12, pose(-20, -26, -175, -80, hips=-6, spread=-24), (0, 0.08, 0.03)),
-        (15, pose(38, 6, -70, -6, hips=12, spread=8), (0, -0.14, -0.05)),
-        (20, pose(30, 0, -40, -12, hips=9, spread=10), (0, -0.1, -0.04)),
-        (28, pose(12, -8, -40, -20), (0, 0, -0.02)),
-    ]
-
-
-def build_animations(armature):
-    ad = armature.animation_data_create()
-    makers = (bz.clip_idle, bz.clip_walk, bz.clip_run, bz.clip_attack, bz.clip_hit, bz.clip_die, clip_tuck, clip_throw)
-    for make in makers:
-        name, keys = make()
-        action = bpy.data.actions.new(name)
-        ad.action = action
-        for frame, pose, hips_loc in keys:
-            bz.set_pose(armature, frame, pose, hips_loc)
-        track = ad.nla_tracks.new()
-        track.name = name
-        track.strips.new(name, 0, action)
-        ad.action = None
-    for pb in armature.pose.bones:
-        pb.rotation_quaternion = (1, 0, 0, 0)
-        pb.location = (0, 0, 0)
-
-
 def build():
     scene = reset_scene()
     scene.render.fps = bz.FPS
@@ -398,7 +346,7 @@ def build():
     accessories.update(frozen_accessories(m))
     for name, parts in accessories.items():
         meshes.append(bz.skin(name, parts, armature))
-    build_animations(armature)
+    zombie_anim.bake(armature, zombie_anim.frost_clips, "frost_zombies")
     save("frost_zombies", [armature] + meshes, animations=True)
 
 

@@ -13,8 +13,9 @@ The Tourist and the Lifeguard appear in every world's waves, so this script also
 builds their world outfits (zombie_<world>.glb, same rig, outfits and clips);
 EnemyData.world_outfits picks the right one for the current level.
 
-All meshes are skinned to the same armature and share its clips:
-    Idle-loop, Walk-loop, Run-loop, Attack, Hit, Die
+All meshes are skinned to the same armature and share its clips, authored in
+zombie_anim.py (boardwalk_clips): Idle, Walk (shamble), Run (sprint), the
+"_Heavy" set for the Bruiser, attacks, Roar, Stagger, Hit_Head, Die_* and Emerge.
 
 The body is built from chunky rigid parts (zombie_kit.py), each bound to a
 single bone (toy style, no deforming joints). The character faces -Y in Blender (+Z in Godot).
@@ -30,6 +31,7 @@ from wla_common import *  # noqa: F401,F403
 from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso, wrap)
 from zombie_kit import hair as hair_parts  # noqa: E402
+import zombie_anim  # noqa: E402
 
 FPS = 24
 
@@ -990,147 +992,6 @@ WORLD_SETS = {
 
 
 # ---------------------------------------------------------------------------
-# Animation
-# ---------------------------------------------------------------------------
-
-def set_pose(armature, frame, pose, hips_loc=(0, 0, 0)):
-    """Key every bone at `frame`. `pose` maps bone -> (rx, ry, rz) in degrees,
-    expressed in armature axes (X = lean forward +, Y = roll, Z = turn left +)."""
-    for pb in armature.pose.bones:
-        rest = pb.bone.matrix_local.to_quaternion()
-        rx, ry, rz = pose.get(pb.name, (0, 0, 0))
-        q = Euler((math.radians(rx), math.radians(ry), math.radians(rz)), "XYZ").to_quaternion()
-        pb.rotation_quaternion = rest.inverted() @ q @ rest
-        pb.keyframe_insert("rotation_quaternion", frame=frame)
-        if pb.name == "Hips":
-            pb.location = rest.inverted() @ Vector(hips_loc)
-            pb.keyframe_insert("location", frame=frame)
-
-
-def arms(left_upper, left_fore, right_upper, right_fore, spread=10):
-    """Arm pose shorthand: forward swing (degrees, negative = forward)."""
-    return {
-        "UpperArm.L": (left_upper, -spread, 0), "ForeArm.L": (left_fore, 0, 0),
-        "UpperArm.R": (right_upper, spread, 0), "ForeArm.R": (right_fore, 0, 0),
-    }
-
-
-def clip_walk():
-    """Shamble: stiff legs, lolling head, both arms reaching forward."""
-    def pose(phase):  # phase 0..1
-        s, c = math.sin(phase * math.tau), math.cos(phase * math.tau)
-        p = {
-            "Hips": (6, 5 * c, 6 * c),
-            "Spine": (15, -4 * c, -9 * c),
-            "Head": (-8, 9 * c, 5 * s),
-            "Thigh.L": (-3 - 25 * c, 0, 0), "Thigh.R": (-3 + 25 * c, 0, 0),
-            "Shin.L": (10 + 34 * max(0.0, s), 0, 0), "Shin.R": (10 + 34 * max(0.0, -s), 0, 0),
-        }
-        p.update(arms(-74 + 6 * c, -14 - 8 * s, -58 - 8 * c, -24 + 8 * s, spread=8))
-        return p, (0, 0, -0.035 * abs(c))
-    return "Walk-loop", [(round(i * 32 / 8), *pose(i / 8)) for i in range(9)]
-
-
-def clip_run():
-    """Sprint: leaning in, long strides, arms clawing ahead."""
-    def pose(phase):
-        s, c = math.sin(phase * math.tau), math.cos(phase * math.tau)
-        p = {
-            "Hips": (14, 4 * c, 9 * c),
-            "Spine": (26, 0, -13 * c),
-            "Head": (-26, 5 * c, 0),
-            "Thigh.L": (-8 - 44 * c, 0, 0), "Thigh.R": (-8 + 44 * c, 0, 0),
-            "Shin.L": (22 + 62 * max(0.0, s), 0, 0), "Shin.R": (22 + 62 * max(0.0, -s), 0, 0),
-        }
-        p.update(arms(-78 - 20 * c, -24 + 16 * c, -78 + 20 * c, -24 - 16 * c, spread=12))
-        return p, (0, 0, -0.05 * abs(c) + 0.02)
-    return "Run-loop", [(round(i * 16 / 8), *pose(i / 8)) for i in range(9)]
-
-
-def clip_idle():
-    def pose(phase):
-        s = math.sin(phase * math.tau)
-        p = {"Hips": (3, 2 * s, 0), "Spine": (11, -3 * s, 3 * s), "Head": (-4, 7 * s, -4 * s),
-             "Thigh.L": (-2, 0, 0), "Thigh.R": (-2, 0, 0), "Shin.L": (6, 0, 0), "Shin.R": (6, 0, 0)}
-        p.update(arms(-22 + 4 * s, -22, -16 - 4 * s, -26, spread=10))
-        return p, (0, 0, -0.01 + 0.006 * s)
-    return "Idle-loop", [(round(i * 48 / 8), *pose(i / 8)) for i in range(9)]
-
-
-def clip_attack():
-    """Obvious windup (arms overhead, leaning back) then a two-handed swipe at frame 13."""
-    legs = {"Thigh.L": (-14, 0, 0), "Thigh.R": (12, 0, 0), "Shin.L": (12, 0, 0), "Shin.R": (16, 0, 0)}
-    def pose(spine, head, upper, fore, hips=4, spread=12):
-        p = {"Hips": (hips, 0, 0), "Spine": (spine, 0, 0), "Head": (head, 0, 0)}
-        p.update(legs)
-        p.update(arms(upper, fore, upper, fore, spread=spread))
-        return p
-    # Windup: arms thrown up and out to the sides in front of the head (readable
-    # from the front), slight lean back, head tilted up. Strike at frame ~13:
-    # a lunging two-handed swipe down and forward.
-    return "Attack", [
-        (0, pose(14, -8, -68, -16), (0, 0, -0.02)),
-        # Spread is negative here: once an arm is raised past horizontal, the same
-        # roll that splays a lowered arm outward would swing it across the face.
-        (6, pose(-4, -20, -138, -26, hips=-2, spread=-40), (0, 0.03, 0.02)),
-        (11, pose(-8, -24, -152, -30, hips=-4, spread=-48), (0, 0.05, 0.03)),
-        (14, pose(44, 8, -40, -2, hips=12, spread=8), (0, -0.2, -0.06)),
-        (18, pose(34, 2, -26, -10, hips=9, spread=10), (0, -0.16, -0.05)),
-        (24, pose(14, -8, -68, -16), (0, 0, -0.02)),
-    ]
-
-
-def clip_hit():
-    legs = {"Thigh.L": (-10, 0, 0), "Thigh.R": (10, 0, 0), "Shin.L": (12, 0, 0), "Shin.R": (14, 0, 0)}
-    def pose(spine, head, upper, twist):
-        p = {"Hips": (4, 0, twist), "Spine": (spine, 0, twist), "Head": (head, 0, 0)}
-        p.update(legs)
-        p.update(arms(upper, -18, upper + 8, -22, spread=14))
-        return p
-    return "Hit", [
-        (0, pose(14, -8, -68, 0), (0, 0, -0.02)),
-        (3, pose(-18, -16, -38, 12), (0, 0.05, -0.02)),
-        (9, pose(14, -8, -68, 0), (0, 0, -0.02)),
-    ]
-
-
-def clip_die():
-    """Topples onto its back, arms flung wide."""
-    def pose(hips, spine, head, upper, fore, thigh, shin, spread):
-        p = {"Hips": (hips, 0, 0), "Spine": (spine, 0, 0), "Head": (head, 0, 0),
-             "Thigh.L": (thigh, 0, 0), "Thigh.R": (thigh + 8, 0, 0), "Shin.L": (shin, 0, 0), "Shin.R": (shin + 6, 0, 0)}
-        p.update(arms(upper, fore, upper - 10, fore, spread=spread))
-        return p
-    return "Die", [
-        (0, pose(4, 12, -8, -62, -16, -4, 10, 10), (0, 0, -0.02)),
-        (5, pose(-22, -24, -22, -125, -30, 8, 14, 40), (0, 0.06, -0.02)),
-        (12, pose(-78, -6, -12, -150, -20, -22, 26, 55), (0, 0.2, -0.46)),
-        (16, pose(-92, 0, -6, -165, -10, -10, 14, 62), (0, 0.22, -0.6)),
-        (19, pose(-88, 0, -4, -160, -12, -4, 10, 62), (0, 0.22, -0.56)),
-        (22, pose(-90, 0, -4, -162, -12, -6, 10, 62), (0, 0.22, -0.58)),
-    ]
-
-
-def build_animations(armature):
-    ad = armature.animation_data_create()
-    for make in (clip_idle, clip_walk, clip_run, clip_attack, clip_hit, clip_die):
-        name, keys = make()
-        action = bpy.data.actions.new(name)
-        ad.action = action
-        for frame, pose, hips_loc in keys:
-            set_pose(armature, frame, pose, hips_loc)
-        # Store the clip on its own NLA track so every clip is exported.
-        track = ad.nla_tracks.new()
-        track.name = name
-        track.strips.new(name, 0, action)
-        ad.action = None
-    # Leave the rig in its rest pose.
-    for pb in armature.pose.bones:
-        pb.rotation_quaternion = (1, 0, 0, 0)
-        pb.location = (0, 0, 0)
-
-
-# ---------------------------------------------------------------------------
 
 def build_set(name, materials, meshes):
     """Skin every (mesh name, parts) of `meshes(m)` to a fresh rig with the shared
@@ -1140,7 +1001,7 @@ def build_set(name, materials, meshes):
     m = materials()
     armature = build_armature()
     objects = [skin(mesh_name, parts, armature) for mesh_name, parts in meshes(m)]
-    build_animations(armature)
+    zombie_anim.bake(armature, zombie_anim.boardwalk_clips, name)
     save(name, [armature] + objects, animations=True)
 
 

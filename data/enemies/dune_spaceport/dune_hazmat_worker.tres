@@ -42,6 +42,7 @@ head_height = 1.25
 shirt_colors = Array[Color]([Color(1, 0.82, 0.12, 1), Color(1, 0.55, 0.1, 1), Color(0.92, 0.92, 0.86, 1), Color(0.62, 0.86, 0.2, 1), Color(0.95, 0.72, 0.1, 1)])
 accessory_slots = PackedStringArray("Acc_Hazmat_Tank|", "Acc_Hazmat_Geiger|Acc_Hazmat_Barrel||", "Acc_Hazmat_Sign||")
 move_animation = &"Walk"
+clip_style = &"Hazmat"
 animation_reference_speed = 2.0
 avoidance_radius = 0.65
 behaviours = Array[ExtResource("3")]([SubResource("burst")])

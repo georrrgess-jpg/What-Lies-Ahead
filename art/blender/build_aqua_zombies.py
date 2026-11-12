@@ -10,8 +10,10 @@
                    Acc_Jelly_Hat, a glowing jellyfish hat that charges an
                    electric aura.
 
-Bodies, heads and faces come from zombie_kit.py; rig, bone names and clips from
-build_zombie.py, so EnemyData can use this model with the shared zombie script.
+Bodies, heads and faces come from zombie_kit.py; rig and bone names from
+build_zombie.py; clips from zombie_anim.aqua_clips (the Diver's waddle and shove,
+the Inker's squelch and Spit, the Jelly's sprint, plus the shared set), so
+EnemyData can use this model with the shared zombie script.
 Each outfit has several faces (Face_<Outfit>_<Preset>); the game shows one per
 zombie. Materials named "Shirt", "Skin" and "SkinDark" are tinted per zombie by
 the game. Faces -Y in Blender (+Z in Godot).
@@ -22,7 +24,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from aqua_common import *  # noqa: F401,F403
-from build_zombie import FPS, bind, build_animations, build_armature, skin  # noqa: E402
+from build_zombie import FPS, bind, build_armature, skin  # noqa: E402
+import zombie_anim  # noqa: E402
 from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
 
@@ -330,7 +333,7 @@ def build():
     for group in (diver_accessories(m), octo_accessories(m), jelly_accessories(m)):
         for name, parts in group.items():
             meshes.append(skin(name, parts, armature))
-    build_animations(armature)
+    zombie_anim.bake(armature, zombie_anim.aqua_clips, "aqua_zombies")
     save("aqua_zombies", [armature] + meshes, animations=True)
 
 

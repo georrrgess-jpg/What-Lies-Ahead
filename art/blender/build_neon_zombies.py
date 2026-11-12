@@ -11,9 +11,9 @@
 
 Bodies, heads and faces come from zombie_kit.py, and the rig and skinning from
 build_zombie.py (bone names Hips, Spine, Head, UpperArm.L/R, ForeArm.L/R, Thigh.L/R,
-Shin.L/R), with the clip names zombie.gd expects: Idle-loop, Walk-loop, Run-loop,
-Attack, Hit, Die. Each model also carries extra clips its behaviour plays: Spray
-(punk), Crouch and Leap (courier). Each outfit has several faces
+Shin.L/R); the clips come from zombie_anim.py (punk_clips, courier_clips, riot_clips):
+Idle, Walk, Run, Attack, Stagger, Hit_Head, the Die_* variants and Emerge, plus the
+extras each behaviour plays: Spray (punk), Crouch and Leap (courier). Each outfit has several faces
 (Face_<Outfit>_<Preset>); the game shows one per zombie.
 
 Materials named "Shirt", "Skin" and "SkinDark" are tinted per zombie by the game.
@@ -28,6 +28,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wla_common import *  # noqa: F401,F403
+import zombie_anim  # noqa: E402
 from build_zombie import FPS, bind, build_armature, skin  # noqa: E402,F401
 from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
@@ -339,252 +340,6 @@ def riot_shield(m):
     return acc
 
 
-# ---------------------------------------------------------------------------
-# Animation
-# ---------------------------------------------------------------------------
-
-def set_pose(armature, frame, pose, hips_loc=(0, 0, 0)):
-    for pb in armature.pose.bones:
-        rest = pb.bone.matrix_local.to_quaternion()
-        rx, ry, rz = pose.get(pb.name, (0, 0, 0))
-        q = Euler((math.radians(rx), math.radians(ry), math.radians(rz)), "XYZ").to_quaternion()
-        pb.rotation_quaternion = rest.inverted() @ q @ rest
-        pb.keyframe_insert("rotation_quaternion", frame=frame)
-        if pb.name == "Hips":
-            pb.location = rest.inverted() @ Vector(hips_loc)
-            pb.keyframe_insert("location", frame=frame)
-
-
-def arms(left_upper, left_fore, right_upper, right_fore, spread=10):
-    return {
-        "UpperArm.L": (left_upper, -spread, 0), "ForeArm.L": (left_fore, 0, 0),
-        "UpperArm.R": (right_upper, spread, 0), "ForeArm.R": (right_fore, 0, 0),
-    }
-
-
-def loop(name, frames, steps, make):
-    return name, [(round(i * frames / steps), *make(i / steps)) for i in range(steps + 1)]
-
-
-# --- Neon Punk: swaggering shamble, can held low, tags you from range --------
-
-def punk_clips():
-    def walk(phase):
-        s, c = math.sin(phase * math.tau), math.cos(phase * math.tau)
-        p = {"Hips": (4, 6 * c, 8 * c), "Spine": (10, -5 * c, -12 * c), "Head": (-6, 10 * c, 6 * s),
-             "Thigh.L": (-2 - 26 * c, 0, 0), "Thigh.R": (-2 + 26 * c, 0, 0),
-             "Shin.L": (8 + 34 * max(0.0, s), 0, 0), "Shin.R": (8 + 34 * max(0.0, -s), 0, 0)}
-        p.update(arms(-70 + 8 * c, -18 - 8 * s, -30 - 10 * c, -40 + 6 * s, spread=10))
-        return p, (0, 0, -0.03 * abs(c))
-
-    def run(phase):
-        s, c = math.sin(phase * math.tau), math.cos(phase * math.tau)
-        p = {"Hips": (12, 4 * c, 9 * c), "Spine": (22, 0, -12 * c), "Head": (-20, 5 * c, 0),
-             "Thigh.L": (-8 - 42 * c, 0, 0), "Thigh.R": (-8 + 42 * c, 0, 0),
-             "Shin.L": (20 + 60 * max(0.0, s), 0, 0), "Shin.R": (20 + 60 * max(0.0, -s), 0, 0)}
-        p.update(arms(-60 - 25 * c, -30, -50 + 25 * c, -40, spread=14))
-        return p, (0, 0, -0.04 * abs(c) + 0.02)
-
-    def idle(phase):
-        s = math.sin(phase * math.tau)
-        p = {"Hips": (2, 3 * s, 4 * s), "Spine": (8, -3 * s, 5 * s), "Head": (-6, 9 * s, -5 * s),
-             "Thigh.L": (-2, 0, 0), "Thigh.R": (-2, 0, 0), "Shin.L": (5, 0, 0), "Shin.R": (5, 0, 0)}
-        p.update(arms(-24 + 4 * s, -24, -30 - 6 * s, -50, spread=12))
-        return p, (0, 0, -0.01 + 0.006 * s)
-
-    legs = {"Thigh.L": (-14, 0, 0), "Thigh.R": (12, 0, 0), "Shin.L": (12, 0, 0), "Shin.R": (16, 0, 0)}
-
-    def pose(spine, head, lu, lf, ru, rf, hips=4, spread=12):
-        p = {"Hips": (hips, 0, 0), "Spine": (spine, 0, 0), "Head": (head, 0, 0)}
-        p.update(legs)
-        p.update(arms(lu, lf, ru, rf, spread=spread))
-        return p
-
-    attack = ("Attack", [
-        (0, pose(12, -6, -68, -16, -40, -30), (0, 0, -0.02)),
-        (6, pose(-6, -18, -140, -24, -130, -30, hips=-2, spread=-40), (0, 0.03, 0.02)),
-        (11, pose(-10, -22, -150, -28, -150, -28, hips=-4, spread=-46), (0, 0.05, 0.03)),
-        (14, pose(42, 8, -40, -4, -36, -6, hips=12, spread=8), (0, -0.2, -0.06)),
-        (18, pose(32, 2, -28, -10, -26, -12, hips=9, spread=10), (0, -0.16, -0.05)),
-        (24, pose(12, -6, -68, -16, -40, -30), (0, 0, -0.02)),
-    ])
-    hit = ("Hit", [
-        (0, pose(12, -6, -60, -20, -40, -30), (0, 0, -0.02)),
-        (3, {**pose(-18, -18, -36, -18, -30, -26), "Spine": (-18, 0, 14)}, (0, 0.05, -0.02)),
-        (9, pose(12, -6, -60, -20, -40, -30), (0, 0, -0.02)),
-    ])
-    # Shake the can (frames 0-19), then hold it out and spray (20-32).
-    spray = []
-    for f in range(0, 21, 2):
-        k = math.sin(f * 1.4)
-        p = pose(4, -10, -40, -30, -150 + 18 * k, -40 - 25 * k, hips=2, spread=6)
-        p["Spine"] = (2, 0, 10)
-        spray.append((f, p, (0, 0, -0.01)))
-    for f in (24, 32):
-        p = pose(10, -4, -50, -30, -92, -4, hips=4, spread=-4)
-        p["Spine"] = (8, 0, 14)
-        spray.append((f, p, (0, -0.02, -0.02)))
-    return [loop("Idle-loop", 48, 8, idle), loop("Walk-loop", 30, 8, walk), loop("Run-loop", 16, 8, run),
-            attack, hit, die_clip(), ("Spray", spray)]
-
-
-# --- Hover Courier: athletic sprinter, crouch-and-leap -----------------------
-
-def courier_clips():
-    def run(phase):
-        s, c = math.sin(phase * math.tau), math.cos(phase * math.tau)
-        p = {"Hips": (16, 3 * c, 10 * c), "Spine": (24, 0, -14 * c), "Head": (-24, 4 * c, 0),
-             "Thigh.L": (-10 - 48 * c, 0, 0), "Thigh.R": (-10 + 48 * c, 0, 0),
-             "Shin.L": (24 + 70 * max(0.0, s), 0, 0), "Shin.R": (24 + 70 * max(0.0, -s), 0, 0)}
-        # Arms pump (elbows bent), not the classic zombie reach.
-        p.update(arms(-10 + 50 * c, -85, -10 - 50 * c, -85, spread=12))
-        return p, (0, 0, -0.05 * abs(c) + 0.03)
-
-    def walk(phase):
-        s, c = math.sin(phase * math.tau), math.cos(phase * math.tau)
-        p = {"Hips": (6, 4 * c, 6 * c), "Spine": (14, -3 * c, -8 * c), "Head": (-10, 6 * c, 4 * s),
-             "Thigh.L": (-3 - 28 * c, 0, 0), "Thigh.R": (-3 + 28 * c, 0, 0),
-             "Shin.L": (10 + 36 * max(0.0, s), 0, 0), "Shin.R": (10 + 36 * max(0.0, -s), 0, 0)}
-        p.update(arms(-76 + 6 * c, -12 - 8 * s, -70 - 6 * c, -18 + 8 * s, spread=10))
-        return p, (0, 0, -0.03 * abs(c))
-
-    def idle(phase):
-        s = math.sin(phase * math.tau * 2)
-        p = {"Hips": (6, 0, 0), "Spine": (12, 0, 4 * s), "Head": (-10, 6 * s, 0),
-             "Thigh.L": (-14, 0, 0), "Thigh.R": (-14, 0, 0), "Shin.L": (26, 0, 0), "Shin.R": (26, 0, 0)}
-        p.update(arms(-30 + 6 * s, -40, -30 - 6 * s, -40, spread=14))
-        return p, (0, 0, -0.05 + 0.025 * abs(s))
-
-    legs = {"Thigh.L": (-16, 0, 0), "Thigh.R": (14, 0, 0), "Shin.L": (14, 0, 0), "Shin.R": (18, 0, 0)}
-
-    def pose(spine, head, upper, fore, hips=6, spread=12):
-        p = {"Hips": (hips, 0, 0), "Spine": (spine, 0, 0), "Head": (head, 0, 0)}
-        p.update(legs)
-        p.update(arms(upper, fore, upper, fore, spread=spread))
-        return p
-
-    attack = ("Attack", [
-        (0, pose(16, -10, -70, -20), (0, 0, -0.02)),
-        (5, pose(-6, -20, -140, -26, hips=-2, spread=-40), (0, 0.04, 0.02)),
-        (9, pose(-10, -24, -150, -30, hips=-4, spread=-46), (0, 0.05, 0.03)),
-        (12, pose(46, 8, -36, -2, hips=12, spread=8), (0, -0.22, -0.06)),
-        (16, pose(36, 2, -24, -10, hips=9, spread=10), (0, -0.18, -0.05)),
-        (22, pose(16, -10, -70, -20), (0, 0, -0.02)),
-    ])
-    hit = ("Hit", [
-        (0, pose(16, -10, -60, -24), (0, 0, -0.02)),
-        (3, {**pose(-18, -18, -30, -24), "Spine": (-18, 0, 14)}, (0, 0.05, -0.02)),
-        (9, pose(16, -10, -60, -24), (0, 0, -0.02)),
-    ])
-    crouch_pose = {"Hips": (24, 0, 0), "Spine": (30, 0, 0), "Head": (-30, 0, 0),
-                   "Thigh.L": (-78, 0, 0), "Thigh.R": (-70, 0, 0), "Shin.L": (118, 0, 0), "Shin.R": (112, 0, 0)}
-    crouch_pose.update(arms(45, -20, 45, -20, spread=24))
-    crouch = ("Crouch", [(0, {**crouch_pose, "Spine": (10, 0, 0)}, (0, 0, -0.1)), (6, crouch_pose, (0, 0.05, -0.32)),
-                         (14, {**crouch_pose, "Head": (-36, 0, 0)}, (0, 0.06, -0.34))])
-    leap_pose = {"Hips": (-10, 0, 0), "Spine": (6, 0, 0), "Head": (-14, 0, 0),
-                 "Thigh.L": (-90, 0, 0), "Thigh.R": (-40, 0, 0), "Shin.L": (100, 0, 0), "Shin.R": (60, 0, 0)}
-    leap_pose.update(arms(-150, -10, -150, -10, spread=-30))
-    leap = ("Leap", [(0, {**leap_pose, "Thigh.R": (10, 0, 0), "Shin.R": (10, 0, 0)}, (0, 0, 0.05)), (6, leap_pose, (0, 0, 0.1)),
-                     (16, {**leap_pose, "Spine": (20, 0, 0), "Thigh.L": (-60, 0, 0), "Thigh.R": (-60, 0, 0)}, (0, 0, 0.05))])
-    return [loop("Idle-loop", 24, 8, idle), loop("Walk-loop", 28, 8, walk), loop("Run-loop", 14, 8, run),
-            attack, hit, die_clip(), crouch, leap]
-
-
-# --- Riot Bruiser: heavy stomp behind the shield, shield bash -----------------
-
-def riot_clips():
-    def shield_arm(extra=0):
-        return {"UpperArm.L": (-58 + extra, 0, -38), "ForeArm.L": (-62, 0, -10)}
-
-    def walk(phase):
-        s, c = math.sin(phase * math.tau), math.cos(phase * math.tau)
-        p = {"Hips": (4, 4 * c, 4 * c), "Spine": (10, -4 * c, -6 * c), "Head": (-6, 3 * c, 0),
-             "Thigh.L": (-2 - 22 * c, 0, 0), "Thigh.R": (-2 + 22 * c, 0, 0),
-             "Shin.L": (8 + 30 * max(0.0, s), 0, 0), "Shin.R": (8 + 30 * max(0.0, -s), 0, 0),
-             "UpperArm.R": (-30 + 14 * c, 14, 0), "ForeArm.R": (-50, 0, 0)}
-        p.update(shield_arm(4 * c))
-        return p, (0, 0, -0.04 * abs(c))
-
-    def run(phase):
-        s, c = math.sin(phase * math.tau), math.cos(phase * math.tau)
-        p = {"Hips": (14, 3 * c, 6 * c), "Spine": (22, 0, -8 * c), "Head": (-20, 3 * c, 0),
-             "Thigh.L": (-8 - 38 * c, 0, 0), "Thigh.R": (-8 + 38 * c, 0, 0),
-             "Shin.L": (20 + 55 * max(0.0, s), 0, 0), "Shin.R": (20 + 55 * max(0.0, -s), 0, 0),
-             "UpperArm.R": (-20 + 30 * c, 16, 0), "ForeArm.R": (-60, 0, 0)}
-        p.update(shield_arm(-10))
-        return p, (0, 0, -0.05 * abs(c) + 0.01)
-
-    def idle(phase):
-        s = math.sin(phase * math.tau)
-        p = {"Hips": (2, 0, 2 * s), "Spine": (8, 0, -2 * s), "Head": (-4, 5 * s, 0),
-             "Thigh.L": (-4, 0, 0), "Thigh.R": (2, 0, 0), "Shin.L": (8, 0, 0), "Shin.R": (6, 0, 0),
-             "UpperArm.R": (-20 + 3 * s, 16, 0), "ForeArm.R": (-40, 0, 0)}
-        p.update(shield_arm(2 * s))
-        return p, (0, 0, -0.015 + 0.008 * s)
-
-    legs = {"Thigh.L": (-22, 0, 0), "Thigh.R": (16, 0, 0), "Shin.L": (16, 0, 0), "Shin.R": (18, 0, 0)}
-
-    def pose(spine, head, right_upper, right_fore, hips=4, shield=0, twist=0):
-        p = {"Hips": (hips, 0, twist * 0.5), "Spine": (spine, 0, twist), "Head": (head, 0, 0),
-             "UpperArm.R": (right_upper, 16, 0), "ForeArm.R": (right_fore, 0, 0)}
-        p.update(legs)
-        p.update(shield_arm(shield))
-        return p
-
-    # Windup: baton raised high behind the shield, leaning back; strike: a
-    # lunging shield bash with the baton coming down.
-    attack = ("Attack", [
-        (0, pose(10, -6, -30, -50), (0, 0, -0.02)),
-        (7, pose(-10, -14, -160, -40, hips=-4, shield=10, twist=-6), (0, 0.06, 0.02)),
-        (12, pose(-14, -18, -170, -36, hips=-6, shield=12, twist=-8), (0, 0.08, 0.03)),
-        (15, pose(30, 6, -60, -10, hips=12, shield=-26, twist=6), (0, -0.26, -0.08)),
-        (19, pose(24, 2, -44, -20, hips=9, shield=-18, twist=4), (0, -0.2, -0.06)),
-        (26, pose(10, -6, -30, -50), (0, 0, -0.02)),
-    ])
-    hit = ("Hit", [
-        (0, pose(10, -6, -30, -50), (0, 0, -0.02)),
-        (3, pose(-12, -14, -20, -30, twist=12, shield=14), (0, 0.06, -0.02)),
-        (10, pose(10, -6, -30, -50), (0, 0, -0.02)),
-    ])
-    return [loop("Idle-loop", 48, 8, idle), loop("Walk-loop", 36, 8, walk), loop("Run-loop", 18, 8, run),
-            attack, hit, die_clip()]
-
-
-def die_clip():
-    """Topples onto its back, arms flung wide (as the boardwalk zombies)."""
-    def pose(hips, spine, head, upper, fore, thigh, shin, spread):
-        p = {"Hips": (hips, 0, 0), "Spine": (spine, 0, 0), "Head": (head, 0, 0),
-             "Thigh.L": (thigh, 0, 0), "Thigh.R": (thigh + 8, 0, 0), "Shin.L": (shin, 0, 0), "Shin.R": (shin + 6, 0, 0)}
-        p.update(arms(upper, fore, upper - 10, fore, spread=spread))
-        return p
-    return "Die", [
-        (0, pose(4, 12, -8, -62, -16, -4, 10, 10), (0, 0, -0.02)),
-        (5, pose(-22, -24, -22, -125, -30, 8, 14, 40), (0, 0.06, -0.02)),
-        (12, pose(-78, -6, -12, -150, -20, -22, 26, 55), (0, 0.2, -0.46)),
-        (16, pose(-92, 0, -6, -165, -10, -10, 14, 62), (0, 0.22, -0.6)),
-        (19, pose(-88, 0, -4, -160, -12, -4, 10, 62), (0, 0.22, -0.56)),
-        (22, pose(-90, 0, -4, -162, -12, -6, 10, 62), (0, 0.22, -0.58)),
-    ]
-
-
-def build_animations(armature, clips):
-    ad = armature.animation_data_create()
-    for name, keys in clips:
-        action = bpy.data.actions.new(name)
-        ad.action = action
-        for frame, pose, hips_loc in keys:
-            set_pose(armature, frame, pose, hips_loc)
-        track = ad.nla_tracks.new()
-        track.name = name
-        track.strips.new(name, 0, action)
-        ad.action = None
-    for pb in armature.pose.bones:
-        pb.rotation_quaternion = (1, 0, 0, 0)
-        pb.location = (0, 0, 0)
-
-
-# ---------------------------------------------------------------------------
-
 def build_one(name, outfit, body, accessories, clips):
     scene = reset_scene()
     scene.render.fps = FPS
@@ -593,14 +348,14 @@ def build_one(name, outfit, body, accessories, clips):
     meshes = [skin("Outfit_" + outfit, body(m), armature)]
     for acc_name, parts in accessories(m).items():
         meshes.append(skin(acc_name, parts, armature))
-    build_animations(armature, clips())
+    zombie_anim.bake(armature, clips, name)
     save(name, [armature] + meshes, animations=True)
 
 
 def build():
-    build_one("neon_punk", "Punk", punk, punk_accessories, punk_clips)
-    build_one("neon_courier", "Courier", courier, courier_accessories, courier_clips)
-    build_one("neon_riot", "Riot", riot, riot_shield, riot_clips)
+    build_one("neon_punk", "Punk", punk, punk_accessories, zombie_anim.punk_clips)
+    build_one("neon_courier", "Courier", courier, courier_accessories, zombie_anim.courier_clips)
+    build_one("neon_riot", "Riot", riot, riot_shield, zombie_anim.riot_clips)
 
 
 if __name__ == "__main__":
