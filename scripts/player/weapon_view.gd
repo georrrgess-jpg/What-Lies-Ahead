@@ -1,13 +1,45 @@
 class_name WeaponView
 extends Node3D
 ## First-person viewmodel: shows the held weapon and arms, applies mastery
-## cosmetics, and animates sway, bob, recoil, reloads, the muzzle flash, the
+## cosmetics, and animates its motion, recoil, reloads, the muzzle flash, the
 ## lower/raise of a weapon switch, charging and beams.
+##
+## Motion is a set of poses blended through springs (so moves overshoot and
+## settle a little, like a weapon held in hands): the lowered and canted
+## sprint pose, a tilt into strafes, a lag behind the look and behind rising
+## and falling, a dip and kick on jumps and landings, a roll while sliding and
+## a lowered weapon while mantling. The bob follows the player's step rhythm,
+## in time with the footsteps, and only on the ground. All of it fades out
+## when aiming down sights, where the sight sits exactly on the screen centre.
 ##
 ## The whole rig is scaled down and held very close to the camera. On screen it
 ## looks identical, but it can no longer poke through walls or zombies.
 
 const VIEW_SCALE := 0.2
+## Poses (position in view units, rotation in degrees) added to the hip pose.
+const SPRINT_POS := Vector3(-0.07, -0.06, 0.03)
+const SPRINT_ROT := Vector3(-14.0, 26.0, 16.0)
+const SLIDE_POS := Vector3(-0.02, -0.035, 0.02)
+const SLIDE_ROT := Vector3(-4.0, 6.0, -10.0)
+const MANTLE_POS := Vector3(-0.03, -0.09, 0.04)
+const MANTLE_ROT := Vector3(-20.0, 8.0, 6.0)
+const VAULT_POS := Vector3(-0.02, -0.06, 0.03)
+const VAULT_ROT := Vector3(-12.0, 4.0, -12.0)
+## Tilt into a strafe at walking speed (degrees), and how far the weapon trails.
+const STRAFE_ROLL := 4.0
+const STRAFE_SHIFT := 0.012
+## Lag behind vertical speed (view units per m/s, and its limit).
+const RISE_LAG := 0.004
+const RISE_LAG_MAX := 0.03
+## Lag behind the look: degrees of lag per degree turned, and its limit.
+const LOOK_LAG := 0.3
+const LOOK_LAG_MAX := 6.0
+## Bob per step: side swing, dip as a foot lands (view units), roll (degrees).
+const BOB_SIDE := 0.012
+const BOB_DIP := 0.015
+const BOB_ROLL := 1.0
+## Initial spring velocity per unit of wanted peak (for the pose springs).
+const KICK_GAIN := 30.0
 const HOLO_SHADER := "res://art/shaders/holo.gdshader"
 ## Parts the reload animations may move (see art/blender/build_weapons.py).
 const ANIMATED_PARTS := ["Cell", "CellHolo", "Slide", "Hammer", "Panel", "Vents", "Barrels", "Pump",
@@ -21,8 +53,11 @@ var _flash: MeshInstance3D
 var _flash_light: OmniLight3D
 var _flash_time := 0.0
 
-var _sway := Vector2.ZERO
-var _bob_time := 0.0
+## Pose offsets on top of the hip pose: position (view units), rotation (degrees).
+var _pose_pos := MotionSpring.new(15.0, 0.6)
+var _pose_rot := MotionSpring.new(15.0, 0.6)
+## Lag behind the look: x yaw, y pitch (degrees).
+var _look := MotionSpring.new(10.0, 0.5)
 var _kick := 0.0
 var _kick_rot := 0.0
 var _raise := 1.0          # 1 = lowered off-screen, 0 = in firing position
@@ -46,11 +81,42 @@ func _ready() -> void:
 	_holder = Node3D.new()
 	_holder.name = "Holder"
 	add_child(_holder)
+	if player:
+		player.jumped.connect(_on_jumped)
+		player.landed.connect(_on_landed)
+		player.slide_started.connect(_on_slide_started)
+		player.traversal_finished.connect(_on_traversal_finished)
 
 
-func add_sway(mouse_delta: Vector2) -> void:
-	_sway += mouse_delta * 0.00035
-	_sway = _sway.limit_length(0.05)
+## The view turned by `look` radians (x right, y down) this frame: the
+## weapon trails behind the turn and swings back.
+func add_look(look: Vector2) -> void:
+	_look.value += Vector3(look.x, look.y, 0.0) * rad_to_deg(LOOK_LAG)
+	_look.value = _look.value.limit_length(LOOK_LAG_MAX)
+
+
+func _on_jumped() -> void:
+	_kick_pose(Vector3(0.0, -0.02, 0.0), Vector3(-2.0, 0.0, 0.0))
+
+
+func _on_landed(impact: float) -> void:
+	var k := minf(impact * 0.004, 0.05)
+	_kick_pose(Vector3(0.0, -k, 0.0), Vector3(-3.0 * k / 0.05, 0.0, 0.0))
+
+
+func _on_slide_started() -> void:
+	_kick_pose(Vector3(0.0, -0.02, 0.01), Vector3(-2.0, 0.0, -4.0))
+
+
+func _on_traversal_finished(vault: bool) -> void:
+	if not vault:
+		_kick_pose(Vector3(0.0, -0.025, 0.0), Vector3(-3.0, 0.0, 0.0))
+
+
+## A jolt that the pose springs carry through and settle (about `pos` and `rot` at its peak).
+func _kick_pose(pos: Vector3, rot: Vector3) -> void:
+	_pose_pos.kick(pos * KICK_GAIN)
+	_pose_rot.kick(rot * KICK_GAIN)
 
 
 ## Shows `weapon`. If another weapon is up, it is lowered out of view first
@@ -141,27 +207,29 @@ func _process(delta: float) -> void:
 		_raise = move_toward(_raise, 0.0, delta / maxf(0.05, data.equip_time))
 	_kick = lerpf(_kick, 0.0, 1.0 - exp(-14.0 * delta))
 	_kick_rot = lerpf(_kick_rot, 0.0, 1.0 - exp(-12.0 * delta))
-	_sway = _sway.lerp(Vector2.ZERO, 1.0 - exp(-7.0 * delta))
-
-	var speed := player.horizontal_speed() if player else 0.0
-	var moving := clampf(speed / 5.0, 0.0, 1.6)
-	_bob_time += delta * (6.0 + speed * 1.1)
-	var bob := Vector3(sin(_bob_time * 0.5) * 0.012, absf(cos(_bob_time * 0.5)) * -0.012, 0.0) * moving
 	var ease_raise := _raise * _raise
-
-	var charge := _weapon_state(delta)
-	var hip_pos := data.view_position + bob + charge \
-		+ Vector3(-_sway.x, _sway.y - ease_raise * 0.45, _kick)
-	var hip_rot := data.view_rotation_degrees \
-		+ Vector3(_kick_rot + ease_raise * -35.0 + _sway.y * 60.0, -_sway.x * 80.0, -_sway.x * 60.0)
 	# Aim down sights: square the gun up and slide it so the sight lands on the
-	# exact screen centre. Kick and sway are damped so the sight picture holds.
+	# exact screen centre. Motion and kick are damped so the sight picture holds.
 	var aim := ease(player.ads if player else 0.0, -1.8)
 	if _reload_tween and _reload_tween.is_valid():
 		aim *= 0.25
+
+	var pose_pos := _pose_pos.update(_pose_target_pos(), delta)
+	var pose_rot := _pose_rot.update(_pose_target_rot(), delta)
+	var look := _look.update(Vector3.ZERO, delta)
+	var look_pos := Vector3(-look.x, look.y, 0.0) * 0.004
+	var look_rot := Vector3(look.y, look.x, look.x * 0.8)
+	var bob := _bob() * (1.0 - 0.85 * aim)
+	var bob_pos := Vector3(bob.x, bob.y, 0.0)
+	var charge := _weapon_state(delta)
+
+	var hip_pos := data.view_position + bob_pos + charge + pose_pos + look_pos \
+		+ Vector3(0.0, -ease_raise * 0.45, _kick)
+	var hip_rot := data.view_rotation_degrees + pose_rot + look_rot \
+		+ Vector3(_kick_rot + ease_raise * -35.0, 0.0, bob.z)
 	var ads_pos := Vector3(0, 0, -data.ads_depth / VIEW_SCALE) - _sight_local \
-		+ Vector3(-_sway.x * 0.3, _sway.y * 0.3, _kick * 0.5) + bob * 0.15
-	var ads_rot := Vector3(_kick_rot * 0.35, 0.0, 0.0)
+		+ (look_pos + pose_pos * 0.5) * 0.3 + Vector3(0.0, 0.0, _kick * 0.5) + bob_pos * 0.15
+	var ads_rot := Vector3(_kick_rot * 0.35, 0.0, 0.0) + (look_rot + pose_rot) * 0.1
 	_holder.position = hip_pos.lerp(ads_pos + charge * 0.4, aim)
 	_holder.rotation_degrees = hip_rot.lerp(ads_rot, aim)
 
@@ -172,6 +240,45 @@ func _process(delta: float) -> void:
 				_flash.visible = false
 			if _flash_light:
 				_flash_light.visible = false
+
+
+## Where the movement poses pull the weapon (view units): sprint, slide,
+## mantle or vault, a trail behind strafes and behind vertical speed.
+func _pose_target_pos() -> Vector3:
+	if player == null:
+		return Vector3.ZERO
+	var lv := player.local_velocity()
+	var strafe := clampf(lv.x / player.walk_speed, -1.0, 1.0)
+	var target := SPRINT_POS * player.sprint_amount \
+		+ Vector3(-STRAFE_SHIFT * strafe, clampf(-lv.y * RISE_LAG, -RISE_LAG_MAX, RISE_LAG_MAX), 0.0)
+	if player.sliding:
+		target += SLIDE_POS
+	if player.is_traversing():
+		target += VAULT_POS if player.traversal_is_vault() else MANTLE_POS
+	return target
+
+
+func _pose_target_rot() -> Vector3:
+	if player == null:
+		return Vector3.ZERO
+	var strafe := clampf(player.local_velocity().x / player.walk_speed, -1.0, 1.0)
+	var target := SPRINT_ROT * player.sprint_amount + Vector3(0.0, 0.0, -STRAFE_ROLL * strafe)
+	if player.sliding:
+		target += SLIDE_ROT
+	if player.is_traversing():
+		target += VAULT_ROT if player.traversal_is_vault() else MANTLE_ROT
+	return target
+
+
+## Bob on the player's step rhythm: a side swing across each stride and a dip
+## as each foot lands. x, y in view units; z is the roll in degrees.
+func _bob() -> Vector3:
+	if player == null:
+		return Vector3.ZERO
+	var phase := player.gait_phase
+	var c := cos(phase)
+	var size := player.gait_amount * (1.0 + 0.5 * player.sprint_amount)
+	return Vector3(BOB_SIDE * sin(phase), BOB_DIP * (0.5 - c * c * c * c), BOB_ROLL * sin(phase)) * size
 
 
 ## Charge, heat and beam feedback. Returns the viewmodel offset for this frame

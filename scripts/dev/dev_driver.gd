@@ -590,12 +590,14 @@ func _walk_to(goal: Vector3, delta: float, face_path: bool) -> void:
 	_set_axis("move_right", "move_left", local.x)
 	_set_held("sprint", face_path and local.z < -0.7)
 
-	# Unstick: if we are not getting anywhere, re-plan from scratch.
+	# Unstick: if we are not getting anywhere, re-plan from scratch and hop
+	# (pushing forward, a jump mantles or vaults out of whatever holds us).
 	_stuck_time += delta
 	if _stuck_time > 2.0:
 		if _player.global_position.distance_to(_last_pos) < 0.5:
 			_path = PackedVector3Array()
 			_ring_index += 1
+			_tap("jump")
 		_last_pos = _player.global_position
 		_stuck_time = 0.0
 
