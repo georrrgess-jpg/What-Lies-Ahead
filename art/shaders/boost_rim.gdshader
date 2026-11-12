@@ -3,9 +3,9 @@
 shader_type spatial;
 render_mode unshaded, blend_add, depth_draw_never, cull_back, shadows_disabled;
 
-uniform vec4 glow_color : source_color = vec4(1.0, 0.42, 0.12, 1.0);
+uniform vec4 glow_color : source_color = vec4(1.0, 0.34, 0.06, 1.0);
 uniform float strength = 1.0;
-uniform float rim_power = 2.0;
+uniform float rim_power = 3.5;
 uniform float time_scroll = 0.0;
 
 void fragment() {
@@ -13,6 +13,6 @@ void fragment() {
 	float rim = pow(1.0 - facing, rim_power);
 	// A faint band sweeping along the weapon so the glow reads as live energy.
 	vec3 world = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	float band = smoothstep(0.75, 1.0, sin(world.x * 18.0 + world.y * 9.0 - time_scroll * 7.0));
-	ALBEDO = glow_color.rgb * (rim * 1.7 + 0.1 + band * 0.25) * strength;
+	float band = smoothstep(0.6, 1.0, sin(world.x * 14.0 + world.y * 7.0 - time_scroll * 6.0));
+	ALBEDO = glow_color.rgb * (rim * 2.2 + band * 0.4 * (0.12 + rim)) * strength;
 }

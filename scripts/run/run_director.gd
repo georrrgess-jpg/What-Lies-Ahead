@@ -109,6 +109,7 @@ func _ready() -> void:
 
 func _begin() -> void:
 	var root := get_parent()
+	tickets = waves.starting_tickets
 	score = ScoreKeeper.new()
 	score.name = "Score"
 	add_child(score)
@@ -163,7 +164,6 @@ func _begin() -> void:
 	Sfx.play_music(level.music, level.music_volume_db)
 
 	countdown = waves.prep_seconds
-	tickets = waves.starting_tickets
 	_set_state(State.PREP)
 	if kiosk:
 		kiosk.set_open(true)

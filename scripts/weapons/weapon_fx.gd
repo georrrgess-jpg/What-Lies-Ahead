@@ -207,15 +207,15 @@ static func _ring_material(color: Color) -> StandardMaterial3D:
 	var key := color.to_html()
 	if not _ring_mats.has(key):
 		var grad := Gradient.new()
-		grad.offsets = PackedFloat32Array([0.0, 0.62, 0.86, 0.93, 1.0])
-		grad.colors = PackedColorArray([Color(1, 1, 1, 0.0), Color(1, 1, 1, 0.12), Color(1, 1, 1, 0.9), Color(1, 1, 1, 1.0), Color(1, 1, 1, 0.0)])
+		grad.offsets = PackedFloat32Array([0.0, 0.7, 0.86, 0.93, 0.97, 1.0])
+		grad.colors = PackedColorArray([Color(1, 1, 1, 0.0), Color(1, 1, 1, 0.05), Color(1, 1, 1, 0.35), Color(1, 1, 1, 1.0), Color(1, 1, 1, 0.9), Color(1, 1, 1, 0.0)])
 		var tex := GradientTexture2D.new()
 		tex.gradient = grad
 		tex.fill = GradientTexture2D.FILL_RADIAL
 		tex.fill_from = Vector2(0.5, 0.5)
 		tex.fill_to = Vector2(1.0, 0.5)
-		tex.width = 128
-		tex.height = 128
+		tex.width = 256
+		tex.height = 256
 		var m := StandardMaterial3D.new()
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -240,13 +240,13 @@ static func smoke(parent: Node, at: Vector3, color: Color, radius: float, count 
 		puff.material_override = material
 		puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(puff)
-		puff.global_position = at + dir * radius * 0.15
-		var size := radius * randf_range(0.7, 1.1)
-		puff.scale = Vector3.ONE * size * 0.4
-		puff.transparency = 0.1
+		puff.global_position = at + dir * radius * 0.1
+		var size := radius * randf_range(0.32, 0.5)
+		puff.scale = Vector3.ONE * size * 0.3
+		puff.transparency = 0.15
 		var life := randf_range(0.5, 0.65)
 		var tw := puff.create_tween().set_parallel(true)
-		tw.tween_property(puff, "global_position", at + dir * radius * randf_range(0.45, 0.7) + Vector3.UP * radius * 0.35, life).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(puff, "global_position", at + dir * radius * randf_range(0.5, 0.8) + Vector3.UP * radius * 0.25, life).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tw.tween_property(puff, "scale", Vector3.ONE * size, life).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tw.tween_property(puff, "transparency", 1.0, life).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		tw.chain().tween_callback(puff.queue_free)
@@ -281,7 +281,7 @@ static func _smoke_material(color: Color) -> StandardMaterial3D:
 	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 	m.billboard_keep_scale = true
 	m.albedo_texture = _smoke_texture
-	m.albedo_color = Color(Color(0.62, 0.57, 0.7).lerp(color, 0.25), 0.9)
+	m.albedo_color = Color(Color(0.68, 0.64, 0.78).lerp(color, 0.2), 0.85)
 	_ring_mats[key] = m
 	return m
 
@@ -293,7 +293,7 @@ static func debris_stars(parent: Node, at: Vector3, color: Color, count := 5) ->
 	var b := FxBurst.new()
 	b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(b)
-	b.setup(at, Vector3.UP, [color, Color(1.0, 0.85, 0.3), Color.WHITE], count, 8.0, 0.9, 0.34, 60.0, Vector3(0, -15.0, 0), _star_mesh())
+	b.setup(at, Vector3.UP, [color, Color(1.0, 0.85, 0.3), Color.WHITE], count, 8.5, 0.9, 0.55, 60.0, Vector3(0, -15.0, 0), _star_mesh())
 
 
 ## Five-pointed star, flat in XY with some depth (FxBurst flattens Z further).
