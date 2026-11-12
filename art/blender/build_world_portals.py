@@ -276,8 +276,8 @@ def build_frost():
     snow = fc.snow_mat()
     timber, dark = fc.fmat("Timber"), fc.fmat("TimberDark")
     lantern = fc.fglow("FrostBulbAmber", "#ffc46b", 3.0)
-    green = fc.fglow("PortalAurora", "#5cffb0", 2.6)
-    lilac = fc.fglow("PortalAuroraLilac", "#b48cff", 2.4)
+    green = fc.fglow("PortalAurora", "#3cf59a", 1.2)
+    lilac = fc.fglow("PortalAuroraLilac", "#a070ff", 1.2)
     navy = fc.fmat("Navy")
     rng = random.Random(5)
     p = []
@@ -316,7 +316,7 @@ def build_frost():
             a = math.radians(-6 + 192.0 * i / 24)
             wob = 0.08 * math.sin(i * 0.8 + phase)
             pts.append((math.cos(a) * (hw + off + wob), 0.25, OPEN_SPRING + math.sin(a) * (rise + off + wob)))
-        p.append(tube(f"Aurora{k}", pts, 0.06 - k * 0.01, m=m, segs=6))
+        p.append(tube(f"Aurora{k}", pts, 0.09 - k * 0.015, m=m, segs=6))
     # Lantern posts either side.
     for s in (-1, 1):
         x = s * 2.75

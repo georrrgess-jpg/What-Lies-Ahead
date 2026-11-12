@@ -47,7 +47,7 @@ def mats():
         inside=dmat("Interior", rough=1.0), shield=dmat("HeatShield", "#5a3a30", rough=0.8),
         cell=dglow("CellGlow", "#5cf2ff", 2.2), screen=dglow("ScreenGlow", "#7cf6d8", 1.8),
         amber=dglow("LiftAmber", "#ffa12a", 3.0), navy=dmat("Navy", rough=0.5),
-        bay=dglow("BayLight", "#d9f6ff", 0.55), ration=dmat("Ration", "#ff8a2a", rough=0.35, metal=0.3),
+        bay=dglow("BayLight", "#86a6c8", 0.3), ration=dmat("Ration", "#ff8a2a", rough=0.35, metal=0.3),
         rubber=dmat("Rubber", rough=0.8), hazard=dmat("Hazard"), hdark=dmat("HazardDark"),
         sand=dmat("Sand", rough=0.95),
     )
@@ -173,10 +173,10 @@ def bay(m):
     for i in range(6):
         p += cell(f"BayCell{i}", m, (-0.72 + i * 0.288, sy, 2.39))
     # Middle shelf: med-kits (left) and ration pouches (right).
-    p += medkit("BayMedA", m, (-0.68, sy - 0.04, 1.745))
-    p += medkit("BayMedB", m, (-0.25, sy - 0.04, 1.745), rot_z=math.radians(-6), size=(0.34, 0.26, 0.24))
-    for i in range(4):
-        p += ration(f"BayRation{i}", m, (0.2 + i * 0.22, sy - 0.08 + (i % 2) * 0.06, 1.745), rot_z=math.radians((i - 1.5) * 7))
+    p += medkit("BayMedA", m, (-0.66, sy - 0.04, 1.745), size=(0.46, 0.32, 0.32))
+    p += medkit("BayMedB", m, (-0.18, sy - 0.04, 1.745), rot_z=math.radians(-6), size=(0.38, 0.28, 0.28))
+    for i in range(3):
+        p += place(ration(f"BayRation{i}", m, (0, 0, 0), rot_z=math.radians((i - 1) * 8)), (0.3 + i * 0.27, sy - 0.1 + (i % 2) * 0.06, 1.745), scale=1.2)
     # Floor: ammo cans and a small cell crate.
     p += ammo_can("BayAmmoA", m, (-0.55, sy - 0.05, BAY_Z0 + 0.03))
     p += ammo_can("BayAmmoB", m, (-0.02, sy - 0.02, BAY_Z0 + 0.03), rot_z=math.radians(8))
@@ -304,7 +304,7 @@ def build_hatch(m):
 
 
 def build_lamps(m, name, colour):
-    glow = dglow(name + "Glow", colour, 3.2)
+    glow = dglow(name + "Glow", colour, 1.6)
     p = []
     for s in (-1, 1):
         p.append(bulb(f"{name}{s}", 0.1, (s * (BAY_W / 2 + 0.11), FRAME_Y - 0.2, BAY_Z1 + 0.34), glow))
