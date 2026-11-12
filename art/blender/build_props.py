@@ -38,7 +38,7 @@ def build_lamp_post():
     """Boardwalk lamp: teal pole, curved arm reaching +X, amber lantern, star banner."""
     reset_scene()
     teal, dark, pink = mat("Teal"), mat("TealDark"), mat("Pink")
-    amber = glow("BulbAmber", "#ffb030", 1.9)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
     yellow = mat("Yellow")
     parts = [
         cyl("Base", 0.26, 0.5, (0, 0, 0.25), segs=12, bevel=0.05, m=dark, radius_top=0.2),
@@ -53,6 +53,7 @@ def build_lamp_post():
         cyl("Shade", 0.42, 0.26, (lx, 0, lz - 0.12), segs=14, bevel=0.03, m=teal, radius_top=0.12),
         cyl("ShadeRim", 0.44, 0.06, (lx, 0, lz - 0.26), segs=14, bevel=0.02, m=dark),
         sphere("Lantern", 0.27, (lx, 0, lz - 0.42), scale=(1, 1, 0.9), m=amber, segs=12, rings=8),
+        bulb("LanternGlow", 0.24, (lx, 0, lz - 0.42), amber),
         # Banner bracket and banner (hangs in the XZ plane, below the arm).
         box("BannerBar", (0.74, 0.05, 0.05), (0.42, 0, 4.18), bevel=0.01, m=dark),
         box("Banner", (0.62, 0.035, 1.25), (0.44, 0, 3.52), bevel=0.012, m=pink),
@@ -182,7 +183,7 @@ def build_booth():
     """Midway game booth, 4.6 m wide, striped awning, prizes on the back wall. Front faces -Y."""
     reset_scene()
     teal, pink, cream, dark = mat("Teal"), mat("Pink"), mat("Cream"), mat("PurpleDark")
-    amber = glow("BulbAmber", "#ffb030", 1.9)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
     yellow, wood = mat("Yellow"), mat("Wood")
     w, d = 4.6, 3.2
     parts = [
@@ -220,7 +221,7 @@ def _gate(name, label):
     """Entrance arch: two teal posts 7.2 m apart carrying a lit pink sign beam."""
     reset_scene()
     teal, dark, pink, cream = mat("Teal"), mat("TealDark"), mat("Pink"), mat("Cream")
-    amber = glow("BulbAmber", "#ffb030", 1.9)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
     yellow, hot = mat("Yellow"), mat("PinkDark")
     parts = []
     for x in (-3.6, 3.6):
@@ -259,7 +260,7 @@ def build_gatehouse():
     """Ticket building that closes the pier entrance. 12 m wide, dark doorway facing -Y."""
     reset_scene()
     teal, pink, cream, dark = mat("Teal"), mat("Pink"), mat("Cream"), mat("Dark")
-    amber = glow("BulbAmber", "#ffb030", 1.9)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
     hot, yellow = mat("PinkDark"), mat("Yellow")
     parts = [
         box("Body", (12.0, 3.0, 5.2), (0, 1.5, 2.6), bevel=0.15, segs=3, m=teal),
@@ -309,7 +310,7 @@ def build_arcade():
     reset_scene()
     teal, pink, cream, dark = mat("Teal"), mat("Pink"), mat("Cream"), mat("PurpleDark")
     inner = mat("ArcadeInner", "#2a1552", rough=0.9)
-    amber = glow("BulbAmber", "#ffb030", 1.9)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
     hot, yellow = mat("PinkDark"), mat("Yellow")
     w, d, h = 14.0, 8.0, 5.2
     parts = [
@@ -373,7 +374,7 @@ def build_coaster():
     """Background roller coaster: a rolling pink track on white supports (scenery only)."""
     reset_scene()
     track_m, support_m, teal = mat("Pink"), mat("White"), mat("TealLight")
-    amber = glow("BulbAmber", "#ffb030", 1.9)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
     parts = []
     pts = []
     for i in range(61):
@@ -403,7 +404,7 @@ def build_portal_arch():
     """The exit portal's frame: a chunky lit arch. Opening about 2.9 m wide x 3.5 m tall, faces -Y."""
     reset_scene()
     purple, pink, teal, dark = mat("Purple"), mat("Pink"), mat("Teal"), mat("PurpleDark")
-    amber = glow("BulbAmber", "#ffb030", 1.9)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
     cyan = glow("PortalCyan", "#33f0ff", 3.0)
     arch_r, spring = 1.75, 2.0
     parts = []
@@ -427,6 +428,99 @@ def build_portal_arch():
         box("Back", (3.4, 0.12, spring + arch_r - 0.3), (0, 0.32, (spring + arch_r - 0.3) / 2), bevel=0.0, m=dark),
     ]
     save("portal_arch", [merge("PortalArch", parts)])
+
+
+def _shop(name, body_hex, trim_hex, awning_a, awning_b, label, sign_hex):
+    """Beach-side shopfront (scenery behind the pier entrance). 9 m wide, front faces -Y."""
+    reset_scene()
+    body, trim = mat("ShopBody" + name, body_hex, rough=0.8), mat("ShopTrim" + name, trim_hex, rough=0.6)
+    a, b = mat(awning_a), mat(awning_b)
+    cream, dark = mat("Cream"), mat("Dark")
+    sign = mat("ShopSign" + name, sign_hex, rough=0.5)
+    glass = mat("ShopGlass", "#3b2f63", rough=0.15, metal=0.2)
+    warm = glow("WindowWarm", "#ffd68a", 1.3)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
+    w, d, h = 9.0, 7.0, 5.0
+    parts = [
+        box("Body", (w, d, h), (0, d / 2, h / 2), bevel=0.14, segs=3, m=body),
+        box("Base", (w + 0.2, d + 0.2, 0.5), (0, d / 2, 0.25), bevel=0.06, m=trim),
+        box("Roof", (w + 0.5, d + 0.5, 0.35), (0, d / 2, h + 0.15), bevel=0.12, m=trim),
+        box("Window", (w - 2.8, 0.2, 2.2), (0.6, -0.02, 2.0), bevel=0.06, m=glass),
+        box("WindowLight", (w - 3.2, 0.1, 1.7), (0.6, 0.06, 2.0), bevel=0.02, m=warm),
+        box("Sill", (w - 2.4, 0.4, 0.14), (0.6, -0.12, 0.86), bevel=0.04, m=cream),
+        box("Door", (1.4, 0.2, 2.6), (-w / 2 + 1.2, -0.02, 1.3), bevel=0.05, m=dark),
+        box("SignBoard", (w * 0.75, 0.35, 1.2), (0, -0.25, h + 0.95), bevel=0.25, segs=3, m=sign),
+        text("SignText", label, 0.72, 0.12, (0, -0.48, h + 0.93), m=cream),
+    ]
+    parts += _awning("Awning", w + 0.3, 1.6, 3.7, 3.1, -0.05, -1.5, 9, a, b)
+    parts += bulb_row("SignBulb", (-w * 0.36, -0.45, h + 1.62), (w * 0.36, -0.45, h + 1.62), 12, 0.08, amber)
+    save(name, [merge("Shop", parts)])
+
+
+def build_beach_shop_a():
+    _shop("beach_shop_a", "#ff86c4", "#c41f74", "Teal", "Cream", "SURF", "#12989c")
+
+
+def build_beach_shop_b():
+    _shop("beach_shop_b", "#ffd36b", "#e07b1f", "Pink", "Cream", "TACOS", "#6b35b8")
+
+
+def build_beach_shop_c():
+    _shop("beach_shop_c", "#7fd6cf", "#0b6268", "Orange", "Cream", "ICE CREAM", "#e0218a")
+
+
+def build_beach_shop_d():
+    _shop("beach_shop_d", "#b493ea", "#3d1f73", "Yellow", "Pink", "GIFTS", "#ff3f9f")
+
+
+def build_popcorn_cart():
+    """Popcorn cart with a striped umbrella. Front faces -Y."""
+    reset_scene()
+    red, white, cream, dark = mat("Red"), mat("White"), mat("Cream"), mat("Dark")
+    pop = mat("Popcorn", "#fff2b8", rough=0.9)
+    glass = mat("CartGlass", "#cfeeff", rough=0.1)
+    yellow, teal = mat("Yellow"), mat("Teal")
+    parts = [
+        box("Cart", (1.6, 0.9, 0.8), (0, 0, 0.75), bevel=0.08, segs=3, m=red),
+        box("CartStripe", (1.62, 0.92, 0.14), (0, 0, 0.75), bevel=0.03, m=white),
+        box("Top", (1.7, 1.0, 0.08), (0, 0, 1.18), bevel=0.03, m=yellow),
+        box("Glass", (1.2, 0.7, 0.7), (0, 0, 1.56), bevel=0.04, m=glass),
+        box("Roof", (1.36, 0.86, 0.12), (0, 0, 1.96), bevel=0.04, m=red),
+        text("Label", "POPCORN", 0.2, 0.04, (0, -0.47, 0.98), m=yellow),
+        cyl("Pole", 0.035, 1.6, (0, 0, 2.7), segs=8, bevel=0.0, m=white),
+    ]
+    import random
+    rng = random.Random(4)
+    for i in range(26):
+        parts.append(sphere(f"Pop{i}", 0.07, (rng.uniform(-0.5, 0.5), rng.uniform(-0.28, 0.28), 1.27 + rng.uniform(0, 0.22)), m=pop, segs=6, rings=4))
+    for x in (-0.65, 0.65):
+        parts.append(cyl(f"Wheel{x}", 0.26, 0.08, (x, -0.47, 0.28), rot=rad(90, 0, 0), segs=16, bevel=0.02, m=dark))
+        parts.append(cyl(f"Hub{x}", 0.08, 0.1, (x, -0.49, 0.28), rot=rad(90, 0, 0), segs=10, bevel=0.01, m=yellow))
+    for i in range(8):
+        a0, a1 = math.tau * i / 8, math.tau * (i + 1) / 8
+        tri = [(0, 0), (math.cos(a0) * 1.25, math.sin(a0) * 1.25), (math.cos(a1) * 1.25, math.sin(a1) * 1.25)]
+        seg = prism(f"Umbrella{i}", [(x, y) for x, y in tri], 0.04, (0, 0, 3.45), rot=rad(90, 0, 0), m=red if i % 2 else white)
+        seg.rotation_euler = Euler((math.radians(0), 0, 0), "XYZ")
+        # Lay the slice flat (prism extrudes along Y; rotate so it lies in XY) and droop it slightly.
+        for v in seg.data.vertices:
+            x, y, z = v.co
+            r = math.hypot(x, z)
+            v.co = Vector((x, z, y - 0.35 * r))
+        parts.append(seg)
+    parts.append(sphere("UmbrellaTop", 0.08, (0, 0, 3.52), m=teal))
+    save("popcorn_cart", [merge("PopcornCart", parts)])
+
+
+def build_trash_bin():
+    reset_scene()
+    teal, pink, dark = mat("Teal"), mat("Pink"), mat("TealDark")
+    parts = [
+        cyl("Bin", 0.32, 0.9, (0, 0, 0.45), segs=16, bevel=0.04, m=teal, radius_top=0.34),
+        cyl("Band", 0.35, 0.1, (0, 0, 0.68), segs=16, bevel=0.02, m=dark),
+        cyl("Lid", 0.38, 0.14, (0, 0, 0.97), segs=16, bevel=0.05, m=pink, radius_top=0.3),
+        sphere("Knob", 0.07, (0, 0, 1.08), m=pink),
+    ]
+    save("trash_bin", [merge("TrashBin", parts)])
 
 
 if __name__ == "__main__":

@@ -16,6 +16,11 @@ extends Node
 ##   --shot-frames=n       frames to wait before capturing
 ##   --shot-reload=1       start a reload just before the wait (to check reload animations)
 ##   --shot-portal=1       open the portal and light the exit route
+##   --shot-fire=n         fire n shots at the nearest staged zombie, then wait --shot-frames
+##   --shot-hurt=1         hit the player from the left (damage feedback check)
+##   --shot-cam=x,y,z>tx,ty,tz   free camera from x,y,z looking at tx,ty,tz (hides the viewmodel)
+##   --shot-anim=Clip:t    pose every staged zombie at time t (seconds) of Clip
+##   --shot-near=1         stage one zombie of each kind close to the player instead of four
 
 var path := ""
 var args := {}
@@ -109,7 +114,45 @@ func _run() -> void:
 	if _arg("reload", "0") == "1":
 		player.weapons._ammo[player.weapons.current.id]["mag"] = 1
 		player.weapons.start_reload()
+	if _arg("cam", "") != "":
+		var parts := _arg("cam", "").split(">")
+		var cam := Camera3D.new()
+		cam.fov = float(_arg("fov", "50"))
+		director.get_parent().add_child(cam)
+		cam.look_at_from_position(_vec(parts[0]), _vec(parts[1]))
+		cam.make_current()
+		player.view.visible = false
+	var shots := int(_arg("fire", "0"))
+	if shots > 0:
+		await _wait(10)
+		player.set_physics_process(true)
+		player.controls_enabled = true
+		for i in shots:
+			_aim_at_nearest(director, player)
+			player.weapons._cooldown = 0.0
+			player.weapons._fire()
+			await _wait(4)
+			var hp := []
+			for z in director.alive_enemies():
+				if is_instance_valid(z):
+					hp.append("%s %.0f%s" % [z.data.id, z.health, " dead" if z.is_dead() else ""])
+			print("[shot] after shot %d: %s  look_pitch=%.2f head_pitch=%.2f" % [i + 1, hp, player.look_pitch(), player.head.rotation.x])
+		player.set_physics_process(false)
+	if _arg("hurt", "0") == "1":
+		await _wait(5)
+		player.take_damage(20.0, player.global_position - player.global_transform.basis.x * 4.0)
 	await _capture(int(_arg("frames", "45")))
+
+
+func _aim_at_nearest(director: RunDirector, player: Player) -> void:
+	var best: Zombie = null
+	for z in director.alive_enemies():
+		if is_instance_valid(z) and not z.is_dead() and (best == null or z.global_position.distance_to(player.global_position) < best.global_position.distance_to(player.global_position)):
+			best = z
+	if best == null:
+		return
+	var to := best.global_position + Vector3(0, 1.0, 0) - player.camera.global_position
+	player.set_look(atan2(-to.x, -to.z), atan2(to.y, Vector2(to.x, to.z).length()))
 
 
 ## Four zombies placed roughly where the reference image has them.
@@ -120,6 +163,12 @@ func _stage_zombies(director: RunDirector, player: Player) -> void:
 		[&"tourist_shambler", Vector3(1.6, 0, 6.4), 0.55, Color(1.0, 0.76, 0.18)],
 		[&"lifeguard_runner", Vector3(8.6, 0, 7.4), 0.40, Color.WHITE],
 	]
+	if _arg("near", "0") == "1":
+		staged = [
+			[&"tourist_shambler", player.global_position + Vector3(-1.1, 0, -4.2), 0.3, Color(1.0, 0.33, 0.62)],
+			[&"lifeguard_runner", player.global_position + Vector3(1.4, 0, -4.6), 0.4, Color.WHITE],
+		]
+	var pose := _arg("anim", "")
 	var scene: PackedScene = load(RunDirector.ZOMBIE_SCENE)
 	for entry in staged:
 		var data: EnemyData = GameData.enemy(entry[0]).duplicate()
@@ -134,7 +183,14 @@ func _stage_zombies(director: RunDirector, player: Player) -> void:
 		z.rotation.y = atan2(to_player.x, to_player.z)
 		z.set_physics_process(false)
 		var anim := z.find_child("AnimationPlayer", true, false) as AnimationPlayer
-		if anim and anim.current_animation != "":
+		if anim and pose != "":
+			var bits := pose.split(":")
+			var clip := bits[0] if anim.has_animation(bits[0]) else bits[0] + "-loop"
+			if anim.has_animation(clip):
+				anim.play(clip)
+				anim.seek(float(bits[1]), true)
+				anim.pause()
+		elif anim and anim.current_animation != "":
 			anim.seek(anim.current_animation_length * float(entry[2]), true)
 			anim.pause()
 

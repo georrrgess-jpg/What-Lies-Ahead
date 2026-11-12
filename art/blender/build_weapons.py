@@ -39,7 +39,8 @@ def arm(prefix, grip, toward, thumb_side=-1.0, underhand=False):
     sleeve = mat("Sleeve", "#1d1b26", rough=0.8)
     c = Vector(grip)
     d = (Vector(toward) - c).normalized()
-    parts = [sphere(prefix + "Fist", 0.066, c, scale=(1.0, 1.1, 1.2), m=glove, segs=14, rings=10)]
+    parts = [sphere(prefix + "Fist", 0.08, c, scale=(1.0, 1.1, 1.2), m=glove, segs=14, rings=10),
+             sphere(prefix + "Knuckles", 0.05, (c.x, c.y + 0.05, c.z + 0.02), scale=(1.5, 0.8, 1.0), m=glove, segs=10, rings=6)]
     if underhand:
         # Cradling from below: fingers curl up the far side, thumb up the near side.
         for i in range(4):
@@ -54,9 +55,10 @@ def arm(prefix, grip, toward, thumb_side=-1.0, underhand=False):
         parts.append(box(prefix + "Thumb", (0.034, 0.075, 0.034), (c.x + thumb_side * 0.055, c.y + 0.03, c.z + 0.055),
                          rot=rad(25, 0, 0), bevel=0.013, m=glove))
     parts += [
-        tube(prefix + "Wrist", [c + d * 0.02, c + d * 0.15], 0.052, m=glove, segs=10),
-        tube(prefix + "Cuff", [c + d * 0.13, c + d * 0.215], 0.073, m=cuff, segs=12),
-        tube(prefix + "Forearm", [c + d * 0.2, c + d * 0.85], 0.062, m=sleeve, segs=10, radius_end=0.085),
+        tube(prefix + "Wrist", [c + d * 0.02, c + d * 0.15], 0.064, m=glove, segs=12),
+        tube(prefix + "Cuff", [c + d * 0.12, c + d * 0.24], 0.094, m=cuff, segs=14),
+        tube(prefix + "CuffRim", [c + d * 0.235, c + d * 0.26], 0.088, m=glove, segs=14),
+        tube(prefix + "Forearm", [c + d * 0.25, c + d * 0.9], 0.078, m=sleeve, segs=12, radius_end=0.1),
     ]
     return parts
 
@@ -101,12 +103,16 @@ def build_pulse_pistol():
         box("Trigger", (0.014, 0.014, 0.04), (0, 0.062, -0.055), rot=rad(15, 0, 0), bevel=0.004, m=M["cell"]),
         cyl("Barrel", 0.027, 0.06, (0, 0.27, 0.065), rot=rad(90, 0, 0), segs=12, bevel=0.006, m=M["dark"]),
         box("UnderLight", (0.03, 0.07, 0.022), (0, 0.2, -0.042), bevel=0.008, m=M["cell"]),
+        # Energy-cell window on the side the player sees.
+        box("CellWindowFrame", (0.012, 0.15, 0.05), (-0.042, 0.13, 0.0), bevel=0.008, m=M["dark"]),
+        box("CellWindow", (0.01, 0.12, 0.032), (-0.047, 0.13, 0.0), bevel=0.008, m=M["cell"]),
     ]
     slide = [
         box("SlideBody", (0.088, 0.3, 0.082), (0, 0.11, 0.07), bevel=0.026, segs=3, m=M["shell"]),
         box("SlideVent", (0.034, 0.13, 0.014), (0, 0.14, 0.113), bevel=0.005, m=M["cell"]),
         box("SlideRear", (0.092, 0.06, 0.088), (0, -0.015, 0.07), bevel=0.02, m=M["trim"]),
         box("SightRear", (0.05, 0.02, 0.022), (0, -0.02, 0.122), bevel=0.006, m=M["dark"]),
+        box("RearGlow", (0.05, 0.012, 0.03), (0, -0.046, 0.075), bevel=0.008, m=M["cell"]),
         box("SightFront", (0.014, 0.02, 0.022), (0, 0.235, 0.118), bevel=0.005, m=M["cell"]),
     ]
     for i in range(3):
@@ -129,7 +135,9 @@ def build_ion_carbine():
     M = mats()
     shell = [
         box("RearBlock", (0.15, 0.2, 0.2), (0, 0.0, 0.035), bevel=0.04, segs=3, m=M["trim"]),
-        box("StockPad", (0.12, 0.06, 0.16), (0, -0.12, 0.03), bevel=0.03, m=M["dark"]),
+        box("StockPad", (0.13, 0.06, 0.16), (0, -0.12, 0.03), bevel=0.035, m=M["shell"]),
+        box("RearSlotFrame", (0.1, 0.02, 0.07), (0, -0.152, 0.05), bevel=0.012, m=M["trim"]),
+        box("RearSlot", (0.078, 0.02, 0.042), (0, -0.158, 0.05), bevel=0.012, m=M["cell"]),
         box("MidShell", (0.17, 0.3, 0.19), (0, 0.22, 0.035), bevel=0.055, segs=3, m=M["shell"]),
         box("MidRidge", (0.085, 0.27, 0.05), (0, 0.22, 0.14), bevel=0.02, m=M["shell"]),
         box("Cradle", (0.05, 0.25, 0.115), (-0.082, 0.22, 0.02), bevel=0.02, m=M["trim"]),
@@ -171,7 +179,9 @@ def build_scatter_blaster():
     shell = [
         box("Body", (0.21, 0.27, 0.18), (0, 0.04, 0.03), bevel=0.05, segs=3, m=M["trim"]),
         box("TopPlate", (0.18, 0.2, 0.05), (0, 0.06, 0.125), bevel=0.02, m=M["shell"]),
-        box("Stock", (0.15, 0.13, 0.14), (0, -0.14, 0.02), bevel=0.04, m=M["dark"]),
+        box("Stock", (0.15, 0.13, 0.14), (0, -0.14, 0.02), bevel=0.04, m=M["shell"]),
+        box("RearSlotFrame", (0.11, 0.02, 0.07), (0, -0.207, 0.035), bevel=0.012, m=M["trim"]),
+        box("RearSlot", (0.085, 0.02, 0.042), (0, -0.213, 0.035), bevel=0.012, m=M["cell"]),
         box("Band", (0.25, 0.055, 0.15), (0, 0.44, 0.045), bevel=0.03, m=M["trim"]),
         box("BandRear", (0.24, 0.05, 0.14), (0, 0.2, 0.045), bevel=0.03, m=M["trim"]),
         box("Grip", (0.08, 0.1, 0.2), (0, -0.05, -0.13), rot=rad(-14, 0, 0), bevel=0.024, m=M["dark"]),
@@ -192,10 +202,10 @@ def build_scatter_blaster():
     for i in range(4):
         pump.append(box(f"PumpRidge{i}", (0.206, 0.02, 0.05), (0, 0.255 + i * 0.037, -0.056), bevel=0.007, m=M["dark"]))
     cell = [
-        cyl("Drum", 0.062, 0.15, (0, -0.03, 0.18), rot=rad(0, 90, 0), segs=16, bevel=0.012, m=M["cell"]),
-        cyl("DrumCapA", 0.068, 0.03, (-0.085, -0.03, 0.18), rot=rad(0, 90, 0), segs=16, bevel=0.008, m=M["trim"]),
-        cyl("DrumCapB", 0.068, 0.03, (0.085, -0.03, 0.18), rot=rad(0, 90, 0), segs=16, bevel=0.008, m=M["trim"]),
-        box("DrumSeat", (0.12, 0.09, 0.04), (0, -0.03, 0.125), bevel=0.012, m=M["dark"]),
+        cyl("Drum", 0.055, 0.14, (0, -0.03, 0.165), rot=rad(0, 90, 0), segs=16, bevel=0.012, m=M["cell"]),
+        cyl("DrumCapA", 0.061, 0.03, (-0.08, -0.03, 0.165), rot=rad(0, 90, 0), segs=16, bevel=0.008, m=M["trim"]),
+        cyl("DrumCapB", 0.061, 0.03, (0.08, -0.03, 0.165), rot=rad(0, 90, 0), segs=16, bevel=0.008, m=M["trim"]),
+        box("DrumSeat", (0.12, 0.09, 0.04), (0, -0.03, 0.115), bevel=0.012, m=M["dark"]),
     ]
     teeth = [(-0.065, 0.022), (0.065, 0.022), (0.065, 0.0), (0.049, -0.028), (0.033, 0.0), (0.016, -0.028), (0.0, 0.0),
              (-0.016, -0.028), (-0.033, 0.0), (-0.049, -0.028), (-0.065, 0.0)]

@@ -23,8 +23,8 @@ def build():
     pink, hot, light = mat("Pink"), mat("PinkDark"), mat("PinkLight")
     cream, teal, tdark, wood = mat("Cream"), mat("Teal"), mat("TealDark"), mat("Wood")
     yellow = mat("Yellow")
-    amber = glow("BulbAmber", "#ffb030", 1.9)
-    white = glow("BulbWhite", "#ffe6b0", 1.7)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
+    white = glow("BulbWhite", "#fff0c8", 2.6)
 
     # --- Stand -------------------------------------------------------------
     stand = [

@@ -68,6 +68,13 @@ func is_reloading() -> bool:
 	return _reloading
 
 
+## 0-1 through the current reload.
+func reload_progress() -> float:
+	if not _reloading or current == null:
+		return 0.0
+	return 1.0 - clampf(_reload_left / maxf(0.01, current.reload_time), 0.0, 1.0)
+
+
 func current_spread() -> float:
 	return (current.spread_degrees + _bloom) if current else 0.0
 
@@ -191,6 +198,9 @@ func _fire() -> void:
 	var any_hit := false
 	var any_kill := false
 	var any_head := false
+	# Pellets are gathered per zombie so a scatter blast is one solid hit
+	# (one flash, one sound, summed damage and knockback), not nine tiny ones.
+	var hits := {}
 
 	for i in data.pellets:
 		var angle := randf() * TAU
@@ -209,13 +219,30 @@ func _fire() -> void:
 				var dmg := data.damage * _falloff(data, origin.distance_to(end))
 				if head:
 					dmg *= data.headshot_multiplier
-				var killed := zombie.take_hit(dmg, end, dir, data.id, head)
-				any_hit = true
-				any_kill = any_kill or killed
-				any_head = any_head or head
+				var key := zombie.get_instance_id()
+				if not hits.has(key):
+					hits[key] = {"zombie": zombie, "damage": 0.0, "push": 0.0, "head": false, "point": end, "dir": dir}
+				var entry: Dictionary = hits[key]
+				entry["damage"] = float(entry["damage"]) + dmg
+				entry["push"] = float(entry["push"]) + data.knockback
+				entry["head"] = bool(entry["head"]) or head
+				if head:
+					entry["point"] = end
 			else:
 				Fx.impact(player.get_parent(), end, hit["normal"], data.tracer_color)
-		Fx.tracer(player.get_parent(), muzzle, end, data.tracer_color, data.tracer_width)
+		# Only a few streaks per scatter blast keep the screen readable.
+		if i < 4:
+			Fx.tracer(player.get_parent(), muzzle, end, data.tracer_color, data.tracer_width, cam.global_position)
+
+	for key in hits:
+		var entry: Dictionary = hits[key]
+		var zombie: Zombie = entry["zombie"]
+		if not is_instance_valid(zombie) or zombie.is_dead():
+			continue
+		var killed := zombie.take_hit(float(entry["damage"]), entry["point"], entry["dir"], data.id, bool(entry["head"]), float(entry["push"]))
+		any_hit = true
+		any_kill = any_kill or killed
+		any_head = any_head or bool(entry["head"])
 
 	_bloom = minf(data.spread_bloom_max, _bloom + data.spread_bloom)
 	player.add_recoil(data.recoil_kick)
@@ -224,6 +251,11 @@ func _fire() -> void:
 	fired.emit(data)
 	if any_hit:
 		hit_confirmed.emit(any_kill, any_head)
+		# Non-positional confirms so far-away hits still register.
+		if any_kill:
+			Sfx.play(&"kill_confirm", -4.0, randf_range(0.97, 1.03))
+		else:
+			Sfx.play(&"hitmarker", -9.0 if not any_head else -5.0, 1.25 if any_head else randf_range(0.96, 1.04))
 	if int(state["mag"]) <= 0 and int(state["reserve"]) > 0:
 		# Auto-reload shortly after the last shot so the player is never stuck clicking.
 		_cooldown = maxf(_cooldown, 0.2)

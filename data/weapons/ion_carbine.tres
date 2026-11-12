@@ -57,6 +57,7 @@ falloff_start = 28.0
 falloff_end = 70.0
 falloff_min_scale = 0.6
 headshot_multiplier = 1.5
+knockback = 0.45
 recoil_kick = 0.42
 view_kick = 0.022
 shake = 0.07

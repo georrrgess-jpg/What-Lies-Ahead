@@ -14,11 +14,11 @@ var _time := 0.0
 func _ready() -> void:
 	add_to_group("exit_lights")
 	_material = StandardMaterial3D.new()
-	_material.albedo_color = Color(0.1, 0.25, 0.3)
-	_material.roughness = 0.4
+	_material.albedo_color = Color(0.32, 0.6, 0.66)
+	_material.roughness = 0.35
 	_material.emission_enabled = true
 	_material.emission = Color(0.2, 0.95, 1.0)
-	_material.emission_energy_multiplier = 0.0
+	_material.emission_energy_multiplier = 0.15
 	material_override = _material
 	set_process(false)
 
@@ -26,8 +26,8 @@ func _ready() -> void:
 func set_lit(value: bool) -> void:
 	lit = value
 	set_process(value)
-	_material.albedo_color = Color(0.2, 0.95, 1.0) if value else Color(0.1, 0.25, 0.3)
-	_material.emission_energy_multiplier = 1.5 if value else 0.0
+	_material.albedo_color = Color(0.2, 0.95, 1.0) if value else Color(0.32, 0.6, 0.66)
+	_material.emission_energy_multiplier = 1.5 if value else 0.15
 
 
 func _process(delta: float) -> void:

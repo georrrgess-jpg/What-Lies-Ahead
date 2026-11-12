@@ -61,6 +61,8 @@ func _initialize() -> void:
 	_build_arena_props()
 	_build_exit()
 	_build_backdrop()
+	_build_string_lights()
+	_build_deck_paint()
 	_build_markers()
 
 	# Navigation needs the nodes in the tree for their global transforms.
@@ -428,6 +430,16 @@ func _build_arena_props() -> void:
 		_prop(props, "bench", "Bench%d" % i, spot, -90.0, Vector3(0.8, 0.9, 2.2))
 		_collider(props, "Bench%dCollision" % i, Vector3(0.9, 0.9, 2.2), spot + Vector3(0, 0.45, 0))
 		i += 1
+	# Litter bins beside the benches, tight to the rail.
+	i = 0
+	for spot in bench_spots:
+		var bin_pos: Vector3 = spot + Vector3(0.1, 0, 1.9)
+		_prop(props, "trash_bin", "Bin%d" % i, bin_pos, 0.0, Vector3(0.7, 1.1, 0.7))
+		_collider(props, "Bin%dCollision" % i, Vector3(0.7, 1.1, 0.7), bin_pos + Vector3(0, 0.55, 0))
+		i += 1
+	# Popcorn cart in the back corner of the ride side, off the main loop.
+	_prop(props, "popcorn_cart", "PopcornCart", Vector3(-20.5, 0, -21.2), 90.0, Vector3(1.7, 2.0, 1.0))
+	_collider(props, "PopcornCartCollision", Vector3(1.1, 2.0, 1.8), Vector3(-20.5, 1.0, -21.2))
 	_prop(dressing, "surfboards", "Surfboards", Vector3(13.45, 0, -2.6), -90.0, Vector3(0.6, 2.4, 1.6))
 	_prop(dressing, "life_ring", "LifeRing", Vector3(13.8, 0.75, 1.4), -90.0, Vector3(0.2, 0.8, 0.8))
 	_prop(dressing, "life_ring", "LifeRing2", Vector3(13.8, 0.75, -30.0), -90.0, Vector3(0.2, 0.8, 0.8))
@@ -463,7 +475,7 @@ func _build_exit() -> void:
 	lights.name = "ExitLights"
 	level.add_child(lights)
 	var strip := BoxMesh.new()
-	strip.size = Vector3(1.8, 0.05, 0.32)
+	strip.size = Vector3(1.3, 0.04, 0.24)
 	var light_script: Script = load("res://scripts/props/exit_light.gd")
 	# From the kiosk plaza to the spur mouth, then down the spur to the portal.
 	var route: Array[Vector3] = [Vector3(8.6, 0, -13.5), Vector3(9.6, 0, -17.0), Vector3(10.5, 0, -20.5)]
@@ -512,17 +524,14 @@ func _build_backdrop() -> void:
 	sand.mesh = _box_mesh(Vector3(260, 2.0, 80), _mat("sand", Color(0.93, 0.74, 0.55), 0.95))
 	sand.position = Vector3(-10, -1.6, 76)
 	backdrop.add_child(sand)
-	var shop_colors := [Color(1.0, 0.45, 0.7), Color(0.14, 0.62, 0.66), Color(1.0, 0.75, 0.3), Color(0.55, 0.35, 0.85)]
+	var shops := ["beach_shop_a", "beach_shop_b", "beach_shop_c", "beach_shop_d"]
 	var x := -62.0
 	var n := 0
 	while x < 50.0:
 		if absf(x + 3.0) > 9.0:
-			var h := 5.0 + (n % 3) * 1.5
-			var shop := MeshInstance3D.new()
-			shop.name = "Shop%02d" % n
-			shop.mesh = _box_mesh(Vector3(9.0, h, 7.0), _mat("shop%d" % (n % 4), shop_colors[n % 4], 0.8))
-			shop.position = Vector3(x, h * 0.5 - 0.6, 41.0)
-			backdrop.add_child(shop)
+			# Shopfronts face the pier across the sand.
+			var shop := _prop(backdrop, shops[n % shops.size()], "Shop%02d" % n, Vector3(x, -0.6, 38.5), 180.0, Vector3(9, 5, 7))
+			shop.scale = Vector3.ONE * (1.0 + 0.12 * (n % 3))
 			_prop(backdrop, "palm", "ShorePalm%02d" % n, Vector3(x + 5.5, -0.6, 36.5), n * 53.0, Vector3(0.5, 7, 0.5))
 		x += 11.0
 		n += 1
@@ -546,6 +555,174 @@ func _build_backdrop() -> void:
 
 	# A tall palm leaning in at the front-right, as in the reference frame.
 	_prop(backdrop, "palm", "CornerPalm", Vector3(15.6, -1.2, 17.5), 200.0, Vector3(0.5, 9, 0.5)).scale = Vector3.ONE * 1.35
+
+
+# ---------------------------------------------------------------------------
+# String lights and deck paint (scenery only, no collision)
+# ---------------------------------------------------------------------------
+
+const POLE_TOP := 5.0
+
+func _build_string_lights() -> void:
+	var lights := Node3D.new()
+	lights.name = "StringLights"
+	level.add_child(lights)
+	var spans := [
+		# Along the ocean rail and over the exit spur.
+		[Vector3(13.6, POLE_TOP, 14), Vector3(13.6, POLE_TOP, 0)],
+		[Vector3(13.6, POLE_TOP, 0), Vector3(13.6, POLE_TOP, -14)],
+		[Vector3(13.6, POLE_TOP, -14), Vector3(13.6, POLE_TOP, -28)],
+		[Vector3(13.6, POLE_TOP, -28), Vector3(13.6, POLE_TOP, -42)],
+		[Vector3(13.6, POLE_TOP, -28), Vector3(8.4, POLE_TOP, -35)],
+		[Vector3(13.6, POLE_TOP, -42), Vector3(8.4, POLE_TOP, -49)],
+		[Vector3(8.4, POLE_TOP, -35), Vector3(8.4, POLE_TOP, -49)],
+		# Ride side and back edge.
+		[Vector3(-24.6, POLE_TOP, 20.5), Vector3(-24.6, POLE_TOP, -1.1)],
+		[Vector3(-24.6, POLE_TOP, -1.1), Vector3(-24.6, POLE_TOP, -21.5)],
+		[Vector3(-16, POLE_TOP, -23.6), Vector3(-3, POLE_TOP, -23.6)],
+		[Vector3(-3, POLE_TOP, -23.6), Vector3(5, POLE_TOP, -23.6)],
+		[Vector3(-14, POLE_TOP, 21.6), Vector3(7, POLE_TOP, 21.6)],
+	]
+	# Carnival strings from the kiosk's roof out to the lamp posts.
+	for target in [Vector3(13.6, POLE_TOP, 0), Vector3(-24.6, POLE_TOP, -1.1), Vector3(-3, POLE_TOP, -23.6), Vector3(7, POLE_TOP, 21.6), Vector3(-14, POLE_TOP, 21.6)]:
+		var flat := Vector3(target.x, 0, target.z).normalized()
+		spans.append([flat * 1.7 + Vector3(0, 6.7, 0), target])
+	var i := 0
+	for span in spans:
+		_garland(lights, "Garland%02d" % i, span[0], span[1])
+		i += 1
+
+
+func _garland(parent: Node3D, garland_name: String, a: Vector3, b: Vector3) -> void:
+	var length := a.distance_to(b)
+	var sag := clampf(length * 0.06, 0.35, 1.1)
+	var bulbs := maxi(4, int(length / 1.1))
+	var points: Array[Vector3] = []
+	for k in bulbs + 1:
+		var t := float(k) / bulbs
+		points.append(a.lerp(b, t) + Vector3.DOWN * sag * 4.0 * t * (1.0 - t))
+	var holder := Node3D.new()
+	holder.name = garland_name
+	parent.add_child(holder)
+	# Wire.
+	var wire := MultiMeshInstance3D.new()
+	wire.name = "Wire"
+	var wm := MultiMesh.new()
+	wm.transform_format = MultiMesh.TRANSFORM_3D
+	wm.mesh = _box_mesh(Vector3(1, 1, 1), _mat("wire", Color(0.12, 0.1, 0.18), 0.6))
+	wm.instance_count = points.size() - 1
+	for k in points.size() - 1:
+		var p0 := points[k]
+		var p1 := points[k + 1]
+		var dir := (p1 - p0).normalized()
+		var basis := Basis.looking_at(dir, Vector3.UP)
+		wm.set_instance_transform(k, Transform3D(Basis(basis.x * 0.025, basis.y * 0.025, basis.z * p0.distance_to(p1)), (p0 + p1) * 0.5))
+	wire.multimesh = wm
+	wire.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	holder.add_child(wire)
+	# Bulbs (skip the two ends, which sit on the posts).
+	var colors := [Color(1.0, 0.76, 0.3), Color(1.0, 0.45, 0.75), Color(0.35, 0.95, 1.0), Color(1.0, 0.76, 0.3)]
+	var bulb_mm := MultiMesh.new()
+	bulb_mm.transform_format = MultiMesh.TRANSFORM_3D
+	bulb_mm.use_colors = true
+	bulb_mm.mesh = _bulb_mesh()
+	bulb_mm.instance_count = points.size() - 2
+	for k in range(1, points.size() - 1):
+		bulb_mm.set_instance_transform(k - 1, Transform3D(Basis(), points[k] + Vector3.DOWN * 0.08))
+		bulb_mm.set_instance_color(k - 1, colors[k % colors.size()])
+	var bulbs_node := MultiMeshInstance3D.new()
+	bulbs_node.name = "Bulbs"
+	bulbs_node.multimesh = bulb_mm
+	bulbs_node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	holder.add_child(bulbs_node)
+	var halo_mm := MultiMesh.new()
+	halo_mm.transform_format = MultiMesh.TRANSFORM_3D
+	halo_mm.mesh = _halo_mesh()
+	halo_mm.instance_count = bulb_mm.instance_count
+	for k in bulb_mm.instance_count:
+		halo_mm.set_instance_transform(k, bulb_mm.get_instance_transform(k))
+	var halos := MultiMeshInstance3D.new()
+	halos.name = "Halos"
+	halos.multimesh = halo_mm
+	halos.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	halos.add_to_group("high_detail", true)
+	holder.add_child(halos)
+
+
+var _bulb_mesh_cache: Mesh
+var _halo_mesh_cache: Mesh
+
+
+func _bulb_mesh() -> Mesh:
+	if _bulb_mesh_cache:
+		return _bulb_mesh_cache
+	var m := StandardMaterial3D.new()
+	m.resource_name = "GarlandBulb"
+	m.vertex_color_use_as_albedo = true
+	m.emission_enabled = true
+	m.emission = Color(1.0, 0.8, 0.5)
+	m.emission_energy_multiplier = 2.2
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.08
+	sphere.height = 0.16
+	sphere.radial_segments = 8
+	sphere.rings = 4
+	sphere.material = m
+	_bulb_mesh_cache = sphere
+	return sphere
+
+
+## Three crossed quads with UVs; the halo shader turns them into a soft glow.
+func _halo_mesh() -> Mesh:
+	if _halo_mesh_cache:
+		return _halo_mesh_cache
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var h := 0.36
+	var corners := [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]
+	for axis in 3:
+		var quad: Array[Vector3] = []
+		for c in corners:
+			var v := Vector3.ZERO
+			v[(axis + 1) % 3] = c.x * h
+			v[(axis + 2) % 3] = c.y * h
+			quad.append(v)
+		for idx in [0, 1, 2, 0, 2, 3]:
+			st.set_uv((corners[idx] + Vector2.ONE) * 0.5)
+			st.add_vertex(quad[idx])
+	var mesh := st.commit()
+	var halo_mat := ShaderMaterial.new()
+	halo_mat.shader = load("res://art/shaders/bulb_halo.gdshader")
+	halo_mat.resource_name = "GarlandHalo"
+	mesh.surface_set_material(0, halo_mat)
+	_halo_mesh_cache = mesh
+	return mesh
+
+
+## Pink edge stripes painted on the deck, as in the reference.
+func _build_deck_paint() -> void:
+	var paint := Node3D.new()
+	paint.name = "DeckPaint"
+	level.add_child(paint)
+	var pink := _mat("deck_paint", Color(0.95, 0.3, 0.62), 0.6)
+	var y := 0.012
+	var stripes := [
+		[Vector3(X1 - 1.1, y, (Z0 + Z1) * 0.5), Vector3(0.28, 0.01, Z1 - Z0 - 2.0)],
+		[Vector3(X0 + 1.1, y, (Z0 + Z1) * 0.5), Vector3(0.28, 0.01, Z1 - Z0 - 2.0)],
+		[Vector3((X0 + X1) * 0.5, y, Z1 - 1.1), Vector3(X1 - X0 - 2.0, 0.01, 0.28)],
+		[Vector3((X0 + X1) * 0.5, y, Z0 + 1.1), Vector3(X1 - X0 - 2.0, 0.01, 0.28)],
+		[Vector3(SPUR_X0 + 0.9, y, (SPUR_Z0 + Z0) * 0.5), Vector3(0.24, 0.01, Z0 - SPUR_Z0 - 2.0)],
+		[Vector3(X1 - 0.9, y, (SPUR_Z0 + Z0) * 0.5), Vector3(0.24, 0.01, Z0 - SPUR_Z0 - 2.0)],
+	]
+	var i := 0
+	for stripe in stripes:
+		var mi := MeshInstance3D.new()
+		mi.name = "Stripe%d" % i
+		mi.mesh = _box_mesh(stripe[1], pink)
+		mi.position = stripe[0]
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		paint.add_child(mi)
+		i += 1
 
 
 # ---------------------------------------------------------------------------

@@ -33,6 +33,11 @@ var _recoil := 0.0
 var _trauma := 0.0
 var _shake_time := 0.0
 var _base_fov := 72.0
+var _hit_roll := 0.0
+var _death_time := 0.0
+var _step_distance := 0.0
+var _step_side := false
+var _heartbeat_timer := 0.0
 
 
 func _ready() -> void:
@@ -80,14 +85,49 @@ func _process(delta: float) -> void:
 	_recoil = lerpf(_recoil, 0.0, 1.0 - exp(-9.0 * delta))
 	_trauma = maxf(0.0, _trauma - 1.6 * delta)
 	_shake_time += delta * 38.0
+	_hit_roll = lerpf(_hit_roll, 0.0, 1.0 - exp(-7.0 * delta))
 	var shake := _trauma * _trauma * Settings.shake_scale()
 	head.rotation.x = _pitch + _recoil
 	camera.rotation = Vector3(
 		sin(_shake_time * 1.3) * 0.03 * shake,
 		sin(_shake_time * 1.7 + 1.0) * 0.03 * shake,
-		sin(_shake_time * 2.1 + 2.0) * 0.045 * shake)
+		sin(_shake_time * 2.1 + 2.0) * 0.045 * shake + _hit_roll * Settings.shake_scale())
+	if not alive:
+		# Slump to the deck and roll over on defeat.
+		_death_time = minf(_death_time + delta, 1.0)
+		var k := ease(_death_time, -2.2)
+		head.position.y = lerpf(1.62, 0.45, k)
+		camera.rotation.z += k * 0.6
+		head.rotation.x = lerpf(_pitch, -0.25, k)
+	_footsteps(delta)
+	_heartbeat_tick(delta)
 	var target_fov := _base_fov + (5.0 if sprinting else 0.0)
 	camera.fov = lerpf(camera.fov, target_fov, 1.0 - exp(-8.0 * delta))
+
+
+func _footsteps(delta: float) -> void:
+	if not alive or not is_on_floor():
+		return
+	var speed := horizontal_speed()
+	if speed < 0.5:
+		_step_distance = 0.0
+		return
+	_step_distance += speed * delta
+	var stride := 2.2 if sprinting else 1.75
+	if _step_distance >= stride:
+		_step_distance = 0.0
+		_step_side = not _step_side
+		Sfx.play(&"footstep_1" if _step_side else &"footstep_2", -15.0 if not sprinting else -12.0, randf_range(0.92, 1.08))
+
+
+func _heartbeat_tick(delta: float) -> void:
+	if not alive or health > max_health * 0.3:
+		_heartbeat_timer = 0.0
+		return
+	_heartbeat_timer -= delta
+	if _heartbeat_timer <= 0.0:
+		_heartbeat_timer = 0.8 if health > max_health * 0.15 else 0.6
+		Sfx.play(&"heartbeat", -6.0)
 
 
 func horizontal_speed() -> float:
@@ -115,7 +155,11 @@ func take_damage(amount: float, source_position: Vector3) -> void:
 	if not alive or amount <= 0.0:
 		return
 	health = maxf(0.0, health - amount)
-	add_shake(0.5)
+	add_shake(0.65)
+	# Roll the view away from whoever hit us.
+	var local := global_transform.basis.inverse() * (source_position - global_position)
+	_hit_roll = clampf(-local.x, -1.0, 1.0) * 0.09 + (0.04 if local.z > 0.0 else 0.0)
+	_recoil -= deg_to_rad(2.5)
 	damaged.emit(amount, source_position)
 	health_changed.emit(health, max_health)
 	Sfx.play(&"player_hurt", -3.0, randf_range(0.95, 1.05))

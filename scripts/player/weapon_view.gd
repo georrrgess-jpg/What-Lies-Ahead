@@ -71,14 +71,14 @@ func muzzle_position() -> Vector3:
 func on_fired(weapon: WeaponData) -> void:
 	_kick = minf(_kick + weapon.view_kick, weapon.view_kick * 2.2)
 	_kick_rot = minf(_kick_rot + weapon.recoil_kick * 1.6, 14.0)
-	_flash_time = 0.055
+	_flash_time = 0.05
 	if _flash:
-		_flash.visible = true
-		_flash.rotation.z = randf() * TAU
-		_flash.scale = Vector3.ONE * randf_range(0.8, 1.25)
+		_flash.visible = Settings.flash_scale() > 0.05
+		_flash.rotate_object_local(Vector3.UP, randf() * TAU)
+		_flash.scale = Vector3.ONE * randf_range(0.85, 1.2) * lerpf(0.5, 1.0, Settings.flash_scale()) * (1.4 if weapon.pellets > 1 else 1.0)
 	if _flash_light:
 		_flash_light.visible = Settings.flash_scale() > 0.05
-		_flash_light.light_energy = 2.2 * Settings.flash_scale()
+		_flash_light.light_energy = 3.0 * Settings.flash_scale()
 
 
 func _process(delta: float) -> void:
@@ -229,6 +229,29 @@ func _disable_shadows(node: Node) -> void:
 		_disable_shadows(child)
 
 
+static var _flash_texture: ImageTexture
+
+
+## Six-pointed star with a white-hot centre, drawn once and shared.
+static func _star_texture() -> ImageTexture:
+	if _flash_texture:
+		return _flash_texture
+	var n := 128
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	for y in n:
+		for x in n:
+			var p := (Vector2(x, y) + Vector2(0.5, 0.5)) / n * 2.0 - Vector2.ONE
+			var r := p.length()
+			var a := atan2(p.y, p.x)
+			var rays := pow(absf(cos(a * 3.0)), 6.0) * 0.55
+			var shape := clampf(1.0 - r / (0.45 + rays), 0.0, 1.0)
+			var core := clampf(1.0 - r / 0.32, 0.0, 1.0)
+			var v := clampf(shape * shape + core, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, v))
+	_flash_texture = ImageTexture.create_from_image(img)
+	return _flash_texture
+
+
 func _build_flash() -> void:
 	_flash = null
 	_flash_light = null
@@ -236,25 +259,32 @@ func _build_flash() -> void:
 		return
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = data.tracer_color.lerp(Color.WHITE, 0.55)
+	mat.albedo_texture = _star_texture()
+	mat.albedo_color = data.tracer_color.lerp(Color.WHITE, 0.35) * 1.6
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var mesh := SphereMesh.new()
-	mesh.radius = 0.07
-	mesh.height = 0.2
-	mesh.radial_segments = 8
-	mesh.rings = 4
+	mat.no_depth_test = true
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.42, 0.42)
 	_flash = MeshInstance3D.new()
-	_flash.mesh = mesh
+	_flash.mesh = quad
 	_flash.material_override = mat
-	_flash.rotation_degrees.x = 90
 	_flash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_flash.visible = false
 	_muzzle.add_child(_flash)
+	# The quad faces back along the barrel, i.e. toward the camera.
+	_flash.rotation_degrees = Vector3(90, 0, 0)
+	var side := MeshInstance3D.new()
+	side.mesh = quad
+	side.material_override = mat
+	side.scale = Vector3(0.55, 1.6, 1.0)
+	side.position = Vector3(0, 0.12, 0)
+	side.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_flash.add_child(side)
 	_flash_light = OmniLight3D.new()
 	_flash_light.light_color = data.tracer_color
-	_flash_light.omni_range = 5.0 * VIEW_SCALE * 5.0
+	_flash_light.omni_range = 6.0
 	_flash_light.visible = false
 	_muzzle.add_child(_flash_light)
 

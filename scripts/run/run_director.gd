@@ -137,6 +137,12 @@ func _process(delta: float) -> void:
 			_tick_wave(delta)
 
 
+func _notification(what: int) -> void:
+	# Alt-tabbing away mid-wave pauses the run instead of leaving the player to die.
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and player != null and not _finished and DisplayServer.get_name() != "headless":
+		pause()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if player == null or _finished:
 		return
@@ -253,7 +259,9 @@ func _tick_wave(delta: float) -> void:
 		for i in count:
 			if _queue.is_empty():
 				break
-			_spawn(_queue.pop_front(), wave)
+			if not _spawn(_queue.front(), wave):
+				break
+			_queue.pop_front()
 
 	# A wave ends only when nothing is queued and nothing is alive.
 	if _queue.is_empty() and _alive.is_empty():
@@ -261,11 +269,12 @@ func _tick_wave(delta: float) -> void:
 		return
 
 
-func _spawn(enemy_id: StringName, wave: WaveData) -> void:
+## Returns false if nothing could be spawned (the enemy stays queued).
+func _spawn(enemy_id: StringName, wave: WaveData) -> bool:
 	var data := GameData.enemy(enemy_id)
 	var point := _pick_spawn()
 	if data == null or point == null:
-		return
+		return false
 	var z: Zombie = _zombie_scene.instantiate()
 	z.setup(data, player, wave.speed_scale)
 	var offset := Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
@@ -275,6 +284,7 @@ func _spawn(enemy_id: StringName, wave: WaveData) -> void:
 	z.stalled.connect(_on_zombie_stalled)
 	_enemies_root.add_child(z)
 	_alive.append(z)
+	return true
 
 
 ## Prefers entrances that are far from the player and outside their view.

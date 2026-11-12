@@ -92,7 +92,7 @@ def build():
     reset_scene()
     teal, tdark, pink, hot = mat("Teal"), mat("TealDark"), mat("Pink"), mat("PinkDark")
     cream, yellow, purple = mat("Cream"), mat("Yellow"), mat("PurpleDark")
-    amber = glow("BulbAmber", "#ffb030", 1.9)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
     lamp = glow("LampWarm", "#ffc860", 1.7)
     S = 32  # radial segments for the big cylinders
 

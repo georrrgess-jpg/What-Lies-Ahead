@@ -6,7 +6,13 @@ extends Node
 const SFX_DIR := "res://audio/sfx/"
 const MUSIC_DIR := "res://audio/music/"
 
+## How many copies of one sound may play at once (stops nine pellets or a
+## crowd of groans from stacking into noise).
+const MAX_VOICES := 4
+
 var _cache := {}
+var _variants := {}
+var _voices := {}
 var _music: AudioStreamPlayer
 var _ambience: AudioStreamPlayer
 var _music_name := ""
@@ -49,26 +55,51 @@ func warm_up() -> void:
 			stream(StringName(base.trim_suffix(".wav")))
 
 
+## A sound may have numbered variants (name_b, name_c); one is picked at random.
+func _pick(sound: StringName) -> AudioStream:
+	if not _variants.has(sound):
+		var list: Array = []
+		for suffix in ["", "_b", "_c", "_d"]:
+			var s := stream(StringName(String(sound) + suffix))
+			if s:
+				list.append(s)
+		_variants[sound] = list
+	var options: Array = _variants[sound]
+	return options[randi() % options.size()] if not options.is_empty() else null
+
+
+func _claim_voice(sound: StringName) -> bool:
+	var n := int(_voices.get(sound, 0))
+	if n >= MAX_VOICES:
+		return false
+	_voices[sound] = n + 1
+	return true
+
+
+func _release_voice(sound: StringName) -> void:
+	_voices[sound] = maxi(0, int(_voices.get(sound, 1)) - 1)
+
+
 ## Non-positional one-shot (UI, the player's own weapon, announcer cues).
 func play(sound: StringName, volume_db := 0.0, pitch := 1.0) -> void:
-	var s := stream(sound)
-	if s == null:
+	var s := _pick(sound)
+	if s == null or not _claim_voice(sound):
 		return
 	var p := AudioStreamPlayer.new()
 	p.stream = s
 	p.bus = &"SFX"
 	p.volume_db = volume_db
 	p.pitch_scale = pitch
-	p.finished.connect(p.queue_free)
+	p.finished.connect(func(): _release_voice(sound); p.queue_free())
 	add_child(p)
 	p.play()
 
 
 ## Positional one-shot in the current scene.
 func play_at(sound: StringName, position: Vector3, volume_db := 0.0, pitch := 1.0, unit_size := 9.0) -> void:
-	var s := stream(sound)
+	var s := _pick(sound)
 	var scene := get_tree().current_scene
-	if s == null or scene == null:
+	if s == null or scene == null or not _claim_voice(sound):
 		return
 	var p := AudioStreamPlayer3D.new()
 	p.stream = s
@@ -78,7 +109,8 @@ func play_at(sound: StringName, position: Vector3, volume_db := 0.0, pitch := 1.
 	p.unit_size = unit_size
 	p.max_distance = 70.0
 	p.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
-	p.finished.connect(p.queue_free)
+	p.finished.connect(func(): _release_voice(sound); p.queue_free())
+	p.tree_exiting.connect(func(): if p.playing: _release_voice(sound))
 	scene.add_child(p)
 	p.global_position = position
 	p.play()

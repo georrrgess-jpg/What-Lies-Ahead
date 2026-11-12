@@ -24,9 +24,13 @@ extends Resource
 @export var attack_reach := 2.3
 @export var attack_windup := 0.7
 @export var attack_recover := 0.8
+## Forward burst (m/s) when the swipe lands; the attack only hits in front.
+@export var lunge_speed := 3.0
+## Heavier zombies are pushed less by knockback and stagger less often.
+@export var mass := 1.0
 
 @export_group("Body")
-## Outfit mesh shown from the shared zombie model ("Tourist" or "Lifeguard").
+## Outfit mesh shown from the shared zombie model ("Tourist", "Lifeguard" or "Bruiser").
 @export var outfit: StringName = &"Tourist"
 @export var body_scale := 1.0
 @export var capsule_radius := 0.45
@@ -35,6 +39,10 @@ extends Resource
 @export var head_height := 1.25
 ## Random shirt colours for variety (empty = keep the model's colour).
 @export var shirt_colors: Array[Color] = []
+@export var skin_colors: Array[Color] = []
+## Each entry is one slot: options separated by "|", meshes combined with "+",
+## an empty option means nothing. e.g. "Acc_Tourist_Cap|Acc_Tourist_Hair+Acc_Tourist_Shades|"
+@export var accessory_slots: PackedStringArray = PackedStringArray()
 @export var move_animation: StringName = &"Walk"
 ## Movement speed at which the move animation plays at 1x.
 @export var animation_reference_speed := 1.8

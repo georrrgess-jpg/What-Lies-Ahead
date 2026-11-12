@@ -35,6 +35,8 @@ extends Resource
 ## Damage multiplier at and beyond falloff_end.
 @export var falloff_min_scale := 0.6
 @export var headshot_multiplier := 1.6
+## Knockback per pellet that hits, in m/s. Big pushes stagger zombies out of their windup.
+@export var knockback := 0.6
 
 @export_group("Feel")
 ## Camera pitch kick per shot, in degrees.

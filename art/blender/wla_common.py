@@ -207,11 +207,44 @@ def sphere(name, radius, loc=(0, 0, 0), scale=(1, 1, 1), rot=(0, 0, 0), m=None, 
     return _finish(name, bm, m, loc, rot)
 
 
-def bulb(name, radius, loc, m=None):
-    """Low-poly glowing bulb."""
+HALO_SCALE = 4.2
+
+
+def halo_material():
+    """Placeholder material for bulb halos. The game swaps any surface using a
+    material named "BulbHalo" for an additive radial glow (see
+    scripts/run/level_environment.gd), so bulbs glow on every renderer."""
+    return mat("BulbHalo", "#ffb030", rough=1.0)
+
+
+def bulb(name, radius, loc, m=None, halo=True):
+    """Low-poly glowing bulb, plus three crossed halo quads (second material)."""
     bm = bmesh.new()
     bmesh.ops.create_icosphere(bm, subdivisions=1, radius=radius)
-    return _finish(name, bm, m, loc, (0, 0, 0))
+    if halo:
+        uv = bm.loops.layers.uv.new("UVMap")
+        h = radius * HALO_SCALE
+        corners = [(-1, -1), (1, -1), (1, 1), (-1, 1)]
+        for axis in range(3):
+            verts = []
+            for cu, cv in corners:
+                co = [0.0, 0.0, 0.0]
+                co[(axis + 1) % 3] = cu * h
+                co[(axis + 2) % 3] = cv * h
+                verts.append(bm.verts.new(co))
+            face = bm.faces.new(verts)
+            face.material_index = 1
+            for loop, (cu, cv) in zip(face.loops, corners):
+                loop[uv].uv = ((cu + 1) * 0.5, (cv + 1) * 0.5)
+    ob = _finish(name, bm, m, loc, (0, 0, 0))
+    if halo:
+        if m is None:
+            ob.data.materials.append(mat("BulbFallback", "#ffb030", emit=2.0))
+        ob.data.materials.append(halo_material())
+        for p in ob.data.polygons:
+            if p.material_index == 1:
+                p.use_smooth = False
+    return ob
 
 
 def torus(name, major, minor, loc=(0, 0, 0), rot=(0, 0, 0), m=None, major_segs=40, minor_segs=8,

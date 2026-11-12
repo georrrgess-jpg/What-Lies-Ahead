@@ -432,6 +432,75 @@ def ui_click():
     return out
 
 
+def hitmarker():
+    """Short, bright 2D tick confirming a hit (plays even when the target is far away)."""
+    out = silence(0.09)
+    place(out, blip(note(31), 0.05, "square", 0.04), 0.0, 0.6)
+    place(out, click(0.015, 5200), 0.0, 0.5)
+    return out
+
+
+def kill_confirm():
+    """Satisfying arcade 'ding-pop' for a finishing blow."""
+    out = silence(0.4)
+    place(out, sweep(300, 1100, 0.05, "sine", 2.0) * env(0.05, 0.001, power=1.0), 0.0, 0.8)
+    place(out, blip(note(28), 0.22, "sine", 0.2), 0.03, 0.7)
+    place(out, blip(note(35), 0.28, "sine", 0.26), 0.08, 0.55)
+    place(out, blip(note(28), 0.08, "square", 0.06), 0.03, 0.18)
+    return out
+
+
+def _step(seed_hz, bright):
+    d = 0.14
+    thud = sweep(seed_hz * 1.4, seed_hz * 0.7, d, "sine", 0.5) * env(d, 0.002, 0.09, power=2.2)
+    knock = band(noise(d), 900 + bright, 400) * env(d, 0.001, 0.05, power=2.0) * 2.5
+    creak = band(noise(d), 2400 + bright, 300) * env(d, 0.01, 0.12, power=1.5) * 0.4
+    return thud + knock + creak
+
+
+def footstep_1():
+    return _step(110, 0)
+
+
+def footstep_2():
+    return _step(96, 250)
+
+
+def heartbeat():
+    out = silence(0.42)
+    for at, g in ((0.0, 1.0), (0.16, 0.7)):
+        place(out, sweep(70, 42, 0.12, "sine", 0.6) * env(0.12, 0.004, power=1.8), at, g)
+    return filt(out, low=400)
+
+
+def bruiser_roar_1():
+    return groan(62, 1.4, glide=-0.15, formants=((380, 110), (780, 150)), rasp=0.45, wobble=0.05)
+
+
+def bruiser_roar_2():
+    return groan(70, 1.1, glide=0.2, formants=((420, 120), (850, 170)), rasp=0.5, wobble=0.06)
+
+
+def bruiser_slam():
+    d = 0.6
+    out = zombie_swipe()
+    out = np.pad(out, (0, int(SR * d) - len(out)))
+    place(out, sweep(120, 34, 0.4, "sine", 0.4) * env(0.4, 0.001, 0.3, power=1.8), 0.16, 1.4)
+    place(out, filt(noise(0.25), low=1200) * env(0.25, 0.001, 0.12, power=2.0), 0.16, 0.9)
+    return crush(out, 1.4)
+
+
+def _variant(fn, pitch, seed):
+    """Re-render a sound with a slightly different pitch and noise seed."""
+    global rng
+    old = rng
+    rng = np.random.default_rng(seed)
+    x = fn()
+    rng = old
+    idx = np.arange(0, len(x) - 1, pitch)
+    return np.interp(idx, np.arange(len(x)), x)
+
+
 # ---------------------------------------------------------------------------
 # Loops
 # ---------------------------------------------------------------------------
@@ -472,10 +541,12 @@ def pier_ambience():
 
 
 def boardwalk_loop():
-    """32-second arcade loop, 120 BPM, A minor: Am - F - C - G."""
+    """64-second arcade loop, 120 BPM, A minor. Section A: Am - F - C - G;
+    section B (second half): F - G - Em - Am with a busier lead, so the loop
+    does not repeat every half minute."""
     bpm = 120.0
     beat = 60.0 / bpm
-    bars = 16
+    bars = 32
     d = bars * 4 * beat
     left, right = silence(d), silence(d)
     chords = [(-12, (0, 3, 7)), (-16, (0, 4, 7)), (-9, (0, 4, 7)), (-14, (0, 4, 7))]   # root offsets from A4
@@ -487,8 +558,10 @@ def boardwalk_loop():
     kick = sweep(150, 45, 0.16, "sine", 0.5) * env(0.16, 0.001, power=2.0)
     hat = filt(noise(0.05), high=7000) * env(0.05, 0.0005, power=2.5)
     snare = (filt(noise(0.14), high=1500) * 0.8 + tone(190, 0.14) * 0.4) * env(0.14, 0.001, power=2.2)
+    chords_b = [(-16, (0, 4, 7)), (-14, (0, 4, 7)), (-17, (0, 3, 7)), (-12, (0, 3, 7))]
     for bar in range(bars):
-        root, triad = chords[(bar // 2) % 4]
+        section_b = bar >= 16
+        root, triad = (chords_b if section_b else chords)[(bar // 2) % 4]
         t0 = bar * 4 * beat
         fill = bar % 8 == 7
         for b in range(4):
@@ -507,7 +580,7 @@ def boardwalk_loop():
         # Arpeggio lead.
         pattern = [0, 1, 2, 1, 0, 2, 1, 2] if bar % 4 < 2 else [2, 1, 0, 1, 2, 0, 1, 0]
         for e in range(16):
-            step = triad[pattern[e % 8]] + (12 if (e // 8 + bar) % 2 else 0)
+            step = triad[pattern[e % 8]] + (12 if (e // 8 + bar) % 2 else 0) + (12 if section_b and e % 4 == 3 else 0)
             x = tone(note(root + 12 + step), beat * 0.24, "square") * env(beat * 0.24, 0.003, beat * 0.3, power=1.4)
             both(filt(x, low=4200), t0 + e * beat * 0.25, 0.11, 0.3 + 0.4 * ((e % 4) / 3.0))
         # Soft pad.
@@ -515,8 +588,12 @@ def boardwalk_loop():
         both(pad, t0, 0.07)
         # Melody phrase every other pair of bars.
         if bar % 4 in (2, 3):
-            phrase = [(7, 0.0, 1.0), (12, 1.0, 0.5), (10, 1.5, 0.5), (7, 2.0, 1.0), (3, 3.0, 1.0)] if bar % 4 == 2 \
-                else [(5, 0.0, 1.0), (7, 1.0, 1.0), (12, 2.0, 2.0)]
+            if section_b:
+                phrase = [(12, 0.0, 0.5), (14, 0.5, 0.5), (15, 1.0, 1.0), (12, 2.0, 0.5), (10, 2.5, 0.5), (7, 3.0, 1.0)] if bar % 4 == 2 \
+                    else [(8, 0.0, 1.0), (10, 1.0, 1.0), (7, 2.0, 2.0)]
+            else:
+                phrase = [(7, 0.0, 1.0), (12, 1.0, 0.5), (10, 1.5, 0.5), (7, 2.0, 1.0), (3, 3.0, 1.0)] if bar % 4 == 2 \
+                    else [(5, 0.0, 1.0), (7, 1.0, 1.0), (12, 2.0, 2.0)]
             for semis, at, length in phrase:
                 x = tone(note(-12 + semis + 12), length * beat * 0.95, "saw", 0.006, 5.5) * env(length * beat * 0.95, 0.01, length * beat * 1.4, power=0.8, release=0.05)
                 both(filt(x, low=2600), t0 + at * beat, 0.1, 0.55)
@@ -530,6 +607,13 @@ SFX_SOUNDS = [
     hit_body, hit_head, zombie_pop, zombie_groan_1, zombie_groan_2, zombie_groan_3, runner_screech_1,
     runner_screech_2, zombie_windup, zombie_swipe, player_hurt, wave_start, final_wave, wave_clear,
     purchase, deny, swap, unlock, portal_open, level_clear, defeat, ui_hover, ui_click,
+    hitmarker, kill_confirm, footstep_1, footstep_2, heartbeat, bruiser_roar_1, bruiser_roar_2, bruiser_slam,
+]
+
+# Extra takes of the most repeated sounds; the game picks one at random (name_b, name_c).
+VARIANTS = [
+    (pistol_fire, (0.95, 1.06)), (carbine_fire, (0.94, 1.05)), (scatter_fire, (0.93, 1.07)),
+    (hit_body, (0.9, 1.12)), (zombie_pop, (0.92, 1.09)), (footstep_1, (0.9, 1.1)), (footstep_2, (0.88, 1.12)),
 ]
 
 
@@ -538,6 +622,9 @@ def main():
     os.makedirs(MUSIC, exist_ok=True)
     for fn in SFX_SOUNDS:
         write_wav(fn.__name__, fn())
+    for fn, pitches in VARIANTS:
+        for suffix, pitch, seed in zip(("_b", "_c"), pitches, (101, 202)):
+            write_wav(fn.__name__ + suffix, _variant(fn, pitch, seed))
     # The portal hum must loop cleanly, so skip the fade.
     hum = norm(portal_hum(), 0.7)
     with wave.open(os.path.join(SFX, "portal_hum.wav"), "wb") as w:

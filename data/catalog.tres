@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="GameCatalog" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="GameCatalog" load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/game_catalog.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/data/world_data.gd" id="2"]
@@ -10,9 +10,10 @@
 [ext_resource type="Resource" path="res://data/weapons/scatter_blaster.tres" id="8"]
 [ext_resource type="Resource" path="res://data/enemies/tourist_shambler.tres" id="9"]
 [ext_resource type="Resource" path="res://data/enemies/lifeguard_runner.tres" id="10"]
+[ext_resource type="Resource" path="res://data/enemies/boardwalk_bruiser.tres" id="11"]
 
 [resource]
 script = ExtResource("1")
 worlds = Array[ExtResource("2")]([ExtResource("5")])
 weapons = Array[ExtResource("3")]([ExtResource("6"), ExtResource("7"), ExtResource("8")])
-enemies = Array[ExtResource("4")]([ExtResource("9"), ExtResource("10")])
+enemies = Array[ExtResource("4")]([ExtResource("9"), ExtResource("10"), ExtResource("11")])

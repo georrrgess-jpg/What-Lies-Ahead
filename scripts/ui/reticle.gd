@@ -27,16 +27,16 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var c := size * 0.5
-	var gap := 7.0 + spread * 5.0
-	var length := 9.0
-	var white := Color(1, 1, 1, 0.95)
-	var shadow := Color(0, 0, 0, 0.45)
+	var gap := 8.0 + spread * 5.0
+	var length := 11.0
+	var white := Color(1, 1, 1, 0.97)
+	var outline := Color(0.08, 0.02, 0.14, 0.8)
 	for dir in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
-		draw_line(c + dir * (gap - 1), c + dir * (gap + length + 1), shadow, 5.0)
+		draw_line(c + dir * (gap - 1.5), c + dir * (gap + length + 1.5), outline, 6.5)
 	for dir in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
-		draw_line(c + dir * gap, c + dir * (gap + length), white, 2.5)
-	draw_circle(c, 2.5, shadow)
-	draw_circle(c, 1.5, white)
+		draw_line(c + dir * gap, c + dir * (gap + length), white, 3.0)
+	draw_circle(c, 3.4, outline)
+	draw_circle(c, 2.0, white)
 	if hit_time > 0.0:
 		var a := clampf(hit_time / 0.22, 0.0, 1.0)
 		var col := UiKit.PINK if hit_kill else (UiKit.AMBER if hit_head else Color.WHITE)

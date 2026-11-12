@@ -16,6 +16,8 @@ var _ammo: Label
 var _weapon_name: Label
 var _tickets: Label
 var _reticle: Reticle
+var _threats: ThreatRing
+var _reload_arc: ReloadArc
 var _banner: Label
 var _notice: Label
 var _status: Label          # reload / empty prompt under the reticle
@@ -47,6 +49,8 @@ func _ready() -> void:
 func bind(run: RunDirector, p: Player) -> void:
 	director = run
 	player = p
+	_threats.player = p
+	_threats.director = run
 	run.wave_started.connect(_on_wave_started)
 	run.tickets_changed.connect(_on_tickets_changed)
 	run.notice.connect(_on_notice)
@@ -88,8 +92,8 @@ func _anchor(c: Control, preset: Control.LayoutPreset, offset: Vector2, grow_h :
 func _build() -> void:
 	# Damage vignette (behind everything else).
 	var grad := Gradient.new()
-	grad.offsets = PackedFloat32Array([0.45, 1.0])
-	grad.colors = PackedColorArray([Color(1.0, 0.2, 0.45, 0.0), Color(1.0, 0.15, 0.4, 0.85)])
+	grad.offsets = PackedFloat32Array([0.38, 1.0])
+	grad.colors = PackedColorArray([Color(0.55, 0.0, 0.1, 0.0), Color(0.5, 0.0, 0.12, 0.95)])
 	var tex := GradientTexture2D.new()
 	tex.gradient = grad
 	tex.fill = GradientTexture2D.FILL_RADIAL
@@ -113,6 +117,12 @@ func _build() -> void:
 
 	# Upper right: tickets.
 	_tickets = UiKit.arcade_label("TICKETS 0", 46, UiKit.AMBER)
+	var plate := UiKit.box(Color(UiKit.INK, 0.55), Color.TRANSPARENT, 16, 0, 0)
+	plate.content_margin_left = 18
+	plate.content_margin_right = 18
+	plate.content_margin_top = 2
+	plate.content_margin_bottom = 4
+	_tickets.add_theme_stylebox_override("normal", plate)
 	_anchor(_tickets, Control.PRESET_TOP_RIGHT, Vector2(-MARGIN, 28), Control.GROW_DIRECTION_BEGIN)
 
 	# Lower left: segmented health.
@@ -132,6 +142,12 @@ func _build() -> void:
 	_reticle = Reticle.new()
 	_reticle.custom_minimum_size = Vector2(120, 120)
 	_anchor(_reticle, Control.PRESET_CENTER, Vector2.ZERO, Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
+	_reload_arc = ReloadArc.new()
+	_reload_arc.custom_minimum_size = Vector2(120, 120)
+	_anchor(_reload_arc, Control.PRESET_CENTER, Vector2.ZERO, Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
+	_threats = ThreatRing.new()
+	_threats.custom_minimum_size = Vector2(420, 420)
+	_anchor(_threats, Control.PRESET_CENTER, Vector2.ZERO, Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
 	_status = UiKit.arcade_label("", 30, UiKit.AMBER)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_anchor(_status, Control.PRESET_CENTER, Vector2(0, 110), Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
@@ -212,6 +228,7 @@ func _process(delta: float) -> void:
 
 	# Reload / empty prompt.
 	var w := player.weapons
+	_reload_arc.progress = w.reload_progress() if w.is_reloading() else -1.0
 	if w.current == null:
 		_status.text = ""
 	elif w.is_reloading():
@@ -317,9 +334,10 @@ func _on_health_changed(current: float, maximum: float) -> void:
 	_health.value = current / maximum
 
 
-func _on_damaged(_amount: float, _source: Vector3) -> void:
-	_hurt = 0.9
+func _on_damaged(_amount: float, source: Vector3) -> void:
+	_hurt = 1.0
 	_health.flash = 1.0
+	_threats.add_hit(source)
 
 
 func _on_ammo_changed(magazine: int, reserve: int) -> void:
