@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/tidal_tunnels_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"tidal_tunnels"
+display_name = "Tidal Tunnels"
+blurb = "Hold the rotunda around the great coral tank, then climb to the observation deck and step through the portal."
+scene_path = "res://scenes/levels/tidal_tunnels.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"tidal_tunnels_loop"
+ambience = &"aqua_ambience"
+music_volume_db = -10.0
+ambience_volume_db = -9.0
+accent_color = Color(0.2, 0.9, 1, 1)
+menu_camera_from = Vector3(7.6, 2.3, 6.9)
+menu_camera_to = Vector3(-1.5, 5.2, -2.5)
+loading_tips = PackedStringArray("Deep Divers shrug off headshots until their visor cracks. Keep shooting the glass.", "Mascot Inkers stop and puff up before they spit. Strafe sideways when the ink sac glows.", "Jelly Heads crackle before they zap. Back off when the hat lights up.", "The shark tunnel and the rotunda both link the halls. Use one to slip away from the other.", "Between waves, the Reef Supply Ring around the coral tank sells energy and snacks.")
