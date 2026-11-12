@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode unshaded, blend_add, depth_draw_never, cull_back, shadows_disabled;
+render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabled;
 
 // Frost cloud left by a shattered Frozen Tourist: a swirling icy dome with a
 // bright fresnel edge, so its slowing area reads clearly from any side.
