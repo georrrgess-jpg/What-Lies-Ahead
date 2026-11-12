@@ -528,7 +528,13 @@ func _apply_gravity_and_move() -> void:
 		velocity.y = -1.0
 	else:
 		velocity.y -= GRAVITY * get_physics_process_delta_time()
+	# The head volume is for shots only: it must not snag on doorways and
+	# overhangs the body capsule fits under.
+	if _head_shape:
+		_head_shape.disabled = true
 	move_and_slide()
+	if _head_shape:
+		_head_shape.disabled = false
 
 
 func _face(direction: Vector3, delta: float, rate: float) -> void:

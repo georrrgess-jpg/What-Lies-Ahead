@@ -41,6 +41,7 @@ a dict:
     "hand.L" / "hand.R"  : wrist (forearm tail) target (left, forward, up),
                            elbow toward "elbow.L" (default out, back, down)
     "scale.Head"         : uniform bone scale (the head pop)
+    "flat"               : 1 keeps the shins upright (skis bound to them)
 
 Clips are lists of keys `(frame, spec_changes, ease)`; each key only lists
 what changes from the key before (see `keyed`).
@@ -250,22 +251,6 @@ def arms(lu, lf, ru, rf, spread=10.0):
             "UpperArm.R": (ru, spread, 0), "ForeArm.R": (rf, 0, 0)}
 
 
-def mirror(spec):
-    """Left/right mirror of a pose spec (for directional variants)."""
-    out = {}
-    for k, v in spec.items():
-        if k.endswith(".L") or k.endswith(".R"):
-            k2 = k[:-1] + ("R" if k.endswith("L") else "L")
-        else:
-            k2 = k
-        if k2 in ("hips",) or k2.startswith(("foot.", "hand.", "knee.", "elbow.")):
-            v = (-v[0], v[1], v[2])
-        elif isinstance(v, tuple) and len(v) == 3:
-            v = (v[0], -v[1], -v[2])
-        out[k2] = v
-    return out
-
-
 # ---------------------------------------------------------------------------
 # Easing and keyed clips
 # ---------------------------------------------------------------------------
@@ -357,11 +342,11 @@ class Gait:
     boots) and `skate` glides each planted foot forward then pushes it out."""
 
     def __init__(self, period, duty, stance, lift, torso, front=0.5, width=0.0, crouch=0.0, bob=0.03,
-                 bob_style="walk", limp=0.0, glide=0.0, skate=0.0, foot=FOOT, profile=None):
+                 bob_style="walk", limp=0.0, glide=0.0, skate=0.0, foot=FOOT):
         self.period, self.duty, self.stance, self.lift = period, duty, stance, lift
         self.torso, self.front, self.width, self.crouch = torso, front, width, crouch
         self.bob, self.bob_style, self.limp, self.glide, self.skate = bob, bob_style, limp, glide, skate
-        self.foot, self.profile = foot, profile
+        self.foot = foot
         self.frames = max(16, round(period * KEY_FPS))
         self.period = self.frames / KEY_FPS
 
@@ -542,8 +527,6 @@ def gait(rig, name, g, **meta):
         poses.append(resolve(rig, spec))
     meta = dict(meta)
     meta.setdefault("speed", round(v, 4))
-    if g.profile:
-        meta["profile"] = g.profile
     print(f"[anim]   {name}: {g.frames} frames, stance {g.stance:.2f} m, hips drop {drop + g.crouch:.3f} m, "
           f"ground speed {v:.2f} m/s")
     return Clip(name, poses, loop=True, **meta)
