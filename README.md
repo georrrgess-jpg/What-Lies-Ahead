@@ -318,4 +318,59 @@ it is not used by the game.
 
 ## Verification and known limits
 
-VERIFICATION_PLACEHOLDER
+What was run for this update, on a headless Linux container (4 vCPU, **no GPU**; rendering
+used Mesa llvmpipe, a software rasteriser):
+
+- Project import with Godot 4.7.1: no script errors.
+- **Bot clears on every level.** Final regression after all changes, with the two starter
+  weapons:
+
+  | Level | Pulse Pistol | Ion Carbine |
+  | --- | --- | --- |
+  | Prize Pier | Cleared, 64 health left | Cleared, 44 |
+  | Neon Skyline | Cleared, 45 | Cleared, 20 |
+  | Tidal Tunnels | Lost on wave 6; two re-runs cleared (40, 70) | Cleared, 38 |
+  | Launch Pad 9 | Cleared, 86 | Cleared, 54 |
+  | Summit Lodge | Cleared, 16 | Lost on wave 6; two re-runs cleared (44, 68) |
+
+  During integration the bot also cleared Neon Skyline with every one of the eight weapons
+  (finishing with 20–68 health; the Arc Coil lost one of its three runs), and the new weapons on other worlds (Arc Coil in Tidal
+  Tunnels, Bumper Lobber in Launch Pad 9 and Tidal Tunnels, Rail Lancer in Summit Lodge,
+  Scatter Blaster in Tidal Tunnels). Those runs drove a balance pass: Neon Punks swipe up
+  close instead of spraying point-blank, and the Scatter Blaster and Cryo Beam were buffed.
+- **Flows**: defeat → Retry (fresh run state), clear → results → main menu, and the pause
+  menu on a virtual display (resume recaptures the mouse; restart and main menu are clean).
+- **Saves**: a save interrupted between writing and replacing is recovered from its
+  `.tmp` copy; unreadable, partial and missing files start cleanly; version 1 saves migrate.
+- **Visual checks** from staged screenshots: every level at player height and from its menu
+  camera, the HUD mid-wave, the intro, title, Play, Arsenal, Locker and results screens,
+  and (by the agents who built them) every weapon's hip, aim and reload poses, every
+  enemy, kill effect, tracer and operator.
+- **Code review**: two independent reviews of the merged update (gameplay runtime; menus
+  and meta-progression). Their findings were fixed (see the git history).
+- **Export smoke test**: see *Exporting a build*; the exported Linux build ran a bot clear
+  and a rendered frame.
+
+Not verified, or limited:
+
+- **Real frame rate.** With no GPU here, the software rasteriser runs at a few frames per
+  second. Draw calls (about 1,000–1,400) and triangles (150k–480k) per frame are modest,
+  but smooth play is untested on real hardware.
+- **Audio by ear.** Every sound and music loop is synthesised and was checked for length
+  and level only. Nobody has listened to the mix; expect to adjust volumes.
+- **Human playtesting.** Difficulty was tuned against a bot with near-perfect aim that never
+  dodges projectiles. Results vary from run to run (the same level and weapon can finish
+  on 20 or 60 health, and occasionally lose), and the later worlds are meant to be harder.
+  Mouse feel, pacing and fairness still need a human pass.
+- **Windows build** was exported but never run.
+- Blender was driven through its Python module, so models were not touched up by hand.
+
+Simplifications:
+
+- Reload animations are code-driven keyframes on the viewmodel parts, not authored clips.
+- UI layouts are built in code by their scripts rather than laid out as scene nodes.
+- A zombie that gets wedged is moved back to an entrance by the stall failsafe; this is
+  rare but can be seen if you are looking at it.
+- Particles use a small script-driven system (`scripts/fx/fx_burst.gd`), because
+  `CPUParticles3D` did not render with this renderer and driver; glows are additive halo
+  quads for the same reason.
