@@ -5,7 +5,10 @@ extends SceneTree
 ## props, spawn markers, kiosk, portal, lighting and a baked navigation mesh.
 ## The result is an ordinary scene you can keep editing in Godot.
 ##
-##   godot --headless --path . --script res://tools/build_prize_pier.gd
+##   xvfb-run -a godot --rendering-driver opengl3 --path . --script res://tools/build_prize_pier.gd
+##
+## Run it with a renderer (not --headless): MultiMesh instance data (string
+## lights) is only stored when a real rendering server is present.
 ##
 ## NOTE: running this overwrites hand edits made to prize_pier.tscn.
 ##

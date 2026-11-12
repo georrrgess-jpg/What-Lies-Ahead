@@ -269,7 +269,8 @@ func _holo_build(part_name: String, t0: float, t1: float, d: float) -> void:
 	if node == null:
 		return
 	_at(t0, d, func(): node.visible = true; _set_holo(part_name, 0.0))
-	_reload_tween.tween_method(_set_holo.bind(part_name), 0.0, 1.0, maxf(0.001, (t1 - t0) * d)).set_delay(t0 * d)
+	# (bind() would append part_name after the tweened value, so use a lambda.)
+	_reload_tween.tween_method(func(k: float): _set_holo(part_name, k), 0.0, 1.0, maxf(0.001, (t1 - t0) * d)).set_delay(t0 * d)
 
 
 ## Swap a hologram for the real part: hide the holo, show the solid one, flare.
