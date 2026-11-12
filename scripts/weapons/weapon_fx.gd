@@ -223,27 +223,32 @@ static func shock_crackle(z: Zombie) -> void:
 
 
 ## Draws each new effect once at level start (behind the fade-in) so its
-## shaders are compiled before the first shot.
+## shaders are compiled before the first shot. Everything hangs off one
+## temporary node that is freed a few frames later.
 static func warm_up(parent: Node3D, at: Vector3) -> void:
+	var holder := Node3D.new()
+	holder.name = "WeaponFxWarmup"
+	parent.add_child(holder)
 	var w := WeaponData.new()
 	w.tracer_color = Color(0.7, 0.9, 1.0)
 	for style in [&"rail", &"lightning"]:
 		w.tracer_style = style
-		shot(parent, at + Vector3.LEFT, at + Vector3.RIGHT, w)
+		shot(holder, at + Vector3.LEFT, at + Vector3.RIGHT, w)
 	for style in [&"frost", &"arc", &"rail"]:
 		w.impact_style = style
-		impact(parent, at, Vector3.UP, w)
-	explosion(parent, at, Color(1.0, 0.4, 0.8), 1.0)
-	shatter(parent, at)
+		impact(holder, at, Vector3.UP, w)
+	explosion(holder, at, Color(1.0, 0.4, 0.8), 1.0)
+	shatter(holder, at)
 	var beam := BeamVisual.new()
-	parent.add_child(beam)
+	holder.add_child(beam)
 	beam.aim(at + Vector3.LEFT, at + Vector3.RIGHT, true)
-	beam.get_tree().create_timer(0.2).timeout.connect(beam.queue_free)
 	var frost := MeshInstance3D.new()
 	frost.mesh = BoxMesh.new()
 	var sm := ShaderMaterial.new()
 	sm.shader = load(StatusEffects.FROST_SHADER)
 	frost.material_override = sm
-	parent.add_child(frost)
+	holder.add_child(frost)
 	frost.global_position = at
-	frost.get_tree().create_timer(0.2).timeout.connect(frost.queue_free)
+	for i in 4:
+		await holder.get_tree().process_frame
+	holder.queue_free()

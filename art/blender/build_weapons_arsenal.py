@@ -25,12 +25,13 @@ from wla_common import *  # noqa: F401,F403
 from build_weapons import arm, side_profile, vent_slots, screws, side_emblem, holo_copy, finish, charm_loop  # noqa: E402
 
 
-def wmats(accent, holo=None, shell="#f6dfae", trim="#6b35b8"):
-    """The shared weapon materials, with this weapon's accent as the Cell glow."""
+def wmats(accent, holo=None, shell="#f6dfae", trim="#6b35b8", emit=2.6):
+    """The shared weapon materials, with this weapon's accent as the Cell glow.
+    Pale or saturated accents use a lower `emit` so the hue survives the glow."""
     return dict(
         shell=mat("Shell", shell, rough=0.38),
         trim=mat("Trim", trim, rough=0.36),
-        cell=mat("Cell", accent, rough=0.3, emit=2.6),
+        cell=mat("Cell", accent, rough=0.3, emit=emit),
         dark=mat("GunDark", "#241d3a", rough=0.45, metal=0.35),
         steel=mat("GunSteel", "#8a86a3", rough=0.3, metal=0.75),
         pink=mat("GunPink", "#ff3f9f", rough=0.4),
@@ -83,17 +84,19 @@ def fins(prefix, count, radius, y, z, size, m, start=0.0, sweep=0.0):
 
 def build_comet_cannon():
     reset_scene()
-    M = wmats("#ffb22e")
-    bore_z = 0.092
-    cyl_c = (0, 0.066, 0.066)
+    M = wmats("#ff8a14", emit=2.0)
+    bore_z = 0.094
+    cyl_c = (0, 0.06, 0.066)
     shell = grip("", (0, -0.032, -0.095), M, tilt=-17, size=(0.072, 0.094, 0.175), body_bottom=-0.018)
     shell += [
         # Frame: rear block, lower bridge under the cylinder, top strap over it.
-        box("FrameRear", (0.08, 0.06, 0.13), (0, -0.04, 0.062), bevel=0.02, m=M["trim"]),
-        box("FrameLow", (0.074, 0.2, 0.04), (0, 0.06, 0.0), bevel=0.016, m=M["trim"]),
-        box("TopStrap", (0.062, 0.17, 0.022), (0, 0.06, 0.124), bevel=0.008, m=M["trim"]),
-        box("FramePlate", (0.084, 0.07, 0.07), (0, -0.04, 0.05), bevel=0.014, m=M["shell"]),
-        box("RecoilShield", (0.07, 0.012, 0.11), (0, 0.006, 0.066), bevel=0.004, m=M["dark"]),
+        box("FrameRear", (0.066, 0.05, 0.12), (0, -0.04, 0.058), bevel=0.018, m=M["trim"]),
+        box("FrameLow", (0.07, 0.2, 0.036), (0, 0.055, -0.01), bevel=0.016, m=M["trim"]),
+        box("TopStrap", (0.056, 0.17, 0.02), (0, 0.055, 0.128), bevel=0.008, m=M["trim"]),
+        box("FramePlate", (0.072, 0.05, 0.05), (0, -0.04, 0.03), bevel=0.012, m=M["shell"]),
+        box("RecoilShield", (0.064, 0.012, 0.11), (0, -0.004, 0.066), bevel=0.004, m=M["dark"]),
+        # Burst counter on the back of the frame: three amber pips.
+        box("PipPlate", (0.05, 0.012, 0.026), (0, -0.068, 0.085), bevel=0.006, m=M["dark"]),
         box("SideStripe", (0.004, 0.13, 0.012), (-0.038, 0.06, 0.012), bevel=0.0, m=M["cell"]),
         # Barrel: heavy cream shroud, dark underlug with an amber light strip, vented rib.
         side_profile("Barrel", [(0.118, 0.052), (0.39, 0.052), (0.418, 0.068), (0.418, 0.112), (0.392, 0.128), (0.118, 0.128)], 0.064, (0, 0, 0), M["shell"], bevel=0.01),
@@ -118,6 +121,8 @@ def build_comet_cannon():
     ]
     for i in range(5):
         shell.append(box(f"RibVent{i}", (0.016, 0.022, 0.006), (0, 0.17 + i * 0.05, 0.142), bevel=0.002, m=M["cell"]))
+    for i in range(3):
+        shell.append(box(f"Pip{i}", (0.011, 0.008, 0.011), (-0.015 + i * 0.015, -0.075, 0.085), bevel=0.002, m=M["cell"]))
     for i, a in enumerate((90, 210, 330)):
         r = math.radians(a)
         shell.append(box(f"TailFin{i}", (0.01, 0.07, 0.03), (math.cos(r) * 0.042, 0.41, bore_z + math.sin(r) * 0.042),
@@ -130,25 +135,25 @@ def build_comet_cannon():
         box("HammerSpur", (0.03, 0.03, 0.014), (0, -0.092, 0.14), rot=rad(-25, 0, 0), bevel=0.004, m=M["dark"]),
         sphere("HammerGlow", 0.007, (0, -0.088, 0.122), m=M["cell"], segs=8, rings=5),
     ]
-    crane_pivot = (-0.026, 0.066, 0.016)
-    crane = [box("CraneArm", (0.016, 0.1, 0.022), (-0.02, 0.066, 0.024), bevel=0.005, m=M["steel"])]
+    crane_pivot = (-0.028, 0.06, 0.012)
+    crane = [box("CraneArm", (0.016, 0.1, 0.022), (-0.022, 0.06, 0.02), bevel=0.005, m=M["steel"])]
     cylinder = [
-        ycyl("CylBody", 0.054, 0.104, cyl_c[1], z=cyl_c[2], m=M["trim"], segs=24, bevel=0.012),
+        ycyl("CylBody", 0.06, 0.1, cyl_c[1], z=cyl_c[2], m=M["trim"], segs=24, bevel=0.014),
         ycyl("CylCore", 0.016, 0.116, cyl_c[1], z=cyl_c[2], m=M["steel"], segs=12),
         ycyl("CylStar", 0.022, 0.006, cyl_c[1] - 0.056, z=cyl_c[2], m=M["steel"], segs=6, bevel=0.0),
     ]
     rounds = []
     for k in range(6):
         a = math.tau * k / 6 + math.pi / 2
-        cx, cz = math.cos(a) * 0.033, cyl_c[2] + math.sin(a) * 0.033
+        cx, cz = math.cos(a) * 0.036, cyl_c[2] + math.sin(a) * 0.036
         # Flutes between the chambers, a comet core in each chamber.
         b = a + math.tau / 12
-        cylinder.append(box(f"Flute{k}", (0.012, 0.074, 0.01), (math.cos(b) * 0.05, cyl_c[1], cyl_c[2] + math.sin(b) * 0.05),
-                            rot=(0, -b + math.pi / 2, 0), bevel=0.003, m=M["dark"]))
-        rounds.append(ycyl(f"Round{k}", 0.0125, 0.112, cyl_c[1], z=cz, x=cx, m=M["cell"], segs=10, bevel=0.003))
-        rounds.append(ycyl(f"RoundRim{k}", 0.015, 0.008, cyl_c[1] - 0.056, z=cz, x=cx, m=M["steel"], segs=10, bevel=0.002))
+        cylinder.append(box(f"Flute{k}", (0.013, 0.07, 0.01), (math.cos(b) * 0.057, cyl_c[1], cyl_c[2] + math.sin(b) * 0.057),
+                            rot=(0, -b + math.pi / 2, 0), bevel=0.003, m=M["cell"]))
+        rounds.append(ycyl(f"Round{k}", 0.0135, 0.108, cyl_c[1], z=cz, x=cx, m=M["cell"], segs=10, bevel=0.003))
+        rounds.append(ycyl(f"RoundRim{k}", 0.016, 0.008, cyl_c[1] - 0.054, z=cz, x=cx, m=M["steel"], segs=10, bevel=0.002))
     rounds_holo = holo_copy(rounds)
-    rounds_holo.append(torus("LoaderRing", 0.042, 0.006, (0, cyl_c[1] - 0.066, cyl_c[2]), rot=rad(90, 0, 0), m=mat("Holo"), major_segs=20, minor_segs=5))
+    rounds_holo.append(torus("LoaderRing", 0.046, 0.006, (0, cyl_c[1] - 0.064, cyl_c[2]), rot=rad(90, 0, 0), m=mat("Holo"), major_segs=20, minor_segs=5))
 
     star = [(0.0, 0.03), (0.009, 0.009), (0.03, 0.0), (0.009, -0.009), (0.0, -0.03), (-0.009, -0.009), (-0.03, 0.0), (-0.009, 0.009)]
     decal = [side_emblem("Emblem", star, -0.043, -0.035, 0.07, M["decal"])]
@@ -179,7 +184,7 @@ def build_comet_cannon():
 
 def build_arc_coil():
     reset_scene()
-    M = wmats("#b8ff3a")
+    M = wmats("#7dff2e", emit=1.9)
     copper = mat("Copper", "#e2894a", rough=0.32, metal=0.7)
     ceramic = mat("Ceramic", "#fbf3e6", rough=0.25)
     bore_z = 0.045
@@ -191,6 +196,7 @@ def build_arc_coil():
         box("RearCap", (0.13, 0.07, 0.115), (0, -0.065, 0.045), bevel=0.035, m=M["shell"]),
         box("RearSlotFrame", (0.09, 0.02, 0.06), (0, -0.102, 0.05), bevel=0.012, m=M["trim"]),
         box("RearSlot", (0.07, 0.02, 0.036), (0, -0.108, 0.05), bevel=0.01, m=M["cell"]),
+        torus("RearRing", 0.05, 0.005, (0, -0.1, 0.045), rot=rad(90, 0, 0), m=M["steel"], major_segs=22, minor_segs=5),
         box("Belly", (0.11, 0.2, 0.04), (0, 0.14, -0.035), bevel=0.016, m=M["dark"]),
         # Front collar and the ceramic insulator stack around the electrode.
         ycyl("Collar", 0.068, 0.05, 0.285, z=bore_z, m=M["dark"], segs=20, bevel=0.012),
@@ -272,7 +278,7 @@ def build_arc_coil():
 
 def build_bumper_lobber():
     reset_scene()
-    M = wmats("#ff4fe0")
+    M = wmats("#ff4fe0", emit=2.0)
     bore_z = 0.05
     dome = (-0.045, 0.05, 0.14)
     shell = grip("", (0, -0.03, -0.13), M, tilt=-14, size=(0.078, 0.098, 0.19), body_bottom=-0.04)
@@ -280,7 +286,9 @@ def build_bumper_lobber():
         box("Body", (0.17, 0.26, 0.15), (0, 0.08, 0.035), bevel=0.05, segs=3, m=M["trim"]),
         box("BodyPanel", (0.176, 0.16, 0.08), (0, 0.06, 0.03), bevel=0.025, m=M["shell"]),
         box("Stock", (0.13, 0.1, 0.12), (0, -0.1, 0.035), bevel=0.04, m=M["shell"]),
-        box("StockPad", (0.11, 0.02, 0.09), (0, -0.155, 0.035), bevel=0.012, m=M["dark"]),
+        box("StockPad", (0.11, 0.02, 0.09), (0, -0.152, 0.035), bevel=0.012, m=M["trim"]),
+        box("CounterFrame", (0.084, 0.012, 0.044), (0, -0.162, 0.045), bevel=0.008, m=M["dark"]),
+        torus("StockRim", 0.05, 0.005, (0, -0.158, 0.035), rot=rad(90, 0, 0), m=M["pink"], major_segs=22, minor_segs=5),
         # Fat barrel with bands, a pink stripe and a flared bell.
         ycyl("Barrel", 0.064, 0.25, 0.32, z=bore_z, m=M["shell"], segs=24, bevel=0.012),
         ring("BandRear", 0.066, 0.008, 0.215, z=bore_z, m=M["trim"]),
@@ -311,6 +319,8 @@ def build_bumper_lobber():
         shell.append(torus(f"CageRib{i}", 0.062, 0.0045, (dome[0], dome[1], dome[2] - 0.02),
                            rot=(math.pi / 2, 0, a), m=M["steel"], major_segs=16, minor_segs=5, arc=math.pi * 0.42, start=0.0))
     shell += vent_slots("Vent", -0.088, 0.1, 0.18, 0.06, 3, M["dark"], M["cell"])
+    for i in range(5):
+        shell.append(sphere(f"CountDot{i}", 0.0065, (-0.028 + i * 0.014, -0.169, 0.045), m=M["cell"], segs=8, rings=5))
     shell += screws("Screw", [(0.088, -0.02, 0.0), (0.088, 0.16, 0.0)], M["steel"])
     shell += charm_loop((-0.088, -0.07, 0.0), M["steel"])
 
@@ -361,7 +371,7 @@ def build_bumper_lobber():
 
 def build_cryo_beam():
     reset_scene()
-    M = wmats("#a8ecff", holo="#bff3ff")
+    M = wmats("#5cc8ff", holo="#bff3ff", emit=1.5)
     frost = mat("Frost", "#eaf6ff", rough=0.28)
     bore_z = 0.05
     tank_x, tank_y, tank_z = -0.098, 0.15, 0.06
@@ -370,7 +380,9 @@ def build_cryo_beam():
         box("Body", (0.14, 0.4, 0.13), (0, 0.14, 0.04), bevel=0.04, segs=3, m=M["trim"]),
         box("FrostPanel", (0.146, 0.24, 0.07), (0, 0.15, 0.025), bevel=0.02, m=frost),
         box("Stock", (0.12, 0.1, 0.12), (0, -0.09, 0.045), bevel=0.04, m=M["shell"]),
-        box("StockPad", (0.1, 0.02, 0.09), (0, -0.145, 0.045), bevel=0.012, m=M["dark"]),
+        box("StockPad", (0.1, 0.02, 0.09), (0, -0.142, 0.045), bevel=0.012, m=frost),
+        torus("PressureRing", 0.03, 0.006, (0, -0.152, 0.045), rot=rad(90, 0, 0), m=M["cell"], major_segs=22, minor_segs=6),
+        ycyl("PressureCore", 0.02, 0.01, -0.151, z=0.045, m=M["dark"], segs=16, bevel=0.002),
         box("TopShell", (0.1, 0.3, 0.03), (0, 0.15, 0.112), bevel=0.012, m=M["shell"]),
         # Tank cradle on the left.
         box("TankSaddle", (0.03, 0.26, 0.05), (-0.072, tank_y, 0.03), bevel=0.012, m=M["dark"]),
@@ -452,7 +464,7 @@ def build_cryo_beam():
 
 def build_rail_lancer():
     reset_scene()
-    M = wmats("#ff2f5a")
+    M = wmats("#ff1f3d", emit=1.7)
     axis_z = 0.05
     shell = grip("", (0, -0.03, -0.14), M, tilt=-12, size=(0.074, 0.094, 0.19), body_bottom=-0.01)
     shell += [
@@ -483,6 +495,10 @@ def build_rail_lancer():
         tube("CableR", [(0.06, -0.05, 0.03), (0.075, 0.1, 0.02), (0.07, 0.3, 0.03)], 0.01, m=M["pink"], segs=6),
     ]
     shell += vent_slots("Vent", 0.064, 0.02, 0.26, 0.09, 5, M["dark"], M["cell"], side=1)
+    shell.append(box("PipStrip", (0.06, 0.07, 0.01), (0, -0.055, 0.122), bevel=0.004, m=M["dark"]))
+    for i in range(3):
+        for j in range(2):
+            shell.append(box(f"ShotPip{i}{j}", (0.012, 0.012, 0.006), (-0.016 + i * 0.016, -0.07 + j * 0.026, 0.128), bevel=0.002, m=M["cell"]))
     shell += screws("Screw", [(-0.062, 0.0, 0.0), (-0.062, 0.3, 0.0)], M["steel"])
     shell += charm_loop((-0.062, -0.06, 0.035), M["steel"])
     # Charge rings around the rail gap.
