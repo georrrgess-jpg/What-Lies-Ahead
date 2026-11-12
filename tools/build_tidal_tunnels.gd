@@ -20,6 +20,8 @@ extends SceneTree
 ##   - East hall: dark jellyfish room with glowing jelly columns and a jelly wall.
 ##   - South lobby: gift shop under a mezzanine (ramps at both ends, exit portal
 ##     on top) and a touch pool.
+##   - Hall dressing (coral displays, planters, a cleaning cart, rope barriers,
+##     feed pallets, hanging signs) gives each hall warm colour and some cover.
 ##   - Zombie entrances (all beyond the loop): filtration room (NW), service
 ##     elevator (NE), loading bay (E), staff door (W) and the gift-shop stockroom.
 
@@ -65,6 +67,7 @@ var _boxes := {}
 var _font: Font
 var _caustic_tex: Texture2D
 var _rng := RandomNumberGenerator.new()
+var _editable: Array[Node3D] = []     # instanced models carrying material overrides
 ## Tank contents render on layer 2 so tank-only lights can target them.
 const TANK_LAYER := 2
 
@@ -96,6 +99,7 @@ func _initialize() -> void:
 	_build_jelly_room()
 	_build_pocket_tanks()
 	_build_lobby()
+	_build_hall_dressing()
 	_build_entrances()
 	_build_signage()
 	_build_lights()
@@ -119,6 +123,8 @@ func _initialize() -> void:
 	for cached in _scene_cache.values():
 		(cached as Node).free()
 	_own(level)
+	for node in _editable:
+		level.set_editable_instance(node, true)
 	var packed := PackedScene.new()
 	var err := packed.pack(level)
 	if err == OK:
@@ -129,7 +135,8 @@ func _initialize() -> void:
 
 
 # ---------------------------------------------------------------------------
-# Environment: indoor, no sun shadows; deep teal ambience and haze.
+# Environment: indoor, no sun shadows; teal ambience, light haze. After hours
+# but readable: warm practical lights in the halls balance the cool tanks.
 # ---------------------------------------------------------------------------
 
 func _build_environment() -> void:
@@ -137,22 +144,22 @@ func _build_environment() -> void:
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0.01, 0.03, 0.07)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.3, 0.55, 0.78)
-	env.ambient_light_energy = 0.55
+	env.ambient_light_color = Color(0.52, 0.6, 0.72)
+	env.ambient_light_energy = 0.8
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_white = 2.0
-	env.tonemap_exposure = 1.05
+	env.tonemap_white = 2.2
+	env.tonemap_exposure = 1.3
 	env.glow_enabled = true
 	env.glow_intensity = 0.55
 	env.glow_bloom = 0.04
 	env.glow_hdr_threshold = 0.95
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.05, 0.2, 0.32)
-	env.fog_density = 0.012
+	env.fog_light_color = Color(0.1, 0.22, 0.32)
+	env.fog_density = 0.006
 	env.fog_sky_affect = 0.0
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 1.15
-	env.adjustment_contrast = 1.06
+	env.adjustment_saturation = 1.0
+	env.adjustment_contrast = 1.05
 	var we := WorldEnvironment.new()
 	we.name = "WorldEnvironment"
 	we.environment = env
@@ -163,8 +170,8 @@ func _build_environment() -> void:
 	var sun := DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.transform = Transform3D(Basis.looking_at(Vector3(0.25, -1.0, 0.35).normalized(), Vector3.FORWARD), Vector3(0, 20, 0))
-	sun.light_color = Color(0.62, 0.86, 1.0)
-	sun.light_energy = 0.42
+	sun.light_color = Color(0.94, 0.92, 0.9)
+	sun.light_energy = 0.5
 	sun.shadow_enabled = false
 	level.add_child(sun)
 	var fill := DirectionalLight3D.new()
@@ -198,8 +205,9 @@ func _caustic_mat(key: String, tint: Color, params := {}) -> ShaderMaterial:
 
 
 func _floor_mat() -> ShaderMaterial:
-	return _caustic_mat("floor", Color(0.82, 0.86, 0.95), {"albedo_tex": "aqua_floor_tiles.png", "normal_tex": "aqua_floor_tiles_normal.png",
-		"normal_strength": 0.7, "uv_scale": 0.25, "roughness": 0.22, "specular": 0.7, "caustic_strength": 0.55, "caustic_scale": 0.14})
+	return _caustic_mat("floor", Color(0.9, 0.9, 0.95), {"albedo_tex": "aqua_floor_tiles.png", "normal_tex": "aqua_floor_tiles_normal.png",
+		"normal_strength": 0.7, "uv_scale": 0.25, "roughness": 0.22, "specular": 0.7, "caustic_strength": 0.45, "caustic_scale": 0.14,
+		"caustic_color": Color(0.5, 0.88, 1.0)})
 
 
 func _wall_mat() -> ShaderMaterial:
@@ -322,7 +330,7 @@ func _build_floors() -> void:
 		{"albedo_tex": "aqua_floor_tiles.png", "normal_tex": "aqua_floor_tiles_normal.png", "normal_strength": 0.7, "uv_scale": 0.25,
 		"roughness": 0.18, "specular": 0.75, "caustic_strength": 0.5, "caustic_color": Color(0.8, 0.45, 1.0)}))
 	_slab(floors, "Lobby", X0, X1, CORE, Z1, _caustic_mat("carpet", Color(1, 1, 1), {"albedo_tex": "aqua_carpet.png",
-		"uv_scale": 0.5, "roughness": 0.95, "specular": 0.2, "caustic_strength": 0.45}))
+		"uv_scale": 0.5, "roughness": 0.95, "specular": 0.2, "caustic_strength": 0.35}))
 
 
 ## Floor slab; thick by default so nothing shoved by physics can drop through.
@@ -369,7 +377,7 @@ func _build_rotunda() -> void:
 	var glass := MeshInstance3D.new()
 	glass.name = "SharkWindow"
 	glass.mesh = _arc_mesh(ROT_R + 0.05, wa0, wa1, 0.7, 6.6, true)
-	glass.material_override = _water_mat("water_shark", 0.0, 6.5, {"density": 0.13, "max_distance": 30.0})
+	glass.material_override = _water_mat("water_shark", 0.0, 6.5, {"density": 0.12, "max_distance": 30.0, "transmit_tint": Color(0.8, 0.93, 1.0)})
 	glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	tanks.add_child(glass)
 	# Brass mullions and frame on the window.
@@ -389,7 +397,7 @@ func _build_rotunda() -> void:
 	# Cornice with an LED strip at the top of the wall, and a low LED skirting.
 	_ring_band(dressing, "Cornice", ROT_R - 0.15, ROT_H - 0.35, ROT_H, _mat("navy_light", Color(0.11, 0.23, 0.39), 0.5))
 	_ring_band(dressing, "CorniceLed", ROT_R - 0.32, ROT_H - 0.42, ROT_H - 0.36, _glow_mat("led_cyan", Color(0.25, 0.95, 1.0), 2.8))
-	_ring_band(dressing, "MidLed", ROT_R - 0.02, 4.55, 4.65, _glow_mat("led_cyan", Color(0.25, 0.95, 1.0), 2.8))
+	_ring_band(dressing, "MidLed", ROT_R - 0.02, 4.55, 4.65, _glow_mat("led_amber", Color(1.0, 0.68, 0.3), 2.6))
 	# Dome.
 	var dome := MeshInstance3D.new()
 	dome.name = "Dome"
@@ -405,6 +413,9 @@ func _build_rotunda() -> void:
 			var p := Vector3(cos(a), 0, sin(a)) * (ROT_R + 0.55)
 			var pillar := _prop(geo, "aqua_pillar", "Pillar%d%s" % [int(centre), "A" if s < 0 else "B"], p, 0.0, Vector3(1.5, 9, 1.5))
 			pillar.rotation.y = -a
+			if centre == 90.0:
+				# The lobby-side pair glows amber: the warm way in from the gift shop.
+				_recolor(pillar, "PillarLed", _glow_mat("led_amber", Color(1.0, 0.68, 0.3), 2.6))
 			var c := _collider(geo, "PillarCol%d%s" % [int(centre), "A" if s < 0 else "B"], Vector3(1.6, 9.0, 1.8), p + Vector3(0, 4.5, 0))
 			c.rotation.y = -a
 	# Floor inlay rings around the station (scenery).
@@ -531,8 +542,8 @@ func _build_centerpiece() -> void:
 	cyl.cap_bottom = false
 	glass.mesh = cyl
 	glass.position.y = 1.3 + 3.85
-	glass.material_override = _water_mat("water_reef", 1.3, 8.7, {"density": 0.075, "max_distance": 7.0,
-		"shallow_color": Color(0.06, 0.48, 0.6), "ray_strength": 0.7, "caustic_strength": 0.9})
+	glass.material_override = _water_mat("water_reef", 1.3, 8.7, {"density": 0.07, "max_distance": 7.0,
+		"shallow_color": Color(0.06, 0.48, 0.6), "ray_strength": 0.7, "caustic_strength": 0.9, "transmit_tint": Color(0.88, 0.96, 1.0)})
 	glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	centre.add_child(glass)
 	# Fish orbiting the spire.
@@ -595,7 +606,7 @@ func _build_shark_tank() -> void:
 	glass.name = "TunnelGlass"
 	glass.mesh = _tunnel_glass_mesh(-TANK_X, TANK_X, TUN_HALF + 0.02)
 	glass.position.z = TUN_Z
-	glass.material_override = _water_mat("water_tunnel", 0.0, 6.5, {"density": 0.15, "max_distance": 26.0, "ray_strength": 0.8})
+	glass.material_override = _water_mat("water_tunnel", 0.0, 6.5, {"density": 0.14, "max_distance": 26.0, "ray_strength": 0.8, "transmit_tint": Color(0.8, 0.93, 1.0)})
 	glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	tank.add_child(glass)
 	# Reef dressing on the tank floor (both sides of the tunnel), kelp along the back.
@@ -664,10 +675,14 @@ func _build_kelp_gallery() -> void:
 	glass.position = Vector3(KELP_GLASS_X, 0.7 + (HALL_H - 1.2) * 0.5, zc)
 	glass.rotation.y = PI * 0.5
 	glass.material_override = _water_mat("water_kelp", 0.5, HALL_H, {"density": 0.16, "max_distance": 14.0,
-		"shallow_color": Color(0.08, 0.45, 0.42), "deep_color": Color(0.01, 0.1, 0.14), "ray_color": Color(0.6, 1.0, 0.75), "ray_strength": 0.9})
+		"shallow_color": Color(0.1, 0.45, 0.38), "deep_color": Color(0.02, 0.1, 0.12), "ray_color": Color(0.85, 1.0, 0.6), "ray_strength": 0.9,
+		"transmit_tint": Color(0.9, 0.97, 0.88)})
 	glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	tank.add_child(glass)
 	_collider(geo, "KelpGlassCol", Vector3(0.3, HALL_H, len_z), Vector3(KELP_GLASS_X - 0.15, HALL_H * 0.5, zc))
+	# The tank has no floor slab: its end walls keep anyone from walking in from the hall ends.
+	for e in [[KELP_Z0 - 0.2, "N"], [KELP_Z1 + 0.2, "S"]]:
+		_collider(geo, "KelpEndCol%s" % e[1], Vector3(KELP_GLASS_X - X0, HALL_H, 0.4), Vector3((X0 + KELP_GLASS_X) * 0.5, HALL_H * 0.5, e[0]))
 	# Frame: sill, header and mullions.
 	var navy := _mat("navy", Color(0.08, 0.14, 0.27), 0.5)
 	_mesh_box(dressing, "KelpSill", Vector3(0.5, 0.7, len_z + 0.4), Vector3(KELP_GLASS_X + 0.15, 0.35, zc), navy)
@@ -685,6 +700,9 @@ func _build_kelp_gallery() -> void:
 	_school(tank, "KelpSardines", "FishSardine", 60, Vector3(-21.5, 3.8, zc), Vector2(0.8, 8.5), Vector2(0.45, 0.45), 0.3, 1.0, 0.35)
 	_school(tank, "KelpSnappers", "FishSnapper", 7, Vector3(-21.6, 2.2, zc), Vector2(0.6, 8.0), Vector2(-0.22, -0.15), 0.3, 0.8, 0.8)
 	_school(tank, "KelpPuffers", "FishPuffer", 3, Vector3(-21.4, 1.6, zc), Vector2(0.5, 7.0), Vector2(0.12, 0.16), 0.3, 0.4, 1.0)
+	_school(tank, "KelpGaribaldi", "FishClown", 12, Vector3(-21.2, 2.0, zc), Vector2(0.55, 8.0), Vector2(0.18, 0.26), 0.3, 1.4, 1.0)
+	_school(tank, "KelpAngels", "FishAngel", 6, Vector3(-21.3, 3.0, zc), Vector2(0.5, 7.5), Vector2(-0.2, -0.14), 0.3, 1.2, 1.0)
+	_school(tank, "KelpTangs", "FishTang", 8, Vector3(-21.0, 2.6, zc), Vector2(0.45, 6.5), Vector2(0.22, 0.3), 0.25, 0.8, 0.5)
 	_light_shaft(tank, "KelpShaftA", Vector3(-21.6, HALL_H, -6.0), 1.4, HALL_H, Color(0.6, 1.0, 0.7), 0.18)
 	_light_shaft(tank, "KelpShaftB", Vector3(-21.6, HALL_H, 3.0), 1.4, HALL_H, Color(0.6, 1.0, 0.7), 0.18)
 	# Benches facing the glass.
@@ -818,7 +836,7 @@ func _build_pocket_tanks() -> void:
 		port.mesh = disc
 		port.rotation.x = PI * 0.5
 		port.position = Vector3(0, PORT_Y, -1.9)
-		port.material_override = _water_mat("water_pocket", 0.7, 4.2, {"density": 0.12, "max_distance": 4.0, "caustic_strength": 1.0})
+		port.material_override = _water_mat("water_pocket", 0.7, 4.2, {"density": 0.1, "max_distance": 4.0, "caustic_strength": 1.0, "transmit_tint": Color(0.9, 0.96, 1.0)})
 		port.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		t.add_child(port)
 		var frame := _prop(t, "aqua_porthole", "Frame", Vector3(0, PORT_Y, -2.02), 180.0, Vector3(2.8, 2.8, 0.3))
@@ -917,10 +935,13 @@ func _build_lobby() -> void:
 	whale.rotation.z = deg_to_rad(4.0)
 	# Pendant lamps.
 	for px in [-16.0, -8.0, 8.0, 16.0]:
-		_prop(dressing, "aqua_pendant", "Pendant%d" % int(px), Vector3(px, LOBBY_H, 16.5), 0.0, Vector3(0.9, 2, 0.9))
+		var pendant := _prop(dressing, "aqua_pendant", "Pendant%d" % int(px), Vector3(px, LOBBY_H, 16.5), 0.0, Vector3(0.9, 2, 0.9))
+		if px < 0.0:
+			_recolor(pendant, "PendantGlow", _glow_mat("pendant_warm", Color(1.0, 0.78, 0.5), 3.0))
+	var warm_lens := _glow_mat("pendant_warm", Color(1.0, 0.78, 0.5), 3.0)
 	for z in [-10.0, -2.0, 6.0]:
-		_prop(dressing, "aqua_pendant", "PendantW%d" % int(z), Vector3(-16.5, HALL_H, z), 0.0, Vector3(0.9, 2, 0.9))
-		_prop(dressing, "aqua_pendant", "PendantE%d" % int(z), Vector3(15.3, HALL_H, z + 3.0), 0.0, Vector3(0.9, 2, 0.9))
+		_recolor(_prop(dressing, "aqua_pendant", "PendantW%d" % int(z), Vector3(-16.5, HALL_H, z), 0.0, Vector3(0.9, 2, 0.9)), "PendantGlow", warm_lens)
+		_recolor(_prop(dressing, "aqua_pendant", "PendantE%d" % int(z), Vector3(15.3, HALL_H, z + 3.0), 0.0, Vector3(0.9, 2, 0.9)), "PendantGlow", warm_lens)
 	# Glowing murals on the long blank walls.
 	_prop(dressing, "aqua_mural", "MuralLobbyE", Vector3(X1 - 0.1, 2.4, 17.5), -90.0, Vector3(6, 2.8, 0.2))
 	_prop(dressing, "aqua_mural", "MuralLobbyW", Vector3(X0 + 0.1, 2.4, 22.0), 90.0, Vector3(6, 2.8, 0.2))
@@ -939,6 +960,86 @@ func _build_lobby() -> void:
 	for spot in [Vector3(-7.4, 0, 19.8), Vector3(7.4, 0, 19.8), Vector3(-16.0, 0, -12.5), Vector3(16.0, 0, 12.6), Vector3(-22.4, 0, -14.0)]:
 		_prop(lobby, "aqua_bin", "Bin%d%d" % [int(spot.x), int(spot.z)], spot, 0.0, Vector3(0.6, 1, 0.6))
 		_collider(lobby, "BinCol%d%d" % [int(spot.x), int(spot.z)], Vector3(0.6, 1.0, 0.6), spot + Vector3(0, 0.5, 0))
+
+
+# ---------------------------------------------------------------------------
+# Hall dressing: warm, colourful set pieces that double as cover. Islands stand
+# mid-hall with >= 2.4 m lanes either side; wall pieces sit flush (no pockets
+# for zombies to wedge into); every piece is clear of the spawn doors.
+# ---------------------------------------------------------------------------
+
+func _build_hall_dressing() -> void:
+	var hall := _node(geo, "HallDressing")
+	# West hall (kelp gallery): two coral islands framing the rotunda opening, a
+	# planter beside the north bench, the night cleaner's cart against the glass.
+	_dressing(hall, "aqua_coral_display", "CoralW1", Vector3(-17.0, 0, -6.2), 90.0, Vector3(1.85, 0.85, 0.95))
+	_dressing(hall, "aqua_coral_display", "CoralW2", Vector3(-17.0, 0, 4.6), 90.0, Vector3(1.85, 0.85, 0.95))
+	_dressing(hall, "aqua_planter", "PlanterW", Vector3(-14.4, 0, -11.3), -90.0, Vector3(1.4, 0.6, 0.7))
+	_dressing(hall, "aqua_janitor_cart", "CartW", Vector3(-19.5, 0, -10.0), 90.0, Vector3(1.6, 1.1, 1.0), Vector3(0, 0, 0.15))
+	_omni(lights, "CoralW1Spot", Vector3(-17.0, 3.2, -6.2), WARM, 0.9, 4.5)
+	_omni(lights, "CoralW2Spot", Vector3(-17.0, 3.2, 4.6), CORAL, 0.9, 4.5)
+	# East hall (jellies): a velvet rope in front of the jelly wall (its collider
+	# fills the gap to the glass), a planter, an info kiosk and a second cart.
+	for k in 3:
+		_prop(hall, "aqua_rope_barrier", "RopeE%d" % k, Vector3(22.25, 0, -9.0 + k * 3.0), 90.0, Vector3(3, 1, 0.3))
+	_collider(hall, "RopeECol", Vector3(1.0, 1.0, 10.0), Vector3(22.5, 0.5, -6.0))
+	_dressing(hall, "aqua_planter", "PlanterE", Vector3(22.6, 0, 1.8), -90.0, Vector3(1.4, 0.6, 0.7))
+	_dressing(hall, "aqua_info_kiosk", "KioskE", Vector3(14.3, 0, -6.6), 90.0, Vector3(1.0, 2.4, 0.5))
+	_dressing(hall, "aqua_janitor_cart", "CartE", Vector3(22.55, 0, 11.6), -90.0, Vector3(1.6, 1.1, 1.0), Vector3(0, 0, 0.15))
+	# North-west and north-east corners: a coral island each, feed pallets in
+	# the dead corners, a planter beside the east tunnel mouth.
+	_dressing(hall, "aqua_coral_display", "CoralNW", Vector3(-19.5, 0, -20.0), 0.0, Vector3(1.85, 0.85, 0.95))
+	_dressing(hall, "aqua_coral_display", "CoralNE", Vector3(19.5, 0, -20.0), 0.0, Vector3(1.85, 0.85, 0.95))
+	_dressing(hall, "aqua_feed_pallet", "PalletNW", Vector3(-22.25, 0, -24.3), 0.0, Vector3(1.45, 1.1, 1.25))
+	_dressing(hall, "aqua_feed_pallet", "PalletNE", Vector3(22.25, 0, -24.3), 0.0, Vector3(1.45, 1.1, 1.25))
+	_dressing(hall, "aqua_planter", "PlanterNE", Vector3(13.9, 0, -24.6), 0.0, Vector3(1.4, 0.6, 0.7))
+	_omni(lights, "CoralNWSpot", Vector3(-19.5, 3.2, -20.0), WARM, 0.9, 4.5)
+	_omni(lights, "CoralNESpot", Vector3(19.5, 3.2, -20.0), CORAL, 0.9, 4.5)
+	# Life rings on the walls (scenery).
+	for spec in [[Vector3(-20.6, 1.9, Z0 + 0.05), 0.0], [Vector3(X1 - 0.05, 1.9, -15.5), -90.0], [Vector3(X0 + 0.05, 1.9, 14.2), 90.0],
+			[Vector3(X0 + 0.05, 1.9, -14.6), 90.0]]:
+		_prop(dressing, "aqua_life_ring", "LifeRing%d%d" % [int(spec[0].x), int(spec[0].z)], spec[0], spec[1], Vector3(0.95, 1.15, 0.1))
+	# Hanging hall signs (both faces lit), warm against the cool halls.
+	var signs := _node(dressing, "HallSigns")
+	_hanging_sign(signs, "KelpN", "KELP FOREST", Vector3(-17.0, HALL_H, -11.4), Color(1.0, 0.78, 0.36))
+	_hanging_sign(signs, "KelpS", "KELP FOREST", Vector3(-17.0, HALL_H, 8.4), Color(1.0, 0.78, 0.36))
+	_hanging_sign(signs, "JellyN", "JELLY LAB", Vector3(17.6, HALL_H, -12.0), Color(1.0, 0.62, 0.42))
+	_hanging_sign(signs, "JellyS", "JELLY LAB", Vector3(17.6, HALL_H, 12.0), Color(1.0, 0.62, 0.42))
+
+
+## A prop with a box collider (`size` in the prop's own frame, `offset` from its origin at mid-height).
+func _dressing(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_degrees: float, size: Vector3, offset := Vector3.ZERO) -> void:
+	_prop(parent, model, prop_name, pos, yaw_degrees, size)
+	var col := _collider(parent, prop_name + "Col", size, Vector3.ZERO)
+	col.rotation.y = deg_to_rad(yaw_degrees)
+	col.position = pos + Vector3(0, size.y * 0.5, 0) + offset.rotated(Vector3.UP, col.rotation.y)
+
+
+## A navy sign board hung from the ceiling across a hall (facing +-Z), lettered on both faces.
+func _hanging_sign(parent: Node3D, sname: String, text: String, top: Vector3, colour: Color) -> void:
+	var y := top.y - 1.35
+	var navy := _mat("sign_navy", Color(0.06, 0.1, 0.2), 0.5)
+	var brass := _mat("brass", Color(0.84, 0.64, 0.27), 0.35)
+	_mesh_box(parent, sname + "Board", Vector3(3.4, 0.8, 0.12), Vector3(top.x, y, top.z), navy)
+	_mesh_box(parent, sname + "Rod", Vector3(3.6, 0.07, 0.07), Vector3(top.x, y + 0.44, top.z), brass)
+	_mesh_box(parent, sname + "Led", Vector3(3.3, 0.04, 0.16), Vector3(top.x, y - 0.42, top.z), _glow_mat("sign_led_%s" % colour.to_html(false), colour, 2.6))
+	for x in [-1.4, 1.4]:
+		_mesh_box(parent, sname + "Cable%d" % int(x), Vector3(0.025, top.y - y - 0.44, 0.025), Vector3(top.x + x, (top.y + y + 0.44) * 0.5, top.z), brass)
+	for face in [[0.07, 0.0], [-0.07, PI]]:
+		_label(parent, "%s%s" % [sname, "F" if face[0] > 0 else "B"], text, Vector3(top.x, y, top.z + face[0]), face[1], 0.0045, colour)
+
+
+## Swaps the material named `material_name` on every mesh of the instanced
+## model `node` for `m` (the instance is saved with editable children so the
+## override survives packing).
+func _recolor(node: Node3D, material_name: String, m: Material) -> void:
+	for mi in node.find_children("*", "MeshInstance3D", true, false):
+		var mesh_node := mi as MeshInstance3D
+		for i in mesh_node.mesh.get_surface_count():
+			var src := mesh_node.mesh.surface_get_material(i)
+			if src and src.resource_name == material_name:
+				mesh_node.set_surface_override_material(i, m)
+	_editable.append(node)
 
 
 # ---------------------------------------------------------------------------
@@ -1007,8 +1108,8 @@ func _build_signage() -> void:
 		var pixel := minf(0.011, 5.6 / (widest * 77.0))
 		# Flat labels on a curved wall: pulled inward so their ends stay in front of it.
 		_label(signs, "In%d" % int(entry[0]), entry[1], dir * (ROT_R - 0.45) + Vector3(0, 6.0, 0), -a - PI * 0.5, pixel, entry[2])
-		_label(signs, "Out%d" % int(entry[0]), "ROTUNDA", dir * (CORE + 0.55) + Vector3(0, 5.2, 0), -a + PI * 0.5, 0.01, Color(0.6, 0.95, 1.0))
-	_label(signs, "SharkWindow", "SHARK BAY", Vector3(0, 7.6, -ROT_R + 0.5), 0.0, 0.0085, Color(0.6, 0.95, 1.0))
+		_label(signs, "Out%d" % int(entry[0]), "ROTUNDA", dir * (CORE + 0.55) + Vector3(0, 5.2, 0), -a + PI * 0.5, 0.01, Color(1.0, 0.86, 0.55))
+	_label(signs, "SharkWindow", "SHARK BAY", Vector3(0, 7.6, -ROT_R + 0.5), 0.0, 0.0085, Color(1.0, 0.62, 0.45))
 	_label(signs, "Welcome", "ABYSS AQUARIUM", Vector3(0, 6.3, CORE + 0.55), 0.0, 0.016, Color(1.0, 0.8, 0.35))
 	# Signposts at the hall junctions.
 	var posts := [[Vector3(-17.0, 0, -16.5), 0.0, "SHARK\nTUNNEL >"], [Vector3(17.0, 0, -16.5), 0.0, "< SHARK\nTUNNEL"],
@@ -1029,8 +1130,8 @@ func _build_signage() -> void:
 	for deg in [45.0, 135.0, 225.0, 315.0]:
 		var a := deg_to_rad(deg)
 		var p := Vector3(cos(a), 0, sin(a)) * (ROT_R - 0.3) + Vector3(0, 6.6, 0)
-		var colour := Color(0.06, 0.42, 0.52) if k2 % 2 == 0 else Color(0.42, 0.14, 0.55)
-		var banner := _mesh_box(signs, "Banner%d" % int(deg), Vector3(1.6, 3.0, 0.06), p, _mat("banner_%d" % (k2 % 2), colour, 0.6))
+		var colour: Color = [Color(0.06, 0.42, 0.52), Color(0.78, 0.3, 0.22), Color(0.42, 0.14, 0.55), Color(0.72, 0.48, 0.1)][k2]
+		var banner := _mesh_box(signs, "Banner%d" % int(deg), Vector3(1.6, 3.0, 0.06), p, _mat("banner_%d" % k2, colour, 0.6))
 		banner.rotation.y = -a - PI * 0.5
 		var rod := _mesh_box(signs, "BannerRod%d" % int(deg), Vector3(1.9, 0.08, 0.08), Vector3.ZERO, _mat("brass", Color(0.84, 0.64, 0.27), 0.35))
 		rod.transform = banner.transform.translated_local(Vector3(0, 1.55, 0))
@@ -1057,35 +1158,47 @@ func _label(parent: Node3D, lname: String, text: String, pos: Vector3, yaw: floa
 
 
 # ---------------------------------------------------------------------------
-# Lights: a few shadowless omnis per room plus the emergency beacons
+# Lights: a few shadowless omnis per room plus the emergency beacons. The tanks
+# keep their cool water light; about a third of the hall lights are warm
+# amber or coral "practicals" (pendants, display spots), so the halls read as
+# a lit building at night rather than a blue void.
 # ---------------------------------------------------------------------------
+
+const WARM := Color(1.0, 0.72, 0.42)
+const CORAL := Color(1.0, 0.52, 0.4)
+
 
 func _build_lights() -> void:
 	_omni(lights, "TankCore", Vector3(0, 5.0, 0), Color(0.3, 0.95, 1.0), 2.2, 13.0)
 	for i in 4:
 		var a := TAU * i / 4.0 + PI / 4.0
-		_omni(lights, "RotundaRing%d" % i, Vector3(cos(a) * 8.5, 7.0, sin(a) * 8.5), Color(0.35, 0.75, 1.0), 0.9, 10.0)
-	_omni(lights, "SharkBay", Vector3(0, 3.5, -13.0), Color(0.2, 0.55, 1.0), 1.6, 8.0, true)
+		var warm := i % 2 == 0
+		_omni(lights, "RotundaRing%d" % i, Vector3(cos(a) * 8.5, 7.0, sin(a) * 8.5), WARM if warm else Color(0.4, 0.78, 1.0), 1.3 if warm else 0.9, 10.0)
+	_omni(lights, "SharkBay", Vector3(0, 3.5, -13.0), Color(0.45, 0.72, 1.0), 1.6, 8.0, true)
 	for x in [-7.0, 0.0, 7.0]:
-		_omni(lights, "Tunnel%d" % int(x), Vector3(x, 3.4, TUN_Z), Color(0.25, 0.65, 1.0), 1.5, 7.0)
-		_omni(lights, "TankFill%d" % int(x), Vector3(x, 5.8, TUN_Z + (5.0 if x == 0.0 else -4.5)), Color(0.2, 0.75, 1.0), 1.4, 9.0, true)
+		_omni(lights, "Tunnel%d" % int(x), Vector3(x, 3.4, TUN_Z), Color(0.3, 0.7, 1.0), 1.5, 7.0)
+		# The middle fill is near-white so the reef floor shows its real colours.
+		var fill := Color(1.0, 0.92, 0.8) if x == 0.0 else Color(0.3, 0.78, 1.0)
+		_omni(lights, "TankFill%d" % int(x), Vector3(x, 5.8, TUN_Z + (5.0 if x == 0.0 else -4.5)), fill, 1.4, 9.0, true)
 	for z in [-9.0, 0.0, 9.0]:
-		_omni(lights, "Kelp%d" % int(z), Vector3(-17.0, 4.0, z), Color(0.35, 1.0, 0.75), 1.1, 9.0)
-	_omni(lights, "KelpTank", Vector3(-21.6, 4.8, -1.5), Color(0.5, 1.0, 0.6), 1.8, 12.0, true)
+		var warm: bool = z != 0.0
+		_omni(lights, "Kelp%d" % int(z), Vector3(-17.0, 4.0, z), WARM if warm else Color(0.4, 1.0, 0.8), 1.5 if warm else 1.0, 9.0)
+	_omni(lights, "KelpTank", Vector3(-21.6, 4.8, -1.5), Color(0.85, 1.0, 0.65), 1.9, 12.0, true)
 	for z in [-9.0, -3.0, 3.0, 9.0]:
 		_omni(lights, "Jelly%d" % int(z), Vector3(18.2, 2.0, z), Color(0.85, 0.4, 1.0) if int(z) % 2 == 0 else Color(1.0, 0.45, 0.8), 1.5, 6.0)
 	_omni(lights, "JellyWall", Vector3(24.3, 3.0, -6.0), Color(0.75, 0.45, 1.0), 1.6, 7.0, true)
-	_omni(lights, "NW", Vector3(-17.0, 4.5, -19.5), Color(0.35, 0.8, 1.0), 1.0, 9.0)
-	_omni(lights, "NE", Vector3(17.0, 4.5, -19.5), Color(0.6, 0.5, 1.0), 1.0, 9.0)
+	_omni(lights, "NW", Vector3(-17.0, 4.5, -19.5), CORAL, 1.4, 9.5)
+	_omni(lights, "NE", Vector3(17.0, 4.5, -19.5), WARM, 1.4, 9.5)
 	_omni(lights, "LobbyShop", Vector3(0, 2.2, 18.5), Color(1.0, 0.72, 0.45), 1.8, 8.0)
 	_omni(lights, "ShopInside", Vector3(0, 2.0, 22.5), Color(1.0, 0.8, 0.55), 1.4, 7.0)
 	_omni(lights, "Whale", Vector3(-4.0, 7.2, 16.5), Color(0.55, 0.8, 1.0), 1.0, 8.0)
-	_omni(lights, "LobbyW", Vector3(-14.0, 5.0, 18.5), Color(0.4, 0.9, 1.0), 1.2, 11.0)
+	_omni(lights, "LobbyW", Vector3(-14.0, 5.0, 18.5), WARM, 1.5, 11.0)
 	_omni(lights, "LobbyE", Vector3(14.0, 5.0, 18.5), Color(1.0, 0.5, 0.85), 1.2, 11.0)
 	_omni(lights, "Mezz", Vector3(0, MEZZ_Y + 3.0, 22.8), Color(0.5, 0.85, 1.0), 1.1, 9.0)
 	for deg in [45.0, 135.0, 225.0, 315.0]:
 		var a := deg_to_rad(deg)
-		_omni(lights, "Pocket%d" % int(deg), Vector3(cos(a), 0, sin(a)) * (ROT_R + 2.2) + Vector3(0, 3.2, 0), Color(0.3, 0.9, 1.0), 1.6, 4.0, true)
+		var colour := Color(1.0, 0.9, 0.75) if int(deg) % 180 == 45 else Color(0.4, 0.9, 1.0)
+		_omni(lights, "Pocket%d" % int(deg), Vector3(cos(a), 0, sin(a)) * (ROT_R + 2.2) + Vector3(0, 3.2, 0), colour, 1.6, 4.0, true)
 	# Warm pools of light around the Reef Supply Ring.
 	for i in 4:
 		var a := TAU * i / 4.0
