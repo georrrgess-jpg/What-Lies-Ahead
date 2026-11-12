@@ -123,7 +123,7 @@ func show_kill_effect(item: CosmeticItem) -> void:
 	var scene := load(ZOMBIE_MODEL) as PackedScene
 	_model = scene.instantiate()
 	for mi in _model.find_children("*", "MeshInstance3D", true, false):
-		mi.visible = String(mi.name) == "Outfit_Tourist" or String(mi.name) == "Acc_Tourist_Cap"
+		mi.visible = String(mi.name) in ["Outfit_Tourist", "Acc_Tourist_Cap", "Face_Tourist_Grin"]
 	_content.add_child(_model)
 	_model.rotation_degrees.y = 20.0
 	var anim := _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
