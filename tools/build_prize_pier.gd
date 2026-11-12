@@ -304,7 +304,9 @@ func _build_rails() -> void:
 	for side in [-13.0, -7.0]:
 		var wall := _box(ramp_walls, "RampWall%s" % ("L" if side < -10.0 else "R"), Vector3(0.3, 1.3, 12.4), Vector3(side, -0.65, Z0 - 6.0), teal)
 		wall.rotation.x = -atan2(2.6, 12.0)
-		_box(ramp_walls, "LandingWall%s" % ("L" if side < -10.0 else "R"), Vector3(0.3, 1.3, 5.0), Vector3(side, -2.6 + 0.65, Z0 - 14.5), teal)
+		_player_wall(wall, Vector3(0.3, 3.4, 12.4))
+		var landing := _box(ramp_walls, "LandingWall%s" % ("L" if side < -10.0 else "R"), Vector3(0.3, 1.3, 5.0), Vector3(side, -2.6 + 0.65, Z0 - 14.5), teal)
+		_player_wall(landing, Vector3(0.3, 3.4, 5.0))
 
 
 ## A rail run: repeated rail modules plus one collision box.
@@ -862,6 +864,24 @@ func _box_mesh(size: Vector3, material: Material) -> BoxMesh:
 	mesh.material = material
 	_boxes[key] = mesh
 	return mesh
+
+
+## Invisible wall on the "player_walls" layer standing on `body` (its
+## bottom at the body's centre minus half the visible height), so the player
+## cannot jump over a low wall; shots, zombies and navigation ignore it.
+func _player_wall(body: StaticBody3D, size: Vector3) -> void:
+	var wall := StaticBody3D.new()
+	wall.name = "PlayerWall"
+	wall.collision_layer = 16
+	wall.collision_mask = 0
+	body.add_child(wall)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	shape.position.y = size.y * 0.5 - 0.65
+	wall.add_child(shape)
 
 
 ## Visible box with matching collision.

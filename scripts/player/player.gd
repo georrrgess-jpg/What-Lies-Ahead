@@ -22,6 +22,9 @@ extends CharacterBody3D
 
 signal health_changed(current: float, maximum: float)
 signal damaged(amount: float, source_position: Vector3)
+## A hit the shield soaked (all or part of it); `damaged` follows for any rest.
+signal shield_hit(absorbed: float, source_position: Vector3)
+signal shield_changed(current: float, maximum: float)
 signal died
 signal jumped
 signal landed(impact_speed: float)
@@ -116,6 +119,9 @@ var alive := true
 var controls_enabled := true
 ## Set when the run is over: lingering clouds and projectiles cannot hurt any more.
 var invulnerable := false
+## Extra layer that absorbs damage before health (the station overshield).
+var shield := 0.0
+var max_shield := 0.0
 var sprinting := false
 var sliding := false
 ## 0 = hip, 1 = fully aimed down sights. Eased by the weapon's ads_time.
@@ -180,7 +186,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Screen pixels (mouse counts), not viewport units: the same turn at any window size.
 		var look: Vector2 = (event as InputEventMouseMotion).screen_relative * Settings.look_radians() * _aim_look_scale()
 		rotate_y(-look.x)
-		_pitch = clampf(_pitch - look.y, -1.45, 1.45)
+		_pitch = clampf(_pitch - look.y * Settings.look_y_sign(), -1.45, 1.45)
 		view.add_look(look)
 	elif controls_enabled and alive:
 		_weapon_switch_input(event)
@@ -649,10 +655,19 @@ func look_pitch() -> float:
 func take_damage(amount: float, source_position: Vector3) -> void:
 	if not alive or invulnerable or amount <= 0.0:
 		return
-	health = maxf(0.0, health - amount)
-	add_shake(0.65)
 	# Roll the view away from whoever hit us.
 	head.hit_from(global_transform.basis.inverse() * (source_position - global_position))
+	var absorbed := minf(shield, amount)
+	if absorbed > 0.0:
+		shield -= absorbed
+		shield_changed.emit(shield, max_shield)
+		shield_hit.emit(absorbed, source_position)
+		amount -= absorbed
+		if amount <= 0.0:
+			add_shake(0.25)
+			return
+	health = maxf(0.0, health - amount)
+	add_shake(0.65)
 	damaged.emit(amount, source_position)
 	health_changed.emit(health, max_health)
 	Sfx.play(&"player_hurt", -3.0, randf_range(0.95, 1.05))
@@ -660,6 +675,13 @@ func take_damage(amount: float, source_position: Vector3) -> void:
 		alive = false
 		controls_enabled = false
 		died.emit()
+
+
+## Sets the shield layer (e.g. a station purchase); 0 removes it.
+func set_shield(amount: float, maximum: float) -> void:
+	max_shield = maximum
+	shield = clampf(amount, 0.0, maximum)
+	shield_changed.emit(shield, max_shield)
 
 
 ## Returns how much health was actually restored.

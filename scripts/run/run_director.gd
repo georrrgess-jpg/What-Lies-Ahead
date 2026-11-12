@@ -59,8 +59,6 @@ var total_kills := 0
 var elapsed := 0.0
 ## Overshield health still standing (absorbs damage before health does).
 var overshield := 0.0
-## How much of the last hit the overshield absorbed (for the HUD).
-var last_absorbed := 0.0
 var damage_boost := Boost.NONE
 ## Score paid for the tickets left over at extraction.
 var tickets_cashed := 0
@@ -83,7 +81,6 @@ var _finished := false
 var score: ScoreKeeper
 var _new_best := false
 var _player_start := Vector3.ZERO
-var _health_seen := 0.0
 
 
 func _ready() -> void:
@@ -130,10 +127,7 @@ func _begin() -> void:
 		player.global_position = spawn.global_position
 		player.set_look(spawn.global_rotation.y, 0.0)
 	player.died.connect(_on_player_died)
-	# First listener on damage: the overshield soaks the hit before anyone reads health.
-	player.damaged.connect(_absorb_with_overshield)
-	player.health_changed.connect(func(current: float, _max: float): _health_seen = current)
-	_health_seen = player.health
+	player.shield_changed.connect(_on_shield_changed)
 	player.damaged.connect(func(amount: float, _src: Vector3): score.on_player_damaged(amount))
 	player.weapons.begin_run()
 	var carried := Loadout.run_slots(Game.weapon_id)
@@ -532,8 +526,7 @@ func buy_overshield() -> bool:
 		return false
 	if not _spend(waves.overshield_price):
 		return false
-	overshield = waves.overshield_amount
-	overshield_changed.emit(overshield, waves.overshield_amount)
+	player.set_shield(waves.overshield_amount, waves.overshield_amount)
 	Sfx.play(&"reload_materialize", -4.0, 0.8)
 	notice.emit("Overshield up: +%d shield" % int(waves.overshield_amount), &"good")
 	return true
@@ -565,24 +558,17 @@ func _set_damage_boost(value: Boost) -> void:
 	damage_boost_changed.emit(value)
 
 
-## Runs inside Player.take_damage (the first listener on `damaged`), so the
-## health it restores is what the death check and every later listener see.
-func _absorb_with_overshield(amount: float, _source: Vector3) -> void:
-	last_absorbed = 0.0
-	if overshield <= 0.0:
-		return
-	last_absorbed = minf(overshield, amount)
-	overshield -= last_absorbed
-	# take_damage clamps health at zero, so a hit that "killed" is rebuilt
-	# from the health seen before it.
-	var before := player.health + amount if player.health > 0.0 else _health_seen
-	player.health = clampf(before - (amount - last_absorbed), 0.0, player.max_health)
-	overshield_changed.emit(overshield, waves.overshield_amount)
-	if overshield <= 0.0:
-		Sfx.play(&"neon_shield_break", -8.0, 1.2)
-		notice.emit("Overshield down", &"bad")
-	else:
-		Sfx.play(&"neon_shield_block", -10.0, 1.3)
+## Mirrors the player's shield for the HUD and plays its block/break sounds.
+func _on_shield_changed(current: float, maximum: float) -> void:
+	var was := overshield
+	overshield = current
+	overshield_changed.emit(current, maximum)
+	if current < was:
+		if current <= 0.0:
+			Sfx.play(&"neon_shield_break", -8.0, 1.2)
+			notice.emit("Overshield down", &"bad")
+		else:
+			Sfx.play(&"neon_shield_block", -10.0, 1.3)
 
 
 ## Leftover tickets become score when the player escapes through the portal.

@@ -81,6 +81,7 @@ func bind(run: RunDirector, p: Player) -> void:
 	run.run_finished.connect(func(_r): _root.visible = false)
 	p.health_changed.connect(_on_health_changed)
 	p.damaged.connect(_on_damaged)
+	p.shield_hit.connect(_on_shield_hit)
 	p.weapons.ammo_changed.connect(_on_ammo_changed)
 	_slots.bind(p.weapons)
 	_weapon_hud.bind(p, _ammo)
@@ -483,14 +484,16 @@ func _on_health_changed(current: float, maximum: float) -> void:
 	_health.value = current / maximum
 
 
-func _on_damaged(amount: float, source: Vector3) -> void:
-	# A hit the overshield soaked up entirely flashes the shield, not the screen.
-	if director and director.last_absorbed >= amount - 0.01:
-		_hurt = maxf(_hurt, 0.3)
-		_health.shield_flash = 1.0
-	else:
-		_hurt = 1.0
-		_health.flash = 1.0
+func _on_damaged(_amount: float, source: Vector3) -> void:
+	_hurt = 1.0
+	_health.flash = 1.0
+	_threats.add_hit(source)
+
+
+## The overshield soaked a hit: flash the shield cells, not the screen.
+func _on_shield_hit(_absorbed: float, source: Vector3) -> void:
+	_hurt = maxf(_hurt, 0.3)
+	_health.shield_flash = 1.0
 	_threats.add_hit(source)
 
 
