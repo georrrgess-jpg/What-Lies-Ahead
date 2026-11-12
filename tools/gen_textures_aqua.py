@@ -5,9 +5,9 @@
     art/textures/aqua_wall_panels.png         ribbed acoustic wall panels, 4 m per tile
     art/textures/aqua_caustics.png            tileable caustic light network (greyscale)
     art/textures/aqua_sand.png                rippled tank sand with shell flecks
-    art/textures/aqua_carpet.png              lobby carpet with a wave motif
+    art/textures/aqua_carpet.png              lobby carpet with a quiet wave motif
 
-    python tools/gen_textures_aqua.py            (needs numpy + Pillow)
+    python tools/gen_textures_aqua.py [floor wall caustics sand carpet]   (needs numpy + Pillow)
 """
 import math
 import os
@@ -91,7 +91,7 @@ def normal_from_height(h, strength):
 # ---------------------------------------------------------------------------
 
 def make_floor(size=1024):
-    """4 x 4 large tiles (1 m each) of dark blue terrazzo with coloured chips."""
+    """4 x 4 large tiles (1 m each) of slate terrazzo with coloured chips (cool and warm)."""
     rng = np.random.default_rng(5)
     px = size / 4.0
     yy, xx = np.meshgrid(np.arange(size), np.arange(size), indexing="ij")
@@ -99,7 +99,7 @@ def make_floor(size=1024):
     lx, ly = (xx % px) / px, (yy % px) / px
     # Each tile: a slightly different tone; a checker of two slate blues.
     tones = rng.uniform(-0.035, 0.035, (4, 4))
-    base_a, base_b = hexc("#2c3f5c"), hexc("#26364f")
+    base_a, base_b = hexc("#3e4a62"), hexc("#363f56")
     checker = ((tile_x + tile_y) % 2)[..., None]
     rgb = base_a * (1 - checker) + base_b * checker
     rgb = rgb + tones[tile_y, tile_x][..., None]
@@ -110,7 +110,7 @@ def make_floor(size=1024):
     f1, f2 = worley(size, 96, 21, 0.85)
     chip = smooth(0.28, 0.2, f1)
     chip_id = (worley(size, 96, 21, 0.85)[0] * 0 + tile_noise(size, 96, 33))
-    palette = [hexc("#d8e6ef"), hexc("#5fb9c9"), hexc("#16233a"), hexc("#e08aa8"), hexc("#8fa4c4")]
+    palette = [hexc("#d8e6ef"), hexc("#5fb9c9"), hexc("#16233a"), hexc("#e08aa8"), hexc("#e8b070"), hexc("#8fa4c4")]
     chip_rgb = np.zeros_like(rgb)
     for k, col in enumerate(palette):
         lo, hi = k / len(palette), (k + 1) / len(palette)
@@ -173,24 +173,26 @@ def make_sand(size=512):
 
 
 def make_carpet(size=512):
-    """Deep blue carpet with teal wave lines (2 m tile)."""
+    """Deep plum carpet with a quiet wave motif (2 m tile). The waves are woven
+    in tones close to the ground (about 40% of the old contrast), so the pattern
+    reads up close without fighting the gameplay at a distance."""
     yy, xx = np.meshgrid(np.arange(size), np.arange(size), indexing="ij")
     u, v = xx / size, yy / size
     fib = tile_noise(size, 256, 120) * 0.5 + tile_noise(size, 128, 121) * 0.5
-    rgb = hexc("#16244a") * (0.85 + fib[..., None] * 0.3)
-    for k, (amp, off, col, w) in enumerate(((0.035, 0.25, "#2bb3c0", 0.018), (0.035, 0.75, "#2bb3c0", 0.018),
-                                           (0.02, 0.5, "#ff6fae", 0.008))):
+    ground = hexc("#2b1f4a")
+    rgb = ground * (0.88 + fib[..., None] * 0.24)
+    for k, (amp, off, col, w, mix) in enumerate(((0.035, 0.25, "#3a8aa6", 0.02, 0.5), (0.035, 0.75, "#3a8aa6", 0.02, 0.5),
+                                                (0.02, 0.5, "#c0607e", 0.01, 0.45))):
         y = off + amp * np.sin(u * math.tau * 2 + k)
         d = np.abs(v - y)
-        line = smooth(w, w * 0.4, d)
-        rgb = rgb * (1 - line[..., None]) + hexc(col) * (0.85 + fib[..., None] * 0.3) * line[..., None]
+        line = smooth(w, w * 0.4, d) * mix
+        rgb = rgb * (1 - line[..., None]) + hexc(col) * (0.88 + fib[..., None] * 0.24) * line[..., None]
     save_rgb("aqua_carpet.png", rgb)
 
 
 if __name__ == "__main__":
+    import sys
     os.makedirs(OUT, exist_ok=True)
-    make_floor()
-    make_wall()
-    make_caustics()
-    make_sand()
-    make_carpet()
+    makers = {"floor": make_floor, "wall": make_wall, "caustics": make_caustics, "sand": make_sand, "carpet": make_carpet}
+    for key in sys.argv[1:] or list(makers):
+        makers[key]()

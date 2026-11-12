@@ -1,7 +1,11 @@
 extends "res://scripts/run/level_environment.gd"
 ## Root script for Neon Skyline. Does everything level_environment.gd does
 ## (graphics preset, bulb halos) and adds the night-city life:
-##  - rain: open cylinders of falling streaks that follow the active camera;
+##  - rain: open cylinders of falling streaks that follow the active camera.
+##    While the sky above the camera is occluded (a solid roof overhead, or a
+##    "neon_rain_cover" volume such as the glass sky-bridge canopy) the inner
+##    layers fade out, so no rain falls indoors; the outer layer keeps raining
+##    beyond the glass;
 ##  - blinking red aviation beacons (nodes in group "neon_blink");
 ##  - conventions for models exported from Blender (see art/blender/neon_common.py):
 ##      material "NeonHalo_<hex>"  additive bulb halo in that colour;
@@ -18,6 +22,13 @@ const RAIN_LAYERS := [[3.5, 14.0, 70.0], [8.0, 22.0, 150.0], [15.0, 30.0, 260.0]
 
 ## Turn rate of "Spin..." nodes (radians per second).
 const SPIN_SPEED := 0.45
+## Rain layers hidden under cover (the outer one falls outside any roof).
+const COVERED_LAYERS := 2
+## How often the sky above the camera is tested, and how high (metres).
+const COVER_CHECK_INTERVAL := 0.1
+const COVER_RAY_LENGTH := 14.0
+## Fade speed of the inner rain layers (1 / seconds).
+const COVER_FADE_SPEED := 5.0
 
 var _rain: Array[MeshInstance3D] = []
 var _blinkers: Array[Node3D] = []
@@ -26,6 +37,14 @@ var _neon_halos: Array[ShaderMaterial] = []
 var _halo_by_color := {}
 var _holo_cache := {}
 var _time := 0.0
+var _rain_materials: Array[ShaderMaterial] = []
+var _rain_strengths: Array[float] = []
+## Rain-cover volumes: [global inverse transform, half extents] per node.
+var _covers: Array = []
+var _cover_ray: PhysicsRayQueryParameters3D
+var _cover_check := 0.0
+var _covered := false
+var _rain_fade := 1.0
 
 
 func _ready() -> void:
@@ -35,6 +54,12 @@ func _ready() -> void:
 	for node in get_tree().get_nodes_in_group("neon_blink"):
 		if node is Node3D and is_ancestor_of(node):
 			_blinkers.append(node)
+	for node in get_tree().get_nodes_in_group("neon_rain_cover"):
+		if node is Node3D and is_ancestor_of(node):
+			var cover := node as Node3D
+			_covers.append([cover.global_transform.affine_inverse(), cover.get_meta("half_extents", Vector3.ONE)])
+	_cover_ray = PhysicsRayQueryParameters3D.new()
+	_cover_ray.collision_mask = 1
 	apply_graphics_preset(Settings.is_low_graphics())
 
 
@@ -53,6 +78,11 @@ func _process(delta: float) -> void:
 		var p := cam.global_position
 		for r in _rain:
 			r.global_position = Vector3(p.x, p.y - 4.0, p.z)
+		_cover_check -= delta
+		if _cover_check <= 0.0:
+			_cover_check = COVER_CHECK_INTERVAL
+			_covered = _sky_occluded(p)
+		_update_rain_fade(delta)
 	for b in _blinkers:
 		if is_instance_valid(b):
 			var phase := fmod(absf(b.global_position.x * 0.37 + b.global_position.z * 0.21), 1.7)
@@ -62,6 +92,28 @@ func _process(delta: float) -> void:
 			s.rotate_y(SPIN_SPEED * delta)
 
 
+## True when something is over `p`: a solid roof (world collision straight
+## up) or a rain-cover volume (non-colliding canopies).
+func _sky_occluded(p: Vector3) -> bool:
+	for c in _covers:
+		var local: Vector3 = (c[0] as Transform3D) * p
+		var half: Vector3 = c[1]
+		if absf(local.x) <= half.x and absf(local.y) <= half.y and absf(local.z) <= half.z:
+			return true
+	_cover_ray.from = p
+	_cover_ray.to = p + Vector3.UP * COVER_RAY_LENGTH
+	return not get_world_3d().direct_space_state.intersect_ray(_cover_ray).is_empty()
+
+
+func _update_rain_fade(delta: float) -> void:
+	var target := 0.0 if _covered else 1.0
+	if is_equal_approx(_rain_fade, target):
+		return
+	_rain_fade = move_toward(_rain_fade, target, COVER_FADE_SPEED * delta)
+	for i in mini(COVERED_LAYERS, _rain_materials.size()):
+		_rain_materials[i].set_shader_parameter("strength", _rain_strengths[i] * _rain_fade)
+
+
 func _build_rain() -> void:
 	var material := ShaderMaterial.new()
 	material.shader = load(RAIN_SHADER)
@@ -69,8 +121,11 @@ func _build_rain() -> void:
 		var mi := MeshInstance3D.new()
 		mi.name = "Rain%d" % _rain.size()
 		var m: ShaderMaterial = material.duplicate()
+		var strength := 0.26 - 0.05 * _rain.size()
 		m.set_shader_parameter("columns", layer[2])
-		m.set_shader_parameter("strength", 0.26 - 0.05 * _rain.size())
+		m.set_shader_parameter("strength", strength)
+		_rain_materials.append(m)
+		_rain_strengths.append(strength)
 		mi.mesh = _rain_cylinder(layer[0], layer[1], m)
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.extra_cull_margin = 40.0

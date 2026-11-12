@@ -467,36 +467,58 @@ def build_blade_sign_b():
 # ---------------------------------------------------------------------------
 
 def build_skybridge():
-    """Arched canopy over the 4.5 m wide, 8 m long sky-bridge. Origin at the
+    """Arched glass canopy over the 4.5 m wide, 8 m long sky-bridge. Origin at the
     south end at deck level; the bridge runs along +Y (Godot -Z) and climbs
-    1.2 m. Glowing ribs, a glass roof and a lit name plate."""
+    1.2 m. Steel arch ribs with glowing inner tubes, longitudinal purlins and
+    a gutter rail frame the glass, which is see-through (material
+    "BridgeGlass", alpha 0.35) so the city stays visible from the bridge."""
     reset_scene()
     c = _common()
-    glass = nmat("BridgeGlass", "#5aa0ff", rough=0.05, metal=0.3, emit=0.25)
+    glass = nmat("BridgeGlass", "#7fb8ff", rough=0.05, metal=0.2, emit=0.12)
+    bsdf = next(n for n in glass.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    bsdf.inputs["Alpha"].default_value = 0.35
+    glass.diffuse_color = (*glass.diffuse_color[:3], 0.35)
+    if hasattr(glass, "surface_render_method"):
+        glass.surface_render_method = "BLENDED"
+    if hasattr(glass, "blend_method"):
+        glass.blend_method = "BLEND"
     parts = []
     length, rise, half = 8.0, 1.2, 2.25
     ribs = 6
+    facets = 6
+
+    def arch(a, y):
+        z0 = rise * y / length
+        return (half * math.cos(a), y, z0 + 1.05 + 2.3 * math.sin(a) ** 0.8)
+
     for i in range(ribs):
         y = length * i / (ribs - 1)
         z0 = rise * i / (ribs - 1)
-        pts = [(half * math.cos(a), y, z0 + 1.05 + 2.3 * math.sin(a) ** 0.8) for a in [math.pi * k / 12 for k in range(13)]]
+        pts = [arch(math.pi * k / 12, y) for k in range(13)]
         pts = [(x, yy, max(z0 + 1.05, z)) for x, yy, z in pts]
-        parts.append(tube(f"Rib{i}", pts, 0.07, m=c["steel_dark"], segs=6, cap=True))
-        parts.append(tube(f"RibGlow{i}", [(x, yy - 0.08, z) for x, yy, z in pts], 0.03, m=c["cyan"], segs=5, cap=True))
-        for s in (-1, 1):
-            parts.append(box(f"RibPost{i}{s}", (0.14, 0.14, 1.1), (s * half, y, z0 + 0.55), bevel=0.02, m=c["steel_dark"]))
-    # Glass roof panels between ribs (flattened arch segments).
+        parts.append(tube(f"Rib{i}", pts, 0.08, m=c["steel_dark"], segs=6, cap=True))
+        parts.append(tube(f"RibGlow{i}", [(x * 0.97, yy, z - 0.05) for x, yy, z in pts], 0.03, m=c["cyan"], segs=5, cap=True))
+        for s_ in (-1, 1):
+            parts.append(box(f"RibPost{i}{s_}", (0.14, 0.14, 1.1), (s_ * half, y, z0 + 0.55), bevel=0.02, m=c["steel_dark"]))
+    # Purlins: a steel bar along every facet edge, from end to end, plus a gutter rail each side.
+    for k in range(facets + 1):
+        a = math.pi * k / facets
+        pts = [arch(a, length * t / 4) for t in range(5)]
+        parts.append(tube(f"Purlin{k}", pts, 0.045, m=c["steel"], segs=6, cap=True))
+    for s_ in (-1, 1):
+        parts.append(tube(f"Gutter{s_}", [(s_ * half, 0, 1.05), (s_ * half, length, 1.05 + rise)], 0.07, m=c["steel_dark"], segs=6, cap=True))
+    # Glass panes between ribs and purlins (flat facets, inset from the frame).
     for i in range(ribs - 1):
         y0, y1 = length * i / (ribs - 1), length * (i + 1) / (ribs - 1)
         zc = rise * (i + 0.5) / (ribs - 1)
-        for k in range(6):
-            a0, a1 = math.pi * k / 6, math.pi * (k + 1) / 6
+        for k in range(facets):
+            a0, a1 = math.pi * k / facets, math.pi * (k + 1) / facets
             xa, za = half * math.cos(a0), zc + 1.05 + 2.3 * math.sin(a0) ** 0.8
             xb, zb = half * math.cos(a1), zc + 1.05 + 2.3 * math.sin(a1) ** 0.8
             mid = ((xa + xb) / 2, (y0 + y1) / 2, (za + zb) / 2)
             wlen = math.hypot(xb - xa, zb - za)
             ang = math.atan2(zb - za, xb - xa)
-            parts.append(box(f"Glass{i}{k}", (wlen, y1 - y0 - 0.12, 0.03), mid, rot=(0, -ang, 0), bevel=0.0, m=glass))
+            parts.append(box(f"Glass{i}{k}", (wlen - 0.06, y1 - y0 - 0.14, 0.02), mid, rot=(0, -ang, 0), bevel=0.0, m=glass))
     # Name plate over the south portal.
     parts.append(box("Plate", (2.6, 0.12, 0.45), (0, -0.05, 3.15), bevel=0.03, m=c["ink"]))
     parts.append(sign_text("PlateText", "SKYWALK 7", 0.26, 0.03, (0, -0.13, 3.15), m=c["magenta"]))
