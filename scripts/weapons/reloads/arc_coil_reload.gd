@@ -22,8 +22,9 @@ func play(v: WeaponView, d: float) -> void:
 	v.at(0.21, d, func(): Sfx.play(&"reload_vent", -6.0, 1.4))
 	v.burst(0.3, d, "EjectPoint", "sparks")
 	v.hide_part(0.48, d, "Cell")
-	v.track("ArmL", d, [[0.26, Vector3(-0.04, 0.07, 0.06), Vector3(0, 0, -16)], [0.74, Vector3(-0.04, 0.08, 0.05), Vector3(0, 0, -16)],
-		[0.92, Vector3.ZERO, Vector3.ZERO]])
+	# The free hand drops away to fetch a capsule and comes back to the grip.
+	v.track("ArmL", d, [[0.24, Vector3(-0.03, -0.22, 0.12), Vector3(25, 0, 0)], [0.72, Vector3(-0.03, -0.22, 0.12), Vector3(25, 0, 0)],
+		[0.9, Vector3.ZERO, Vector3.ZERO]])
 	# A hologram capsule lowers into the cradle.
 	v.track("CellHolo", d, [[0.5, Vector3(0, 0.1, 0), Vector3.ZERO, 1.0, "hold"], [0.7, Vector3(0, 0.09, 0), Vector3(0, 90, 0)],
 		[0.78, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_CUBIC, Tween.EASE_OUT)

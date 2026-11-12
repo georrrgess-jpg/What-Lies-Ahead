@@ -30,7 +30,7 @@ func _ready() -> void:
 	_dots.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_dots)
 	var ring := TorusMesh.new()
-	ring.inner_radius = 0.9
+	ring.inner_radius = 0.93
 	ring.outer_radius = 1.0
 	ring.rings = 36
 	ring.ring_segments = 4
@@ -38,15 +38,20 @@ func _ready() -> void:
 	_ring.mesh = ring
 	_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_ring)
+	# Dots draw through scenery so the arc reads; the blast ring sits in the world.
+	_dots.material_override = _glow_material(true)
+	_ring.material_override = _glow_material(false)
+	visible = false
+
+
+func _glow_material(on_top: bool) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	m.no_depth_test = true
+	m.no_depth_test = on_top
 	m.albedo_color = color
-	_dots.material_override = m
-	_ring.material_override = m
-	visible = false
+	return m
 
 
 ## Redraws the path for a launch from `from` with `vel`. `strength` 0-1 fades it.
@@ -56,6 +61,7 @@ func show_path(w: WeaponData, from: Vector3, vel: Vector3, strength: float, excl
 	if not visible:
 		return
 	(_dots.material_override as StandardMaterial3D).albedo_color = Color(w.tracer_color, 0.75 * strength)
+	(_ring.material_override as StandardMaterial3D).albedo_color = Color(w.tracer_color, 0.5 * strength)
 	var space := get_world_3d().direct_space_state
 	var p := from
 	var v := vel
@@ -77,7 +83,7 @@ func show_path(w: WeaponData, from: Vector3, vel: Vector3, strength: float, excl
 			normal = hit["normal"]
 			landed = true
 		if t >= next_dot or landed:
-			var s := 0.045 if count > 1 else 0.0
+			var s := 0.06 if count > 1 else 0.0
 			mm.set_instance_transform(count, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * s), np))
 			count += 1
 			next_dot += dot_every

@@ -21,7 +21,8 @@ func play(v: WeaponView, d: float) -> void:
 	v.at(0.3, d, func(): Sfx.play(&"reload_clunk", -6.0, 1.4))
 	v.burst(0.34, d, "EjectPoint", "sparks")
 	v.hide_part(0.5, d, "Cell")
-	v.track("ArmL", d, [[0.3, Vector3(-0.07, -0.03, 0.12), Vector3(0, 0, -12)], [0.74, Vector3(-0.06, -0.01, 0.1), Vector3(0, 0, -12)],
+	# The support hand drops away to fetch a capacitor and returns to the handguard.
+	v.track("ArmL", d, [[0.26, Vector3(-0.03, -0.24, 0.14), Vector3(25, 0, 0)], [0.74, Vector3(-0.03, -0.24, 0.14), Vector3(25, 0, 0)],
 		[0.92, Vector3.ZERO, Vector3.ZERO]])
 	# A hologram capacitor prints in and slots home.
 	v.track("CellHolo", d, [[0.52, Vector3(-0.1, -0.05, 0), Vector3(0, 0, 30), 1.0, "hold"], [0.7, Vector3(-0.08, -0.04, 0), Vector3(0, 0, 20)],

@@ -8,7 +8,7 @@ extends RefCounted
 func play(v: WeaponView, d: float) -> void:
 	v.register_part("Fins")
 	v.register_part("Needle")
-	v.track("Root", d, [[0.12, Vector3(0.02, 0.03, 0.0), Vector3(6, -10, -30)], [0.84, Vector3(0.02, 0.03, 0.0), Vector3(6, -10, -30)],
+	v.track("Root", d, [[0.12, Vector3(0.03, 0.04, 0.0), Vector3(10, -14, -12)], [0.84, Vector3(0.03, 0.04, 0.0), Vector3(10, -14, -12)],
 		[1.0, Vector3.ZERO, Vector3.ZERO]])
 	v.track("Fins", d, [[0.04, Vector3.ZERO, Vector3.ZERO], [0.4, Vector3.ZERO, Vector3(0, 0, 300)]], Tween.TRANS_QUAD, Tween.EASE_OUT)
 	v.burst(0.08, d, "VentPoint", "steam")
@@ -24,8 +24,9 @@ func play(v: WeaponView, d: float) -> void:
 		[0.52, Vector3(-0.2, -0.16, 0.02), Vector3(30, 0, 260), 0.8]], Tween.TRANS_QUAD, Tween.EASE_IN)
 	v.burst(0.36, d, "EjectPoint", "steam")
 	v.hide_part(0.52, d, "Cell")
-	v.track("ArmL", d, [[0.24, Vector3(-0.08, 0.03, 0.08), Vector3(0, 0, -18)], [0.74, Vector3(-0.09, 0.02, 0.06), Vector3(0, 0, -18)],
-		[0.92, Vector3.ZERO, Vector3.ZERO]])
+	# The free hand drops away to fetch a fresh tank and returns to the foregrip.
+	v.track("ArmL", d, [[0.22, Vector3(-0.03, -0.24, 0.14), Vector3(25, 0, 0)], [0.72, Vector3(-0.03, -0.24, 0.14), Vector3(25, 0, 0)],
+		[0.9, Vector3.ZERO, Vector3.ZERO]])
 	# A hologram tank slides in from the side and freezes solid.
 	v.track("CellHolo", d, [[0.54, Vector3(-0.12, 0, 0), Vector3(0, 0, -90), 1.0, "hold"], [0.7, Vector3(-0.1, 0, 0), Vector3(0, 0, -40)],
 		[0.76, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_CUBIC, Tween.EASE_OUT)

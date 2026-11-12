@@ -62,6 +62,7 @@ var _burst_left := 0
 var _burst_timer := 0.0
 var _regen := 0.0
 var _beam_on := false
+var _beam_linger := 0.0      # keeps the beam drawn briefly after a tick
 var _beam_end := Vector3.ZERO
 var _confirm_cool := 0.0
 var _beam: BeamVisual
@@ -142,7 +143,7 @@ func _take(data: WeaponData, animate: bool) -> void:
 		_ammo[data.id] = {"mag": data.magazine_size, "reserve": data.reserve_start}
 	_reloading = false
 	_reload_left = 0.0
-	_switch_left = (LOWER_TIME if animate else 0.0) + data.equip_time
+	_switch_left = LOWER_TIME + data.equip_time if animate else 0.0
 	_cooldown = 0.0
 	_bloom = 0.0
 	_regen = 0.0
@@ -280,7 +281,7 @@ func _carried() -> Array[WeaponData]:
 
 
 func start_reload() -> bool:
-	if current == null or _reloading or magazine() >= current.magazine_size or reserve() <= 0:
+	if current == null or _reloading or is_switching() or magazine() >= current.magazine_size or reserve() <= 0:
 		return false
 	_end_trigger()
 	_reloading = true
@@ -301,6 +302,7 @@ func _physics_process(delta: float) -> void:
 	_dry_cooldown = maxf(0.0, _dry_cooldown - delta)
 	_switch_left = maxf(0.0, _switch_left - delta)
 	_confirm_cool = maxf(0.0, _confirm_cool - delta)
+	_beam_linger = maxf(0.0, _beam_linger - delta)
 	if current == null:
 		return
 	_bloom = maxf(0.0, _bloom - current.spread_bloom_max * 2.5 * delta)
@@ -356,18 +358,19 @@ func _handle_trigger(delta: float) -> void:
 	if Input.is_action_just_pressed("fire"):
 		# Buffer clicks slightly so a click just before the weapon is ready still fires.
 		_fire_buffer = FIRE_BUFFER
-	var ready := _cooldown <= 0.0 and not _reloading and _switch_left <= 0.0
+	var can_shoot := _cooldown <= 0.0 and not _reloading and _switch_left <= 0.0
 	if _burst_left > 0:
 		_burst_timer -= delta
 		if _burst_timer <= 0.0:
 			_burst_step()
 		return
 	if current.charge_time > 0.0:
-		_handle_charge(held, ready, delta)
+		_handle_charge(held, can_shoot, delta)
 		return
 	var wants := held if (current.automatic or current.beam) else _fire_buffer > 0.0
-	_set_beam(current.beam and held and ready and magazine() > 0)
-	if not wants or not ready:
+	# The beam stays on between damage ticks (they are paced by the cooldown).
+	_set_beam(current.beam and held and not _reloading and _switch_left <= 0.0 and magazine() > 0)
+	if not wants or not can_shoot:
 		return
 	if magazine() > 0:
 		_fire_buffer = 0.0
@@ -380,7 +383,7 @@ func _handle_trigger(delta: float) -> void:
 		Sfx.play(current.empty_sound, -4.0)
 
 
-func _handle_charge(held: bool, ready: bool, delta: float) -> void:
+func _handle_charge(held: bool, can_shoot: bool, delta: float) -> void:
 	if _charging:
 		if not held:
 			_release_charge()
@@ -390,7 +393,7 @@ func _handle_charge(held: bool, ready: bool, delta: float) -> void:
 			_charge_ready = true
 			Sfx.play(current.charge_ready_sound, -4.0)
 		return
-	if not held or not ready:
+	if not held or not can_shoot:
 		return
 	if magazine() > 0:
 		_charging = true
@@ -510,6 +513,7 @@ func _fire_shot(scale: float, power: float) -> void:
 		var end := _trace(origin, dir, data, scale, hits)
 		if data.beam:
 			_beam_end = end
+			_beam_linger = data.fire_interval * 1.5
 		# Only a few streaks per scatter blast keep the screen readable.
 		elif i < 4:
 			WeaponFx.shot(_level(), muzzle, end, data, power)
@@ -767,10 +771,9 @@ func _update_aim_visuals() -> void:
 			add_child(_beam)
 		_beam.color = current.tracer_color
 		_beam.width = current.tracer_width
-		var end := _beam_end
-		if _beam_on:
-			end = _visual_end(cam.global_position, aim_dir)
-		_beam.aim(player.view.muzzle_position(), end, _beam_on)
+		var shown := _beam_on or _beam_linger > 0.0
+		var end := _visual_end(cam.global_position, aim_dir) if shown else _beam_end
+		_beam.aim(player.view.muzzle_position(), end, shown)
 	elif _beam:
 		_beam.aim(Vector3.ZERO, Vector3.ZERO, false)
 	var lob := current.projectile_speed > 0.0 and current.projectile_gravity > 0.0

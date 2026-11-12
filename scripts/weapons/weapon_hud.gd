@@ -4,7 +4,7 @@ extends Control
 ## normal reticle:
 ##   charge   a ring around the reticle that fills while charging, with rail
 ##            brackets closing in; pulses when the charge is full
-##   heat     a bar above the ammo counter, cyan to red; flashes while venting
+##   heat     a gauge beside the ammo counter, cyan to red; flashes while venting
 ##   burst    one pip per shot of a burst under the reticle, lit when ready
 ##   seek     a spinning diamond on the zombie a seeking weapon will hit
 
@@ -73,34 +73,33 @@ func _draw_heat(heat: float, venting: bool, data: WeaponData) -> void:
 		return
 	var rect := ammo_label.get_global_rect()
 	rect.position -= get_global_rect().position
-	var bar := Rect2(rect.position.x + 10.0, rect.position.y - 8.0, rect.size.x - 20.0, 14.0)
+	# A vertical gauge just left of the ammo counter, filling from the bottom.
+	var bar := Rect2(rect.position.x - 30.0, rect.position.y + 18.0, 16.0, rect.size.y - 34.0)
 	var back := StyleBoxFlat.new()
 	back.bg_color = Color(UiKit.INK, 0.75)
-	back.set_corner_radius_all(7)
+	back.set_corner_radius_all(8)
 	back.set_expand_margin_all(4)
 	draw_style_box(back, bar)
 	var col := data.tracer_color.lerp(UiKit.AMBER, smoothstep(0.45, 0.75, heat)).lerp(UiKit.RED, smoothstep(0.75, 0.95, heat))
 	if venting:
 		col = UiKit.RED.lerp(Color.WHITE, 0.5 + 0.5 * sin(_time * 20.0))
-	if heat > 0.01:
+	var k := 1.0 if venting else heat
+	if k > 0.01:
 		var fill := StyleBoxFlat.new()
 		fill.bg_color = col
-		fill.set_corner_radius_all(7)
-		draw_style_box(fill, Rect2(bar.position, Vector2(maxf(14.0, bar.size.x * heat), bar.size.y)))
-	var font := UiKit.display_font()
-	var text := "VENTING" if venting else "HEAT"
-	draw_string_outline(font, bar.position + Vector2(0, -8), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, 6, Color(UiKit.INK, 0.85))
-	draw_string(font, bar.position + Vector2(0, -8), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, col if venting else Color(1, 1, 1, 0.85))
+		fill.set_corner_radius_all(8)
+		var h := maxf(16.0, bar.size.y * k)
+		draw_style_box(fill, Rect2(bar.position.x, bar.end.y - h, bar.size.x, h))
 
 
 func _draw_burst(c: Vector2, w: WeaponController, data: WeaponData) -> void:
-	var ready := not w.is_reloading() and not w.is_switching() and w.magazine() > 0
+	var can_fire := not w.is_reloading() and not w.is_switching() and w.magazine() > 0
 	var n := data.burst_count
 	var spacing := 12.0
 	var y := c.y + 30.0
 	for i in n:
 		var x := c.x + (i - (n - 1) * 0.5) * spacing
-		var lit := ready and i < w.magazine()
+		var lit := can_fire and i < w.magazine()
 		draw_circle(Vector2(x, y), 4.6, Color(UiKit.INK, 0.8))
 		draw_circle(Vector2(x, y), 3.0, data.tracer_color if lit else Color(1, 1, 1, 0.25))
 

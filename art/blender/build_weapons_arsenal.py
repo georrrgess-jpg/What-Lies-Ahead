@@ -402,7 +402,6 @@ def build_cryo_beam():
         box("SightFrameL", (0.01, 0.025, 0.06), (-0.034, 0.18, 0.17), bevel=0.004, m=M["trim"]),
         box("SightFrameR", (0.01, 0.025, 0.06), (0.034, 0.18, 0.17), bevel=0.004, m=M["trim"]),
         box("SightFrameT", (0.078, 0.025, 0.01), (0, 0.18, 0.202), bevel=0.004, m=M["trim"]),
-        box("SightPane", (0.058, 0.003, 0.048), (0, 0.184, 0.171), bevel=0.0, m=M["holo"]),
         sphere("SightDot", 0.0055, (0, 0.182, 0.171), m=M["pink"], segs=8, rings=5),
         # Vertical foregrip.
         box("Foregrip", (0.045, 0.055, 0.11), (0, 0.32, -0.06), rot=rad(8, 0, 0), bevel=0.018, m=M["trim"]),

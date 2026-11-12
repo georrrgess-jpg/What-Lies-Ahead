@@ -13,7 +13,6 @@ var _wave: Label
 var _wave_sub: Label
 var _health: SegmentBar
 var _ammo: Label
-var _weapon_name: Label
 var _slots: WeaponSlots
 var _weapon_hud: WeaponHud
 var _tickets: Label
@@ -71,7 +70,6 @@ func bind(run: RunDirector, p: Player) -> void:
 	p.health_changed.connect(_on_health_changed)
 	p.damaged.connect(_on_damaged)
 	p.weapons.ammo_changed.connect(_on_ammo_changed)
-	p.weapons.weapon_changed.connect(_on_weapon_changed)
 	_slots.bind(p.weapons)
 	_weapon_hud.bind(p, _ammo)
 	p.weapons.hit_confirmed.connect(_reticle.show_hit)
@@ -79,7 +77,6 @@ func bind(run: RunDirector, p: Player) -> void:
 	p.weapons.reload_started.connect(p.view.play_reload)
 	p.weapons.weapon_changed.connect(p.view.show_weapon)
 	if p.weapons.current:
-		_on_weapon_changed(p.weapons.current)
 		_on_ammo_changed(p.weapons.magazine(), p.weapons.reserve())
 		p.view.show_weapon(p.weapons.current)
 	_on_health_changed(p.health, p.max_health)
@@ -182,23 +179,15 @@ func _build() -> void:
 	_health.custom_minimum_size = Vector2(390, 50)
 	_anchor(_health, Control.PRESET_BOTTOM_LEFT, Vector2(MARGIN + 8, -MARGIN - 8), Control.GROW_DIRECTION_END, Control.GROW_DIRECTION_BEGIN)
 
-	# Lower right: the two carried weapons beside the ammo counter.
-	var ammo_row := HBoxContainer.new()
-	ammo_row.add_theme_constant_override("separation", 28)
-	ammo_row.alignment = BoxContainer.ALIGNMENT_END
-	_slots = WeaponSlots.new()
-	_slots.size_flags_vertical = Control.SIZE_SHRINK_END
-	ammo_row.add_child(_slots)
+	# Lower right: ammo, with the two carried weapons right above it.
 	_ammo = UiKit.arcade_label("12 / 60", 92)
 	_ammo.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	ammo_row.add_child(_ammo)
-	_anchor(ammo_row, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN, -26), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
+	_anchor(_ammo, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN, -26), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
+	_slots = WeaponSlots.new()
+	_anchor(_slots, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN, -134), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
 	# Charge ring, heat bar, burst pips and seek lock (drawn over everything).
 	_weapon_hud = WeaponHud.new()
 	_root.add_child(_weapon_hud)
-	_weapon_name = UiKit.arcade_label("", 30, UiKit.CYAN)
-	_weapon_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_anchor(_weapon_name, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN - 4, -138), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
 
 	# Centre: reticle and status.
 	_reticle = Reticle.new()
@@ -228,7 +217,7 @@ func _build() -> void:
 	_anchor(_notice, Control.PRESET_CENTER_BOTTOM, Vector2(0, -200), Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BEGIN)
 
 	# Controls reminder, shown only before the first wave.
-	_controls = UiKit.label("WASD move  ·  Shift sprint  ·  LMB fire  ·  RMB aim  ·  R reload  ·  1 / 2 or wheel switch weapon  ·  F start wave  ·  Esc pause\nAt the Loadout Station between waves:  E energy  ·  Q snack  ·  %s / %s swap the held weapon" % [
+	_controls = UiKit.label("WASD move  ·  Shift sprint  ·  Mouse aim  ·  LMB fire  ·  R reload  ·  1 / 2 switch  ·  F start wave  ·  Esc pause\nAt the Loadout Station between waves:  E energy  ·  Q snack  ·  %s / %s swap the held weapon" % [
 		Loadout.key_hint(&"kiosk_prev").get_slice(" / ", 0), Loadout.key_hint(&"kiosk_next").get_slice(" / ", 0)], 26, UiKit.CREAM)
 	_controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_controls.add_theme_color_override("font_outline_color", Color(UiKit.INK, 0.9))
@@ -389,7 +378,11 @@ func _kiosk_swap() -> Control:
 	row.add_child(_key_chip(Loadout.key_hint(&"kiosk_next").get_slice(" / ", 0), can))
 	box.add_child(row)
 	var index := options.find(w.current) + 1
-	var note := "%s  ·  %d of %d unlocked" % [w.current.category, index, options.size()] if can else "Unlock more weapons by levelling up"
+	var note := "%s  ·  %d unlocked to choose from" % [w.current.category, options.size()]
+	if index > 0:
+		note = "%s  ·  %d of %d" % [w.current.category, index, options.size()]
+	if not can:
+		note = "Level up to unlock more weapons"
 	box.add_child(UiKit.label(note, 24, UiKit.AMBER))
 	box.add_child(UiKit.label("1 / 2 picks the slot to swap", 22, Color(1, 1, 1, 0.6)))
 	return box
@@ -451,10 +444,6 @@ func _on_damaged(_amount: float, source: Vector3) -> void:
 func _on_ammo_changed(magazine: int, reserve: int) -> void:
 	_ammo.text = "%d / %d" % [magazine, reserve]
 	_ammo.add_theme_color_override("font_color", UiKit.RED if magazine == 0 else Color.WHITE)
-
-
-func _on_weapon_changed(data: WeaponData) -> void:
-	_weapon_name.text = data.display_name.to_upper()
 
 
 func _on_notice(text: String, kind: StringName) -> void:
