@@ -20,4 +20,5 @@ ambience_volume_db = -10.0
 accent_color = Color(1, 0.48, 0.16, 1)
 menu_camera_from = Vector3(12, 8.5, 23)
 menu_camera_to = Vector3(-3, 10.5, -10)
+heal_item_name = "Space rations"
 loading_tips = PackedStringArray("Space Cadets crouch before they pounce. Sidestep while they are crouched and they land on nothing.", "A sputtering jetpack means a mechanic is about to fly over. Climbing the launch deck will not shake it off.", "Hazmat workers burst into a radioactive cloud when they drop. Get out of the green ring before it pops.", "The launch deck is a third route between the lanes: one ramp climbs from the plaza, the other drops into the back yard by the portal.", "Between waves, the supply pod in the plaza sells energy and snacks. Follow the beacon.")

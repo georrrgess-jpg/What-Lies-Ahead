@@ -51,6 +51,7 @@ var geo: Node3D          # collidable geometry (navmesh source)
 var dressing: Node3D     # non-colliding scenery
 var _materials := {}
 var _meshes := {}
+var _editable: Array[Node3D] = []     # instanced models carrying material overrides
 
 
 func _initialize() -> void:
@@ -98,6 +99,10 @@ func _initialize() -> void:
 	level.add_child(director)
 
 	_own(level)
+	# Save the per-instance recolours (container paint): without editable
+	# children the packer drops overrides made inside instanced models.
+	for node in _editable:
+		level.set_editable_instance(node, true)
 	var packed := PackedScene.new()
 	var err := packed.pack(level)
 	if err == OK:
@@ -108,7 +113,8 @@ func _initialize() -> void:
 
 
 # ---------------------------------------------------------------------------
-# Environment: golden-hour sky, long warm key light, violet fill
+# Environment: golden-hour sky, long golden key light, cool violet fill and
+# ambient (warm light against cool shadows keeps the sand from washing out)
 # ---------------------------------------------------------------------------
 
 func _build_environment() -> void:
@@ -117,27 +123,27 @@ func _build_environment() -> void:
 	var sky := Sky.new()
 	var pano := PanoramaSkyMaterial.new()
 	pano.panorama = load(TEX + "dune_sky.png")
-	pano.energy_multiplier = 0.95
+	pano.energy_multiplier = 1.0
 	sky.sky_material = pano
 	env.sky = sky
 	env.sky_rotation = Vector3(0.0, deg_to_rad(SKY_YAW_DEGREES), 0.0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.62, 0.5, 0.72)
+	env.ambient_light_color = Color(0.5, 0.48, 0.78)
 	env.ambient_light_energy = 0.6
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_white = 2.2
-	env.tonemap_exposure = 0.95
+	env.tonemap_white = 2.4
+	env.tonemap_exposure = 0.98
 	env.glow_enabled = true
 	env.glow_intensity = 0.5
 	env.glow_bloom = 0.0
 	env.glow_hdr_threshold = 1.0
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.98, 0.7, 0.55)
-	env.fog_density = 0.0016
+	env.fog_light_color = Color(1.0, 0.64, 0.46)
+	env.fog_density = 0.0014
 	env.fog_sky_affect = 0.0
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 1.1
-	env.adjustment_contrast = 1.05
+	env.adjustment_saturation = 1.28
+	env.adjustment_contrast = 1.1
 	var we := WorldEnvironment.new()
 	we.name = "WorldEnvironment"
 	we.environment = env
@@ -151,8 +157,8 @@ func _build_environment() -> void:
 	var elevation := deg_to_rad(24.0)
 	var to_sun := Vector3(sin(azimuth) * cos(elevation), sin(elevation), -cos(azimuth) * cos(elevation))
 	sun.transform = Transform3D(Basis.looking_at(-to_sun, Vector3.UP), Vector3(0, 30, 0))
-	sun.light_color = Color(1.0, 0.76, 0.52)
-	sun.light_energy = 1.2
+	sun.light_color = Color(1.0, 0.72, 0.44)
+	sun.light_energy = 1.3
 	sun.shadow_enabled = true
 	sun.shadow_bias = 0.06
 	sun.shadow_normal_bias = 1.2
@@ -164,8 +170,8 @@ func _build_environment() -> void:
 	var fill := DirectionalLight3D.new()
 	fill.name = "FillLight"
 	fill.transform = Transform3D(Basis.looking_at(Vector3(-0.5, -0.45, 0.75).normalized(), Vector3.UP), Vector3(0, 30, 0))
-	fill.light_color = Color(0.62, 0.6, 1.0)
-	fill.light_energy = 0.3
+	fill.light_color = Color(0.55, 0.6, 1.0)
+	fill.light_energy = 0.32
 	fill.shadow_enabled = false
 	level.add_child(fill)
 
@@ -611,6 +617,22 @@ func _build_cover() -> void:
 		_prop(cover, "dune_light_mast", "Mast%d" % i, spot, yaw)
 		_collider(cover, "Mast%dCollision" % i, Vector3(0.7, 8.0, 0.7), spot + Vector3(0, 4.0, 0))
 		i += 1
+	# White-and-teal ground equipment and wayfinding: the spacecraft livery
+	# against the sand and rust (cool accents for colour contrast).
+	var accents := [
+		["dune_gse_cart", Vector3(12.0, 0, 21.0), -15.0, Vector3(3.6, 1.75, 1.5), Vector3(-0.2, 0, 0)],
+		["dune_gse_cart", Vector3(20.5, 0, -16.5), 90.0, Vector3(3.6, 1.75, 1.5), Vector3(-0.2, 0, 0)],
+		["dune_console", Vector3(-9.0, 0, 2.4), 35.0, Vector3(1.9, 1.3, 1.0), Vector3.ZERO],
+		["dune_totem", Vector3(-6.5, 0, 19.0), 30.0, Vector3(1.0, 3.3, 0.5), Vector3.ZERO],
+		["dune_totem", Vector3(11.2, 0, 9.0), -90.0, Vector3(1.0, 3.3, 0.5), Vector3.ZERO],
+	]
+	for a in accents:
+		_prop(cover, a[0], "Accent%d" % i, a[1], a[2])
+		var size: Vector3 = a[3]
+		var yaw := deg_to_rad(a[2])
+		var col := _collider(cover, "Accent%dCollision" % i, size, a[1] + (a[4] as Vector3).rotated(Vector3.UP, yaw) + Vector3(0, size.y * 0.5, 0))
+		col.rotation.y = yaw
+		i += 1
 	_prop(dressing, "dune_windsock", "Windsock", Vector3(24.6, 0, 20.0), 70.0)
 	_collider(cover, "WindsockPole", Vector3(0.4, 4.0, 0.4), Vector3(24.6, 2.0, 20.0))
 	_prop(dressing, "dune_sign", "PadSign", Vector3(15.5, 0, 25.4), 180.0)
@@ -651,7 +673,7 @@ func _build_station_and_portal() -> void:
 	geo.add_child(station)
 	station.position = STATION_POS
 
-	var portal: Node3D = (load("res://scenes/props/portal.tscn") as PackedScene).instantiate()
+	var portal: Node3D = (load("res://scenes/props/dune_portal.tscn") as PackedScene).instantiate()
 	portal.name = "Portal"
 	geo.add_child(portal)
 	portal.position = PORTAL_POS
@@ -1288,7 +1310,8 @@ func _prop(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_d
 
 
 ## Recolours every surface using the material named `material_name`.
-func _tint(node: Node, material_name: String, color: Color) -> void:
+func _tint(node: Node3D, material_name: String, color: Color) -> void:
+	_editable.append(node)
 	var key := "%s_%s" % [material_name, color.to_html()]
 	for mi in node.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D

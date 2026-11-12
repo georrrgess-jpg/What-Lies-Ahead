@@ -107,17 +107,19 @@ def make_sky(width=4096, height=2048, seed=23):
     sun_dist = np.degrees(np.arccos(np.clip(cosd, -1, 1)))
     toward = (0.5 + 0.5 * np.cos(rad(AZ)))[..., None]              # 1 toward the sun, 0 away
 
-    # Away from the sun: dusty rose horizon into violet and indigo.
+    # Away from the sun: rose horizon into magenta-violet and a deep indigo
+    # zenith (saturated enough to hold its colour through the haze and the
+    # filmic tonemapper: warm ground against a cool, colourful sky).
     cool = ramp(EL, [
-        (-90, hexc("#5a3a3e")), (-4, hexc("#b9775e")), (0.0, hexc("#f2a88a")), (3, hexc("#ee9f8c")),
-        (9, hexc("#d98897")), (17, hexc("#ad73a3")), (28, hexc("#80619f")), (45, hexc("#5a4b8f")),
-        (65, hexc("#3d3676")), (90, hexc("#2c2860")),
+        (-90, hexc("#5a3a3e")), (-4, hexc("#b9775e")), (0.0, hexc("#f7a284")), (3, hexc("#f2927f")),
+        (9, hexc("#df7896")), (17, hexc("#a95fac")), (28, hexc("#7652ab")), (45, hexc("#4e43a0")),
+        (65, hexc("#33307f")), (90, hexc("#252463")),
     ])
-    # Toward the sun: gold horizon into peach, salmon and mauve.
+    # Toward the sun: gold horizon into tangerine, coral and orchid.
     warm = ramp(EL, [
-        (-90, hexc("#6a4636")), (-4, hexc("#d08a58")), (0.0, hexc("#ffd690")), (3, hexc("#ffc27a")),
-        (8, hexc("#ffa46e")), (15, hexc("#f2887a")), (26, hexc("#c47490")), (42, hexc("#7f5e9c")),
-        (65, hexc("#463c80")), (90, hexc("#2c2860")),
+        (-90, hexc("#6a4636")), (-4, hexc("#d08a58")), (0.0, hexc("#ffd27a")), (3, hexc("#ffb85e")),
+        (8, hexc("#ff9450")), (15, hexc("#f7766a")), (26, hexc("#c75f94")), (42, hexc("#7a52a6")),
+        (65, hexc("#40388a")), (90, hexc("#252463")),
     ])
     sky = cool * (1 - toward ** 1.1) + warm * toward ** 1.1
 

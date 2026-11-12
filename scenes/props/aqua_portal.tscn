@@ -1,0 +1,117 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/props/exit_portal.gd" id="1"]
+[ext_resource type="Shader" path="res://art/shaders/portal_swirl.gdshader" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/aqua_portal_arch.glb" id="3"]
+
+[sub_resource type="ShaderMaterial" id="swirl_material"]
+render_priority = 0
+shader = ExtResource("2")
+shader_parameter/color_core = Color(0.88, 1, 0.96, 1)
+shader_parameter/color_a = Color(0.1, 0.95, 0.85, 1)
+shader_parameter/color_b = Color(1, 0.42, 0.4, 1)
+
+[sub_resource type="QuadMesh" id="swirl_mesh"]
+material = SubResource("swirl_material")
+size = Vector2(2.9, 3.75)
+
+[sub_resource type="StandardMaterial3D" id="bubble_material"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.72, 1, 0.97, 0.6)
+
+[sub_resource type="SphereMesh" id="bubble_mesh"]
+material = SubResource("bubble_material")
+radius = 0.06
+height = 0.12
+radial_segments = 8
+rings = 4
+
+[sub_resource type="Curve" id="bubble_scale"]
+_data = [Vector2(0, 0.35), 0.0, 0.0, 0, 0, Vector2(0.25, 1), 0.0, 0.0, 0, 0, Vector2(1, 1.25), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="BoxShape3D" id="trigger_shape"]
+size = Vector3(2.8, 3.2, 1.4)
+
+[sub_resource type="BoxShape3D" id="pillar_shape"]
+size = Vector3(1.55, 4.6, 0.7)
+
+[node name="Portal" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Model" parent="." instance=ExtResource("3")]
+
+[node name="Swirl" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.875, -0.12)
+cast_shadow = 0
+mesh = SubResource("swirl_mesh")
+
+[node name="BubblesL" type="CPUParticles3D" parent="Swirl"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.05, -1.83, 0.67)
+cast_shadow = 0
+amount = 14
+lifetime = 2.4
+preprocess = 2.0
+mesh = SubResource("bubble_mesh")
+emission_shape = 1
+emission_sphere_radius = 0.18
+direction = Vector3(0, 1, 0)
+spread = 10.0
+gravity = Vector3(0, 0.5, 0)
+initial_velocity_min = 0.7
+initial_velocity_max = 1.3
+scale_amount_min = 0.6
+scale_amount_max = 1.4
+scale_amount_curve = SubResource("bubble_scale")
+
+[node name="BubblesR" type="CPUParticles3D" parent="Swirl"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.05, -1.83, 0.67)
+cast_shadow = 0
+amount = 14
+lifetime = 2.4
+preprocess = 2.0
+mesh = SubResource("bubble_mesh")
+emission_shape = 1
+emission_sphere_radius = 0.18
+direction = Vector3(0, 1, 0)
+spread = 10.0
+gravity = Vector3(0, 0.5, 0)
+initial_velocity_min = 0.7
+initial_velocity_max = 1.3
+scale_amount_min = 0.6
+scale_amount_max = 1.4
+scale_amount_curve = SubResource("bubble_scale")
+
+[node name="Trigger" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Trigger"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0.5)
+shape = SubResource("trigger_shape")
+
+[node name="Light" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 1.5)
+light_color = Color(0.35, 1, 0.85, 1)
+light_energy = 3.0
+omni_range = 12.0
+
+[node name="Hum" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+unit_size = 8.0
+max_distance = 60.0
+bus = &"SFX"
+
+[node name="PillarL" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PillarL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 2.3, -0.1)
+shape = SubResource("pillar_shape")
+
+[node name="PillarR" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PillarR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 2.3, -0.1)
+shape = SubResource("pillar_shape")

@@ -44,6 +44,8 @@ var slots: Array[StringName] = [&"", &""]
 var active_slot := 0
 ## False between runs or while the results screen is up.
 var enabled := true
+## Multiplies all damage dealt (the loadout station's damage boost sets it).
+var damage_multiplier := 1.0
 ## Zombie a seeking weapon would hit right now (for the HUD lock marker).
 var lock_target: Zombie
 
@@ -367,7 +369,8 @@ func _handle_trigger(delta: float) -> void:
 	if Input.is_action_just_pressed("fire"):
 		# Buffer clicks slightly so a click just before the weapon is ready still fires.
 		_fire_buffer = FIRE_BUFFER
-	var can_shoot := _cooldown <= 0.0 and not _reloading and _switch_left <= 0.0
+	# Not until the weapon is up out of a sprint or a mantle.
+	var can_shoot := _cooldown <= 0.0 and not _reloading and _switch_left <= 0.0 and player.weapon_ready()
 	if _burst_left > 0:
 		_burst_timer -= delta
 		if _burst_timer <= 0.0:
@@ -378,7 +381,7 @@ func _handle_trigger(delta: float) -> void:
 		return
 	var wants := held if (current.automatic or current.beam) else _fire_buffer > 0.0
 	# The beam stays on between damage ticks (they are paced by the cooldown).
-	_set_beam(current.beam and held and not _reloading and _switch_left <= 0.0 and magazine() > 0)
+	_set_beam(current.beam and held and not _reloading and _switch_left <= 0.0 and magazine() > 0 and player.weapon_ready())
 	if not wants or not can_shoot:
 		return
 	if magazine() > 0:
@@ -515,9 +518,10 @@ func _fire_shot(scale: float, power: float) -> void:
 	_cooldown = data.fire_interval + _overshoot()
 	_emit_ammo()
 
-	var cam := player.camera
-	var origin := cam.global_position
-	var aim := cam.global_transform.basis
+	# The unshaken aim: camera shake is visual only, recoil moves the aim.
+	var eye := player.aim_transform()
+	var origin := eye.origin
+	var aim := eye.basis
 	var muzzle := player.view.muzzle_position()
 	var spread := deg_to_rad(current_spread())
 	# Hits are gathered per zombie so a scatter blast is one solid hit
@@ -696,7 +700,7 @@ func _apply_hits(hits: Dictionary, data: WeaponData) -> Array:
 		var zombie: Zombie = entry["zombie"]
 		if not is_instance_valid(zombie) or zombie.is_dead():
 			continue
-		var scale := StatusEffects.damage_scale(zombie)
+		var scale := StatusEffects.damage_scale(zombie) * damage_multiplier
 		var dmg := float(entry["damage"]) * scale
 		# A blast that hit both head and body: armour sees each part separately.
 		var heads := int(entry["heads"])
@@ -785,11 +789,11 @@ func _emit_ammo() -> void:
 # --- aim visuals (beam, lob arc, seek lock) ---------------------------------------
 
 func _update_aim_visuals() -> void:
-	var cam := player.camera
-	var aim_dir := -cam.global_transform.basis.z
+	var eye := player.aim_transform()
+	var aim_dir := -eye.basis.z
 	lock_target = null
 	if current.seek_cone_degrees > 0.0 and not current.beam:
-		lock_target = seek(cam.global_position, aim_dir, current)
+		lock_target = seek(eye.origin, aim_dir, current)
 	if current.beam:
 		if _beam == null:
 			_beam = BeamVisual.new()
@@ -797,7 +801,7 @@ func _update_aim_visuals() -> void:
 		_beam.color = current.tracer_color
 		_beam.width = current.tracer_width
 		var shown := _beam_on or _beam_linger > 0.0
-		var end := _visual_end(cam.global_position, aim_dir) if shown else _beam_end
+		var end := _visual_end(eye.origin, aim_dir) if shown else _beam_end
 		_beam.aim(player.view.muzzle_position(), end, shown)
 	elif _beam:
 		_beam.aim(Vector3.ZERO, Vector3.ZERO, false)

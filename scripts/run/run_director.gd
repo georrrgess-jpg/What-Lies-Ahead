@@ -23,8 +23,13 @@ signal run_started
 signal enemy_recovered(zombie: Zombie, removed: bool)
 ## A zombie died (after tickets, XP and score were awarded).
 signal enemy_killed(zombie: Zombie, weapon_id: StringName)
+## The overshield was bought, took a hit or broke.
+signal overshield_changed(value: float, maximum: float)
+## The damage boost was bought (READY), started with a wave (ACTIVE) or ran out (NONE).
+signal damage_boost_changed(boost: Boost)
 
 enum State { PREP, WAVE, BREAK, EXTRACTION, CLEARED, DEFEAT }
+enum Boost { NONE, READY, ACTIVE }
 
 const PLAYER_SCENE := "res://scenes/player/player.tscn"
 const ZOMBIE_SCENE := "res://scenes/enemies/zombie.tscn"
@@ -34,6 +39,11 @@ const RESULTS_SCENE := "res://scenes/ui/results.tscn"
 ## Minimum distance from the player for a spawn point to be used.
 const SPAWN_MIN_DISTANCE := 13.0
 const MAX_RECOVERIES := 2
+## Station purchases without a project InputMap entry: action -> physical keycodes.
+const STATION_ACTIONS := {
+	&"buy_overshield": [KEY_G],
+	&"buy_damage_boost": [KEY_B],
+}
 
 var level: LevelData
 var waves: WaveSet
@@ -47,6 +57,11 @@ var countdown := 0.0
 var heals_this_break := 0
 var total_kills := 0
 var elapsed := 0.0
+## Overshield health still standing (absorbs damage before health does).
+var overshield := 0.0
+var damage_boost := Boost.NONE
+## Score paid for the tickets left over at extraction.
+var tickets_cashed := 0
 
 var player: Player
 var kiosk: PrizeKiosk
@@ -84,12 +99,14 @@ func _ready() -> void:
 		if Game.weapon_id == &"":
 			Game.weapon_id = Loadout.primary()
 	waves = level.wave_set
+	ensure_station_actions()
 	_zombie_scene = load(ZOMBIE_SCENE)
 	_begin.call_deferred()
 
 
 func _begin() -> void:
 	var root := get_parent()
+	tickets = waves.starting_tickets
 	score = ScoreKeeper.new()
 	score.name = "Score"
 	add_child(score)
@@ -110,6 +127,7 @@ func _begin() -> void:
 		player.global_position = spawn.global_position
 		player.set_look(spawn.global_rotation.y, 0.0)
 	player.died.connect(_on_player_died)
+	player.shield_changed.connect(_on_shield_changed)
 	player.damaged.connect(func(amount: float, _src: Vector3): score.on_player_damaged(amount))
 	player.weapons.begin_run()
 	var carried := Loadout.run_slots(Game.weapon_id)
@@ -189,6 +207,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		buy_ammo()
 	elif event.is_action_pressed("interact_alt"):
 		buy_heal()
+	elif event.is_action_pressed("buy_overshield"):
+		buy_overshield()
+	elif event.is_action_pressed("buy_damage_boost"):
+		buy_damage_boost()
 	elif event.is_action_pressed("kiosk_next"):
 		cycle_station_weapon(1)
 	elif event.is_action_pressed("kiosk_prev"):
@@ -246,6 +268,8 @@ func start_next_wave() -> void:
 	_last_spawn = null
 	if kiosk:
 		kiosk.set_open(false)
+	if damage_boost == Boost.READY:
+		_set_damage_boost(Boost.ACTIVE)
 	_set_state(State.WAVE)
 	var final := wave_number == total_waves()
 	Sfx.play(&"final_wave" if final else &"wave_start", -2.0)
@@ -398,6 +422,8 @@ func _end_wave() -> void:
 	if state != State.WAVE:
 		return
 	waves_cleared = wave_number
+	if damage_boost == Boost.ACTIVE:
+		_set_damage_boost(Boost.NONE)
 	var bonus := waves.wave_bonus_base + waves.wave_bonus_per_wave * wave_number
 	for weapon_id in _wave_kills:
 		if int(_wave_kills[weapon_id]) > 0:
@@ -441,6 +467,7 @@ func _on_portal_entered() -> void:
 	if state != State.EXTRACTION:
 		return
 	_set_state(State.CLEARED)
+	_cash_in_tickets()
 	Profile.record_level_cleared(level.id)
 	_commit()
 	Sfx.play(&"level_clear", 0.0)
@@ -476,7 +503,7 @@ func buy_heal() -> bool:
 	if not kiosk_available():
 		return false
 	if heals_left() <= 0:
-		notice.emit("Snack already eaten this break", &"info")
+		notice.emit("One %s per break" % level.heal_item_name.to_lower(), &"info")
 		return false
 	if player.health >= player.max_health:
 		notice.emit("Health already full", &"info")
@@ -485,8 +512,85 @@ func buy_heal() -> bool:
 		return false
 	heals_this_break += 1
 	player.heal(waves.heal_amount)
-	notice.emit("Boardwalk snack: health restored", &"good")
+	notice.emit("%s: health restored" % level.heal_item_name, &"good")
 	return true
+
+
+## An extra health layer on top of the health bar; buying again refills it.
+func buy_overshield() -> bool:
+	if not kiosk_available():
+		return false
+	if overshield >= waves.overshield_amount:
+		notice.emit("Overshield already full", &"info")
+		return false
+	if not _spend(waves.overshield_price):
+		return false
+	player.set_shield(waves.overshield_amount, waves.overshield_amount)
+	Sfx.play(&"reload_materialize", -4.0, 0.8)
+	notice.emit("Overshield up: +%d shield" % int(waves.overshield_amount), &"good")
+	return true
+
+
+## More damage for the whole next wave (one boost at a time).
+func buy_damage_boost() -> bool:
+	if not kiosk_available():
+		return false
+	if damage_boost != Boost.NONE:
+		notice.emit("Damage boost already loaded", &"info")
+		return false
+	if not _spend(waves.damage_boost_price):
+		return false
+	_set_damage_boost(Boost.READY)
+	Sfx.play(&"weap_rail_ready", -6.0, 1.2)
+	notice.emit("Damage boost: +%d%% damage next wave" % boost_percent(), &"good")
+	return true
+
+
+## The damage boost as a whole percentage (20 for +20%).
+func boost_percent() -> int:
+	return int(round((waves.damage_boost_scale - 1.0) * 100.0))
+
+
+func _set_damage_boost(value: Boost) -> void:
+	damage_boost = value
+	player.weapons.damage_multiplier = waves.damage_boost_scale if value == Boost.ACTIVE else 1.0
+	damage_boost_changed.emit(value)
+
+
+## Mirrors the player's shield for the HUD and plays its block/break sounds.
+func _on_shield_changed(current: float, maximum: float) -> void:
+	var was := overshield
+	overshield = current
+	overshield_changed.emit(current, maximum)
+	if current < was:
+		if current <= 0.0:
+			Sfx.play(&"neon_shield_break", -8.0, 1.2)
+			notice.emit("Overshield down", &"bad")
+		else:
+			Sfx.play(&"neon_shield_block", -10.0, 1.3)
+
+
+## Leftover tickets become score when the player escapes through the portal.
+func _cash_in_tickets() -> void:
+	tickets_cashed = tickets * waves.ticket_score_rate
+	if tickets_cashed <= 0 or score == null:
+		return
+	score.breakdown["tickets"] = tickets_cashed
+	score.score += tickets_cashed
+	score.award.emit("%d TICKETS CASHED" % tickets, tickets_cashed, UiKit.AMBER)
+	score.score_changed.emit(score.score, tickets_cashed)
+
+
+## Adds the station purchase keys to the InputMap unless the project has them.
+static func ensure_station_actions() -> void:
+	for action in STATION_ACTIONS:
+		if InputMap.has_action(action):
+			continue
+		InputMap.add_action(action)
+		for key in STATION_ACTIONS[action]:
+			var e := InputEventKey.new()
+			e.physical_keycode = key
+			InputMap.action_add_event(action, e)
 
 
 func _spend(price: int) -> bool:
@@ -599,6 +703,8 @@ func result() -> Dictionary:
 		"best_combo": score.best_combo if score else 0,
 		"headshots": score.headshot_kills if score else 0,
 		"score_breakdown": score.breakdown.duplicate() if score else {},
+		"tickets_left": tickets,
+		"tickets_cashed": tickets_cashed,
 	}
 
 

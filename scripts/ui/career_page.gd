@@ -66,7 +66,7 @@ func _header() -> Control:
 	var title := UiKit.label("CAREER", 64, UiKit.AMBER, true)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
-	var back_button := UiKit.soft_button("Back", 30)
+	var back_button := UiKit.soft_button("BACK", 30)
 	back_button.pressed.connect(func(): back.emit())
 	head.add_child(back_button)
 	return head

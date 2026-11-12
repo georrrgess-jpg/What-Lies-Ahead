@@ -17,6 +17,8 @@ const DEFAULT_SETTINGS := {
 	"master_volume": 0.9,
 	"music_volume": 0.7,
 	"sfx_volume": 0.9,
+	"ambience_volume": 1.0,
+	"invert_y": false,
 	"camera_shake": 1.0,
 	"flashes": 1.0,
 	"graphics": "high",
