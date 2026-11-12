@@ -11,6 +11,7 @@ weapon's `fire_sound`), so add a new function here and use its name there.
 import math
 import os
 import subprocess
+import sys
 import wave
 
 import numpy as np
@@ -734,24 +735,68 @@ VARIANTS = [
 ]
 
 
-def main():
-    os.makedirs(SFX, exist_ok=True)
-    os.makedirs(MUSIC, exist_ok=True)
+def write_loop_wav(name, mono, peak=0.7):
+    """A mono loop written without fades (so it loops cleanly)."""
+    x = norm(np.asarray(mono, dtype=np.float64), peak)
+    with wave.open(os.path.join(SFX, name + ".wav"), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes((x * 32767).astype("<i2").tobytes())
+
+
+def run_core():
     for fn in SFX_SOUNDS:
         write_wav(fn.__name__, fn())
     for fn, pitches in VARIANTS:
         for suffix, pitch, seed in zip(("_b", "_c"), pitches, (101, 202)):
             write_wav(fn.__name__ + suffix, _variant(fn, pitch, seed))
-    # The portal hum must loop cleanly, so skip the fade.
-    hum = norm(portal_hum(), 0.7)
-    with wave.open(os.path.join(SFX, "portal_hum.wav"), "wb") as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(SR)
-        w.writeframes((hum * 32767).astype("<i2").tobytes())
+    write_loop_wav("portal_hum", portal_hum())
     write_ogg("pier_ambience", pier_ambience(), peak=0.7)
     write_ogg("boardwalk_loop", boardwalk_loop(), peak=0.75)
-    print("wrote %d sfx + portal_hum, pier_ambience.ogg, boardwalk_loop.ogg" % len(SFX_SOUNDS))
+    print("core: %d sfx + portal_hum, pier_ambience.ogg, boardwalk_loop.ogg" % len(SFX_SOUNDS))
+
+
+def run_pack(name):
+    """Runs tools/audio_packs/<name>.py. A pack module may define:
+         SOUNDS   list of functions -> mono array      (written as <fn name>.wav)
+         VARIANTS list of (function, (pitch_b, pitch_c)) (writes _b/_c takes)
+         LOOPS    dict name -> function -> mono array   (seamless .wav loops)
+         MUSIC    dict name -> function -> (n, 2) array (written as .ogg)
+       Packs import the helpers with `from gen_audio import *`.
+    """
+    import importlib
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_packs"))
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    mod = importlib.import_module(name)
+    count = 0
+    for fn in getattr(mod, "SOUNDS", []):
+        write_wav(fn.__name__, fn())
+        count += 1
+    for fn, pitches in getattr(mod, "VARIANTS", []):
+        for suffix, pitch, seed in zip(("_b", "_c"), pitches, (101, 202)):
+            write_wav(fn.__name__ + suffix, _variant(fn, pitch, seed))
+    for loop_name, fn in getattr(mod, "LOOPS", {}).items():
+        write_loop_wav(loop_name, fn())
+    for music_name, fn in getattr(mod, "MUSIC", {}).items():
+        write_ogg(music_name, fn(), peak=0.75)
+    print("pack %s: %d sfx, %d loops, %d music" % (name, count, len(getattr(mod, "LOOPS", {})), len(getattr(mod, "MUSIC", {}))))
+
+
+def main():
+    """python tools/gen_audio.py            -> core sounds + every pack
+       python tools/gen_audio.py core       -> only the core sounds
+       python tools/gen_audio.py neon_city  -> only tools/audio_packs/neon_city.py"""
+    os.makedirs(SFX, exist_ok=True)
+    os.makedirs(MUSIC, exist_ok=True)
+    wanted = [a for a in sys.argv[1:] if not a.startswith("-")]
+    packs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_packs")
+    packs = sorted(f[:-3] for f in os.listdir(packs_dir) if f.endswith(".py") and not f.startswith("_"))
+    if not wanted or "core" in wanted:
+        run_core()
+    for pack in packs:
+        if not wanted or pack in wanted:
+            run_pack(pack)
 
 
 if __name__ == "__main__":

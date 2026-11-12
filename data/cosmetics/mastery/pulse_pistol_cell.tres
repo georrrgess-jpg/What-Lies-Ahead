@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+target = &"pulse_pistol"
+amount = 3
+
+[resource]
+script = ExtResource("1")
+id = &"pulse_pistol_cell"
+display_name = "Sunset Cell"
+description = "Mastery reward: reach rank 3 with the Pulse Pistol."
+slot = &"weapon_cell"
+weapon_id = &"pulse_pistol"
+rarity = 4
+requirement = SubResource("req")
+colors = PackedColorArray(1.0, 0.5, 0.15, 1, 1, 1, 1, 1)
+params = {
+"metallic": 0.0,
+"roughness": 0.5
+}
+sort_order = 3

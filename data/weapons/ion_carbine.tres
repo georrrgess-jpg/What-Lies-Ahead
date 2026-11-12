@@ -1,43 +1,13 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/data/mastery_reward.gd" id="2"]
 [ext_resource type="PackedScene" path="res://art/models/ion_carbine.glb" id="3"]
-
-[sub_resource type="Resource" id="reward_1"]
-script = ExtResource("2")
-id = &"ion_carbine_decal"
-display_name = "Thunder Bolt"
-kind = 0
-rank_required = 1
-color = Color(1.0, 0.9, 0.25, 1)
-metallic = 0.0
-roughness = 0.5
-
-[sub_resource type="Resource" id="reward_2"]
-script = ExtResource("2")
-id = &"ion_carbine_cell"
-display_name = "Bubblegum Cell"
-kind = 1
-rank_required = 3
-color = Color(1.0, 0.35, 0.75, 1)
-metallic = 0.0
-roughness = 0.5
-
-[sub_resource type="Resource" id="reward_3"]
-script = ExtResource("2")
-id = &"ion_carbine_finish"
-display_name = "Midnight Chrome"
-kind = 2
-rank_required = 5
-color = Color(0.12, 0.14, 0.28, 1)
-secondary_color = Color(1.0, 0.3, 0.65, 1)
-metallic = 0.9
-roughness = 0.22
 
 [resource]
 script = ExtResource("1")
 id = &"ion_carbine"
+sort_order = 20
+category = "Carbine"
 display_name = "Ion Carbine"
 role = "Fast automatic fire with light recoil. Chews through groups; watch the energy cell."
 magazine_size = 24
@@ -79,4 +49,3 @@ reload_sound = &"carbine_reload"
 empty_sound = &"empty_click"
 fire_pitch_variance = 0.06
 rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
-rewards = Array[ExtResource("2")]([SubResource("reward_1"), SubResource("reward_2"), SubResource("reward_3")])

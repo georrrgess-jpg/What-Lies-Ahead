@@ -5,6 +5,7 @@ extends Node
 ##   godot --path . --resolution 1672x941 -- --shot=out.png [options]
 ##
 ## Options (all optional):
+##   --shot-level=<id>     level to load (default prize_pier)
 ##   --shot-scene=level|menu|play|armory|settings|results|defeat|pause|kiosk
 ##   --shot-pos=x,y,z      player feet position
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
@@ -61,7 +62,7 @@ func _run() -> void:
 		await _capture(int(_arg("frames", "30")))
 		return
 
-	Game.start_level(&"prize_pier", StringName(_arg("weapon", "ion_carbine")))
+	Game.start_level(StringName(_arg("level", "prize_pier")), StringName(_arg("weapon", "ion_carbine")))
 	var director: RunDirector = null
 	while director == null or director.player == null:
 		await get_tree().process_frame

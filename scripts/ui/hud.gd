@@ -83,6 +83,12 @@ func bind(run: RunDirector, p: Player) -> void:
 	_on_state_changed(run.state)
 
 
+## Adds an extra widget (from a HUD_WIDGET UiExtension) on top of the HUD.
+func add_widget(widget: Control) -> void:
+	widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(widget)
+
+
 ## Level start: hold black for a few frames (while FxWarmup compiles shaders
 ## underneath), then fade the world in.
 func fade_in() -> void:
@@ -436,7 +442,7 @@ func _show_banner(text: String, color: Color) -> void:
 	_banner_tween.chain().tween_property(_banner, "modulate:a", 0.0, 0.5)
 
 
-func _on_reward_unlocked(weapon: WeaponData, reward: MasteryReward) -> void:
+func _on_reward_unlocked(weapon: WeaponData, reward: CosmeticItem) -> void:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.NAVY, 0.92), UiKit.CYAN, 18, 3, 14))
 	var v := VBoxContainer.new()
@@ -444,7 +450,7 @@ func _on_reward_unlocked(weapon: WeaponData, reward: MasteryReward) -> void:
 	panel.add_child(v)
 	v.add_child(UiKit.label("MASTERY UNLOCK", 24, UiKit.CYAN, true))
 	v.add_child(UiKit.label("%s — %s" % [weapon.display_name, reward.display_name], 28, Color.WHITE))
-	v.add_child(UiKit.label("%s · equip it in the Armory" % reward.kind_label(), 22, UiKit.CREAM))
+	v.add_child(UiKit.label("%s · equip it in the Armory" % reward.slot_label(), 22, UiKit.CREAM))
 	_toasts.add_child(panel)
 	panel.modulate.a = 0.0
 	var tw := panel.create_tween()

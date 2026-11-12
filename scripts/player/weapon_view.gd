@@ -68,7 +68,7 @@ func show_weapon(weapon: WeaponData) -> void:
 	# "Root" tilts the whole weapon (and both hands) during reloads.
 	_rest["Root"] = {"node": model, "transform": model.transform}
 	_build_flash()
-	WeaponCosmetics.apply(model, weapon, Mastery.cosmetics(weapon.id))
+	WeaponCosmetics.apply(model, weapon, Cosmetics.weapon_loadout(weapon.id))
 	_setup_reload_materials()
 	_raise = 1.0
 	_kick = 0.0
@@ -151,6 +151,9 @@ func play_reload(weapon: WeaponData, duration: float) -> void:
 	_kill_reload_tween()
 	_reset_parts()
 	_reload_tween = create_tween().set_parallel(true)
+	if weapon.reload_script:
+		weapon.reload_script.new().play(self, duration)
+		return
 	match weapon.reload_style:
 		&"side_swap": _reload_vent_purge(duration)
 		&"break_open": _reload_break_open(duration)
@@ -317,6 +320,57 @@ static func _burst_mesh() -> Mesh:
 		q.material = m
 		_burst_mesh_cache = q
 	return _burst_mesh_cache
+
+
+# --- public reload API (for WeaponData.reload_script) -------------------------
+# A custom reload script looks like:
+#   extends RefCounted
+#   func play(v: WeaponView, d: float) -> void:
+#       v.track("Cell", d, [[0.2, Vector3(0, -0.3, 0), Vector3(0, 0, 90)], [0.6, Vector3.ZERO, Vector3.ZERO]])
+#       v.burst(0.25, d, "VentPoint", "steam")
+# Times are fractions (0-1) of the reload duration d. Offsets are in the
+# model's own space; rotations are degrees about the part's own pivot.
+
+func track(part: String, d: float, keys: Array, trans := Tween.TRANS_SINE, ease_type := Tween.EASE_IN_OUT) -> void:
+	_track(part, d, keys, trans, ease_type)
+
+
+func at(t: float, d: float, fn: Callable) -> void:
+	_at(t, d, fn)
+
+
+func glow_ramp(t0: float, t1: float, d: float, from_k: float, to_k: float) -> void:
+	_glow_ramp(t0, t1, d, from_k, to_k)
+
+
+func holo_build(part: String, t0: float, t1: float, d: float) -> void:
+	_holo_build(part, t0, t1, d)
+
+
+func solidify(holo_part: String, solid_part: String, t: float, d: float) -> void:
+	_solidify(holo_part, solid_part, t, d)
+
+
+## kind: "steam" or "sparks"; anchor: an empty in the model (EjectPoint, VentPoint, Muzzle...).
+func burst(t: float, d: float, anchor: String, kind: String) -> void:
+	_burst(t, d, anchor, kind)
+
+
+func hide_part(t: float, d: float, part: String) -> void:
+	_at(t, d, func(): var p := _part(part); if p: p.visible = false)
+
+
+func has_part(part: String) -> bool:
+	return _rest.has(part)
+
+
+## Register extra animated parts (beyond ANIMATED_PARTS) for a custom model.
+func register_part(part: String) -> void:
+	if _rest.has(part) or model == null:
+		return
+	var node := model.find_child(part, true, false) as Node3D
+	if node:
+		_rest[part] = {"node": node, "transform": node.transform}
 
 
 ## Pulse Pistol "holo-print": the spent cell spins out of the grip, a new one

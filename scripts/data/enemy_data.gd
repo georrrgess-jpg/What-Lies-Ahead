@@ -47,6 +47,11 @@ extends Resource
 @export var charge_cooldown := 7.0
 
 @export_group("Body")
+## Model scene for this enemy. Empty = the shared boardwalk zombie
+## (art/models/zombie.glb). A custom model needs an AnimationPlayer with clips
+## named Idle, Walk, Run, Attack, Hit and Die (a "-loop" suffix is fine) and
+## meshes named Outfit_<outfit> for the body.
+@export var model_scene: PackedScene
 ## Outfit mesh shown from the shared zombie model ("Tourist", "Lifeguard" or "Bruiser").
 @export var outfit: StringName = &"Tourist"
 @export var body_scale := 1.0
@@ -64,6 +69,11 @@ extends Resource
 ## Movement speed at which the move animation plays at 1x.
 @export var animation_reference_speed := 1.8
 @export var avoidance_radius := 0.55
+
+@export_group("Behaviour")
+## Extra behaviour components (EnemyBehaviour resources): ranged attacks,
+## shields, leaps, splitting on death, auras... Each zombie gets its own copy.
+@export var behaviours: Array[EnemyBehaviour] = []
 
 @export_group("Audio")
 @export var voice_sounds: Array[StringName] = []

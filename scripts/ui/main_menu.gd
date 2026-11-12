@@ -2,7 +2,6 @@ extends Control
 ## Main menu: Play (world + level select, starter weapon), Armory, Settings.
 ## The pier itself turns slowly behind the menu.
 
-const PAGES := ["title", "play", "armory", "settings"]
 
 var _pages := {}
 var _selected_level: LevelData
@@ -35,13 +34,23 @@ func _ready() -> void:
 	if GameData.weapon(_selected_weapon) == null:
 		_selected_weapon = GameData.default_weapon_id()
 
-	_pages["title"] = _build_title()
 	_pages["play"] = _build_play()
-	_pages["armory"] = _build_armory()
 	_pages["settings"] = _build_settings()
+	# Pages registered in data/ui/ (armory, arsenal, career, locker...).
+	for ext in GameData.ui_extensions(UiExtension.Kind.MENU_PAGE):
+		if ext.script_ref == null:
+			continue
+		var page: Control = ext.script_ref.new()
+		page.name = String(ext.id)
+		if page.has_signal("back"):
+			page.back.connect(_show.bind("title"))
+		if page.has_signal("open_page"):
+			page.open_page.connect(func(id: StringName): _show(String(id)))
+		_pages[String(ext.id)] = page
+	_pages["title"] = _build_title()
 	for key in _pages:
 		add_child(_pages[key])
-	_show(Game.menu_page if Game.menu_page in PAGES else "title")
+	_show(Game.menu_page if _pages.has(Game.menu_page) else "title")
 	Game.menu_page = ""
 
 	if Profile.recovered_from_bad_save:
@@ -69,8 +78,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _show(page: String) -> void:
 	for key in _pages:
 		_pages[key].visible = key == page
-	if page == "armory":
-		_pages["armory"].refresh()
+	if _pages[page].has_method("refresh"):
+		_pages[page].refresh()
 	if page == "play":
 		_refresh_play()
 	var focus := _pages[page].find_child("FirstFocus", true, false) as Control
@@ -119,7 +128,12 @@ func _build_title() -> Control:
 	var sub := UiKit.arcade_label("WORLD 1  ·  BOARDWALK BREAKOUT", 42, UiKit.AMBER)
 	col.add_child(sub)
 	col.add_child(UiKit.spacer(26))
-	for item in [["PLAY", "play"], ["ARMORY", "armory"], ["SETTINGS", "settings"]]:
+	var items := [["PLAY", "play"]]
+	for ext in GameData.ui_extensions(UiExtension.Kind.MENU_PAGE):
+		if ext.show_on_title and _pages.has(String(ext.id)):
+			items.append([ext.title.to_upper(), String(ext.id)])
+	items.append(["SETTINGS", "settings"])
+	for item in items:
 		var b := UiKit.button(item[0], 54)
 		b.custom_minimum_size = Vector2(460, 100)
 		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -280,12 +294,6 @@ func _start() -> void:
 
 
 # --- armory / settings -----------------------------------------------------------
-
-func _build_armory() -> Control:
-	var armory := ArmoryPage.new()
-	armory.back.connect(_show.bind("title"))
-	return armory
-
 
 func _build_settings() -> Control:
 	var page := Control.new()

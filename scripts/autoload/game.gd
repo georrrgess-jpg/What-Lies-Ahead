@@ -23,7 +23,8 @@ func _ready() -> void:
 
 func start_level(level_id: StringName, starter_weapon: StringName) -> bool:
 	var data := GameData.level(level_id)
-	if data == null or not GameData.is_level_unlocked(data):
+	var dev := has_node("DevDriver")
+	if data == null or data.scene_path.is_empty() or (not dev and not GameData.is_level_unlocked(data)):
 		push_warning("Game: level '%s' is not available" % level_id)
 		return false
 	level = data

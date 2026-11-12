@@ -11,3 +11,7 @@ blurb = "Hold the midway around the prize kiosk, then follow the lights to the p
 scene_path = "res://scenes/levels/prize_pier.tscn"
 wave_set = ExtResource("2")
 requires_level = &""
+sort_order = 10
+music = &"boardwalk_loop"
+ambience = &"pier_ambience"
+accent_color = Color(1, 0.247, 0.643, 1)

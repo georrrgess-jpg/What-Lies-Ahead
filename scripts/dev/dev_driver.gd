@@ -7,6 +7,8 @@ extends Node
 ##   --autoplay=pause     exercise the pause menu: resume, restart, main menu
 ##   --autoplay=route     crowd test: do zombies use both lanes around the kiosk?
 ##   --weapon=<id>        starter weapon for the bot (default: pulse_pistol)
+##   --level=<id>         level to play (default: the first one); locks are ignored
+##   --ring=<m>           radius of the bot's patrol ring around the loadout station
 ##   --swap               bot switches weapon at the kiosk every break
 ##   --aim-error=<deg>    random aim error for the bot (default 1.2)
 ##   --god                bot takes no damage (for flow tests, not for tuning)
@@ -32,6 +34,8 @@ var max_seconds := 1500.0
 var shot_path := ""
 var shot_args := {}
 var start_wave := 1
+var level_id := &""
+var ring_radius := 11.0
 var perf := false
 var _perf_timer := 0.0
 var _perf_samples: Array = []
@@ -71,6 +75,10 @@ func _ready() -> void:
 			mode = Mode.PAUSE
 		elif arg == "--autoplay=route":
 			mode = Mode.ROUTE
+		elif arg.begins_with("--level="):
+			level_id = StringName(arg.trim_prefix("--level="))
+		elif arg.begins_with("--ring="):
+			ring_radius = float(arg.trim_prefix("--ring="))
 		elif arg.begins_with("--weapon="):
 			weapon = StringName(arg.trim_prefix("--weapon="))
 		elif arg == "--swap":
@@ -127,6 +135,8 @@ func _physics_process(delta: float) -> void:
 			print("[dev] menu loaded; starting level via Play page")
 			scene._show("play")
 			scene._select_weapon(weapon)
+			if level_id != &"":
+				scene._selected_level = GameData.level(level_id)
 			scene._start()
 		elif _then_done and _clock > 1.0:
 			print("[dev] back at main menu after results: OK")
@@ -456,11 +466,21 @@ func _nearest_distance() -> float:
 
 
 ## Waypoints circling the kiosk: the ride-side midway and the rail-side stretch.
+## Patrol ring around the loadout station, snapped onto the navmesh, so the
+## bot works on any level.
+var _ring_cache: Array = []
+
+
 func _ring_points() -> Array:
-	return [
-		Vector3(9.5, 0, 9.0), Vector3(9.5, 0, -2.0), Vector3(8.0, 0, -12.0), Vector3(-2.0, 0, -15.0),
-		Vector3(-11.0, 0, -6.0), Vector3(-13.0, 0, 3.0), Vector3(-7.0, 0, 13.0), Vector3(2.0, 0, 15.0),
-	]
+	if not _ring_cache.is_empty():
+		return _ring_cache
+	var centre := _director.kiosk.global_position if _director.kiosk else _player.global_position
+	var map := _player.get_world_3d().navigation_map
+	for i in 8:
+		var a := TAU * i / 8.0
+		var want := centre + Vector3(cos(a), 0, sin(a)) * ring_radius
+		_ring_cache.append(NavigationServer3D.map_get_closest_point(map, want))
+	return _ring_cache
 
 
 # --- movement --------------------------------------------------------------------

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+target = &"ion_carbine"
+amount = 1
+
+[resource]
+script = ExtResource("1")
+id = &"ion_carbine_decal"
+display_name = "Thunder Bolt"
+description = "Mastery reward: reach rank 1 with the Ion Carbine."
+slot = &"weapon_decal"
+weapon_id = &"ion_carbine"
+rarity = 4
+requirement = SubResource("req")
+colors = PackedColorArray(1.0, 0.9, 0.25, 1, 1, 1, 1, 1)
+params = {
+"metallic": 0.0,
+"roughness": 0.5
+}
+sort_order = 1

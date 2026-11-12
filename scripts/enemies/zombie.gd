@@ -76,6 +76,10 @@ static var _flash_material: StandardMaterial3D
 ## Call before adding the zombie to the tree.
 func setup(enemy: EnemyData, chase_target: Player, speed_scale := 1.0) -> void:
 	data = enemy
+	behaviours.clear()
+	for b in enemy.behaviours:
+		if b:
+			behaviours.append(b.duplicate(true))
 	target = chase_target
 	health = enemy.max_health
 	speed = enemy.move_speed * speed_scale * (1.0 + randf_range(-enemy.speed_variance, enemy.speed_variance))
@@ -84,6 +88,10 @@ func setup(enemy: EnemyData, chase_target: Player, speed_scale := 1.0) -> void:
 ## True for the invisible-to-gameplay copy drawn once at level start so its
 ## materials compile early (see FxWarmup). It never joins the "zombies" group.
 var warmup_only := false
+## This zombie's own copies of its EnemyData.behaviours.
+var behaviours: Array[EnemyBehaviour] = []
+## Multiplies chase speed this frame (behaviours set it; reset every frame).
+var speed_multiplier := 1.0
 
 
 func _ready() -> void:
@@ -113,11 +121,20 @@ func _ready() -> void:
 	model_root.scale = Vector3.ONE * 0.6
 	_punch_tween = create_tween()
 	_punch_tween.tween_property(model_root, "scale", Vector3.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if not warmup_only:
+		for b in behaviours:
+			b.on_ready(self)
 
 
 ## True while winding up an attack that has not landed yet (for threat indicators).
 func is_winding_up() -> bool:
-	return (state == State.WINDUP and not _struck) or _charge_telegraph > 0.0
+	if (state == State.WINDUP and not _struck) or _charge_telegraph > 0.0:
+		return true
+	# Behaviours with their own telegraphs (ranged windups etc.) count too.
+	for b in behaviours:
+		if b.has_method("is_winding_up") and b.is_winding_up():
+			return true
+	return false
 
 
 ## True while rushing at the player (or about to).
@@ -138,6 +155,8 @@ func is_head_hit(world_position: Vector3) -> bool:
 func take_hit(amount: float, hit_position: Vector3, direction: Vector3, weapon_id: StringName, headshot: bool, push := 0.0) -> bool:
 	if state == State.DEAD:
 		return false
+	for b in behaviours:
+		amount = b.on_hit(self, amount, hit_position, headshot)
 	health -= amount
 	last_hit_weapon = weapon_id
 	_lost_timer = 0.0
@@ -194,6 +213,13 @@ func _physics_process(delta: float) -> void:
 		return
 	if not is_instance_valid(target):
 		return
+	var skip := false
+	for b in behaviours:
+		if b.on_physics(self, delta):
+			skip = true
+	if skip:
+		_voice(delta)
+		return
 
 	_slow = maxf(0.0, _slow - delta)
 	var to_target := target.global_position - global_position
@@ -215,8 +241,11 @@ func _physics_process(delta: float) -> void:
 				# Lunge to close the gap, but never far enough to shove the player.
 				_knock += forward * data.lunge_speed * clampf((distance - 1.1) / 1.2, 0.0, 1.0)
 				var facing := forward.dot(to_target.normalized()) if distance > 0.01 else 1.0
-				if target.alive and distance <= data.attack_reach and facing >= 0.3:
+				var landed := target.alive and distance <= data.attack_reach and facing >= 0.3
+				if landed:
 					target.take_damage(data.damage, global_position)
+				for b in behaviours:
+					b.on_attack(self, landed)
 				_set_state(State.RECOVER)
 		State.RECOVER:
 			_idle_move(delta)
@@ -253,6 +282,8 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 	if _enrage > 0.0:
 		_enrage -= delta
 		move_speed *= 1.18
+	move_speed *= speed_multiplier
+	speed_multiplier = 1.0
 	if _charge_left > 0.0:
 		move_speed = speed * data.charge_speed_mult
 	# Stop at arm's length instead of walking into (and shoving) the player.
@@ -385,6 +416,8 @@ func _die(weapon_id: StringName, hit_position := Vector3.ZERO) -> void:
 	nav.avoidance_enabled = false
 	velocity = Vector3.ZERO
 	_knock = _knock.limit_length(KNOCK_MAX) * 1.4 + _knock.normalized() * 1.5
+	for b in behaviours:
+		b.on_death(self)
 	died.emit(self, weapon_id)
 	var chest := global_position + Vector3.UP * 1.1 * data.body_scale
 	Fx.kill_burst(get_parent(), hit_position if hit_position != Vector3.ZERO else chest)
@@ -443,8 +476,11 @@ func reset_stall() -> void:
 
 func _build_model() -> void:
 	model_root.scale = Vector3.ONE
-	if ResourceLoader.exists(MODEL_PATH):
-		_model = (load(MODEL_PATH) as PackedScene).instantiate()
+	var model_scene: PackedScene = data.model_scene
+	if model_scene == null and ResourceLoader.exists(MODEL_PATH):
+		model_scene = load(MODEL_PATH)
+	if model_scene:
+		_model = model_scene.instantiate()
 		model_root.add_child(_model)
 		_model.scale = Vector3.ONE * data.body_scale
 		_anim = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
@@ -535,6 +571,42 @@ func _flash(duration: float) -> void:
 	_flash_material.albedo_color = Color(0.6, 0.38, 0.5) * k
 	_flash_left = duration
 	_set_overlay(_flash_material)
+
+
+# --- public helpers for EnemyBehaviour components ---------------------------
+
+func distance_to_target() -> float:
+	return global_position.distance_to(target.global_position) if is_instance_valid(target) else INF
+
+
+func has_line_of_sight() -> bool:
+	if not is_instance_valid(target):
+		return false
+	var from := global_position + Vector3.UP * 1.4 * data.body_scale
+	var to := target.global_position + Vector3.UP * 1.2
+	var q := PhysicsRayQueryParameters3D.create(from, to, 1)
+	q.exclude = [get_rid()]
+	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+
+
+func face_toward(direction: Vector3, delta: float) -> void:
+	_face(direction, delta, 1.0)
+
+
+func play_animation(clip: StringName, blend := 0.1) -> void:
+	_play(clip, blend)
+
+
+func knockback(impulse: Vector3) -> void:
+	_knock = (_knock + impulse).limit_length(KNOCK_MAX)
+
+
+## Moves with gravity using the given horizontal velocity (for behaviours
+## that take over movement).
+func move_with(horizontal: Vector3) -> void:
+	velocity.x = horizontal.x + _knock.x
+	velocity.z = horizontal.z + _knock.z
+	_apply_gravity_and_move()
 
 
 ## Shows the hit tint immediately (used by the warm-up pass).

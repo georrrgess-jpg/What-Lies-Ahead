@@ -7,6 +7,12 @@ extends Resource
 @export var id: StringName
 @export var display_name := ""
 @export_multiline var role := ""
+## Position in menus and the loadout list (lower first).
+@export var sort_order := 0
+## Short class tag shown in menus, e.g. "Pistol", "Carbine", "Shotgun".
+@export var category := ""
+## Unlock condition (null = available from the start).
+@export var unlock: Requirement
 
 @export_group("Ammo")
 @export var magazine_size := 12
@@ -72,6 +78,9 @@ extends Resource
 @export var view_rotation_degrees := Vector3(0.0, 0.0, -2.5)
 ## Which reload animation the viewmodel plays: "cell_drop", "side_swap" or "break_open".
 @export var reload_style: StringName = &"cell_drop"
+## Optional custom reload: a script with `func play(view: WeaponView, duration: float)`
+## (see WeaponView's public reload API). Overrides reload_style when set.
+@export var reload_script: Script
 @export var fire_sound: StringName
 @export var reload_sound: StringName
 @export var empty_sound: StringName
@@ -80,7 +89,6 @@ extends Resource
 @export_group("Mastery")
 ## Lifetime XP needed to reach rank 1, 2, 3...
 @export var rank_xp: PackedInt32Array = PackedInt32Array([450, 1100, 2300, 4000, 6200])
-@export var rewards: Array[MasteryReward] = []
 
 
 func max_rank() -> int:
@@ -107,10 +115,3 @@ func xp_ceiling(rank: int) -> int:
 	if rank >= rank_xp.size():
 		return -1
 	return rank_xp[rank]
-
-
-func reward_by_id(reward_id: StringName) -> MasteryReward:
-	for r in rewards:
-		if r.id == reward_id:
-			return r
-	return null

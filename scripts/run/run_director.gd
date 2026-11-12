@@ -15,8 +15,10 @@ signal wave_cleared(number: int, total: int)
 signal tickets_changed(tickets: int)
 ## Short HUD message. kind: "info", "good", "bad", "banner".
 signal notice(text: String, kind: StringName)
-signal reward_unlocked(weapon: WeaponData, reward: MasteryReward)
+signal reward_unlocked(weapon: WeaponData, reward: CosmeticItem)
 signal run_finished(result: Dictionary)
+## Emitted once the player, HUD and level are set up.
+signal run_started
 ## A stalled zombie was moved back to an entrance (removed = true if it was despawned instead).
 signal enemy_recovered(zombie: Zombie, removed: bool)
 ## A zombie died (after tickets, XP and score were awarded).
@@ -115,6 +117,14 @@ func _begin() -> void:
 	hud = (load(HUD_SCENE) as PackedScene).instantiate()
 	root.add_child(hud)
 	hud.bind(self, player)
+	# Extra HUD widgets registered in data/ui/ (progression bars, etc.).
+	for ext in GameData.ui_extensions(UiExtension.Kind.HUD_WIDGET):
+		if ext.script_ref:
+			var widget = ext.script_ref.new()
+			widget.name = String(ext.id)
+			hud.add_widget(widget)
+			if widget.has_method("bind"):
+				widget.bind(self, player)
 
 	Game.capture_mouse(true)
 	Sfx.warm_up()
@@ -125,14 +135,16 @@ func _begin() -> void:
 	root.add_child(warm)
 	warm.run(player.camera, _level_enemies(), GameData.weapons())
 	hud.fade_in()
-	Sfx.play_ambience(&"pier_ambience")
-	Sfx.play_music(&"boardwalk_loop")
+	Sfx.play_ambience(level.ambience, level.ambience_volume_db)
+	Sfx.play_music(level.music, level.music_volume_db)
 
 	countdown = waves.prep_seconds
 	_set_state(State.PREP)
 	if kiosk:
 		kiosk.set_open(true)
 	notice.emit("Get ready! Follow the marker to the Loadout Station between waves.", &"info")
+	run_started.emit()
+	Events.run_started.emit(self)
 
 
 func _process(delta: float) -> void:
@@ -354,8 +366,9 @@ func _on_zombie_died(z: Zombie, weapon_id: StringName) -> void:
 		if is_instance_valid(other) and other.data.enrage_radius > 0.0 \
 				and other.global_position.distance_to(z.global_position) <= other.data.enrage_radius:
 			other.enrage(other.data.enrage_seconds)
-	score.on_kill(z.data.score, z.killed_by_headshot, w.headshot_multiplier if w else 1.5,
+	var points := score.on_kill(z.data.score, z.killed_by_headshot, w.headshot_multiplier if w else 1.5,
 		z.kill_distance, player.health / player.max_health if player else 1.0)
+	Events.enemy_killed.emit(z, weapon_id, z.killed_by_headshot, points)
 	enemy_killed.emit(z, weapon_id)
 
 
@@ -395,6 +408,7 @@ func _end_wave() -> void:
 	Profile.record_wave_cleared(level.id, wave_number)
 	_commit()
 	wave_cleared.emit(wave_number, total_waves())
+	Events.wave_cleared.emit(wave_number, total_waves())
 	if wave_number >= total_waves():
 		_begin_extraction()
 	else:
@@ -589,6 +603,7 @@ func _finish(victory: bool) -> void:
 	Profile.save_profile()
 	var data := result()
 	run_finished.emit(data)
+	Events.run_finished.emit(data)
 	await get_tree().create_timer(0.9 if victory else 1.6).timeout
 	Game.capture_mouse(false)
 	var screen = (load(RESULTS_SCENE) as PackedScene).instantiate()
@@ -607,6 +622,10 @@ func pause() -> void:
 ## Leaves the run early (from the pause menu). Earned mastery is kept.
 func abandon(retry: bool) -> void:
 	_finished = true
+	# Progress earned so far still counts (XP, unlocks) when quitting mid-run.
+	var data := result()
+	data["abandoned"] = true
+	Events.run_finished.emit(data)
 	_commit()
 	if retry:
 		Game.retry()

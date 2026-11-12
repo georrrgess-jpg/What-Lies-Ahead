@@ -4,9 +4,7 @@ extends Node
 
 signal xp_changed(weapon_id: StringName)
 signal rank_up(weapon: WeaponData, rank: int)
-signal reward_unlocked(weapon: WeaponData, reward: MasteryReward)
-
-const SLOTS := ["decal", "cell", "finish"]
+signal reward_unlocked(weapon: WeaponData, reward: CosmeticItem)
 
 
 func _entry(weapon_id: StringName) -> Dictionary:
@@ -23,6 +21,14 @@ func xp(weapon_id: StringName) -> int:
 
 func kills(weapon_id: StringName) -> int:
 	return int(_entry(weapon_id)["kills"])
+
+
+## Lifetime kills across every weapon.
+func total_kills() -> int:
+	var total := 0
+	for key in Profile.data["mastery"]:
+		total += int(Profile.data["mastery"][key].get("kills", 0))
+	return total
 
 
 func rank(weapon_id: StringName) -> int:
@@ -44,11 +50,21 @@ func rank_progress(weapon_id: StringName) -> float:
 	return clampf(float(current - floor_xp) / float(maxi(1, ceiling - floor_xp)), 0.0, 1.0)
 
 
+## Mastery reward items for a weapon (cosmetics gated on its rank).
+func rewards(weapon_id: StringName) -> Array[CosmeticItem]:
+	var out: Array[CosmeticItem] = []
+	for it in GameData.cosmetics():
+		if it.requirement and it.requirement.kind == Requirement.Kind.WEAPON_RANK and it.requirement.target == weapon_id:
+			out.append(it)
+	out.sort_custom(func(a, b): return a.requirement.amount < b.requirement.amount)
+	return out
+
+
 ## Adds XP (and optionally kills) to a weapon. Changes are in memory until the
 ## run director commits the profile at a wave boundary, defeat or extraction.
-## Returns the rewards this grant unlocked.
-func grant(weapon_id: StringName, amount: int, kill_count := 0) -> Array[MasteryReward]:
-	var unlocked: Array[MasteryReward] = []
+## Returns the cosmetics this grant unlocked.
+func grant(weapon_id: StringName, amount: int, kill_count := 0) -> Array[CosmeticItem]:
+	var unlocked: Array[CosmeticItem] = []
 	var w := GameData.weapon(weapon_id)
 	if w == null or (amount <= 0 and kill_count <= 0):
 		return unlocked
@@ -60,44 +76,8 @@ func grant(weapon_id: StringName, amount: int, kill_count := 0) -> Array[Mastery
 	xp_changed.emit(weapon_id)
 	if new_rank > old_rank:
 		rank_up.emit(w, new_rank)
-		for reward in w.rewards:
-			if reward.rank_required > old_rank and reward.rank_required <= new_rank:
-				unlocked.append(reward)
-				reward_unlocked.emit(w, reward)
+	# Any cosmetic whose requirement just became true (rank, kills, ...).
+	for it in Cosmetics.check_new_unlocks():
+		unlocked.append(it)
+		reward_unlocked.emit(w, it)
 	return unlocked
-
-
-func is_unlocked(weapon_id: StringName, reward: MasteryReward) -> bool:
-	return rank(weapon_id) >= reward.rank_required
-
-
-func equipped_id(weapon_id: StringName, slot: String) -> StringName:
-	var e: Dictionary = Profile.data["equipped"].get(String(weapon_id), {})
-	return StringName(String(e.get(slot, "")))
-
-
-## Equips a reward in its slot, or clears the slot when reward is null.
-func equip(weapon_id: StringName, slot: String, reward: MasteryReward) -> bool:
-	if reward != null and not is_unlocked(weapon_id, reward):
-		return false
-	var eq: Dictionary = Profile.data["equipped"]
-	var key := String(weapon_id)
-	if not eq.has(key):
-		eq[key] = {"decal": "", "cell": "", "finish": ""}
-	eq[key][slot] = String(reward.id) if reward else ""
-	Profile.save_profile()
-	return true
-
-
-## The equipped (and still valid) reward per slot: { "decal": MasteryReward|null, ... }.
-func cosmetics(weapon_id: StringName) -> Dictionary:
-	var out := {}
-	var w := GameData.weapon(weapon_id)
-	for slot in SLOTS:
-		var reward: MasteryReward = null
-		if w:
-			reward = w.reward_by_id(equipped_id(weapon_id, slot))
-			if reward and (reward.slot() != slot or not is_unlocked(weapon_id, reward)):
-				reward = null
-		out[slot] = reward
-	return out

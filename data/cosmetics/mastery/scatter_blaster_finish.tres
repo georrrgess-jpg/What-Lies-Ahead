@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+target = &"scatter_blaster"
+amount = 5
+
+[resource]
+script = ExtResource("1")
+id = &"scatter_blaster_finish"
+display_name = "Cotton Candy"
+description = "Mastery reward: reach rank 5 with the Scatter Blaster."
+slot = &"weapon_finish"
+weapon_id = &"scatter_blaster"
+rarity = 4
+requirement = SubResource("req")
+colors = PackedColorArray(1.0, 0.55, 0.8, 1, 0.3, 0.85, 0.95, 1)
+params = {
+"metallic": 0.1,
+"roughness": 0.4
+}
+sort_order = 5

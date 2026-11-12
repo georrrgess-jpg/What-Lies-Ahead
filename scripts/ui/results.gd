@@ -99,6 +99,13 @@ func show_result(result: Dictionary) -> void:
 	for row in rows:
 		col.add_child(_weapon_row(row))
 
+	# Extra sections registered in data/ui/ (progression, unlocks, ...).
+	for ext in GameData.ui_extensions(UiExtension.Kind.RESULTS_SECTION):
+		if ext.script_ref and ext.script_ref.has_method("build"):
+			var section: Control = ext.script_ref.build(result)
+			if section:
+				col.add_child(section)
+
 	col.add_child(UiKit.spacer(14))
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -177,6 +184,6 @@ func _weapon_row(row: Dictionary) -> Control:
 	bar_row.add_child(xp_label)
 
 	for reward in row["unlocks"]:
-		var unlock := UiKit.label("UNLOCKED  %s  (%s)" % [reward.display_name, reward.kind_label()], 26, UiKit.AMBER, true)
+		var unlock := UiKit.label("UNLOCKED  %s  (%s)" % [reward.display_name, reward.slot_label()], 26, UiKit.AMBER, true)
 		v.add_child(unlock)
 	return box

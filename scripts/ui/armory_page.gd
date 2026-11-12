@@ -1,9 +1,7 @@
 class_name ArmoryPage
-extends Control
+extends MenuPage
 ## Armory: per-weapon mastery progress and cosmetic rewards. Unlocked rewards
 ## can be equipped here; the preview shows the result.
-
-signal back
 
 var _weapon: WeaponData
 var _tabs := {}
@@ -161,16 +159,16 @@ func _build_rewards() -> void:
 	for c in _rewards.get_children():
 		c.queue_free()
 	var rank := Mastery.rank(_weapon.id)
-	for reward in _weapon.rewards:
-		var unlocked := rank >= reward.rank_required
-		var equipped := Mastery.equipped_id(_weapon.id, reward.slot()) == reward.id
+	for reward in Mastery.rewards(_weapon.id):
+		var unlocked := Cosmetics.is_owned(reward)
+		var equipped := Cosmetics.equipped(reward.slot, _weapon.id) == reward
 		var row := PanelContainer.new()
 		row.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.7), UiKit.CYAN if equipped else Color.TRANSPARENT, 14, 3 if equipped else 0, 12))
 		var h := HBoxContainer.new()
 		h.add_theme_constant_override("separation", 14)
 		row.add_child(h)
 		var swatch := ColorRect.new()
-		swatch.color = reward.color if unlocked else Color(0.3, 0.28, 0.4)
+		swatch.color = reward.color(0) if unlocked else Color(0.3, 0.28, 0.4)
 		swatch.custom_minimum_size = Vector2(46, 46)
 		swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		h.add_child(swatch)
@@ -179,7 +177,7 @@ func _build_rewards() -> void:
 		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(text)
 		text.add_child(UiKit.label(reward.display_name, 30, Color.WHITE if unlocked else Color(1, 1, 1, 0.55), true))
-		text.add_child(UiKit.label("%s  ·  unlocks at rank %d" % [reward.kind_label(), reward.rank_required], 22, UiKit.CREAM if unlocked else Color(1, 1, 1, 0.45)))
+		text.add_child(UiKit.label("%s  ·  %s" % [reward.slot_label(), reward.requirement.describe() if reward.requirement else ""], 22, UiKit.CREAM if unlocked else Color(1, 1, 1, 0.45)))
 		if unlocked:
 			var b := UiKit.soft_button("Unequip" if equipped else "Equip", 26)
 			b.custom_minimum_size = Vector2(170, 0)
@@ -193,8 +191,8 @@ func _build_rewards() -> void:
 		_rewards.add_child(row)
 
 
-func _toggle(reward: MasteryReward, currently_equipped: bool) -> void:
-	Mastery.equip(_weapon.id, reward.slot(), null if currently_equipped else reward)
+func _toggle(reward: CosmeticItem, currently_equipped: bool) -> void:
+	Cosmetics.equip(reward.slot, null if currently_equipped else reward, _weapon.id)
 	_select(_weapon)
 
 
@@ -210,7 +208,7 @@ func _build_preview() -> void:
 		var arm := _model.find_child(arm_name, true, false) as Node3D
 		if arm:
 			arm.visible = false
-	WeaponCosmetics.apply(_model, _weapon, Mastery.cosmetics(_weapon.id))
+	WeaponCosmetics.apply(_model, _weapon, Cosmetics.weapon_loadout(_weapon.id))
 	# Centre the weapon on the turntable.
 	var bounds := _bounds(_model)
 	_model.position = -bounds.get_center()

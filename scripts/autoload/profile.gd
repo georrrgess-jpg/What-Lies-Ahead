@@ -5,7 +5,7 @@ extends Node
 
 signal saved
 
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 const DEFAULT_PATH := "user://profile.json"
 
 const DEFAULT_SETTINGS := {
@@ -40,11 +40,23 @@ func defaults() -> Dictionary:
 	return {
 		"version": SAVE_VERSION,
 		"mastery": {},    # weapon_id -> { "xp": int, "kills": int }
-		"equipped": {},   # weapon_id -> { "decal": id, "cell": id, "finish": id }
-		"levels": {},     # level_id -> { "best_wave": int, "completed": bool, "clears": int }
+		"levels": {},     # level_id -> { "best_wave", "completed", "clears", "best_score" }
 		"settings": DEFAULT_SETTINGS.duplicate(),
 		"last_weapon": "",
+		# Free-form sections owned by individual systems (see section()):
+		# "cosmetics", "progression", "unlocks", "loadout", "stats", ...
+		"sections": {},
 	}
+
+
+## A persistent dictionary owned by one system (created on first use). Its
+## contents are saved as-is, so keep them to JSON types (numbers, strings,
+## bools, arrays, dictionaries). Call save_profile() after changing it.
+func section(name: String) -> Dictionary:
+	var all: Dictionary = data["sections"]
+	if typeof(all.get(name)) != TYPE_DICTIONARY:
+		all[name] = {}
+	return all[name]
 
 
 func load_profile() -> void:
@@ -154,14 +166,23 @@ func _migrate(raw: Dictionary) -> Dictionary:
 					"xp": maxi(0, int(m.get("xp", 0))),
 					"kills": maxi(0, int(m.get("kills", 0))),
 				}
+	if typeof(raw.get("sections")) == TYPE_DICTIONARY:
+		for key in raw["sections"]:
+			if typeof(raw["sections"][key]) == TYPE_DICTIONARY:
+				out["sections"][String(key)] = raw["sections"][key]
+	# version 1 -> 2: per-weapon equipped rewards moved into the cosmetics section.
 	if typeof(raw.get("equipped")) == TYPE_DICTIONARY:
-		for key in raw["equipped"]:
-			var e = raw["equipped"][key]
+		var cos: Dictionary = out["sections"].get("cosmetics", {})
+		var eq: Dictionary = cos.get("equipped", {})
+		for weapon_id in raw["equipped"]:
+			var e = raw["equipped"][weapon_id]
 			if typeof(e) == TYPE_DICTIONARY:
-				var slots := {}
 				for slot in ["decal", "cell", "finish"]:
-					slots[slot] = String(e.get(slot, ""))
-				out["equipped"][String(key)] = slots
+					var id := String(e.get(slot, ""))
+					if id != "":
+						eq["weapon_%s@%s" % [slot, weapon_id]] = id
+		cos["equipped"] = eq
+		out["sections"]["cosmetics"] = cos
 	if typeof(raw.get("levels")) == TYPE_DICTIONARY:
 		for key in raw["levels"]:
 			var l = raw["levels"][key]

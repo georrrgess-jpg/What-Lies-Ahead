@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UiExtension" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ui_extension.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/armory_page.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+kind = 0
+id = &"armory"
+title = "Armory"
+script_ref = ExtResource("2")
+order = 50
+show_on_title = true
