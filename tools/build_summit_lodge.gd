@@ -7,7 +7,10 @@ extends SceneTree
 ## the moving chairlift and gondola, dressing, lights, the aurora and a baked
 ## navigation mesh. The result is an ordinary scene you can keep editing.
 ##
-##   godot --headless --path . --script res://tools/build_summit_lodge.gd
+##   xvfb-run -a godot --rendering-driver opengl3 --path . --script res://tools/build_summit_lodge.gd
+##
+## Run it with a renderer (not --headless): the headless renderer keeps no
+## MultiMesh instance data, so fences, lights and trees would save empty.
 ##
 ## NOTE: running this overwrites hand edits made to summit_lodge.tscn.
 ##

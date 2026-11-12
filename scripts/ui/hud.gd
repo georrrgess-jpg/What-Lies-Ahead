@@ -489,7 +489,7 @@ func _on_reward_unlocked(weapon: WeaponData, reward: CosmeticItem) -> void:
 	panel.add_child(v)
 	v.add_child(UiKit.label("MASTERY UNLOCK", 24, UiKit.CYAN, true))
 	v.add_child(UiKit.label("%s — %s" % [weapon.display_name, reward.display_name], 28, Color.WHITE))
-	v.add_child(UiKit.label("%s · equip it in the Armory" % reward.slot_label(), 22, UiKit.CREAM))
+	v.add_child(UiKit.label("%s · equip it in the Locker" % reward.slot_label(), 22, UiKit.CREAM))
 	_toasts.add_child(panel)
 	panel.modulate.a = 0.0
 	var tw := panel.create_tween()
