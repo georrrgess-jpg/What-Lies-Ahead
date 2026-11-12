@@ -13,8 +13,8 @@ extends CharacterBody3D
 ##   - jumps forgive a late press (coyote time) and an early one (buffer), fall
 ##     a little faster than they rise, and stop short if released early;
 ##   - curbs up to 0.3 m are stepped over; jump at a ledge while pushing toward
-##     it to mantle onto it or vault over it (sprinting into a low barrier
-##     vaults too), and a ledge reached in the air is pulled up onto;
+##     it to mantle onto it or vault over it (at a run, thin obstacles are
+##     vaulted), and a ledge reached in the air is pulled up onto;
 ##   - sprint + crouch slides under a lowered capsule: a boost on the entry
 ##     speed that tires when slides are chained, pulled along by slopes;
 ##   - firing or aiming ends a sprint at once, and the weapon takes a beat to
@@ -56,6 +56,11 @@ const STRIDE_WALK := 1.75
 const STRIDE_SPRINT := 2.2
 ## A move longer than this in one tick is a teleport (the camera snaps).
 const TELEPORT_DISTANCE := 1.5
+## Collision margin: generous against scenery, so the capsule glides along
+## the seams between colliders instead of snagging; tiny while zombies are
+## close, where a wide margin would let them shove the player around.
+const WALL_MARGIN := 0.03
+const CROWD_MARGIN := 0.001
 
 @export var walk_speed := 5.2
 @export var sprint_speed := 7.6
@@ -103,6 +108,7 @@ const TELEPORT_DISTANCE := 1.5
 @onready var weapons: WeaponController = $Weapons
 @onready var view: WeaponView = $Head/Camera3D/WeaponView
 @onready var _capsule: CollisionShape3D = $CollisionShape3D
+@onready var _crowd: Area3D = $CrowdSense
 
 var health := 100.0
 var alive := true
@@ -237,6 +243,7 @@ func _physics_process(delta: float) -> void:
 	var on_floor := is_on_floor()
 	if on_floor:
 		_floor_y = global_position.y
+	safe_margin = CROWD_MARGIN if _crowd.has_overlapping_bodies() else WALL_MARGIN
 	_tick_timers(delta, can_act, on_floor)
 	_update_aim(delta, can_act)
 
@@ -316,7 +323,7 @@ func _sprint_out_time() -> float:
 # --- mantle and vault --------------------------------------------------------------
 
 ## Jump at a ledge (or reach one in the air) while pushing toward it: mantle
-## onto it or vault over it. Sprinting straight into a low barrier vaults.
+## onto it or vault over it.
 func _try_traversal(input: Vector2, wish: Vector3, on_floor: bool) -> bool:
 	if _traverse_cool > 0.0 or input.y > -LEDGE_INPUT:
 		return false
@@ -330,8 +337,6 @@ func _try_traversal(input: Vector2, wish: Vector3, on_floor: bool) -> bool:
 		kind = _traverse.plan(dir, _floor_y, false, toward)
 		if kind == PlayerTraversal.Kind.MANTLE and _traverse.planned_height() < GROUND_MANTLE_MIN:
 			kind = PlayerTraversal.Kind.NONE
-	elif grounded and sprinting and toward > sprint_speed * 0.75:
-		kind = _traverse.plan(dir, _floor_y, false, toward, true)
 	elif not grounded and not _crouched:
 		kind = _traverse.plan(dir, _floor_y, true, toward)
 		# Not while the jump is still going to clear the ledge by itself.

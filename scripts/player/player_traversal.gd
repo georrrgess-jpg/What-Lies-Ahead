@@ -143,9 +143,8 @@ func step_up(motion: Vector3) -> float:
 
 ## Looks for a ledge along `dir` (flat, unit length). `floor_y` is the height
 ## of the floor the player last stood on, `speed` the run-up speed toward the
-## ledge. `vault_only` skips mantles (sprinting into a low barrier).
-## Returns the kind of move found; begin() starts it.
-func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float, vault_only := false) -> Kind:
+## ledge. Returns the kind of move found; begin() starts it.
+func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float) -> Kind:
 	_plan_kind = Kind.NONE
 	var xf := _body.global_transform
 	var feet := xf.origin
@@ -162,10 +161,10 @@ func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float, vault_only
 	if _sweep(xf, Vector3.UP * rise):
 		return Kind.NONE
 	var raised := xf.translated(Vector3.UP * rise)
-	var can_mantle := not vault_only and _check_mantle(raised, feet, dir, face, ledge)
+	var can_mantle := _check_mantle(raised, feet, dir, face, ledge)
 	var mantle_forward := _plan_forward
 	var can_vault := ledge - feet.y <= VAULT_MAX_HEIGHT and _check_vault(raised, feet, dir, face, ledge)
-	if can_vault and (vault_only or speed >= VAULT_PREFER_SPEED or not can_mantle):
+	if can_vault and (speed >= VAULT_PREFER_SPEED or not can_mantle):
 		_plan_kind = Kind.VAULT
 	elif can_mantle:
 		_plan_kind = Kind.MANTLE

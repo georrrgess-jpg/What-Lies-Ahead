@@ -18,7 +18,7 @@ func _ready() -> void:
 	_section("CONTROLS")
 	_slider("look_sensitivity", "Look sensitivity", Settings.LOOK_RANGE.x, Settings.LOOK_RANGE.y, 0.05, func(v): return "%.2f" % v)
 	_slider("ads_sensitivity", "Aim sensitivity", 0.3, 1.5, 0.05, func(v): return "%.2f" % v)
-	_slider("fov", "Field of view", 60.0, 100.0, 1.0, _fov_text)
+	_slider("fov", "Field of view (vertical)", 60.0, 100.0, 1.0, _fov_text)
 	_section("RETICLE")
 	_choice("reticle_style", "Style", [["auto", "Auto"], ["cross", "Cross"], ["circle", "Circle"], ["dot", "Dot"], ["chevron", "Chevron"]])
 	_choice("reticle_color", "Colour", [["white", "White"], ["cyan", "Cyan"], ["pink", "Pink"], ["green", "Green"], ["yellow", "Yellow"]])
@@ -62,7 +62,7 @@ func _percent(v: float) -> String:
 ## The FOV setting is vertical; also show what that spans across a 16:9 screen.
 func _fov_text(v: float) -> String:
 	var wide := rad_to_deg(2.0 * atan(tan(deg_to_rad(v) * 0.5) * 16.0 / 9.0))
-	return "%d° vertical (%d° wide)" % [int(v), int(round(wide))]
+	return "%d° (%d° wide)" % [int(v), int(round(wide))]
 
 
 func _section(text: String) -> void:

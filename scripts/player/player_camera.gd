@@ -135,13 +135,14 @@ func _update_fov(delta: float, motion: float) -> void:
 	camera.fov = lerpf(camera.fov, target, 1.0 - exp(-14.0 * delta))
 
 
-## Where shots go from: the eye at the body's physics position, turned by the
-## look and the recoil only. Shake, nods, roll and bob are visual and leave
-## the point of aim alone.
+## Where shots go from: the eye where the camera shows it (the smoothed body
+## position, so the reticle is exactly what is hit), turned by the look and
+## the recoil only. Shake, nods, roll and bob are visual and leave the point
+## of aim alone.
 func aim_transform() -> Transform3D:
-	var eye := lerpf(_stand_height, SLIDE_HEIGHT, ease(_crouch, -1.8))
+	var eye := lerpf(_stand_height, SLIDE_HEIGHT, ease(_crouch, -1.8)) + _step_offset
 	var turn := Basis.from_euler(Vector3(player.look_pitch() + recoil, _recoil_yaw, 0.0))
-	return Transform3D(player.global_basis * turn, player.global_position + Vector3.UP * eye)
+	return Transform3D(player.global_basis * turn, player.view_origin() + Vector3.UP * eye)
 
 
 ## The body just climbed a step of `height` m in one tick: ease the view up.
