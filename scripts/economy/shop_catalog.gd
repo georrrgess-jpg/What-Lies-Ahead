@@ -9,6 +9,7 @@ extends RefCounted
 ##   featured()   today's featured items, sold at a discount; the selection is
 ##                the same for the whole day and changes at local midnight
 ##   price() / base_price() / discount()   what an item costs right now
+##   can_buy() / buy() / lock_text()       buying without weapon bookkeeping
 ##   is_new() / mark_seen()                NEW flags
 ##
 ## State lives in Profile.section("shop"): the day's featured ids and the ids
@@ -196,9 +197,36 @@ static func is_open(it: CosmeticItem) -> bool:
 	return Cosmetics.can_unlock_purchase(it, it.weapon_id)
 
 
+## The weapon to buy `it` for: its own weapon, or for an item that fits every
+## weapon and asks for a mastery rank, the first weapon with that rank.
+static func buy_context(it: CosmeticItem) -> StringName:
+	if it == null or it.weapon_id != &"" or it.requirement == null or not it.is_weapon_slot():
+		return it.weapon_id if it else &""
+	for w in GameData.weapons():
+		if Cosmetics.can_unlock_purchase(it, w.id):
+			return w.id
+	return &""
+
+
+## For sale, open and affordable right now.
+static func can_buy(it: CosmeticItem) -> bool:
+	return Cosmetics.can_buy(it, buy_context(it))
+
+
+## Buys `it` at price(it) (Cosmetics.buy with the right weapon context).
+## Returns false, changing nothing, if it cannot be bought.
+static func buy(it: CosmeticItem) -> bool:
+	return Cosmetics.buy(it, buy_context(it))
+
+
+## Why `it` cannot be bought yet ("Ion Carbine mastery rank 5"), or "" if it is open.
+static func lock_text(it: CosmeticItem) -> String:
+	return "" if is_open(it) else it.requirement.describe()
+
+
 ## Items the player could buy right now.
 static func affordable() -> Array[CosmeticItem]:
-	return for_sale().filter(func(it): return is_open(it) and Wallet.can_afford(price(it)))
+	return for_sale().filter(func(it): return can_buy(it))
 
 
 static func _sec() -> Dictionary:

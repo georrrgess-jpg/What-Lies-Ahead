@@ -108,10 +108,12 @@ static func record(stat: StringName, value: int, weapon_id: StringName = &"") ->
 ## the entries that were dealt.
 static func roll_over() -> Array:
 	var list := _list()
+	var finished := {}
 	for i in range(list.size() - 1, -1, -1):
 		if is_done(list[i]) or template(list[i]) == null:
+			finished[String(list[i].get("id", ""))] = true
 			list.remove_at(i)
-	return _deal(list)
+	return _deal(list, finished)
 
 
 static func _list() -> Array:
@@ -122,13 +124,14 @@ static func _list() -> Array:
 
 
 ## Fills empty slots. A new profile gets the three easiest templates; after
-## that the pick is random among templates that are not active already and
-## track a stat no active contract tracks.
-static func _deal(list: Array) -> Array:
+## that the pick is random among templates that are not active already, track
+## a stat no active contract tracks and were not just finished (`avoid`:
+## template ids).
+static func _deal(list: Array, avoid := {}) -> Array:
 	var dealt: Array = []
 	var first_hand := completed_count() == 0 and list.is_empty()
 	while list.size() < SLOTS:
-		var options := _options(list)
+		var options := _options(list, avoid)
 		if options.is_empty():
 			break
 		var ch: Challenge = options[0] if first_hand else options[randi() % options.size()]
@@ -140,7 +143,9 @@ static func _deal(list: Array) -> Array:
 	return dealt
 
 
-static func _options(list: Array) -> Array:
+## Templates that can be dealt, best candidates only: fresh stats that were
+## not just finished, else fresh stats, else anything not on the board.
+static func _options(list: Array, avoid: Dictionary) -> Array:
 	var used_ids := {}
 	var used_stats := {}
 	for entry in list:
@@ -148,6 +153,7 @@ static func _options(list: Array) -> Array:
 		if ch:
 			used_ids[ch.id] = true
 			used_stats[ch.stat] = true
+	var best: Array = []
 	var fresh: Array = []
 	var fallback: Array = []
 	for ch in templates():
@@ -156,6 +162,10 @@ static func _options(list: Array) -> Array:
 		fallback.append(ch)
 		if not used_stats.has(ch.stat):
 			fresh.append(ch)
+			if not avoid.has(String(ch.id)):
+				best.append(ch)
+	if not best.is_empty():
+		return best
 	return fresh if not fresh.is_empty() else fallback
 
 

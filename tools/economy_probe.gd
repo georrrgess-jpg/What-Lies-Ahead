@@ -170,7 +170,7 @@ func _featured() -> void:
 			break
 	_check("featured: other items cost their full price", Shop.price(other) == other.price and Shop.discount(other) == 0.0)
 	wallet.earn(cut, &"test")
-	_check("featured: buying it charges the discounted price", cosmetics.buy(it, it.weapon_id) and wallet.balance() == 0)
+	_check("featured: buying it charges the discounted price", Shop.can_buy(it) and Shop.buy(it) and wallet.balance() == 0 and not Shop.can_buy(it))
 	_check("featured: the day's selection does not refill after a purchase", _ids(Shop.featured()) == first)
 	profile.load_profile()
 	_check("featured: and is the same after a restart", _ids(Shop.featured()) == first)
