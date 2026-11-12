@@ -6,8 +6,10 @@ extends SceneTree
 ## cover, lights, vapour, blowing sand, backdrop, markers, the supply-pod
 ## loadout station, the exit portal and a baked navigation mesh.
 ##
-##   godot --headless --path . --script res://tools/build_launch_pad.gd
+##   xvfb-run godot --rendering-driver opengl3 --path . --script res://tools/build_launch_pad.gd
 ##
+## Run it with a renderer (not --headless): the headless dummy renderer keeps no
+## MultiMesh instance data, so the blast walls, lights and vapour would be saved empty.
 ## NOTE: running this overwrites hand edits made to launch_pad.tscn.
 ##
 ## Layout (metres, top view; the player starts at the south edge facing -Z):
