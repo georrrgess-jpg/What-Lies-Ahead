@@ -51,7 +51,9 @@ import os
 import bpy  # noqa: F401  (must be imported before mathutils with the PyPI module)
 from mathutils import Matrix, Quaternion, Vector
 
-FPS = 24
+FPS = 24          # clips are authored in 24 fps frames...
+SUB = 2           # ...and baked at FPS * SUB samples per second
+KEY_FPS = FPS * SUB
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.normpath(os.path.join(HERE, "..", "models"))
 
@@ -183,8 +185,11 @@ def elbow_pole(side):
     return (side * 0.75, -0.55, -0.35)
 
 
-def resolve(rig, spec):
-    """Turn a pose spec (see the module notes) into a Pose (FK + IK)."""
+def resolve(rig, spec, plant=False):
+    """Turn a pose spec (see the module notes) into a Pose (FK + IK). With
+    `plant`, a foot target at ground height (REST_ANKLE) is a planted foot:
+    its ankle rises on the heel/toe rocker as the shin tilts, so the sole
+    never sinks into the ground."""
     rot = {}
     for b in rig.order:
         e = spec.get(b)
@@ -194,8 +199,20 @@ def resolve(rig, spec):
     for s, side in SIDES:
         if "foot." + s in spec:
             thigh, shin = LEG[s]
+            target = B(*spec["foot." + s])
+            if plant and target.z <= REST_ANKLE + 0.003:
+                target, _, _ = _stance_ankle(rig, pos, world, s, side, -target.y - FOOT[0], target.x, FOOT)
+            elif plant:
+                # A lifted foot never dips its toe or heel into the ground.
+                for _ in range(2):
+                    theta, _ = _shin_pitch(rig, pos, world, s, target, side)
+                    hb, tf, sd = FOOT
+                    low = target.z + min(-tf * math.sin(theta) - sd * math.cos(theta), hb * math.sin(theta) - sd * math.cos(theta))
+                    if low >= 0.0:
+                        break
+                    target = target + Vector((0, 0, -low))
             kp = spec.get("knee." + s, (KNEE_POLE[0] * side, KNEE_POLE[1], KNEE_POLE[2]))
-            rot[thigh], rot[shin], _ = rig.two_bone(pos, world, thigh, shin, B(*spec["foot." + s]), B(*kp), Vector((0, -1, 0)))
+            rot[thigh], rot[shin], _ = rig.two_bone(pos, world, thigh, shin, target, B(*kp), Vector((0, -1, 0)))
     pos, world = rig.fk(rot, hips)
     for s, side in SIDES:
         if "hand." + s in spec:
@@ -270,14 +287,15 @@ class Clip:
         self.name = name + ("-loop" if loop else "")
         self.poses = poses
         self.meta = meta
-        self.meta["length"] = round((len(poses) - 1) / FPS, 4)
+        self.meta["length"] = round((len(poses) - 1) / KEY_FPS, 4)
 
 
-def keyed(rig, name, keys, loop=False, **meta):
+def keyed(rig, name, keys, loop=False, plant=True, **meta):
     """Dense clip from sparse keys. `keys` is a list of (frame, changes) or
     (frame, changes, ease); each key's spec is the previous key's spec updated
     with `changes`, and the segment arriving at a key uses its ease ("io" by
-    default; "lin", "in", "out", "snap", "back", "hold")."""
+    default; "lin", "in", "out", "snap", "back", "hold"). Feet targeted at
+    ground height are planted (see `resolve`)."""
     specs, frames, eases = [], [], []
     current = {}
     for k in keys:
@@ -292,7 +310,8 @@ def keyed(rig, name, keys, loop=False, **meta):
         missing = set(s) - set(specs[0])
         assert not missing, f"{name}: keys add {missing} not set at the first key"
     poses = []
-    for f in range(frames[-1] + 1):
+    for k in range(frames[-1] * SUB + 1):
+        f = k / SUB
         i = 0
         while i < len(frames) - 1 and frames[i + 1] < f:
             i += 1
@@ -303,7 +322,7 @@ def keyed(rig, name, keys, loop=False, **meta):
             t = _ease(eases[i + 1], (f - f0) / max(1, f1 - f0))
             a, b = specs[i], specs[i + 1]
             spec = {k: _mix(a[k], b[k], t) for k in a}
-        poses.append(resolve(rig, spec))
+        poses.append(resolve(rig, spec, plant))
     return Clip(name, poses, loop=loop, **meta)
 
 
@@ -329,8 +348,8 @@ class Gait:
         self.torso, self.front, self.width, self.crouch = torso, front, width, crouch
         self.bob, self.bob_style, self.limp, self.glide, self.skate = bob, bob_style, limp, glide, skate
         self.foot, self.profile = foot, profile
-        self.frames = max(8, round(period * FPS))
-        self.period = self.frames / FPS
+        self.frames = max(16, round(period * KEY_FPS))
+        self.period = self.frames / KEY_FPS
 
     @property
     def speed(self):
@@ -372,14 +391,26 @@ def _stance_ankle(rig, pos, world, s, side, heel_f, lat, foot):
     """Ankle on a rolling rigid foot whose heel (toe up) or toe (toe down) is
     fixed at forward position heel_f (toe tip at heel_f + heel + toe)."""
     hb, tf, _ = foot
-    theta, reach = 0.0, 0.0
-    ankle = None
-    for _ in range(6):
+
+    def ankle_at(theta):
         toe = theta > 0
-        cf = heel_f + (hb + tf if toe else 0.0)
         of, ou = _foot_offsets(theta, foot, toe)
-        ankle = B(lat, cf + of, ou)
-        theta, reach = _shin_pitch(rig, pos, world, s, ankle, side)
+        return B(lat, heel_f + (hb + tf if toe else 0.0) + of, ou)
+
+    # The shin pitch the IK gives must equal the pitch the ankle was placed
+    # for: bisect on that fixed point (plain iteration oscillates in squats).
+    lo, hi = -1.3, 1.3
+    g_lo = _shin_pitch(rig, pos, world, s, ankle_at(lo), side)[0] - lo
+    for _ in range(22):
+        mid = 0.5 * (lo + hi)
+        g_mid = _shin_pitch(rig, pos, world, s, ankle_at(mid), side)[0] - mid
+        if (g_mid > 0) == (g_lo > 0):
+            lo, g_lo = mid, g_mid
+        else:
+            hi = mid
+    theta = 0.5 * (lo + hi)
+    ankle = ankle_at(theta)
+    _, reach = _shin_pitch(rig, pos, world, s, ankle, side)
     return ankle, theta, reach
 
 
@@ -438,9 +469,11 @@ def _auto_drop(rig, g):
 
 
 def _swing(p0, p1, slope, u):
-    """From p0 to p1 over u in [0, 1] with d/du = slope at both ends and the
-    rest of the travel eased in and out (smootherstep)."""
-    s5 = u * u * u * (u * (6 * u - 15) + 10)
+    """From p0 to p1 over u in [0, 1] with d/du = slope throughout the first
+    5% and the last 20% (the foot peels off, and comes down, at rest relative
+    to the ground) and the rest of the travel eased in and out between."""
+    w = min(1.0, max(0.0, (u - 0.05) / 0.75))
+    s5 = w * w * w * (w * (6 * w - 15) + 10)
     return p0 + slope * u + (p1 - p0 - slope) * s5
 
 
@@ -509,9 +542,11 @@ def gait(rig, name, g, **meta):
 def bake(armature, clipset, model_name):
     """Key every clip of `clipset(rig)` as its own action (stored on an NLA
     track so all are exported), leave the rig at rest and write the clip table
-    art/models/<model_name>_clips.tres. Returns the clips."""
+    art/models/<model_name>_clips.tres. Returns the clips. The scene is set
+    to KEY_FPS so the export samples every baked pose."""
     rig = Rig(armature)
     clips = clipset(rig)
+    bpy.context.scene.render.fps = KEY_FPS
     ad = armature.animation_data_create()
     for clip in clips:
         action = bpy.data.actions.new(clip.name)
@@ -650,7 +685,7 @@ def flail_sprint():
     def arms_fn(ph):
         c, s = _cs(ph)
         return arms(-62 + 32 * c, -34 + 14 * s, -62 - 32 * c, -34 - 14 * s, spread=12)
-    return Gait(0.42, 0.36, 0.82, 0.16, runner(lean=22, arms_fn=arms_fn), front=0.32, bob=0.03, bob_style="run")
+    return Gait(0.42, 0.36, 0.82, 0.16, runner(lean=22, arms_fn=arms_fn), front=0.2, bob=0.03, bob_style="run")
 
 
 def stomp():
@@ -666,7 +701,7 @@ def charge():
     """Heavy charge: a lumbering run, head down, arms pumping wide."""
     return Gait(0.55, 0.42, 0.94, 0.14, runner(lean=24, hips_pitch=12, yaw=7, head=-14,
                                                arms_fn=arms_pump(36, -70, -20)),
-                front=0.45, width=0.06, bob=0.05, bob_style="run")
+                front=0.25, width=0.06, bob=0.05, bob_style="run")
 
 
 def swagger():
@@ -688,18 +723,21 @@ def glide():
         c, s = _cs(ph)
         return arms(28 + 18 * c, -30, 28 - 18 * c, -30, spread=24)
     return Gait(0.75, 0.55, 2.0, 0.08, runner(lean=18, hips_pitch=12, yaw=6, head=-24, arms_fn=arms_fn),
-                front=0.5, bob=0.025, glide=0.07, skate=0.55, crouch=0.04)
+                front=0.5, bob=0.025, glide=0.1, skate=0.55, crouch=0.04)
 
 
 def waddle():
     """Deep Diver: flippers slap down in short, wide, rocking steps."""
-    d = 0.6
+    d = 0.55
 
     def arms_fn(ph):
         c, s = _cs(ph)
         return arms(-30 + 10 * c, -40, -30 - 10 * c, -40, spread=30)
-    return Gait(0.62, d, 0.6, 0.15, walker(d, lean=8, yaw=5, roll=9, sway=0.07, loll=3, head=-6,
-                                           arms_fn=arms_fn), front=0.5, width=0.06, bob=0.03)
+    # Flippers: the tip reaches 0.75 m ahead of the ankle, so the steps are
+    # short and stiff-kneed, the fins slap down ahead and lift off before the
+    # shin can tip them into the floor; the body rocks side to side instead.
+    return Gait(0.5, d, 0.5, 0.14, walker(d, lean=8, yaw=5, roll=11, sway=0.08, loll=3, head=-6,
+                                          arms_fn=arms_fn), front=0.8, width=0.08, bob=0.03, foot=(0.13, 0.75, 0.05))
 
 
 def squelch():
@@ -774,7 +812,7 @@ def riot_charge():
         return {"UpperArm.L": (-68, 0, -38), "ForeArm.L": (-62, 0, -10),
                 "UpperArm.R": (-20 + 30 * c, 16, 0), "ForeArm.R": (-60, 0, 0)}
     return Gait(0.55, 0.42, 0.9, 0.14, runner(lean=18, hips_pitch=12, yaw=5, head=-16, arms_fn=arms_fn),
-                front=0.45, width=0.06, bob=0.05, bob_style="run")
+                front=0.25, width=0.06, bob=0.05, bob_style="run")
 
 
 # ---------------------------------------------------------------------------
@@ -838,11 +876,13 @@ def attack(rig, name="Attack", height=1.55):
     14.3): both hands sweep in and cross at `height` about 0.8 m in front,
     head up at the player; follow-through, then recover. 26 frames."""
     r = _attack_ready()
-    up = {"Hips": (-4, 0, 6), "Spine": (-14, 0, 8), "Head": (-20, 0, 0), "hips": (0, -0.08, -0.03),
-          "hand.L": (0.52, 0.02, 1.95), "hand.R": (-0.5, -0.02, 1.92),
-          "elbow.L": (1.0, -0.2, 0.3), "elbow.R": (-1.0, -0.2, 0.3), **feet(0.18, 0.12, -0.1)}
-    hold = dict(up, **{"Spine": (-17, 0, 10), "Head": (-22, 0, 0), "hand.L": (0.56, -0.04, 2.0), "hand.R": (-0.54, -0.06, 1.98)})
-    shake = dict(hold, **{"Spine": (-15, 2, 9), "hand.L": (0.55, -0.02, 2.03)})
+    # Claws up and out (elbows bent wide, a "W"), chin up but eyes on the player.
+    up = {"Hips": (-4, 0, 6), "Spine": (-14, 0, 8), "Head": (-2, 0, 0), "hips": (0, -0.08, -0.03),
+          "hand.L": (0.64, 0.04, 1.78), "hand.R": (-0.62, 0.0, 1.76),
+          "elbow.L": (1.0, -0.3, -0.7), "elbow.R": (-1.0, -0.3, -0.7), **feet(0.18, 0.12, -0.1)}
+    hold = dict(up, **{"Spine": (-17, 0, 10), "Head": (-4, 0, 0), "hand.L": (0.68, -0.02, 1.84),
+                       "hand.R": (-0.66, -0.04, 1.82)})
+    shake = dict(hold, **{"Spine": (-15, 2, 9), "hand.L": (0.66, 0.0, 1.87)})
     strike = {"Hips": (12, 0, -4), "Spine": (20, 0, -6), "Head": (-24, 0, 0), "hips": (0, 0.14, -0.08),
               "hand.L": (0.14, 0.82, height), "hand.R": (-0.12, 0.8, height - 0.04),
               "elbow.L": (0.8, -0.3, -0.5), "elbow.R": (-0.8, -0.3, -0.5), **feet(0.18, 0.2, -0.12)}
@@ -1041,10 +1081,11 @@ def die_spin(rig, name="Die_Spin"):
                        **arms(-80, -10, -70, -14, spread=70), **_legs(-20, 30, 10, 26)})
     crumple = dict(twist, **{"Hips": (-10, 10, 170), "Spine": (10, 14, 10), "Head": (20, 10, 0),
                              "hips": (0.08, -0.1, -0.4), **arms(-40, -30, -30, -40, spread=40), **_legs(-66, 110, -50, 104)})
-    down = dict(crumple, **{"Hips": (-84, 30, 190), "Spine": (-4, 10, 0), "Head": (10, 20, 10),
-                            "hips": (0.18, 0.4, -0.54), **arms(-150, -10, -120, -20, spread=-60), **_legs(-24, 50, -10, 30)})
-    bounce = dict(down, **{"Hips": (-76, 26, 190), "hips": (0.18, 0.4, -0.49)})
-    rest = dict(down, **{"Hips": (-88, 32, 190), "Head": (16, 24, 10)})
+    # Flat on its back, arms flung out along the ground.
+    down = dict(crumple, **{"Hips": (-84, 12, 190), "Spine": (-4, 6, 0), "Head": (10, 20, 10),
+                            "hips": (0.18, 0.4, -0.54), **arms(-6, -10, 8, -20, spread=76), **_legs(-24, 50, -10, 30)})
+    bounce = dict(down, **{"Hips": (-76, 10, 190), "hips": (0.18, 0.4, -0.49)})
+    rest = dict(down, **{"Hips": (-88, 14, 190), "Head": (16, 24, 10)})
     return keyed(rig, name, [(0, s), (6, twist, "out"), (11, crumple, "io"), (17, down, "in"), (20, bounce, "out"),
                              (23, rest, "in"), (28, rest)], impact=round(17 / FPS, 4))
 

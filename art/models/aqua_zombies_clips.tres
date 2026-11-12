@@ -4,7 +4,7 @@
 metadata/clips = {
 "Idle-loop": {"length": 2},
 "Walk-loop": {"length": 0.7083, "speed": 2.045},
-"Walk_Diver-loop": {"length": 0.625, "speed": 1.6},
+"Walk_Diver-loop": {"length": 0.5, "speed": 1.818},
 "Walk_Octo-loop": {"length": 0.625, "speed": 2.229},
 "Run-loop": {"length": 0.4167, "speed": 5.467},
 "Attack": {"length": 1.083, "strike": 0.5958},
