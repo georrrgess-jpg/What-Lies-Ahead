@@ -11,6 +11,7 @@ extends Node
 ##   --then=retry|menu    after the results screen, press Retry / Main Menu once
 ##   --max-seconds=<n>    give up after n simulated seconds (default 1500)
 ##   --shot=<file.png>    stage the reference composition and save a screenshot
+##   --dump-profile       print the loaded profile and settings, then quit
 ##
 ## The bot plays through the real input pipeline (InputEventAction), so the
 ## same code paths run as for a human player.
@@ -70,6 +71,9 @@ func _ready() -> void:
 			then = arg.trim_prefix("--then=")
 		elif arg.begins_with("--max-seconds="):
 			max_seconds = float(arg.trim_prefix("--max-seconds="))
+		elif arg == "--dump-profile":
+			print("[dev] PROFILE recovered_from_bad_save=%s data=%s" % [Profile.recovered_from_bad_save, JSON.stringify(Profile.data)])
+			get_tree().quit.call_deferred()
 		elif arg.begins_with("--shot="):
 			mode = Mode.SHOT
 			shot_path = arg.trim_prefix("--shot=")
@@ -119,6 +123,7 @@ func _physics_process(delta: float) -> void:
 	if _player != _director.player:
 		_player = _director.player
 		_runs += 1
+		_director.enemy_recovered.connect(_on_enemy_recovered)
 		_result_logged = false
 		_break_done = false
 		_ring_index = 0
@@ -163,6 +168,13 @@ func _physics_process(delta: float) -> void:
 			_stop_moving()
 			_release("fire")
 			_after_run()
+
+
+func _on_enemy_recovered(z: Zombie, removed: bool) -> void:
+	print("[dev] STALL %s %s at %s state=%d player at %s dist=%.1f nav_finished=%s" % [
+		"removed" if removed else "moved", z.data.id, z.global_position.snapped(Vector3.ONE * 0.1), z.state,
+		_player.global_position.snapped(Vector3.ONE * 0.1), z.global_position.distance_to(_player.global_position),
+		z.nav.is_navigation_finished()])
 
 
 # --- intermission ----------------------------------------------------------------

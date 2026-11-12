@@ -17,7 +17,7 @@ func _ready() -> void:
 
 	_section("CONTROLS")
 	_slider("mouse_sensitivity", "Mouse sensitivity", 0.2, 3.0, 0.05, func(v): return "%.2f" % v)
-	_slider("fov", "Field of view", 70.0, 110.0, 1.0, func(v): return "%d°" % int(v))
+	_slider("fov", "Field of view", 60.0, 100.0, 1.0, func(v): return "%d°" % int(v))
 	_section("AUDIO")
 	_slider("master_volume", "Master volume", 0.0, 1.0, 0.05, _percent)
 	_slider("music_volume", "Music volume", 0.0, 1.0, 0.05, _percent)

@@ -32,7 +32,7 @@ var _pitch := 0.0
 var _recoil := 0.0
 var _trauma := 0.0
 var _shake_time := 0.0
-var _base_fov := 85.0
+var _base_fov := 72.0
 
 
 func _ready() -> void:
@@ -43,7 +43,7 @@ func _ready() -> void:
 
 
 func _apply_settings() -> void:
-	_base_fov = clampf(float(Settings.value("fov")), 60.0, 120.0)
+	_base_fov = clampf(float(Settings.value("fov")), 55.0, 110.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:

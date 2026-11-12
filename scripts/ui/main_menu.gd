@@ -51,10 +51,12 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if _camera:
-		_orbit += delta * 0.035
-		var centre := Vector3(1.0, 2.2, -2.0)
-		_camera.position = centre + Vector3(sin(_orbit) * 21.0, 3.2 + sin(_orbit * 0.7) * 0.8, cos(_orbit) * 21.0 + 2.0)
-		_camera.look_at(centre + Vector3(0, 1.2, 0))
+		# Slow sweep out over the water on the ocean side, looking back at the pier.
+		_orbit += delta * 0.05
+		var angle := deg_to_rad(78.0 + 34.0 * sin(_orbit))
+		var centre := Vector3(-2.0, 3.0, -4.0)
+		_camera.position = centre + Vector3(sin(angle) * 31.0, 5.5 + sin(_orbit * 0.6) * 1.2, cos(angle) * 31.0)
+		_camera.look_at(centre)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -94,10 +96,10 @@ func _build_backdrop() -> void:
 		director.queue_free()
 	add_child(_backdrop)
 	_camera = Camera3D.new()
-	_camera.fov = 60.0
+	_camera.fov = 55.0
 	_backdrop.add_child(_camera)
 	_camera.make_current()
-	_orbit = 0.55
+	_orbit = 0.4
 
 
 # --- title -------------------------------------------------------------------

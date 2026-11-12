@@ -14,7 +14,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Developer hooks (automated playtests / screenshots). No effect in normal play.
 	for arg in OS.get_cmdline_user_args():
-		if arg.begins_with("--autoplay") or arg.begins_with("--shot"):
+		if arg.begins_with("--autoplay") or arg.begins_with("--shot") or arg == "--dump-profile":
 			var dev = load("res://scripts/dev/dev_driver.gd").new()
 			dev.name = "DevDriver"
 			add_child(dev)

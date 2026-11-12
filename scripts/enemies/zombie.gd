@@ -18,6 +18,10 @@ const GRAVITY := 22.0
 const REPATH_INTERVAL := 0.3
 const STALL_WINDOW := 5.0
 const STALL_DISTANCE := 0.7
+## A zombie that stays this far from the player, untouched, for LOST_SECONDS is
+## treated as lost and handed back to the director.
+const LOST_DISTANCE := 16.0
+const LOST_SECONDS := 75.0
 ## Fraction of the Attack clip at which the swipe lands.
 const ATTACK_STRIKE_FRACTION := 0.55
 
@@ -35,6 +39,7 @@ var _slow := 0.0
 var _struck := false
 var _stall_anchor := Vector3.ZERO
 var _stall_timer := 0.0
+var _lost_timer := 0.0
 var _flash_left := 0.0
 var _meshes: Array[MeshInstance3D] = []
 var _anim: AnimationPlayer
@@ -91,6 +96,7 @@ func take_hit(amount: float, hit_position: Vector3, direction: Vector3, weapon_i
 		return false
 	health -= amount
 	last_hit_weapon = weapon_id
+	_lost_timer = 0.0
 	_slow = 0.3
 	_flash(0.09)
 	Fx.hit_pop(get_parent(), hit_position, direction, headshot)
@@ -254,6 +260,11 @@ func _check_stall(delta: float, distance: float) -> void:
 	if global_position.y < -8.0:
 		stalled.emit(self)
 		return
+	_lost_timer = 0.0 if distance < LOST_DISTANCE else _lost_timer + delta
+	if _lost_timer > LOST_SECONDS:
+		_lost_timer = 0.0
+		stalled.emit(self)
+		return
 	_stall_timer += delta
 	if _stall_timer < STALL_WINDOW:
 		return
@@ -267,6 +278,7 @@ func _check_stall(delta: float, distance: float) -> void:
 ## Called by the director after it relocates a stalled zombie.
 func reset_stall() -> void:
 	_stall_timer = 0.0
+	_lost_timer = 0.0
 	_stall_anchor = global_position
 	_repath = 0.0
 	velocity = Vector3.ZERO

@@ -17,6 +17,8 @@ signal tickets_changed(tickets: int)
 signal notice(text: String, kind: StringName)
 signal reward_unlocked(weapon: WeaponData, reward: MasteryReward)
 signal run_finished(result: Dictionary)
+## A stalled zombie was moved back to an entrance (removed = true if it was despawned instead).
+signal enemy_recovered(zombie: Zombie, removed: bool)
 
 enum State { PREP, WAVE, BREAK, EXTRACTION, CLEARED, DEFEAT }
 
@@ -27,9 +29,6 @@ const PAUSE_SCENE := "res://scenes/ui/pause_menu.tscn"
 const RESULTS_SCENE := "res://scenes/ui/results.tscn"
 ## Minimum distance from the player for a spawn point to be used.
 const SPAWN_MIN_DISTANCE := 13.0
-## If nothing dies and nobody is hurt for this long with the queue empty,
-## the remaining zombies are treated as stalled.
-const WAVE_WATCHDOG_SECONDS := 70.0
 const MAX_RECOVERIES := 2
 
 var level: LevelData
@@ -56,7 +55,6 @@ var _spawn_timer := 0.0
 var _wave_kills := {}        # weapon id -> kills in the current wave
 var _run_stats := {}         # weapon id -> { xp, kills, xp_before, rank_before, unlocks }
 var _recoveries := {}        # zombie instance id -> times relocated
-var _idle_time := 0.0
 var _last_spawn: Node3D
 var _enemies_root: Node3D
 var _zombie_scene: PackedScene
@@ -196,7 +194,6 @@ func start_next_wave() -> void:
 	_queue = _build_queue(wave)
 	_wave_kills.clear()
 	_spawn_timer = 1.6
-	_idle_time = 0.0
 	_last_spawn = null
 	if kiosk:
 		kiosk.set_open(false)
@@ -256,12 +253,6 @@ func _tick_wave(delta: float) -> void:
 		_end_wave()
 		return
 
-	_idle_time += delta
-	if _queue.is_empty() and _idle_time > WAVE_WATCHDOG_SECONDS:
-		_idle_time = 0.0
-		for z in _alive.duplicate():
-			_on_zombie_stalled(z)
-
 
 func _spawn(enemy_id: StringName, wave: WaveData) -> void:
 	var data := GameData.enemy(enemy_id)
@@ -308,7 +299,6 @@ func _pick_spawn() -> Node3D:
 
 func _on_zombie_died(z: Zombie, weapon_id: StringName) -> void:
 	_alive.erase(z)
-	_idle_time = 0.0
 	total_kills += 1
 	tickets += z.data.tickets
 	tickets_changed.emit(tickets)
@@ -316,8 +306,10 @@ func _on_zombie_died(z: Zombie, weapon_id: StringName) -> void:
 	_grant(weapon_id, z.data.xp, 1)
 
 
-## A zombie that stops making progress is moved back to an entrance; if that
-## keeps happening it is removed (no rewards) so the wave can finish.
+## A zombie reports itself stalled when it stops making progress or loses
+## contact with the player for a long time (see zombie.gd). It is moved back to
+## an entrance; if that keeps happening it is removed (no rewards) so a stuck
+## enemy can never hold the wave open forever.
 func _on_zombie_stalled(z: Zombie) -> void:
 	if not is_instance_valid(z) or z.is_dead():
 		return
@@ -327,8 +319,10 @@ func _on_zombie_stalled(z: Zombie) -> void:
 	if count > MAX_RECOVERIES:
 		_alive.erase(z)
 		_recoveries.erase(key)
+		enemy_recovered.emit(z, true)
 		z.despawn()
 		return
+	enemy_recovered.emit(z, false)
 	var point := _pick_spawn()
 	if point:
 		z.global_position = point.global_position

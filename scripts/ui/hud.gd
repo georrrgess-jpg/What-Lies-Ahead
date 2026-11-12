@@ -203,8 +203,8 @@ func _process(delta: float) -> void:
 		_status.text = ""
 	elif w.is_reloading():
 		_status.text = "RELOADING"
-	elif w.magazine() == 0 and w.reserve() == 0:
-		_status.text = "OUT OF ENERGY"
+	elif w.is_emergency_recharging():
+		_status.text = "EMERGENCY RECHARGE" if w.magazine() > 0 else "OUT OF ENERGY — RECHARGING"
 	elif w.magazine() <= maxi(1, w.current.magazine_size / 4) and w.reserve() > 0:
 		_status.text = "[R] RELOAD"
 	else:

@@ -10,7 +10,7 @@ const DEFAULT_PATH := "user://profile.json"
 
 const DEFAULT_SETTINGS := {
 	"mouse_sensitivity": 1.0,
-	"fov": 85.0,
+	"fov": 72.0,
 	"master_volume": 0.9,
 	"music_volume": 0.55,
 	"sfx_volume": 0.9,

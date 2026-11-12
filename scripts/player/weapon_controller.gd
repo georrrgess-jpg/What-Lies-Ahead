@@ -28,6 +28,7 @@ var _reloading := false
 var _bloom := 0.0
 var _fire_buffer := 0.0
 var _dry_cooldown := 0.0
+var _trickle := 0.0
 
 @onready var player: Player = get_parent()
 
@@ -69,6 +70,11 @@ func is_reloading() -> bool:
 
 func current_spread() -> float:
 	return (current.spread_degrees + _bloom) if current else 0.0
+
+
+## True while the weapon is out of reserve energy and slowly refilling itself.
+func is_emergency_recharging() -> bool:
+	return current != null and reserve() <= 0 and magazine() < int(ceil(current.magazine_size * 0.5))
 
 
 func is_ammo_full() -> bool:
@@ -119,6 +125,16 @@ func _physics_process(delta: float) -> void:
 		_reload_left -= delta
 		if _reload_left <= 0.0:
 			_finish_reload()
+
+	# Emergency recharge: only when the reserve is empty and the magazine is low.
+	if is_emergency_recharging():
+		_trickle += delta
+		if _trickle >= current.emergency_recharge_interval:
+			_trickle = 0.0
+			_ammo[current.id]["mag"] = magazine() + 1
+			_emit_ammo()
+	else:
+		_trickle = 0.0
 
 	if not enabled or not player.alive or not player.controls_enabled:
 		return

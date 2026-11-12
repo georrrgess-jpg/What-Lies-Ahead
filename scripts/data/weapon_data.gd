@@ -13,6 +13,9 @@ extends Resource
 @export var reserve_start := 60
 @export var reserve_max := 96
 @export var reload_time := 1.3
+## With no energy left at all, the cell trickles back one round per this many
+## seconds (up to half a magazine) so the player is never completely helpless.
+@export var emergency_recharge_interval := 1.0
 
 @export_group("Fire")
 ## true = hold to fire, false = one shot per click.
