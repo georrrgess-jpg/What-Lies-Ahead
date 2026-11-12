@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WorldData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/world_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="2"]
+[ext_resource type="Resource" path="res://data/levels/neon_skyline.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("4")
+kind = 2
+target = &"prize_pier"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"neon_rooftops"
+display_name = "Neon Rooftops"
+blurb = "Rain-slicked rooftops above the arcade city. The night shift never clocked out."
+levels = Array[ExtResource("2")]([ExtResource("3")])
+sort_order = 20
+tagline = "Midnight rain, neon signs, and something on the roof."
+requirement = SubResource("unlock")
+accent_color = Color(0.2, 0.95, 1, 1)
+secondary_color = Color(1, 0.25, 0.75, 1)
+backdrop_color = Color(0.06, 0.04, 0.17, 1)
