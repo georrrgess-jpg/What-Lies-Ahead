@@ -98,7 +98,7 @@ spawns = {
 }
 spawn_interval = 2.3
 burst = 2
-max_alive = 9
+max_alive = 8
 speed_scale = 1.08
 late_types_after = 0.15
 banner = "WAVE 7 — HEAVY LIFTERS ON THE PAD"
@@ -114,7 +114,7 @@ spawns = {
 }
 spawn_interval = 2.4
 burst = 2
-max_alive = 11
+max_alive = 10
 speed_scale = 1.1
 late_types_after = 0.3
 banner = "FINAL WAVE — T-MINUS ZERO: JETPACK SWARM"

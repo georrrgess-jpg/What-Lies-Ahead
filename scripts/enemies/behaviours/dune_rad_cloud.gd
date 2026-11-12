@@ -14,7 +14,7 @@ var fuse := 1.1
 var radius := 3.0
 var burst_damage := 8.0
 var cloud_seconds := 3.5
-var damage_per_second := 5.0
+var damage_per_second := 4.0
 
 var _time := 0.0
 var _burst := false

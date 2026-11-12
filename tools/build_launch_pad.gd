@@ -229,7 +229,25 @@ func _build_launch_mount() -> void:
 	geo.add_child(pad)
 	var c := MOUNT_C
 	_prop(pad, "dune_launch_mount", "Mount", c, 0.0)
-	_collider(pad, "MountBody", Vector3(MOUNT_SIZE.x, DECK_Y, MOUNT_SIZE.y), c + Vector3(0, DECK_Y * 0.5, 0))
+	# The pedestal's corners are chamfered so zombies rounding it slide past.
+	var body := StaticBody3D.new()
+	body.name = "MountBody"
+	body.position = c
+	pad.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var convex := ConvexPolygonShape3D.new()
+	var mx := MOUNT_SIZE.x * 0.5
+	var mz := MOUNT_SIZE.y * 0.5
+	var ch := 0.8
+	var pts := PackedVector3Array()
+	for y in [0.0, DECK_Y]:
+		for p in [Vector2(-mx + ch, -mz), Vector2(mx - ch, -mz), Vector2(mx, -mz + ch), Vector2(mx, mz - ch),
+				Vector2(mx - ch, mz), Vector2(-mx + ch, mz), Vector2(-mx, mz - ch), Vector2(-mx, -mz + ch)]:
+			pts.append(Vector3(p.x, y, p.y))
+	convex.points = pts
+	shape.shape = convex
+	body.add_child(shape)
 	# Launch table, rocket and the tail service masts beside it are off-limits.
 	_collider(pad, "TableBlock", Vector3(10.2, 4.0, 8.4), c + Vector3(0.9, DECK_Y + 2.0, 0))
 	_prop(pad, "dune_rocket", "Rocket", c + Vector3(0, 2.6, 0), 0.0)

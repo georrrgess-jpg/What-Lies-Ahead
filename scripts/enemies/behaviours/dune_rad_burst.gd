@@ -9,7 +9,7 @@ extends EnemyBehaviour
 @export var radius := 3.0
 @export var burst_damage := 8.0
 @export var cloud_seconds := 3.5
-@export var damage_per_second := 5.0
+@export var damage_per_second := 4.0
 
 
 func on_death(z: Zombie) -> void:
