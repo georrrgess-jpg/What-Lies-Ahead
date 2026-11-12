@@ -411,6 +411,8 @@ func _build_bridge() -> void:
 	])
 	_prism(bridge, "Deck", deck, BOX_FACES, [_mat("bridge_under", Color(0.12, 0.1, 0.2), 0.6), _roof_material("metal")], [0, 0, 0, 0, 0, 1])
 	_prop(dressing, "neon_skybridge", "SkyBridgeCanopy", Vector3((x0 + x1) * 0.5, 0, A_Z0), 0.0, Vector3(4.5, 4, 8))
+	# The glass canopy keeps the camera-following rain out (neon_skyline_environment.gd).
+	_rain_cover("SkyBridgeRainCover", Vector3((x0 + x1) * 0.5, 2.25, (A_Z0 + N_Z1) * 0.5), Vector3((x1 - x0) * 0.5, 2.75, (A_Z0 - N_Z1) * 0.5))
 
 
 # ---------------------------------------------------------------------------
@@ -698,6 +700,7 @@ func _build_props() -> void:
 	geo.add_child(props)
 	# Water tower in the south-west corner (legs are the only collision).
 	_prop(props, "neon_water_tower", "WaterTower", Vector3(-14.5, 0, 9.5), 70.0, Vector3(5, 10, 5))
+	_rain_cover("WaterTowerRainCover", Vector3(-14.5, 2.5, 9.5), Vector3(2.2, 2.5, 2.2))
 	for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
 		var leg := Vector2(corner.x, corner.y).rotated(-deg_to_rad(70.0)) * 1.75
 		_collider(props, "WaterTowerLeg%d" % props.get_child_count(), Vector3(0.45, 4.2, 0.45), Vector3(-14.5 + leg.x, 2.1, 9.5 + leg.y))
@@ -1383,6 +1386,17 @@ func _prop(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_d
 	node.position = pos
 	node.rotation.y = deg_to_rad(yaw_degrees)
 	return node
+
+
+## An invisible box (centre, half extents) in group "neon_rain_cover": while the
+## camera is inside it the level's camera-following rain fades out.
+func _rain_cover(cover_name: String, centre: Vector3, half_extents: Vector3) -> void:
+	var cover := Node3D.new()
+	cover.name = cover_name
+	cover.position = centre
+	cover.set_meta("half_extents", half_extents)
+	cover.add_to_group("neon_rain_cover", true)
+	dressing.add_child(cover)
 
 
 func _own(node: Node) -> void:

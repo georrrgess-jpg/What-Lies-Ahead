@@ -232,6 +232,41 @@ def build_gantry():
 MOUNT_W, MOUNT_D = 20.0, 14.0
 
 
+def _service_mast(prefix, base, teal, rust, sdark, steel, vent):
+    """One tail service mast, 1 x 1 m, 3.5 m tall, standing at `base` (x, y, z)."""
+    x, y, z = base
+    white = dmat("Hull", rough=0.45)
+    green, amber = dglow("LampGreen", "#5dff8a", 3.0), dglow("LampAmber", "#ffb03a", 3.0)
+    oct_ = [(-0.38, -0.5), (0.38, -0.5), (0.5, -0.38), (0.5, 0.38), (0.38, 0.5), (-0.38, 0.5), (-0.5, 0.38), (-0.5, -0.38)]
+    body = prism(prefix + "Body", oct_, 2.9, (0, 0, 0), rot=rad(90, 0, 0), m=teal, bevel=0.05)
+    body.location = (x, y, z + 0.35 + 1.45)
+    parts = [
+        box(prefix + "Plinth", (1.3, 1.3, 0.35), (x, y, z + 0.175), bevel=0.06, m=sdark),
+        body,
+        box(prefix + "Shoulder", (1.16, 1.16, 0.14), (x, y, z + 3.1), bevel=0.04, m=sdark),
+        box(prefix + "Cap", (1.24, 1.24, 0.26), (x, y, z + 3.32), bevel=0.08, m=rust),
+        cyl(prefix + "Beacon", 0.12, 0.16, (x, y, z + 3.53), segs=12, bevel=0.03, m=amber),
+    ]
+    # Hazard bands on all four faces at the foot and under the shoulder.
+    for side in range(4):
+        a = math.pi / 2 * side
+        for zz, h in ((z + 0.55, 0.26), (z + 2.85, 0.22)):
+            parts += place(hazard_band(f"{prefix}Haz{side}{int(zz * 10)}", 0.74, h, (0, -0.51, 0), 0.0, depth=0.03, stripe=0.18), (x, y, zz), rot_z=a)
+        # A white service panel with seams on each face.
+        parts += place([box(f"{prefix}Panel{side}", (0.56, 0.03, 0.9), (0, -0.505, 0), bevel=0.01, m=white),
+                        fbox(f"{prefix}Seam{side}", (0.6, 0.035, 0.03), (0, -0.505, -0.2), m=sdark)], (x, y, z + 1.55), rot_z=a)
+    # Umbilical plate facing the rocket (-X), with three connectors and the vent.
+    parts += [
+        box(prefix + "Umbilical", (0.1, 0.7, 0.8), (x - 0.53, y, z + 2.2), bevel=0.03, m=steel),
+        fbox(prefix + "Vent", (0.06, 0.5, 0.22), (x - 0.59, y, z + 2.45), m=vent),
+    ]
+    for i, yy in enumerate((-0.2, 0.0, 0.2)):
+        parts.append(cyl(f"{prefix}Plug{i}", 0.07, 0.16, (x - 0.62, y + yy, z + 2.05), rot=(0, math.pi / 2, 0), segs=10, bevel=0.02, m=sdark))
+    parts.append(sphere(prefix + "LampG", 0.06, (x - 0.52, y - 0.3, z + 2.75), m=green, segs=8, rings=5))
+    parts.append(sphere(prefix + "LampA", 0.06, (x - 0.52, y + 0.3, z + 2.75), m=amber, segs=8, rings=5))
+    return parts
+
+
 def build_launch_mount():
     reset_scene()
     conc, cdark, clight = dmat("Concrete", rough=0.9), dmat("ConcreteDark", rough=0.92), dmat("ConcreteLight", rough=0.9)
@@ -296,11 +331,11 @@ def build_launch_mount():
                  box(f"ClampJaw{i}", (0.4, 0.9, 0.5), (4.6, 0, tz + 1.05), bevel=0.06, m=rdark),
                  box(f"ClampBase{i}", (1.4, 1.6, 0.3), (5.1, 0, tz + 0.7), bevel=0.06, m=sdark)]
         parts += place(clamp, rot_z=a)
-    # Tail service masts beside the table (east side), with vents that glow faintly.
+    # Tail service masts beside the table (east side): chamfered teal towers on a
+    # steel plinth, hazard bands at foot and shoulder, panel seams, an umbilical
+    # plate facing the rocket, a glowing vent and status lamps.
     for k, y in enumerate((-2.6, 2.6)):
-        parts.append(box(f"TsmBody{k}", (1.0, 1.0, 3.2), (5.2, y, tz + 1.6), bevel=0.1, m=teal))
-        parts.append(box(f"TsmCap{k}", (1.2, 1.2, 0.3), (5.2, y, tz + 3.35), bevel=0.08, m=rust))
-        parts.append(fbox(f"TsmVent{k}", (0.08, 0.6, 0.3), (4.68, y, tz + 2.6), m=vent))
+        parts += _service_mast(f"Tsm{k}", (5.2, y, tz), teal, rust, sdark, steel, vent)
     # Vent grilles in the deck (vapour rises from these in the level).
     for i, (x, y) in enumerate(((-4.6, -5.4), (4.6, 5.4), (6.8, -5.3), (-6.6, 5.3))):
         parts.append(fbox(f"Grille{i}", (1.4, 0.9, 0.05), (x, y, H + 0.04), m=sdark))

@@ -31,18 +31,24 @@ from dune_kit import *  # noqa: F401,F403
 
 
 def build_container():
+    """6.1 m cargo container. Both ends read at cover distance: the door end (+X)
+    has two doors with four lock bars, cam keepers, hinges, a door seam and a
+    stencilled number; the blind end (-X) is corrugated with a vent and a
+    hazard placard."""
     reset_scene()
     paint = dmat("ContainerPaint", "#d0582c", rough=0.6)
     rib = dmat("ContainerRib", "#b9b0a4", rough=0.6)
     steel, dark = dmat("SteelDark", rough=0.45, metal=0.4), dmat("HazardDark", rough=0.6)
     white = dmat("ContainerText", "#f3efe6", rough=0.5)
+    shade = dmat("ContainerShade", "#2f2a2e", rough=0.8)
+    hazard = dmat("Hazard", rough=0.5)
     L, W, H = 6.1, 2.44, 2.6
     parts = [box("Body", (L, W, H), (0, 0, H / 2), bevel=0.05, m=paint)]
     n = 18
-    for s in (-1, 1):
+    for s_ in (-1, 1):
         for i in range(n):
             x = -L / 2 + 0.35 + i * (L - 0.7) / (n - 1)
-            parts.append(box(f"Rib{s}{i:02d}", (0.16, 0.08, H - 0.36), (x, s * (W / 2 + 0.02), H / 2), bevel=0.03, segs=1, m=paint))
+            parts.append(box(f"Rib{s_}{i:02d}", (0.16, 0.08, H - 0.36), (x, s_ * (W / 2 + 0.02), H / 2), bevel=0.03, segs=1, m=paint))
     for i in range(6):
         y = -W / 2 + 0.3 + i * (W - 0.6) / 5
         parts.append(box(f"RoofRib{i}", (L - 0.4, 0.14, 0.06), (0, y, H + 0.01), bevel=0.02, segs=1, m=paint))
@@ -51,20 +57,52 @@ def build_container():
         for y in (-W / 2, W / 2):
             for z in (0.12, H - 0.12):
                 parts.append(box(f"Corner{x}{y}{z}", (0.2, 0.2, 0.24), (x * 0.985, y * 0.97, z), bevel=0.03, segs=1, m=steel))
-    for s in (-1, 1):
-        parts.append(box(f"TopRail{s}", (L, 0.12, 0.16), (0, s * W / 2, H - 0.08), bevel=0.02, segs=1, m=paint))
-        parts.append(box(f"BotRail{s}", (L, 0.12, 0.2), (0, s * W / 2, 0.1), bevel=0.02, segs=1, m=steel))
-    # Door end (+X) with four locking bars.
-    parts.append(box("DoorFrame", (0.1, W - 0.1, H - 0.2), (L / 2 + 0.02, 0, H / 2), bevel=0.02, m=paint))
+    for s_ in (-1, 1):
+        parts.append(box(f"TopRail{s_}", (L, 0.12, 0.16), (0, s_ * W / 2, H - 0.08), bevel=0.02, segs=1, m=paint))
+        parts.append(box(f"BotRail{s_}", (L, 0.12, 0.2), (0, s_ * W / 2, 0.1), bevel=0.02, segs=1, m=steel))
+    # Door end (+X): header and sill, two door leaves split down the middle.
+    xd = L / 2
+    parts.append(box("DoorHeader", (0.16, W, 0.24), (xd + 0.04, 0, H - 0.14), bevel=0.03, m=steel))
+    parts.append(box("DoorSill", (0.16, W, 0.2), (xd + 0.04, 0, 0.12), bevel=0.03, m=steel))
+    for s_ in (-1, 1):
+        y0 = s_ * W / 4
+        parts.append(box(f"Leaf{s_}", (0.08, W / 2 - 0.12, H - 0.5), (xd + 0.05, y0, H / 2), bevel=0.02, m=paint))
+        # Pressed panels on each leaf (shadowed recesses).
+        for k in range(3):
+            parts.append(fbox(f"LeafPanel{s_}{k}", (0.02, W / 2 - 0.34, 0.5), (xd + 0.1, y0, 0.55 + k * 0.62), m=shade))
+        # Hinges on the outer edge of each leaf.
+        for k, z in enumerate((0.45, 1.05, 1.65, 2.2)):
+            parts.append(box(f"Hinge{s_}{k}", (0.12, 0.14, 0.18), (xd + 0.1, s_ * (W / 2 - 0.08), z), bevel=0.02, segs=1, m=steel))
+    parts.append(fbox("DoorSplit", (0.04, 0.05, H - 0.5), (xd + 0.1, 0, H / 2), m=dark))
+    # Four lock bars with cam keepers top and bottom and a handle each.
     for i in range(4):
         y = -W / 2 + 0.35 + i * (W - 0.7) / 3
-        parts.append(rod(f"LockBar{i}", (L / 2 + 0.1, y, 0.25), (L / 2 + 0.1, y, H - 0.25), 0.035, m=rib))
-        parts.append(box(f"LockHandle{i}", (0.06, 0.18, 0.08), (L / 2 + 0.14, y + 0.08, 1.2), bevel=0.02, segs=1, m=rib))
-    parts.append(fbox("DoorSplit", (0.06, 0.04, H - 0.3), (L / 2 + 0.08, 0, H / 2), m=dark))
+        parts.append(rod(f"LockBar{i}", (xd + 0.14, y, 0.28), (xd + 0.14, y, H - 0.28), 0.045, m=rib))
+        for z in (0.32, H - 0.32):
+            parts.append(box(f"Keeper{i}{z}", (0.12, 0.16, 0.12), (xd + 0.13, y, z), bevel=0.02, segs=1, m=steel))
+        parts.append(box(f"LockHandle{i}", (0.07, 0.26, 0.09), (xd + 0.2, y + 0.12, 1.2), bevel=0.02, segs=1, m=rib))
+        parts.append(box(f"HandleClip{i}", (0.08, 0.08, 0.16), (xd + 0.17, y + 0.24, 1.2), bevel=0.02, segs=1, m=steel))
+    # Stencilled number and a data plate on the doors.
+    parts.append(text("DoorCode", "LP9 0418", 0.24, 0.02, (xd + 0.1, 0, H - 0.52), rot=(0, 0, math.pi / 2), m=white))
+    parts.append(box("DataPlate", (0.03, 0.4, 0.26), (xd + 0.1, -W / 4, 0.95), bevel=0.01, m=white))
+    # Blind end (-X): corrugated end wall, a vent and a hazard placard.
+    xb = -L / 2
+    parts += corrugated("End", W - 0.3, H - 0.5, (xb - 0.02, 0, 0.25), rot_z=-math.pi / 2, pitch=0.24, depth=0.05, m=paint)
+    parts.append(box("EndHeader", (0.14, W, 0.22), (xb - 0.03, 0, H - 0.13), bevel=0.03, m=steel))
+    parts.append(box("EndSill", (0.14, W, 0.2), (xb - 0.03, 0, 0.12), bevel=0.03, m=steel))
+    parts.append(box("Vent", (0.06, 0.5, 0.18), (xb - 0.1, -0.6, H - 0.45), bevel=0.02, m=steel))
+    for k in range(3):
+        parts.append(fbox(f"VentSlot{k}", (0.02, 0.42, 0.03), (xb - 0.135, -0.6, H - 0.5 + k * 0.05), m=shade))
+    placard = box("Placard", (0.04, 0.4, 0.4), (0, 0, 0), bevel=0.01, m=white)
+    placard.matrix_world = Matrix.Translation((xb - 0.08, 0.55, 1.4)) @ Matrix.Rotation(math.pi / 4, 4, "X") @ placard.matrix_basis
+    inner = box("PlacardInner", (0.05, 0.3, 0.3), (0, 0, 0), bevel=0.0, m=hazard)
+    inner.matrix_world = Matrix.Translation((xb - 0.085, 0.55, 1.4)) @ Matrix.Rotation(math.pi / 4, 4, "X") @ inner.matrix_basis
+    parts += [placard, inner]
+    parts.append(text("EndCode", "DUNE LINES", 0.2, 0.02, (xb - 0.1, 0, 0.62), rot=(0, 0, -math.pi / 2), m=white))
     # Stencils on both long sides.
-    for s, rot in ((-1, 0.0), (1, math.pi)):
-        parts.append(text(f"Logo{s}", "DUNE LINES", 0.42, 0.04, (-0.6 * -s, s * (W / 2 + 0.07), H - 0.6), rot=(0, 0, rot), m=white))
-        parts.append(text(f"Code{s}", "LP9 0418", 0.2, 0.03, (1.6 * -s, s * (W / 2 + 0.07), 0.55), rot=(0, 0, rot), m=white))
+    for s_, rot in ((-1, 0.0), (1, math.pi)):
+        parts.append(text(f"Logo{s_}", "DUNE LINES", 0.42, 0.04, (-0.6 * -s_, s_ * (W / 2 + 0.07), H - 0.6), rot=(0, 0, rot), m=white))
+        parts.append(text(f"Code{s_}", "LP9 0418", 0.2, 0.03, (1.6 * -s_, s_ * (W / 2 + 0.07), 0.55), rot=(0, 0, rot), m=white))
     save("dune_container", [merge("Container", parts)])
 
 
