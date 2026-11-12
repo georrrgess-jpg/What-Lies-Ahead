@@ -1,7 +1,8 @@
 class_name WeaponView
 extends Node3D
 ## First-person viewmodel: shows the held weapon and arms, applies mastery
-## cosmetics, and animates sway, bob, recoil, reloads and the muzzle flash.
+## cosmetics, and animates sway, bob, recoil, reloads, the muzzle flash, the
+## lower/raise of a weapon switch, charging and beams.
 ##
 ## The whole rig is scaled down and held very close to the camera. On screen it
 ## looks identical, but it can no longer poke through walls or zombies.
@@ -30,6 +31,10 @@ var _glow_mats: Array[StandardMaterial3D] = []   # per-instance copies of the ce
 var _glow_base := 2.6
 var _holo_mats := {}                               # part name -> ShaderMaterial
 var _rest := {}            # node -> rest Transform3D, for reload animations
+var _pending: WeaponData   # weapon to show once the old one is lowered
+var _reload_player: Object # the running custom reload (WeaponData.reload_script)
+var _lowering := false
+var _time := 0.0
 ## Where the sight sits in model space; aiming puts this point on the screen centre.
 var _sight_local := Vector3(0, 0.13, 0)
 
@@ -48,7 +53,23 @@ func add_sway(mouse_delta: Vector2) -> void:
 	_sway = _sway.limit_length(0.05)
 
 
+## Shows `weapon`. If another weapon is up, it is lowered out of view first
+## (WeaponController.LOWER_TIME), then the new one is raised over its equip_time.
 func show_weapon(weapon: WeaponData) -> void:
+	if _lowering and weapon == data:
+		_lowering = false
+		_pending = null
+		return
+	if model and data and weapon != data and is_visible_in_tree():
+		_pending = weapon
+		_lowering = true
+		_kill_reload_tween()
+		_reset_parts()
+		return
+	_build_model(weapon)
+
+
+func _build_model(weapon: WeaponData) -> void:
 	data = weapon
 	_kill_reload_tween()
 	if model:
@@ -93,6 +114,8 @@ func muzzle_position() -> Vector3:
 func on_fired(weapon: WeaponData) -> void:
 	_kick = minf(_kick + weapon.view_kick, weapon.view_kick * 2.2)
 	_kick_rot = minf(_kick_rot + weapon.recoil_kick * 1.6, 14.0)
+	if weapon.beam:
+		return
 	_flash_time = 0.05
 	if _flash:
 		_flash.visible = Settings.flash_scale() > 0.05
@@ -106,7 +129,16 @@ func on_fired(weapon: WeaponData) -> void:
 func _process(delta: float) -> void:
 	if data == null or model == null:
 		return
-	_raise = move_toward(_raise, 0.0, delta * 4.0)
+	_time += delta
+	if _lowering:
+		_raise = move_toward(_raise, 1.0, delta / WeaponController.LOWER_TIME)
+		if _raise >= 1.0:
+			_lowering = false
+			_build_model(_pending)
+			_pending = null
+			return
+	else:
+		_raise = move_toward(_raise, 0.0, delta / maxf(0.05, data.equip_time))
 	_kick = lerpf(_kick, 0.0, 1.0 - exp(-14.0 * delta))
 	_kick_rot = lerpf(_kick_rot, 0.0, 1.0 - exp(-12.0 * delta))
 	_sway = _sway.lerp(Vector2.ZERO, 1.0 - exp(-7.0 * delta))
@@ -117,7 +149,8 @@ func _process(delta: float) -> void:
 	var bob := Vector3(sin(_bob_time * 0.5) * 0.012, absf(cos(_bob_time * 0.5)) * -0.012, 0.0) * moving
 	var ease_raise := _raise * _raise
 
-	var hip_pos := data.view_position + bob \
+	var charge := _weapon_state(delta)
+	var hip_pos := data.view_position + bob + charge \
 		+ Vector3(-_sway.x, _sway.y - ease_raise * 0.45, _kick)
 	var hip_rot := data.view_rotation_degrees \
 		+ Vector3(_kick_rot + ease_raise * -35.0 + _sway.y * 60.0, -_sway.x * 80.0, -_sway.x * 60.0)
@@ -129,7 +162,7 @@ func _process(delta: float) -> void:
 	var ads_pos := Vector3(0, 0, -data.ads_depth / VIEW_SCALE) - _sight_local \
 		+ Vector3(-_sway.x * 0.3, _sway.y * 0.3, _kick * 0.5) + bob * 0.15
 	var ads_rot := Vector3(_kick_rot * 0.35, 0.0, 0.0)
-	_holder.position = hip_pos.lerp(ads_pos, aim)
+	_holder.position = hip_pos.lerp(ads_pos + charge * 0.4, aim)
 	_holder.rotation_degrees = hip_rot.lerp(ads_rot, aim)
 
 	if _flash_time > 0.0:
@@ -139,6 +172,26 @@ func _process(delta: float) -> void:
 				_flash.visible = false
 			if _flash_light:
 				_flash_light.visible = false
+
+
+## Charge, heat and beam feedback. Returns the viewmodel offset for this frame
+## (a pull-back and tremble while charging).
+func _weapon_state(delta: float) -> Vector3:
+	var w := player.weapons if player else null
+	if w == null or w.current != data:
+		return Vector3.ZERO
+	var charge := w.charge_progress()
+	var reloading := _reload_tween != null and _reload_tween.is_valid()
+	if not reloading and (charge > 0.0 or data.uses_heat() or data.charge_time > 0.0):
+		var flicker := 0.85 + 0.15 * sin(_time * 45.0)
+		_set_glow(1.0 + charge * charge * 2.4 * flicker + w.heat() * 1.2)
+	if w.is_beaming() and _flash:
+		_flash.visible = Settings.flash_scale() > 0.05
+		_flash.scale = Vector3.ONE * randf_range(0.5, 0.75) * lerpf(0.5, 1.0, Settings.flash_scale())
+		_flash.rotate_object_local(Vector3.UP, delta * 9.0)
+		_flash_time = 0.06
+	var shake := charge * charge * 0.006
+	return Vector3(randf_range(-shake, shake), randf_range(-shake, shake), charge * 0.035)
 
 
 # --- reload animations ------------------------------------------------------
@@ -152,7 +205,9 @@ func play_reload(weapon: WeaponData, duration: float) -> void:
 	_reset_parts()
 	_reload_tween = create_tween().set_parallel(true)
 	if weapon.reload_script:
-		weapon.reload_script.new().play(self, duration)
+		# Kept until the next reload so callbacks bound to it stay valid.
+		_reload_player = weapon.reload_script.new()
+		_reload_player.play(self, duration)
 		return
 	match weapon.reload_style:
 		&"side_swap": _reload_vent_purge(duration)
@@ -220,7 +275,8 @@ func _set_glow(k: float) -> void:
 		m.emission_energy_multiplier = _glow_base * k
 
 
-func _set_holo(part_name: String, k: float) -> void:
+## `k` comes first so tween_method can drive it with the part name bound.
+func _set_holo(k: float, part_name: String) -> void:
 	if _holo_mats.has(part_name):
 		_holo_mats[part_name].set_shader_parameter("materialize", k)
 
@@ -268,9 +324,8 @@ func _holo_build(part_name: String, t0: float, t1: float, d: float) -> void:
 	var node := _part(part_name)
 	if node == null:
 		return
-	_at(t0, d, func(): node.visible = true; _set_holo(part_name, 0.0))
-	# (bind() would append part_name after the tweened value, so use a lambda.)
-	_reload_tween.tween_method(func(k: float): _set_holo(part_name, k), 0.0, 1.0, maxf(0.001, (t1 - t0) * d)).set_delay(t0 * d)
+	_at(t0, d, func(): node.visible = true; _set_holo(0.0, part_name))
+	_reload_tween.tween_method(_set_holo.bind(part_name), 0.0, 1.0, maxf(0.001, (t1 - t0) * d)).set_delay(t0 * d)
 
 
 ## Swap a hologram for the real part: hide the holo, show the solid one, flare.

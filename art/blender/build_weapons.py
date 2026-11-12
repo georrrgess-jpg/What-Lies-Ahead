@@ -14,7 +14,11 @@ by scripts/player/weapon_view.gd and scripts/player/weapon_cosmetics.gd:
   Arms        ArmR, ArmL (dark glove, pink cuff)
   Decal       emblem, hidden unless a decal is equipped
   Empties     Muzzle (barrel tip), SightPoint (eye line when aimed),
-              EjectPoint (where spent cells fly from), VentPoint (steam origin)
+              EjectPoint (where spent cells fly from), VentPoint (steam origin),
+              CharmPoint (left side toward the rear, below a small steel loop:
+              weapon charms hang from it)
+
+The newer weapons are built by build_weapons_arsenal.py with the same contract.
 
 *Holo parts are hidden copies of the energy cell; the game shows them with a
 hologram shader while a new cell "prints" in during the reload.
@@ -132,6 +136,13 @@ def holo_copy(parts, suffix="Holo"):
     return out
 
 
+def charm_loop(loc, m, side=-1.0):
+    """Small steel loop on the weapon's side that a charm hangs from (CharmPoint sits just under it)."""
+    x, y, z = loc
+    return [torus("CharmLoop", 0.009, 0.0028, (x, y, z), rot=rad(0, 90, 0), m=m, major_segs=12, minor_segs=5),
+            box("CharmLoopBase", (0.006, 0.016, 0.01), (x - side * 0.004, y, z - 0.004), bevel=0.002, m=m)]
+
+
 def finish(name, groups, empties, decal_parent=None):
     """groups: {node_name: (parts, pivot, parent_name_or_None)}."""
     exports = {}
@@ -177,6 +188,7 @@ def build_pulse_pistol():
     for i in range(4):
         shell.append(box(f"GripRidge{i}", (0.078, 0.012, 0.008), (0, -0.04 + i * 0.002, -0.06 - i * 0.03), rot=grip_rot, bevel=0.002, m=M["dark"]))
     shell += screws("Screw", [(-0.04, 0.03, -0.01), (-0.04, 0.2, -0.01)], M["steel"])
+    shell += charm_loop((-0.044, 0.005, 0.02), M["steel"])
 
     slide_outline = [(-0.045, 0.032), (0.258, 0.032), (0.258, 0.085), (0.23, 0.113), (-0.03, 0.113), (-0.048, 0.098)]
     slide = [
@@ -219,6 +231,7 @@ def build_pulse_pistol():
         "SightPoint": ((0, -0.03, 0.134), None),
         "EjectPoint": ((0, -0.03, -0.24), None),
         "VentPoint": ((-0.05, 0.16, 0.08), None),
+        "CharmPoint": ((-0.047, 0.005, 0.009), None),
     }
     finish("pulse_pistol", groups, empties)
 
@@ -268,6 +281,7 @@ def build_ion_carbine():
     for i in range(8):
         shell.append(box(f"RailNotch{i}", (0.054, 0.008, 0.008), (0, 0.06 + i * 0.038, 0.182), bevel=0.0, m=M["steel"]))
     shell += screws("Screw", [(0.088, 0.1, 0.1), (0.088, 0.34, 0.1), (0.088, 0.1, -0.03), (0.088, 0.34, -0.03)], M["steel"])
+    shell += charm_loop((-0.078, -0.02, 0.0), M["steel"])
 
     # Hinged cage over the cell (hinge along the bottom edge).
     hinge = (-0.1, 0.22, -0.035)
@@ -306,6 +320,7 @@ def build_ion_carbine():
         "SightPoint": ((0, 0.04, 0.234), None),
         "EjectPoint": ((-0.16, 0.22, 0.03), None),
         "VentPoint": ((0.03, 0.215, 0.16), None),
+        "CharmPoint": ((-0.081, -0.02, -0.011), None),
     }
     finish("ion_carbine", groups, empties)
 
@@ -337,6 +352,7 @@ def build_scatter_blaster():
     for i in range(3):
         shell.append(box(f"ShieldSlit{i}", (0.006, 0.03, 0.06), (-0.118, 0.01 + i * 0.05, 0.03), bevel=0.002, m=M["cell"]))
     shell += screws("Screw", [(0.106, -0.04, 0.09), (0.106, 0.12, 0.09)], M["steel"])
+    shell += charm_loop((-0.108, -0.06, 0.0), M["steel"])
 
     barrels = []
     for i, x in enumerate((-0.058, 0.058)):
@@ -394,6 +410,7 @@ def build_scatter_blaster():
         "SightPoint": ((0, 0.05, 0.155), None),
         "EjectPoint": ((0, 0.2, 0.1), None),
         "VentPoint": ((0, 0.39, 0.12), "Barrels"),
+        "CharmPoint": ((-0.111, -0.06, -0.011), None),
     }
     finish("scatter_blaster", groups, empties)
 

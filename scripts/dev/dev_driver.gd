@@ -9,7 +9,8 @@ extends Node
 ##   --weapon=<id>        starter weapon for the bot (default: pulse_pistol)
 ##   --level=<id>         level to play (default: the first one); locks are ignored
 ##   --ring=<m>           radius of the bot's patrol ring around the loadout station
-##   --swap               bot switches weapon at the kiosk every break
+##   --swap               bot swaps the held weapon at the kiosk every break
+##   --switch             bot switches to its other slot whenever it starts a reload
 ##   --aim-error=<deg>    random aim error for the bot (default 1.2)
 ##   --god                bot takes no damage (for flow tests, not for tuning)
 ##   --then=retry|menu    after the results screen, press Retry / Main Menu once
@@ -27,6 +28,9 @@ enum Mode { NONE, CLEAR, DEFEAT, SHOT, PAUSE, ROUTE }
 var mode := Mode.NONE
 var weapon := &"pulse_pistol"
 var swap_each_break := false
+var switch_on_reload := false
+var _switches := 0
+var _switch_cancels := 0
 var aim_error := 1.2
 var god := false
 var then := ""
@@ -83,6 +87,8 @@ func _ready() -> void:
 			weapon = StringName(arg.trim_prefix("--weapon="))
 		elif arg == "--swap":
 			swap_each_break = true
+		elif arg == "--switch":
+			switch_on_reload = true
 		elif arg.begins_with("--aim-error="):
 			aim_error = float(arg.trim_prefix("--aim-error="))
 		elif arg == "--god":
@@ -363,9 +369,7 @@ func _do_break(delta: float) -> void:
 	_break_done = true
 	var before := [_director.tickets, _player.weapons.magazine(), _player.weapons.reserve(), int(_player.health)]
 	if swap_each_break:
-		var list := GameData.weapons()
-		var next := (list.find(_player.weapons.current) + 1) % list.size()
-		_tap("weapon_%d" % (next + 1))
+		_tap("kiosk_next")
 		await get_tree().physics_frame
 		await get_tree().physics_frame
 	if _player.health <= 70.0:
@@ -410,6 +414,8 @@ func _do_fight(delta: float) -> void:
 		_aim_offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * deg_to_rad(aim_error)
 	var aim_point := target.global_position + Vector3(0, (1.0 if randf() < 0.7 else 1.45) * target.data.body_scale, 0)
 	var eye := _player.camera.global_position
+	if w.current.projectile_speed > 0.0:
+		aim_point = _ballistic_aim(target, eye, w.current)
 	var to := aim_point - eye
 	var yaw := atan2(-to.x, -to.z) + _aim_offset.x
 	var pitch := atan2(to.y, Vector2(to.x, to.z).length()) + _aim_offset.y
@@ -420,9 +426,11 @@ func _do_fight(delta: float) -> void:
 
 	var aligned := absf(angle_difference(_player.rotation.y, yaw)) < deg_to_rad(4.0)
 	var dist := to.length()
-	var in_range := dist < (10.0 if w.current.pellets > 1 else 26.0)
-	if aligned and in_range and not w.is_reloading():
-		if w.current.automatic:
+	var in_range := dist < _bot_range(w.current)
+	if w.current.charge_time > 0.0:
+		_fire_charge(w, target, aligned, in_range, dist)
+	elif aligned and in_range and not w.is_reloading():
+		if w.current.automatic or w.current.beam:
 			_press("fire")
 		else:
 			# Semi-auto: click, release, click...
@@ -433,8 +441,59 @@ func _do_fight(delta: float) -> void:
 				_release("fire")
 	else:
 		_release("fire")
-	if w.magazine() == 0 and w.reserve() > 0 and not w.is_reloading():
+	if w.magazine() == 0 and w.reserve() > 0 and not w.is_reloading() and not w.current.uses_heat():
 		_tap("reload")
+	if switch_on_reload and w.is_reloading() and w.reload_progress() < 0.5:
+		_switch_slot(w)
+
+
+## How close a target must be before the bot opens fire with this weapon.
+func _bot_range(data: WeaponData) -> float:
+	if data.pellets > 1:
+		return 10.0
+	if data.beam or data.chain_count > 0:
+		return minf(data.max_range * 0.85, 17.0)
+	if data.projectile_speed > 0.0:
+		return 21.0
+	return 26.0
+
+
+## Charge weapons: hold to charge, release once charged enough and on target.
+## Fast or close zombies get a quicker, weaker shot.
+func _fire_charge(w: WeaponController, target: Zombie, aligned: bool, in_range: bool, dist: float) -> void:
+	if w.is_reloading() or not in_range:
+		_release("fire")
+		return
+	var want := 1.0 if dist > 7.0 and target.data.move_speed < 4.0 else 0.45
+	if w.is_charging() and w.charge_progress() >= want and aligned:
+		_release("fire")
+	else:
+		_press("fire")
+
+
+## Aim point for a lobbed projectile: lead the target and lift the aim to
+## cancel the drop over the flight time.
+func _ballistic_aim(target: Zombie, eye: Vector3, data: WeaponData) -> Vector3:
+	var p := target.global_position + Vector3.UP * 0.7 * target.data.body_scale
+	var t := eye.distance_to(p) / maxf(1.0, data.projectile_speed)
+	p += target.velocity * t * 0.8
+	p.y += 0.5 * data.projectile_gravity * t * t - data.projectile_loft * t
+	return p
+
+
+## Switches to the other slot mid-reload (faster than waiting), if it has energy.
+func _switch_slot(w: WeaponController) -> void:
+	var other := w.slot_weapon(1 - w.active_slot)
+	if other == null or w.ammo_of(other.id).x <= 0:
+		return
+	_switches += 1
+	_tap("weapon_%d" % (2 - w.active_slot))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if not w.is_reloading() and w.current == other:
+		_switch_cancels += 1
+	if _switches % 10 == 1:
+		print("[dev] switch %d: reload cancelled=%s now %s %d/%d" % [_switches, not w.is_reloading(), w.current.id, w.magazine(), w.reserve()])
 
 
 func _pick_target() -> Zombie:
@@ -571,9 +630,9 @@ func _after_run() -> void:
 			for u in row["unlocks"]:
 				unlocks.append(String(u.id))
 			rows.append("%s +%dxp %dkills rank %d->%d unlocks=%s" % [row["weapon"].id, row["xp_gained"], row["kills"], row["rank_before"], row["rank_after"], unlocks])
-		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d score=%d headshots=%d best_combo=%d" % [
+		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d score=%d headshots=%d best_combo=%d switches=%d/%d" % [
 			r["victory"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_min_health), _director.tickets,
-			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0))])
+			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0)), _switch_cancels, _switches])
 		for line in rows:
 			print("[dev]   ", line)
 		print("[dev] profile: ", JSON.stringify(Profile.data["mastery"]), " levels=", JSON.stringify(Profile.data["levels"]))

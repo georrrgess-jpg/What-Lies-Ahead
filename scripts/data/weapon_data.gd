@@ -1,7 +1,9 @@
 class_name WeaponData
 extends Resource
-## Tuning + presentation for one weapon. All three weapons run through the same
-## combat code in scripts/player/weapon_controller.gd; only this data differs.
+## Tuning + presentation for one weapon. Every weapon runs through the same
+## combat code (scripts/player/weapon_controller.gd and scripts/weapons/);
+## only this data differs. Fire modes (charge, burst, beam, projectile, splash,
+## pierce, chain, status effects, heat) are switched on by their fields below.
 
 ## Stable ID used by saves, mastery and unlocks. Never rename once shipped.
 @export var id: StringName
@@ -56,6 +58,7 @@ extends Resource
 ## First shot after a pause is perfectly accurate (precision weapons).
 @export var first_shot_accurate := true
 ## Reticle drawn for this weapon: "cross", "dot", "circle", "chevron" or "bracket".
+## Charge, chain and burst weapons get extra reticle marks from WeaponHud.
 @export var reticle_style := "cross"
 
 @export_group("Feel")
@@ -90,9 +93,144 @@ extends Resource
 ## Lifetime XP needed to reach rank 1, 2, 3...
 @export var rank_xp: PackedInt32Array = PackedInt32Array([450, 1100, 2300, 4000, 6200])
 
+# --- fire modes (all optional; defaults give a plain hitscan weapon) ----------
+# See scripts/weapons/ for the systems these drive.
+
+@export_group("Handling")
+## Player move speed multiplier while this weapon is held.
+@export var move_speed_scale := 1.0
+## Seconds to raise this weapon after switching to it (nothing fires until then).
+@export var equip_time := 0.32
+## Sound played when this weapon is switched in (empty = the shared switch sound).
+@export var equip_sound: StringName
+
+@export_group("Charge")
+## > 0: hold fire to charge for this many seconds, release to fire.
+@export var charge_time := 0.0
+## Release below this fraction of a full charge and the shot fizzles.
+@export_range(0.0, 1.0) var charge_min_fraction := 0.2
+## Damage multiplier of the weakest allowed charge (a full charge is x1).
+@export var charge_min_damage_scale := 0.2
+## Move speed multiplier while charging.
+@export var charge_move_scale := 0.75
+@export var charge_sound: StringName
+## Played once when the charge is full.
+@export var charge_ready_sound: StringName
+
+@export_group("Burst")
+## Shots fired per trigger pull (1 = no burst).
+@export var burst_count := 1
+## Seconds between the shots of one burst (fire_interval is the pause after it).
+@export var burst_interval := 0.07
+
+@export_group("Beam")
+## Continuous beam: holding fire deals one damage tick every fire_interval and
+## draws a beam from the muzzle to the target.
+@export var beam := false
+## Looping sound while the beam is on.
+@export var beam_loop_sound: StringName
+
+@export_group("Projectile")
+## > 0: shots launch a physical projectile at this speed (m/s) instead of a hitscan ray.
+@export var projectile_speed := 0.0
+## Downward acceleration (m/s²) so the shot arcs.
+@export var projectile_gravity := 0.0
+## Extra upward launch speed (m/s), so a lob clears a low obstacle.
+@export var projectile_loft := 0.0
+## Times the projectile can bounce off scenery before it detonates.
+@export var projectile_bounces := 0
+## Velocity kept after a bounce.
+@export var projectile_bounciness := 0.55
+## Seconds before it detonates on its own.
+@export var projectile_fuse := 2.0
+## Visual radius of the projectile (m).
+@export var projectile_size := 0.12
+@export var bounce_sound: StringName
+
+@export_group("Splash")
+## > 0: hits deal `damage` at the centre of a blast of this radius (m).
+@export var splash_radius := 0.0
+## Damage multiplier at the edge of the blast.
+@export var splash_edge_scale := 0.35
+## Outward knockback at the centre of the blast (m/s).
+@export var splash_push := 4.0
+## Extra damage to a zombie struck directly by the projectile.
+@export var direct_hit_bonus := 0.0
+@export var explosion_sound: StringName
+
+@export_group("Pierce & Chain")
+## Extra zombies a shot passes through after the first.
+@export var pierce := 0
+## Damage multiplier for each zombie a shot has already passed through.
+@export var pierce_falloff := 0.85
+## Extra zombies a hit arcs to (chain lightning).
+@export var chain_count := 0
+## Max distance of one chain jump (m).
+@export var chain_range := 6.0
+## Damage multiplier per jump.
+@export var chain_falloff := 0.75
+## Shots that miss lock onto the zombie closest to the crosshair inside this
+## cone (degrees), within max_range and line of sight. 0 = off.
+@export var seek_cone_degrees := 0.0
+@export var chain_sound: StringName
+
+@export_group("Status")
+## Effect applied on hit: "" (none), "chill" (slows, then freezes) or "shock" (brief slow).
+@export var status_effect: StringName
+## Status build-up per hit (chill: 1.0 = frozen).
+@export var status_amount := 0.0
+## Seconds a frozen zombie stays frozen / a shocked zombie stays shocked.
+@export var status_duration := 1.5
+## Damage multiplier frozen zombies take from every weapon.
+@export var frozen_damage_scale := 1.0
+## Killing a frozen zombie shatters it: damage to zombies within 2.5 m.
+@export var shatter_damage := 0.0
+@export var status_sound: StringName
+
+@export_group("Heat")
+## > 0: the magazine is a heat capacity that cools (refills from reserve) at
+## this many rounds per second once the trigger has been released for
+## regen_delay seconds. Running dry overheats it (the reload is the vent).
+@export var regen_rate := 0.0
+@export var regen_delay := 0.4
+
+@export_group("Effects")
+## Shot streak: "bolt" (default tracer), "rail", "lightning", "beam" or "none".
+@export var tracer_style: StringName = &"bolt"
+## Impact on scenery: "spark", "frost", "arc" or "rail".
+@export var impact_style: StringName = &"spark"
+
 
 func max_rank() -> int:
 	return rank_xp.size()
+
+
+## Damage one trigger pull deals to a single target (full charge, every pellet
+## and every shot of a burst, body hits at close range).
+func burst_damage() -> float:
+	return damage * pellets * burst_count + direct_hit_bonus
+
+
+## Seconds from one trigger pull to the next while holding or clicking fast.
+func cycle_time() -> float:
+	return fire_interval + charge_time + (burst_count - 1) * burst_interval
+
+
+## Sustained single-target damage per second while the magazine lasts.
+func damage_per_second() -> float:
+	return burst_damage() / maxf(0.05, cycle_time())
+
+
+## Distance (m) at which the weapon still does most of its work.
+func effective_range() -> float:
+	if projectile_speed > 0.0:
+		return minf(max_range, projectile_speed * projectile_fuse * 0.6)
+	return minf(max_range, falloff_start + (falloff_end - falloff_start) * 0.35)
+
+
+## True for weapons whose magazine is a cooling heat capacity.
+func uses_heat() -> bool:
+	return regen_rate > 0.0
 
 
 func rank_for_xp(xp: int) -> int:

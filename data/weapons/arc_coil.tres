@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/arc_coil.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/arc_coil_reload.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 4
+
+[resource]
+script = ExtResource("1")
+id = &"arc_coil"
+sort_order = 50
+category = "Arc Thrower"
+display_name = "Arc Coil"
+role = "Short-range chain lightning. Each zap locks onto the zombie nearest your crosshair and arcs to three more nearby; shocked zombies stumble. Weak at range and against Bruisers."
+unlock = SubResource("unlock")
+magazine_size = 40
+reserve_start = 160
+reserve_max = 280
+reload_time = 1.9
+emergency_recharge_interval = 0.35
+automatic = true
+fire_interval = 0.13
+damage = 15.0
+pellets = 1
+spread_degrees = 0.6
+spread_bloom = 0.0
+spread_bloom_max = 0.0
+max_range = 17.0
+falloff_start = 12.0
+falloff_end = 17.0
+falloff_min_scale = 0.7
+headshot_multiplier = 1.25
+knockback = 0.25
+ads_fov_scale = 0.88
+ads_time = 0.16
+ads_spread_scale = 0.6
+ads_depth = 0.11
+first_shot_accurate = false
+reticle_style = "circle"
+recoil_kick = 0.22
+recoil_yaw = 0.12
+view_kick = 0.014
+shake = 0.05
+tracer_color = Color(0.72, 1, 0.26, 1)
+tracer_width = 0.075
+view_position = Vector3(0.27, -0.27, -0.66)
+view_rotation_degrees = Vector3(0, 0, -3)
+fire_sound = &"weap_arc_fire"
+reload_sound = &"weap_arc_reload"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.08
+move_speed_scale = 0.96
+equip_time = 0.32
+chain_count = 3
+chain_range = 6.5
+chain_falloff = 0.78
+seek_cone_degrees = 8.0
+chain_sound = &"weap_arc_chain"
+status_effect = &"shock"
+status_duration = 0.35
+tracer_style = &"lightning"
+impact_style = &"arc"
+viewmodel = ExtResource("3")
+reload_script = ExtResource("4")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
