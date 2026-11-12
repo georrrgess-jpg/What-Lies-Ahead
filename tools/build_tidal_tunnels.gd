@@ -1260,7 +1260,7 @@ func _omni(parent: Node3D, lname: String, pos: Vector3, color: Color, energy: fl
 # ---------------------------------------------------------------------------
 
 func _build_exit() -> void:
-	var portal: Node3D = (load("res://scenes/props/portal.tscn") as PackedScene).instantiate()
+	var portal: Node3D = (load("res://scenes/props/aqua_portal.tscn") as PackedScene).instantiate()
 	portal.name = "Portal"
 	geo.add_child(portal)
 	portal.position = Vector3(0, MEZZ_Y, Z1 - 1.0)

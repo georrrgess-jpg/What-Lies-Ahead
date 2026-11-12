@@ -1281,7 +1281,7 @@ func _halo_mesh() -> Mesh:
 # ---------------------------------------------------------------------------
 
 func _build_exit() -> void:
-	var portal: Node3D = (load("res://scenes/props/portal.tscn") as PackedScene).instantiate()
+	var portal: Node3D = (load("res://scenes/props/frost_portal.tscn") as PackedScene).instantiate()
 	portal.name = "Portal"
 	geo.add_child(portal)
 	portal.position = Vector3(-6.0, 0, 21.4)

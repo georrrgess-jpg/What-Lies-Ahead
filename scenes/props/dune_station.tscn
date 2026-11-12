@@ -1,10 +1,11 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/props/prize_kiosk.gd" id="1"]
 [ext_resource type="PackedScene" path="res://art/models/dune_station.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/props/station_opener.gd" id="3"]
 
 [sub_resource type="CylinderShape3D" id="body_shape"]
-radius = 2.9
+radius = 4.0
 height = 5.6
 
 [sub_resource type="CylinderShape3D" id="zone_shape"]
@@ -29,6 +30,15 @@ script = ExtResource("1")
 beacon_height_offset = -2.4
 
 [node name="Model" parent="." instance=ExtResource("2")]
+
+[node name="HatchOpener" type="Node" parent="."]
+script = ExtResource("3")
+hinge = NodePath("../Model/Hatch")
+open_rotation_degrees = Vector3(123, 0, 0)
+duration = 0.9
+open_transition = 9
+show_when_open = Array[NodePath]([NodePath("../Model/OpenLamps")])
+show_when_closed = Array[NodePath]([NodePath("../Model/ClosedLamps")])
 
 [node name="Body" type="StaticBody3D" parent="."]
 
