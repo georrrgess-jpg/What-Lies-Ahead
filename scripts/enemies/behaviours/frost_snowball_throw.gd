@@ -54,13 +54,19 @@ func on_physics(z: Zombie, delta: float) -> bool:
 
 
 func on_hit(z: Zombie, amount: float, _hit_position: Vector3, headshot: bool) -> float:
-	if headshot and _winding > 0.0:
-		_winding = 0.0
-		_cool = cooldown * 0.6
-		_drop_ball()
-		z.play_animation(&"Hit", 0.05)
-		Sfx.play_at(&"frost_snowball_hit", z.global_position + Vector3.UP * 2.0, -4.0, 1.2)
+	if headshot:
+		interrupt(z)
 	return amount
+
+
+func interrupt(z: Zombie) -> void:
+	if _winding <= 0.0:
+		return
+	_winding = 0.0
+	_cool = cooldown * 0.6
+	_drop_ball()
+	z.play_animation(&"Hit", 0.05)
+	Sfx.play_at(&"frost_snowball_hit", z.global_position + Vector3.UP * 2.0, -4.0, 1.2)
 
 
 func on_death(_z: Zombie) -> void:

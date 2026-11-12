@@ -35,3 +35,10 @@ func on_attack(_z: Zombie, _hit_player: bool) -> void:
 ## Called once on death (before the death animation).
 func on_death(_z: Zombie) -> void:
 	pass
+
+
+## Called when something knocks the zombie out of its telegraph (a freeze,
+## a heavy stagger). Cancel any attack that is winding up but not yet
+## released; leave moves already in flight alone.
+func interrupt(_z: Zombie) -> void:
+	pass

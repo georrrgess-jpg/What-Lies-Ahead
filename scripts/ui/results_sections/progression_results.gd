@@ -4,9 +4,7 @@ extends PanelContainer
 ## bar filling up (with a flash and fanfare for every level gained), the XP
 ## breakdown, mastery bonuses, challenges completed this run and new rewards.
 ##
-## build() returns an empty placeholder for the results column; the card
-## itself sits on its own CanvasLayer at the right edge of the screen, so it
-## adds no height to the shared results column.
+## It sits in the results screen's scrolling side column, above the player card.
 
 const WIDTH := 344.0
 const FILL_TIME := 2.4
@@ -30,25 +28,10 @@ static func build(result: Dictionary) -> Control:
 	var summary := Progression.settle(result)
 	if summary.is_empty():
 		return null
-	var placeholder := Control.new()
-	placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var layer := CanvasLayer.new()
-	layer.layer = 41
-	placeholder.add_child(layer)
-	var screen := Control.new()
-	screen.theme = UiKit.theme()
-	screen.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	layer.add_child(screen)
 	var section := ProgressionResultsSection.new()
 	section._summary = summary
-	screen.add_child(section)
-	section.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE)
-	section.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	section.grow_vertical = Control.GROW_DIRECTION_BOTH
-	section.offset_right = -24.0
-	section.offset_left = -24.0 - WIDTH
-	return placeholder
+	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return section
 
 
 func _init() -> void:

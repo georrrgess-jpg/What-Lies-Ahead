@@ -58,6 +58,14 @@ func is_winding_up() -> bool:
 	return _phase == Phase.TUCK or _phase == Phase.RUSH
 
 
+## Breaks the tuck (not a rush already under way).
+func interrupt(z: Zombie) -> void:
+	if _phase == Phase.TUCK:
+		_phase = Phase.NONE
+		_cool = cooldown * 0.5
+		z.play_animation(z.data.move_animation, 0.15)
+
+
 func _tuck(z: Zombie, delta: float) -> bool:
 	_time -= delta
 	# Track the player until the heading locks, then commit to the line.

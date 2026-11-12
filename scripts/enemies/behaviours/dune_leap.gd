@@ -68,6 +68,13 @@ func is_winding_up() -> bool:
 	return _wind > 0.0 or _flight >= 0.0
 
 
+## Only the crouch can be broken; a leap already in the air lands.
+func interrupt(z: Zombie) -> void:
+	if _wind > 0.0:
+		_wind = 0.0
+		z.play_animation(z.data.move_animation, 0.15)
+
+
 func is_airborne() -> bool:
 	return _flight >= 0.0
 

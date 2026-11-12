@@ -104,6 +104,17 @@ func _discharge(z: Zombie) -> void:
 	Sfx.play_at(zap_sound, centre, 2.0, randf_range(0.95, 1.08))
 
 
+func interrupt(_z: Zombie) -> void:
+	if _charge <= 0.0:
+		return
+	_charge = 0.0
+	_cool = cooldown * 0.5
+	if _ring:
+		_ring.visible = false
+	if _hat:
+		_hat.material_override = null
+
+
 func on_death(_z: Zombie) -> void:
 	_charge = 0.0
 	if _ring:

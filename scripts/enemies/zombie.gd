@@ -174,12 +174,24 @@ func take_hit(amount: float, hit_position: Vector3, direction: Vector3, weapon_i
 		_die(weapon_id, hit_position)
 		return true
 	# A heavy hit knocks a zombie out of its windup: the swipe never lands.
-	if state == State.WINDUP and _knock.length() >= STAGGER_PUSH and not _struck:
-		_set_state(State.RECOVER)
+	if _knock.length() >= STAGGER_PUSH and is_winding_up():
+		interrupt()
 		_play_hit_reaction()
 	elif state == State.CHASE and (_knock.length() >= STAGGER_PUSH or randf() < 0.4):
 		_play_hit_reaction()
 	return false
+
+
+## Knocks the zombie out of any windup that has not landed yet: its melee
+## swipe and its behaviours' telegraphed attacks (freezes and heavy hits).
+func interrupt() -> void:
+	if state == State.WINDUP and not _struck:
+		_set_state(State.RECOVER)
+	if _charge_telegraph > 0.0:
+		_charge_telegraph = 0.0
+		_play(data.move_animation, 0.2)
+	for b in behaviours:
+		b.interrupt(self)
 
 
 func _play_hit_reaction() -> void:

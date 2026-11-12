@@ -71,6 +71,13 @@ func is_winding_up() -> bool:
 	return _crouch > 0.0 or _flight >= 0.0
 
 
+## Breaks the crouch (a leap already in the air lands).
+func interrupt(z: Zombie) -> void:
+	if _crouch > 0.0:
+		_crouch = 0.0
+		z.play_animation(z.data.move_animation, 0.15)
+
+
 ## In range, in sight, and a landing spot on the navmesh beside the player.
 func _wants_leap(z: Zombie) -> bool:
 	var d := z.distance_to_target()

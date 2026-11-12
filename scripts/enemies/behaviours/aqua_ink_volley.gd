@@ -86,3 +86,9 @@ func on_death(_z: Zombie) -> void:
 
 func is_winding_up() -> bool:
 	return _winding > 0.0
+
+
+func interrupt(z: Zombie) -> void:
+	if _winding > 0.0:
+		_winding = 0.0
+		z.play_animation(&"Walk", 0.2)

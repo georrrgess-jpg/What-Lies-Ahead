@@ -94,6 +94,7 @@ func _freeze(weapon: WeaponData) -> void:
 	frozen_left = weapon.status_duration
 	frozen_damage_scale = weapon.frozen_damage_scale
 	shatter_damage = weapon.shatter_damage
+	zombie.interrupt()
 	zombie.process_mode = Node.PROCESS_MODE_DISABLED
 	_show_crystals(true)
 	WeaponFx.frost_puff(zombie.get_parent(), zombie.global_position + Vector3.UP * 1.0, 1.6)
