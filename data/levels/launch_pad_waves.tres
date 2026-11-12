@@ -67,23 +67,23 @@ spawns = {
 }
 spawn_interval = 1.8
 burst = 1
-max_alive = 9
-speed_scale = 1.05
+max_alive = 10
+speed_scale = 1.08
 late_types_after = 0.15
 banner = "WAVE 5 — RADIATION LEAK: STAY OUT OF THE GLOW"
 
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"dune_jet_mechanic": 6,
+"dune_jet_mechanic": 8,
 "dune_space_cadet": 7,
 "dune_hazmat_worker": 4,
 "tourist_shambler": 4
 }
 spawn_interval = 2.3
 burst = 2
-max_alive = 10
-speed_scale = 1.07
+max_alive = 11
+speed_scale = 1.1
 late_types_after = 0.2
 banner = ""
 
@@ -92,13 +92,13 @@ script = ExtResource("2")
 spawns = {
 "dune_hazmat_worker": 6,
 "dune_space_cadet": 7,
-"dune_jet_mechanic": 7,
+"dune_jet_mechanic": 9,
 "tourist_shambler": 4
 }
 spawn_interval = 2.2
 burst = 2
-max_alive = 11
-speed_scale = 1.08
+max_alive = 12
+speed_scale = 1.12
 late_types_after = 0.15
 banner = "WAVE 7 — HEAVY LIFTERS ON THE PAD"
 
@@ -106,14 +106,14 @@ banner = "WAVE 7 — HEAVY LIFTERS ON THE PAD"
 script = ExtResource("2")
 spawns = {
 "dune_jet_mechanic": 12,
-"dune_space_cadet": 10,
-"dune_hazmat_worker": 6,
+"dune_space_cadet": 8,
+"dune_hazmat_worker": 8,
 "tourist_shambler": 4
 }
-spawn_interval = 2.3
+spawn_interval = 2.1
 burst = 3
 max_alive = 14
-speed_scale = 1.1
+speed_scale = 1.14
 late_types_after = 0.2
 banner = "FINAL WAVE — T-MINUS ZERO: JETPACK SWARM"
 
@@ -123,9 +123,12 @@ waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), S
 prep_seconds = 12.0
 break_seconds = 20.0
 break_refill_fraction = 0.25
-ammo_topup_price = 150
-heal_price = 250
+ammo_topup_price = 180
+heal_price = 280
 heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 22
 wave_bonus_per_wave = 6
+overshield_price = 500
+overshield_amount = 25.0
+damage_boost_price = 500

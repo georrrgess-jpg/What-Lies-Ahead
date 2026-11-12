@@ -121,3 +121,6 @@ heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 20
 wave_bonus_per_wave = 5
+overshield_price = 450
+overshield_amount = 25.0
+damage_boost_price = 400

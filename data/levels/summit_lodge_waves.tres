@@ -84,7 +84,7 @@ spawns = {
 }
 spawn_interval = 2.3
 burst = 2
-max_alive = 9
+max_alive = 10
 speed_scale = 1.08
 late_types_after = 0.2
 banner = ""
@@ -100,8 +100,8 @@ spawns = {
 }
 spawn_interval = 2.2
 burst = 2
-max_alive = 10
-speed_scale = 1.1
+max_alive = 11
+speed_scale = 1.14
 late_types_after = 0.2
 banner = ""
 
@@ -114,10 +114,10 @@ spawns = {
 "lifeguard_runner": 3,
 "tourist_shambler": 3
 }
-spawn_interval = 2.8
+spawn_interval = 2.5
 burst = 3
-max_alive = 12
-speed_scale = 1.05
+max_alive = 13
+speed_scale = 1.1
 late_types_after = 0.15
 banner = "FINAL WAVE — WHITEOUT"
 
@@ -127,9 +127,12 @@ waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), S
 prep_seconds = 12.0
 break_seconds = 20.0
 break_refill_fraction = 0.3
-ammo_topup_price = 150
-heal_price = 250
+ammo_topup_price = 190
+heal_price = 300
 heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 20
 wave_bonus_per_wave = 5
+overshield_price = 600
+overshield_amount = 25.0
+damage_boost_price = 600

@@ -464,7 +464,7 @@ func _play_on(p: AudioStreamPlayer, sound: StringName, volume_db: float, loop: b
 		s.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		s.loop_end = int(s.get_length() * s.mix_rate)
 	p.stream = s
-	p.volume_db = volume_db
+	p.volume_db = volume_db + Sfx.mix_db(sound)
 	p.play()
 
 
