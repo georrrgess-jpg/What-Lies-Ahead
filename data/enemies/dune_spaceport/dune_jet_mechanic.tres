@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/dune_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/dune_jetpack_hop.gd" id="4"]
+
+[sub_resource type="Resource" id="hop"]
+script = ExtResource("4")
+climb_trigger = 1.2
+flame_color = Color(1, 0.6, 0.18, 1)
+min_range = 6.0
+max_range = 20.0
+cooldown = 7.0
+windup = 0.75
+flight_time = 1.25
+apex = 4.5
+land_offset = 2.6
+landing_damage = 10.0
+landing_radius = 2.0
+windup_clip = &"Crouch"
+flight_clip = &"Hover"
+windup_sound = &"dune_jet_ignite"
+launch_sound = &"dune_jet_burn"
+land_sound = &"dune_land_thump"
+dust_color = Color(0.95, 0.78, 0.55, 1)
+
+[resource]
+script = ExtResource("1")
+id = &"dune_jet_mechanic"
+display_name = "Jetpack Mechanic"
+max_health = 105.0
+move_speed = 2.4
+speed_variance = 0.12
+turn_speed = 5.0
+tickets = 18
+score = 200
+xp = 18
+damage = 18.0
+attack_range = 1.7
+attack_reach = 2.4
+attack_windup = 0.7
+attack_recover = 0.9
+lunge_speed = 3.0
+mass = 1.1
+flank_degrees = 60.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Mechanic"
+body_scale = 1.0
+capsule_radius = 0.48
+capsule_height = 1.95
+head_height = 1.25
+shirt_colors = Array[Color]([Color(1, 0.48, 0.16, 1), Color(0.13, 0.62, 0.6, 1), Color(0.2, 0.3, 0.52, 1), Color(0.82, 0.3, 0.2, 1)])
+skin_colors = Array[Color]([Color(0.64, 0.82, 0.29, 1), Color(0.5, 0.78, 0.38, 1), Color(0.48, 0.74, 0.5, 1)])
+accessory_slots = PackedStringArray("Acc_Mechanic_Cap|Acc_Mechanic_Goggles|Acc_Mechanic_Cap+Acc_Mechanic_Goggles|", "Acc_Mechanic_Wrench||")
+move_animation = &"Walk"
+animation_reference_speed = 2.4
+avoidance_radius = 0.6
+behaviours = Array[ExtResource("3")]([SubResource("hop")])
+voice_sounds = Array[StringName]([&"dune_mechanic_grunt_1", &"dune_mechanic_grunt_2"])
+voice_interval = Vector2(3, 7)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"
