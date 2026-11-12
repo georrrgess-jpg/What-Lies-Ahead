@@ -51,7 +51,7 @@ sound = &"prog_rank_prismatic"
 
 [resource]
 script = ExtResource("1")
-rank_xp = PackedInt32Array(600, 1500, 2800, 4600, 7000, 10000, 14000, 19500, 27000, 38000)
+rank_xp = PackedInt32Array(400, 1200, 2400, 4000, 6000, 8500, 11500, 15500, 21000, 28000)
 tiers = Array[ExtResource("2")]([SubResource("bronze"), SubResource("silver"), SubResource("gold"), SubResource("diamond"), SubResource("prismatic")])
 headshot_bonus = 0.5
 multi_kill_bonus = 12

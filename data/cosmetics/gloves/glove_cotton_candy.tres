@@ -1,12 +1,6 @@
-[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
-
-[sub_resource type="Resource" id="req"]
-script = ExtResource("2")
-kind = 1
-amount = 2
 
 [resource]
 script = ExtResource("1")
@@ -15,7 +9,7 @@ display_name = "Cotton Candy"
 description = "Fluffy pink with blue polka dots. Sticky fingers not included."
 slot = &"gloves"
 rarity = 0
-requirement = SubResource("req")
+price = 150
 colors = PackedColorArray(1, 0.7608, 0.8863, 1, 0.5608, 0.8471, 1, 1, 1, 1, 1, 1, 0.1647, 0.1412, 0.251, 1, 0.5608, 0.8471, 1, 1, 1, 1, 1, 1)
 params = {
 "pattern": "dots",

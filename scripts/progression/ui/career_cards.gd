@@ -136,8 +136,8 @@ static func track_card(lvl: int, current: int) -> Control:
 	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name.custom_minimum_size = Vector2(150, 0)
 	v.add_child(name)
-	var kind := item.slot_label() if item else "Pier Pass stamp"
-	v.add_child(UiKit.label(kind, 17, Color(accent, 0.9) if item else UiKit.AMBER))
+	var kind := item.slot_label() if item else Progression.stamp_kind(lvl)
+	v.add_child(UiKit.label("%s  ·  +%d Sparks" % [kind, Progression.level_sparks(lvl)], 17, Color(accent, 0.9) if item else UiKit.AMBER))
 	card.tooltip_text = item.description if item else (stamp[1] if stamp.size() > 1 else "")
 	if is_next:
 		var bar := ProgStyle.bar(8.0, UiKit.CYAN)
@@ -191,7 +191,8 @@ static func weapon_card(w: WeaponData, on_change: Callable) -> Control:
 	var xp_label := UiKit.label(xp_text, 19, UiKit.CREAM)
 	xp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.add_child(xp_label)
-	info.add_child(UiKit.label(_challenge_count(w.id), 19, UiKit.GREEN, true))
+	if not ChallengeBook.of_scope(Challenge.Scope.WEAPON).is_empty():
+		info.add_child(UiKit.label(_challenge_count(w.id), 19, UiKit.GREEN, true))
 	v.add_child(_reward_strip(w, rank, on_change))
 	var next := _next_reward(w.id, rank)
 	if next:
@@ -253,7 +254,51 @@ static func _make_equippable(art: RewardArt, weapon_id: StringName, on_change: C
 			on_change.call())
 
 
-# --- challenges -----------------------------------------------------------------------
+# --- contracts and milestones ---------------------------------------------------------
+
+## The three active contracts side by side (ContractBoard), each with its
+## goal, progress bar and reward.
+static func contracts_row() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	for entry in ContractBoard.active():
+		row.add_child(contract_tile(entry))
+	return row
+
+
+## One active contract: name, goal, progress and what it pays.
+static func contract_tile(entry: Dictionary) -> Control:
+	var template := ContractBoard.template(entry)
+	var done := ContractBoard.is_done(entry)
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.78), Color(UiKit.GREEN if done else Wallet.COLOR_GLOW, 0.6), 16, 2, 12))
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 2)
+	card.add_child(v)
+	var top := HBoxContainer.new()
+	v.add_child(top)
+	var name := UiKit.label(ContractBoard.title(entry).to_upper(), 26, UiKit.GREEN if done else Color.WHITE, true)
+	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(name)
+	var reward := "+%d Sparks  ·  +%s XP" % [template.sparks, ProgStyle.num(template.xp)] if template else ""
+	top.add_child(UiKit.label(reward, 19, Wallet.COLOR, true))
+	var desc := UiKit.label(ContractBoard.describe(entry), 19, UiKit.CREAM)
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(desc)
+	var bar_row := HBoxContainer.new()
+	bar_row.add_theme_constant_override("separation", 10)
+	v.add_child(bar_row)
+	var bar := ProgStyle.bar(12.0, UiKit.GREEN if done else Wallet.COLOR_GLOW)
+	bar.value = ContractBoard.fraction(entry)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bar_row.add_child(bar)
+	var count := "DONE" if done else "%s / %s" % [ProgStyle.num(ContractBoard.progress(entry)), ProgStyle.num(ContractBoard.goal(entry))]
+	bar_row.add_child(UiKit.label(count, 18, UiKit.GREEN if done else Color.WHITE, true))
+	return card
+
+
 
 ## A challenge with its progress bar, XP reward and any cosmetic reward.
 static func challenge_tile(ch: Challenge, weapon_id: StringName, compact := false) -> Control:
@@ -273,7 +318,10 @@ static func challenge_tile(ch: Challenge, weapon_id: StringName, compact := fals
 	var name := UiKit.label(ch.display_name.to_upper(), 24 if compact else 27, UiKit.GREEN if done else Color.WHITE, true)
 	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name)
-	top.add_child(UiKit.label("+%s XP" % ProgStyle.num(ch.xp), 20, UiKit.AMBER, true))
+	var pay := "+%s XP" % ProgStyle.num(ch.xp)
+	if ch.sparks > 0:
+		pay = "+%d Sparks  ·  %s" % [ch.sparks, pay]
+	top.add_child(UiKit.label(pay, 20, UiKit.AMBER, true))
 	var desc := UiKit.label(ch.describe(), 19, UiKit.CREAM)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(desc)

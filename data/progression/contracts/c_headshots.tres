@@ -4,14 +4,15 @@
 
 [resource]
 script = ExtResource("1")
-id = &"w_veteran"
-display_name = "Veteran"
-description = "Get %s kills"
-scope = 1
-stat = &"kills"
+id = &"c_headshots"
+display_name = "Sharp Eye"
+description = "Get %s headshot kills"
+scope = 0
+stat = &"headshots"
 mode = 0
-goal = 500
+goal = 30
 param = 0
-xp = 1500
-mastery_xp = 1200
-sort_order = 240
+xp = 400
+sparks = 50
+mastery_xp = 0
+sort_order = 30

@@ -1,12 +1,6 @@
-[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
-
-[sub_resource type="Resource" id="req"]
-script = ExtResource("2")
-kind = 4
-amount = 500
 
 [resource]
 script = ExtResource("1")
@@ -15,7 +9,7 @@ display_name = "Digital Camo"
 description = "Pixel-perfect woodland camouflage."
 slot = &"weapon_finish"
 rarity = 1
-requirement = SubResource("req")
+price = 400
 colors = PackedColorArray(0.3725, 0.4784, 0.2353, 1, 0.1647, 0.2275, 0.1176, 1)
 params = {
 "shader": "res://art/shaders/skin_digicamo.gdshader",

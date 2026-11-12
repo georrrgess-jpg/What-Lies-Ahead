@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"w_crowd_control"
+display_name = "Crowd Control"
+description = "Get %s multi-kills"
+scope = 1
+stat = &"multi_kills"
+mode = 0
+goal = 5
+param = 2
+xp = 400
+sparks = 50
+mastery_xp = 400
+sort_order = 150
