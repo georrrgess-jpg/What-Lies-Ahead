@@ -1,18 +1,26 @@
 """Synthesises every sound in the game from scratch (no third-party audio).
 
     audio/sfx/*.wav      one-shots: weapons, zombies, arcade cues, UI
-    audio/music/*.ogg    looping pier ambience and the boardwalk music loop
+    audio/music/*.ogg    music loops (each level's loop and its final-wave
+                         variant, the menu theme) and ambience beds
 
     python tools/gen_audio.py        (needs numpy; ffmpeg with libvorbis for the .ogg loops)
 
 Sound names are referenced by StringName from data and scripts (for example a
 weapon's `fire_sound`), so add a new function here and use its name there.
+
+Music and ambience go through master(): an EQ for small speakers, a look-ahead
+peak limiter and loudness normalisation (MUSIC_LUFS, FINAL_LUFS, BED_LUFS), so
+every loop leaves here at the same loudness and the game sets its level
+(data/levels/<level>.tres, audio/mix.tres). Check the whole mix with
+`python3 tools/audio_mix_report.py`.
 """
 import math
 import os
 import subprocess
 import sys
 import wave
+import zlib
 
 import numpy as np
 
@@ -137,8 +145,11 @@ def write_wav(name, x, peak=0.85):
 
 
 def write_ogg(name, stereo, peak=0.8, quality=5):
-    """stereo: array shaped (n, 2). Encoded with ffmpeg/libvorbis."""
-    stereo = stereo * (peak / max(1e-9, np.max(np.abs(stereo))))
+    """stereo: array shaped (n, 2). Encoded with ffmpeg/libvorbis. peak=None
+    writes the samples as they are (already mastered)."""
+    if peak is not None:
+        stereo = stereo * (peak / max(1e-9, np.max(np.abs(stereo))))
+    stereo = np.clip(stereo, -1.0, 32767 / 32768)
     tmp = os.path.join(MUSIC, name + ".tmp.wav")
     with wave.open(tmp, "wb") as w:
         w.setnchannels(2)
@@ -149,6 +160,127 @@ def write_ogg(name, stereo, peak=0.8, quality=5):
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp, "-c:a", "libvorbis", "-q:a", str(quality), out], check=True)
     os.remove(tmp)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Music mastering: every loop is voiced for small speakers, peak-limited and
+# normalised to one loudness, so a level's music_volume_db means the same in
+# every world.
+# ---------------------------------------------------------------------------
+
+MUSIC_LUFS = -15.0     # level loops and the menu theme
+FINAL_LUFS = -14.0     # final-wave variants sit 1 dB hotter
+BED_LUFS = -18.0       # ambience beds
+CEILING_DB = -2.0      # sample-peak ceiling (Vorbis encoding overshoots by up to ~0.7 dB)
+# Music voicing: high-pass the sub rumble small speakers cannot play, thin the
+# 60-180 Hz build-up, and lift 1-5 kHz (melody, hats) and the air above 8 kHz.
+MUSIC_EQ = {"hp": 50.0, "bells": ((100.0, -5.0, 0.7), (2500.0, 3.5, 0.55)), "shelf": (8000.0, 1.5)}
+BED_EQ = {"hp": 40.0}
+
+
+def _eq_gain(n, hp=None, bells=(), shelf=None):
+    f = np.fft.rfftfreq(n, 1.0 / SR)
+    f[0] = 1e-3
+    g = np.ones_like(f)
+    if hp:
+        g /= np.sqrt(1.0 + (hp / f) ** 8)                          # 4th-order Butterworth
+    for fc, gain_db, q in bells:                                    # analog peaking filter
+        a = 10 ** (gain_db / 40.0)
+        w = f / fc
+        g *= np.sqrt(((1 - w * w) ** 2 + (w * a / q) ** 2) / ((1 - w * w) ** 2 + (w / (a * q)) ** 2))
+    if shelf:
+        fc, gain_db = shelf
+        g *= 10 ** (gain_db * (f * f / (f * f + fc * fc)) / 20.0)  # gentle high shelf
+    return g
+
+
+def eq(x, hp=None, bells=(), shelf=None):
+    """Zero-phase FFT EQ of an (n, 2) loop. Circular, so a loop stays seamless."""
+    spec = np.fft.rfft(x, axis=0)
+    spec *= _eq_gain(len(x), hp, bells, shelf)[:, None]
+    return np.fft.irfft(spec, len(x), axis=0)
+
+
+def _k_weight(n):
+    """|H| of the ITU-R BS.1770 K-weighting (+4 dB shelf at 1.5 kHz, 38 Hz high-pass)."""
+    z = np.exp(-1j * 2 * np.pi * np.fft.rfftfreq(n, 1.0 / SR) / SR)
+
+    def biquad(b, a):
+        return np.abs((b[0] + b[1] * z + b[2] * z * z) / (a[0] + a[1] * z + a[2] * z * z))
+
+    a_lin, w0 = 10 ** (4.0 / 40), 2 * np.pi * 1500.0 / SR
+    c, s = np.cos(w0), 2 * np.sqrt(a_lin) * np.sin(w0) / (2 / np.sqrt(2))
+    shelf = biquad([a_lin * ((a_lin + 1) + (a_lin - 1) * c + s), -2 * a_lin * ((a_lin - 1) + (a_lin + 1) * c),
+                    a_lin * ((a_lin + 1) + (a_lin - 1) * c - s)],
+                   [(a_lin + 1) - (a_lin - 1) * c + s, 2 * ((a_lin - 1) - (a_lin + 1) * c), (a_lin + 1) - (a_lin - 1) * c - s])
+    w0 = 2 * np.pi * 38.0 / SR
+    c, alpha = np.cos(w0), np.sin(w0) / (2 * 0.5)
+    return shelf * biquad([(1 + c) / 2, -(1 + c), (1 + c) / 2], [1 + alpha, -2 * c, 1 - alpha])
+
+
+def lufs(x):
+    """Integrated loudness of an (n, 2) loop: K-weighted 400 ms blocks, gated."""
+    k = np.fft.irfft(np.fft.rfft(x, axis=0) * _k_weight(len(x))[:, None], len(x), axis=0)
+    w, h = int(0.4 * SR), int(0.1 * SR)
+    k = np.concatenate([k, k[:w]])
+    c = np.concatenate([np.zeros((1, 2)), np.cumsum(k * k, axis=0)])
+    starts = np.arange(0, len(k) - w + 1, h)
+    blocks = ((c[starts + w] - c[starts]) / w).sum(axis=1)
+    loud = -0.691 + 10 * np.log10(np.maximum(blocks, 1e-12))
+    gated = blocks[loud > -70]
+    rel = -0.691 + 10 * np.log10(gated.mean()) - 10
+    return -0.691 + 10 * np.log10(blocks[(loud > -70) & (loud > rel)].mean())
+
+
+def limit(x, ceiling_db=CEILING_DB, release=0.06, block=32, lookahead=4):
+    """Look-ahead peak limiter for an (n, 2) loop (circular, as the loop plays).
+    Gain is worked out per 32-sample block: a block may not exceed what any
+    block within `lookahead` needs, recovers over `release` seconds and is
+    smoothed across the look-ahead window, so it ramps down before a peak."""
+    ceiling = 10 ** (ceiling_db / 20.0)
+    n = len(x)
+    nb = -(-n // block)
+    padded = np.concatenate([x, x[: nb * block - n]]) if nb * block > n else x
+    peaks = np.abs(padded).reshape(nb, block, -1).max(axis=(1, 2))
+    need = np.minimum(1.0, ceiling / np.maximum(peaks, 1e-12))
+    want = need.copy()
+    for k in range(1, lookahead + 1):
+        want = np.minimum(want, np.minimum(np.roll(need, k), np.roll(need, -k)))
+    coef = math.exp(-block / (release * SR))
+    gain, cur = np.empty(nb), 1.0
+    for _ in range(2):                       # the second lap settles the state at the loop point
+        for i, v in enumerate(want):
+            cur = v if v < cur else v + (cur - v) * coef
+            gain[i] = cur
+    span = lookahead - 1
+    smooth = sum(np.roll(gain, k) for k in range(-span, span + 1)) / (2 * span + 1)
+    per_sample = np.interp(np.arange(n), (np.arange(nb) + 0.5) * block, smooth, period=nb * block)
+    return np.clip(x * per_sample[:, None], -ceiling, ceiling)
+
+
+def master(x, target_lufs, voicing):
+    """EQ, then normalise to `target_lufs` under the peak ceiling."""
+    x = eq(np.asarray(x, dtype=np.float64), **voicing)
+    for _ in range(4):
+        x = limit(x * 10 ** ((target_lufs - lufs(x)) / 20.0))
+    return x
+
+
+def write_music(name, stereo):
+    """Masters and writes a loop. Names ending in _ambience are beds, _final the
+    final-wave variants; anything else is a music loop."""
+    if name.endswith("_ambience"):
+        x = master(stereo, BED_LUFS, BED_EQ)
+    else:
+        x = master(stereo, FINAL_LUFS if name.endswith("_final") else MUSIC_LUFS, MUSIC_EQ)
+    return write_ogg(name, x, peak=None)
+
+
+def seed_for(name, *modules):
+    """Gives each loop its own seeded generator, so editing one never re-rolls another."""
+    r = np.random.default_rng(zlib.crc32(name.encode()))
+    for m in modules:
+        m.rng = r
 
 
 def note(semitones_from_a4):
@@ -462,11 +594,16 @@ def ui_click():
 
 
 def hitmarker():
-    """Tight 2D tick confirming a hit."""
-    out = silence(0.1)
-    place(out, blip(note(31), 0.05, "square", 0.035), 0.0, 0.55)
-    place(out, click(0.015, 5600), 0.0, 0.55)
-    place(out, sweep(260, 140, 0.05, "sine") * env(0.05, 0.001, power=2.0), 0.0, 0.5)
+    """Bright 2D tick confirming a hit: a glassy 3-5 kHz 'tink' over a crisp
+    click and a small 1.2 kHz knock. No low end, so it cuts through sustained
+    fire without masking it. (Exactly one click() call: the noise it draws keeps
+    every later core sound unchanged.)"""
+    out = silence(0.12)
+    place(out, click(0.015, 4400), 0.0, 0.25)
+    place(out, tone(3150, 0.11) * env(0.11, 0.001, 0.1, power=1.2), 0.0, 0.5)
+    place(out, tone(4700, 0.09) * env(0.09, 0.001, 0.08, power=1.4), 0.0, 0.25)
+    place(out, blip(note(31), 0.07, "square", 0.06), 0.0, 0.2)
+    place(out, sweep(1400, 1000, 0.05, "tri") * env(0.05, 0.0005, power=1.3), 0.0, 0.25)
     return out
 
 
@@ -711,6 +848,52 @@ def pier_ambience():
     return loopable(stereo, 1.0)
 
 
+# ---------------------------------------------------------------------------
+# Music instruments shared by every loop (the packs use them too)
+# ---------------------------------------------------------------------------
+
+def kick_click(gain=1.0, centre=3200):
+    """Beater click layered on a kick, so the kick reads on small speakers."""
+    d = 0.012
+    return band(noise(d), centre, centre * 0.5) * env(d, 0.0003, d, power=2.0) * 3.0 * gain
+
+
+def audible_bass(x, amount=0.35, low_cut=220.0, high_cut=2400.0):
+    """A bass note plus its own upper harmonics (soft saturation, band-passed),
+    so speakers that cannot play the fundamental still carry the line."""
+    peak = np.max(np.abs(x)) + 1e-9
+    return x + filt(np.tanh(x / peak * 2.5), low=high_cut, high=low_cut) * peak * amount
+
+
+def clap(seconds=0.22):
+    """Hand clap: three quick noise bursts and a short room tail."""
+    out = silence(seconds)
+    for at in (0.0, 0.010, 0.021):
+        place(out, band(noise(0.012), 1400, 700) * env(0.012, 0.0004, power=1.5), at, 2.2)
+    place(out, band(noise(seconds), 1300, 900) * env(seconds, 0.001, seconds, power=2.5), 0.028, 1.6)
+    return out
+
+
+def cymbal(seconds=1.6):
+    """Crash cymbal: bright noise with a metallic band and a long decay."""
+    n = noise(seconds)
+    return (filt(n, high=5000) + band(n, 3600, 900) * 1.5) * env(seconds, 0.002, seconds, power=2.6)
+
+
+def riser(seconds):
+    """Noise swell that rises into the next phrase."""
+    t = t_axis(seconds)
+    return filt(noise(seconds), high=1500) * (t / seconds) ** 2.2 * np.clip((seconds - t) / 0.01, 0.0, 1.0)
+
+
+def fold_loop(left, right, seconds):
+    """Folds whatever rang past `seconds` back onto the start: a seamless loop."""
+    n = int(seconds * SR)
+    left[: len(left) - n] += left[n:]
+    right[: len(right) - n] += right[n:]
+    return np.stack([left[:n], right[:n]], axis=1)
+
+
 def menu_theme():
     """Menu music: a moody, wide synthwave loop (64 s at 100 BPM), slow
     arpeggios over a pulsing bass, with a brighter B section."""
@@ -726,6 +909,7 @@ def menu_theme():
 
     prog = [(-15, (0, 3, 7)), (-19, (0, 4, 7)), (-12, (0, 4, 7)), (-17, (0, 4, 7))]   # F#m D A C# -> roots from A4
     kick = sweep(120, 40, 0.3, "sine", 0.5) * env(0.3, 0.001, power=2.0)
+    place(kick, kick_click(0.3), 0.0)
     snare = (filt(noise(0.3), high=1200) * 0.7 + tone(180, 0.3) * 0.2) * env(0.3, 0.001, 0.25, power=1.8)
     for bar in range(bars):
         root, triad = prog[(bar // 2) % 4]
@@ -738,7 +922,7 @@ def menu_theme():
                 if b in (1, 3):
                     both(snare, t0 + b * beat, 0.22)
             for h in range(2):
-                both(filt(noise(0.04), high=7500) * env(0.04, 0.0005, power=2.5), t0 + (b + h * 0.5) * beat, 0.08 if h else 0.05, 0.65)
+                both(filt(noise(0.04), high=7500) * env(0.04, 0.0005, power=2.5), t0 + (b + h * 0.5) * beat, 0.11 if h else 0.07, 0.65)
         # Pulsing eighth-note bass.
         for e in range(8):
             x = tone(note(root - 12), beat * 0.45, "saw") * env(beat * 0.45, 0.004, beat * 0.5, power=1.2)
@@ -751,61 +935,91 @@ def menu_theme():
         for e in range(steps):
             n = triad[e % 3] + (12 if (e // 3) % 2 else 0)
             x = tone(note(root + 12 + n), beat * 4 / steps * 0.8, "square") * env(beat * 4 / steps * 0.8, 0.003, beat * 0.4, power=1.4)
-            both(filt(x, low=3500), t0 + e * beat * 4 / steps, 0.07, 0.25 + 0.5 * (e % 2))
+            both(filt(x, low=4500), t0 + e * beat * 4 / steps, 0.07, 0.25 + 0.5 * (e % 2))
         if section_b and bar % 2 == 0:
             for k, (n, at, ln) in enumerate([(19, 0, 1.5), (16, 1.5, 0.5), (14, 2, 2)]):
                 x = tone(note(root + n), ln * beat * 0.95, "saw", 0.006, 5.5) * env(ln * beat * 0.95, 0.02, ln * beat * 1.3, power=0.7, release=0.05)
-                both(filt(x, low=2400), t0 + at * beat, 0.09, 0.55)
+                both(filt(x, low=3000), t0 + at * beat, 0.1, 0.55)
     stereo = np.stack([left, right], axis=1)
     return loopable(stereo, 1.0)
 
 
-def boardwalk_loop():
+def boardwalk_loop(intense=False):
     """64-second arcade loop, 120 BPM, A minor. Section A: Am - F - C - G;
     section B (second half): F - G - Em - Am with a busier lead, so the loop
-    does not repeat every half minute."""
+    does not repeat every half minute.
+
+    intense=True is the final-wave variant (boardwalk_final): the same song
+    with sixteenth hats, claps, a galloping bass, off-beat chord stabs, the arp
+    and lead doubled an octave up, crashes and risers. It keeps the tempo and
+    length, so the game cross-fades between the two in time."""
     bpm = 120.0
     beat = 60.0 / bpm
     bars = 32
     d = bars * 4 * beat
-    left, right = silence(d), silence(d)
+    left, right = silence(d + 2.0), silence(d + 2.0)
     chords = [(-12, (0, 3, 7)), (-16, (0, 4, 7)), (-9, (0, 4, 7)), (-14, (0, 4, 7))]   # root offsets from A4
+    chords_b = [(-16, (0, 4, 7)), (-14, (0, 4, 7)), (-17, (0, 3, 7)), (-12, (0, 3, 7))]
 
     def both(x, at, gain, pan=0.5):
         place(left, x, at, gain * (1 - pan) * 2)
         place(right, x, at, gain * pan * 2)
 
     kick = sweep(150, 45, 0.16, "sine", 0.5) * env(0.16, 0.001, power=2.0)
+    place(kick, kick_click(0.35), 0.0)
     hat = filt(noise(0.05), high=7000) * env(0.05, 0.0005, power=2.5)
+    open_hat = filt(noise(0.22), high=6500) * env(0.22, 0.001, power=1.5)
     snare = (filt(noise(0.14), high=1500) * 0.8 + tone(190, 0.14) * 0.4) * env(0.14, 0.001, power=2.2)
-    chords_b = [(-16, (0, 4, 7)), (-14, (0, 4, 7)), (-17, (0, 3, 7)), (-12, (0, 3, 7))]
+    hand_clap, crash = clap(), cymbal()
+    hat_gains = (0.17, 0.09, 0.26, 0.1) if intense else (0.17, 0.26)
+    bass_steps = 16 if intense else 8
     for bar in range(bars):
         section_b = bar >= 16
         root, triad = (chords_b if section_b else chords)[(bar // 2) % 4]
         t0 = bar * 4 * beat
         fill = bar % 8 == 7
+        if intense and bar % 8 == 0:
+            both(crash, t0, 0.12, 0.4)
+        if intense and fill:
+            both(riser(2 * beat), t0 + 2 * beat, 0.1, 0.6)
         for b in range(4):
-            both(kick, t0 + b * beat, 0.55)
+            both(kick, t0 + b * beat, 0.5)
             if b in (1, 3):
                 both(snare, t0 + b * beat, 0.3)
-            for h in range(2):
-                both(hat, t0 + (b + h * 0.5) * beat, 0.13 if h == 0 else 0.2, 0.62)
+                if intense:
+                    both(hand_clap, t0 + b * beat, 0.2, 0.45)
+            for h, g in enumerate(hat_gains):
+                both(hat, t0 + (b + h / len(hat_gains)) * beat, g, 0.62)
             if fill and b >= 2:
                 for s in range(4):
                     both(snare, t0 + (b + s * 0.25) * beat, 0.18 + 0.03 * s)
-        # Bass: root on the beat with an octave bounce.
-        for e in range(8):
-            n = root - 12 + (12 if e % 2 else 0)
-            both(tone(note(n), beat * 0.48, "tri") * env(beat * 0.48, 0.004, beat * 0.6, power=1.0), t0 + e * beat * 0.5, 0.42)
-        # Arpeggio lead.
+        if intense:
+            both(kick, t0 + 3.5 * beat, 0.25)
+            for b in (1, 3):
+                both(open_hat, t0 + (b + 0.5) * beat, 0.1, 0.7)
+        # Bass: root on the beat with an octave bounce (a sixteenth gallop when intense).
+        for e in range(bass_steps):
+            octave = e % 4 == 2 if intense else e % 2 == 1
+            ln = beat * 4 / bass_steps * 0.96
+            x = tone(note(root - 12 + (12 if octave else 0)), ln, "tri") * env(ln, 0.004, ln * 1.25, power=1.0)
+            both(audible_bass(x), t0 + e * beat * 4 / bass_steps, 0.42)
+        # Arpeggio lead (doubled an octave up when intense).
         pattern = [0, 1, 2, 1, 0, 2, 1, 2] if bar % 4 < 2 else [2, 1, 0, 1, 2, 0, 1, 0]
         for e in range(16):
             step = triad[pattern[e % 8]] + (12 if (e // 8 + bar) % 2 else 0) + (12 if section_b and e % 4 == 3 else 0)
             x = tone(note(root + 12 + step), beat * 0.24, "square") * env(beat * 0.24, 0.003, beat * 0.3, power=1.4)
-            both(filt(x, low=4200), t0 + e * beat * 0.25, 0.11, 0.3 + 0.4 * ((e % 4) / 3.0))
-        # Soft pad.
+            pan = 0.3 + 0.4 * ((e % 4) / 3.0)
+            both(filt(x, low=5000), t0 + e * beat * 0.25, 0.12, pan)
+            if intense:
+                hi = tone(note(root + 24 + step), beat * 0.2, "square") * env(beat * 0.2, 0.002, beat * 0.25, power=1.5)
+                both(filt(hi, low=7000), t0 + e * beat * 0.25, 0.04, 1.0 - pan)
+        # Soft pad, and off-beat chord stabs when intense.
         pad = sum(tone(note(root + s), 4 * beat, "sine", 0.003, 5.0) for s in triad) * env(4 * beat, 0.25, 8 * beat, power=0.5, release=0.3)
         both(pad, t0, 0.07)
+        if intense:
+            stab = filt(sum(tone(note(root + 12 + s), 0.12, "saw") for s in triad) * env(0.12, 0.002, 0.11, power=1.6), low=2800)
+            for b in range(4):
+                both(stab, t0 + (b + 0.5) * beat, 0.045, 0.35 if b % 2 else 0.65)
         # Melody phrase every other pair of bars.
         if bar % 4 in (2, 3):
             if section_b:
@@ -815,9 +1029,13 @@ def boardwalk_loop():
                 phrase = [(7, 0.0, 1.0), (12, 1.0, 0.5), (10, 1.5, 0.5), (7, 2.0, 1.0), (3, 3.0, 1.0)] if bar % 4 == 2 \
                     else [(5, 0.0, 1.0), (7, 1.0, 1.0), (12, 2.0, 2.0)]
             for semis, at, length in phrase:
-                x = tone(note(-12 + semis + 12), length * beat * 0.95, "saw", 0.006, 5.5) * env(length * beat * 0.95, 0.01, length * beat * 1.4, power=0.8, release=0.05)
-                both(filt(x, low=2600), t0 + at * beat, 0.1, 0.55)
-    return np.stack([left, right], axis=1)
+                ln = length * beat * 0.95
+                x = tone(note(semis), ln, "saw", 0.006, 5.5) * env(ln, 0.01, length * beat * 1.4, power=0.8, release=0.05)
+                both(filt(x, low=3400), t0 + at * beat, 0.12, 0.55)
+                if intense:
+                    hi = tone(note(semis + 12), ln, "square", 0.006, 5.5) * env(ln, 0.01, length * beat * 1.2, power=0.9, release=0.05)
+                    both(filt(hi, low=5000), t0 + at * beat, 0.035, 0.45)
+    return fold_loop(left, right, d)
 
 
 # ---------------------------------------------------------------------------
@@ -852,30 +1070,44 @@ def write_loop_wav(name, mono, peak=0.7):
         w.writeframes((x * 32767).astype("<i2").tobytes())
 
 
-def run_core():
-    for fn in SFX_SOUNDS:
-        write_wav(fn.__name__, fn())
-    for fn, pitches in VARIANTS:
-        for suffix, pitch, seed in zip(("_b", "_c"), pitches, (101, 202)):
-            write_wav(fn.__name__ + suffix, _variant(fn, pitch, seed))
-    write_loop_wav("portal_hum", portal_hum())
-    write_ogg("pier_ambience", pier_ambience(), peak=0.7)
-    write_ogg("boardwalk_loop", boardwalk_loop(), peak=0.75)
-    write_ogg("menu_theme", menu_theme(), peak=0.72)
-    print("core: %d sfx + portal_hum, pier_ambience.ogg, boardwalk_loop.ogg" % len(SFX_SOUNDS))
+CORE_MUSIC = {
+    "pier_ambience": pier_ambience,
+    "boardwalk_loop": boardwalk_loop,
+    "boardwalk_final": lambda: boardwalk_loop(intense=True),
+    "menu_theme": menu_theme,
+}
 
 
-def run_pack(name):
+def run_core(music_only=False):
+    if not music_only:
+        for fn in SFX_SOUNDS:
+            write_wav(fn.__name__, fn())
+        for fn, pitches in VARIANTS:
+            for suffix, pitch, seed in zip(("_b", "_c"), pitches, (101, 202)):
+                write_wav(fn.__name__ + suffix, _variant(fn, pitch, seed))
+        write_loop_wav("portal_hum", portal_hum())
+    for name, fn in CORE_MUSIC.items():
+        seed_for(name, sys.modules[__name__])
+        write_music(name, fn())
+    print("core: %s%s" % ("" if music_only else "%d sfx + portal_hum, " % len(SFX_SOUNDS), ", ".join(CORE_MUSIC)))
+
+
+def run_pack(name, music_only=False):
     """Runs tools/audio_packs/<name>.py. A pack module may define:
          SOUNDS   list of functions -> mono array      (written as <fn name>.wav)
          VARIANTS list of (function, (pitch_b, pitch_c)) (writes _b/_c takes)
          LOOPS    dict name -> function -> mono array   (seamless .wav loops)
-         MUSIC    dict name -> function -> (n, 2) array (written as .ogg)
+         MUSIC    dict name -> function -> (n, 2) array (mastered by write_music,
+                  written as .ogg; *_ambience = bed, *_final = final-wave variant)
        Packs import the helpers with `from gen_audio import *`.
     """
     import importlib
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_packs"))
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    core = sys.modules.get("gen_audio")
+    if core is not None:
+        # Every pack starts from the same generator, whether it runs alone or after others.
+        core.rng = np.random.default_rng(42)
     mod = importlib.import_module(name)
     core = sys.modules.get("gen_audio")
 
@@ -888,33 +1120,37 @@ def run_pack(name):
         return value
 
     count = 0
-    for fn in own("SOUNDS", []):
-        write_wav(fn.__name__, fn())
-        count += 1
-    for fn, pitches in own("VARIANTS", []):
-        for suffix, pitch, seed in zip(("_b", "_c"), pitches, (101, 202)):
-            write_wav(fn.__name__ + suffix, _variant(fn, pitch, seed))
-    for loop_name, fn in own("LOOPS", {}).items():
-        write_loop_wav(loop_name, fn())
+    if not music_only:
+        for fn in own("SOUNDS", []):
+            write_wav(fn.__name__, fn())
+            count += 1
+        for fn, pitches in own("VARIANTS", []):
+            for suffix, pitch, seed in zip(("_b", "_c"), pitches, (101, 202)):
+                write_wav(fn.__name__ + suffix, _variant(fn, pitch, seed))
+        for loop_name, fn in own("LOOPS", {}).items():
+            write_loop_wav(loop_name, fn())
     for music_name, fn in own("MUSIC", {}).items():
-        write_ogg(music_name, fn(), peak=0.75)
+        seed_for(music_name, core, mod)
+        write_music(music_name, fn())
     print("pack %s: %d sfx, %d loops, %d music" % (name, count, len(own("LOOPS", {})), len(own("MUSIC", {}))))
 
 
 def main():
     """python tools/gen_audio.py            -> core sounds + every pack
        python tools/gen_audio.py core       -> only the core sounds
-       python tools/gen_audio.py neon_city  -> only tools/audio_packs/neon_city.py"""
+       python tools/gen_audio.py neon_city  -> only tools/audio_packs/neon_city.py
+       --music                              -> only the music and ambience loops"""
     os.makedirs(SFX, exist_ok=True)
     os.makedirs(MUSIC, exist_ok=True)
     wanted = [a for a in sys.argv[1:] if not a.startswith("-")]
+    music_only = "--music" in sys.argv[1:]
     packs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_packs")
     packs = sorted(f[:-3] for f in os.listdir(packs_dir) if f.endswith(".py") and not f.startswith("_"))
     if not wanted or "core" in wanted:
-        run_core()
+        run_core(music_only)
     for pack in packs:
         if not wanted or pack in wanted:
-            run_pack(pack)
+            run_pack(pack, music_only)
 
 
 if __name__ == "__main__":

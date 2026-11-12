@@ -1,5 +1,5 @@
-"""Neon Rooftops (World 2) audio pack: a synthwave loop, the rain-and-city
-ambience bed, zombie voices and the behaviour sounds (spray can, hover leap,
+"""Neon Rooftops (World 2) audio pack: a synthwave loop and its final-wave
+variant, the rain-and-city ambience bed, zombie voices and the behaviour sounds (spray can, hover leap,
 riot shield). Everything is synthesised; generate with
 
     python tools/gen_audio.py neon
@@ -223,11 +223,16 @@ def neon_ambience():
 # Music: synthwave, 100 BPM, F# minor
 # ---------------------------------------------------------------------------
 
-def neon_skyline_loop():
+def neon_skyline_loop(intense=False):
     """77-second synthwave loop, 100 BPM in F# minor. Section A (bars 1-16):
     F#m - D - A - E under a pumping pad, rolling bass and a delayed arpeggio.
     Section B (bars 17-32): D - E - C#m - F#m with a soaring saw lead and
-    busier drums, so the loop does not repeat every half minute."""
+    busier drums, so the loop does not repeat every half minute.
+
+    intense=True is the final-wave variant (neon_skyline_final): sixteenth
+    hats and claps throughout, crashes and risers, an octave-jumping bass, the
+    arp doubled an octave up and a chord-tone anthem lead over section A. Same
+    tempo and length, so the game cross-fades between the two in time."""
     bpm = 100.0
     beat = 60.0 / bpm
     bars = 32
@@ -241,7 +246,8 @@ def neon_skyline_loop():
     chords_a = [(-15, (0, 3, 7)), (-19, (0, 4, 7)), (-12, (0, 4, 7)), (-17, (0, 4, 7))]
     chords_b = [(-19, (0, 4, 7)), (-17, (0, 4, 7)), (-20, (0, 3, 7)), (-15, (0, 3, 7))]
     kick = sweep(160, 40, 0.28, "sine", 0.45) * env(0.28, 0.001, 0.26, power=1.6)
-    place(kick, filt(noise(0.01), high=3000) * env(0.01, 0.0002), 0.0, 0.3)
+    place(kick, kick_click(0.4), 0.0)
+    hand_clap, crash = clap(), cymbal()
     sn_len = 0.34
     snare = (band(noise(sn_len), 1800, 1400) * 0.9 + tone(185, sn_len) * 0.35) * env(sn_len, 0.001, sn_len * 1.05, power=0.35, release=0.03)
     snare_tail = filt(noise(0.7), low=5000, high=600) * env(0.7, 0.01, 0.7, power=2.0) * 0.35
@@ -270,68 +276,81 @@ def neon_skyline_loop():
         root, triad = (chords_b if section_b else chords_a)[(bar // 2) % 4]
         t0 = bar * 4 * beat
         fill = bar % 8 == 7
+        if intense and bar % 8 == 0:
+            both(crash, t0, 0.11, 0.4)
+        if intense and fill:
+            both(riser(2 * beat), t0 + 2 * beat, 0.08, 0.6)
         for b in range(4):
             both(kick, t0 + b * beat, 0.62)
             if b in (1, 3):
                 both(snare, t0 + b * beat, 0.32)
                 both(snare_tail, t0 + b * beat + 0.05, 0.12, 0.3)
                 both(snare_tail, t0 + b * beat + 0.09, 0.12, 0.7)
-            both(hat, t0 + (b + 0.5) * beat, 0.16, 0.65)
-            if section_b:
-                both(hat, t0 + (b + 0.25) * beat, 0.07, 0.35)
-                both(hat, t0 + (b + 0.75) * beat, 0.07, 0.35)
-        both(open_hat, t0 + 3.5 * beat, 0.1, 0.7)
+                if intense:
+                    both(hand_clap, t0 + b * beat, 0.18, 0.55)
+            both(hat, t0 + (b + 0.5) * beat, 0.2, 0.65)
+            if section_b or intense:
+                both(hat, t0 + (b + 0.25) * beat, 0.09, 0.35)
+                both(hat, t0 + (b + 0.75) * beat, 0.09, 0.35)
+        both(open_hat, t0 + 3.5 * beat, 0.12, 0.7)
+        if intense:
+            both(open_hat, t0 + 1.5 * beat, 0.1, 0.3)
         if fill:
             for k, f in enumerate((220, 180, 150, 120)):
                 both(tom(f), t0 + (3 + k * 0.25) * beat, 0.35, 0.3 + 0.13 * k)
-        # Rolling 16th bass on the root.
+        # Rolling 16th bass on the root (jumping an octave every beat when intense).
         for s in range(16):
-            n = root - 12 + (12 if s % 8 == 6 else 0)
+            n = root - 12 + (12 if (s % 4 == 2 if intense else s % 8 == 6) else 0)
             ln = beat * 0.22
             x = tone(note(n), ln, "saw") * env(ln, 0.003, ln * 1.1, power=1.2)
-            x = filt(x, low=900 if section_b else 650)
+            x = filt(x, low=1100 if intense else 900 if section_b else 650)
             melodic(x, t0 + s * beat * 0.25, 0.32)
         # Lush pad: three detuned saws per chord tone, slow attack.
         ln = 4 * beat
         voice = sum(tone(note(root + s) * dt, ln, "saw") for s in triad for dt in (0.996, 1.0, 1.004))
-        voice = filt(voice, low=1900 if section_b else 1400) * env(ln, 0.35, ln * 2.0, power=0.5, release=0.25)
+        voice = filt(voice, low=(1900 if section_b else 1400) + (500 if intense else 0)) * env(ln, 0.35, ln * 2.0, power=0.5, release=0.25)
         place(pad_l, voice, t0, 0.05)
         place(pad_r, np.roll(voice, int(SR * 0.012)), t0, 0.05)
-        # Arpeggio with a dotted-eighth ping-pong delay.
+        # Arpeggio with a dotted-eighth ping-pong delay (doubled an octave up when intense).
         pattern = [0, 1, 2, 1, 2, 3, 2, 1] if bar % 2 == 0 else [0, 2, 1, 3, 2, 1, 2, 3]
         tones = list(triad) + [12]
         for e in range(16):
             step = tones[pattern[e % 8]] + (12 if e >= 8 and section_b else 0)
             ln = beat * 0.22
             x = tone(note(root + 12 + step), ln, "square") * env(ln, 0.002, ln * 1.2, power=1.3)
-            x = filt(x, low=3200)
+            x = filt(x, low=4000)
             at = t0 + e * beat * 0.25
             melodic(x, at, 0.1, 0.45)
             melodic(x, at + beat * 0.75, 0.05, 0.85)
             melodic(x, at + beat * 1.5, 0.03, 0.15)
-        # Saw lead in section B (and an answer phrase at the end of A).
+            if intense:
+                hi = tone(note(root + 24 + step), ln, "square") * env(ln, 0.002, ln, power=1.5)
+                melodic(filt(hi, low=6000), at, 0.035, 0.7)
+        # Saw lead in section B (and an answer phrase at the end of A); when
+        # intense, section A gets an anthem line on the chord tones.
+        phrases = {
+            0: [(7, 0.0, 1.5), (5, 1.5, 0.5), (4, 2.0, 1.0), (0, 3.0, 1.0)],
+            1: [(2, 0.0, 1.0), (4, 1.0, 1.0), (7, 2.0, 2.0)],
+            2: [(9, 0.0, 1.0), (7, 1.0, 0.5), (4, 1.5, 0.5), (7, 2.0, 1.5), (9, 3.5, 0.5)],
+            3: [(12, 0.0, 2.0), (11, 2.0, 1.0), (7, 3.0, 1.0)],
+        }
+        lead = None
         if section_b or bar in (14, 15):
-            phrases = {
-                0: [(7, 0.0, 1.5), (5, 1.5, 0.5), (4, 2.0, 1.0), (0, 3.0, 1.0)],
-                1: [(2, 0.0, 1.0), (4, 1.0, 1.0), (7, 2.0, 2.0)],
-                2: [(9, 0.0, 1.0), (7, 1.0, 0.5), (4, 1.5, 0.5), (7, 2.0, 1.5), (9, 3.5, 0.5)],
-                3: [(12, 0.0, 2.0), (11, 2.0, 1.0), (7, 3.0, 1.0)],
-            }
-            for semis, at, length in phrases[bar % 4]:
-                ln = length * beat * 0.95
-                x = sum(tone(note(root + 12 + semis) * dt, ln, "saw", 0.008, 5.5) for dt in (0.997, 1.003))
-                x = filt(x, low=2800) * env(ln, 0.02, ln * 1.5, power=0.7, release=0.06)
-                melodic(x, t0 + at * beat, 0.07, 0.5)
-                melodic(x, t0 + at * beat + beat * 0.75, 0.03, 0.2)
-                melodic(x, t0 + at * beat + beat * 0.75, 0.03, 0.8)
+            lead = phrases[bar % 4]
+        elif intense:
+            lead = [(triad[2], 0.0, 1.5), (triad[1], 1.5, 0.5), (triad[0] + 12, 2.0, 2.0)] if bar % 2 == 0 \
+                else [(triad[1], 0.0, 1.0), (triad[2], 1.0, 1.0), (triad[1], 2.0, 2.0)]
+        for semis, at, length in lead or ():
+            ln = length * beat * 0.95
+            x = sum(tone(note(root + 12 + semis) * dt, ln, "saw", 0.008, 5.5) for dt in (0.997, 1.003))
+            x = filt(x, low=3400) * env(ln, 0.02, ln * 1.5, power=0.7, release=0.06)
+            melodic(x, t0 + at * beat, 0.085, 0.5)
+            melodic(x, t0 + at * beat + beat * 0.75, 0.035, 0.2)
+            melodic(x, t0 + at * beat + beat * 0.75, 0.035, 0.8)
 
     left += (pad_l + mel_l) * duck
     right += (pad_r + mel_r) * duck
-    # Fold the tail that rang past the end back onto the start.
-    n = int(d * SR)
-    left[: len(left) - n] += left[n:]
-    right[: len(right) - n] += right[n:]
-    return np.stack([left[:n], right[:n]], axis=1)
+    return fold_loop(left, right, d)
 
 
 SOUNDS = [
@@ -345,4 +364,8 @@ VARIANTS = [
     (neon_spray_hiss, (0.9, 1.12)), (neon_shield_block, (0.92, 1.1)), (neon_leap_land, (0.92, 1.06)),
 ]
 
-MUSIC = {"neon_skyline_loop": neon_skyline_loop, "neon_ambience": neon_ambience}
+MUSIC = {
+    "neon_skyline_loop": neon_skyline_loop,
+    "neon_skyline_final": lambda: neon_skyline_loop(intense=True),
+    "neon_ambience": neon_ambience,
+}

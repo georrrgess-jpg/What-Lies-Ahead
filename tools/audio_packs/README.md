@@ -15,5 +15,18 @@ LOOPS = {"my_hum": lambda: ...}     # -> audio/sfx/my_hum.wav, seamless
 MUSIC = {"my_world_loop": my_music} # -> audio/music/my_world_loop.ogg (stereo (n, 2) array)
 ```
 
+A pack that does `from gen_audio import *` must define `MUSIC` (and `LOOPS`) itself,
+even empty: the star import also brings in gen_audio's `MUSIC` folder path.
+
+Music is mastered by `write_music()`: EQ for small speakers (high-pass at 50 Hz, less
+60-180 Hz, more 1-5 kHz), a look-ahead limiter and loudness normalisation, so return
+the raw mix. The name picks the target: `*_ambience` is a bed (-18 LUFS, 40 Hz
+high-pass only), `*_final` a level's final-wave variant (-14 LUFS: keep its tempo and
+length equal to the main loop so the game cross-fades in time), anything else a music
+loop (-15 LUFS). Each loop draws noise from its own seeded generator, so editing one
+loop never changes another. Shared instruments: `kick_click`, `audible_bass`, `clap`,
+`cymbal`, `riser`, `fold_loop`.
+
 Generate one pack: `python tools/gen_audio.py <pack_name>`. All: `python tools/gen_audio.py`.
+Only the loops: add `--music`. Check levels afterwards with `python3 tools/audio_mix_report.py`.
 Name sounds with a pack prefix (e.g. `neon_drone_hum`) so packs never collide.

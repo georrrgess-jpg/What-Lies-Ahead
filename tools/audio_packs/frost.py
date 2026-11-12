@@ -5,7 +5,8 @@ Ski Racer, Yeti and Frozen Tourist voices, snowballs, ice and frost clouds.
 
     audio/music/summit_lodge_loop.ogg   62 s wintry loop, two sections: sleigh bells,
                                         celesta arpeggios and a driving beat
-    audio/music/frost_ambience.ogg      mountain wind, a crackling fire pit and the
+    audio/music/summit_lodge_final.ogg  its final-wave variant (denser drums and bells)
+    audio/music/frost_ambience.ogg     mountain wind, a crackling fire pit and the
                                         creak and clunk of the chairlift
     audio/sfx/frost_*.wav               enemy and effect sounds
 """
@@ -56,42 +57,56 @@ def pad_chord(semis, seconds):
 # Music
 # ---------------------------------------------------------------------------
 
-def summit_lodge_loop():
+def summit_lodge_loop(intense=False):
     """124 BPM, D minor. Section A (bars 1-16): Dm - Bb - F - C with a driving
     beat, sleigh bells on the offbeats and a celesta arpeggio. Section B
     (bars 17-32): Gm - Bb - F - A with a soaring celesta melody, denser bells
-    and a sub-bass push, then it turns back to A."""
+    and a sub-bass push, then it turns back to A.
+
+    intense=True is the final-wave variant (summit_lodge_final): sixteenth hats,
+    bells on every eighth, claps, crashes and risers throughout, the sub push in
+    both sections and a celesta line over section A. Same tempo and length, so
+    the game cross-fades between the two in time."""
     bpm = 124.0
     beat = 60.0 / bpm
     bars = 32
     d = bars * 4 * beat
-    left, right = silence(d), silence(d)
+    left, right = silence(d + 2.0), silence(d + 2.0)
 
     def both(x, at, gain, pan=0.5):
         place(left, x, at, gain * (1 - pan) * 2)
         place(right, x, at, gain * pan * 2)
 
     kick = sweep(140, 42, 0.2, "sine", 0.45) * env(0.2, 0.001, power=2.2)
+    place(kick, kick_click(0.3), 0.0)
     snare = (band(noise(0.18), 1900, 1000) * 0.8 + tone(205, 0.18) * 0.5) * env(0.18, 0.001, power=2.4)
     hat = filt(noise(0.04), high=8000) * env(0.04, 0.0005, power=2.8)
     bells = [sleigh_bell(0.3, rng.uniform(0.95, 1.06)) for _ in range(6)]
+    hand_clap, crash = clap(), cymbal()
     chords_a = [(-7, (0, 3, 7)), (-11, (0, 4, 7)), (-16, (0, 4, 7)), (-9, (0, 4, 7))]      # Dm Bb F C (roots from A4)
     chords_b = [(-14, (0, 3, 7)), (-11, (0, 4, 7)), (-16, (0, 4, 7)), (-12, (0, 4, 7))]    # Gm Bb F A
     for bar in range(bars):
         section_b = bar >= 16
+        busy = section_b or intense
         root, triad = (chords_b if section_b else chords_a)[(bar // 2) % 4]
         t0 = bar * 4 * beat
         fill = bar % 8 == 7
+        if intense and bar % 8 == 0:
+            both(crash, t0, 0.11, 0.6)
+        if intense and fill:
+            both(riser(2 * beat), t0 + 2 * beat, 0.08, 0.4)
         for b in range(4):
             both(kick, t0 + b * beat, 0.6)
             if b in (1, 3):
                 both(snare, t0 + b * beat, 0.32)
-            for h in range(4 if section_b else 2):
-                step = b + h / (4 if section_b else 2)
-                both(hat, t0 + step * beat, 0.05 if h % 2 == 0 else 0.07, 0.65)
+                if intense:
+                    both(hand_clap, t0 + b * beat, 0.16, 0.45)
+            for h in range(4 if busy else 2):
+                step = b + h / (4 if busy else 2)
+                both(hat, t0 + step * beat, 0.07 if h % 2 == 0 else 0.1, 0.65)
             # Sleigh bells shake on the offbeats (every eighth in section B).
             both(bells[(bar + b) % len(bells)], t0 + (b + 0.5) * beat, 0.2, 0.35)
-            if section_b:
+            if busy:
                 both(bells[(bar + b + 3) % len(bells)], t0 + b * beat, 0.11, 0.6)
             if fill and b >= 2:
                 for s in range(4):
@@ -100,7 +115,7 @@ def summit_lodge_loop():
         for e in range(8):
             n = root - 12 + (12 if e % 4 == 3 else 0)
             both(filt(pluck_bass(note(n), beat * 0.45), low=1200), t0 + e * beat * 0.5, 0.55)
-        if section_b and bar % 2 == 0:
+        if busy and bar % 2 == 0:
             both(sweep(note(root - 24) * 1.02, note(root - 24), 4 * beat, "sine") * env(4 * beat, 0.01, 4 * beat, power=0.8), t0, 0.35)
         # Celesta arpeggio: rising in A, rippling in B.
         pattern = [0, 1, 2, 1, 2, 0, 1, 2] if not section_b else [0, 2, 1, 2, 0, 2, 1, 0]
@@ -124,7 +139,13 @@ def summit_lodge_loop():
             # A little bell turn at the end of each phrase in section A.
             for i, s in enumerate((12, 15, 19, 24)):
                 both(celesta(note(root + s + 12), beat * 0.8, 0.7), t0 + (2 + i * 0.5) * beat, 0.1, 0.7)
-    return np.stack([left, right], axis=1)
+        elif intense:
+            # A celesta line on the chord tones over the rest of section A.
+            line = ((2, 0.0, 1.5), (1, 1.5, 0.5), (0, 2.0, 2.0)) if bar % 2 == 0 else ((1, 0.0, 1.0), (2, 1.0, 1.0), (0, 2.0, 2.0))
+            for i, at, length in line:
+                semis = root + 24 + triad[i] + (12 if i == 0 and at == 2.0 else 0)
+                both(celesta(note(semis), length * beat * 1.2, 1.0), t0 + at * beat, 0.2, 0.55)
+    return fold_loop(left, right, d)
 
 
 def frost_ambience():
@@ -308,5 +329,6 @@ VARIANTS = [
 
 MUSIC = {
     "summit_lodge_loop": summit_lodge_loop,
+    "summit_lodge_final": lambda: summit_lodge_loop(intense=True),
     "frost_ambience": frost_ambience,
 }

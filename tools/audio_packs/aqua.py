@@ -3,6 +3,8 @@
     tidal_tunnels_loop   music: 77 s dubby aquatic loop, 100 BPM, D dorian,
                          section A (pads, kalimba arps, sub pulse) and section
                          B (busier arps, vibraphone lead, shaker)
+    tidal_tunnels_final  the final-wave variant: kick on every beat, sixteenth
+                         shaker and arps throughout, an octave pluck, a lead in A
     aqua_ambience        ambience bed: pump hum, bubbling filters, water flow,
                          distant whale calls (written as music, .ogg)
     aqua_*               enemy sounds: diver regulator breaths, helmet clank and
@@ -240,10 +242,12 @@ def aqua_ambience():
 # Music
 # ---------------------------------------------------------------------------
 
-def tidal_tunnels_loop():
+def tidal_tunnels_loop(intense=False):
     """100 BPM, D dorian. 32 bars (76.8 s): A = 16 bars of pads, kalimba arps
     and a sub pulse; B = 16 bars with 16th arps, a vibraphone lead and shaker.
-    Every echo tail wraps around, so the loop is seamless."""
+    Every echo tail wraps around, so the loop is seamless. intense=True is the
+    final-wave variant (same tempo and length, so the game cross-fades between
+    the two in time)."""
     bpm = 100.0
     beat = 60.0 / bpm
     bar = 4 * beat
@@ -260,6 +264,7 @@ def tidal_tunnels_loop():
     chords_b = [(-16, (0, 4, 7, 11, 14)), (-21, (0, 4, 7, 14, 16)), (-19, (0, 3, 7, 10, 14)), (-12, (0, 4, 7, 10, 13))]
 
     kick = sweep(110, 42, 0.32, "sine", 0.45) * env(0.32, 0.002, 0.3, power=2.0)
+    place(kick, kick_click(0.3, 2600), 0.0)
     hat = filt(noise(0.06), high=6500) * env(0.06, 0.0008, 0.05, power=2.5)
     shaker = band(noise(0.08), 7000, 2500) * env(0.08, 0.01, 0.08, power=1.5)
     rim = band(noise(0.05), 2200, 600) * env(0.05, 0.0005, 0.04, power=2.0) + tone(820, 0.05) * env(0.05, 0.0005, 0.03) * 0.3
@@ -289,43 +294,63 @@ def tidal_tunnels_loop():
             shape = env(plen, 0.6, plen * 3.0, power=0.4, release=0.5) * duck
             placew(left, filt(pad_l * shape, low=1600) * 0.05, t0)
             placew(right, filt(pad_r * shape, low=1600) * 0.05, t0)
-        # Sub bass pulse on 1 and the "and" of 2, with a fifth on 3.
+        # Sub bass pulse on 1 and the "and" of 2, with a fifth on 3 (its
+        # harmonics carry it on small speakers); when intense, an eighth-note
+        # octave pluck drives underneath.
         for at, semi, length in ((0.0, 0, 1.2), (1.5, 0, 0.45), (2.0, 7, 0.9), (3.5, 12 if section_b else 0, 0.4)):
             x = np.sin(2 * np.pi * note(root - 12 + semi) * t_axis(length * beat)) * env(length * beat, 0.01, length * beat * 1.1, power=1.2)
-            both(x, t0 + at * beat, 0.32)
-        # Drums: soft kick on 1 and 3, rim on 4, hats on the offbeats; shaker in B.
-        both(kick, t0, 0.5)
-        both(kick, t0 + 2 * beat, 0.42)
-        both(rim, t0 + 3 * beat, 0.18, 0.62)
+            both(audible_bass(x, 0.5), t0 + at * beat, 0.32)
+        if intense:
+            for k in range(8):
+                ln = beat * 0.4
+                x = osc(2 * np.pi * note(root + (12 if k % 2 else 0)) * t_axis(ln), "tri") * env(ln, 0.003, ln, power=1.6)
+                both(filt(x, low=1800), t0 + k * beat * 0.5, 0.1, 0.4 if k % 2 else 0.6)
+        # Drums: soft kick on 1 and 3, rim on 4, hats on the offbeats; shaker in
+        # B. Intense: kick on every beat, rim on 2 and 4, sixteenth shaker and hats.
+        for k in range(4) if intense else (0, 2):
+            both(kick, t0 + k * beat, 0.5 if k == 0 else 0.42)
+        for k in (1, 3) if intense else (3,):
+            both(rim, t0 + k * beat, 0.18, 0.62)
         for k in range(4):
-            both(hat, t0 + (k + 0.5) * beat, 0.09, 0.65)
-        if section_b:
+            both(hat, t0 + (k + 0.5) * beat, 0.12, 0.65)
+            if intense:
+                both(hat, t0 + (k + 0.25) * beat, 0.05, 0.4)
+                both(hat, t0 + (k + 0.75) * beat, 0.05, 0.4)
+        if section_b or intense:
             for k in range(16):
-                both(shaker, t0 + k * beat * 0.25, 0.05 + 0.03 * (k % 2), 0.35)
-        if b % 8 == 7:
+                both(shaker, t0 + k * beat * 0.25, 0.06 + 0.03 * (k % 2), 0.35)
+        if b % 8 == 7 or (intense and b % 4 == 3):
             swell = filt(noise(bar * 0.5), high=600, low=4000) * env(bar * 0.5, bar * 0.48, bar * 0.6, power=0.5, release=0.02)
             both(swell, t0 + bar * 0.5, 0.09)
-        # Kalimba arpeggio with a dub echo (3/8 delay, ping-pong).
-        steps = 16 if section_b else 8
+        # Kalimba arpeggio with a dub echo (3/8 delay, ping-pong); sixteenths in
+        # B, and everywhere when intense.
+        steps = 16 if section_b or intense else 8
         pattern = [0, 2, 4, 1, 3, 2, 4, 1] if b % 4 < 2 else [4, 2, 0, 3, 1, 2, 0, 3]
         for k in range(steps):
-            semi = root + 24 + tones[pattern[k % 8] % len(tones)] + (12 if section_b and k % 8 == 6 else 0)
+            semi = root + 24 + tones[pattern[k % 8] % len(tones)] + (12 if steps == 16 and k % 8 == 6 else 0)
             x = kalimba(semi, beat * 0.9)
             at = t0 + k * bar / steps
             pan = 0.3 if k % 2 == 0 else 0.7
-            both(x, at, 0.07 if section_b else 0.09, pan)
+            both(x, at, 0.07 if steps == 16 else 0.09, pan)
             for e in range(1, 4):
                 both(filt(x, low=2600 - e * 500), at + e * beat * 0.75, 0.07 * 0.45 ** e, 1.0 - pan if e % 2 else pan)
-        # Vibraphone lead in section B (two-bar phrases).
+        # Vibraphone lead in section B (two-bar phrases); when intense, section A
+        # gets a vibraphone line on the chord tones.
+        phrases = {0: [(14, 0.0, 1.0), (12, 1.0, 0.5), (10, 1.5, 0.5), (7, 2.0, 2.0)],
+                   1: [(10, 0.0, 1.5), (12, 1.5, 0.5), (14, 2.0, 1.0), (17, 3.0, 1.0)],
+                   2: [(19, 0.0, 1.0), (17, 1.0, 1.0), (14, 2.0, 0.5), (12, 2.5, 1.5)],
+                   3: [(10, 0.0, 2.0), (12, 2.0, 0.5), (14, 2.5, 1.5)]}
         if section_b:
-            phrases = {0: [(14, 0.0, 1.0), (12, 1.0, 0.5), (10, 1.5, 0.5), (7, 2.0, 2.0)],
-                       1: [(10, 0.0, 1.5), (12, 1.5, 0.5), (14, 2.0, 1.0), (17, 3.0, 1.0)],
-                       2: [(19, 0.0, 1.0), (17, 1.0, 1.0), (14, 2.0, 0.5), (12, 2.5, 1.5)],
-                       3: [(10, 0.0, 2.0), (12, 2.0, 0.5), (14, 2.5, 1.5)]}
-            for semi, at, length in phrases[b % 4]:
-                x = vibe(-7 + 12 + semi, length * beat)
-                both(x, t0 + at * beat, 0.09, 0.55)
-                both(filt(x, low=2200), t0 + at * beat + beat * 0.75, 0.035, 0.3)
+            lead = [(-7 + 12 + semi, at, length) for semi, at, length in phrases[b % 4]]
+        elif intense:
+            line = ((2, 0.0, 1.5), (1, 1.5, 0.5), (3, 2.0, 2.0)) if b % 2 == 0 else ((4, 0.0, 1.0), (2, 1.0, 1.0), (1, 2.0, 2.0))
+            lead = [(root + 24 + tones[i], at, length) for i, at, length in line]
+        else:
+            lead = []
+        for semi, at, length in lead:
+            x = vibe(semi, length * beat)
+            both(x, t0 + at * beat, 0.1, 0.55)
+            both(filt(x, low=2200), t0 + at * beat + beat * 0.75, 0.04, 0.3)
         # A few bubbles drifting through the mix.
         if b % 4 == 1:
             bb = bubbles(1.6, 10, 500, 1500, seed=100 + b) * 0.05
@@ -333,4 +358,8 @@ def tidal_tunnels_loop():
     return np.stack([left, right], axis=1)
 
 
-MUSIC = {"tidal_tunnels_loop": tidal_tunnels_loop, "aqua_ambience": aqua_ambience}
+MUSIC = {
+    "tidal_tunnels_loop": tidal_tunnels_loop,
+    "tidal_tunnels_final": lambda: tidal_tunnels_loop(intense=True),
+    "aqua_ambience": aqua_ambience,
+}

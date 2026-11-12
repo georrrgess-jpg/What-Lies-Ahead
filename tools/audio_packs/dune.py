@@ -5,7 +5,8 @@
 Music:   launch_pad_loop  space-western loop, 104 BPM, ~74 s: section A (twang guitar,
                           galloping drums, whistled tune), section B (theremin lead,
                           pad swells, synth arpeggio).
-Bed:     dune_ambience    desert wind and gusts, distant engines, PA chimes with a
+         launch_pad_final the final-wave variant (driving drums, walking bass).
+Bed:    dune_ambience    desert wind and gusts, distant engines, PA chimes with a
                           muffled announcer, far-off clanks and a reversing tug.
 Enemies: dune_cadet_radio_*, dune_mechanic_grunt_*, dune_hazmat_breath_* (voices),
          dune_leap_charge / dune_leap_whoosh / dune_land_thump (Space Cadet pounce),
@@ -205,7 +206,11 @@ def reverb(x, seconds=1.6, mix=0.25, seed=5):
     return y * mix
 
 
-def launch_pad_loop():
+def launch_pad_loop(intense=False):
+    """intense=True is the final-wave variant (launch_pad_final): kick on every
+    beat with a gallop pickup, a brushed train beat, shaker, synth arp and pad
+    throughout, a walking eighth bass, crashes and the whistled tune from the
+    top. Same tempo and length, so the game cross-fades between the two in time."""
     bpm = 104.0
     beat = 60.0 / bpm
     bars = 32
@@ -225,31 +230,49 @@ def launch_pad_loop():
     prog_a = [(-17, (0, 3, 7)), (-21, (0, 4, 7)), (-19, (0, 4, 7)), (-17, (0, 3, 7))]
     prog_b = [(-14, (0, 4, 7)), (-19, (0, 4, 7)), (-12, (0, 3, 7)), (-22, (0, 4, 7, 10))]
     kick = sweep(120, 42, 0.2, "sine", 0.5) * env(0.2, 0.001, power=2.0)
+    place(kick, kick_click(0.3), 0.0)
     rim = (band(noise(0.04), 2200, 600) * 3 + tone(820, 0.04) * 0.5) * env(0.04, 0.0005, power=2.5)
     snare = (filt(noise(0.18), high=1200) * 0.7 + tone(180, 0.18) * 0.3) * env(0.18, 0.001, power=2.0)
+    brush = band(noise(0.07), 3200, 1800) * env(0.07, 0.004, power=1.6)
     shaker = filt(noise(0.06), high=6000) * env(0.06, 0.01, power=1.5)
+    crash = cymbal(2.0)
     for bar in range(bars):
         section_b = bar >= 16
         root, chord = (prog_b if section_b else prog_a)[(bar // 2) % 4]
         t0 = bar * 4 * beat
         last = bar == bars - 1
-        # Galloping drums: kick on 1 and 3, the "horse trot" on the rim, snare on 2 and 4.
+        if intense and bar % 8 == 0:
+            put(crash, t0, 0.1, 0.6, 0.3)
+        if intense and bar % 8 == 7:
+            put(riser(2 * beat), t0 + 2 * beat, 0.07, 0.4)
+        # Galloping drums: kick on 1 and 3, the "horse trot" on the rim, snare on
+        # 2 and 4 (intense: kick on every beat with a pickup, a brushed train beat).
         for b in range(4):
-            put(kick, t0 + b * beat, 0.5 if b in (0, 2) else 0.25)
+            put(kick, t0 + b * beat, 0.5 if b in (0, 2) or intense else 0.25)
+            if intense and b in (1, 3):
+                put(kick, t0 + (b + 0.75) * beat, 0.2)
             if b in (1, 3):
-                put(snare, t0 + b * beat, 0.26 if section_b else 0.18, 0.5, 0.3)
+                put(snare, t0 + b * beat, 0.26 if section_b or intense else 0.18, 0.5, 0.3)
             for s, g in ((0.0, 0.16), (0.5, 0.1), (0.75, 0.13)):
                 put(rim, t0 + (b + s) * beat, g, 0.35)
-            if section_b:
+            if section_b or intense:
                 for s in range(4):
-                    put(shaker, t0 + (b + s * 0.25) * beat, 0.05 + 0.03 * (s % 2), 0.7)
+                    put(shaker, t0 + (b + s * 0.25) * beat, 0.06 + 0.03 * (s % 2), 0.7)
+            if intense:
+                for s in range(4):
+                    put(brush, t0 + (b + s * 0.25) * beat, 0.05 if s % 2 else 0.08, 0.55)
         if bar % 8 == 7 and not last:
             for s in range(6):
                 put(snare, t0 + (2.5 + s * 0.25) * beat, 0.12 + s * 0.03, 0.5, 0.3)
-        # Bass: root and fifth, a walking pickup into the next chord.
-        for b in range(4):
-            n = root - 12 + (7 if b == 2 else 0)
-            put(pluck(note(n), beat * 0.95, bright=0.4, bend=0.004), t0 + b * beat, 0.5)
+        # Bass: root and fifth, a walking pickup into the next chord (walking
+        # eighths when intense).
+        if intense:
+            for e, step in enumerate((0, 0, 7, 7, 0, 0, 7, 12)):
+                put(pluck(note(root - 12 + step), beat * 0.5, bright=0.55, bend=0.004), t0 + e * beat * 0.5, 0.42)
+        else:
+            for b in range(4):
+                n = root - 12 + (7 if b == 2 else 0)
+                put(pluck(note(n), beat * 0.95, bright=0.55, bend=0.004), t0 + b * beat, 0.5)
         # Twang guitar: broken-chord arpeggio in eighths, dotted rhythm in B.
         pattern = [0, 2, 1, 2, 0, 2, 1, 3] if not section_b else [0, 1, 2, 3, 2, 1, 2, 1]
         for e in range(8):
@@ -259,8 +282,8 @@ def launch_pad_loop():
             step = chord[idx] + (12 if pattern[e] >= len(chord) else 0)
             n = root + 12 + step
             put(pluck(note(n), beat * 1.6, bright=0.75), t0 + e * beat * 0.5, 0.17, 0.3 if e % 2 else 0.42, 0.55)
-        # Warm pad in section B (detuned saws through a low-pass).
-        if section_b:
+        # Warm pad in section B (detuned saws through a low-pass), everywhere when intense.
+        if section_b or intense:
             pad = sum(osc(2 * np.pi * np.cumsum(np.full(int(SR * 4 * beat), note(root + 12 + s) * (1 + det))) / SR, "saw")
                       for s in chord[:3] for det in (-0.003, 0.003))
             pad = filt(pad, low=1400) * env(4 * beat, 0.6, 8 * beat, power=0.5, release=0.4)
@@ -275,11 +298,13 @@ def launch_pad_loop():
                (7, 8.0, 1.5), (10, 9.5, 0.5), (8, 10.0, 1.0), (7, 11.0, 1.0), (5, 12.0, 2.0), (3, 14.0, 2.0),
                (7, 16.0, 1.5), (5, 17.5, 0.5), (3, 18.0, 1.0), (0, 19.0, 1.0), (-2, 20.0, 1.5), (3, 21.5, 0.5), (0, 22.0, 4.0),
                (-5, 26.0, 1.0), (-2, 27.0, 1.0), (0, 28.0, 4.0)]
-    for semis, at, length in whistle:
-        f = note(semis - 5 + 12)
-        dur = length * beat * 0.95
-        x = theremin(np.full(int(SR * dur), f), dur) * env(dur, 0.04, dur * 1.3, power=0.6, release=0.08)
-        put(filt(x, low=3500) + filt(noise(dur), low=4000, high=1500) * 0.02, 8 * 4 * beat + at * beat, 0.12, 0.6, 0.6)
+    # Intense: the tune also opens the loop (bars 0-7 share the chords of 8-15).
+    for start in (0, 8) if intense else (8,):
+        for semis, at, length in whistle:
+            f = note(semis - 5 + 12)
+            dur = length * beat * 0.95
+            x = theremin(np.full(int(SR * dur), f), dur) * env(dur, 0.04, dur * 1.3, power=0.6, release=0.08)
+            put(filt(x, low=3800) + filt(noise(dur), low=4000, high=1500) * 0.02, start * 4 * beat + at * beat, 0.13, 0.6, 0.6)
     lead = [(12, 0, 3), (10, 3, 1), (7, 4, 2), (5, 6, 2), (7, 8, 3), (3, 11, 1), (5, 12, 4),
             (12, 16, 3), (14, 19, 1), (15, 20, 2), (14, 22, 2), (12, 24, 2), (10, 26, 2), (7, 28, 4),
             (7, 32, 2), (10, 34, 2), (12, 36, 3), (10, 39, 1), (7, 40, 4), (5, 44, 2), (3, 46, 2),
@@ -291,7 +316,7 @@ def launch_pad_loop():
         glide = np.minimum(np.arange(n) / (SR * 0.09), 1.0)
         path = note(prev - 5) + (note(semis - 5) - note(prev - 5)) * glide
         x = theremin(path, dur) * env(dur, 0.06, dur * 1.2, power=0.5, release=0.1)
-        put(x, 16 * 4 * beat + at * beat, 0.1, 0.45, 0.7)
+        put(x, 16 * 4 * beat + at * beat, 0.12, 0.45, 0.7)
     stereo_wet = reverb(wet, 1.8, 0.35)
     left = dry_l + stereo_wet[: len(dry_l)]
     right = dry_r + np.roll(stereo_wet[: len(dry_r)], int(SR * 0.013))
@@ -358,4 +383,8 @@ def dune_ambience():
     return loopable(stereo, 1.0)
 
 
-MUSIC = {"launch_pad_loop": launch_pad_loop, "dune_ambience": dune_ambience}
+MUSIC = {
+    "launch_pad_loop": launch_pad_loop,
+    "launch_pad_final": lambda: launch_pad_loop(intense=True),
+    "dune_ambience": dune_ambience,
+}
