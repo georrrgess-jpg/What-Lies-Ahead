@@ -120,7 +120,7 @@ func finish(result: Dictionary) -> void:
 	_bank_score(score)
 	_best(&"run_score", score)
 	if victory:
-		_bank("clear", "Level clear", Progression.rules.clear_xp)
+		_bank("clear", "Level clear", Progression.clear_xp(level_id))
 		var firsts: Array = Profile.section("progression").get("first_clears", [])
 		if level_id != &"" and not firsts.has(String(level_id)):
 			firsts.append(String(level_id))

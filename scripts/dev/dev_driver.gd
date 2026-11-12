@@ -11,9 +11,12 @@ extends Node
 ##   --ring=<m>           radius of the bot's patrol ring around the loadout station
 ##   --swap               bot swaps the held weapon at the kiosk every break
 ##   --switch             bot switches to its other slot whenever it starts a reload
+##   --boost              bot buys the damage boost whenever it can afford it (before
+##                        the overshield, which it always buys when it can)
 ##   --aim-error=<deg>    random aim error for the bot (default 1.2)
 ##   --god                bot takes no damage (for flow tests, not for tuning)
-##   --then=retry|menu    after the results screen, press Retry / Main Menu once
+##   --then=retry|menu|next   after the results screen, press Retry / Main Menu /
+##                        Next World once
 ##   --max-seconds=<n>    give up after n simulated seconds (default 1500)
 ##   --shot=<file.png>    stage the reference composition and save a screenshot
 ##   --dump-profile       print the loaded profile and settings, then quit
@@ -29,6 +32,7 @@ var mode := Mode.NONE
 var weapon := &"pulse_pistol"
 var swap_each_break := false
 var switch_on_reload := false
+var buy_boost := false
 var _switches := 0
 var _switch_cancels := 0
 var aim_error := 1.2
@@ -89,6 +93,8 @@ func _ready() -> void:
 			swap_each_break = true
 		elif arg == "--switch":
 			switch_on_reload = true
+		elif arg == "--boost":
+			buy_boost = true
 		elif arg.begins_with("--aim-error="):
 			aim_error = float(arg.trim_prefix("--aim-error="))
 		elif arg == "--god":
@@ -156,6 +162,8 @@ func _physics_process(delta: float) -> void:
 		_player = _director.player
 		_runs += 1
 		_director.enemy_recovered.connect(_on_enemy_recovered)
+		_director.damage_boost_changed.connect(func(b: RunDirector.Boost):
+			print("[dev] damage boost %s: damage x%.2f" % [RunDirector.Boost.keys()[b], _player.weapons.damage_multiplier]))
 		if start_wave > 1 and _runs == 1:
 			_director.wave_number = start_wave - 1
 			_director.tickets = 400
@@ -166,9 +174,14 @@ func _physics_process(delta: float) -> void:
 		print("[dev] run %d started: state=%s tickets=%d wave=%d health=%d weapon=%s mag=%d" % [
 			_runs, RunDirector.State.keys()[_director.state], _director.tickets, _director.wave_number,
 			int(_player.health), _player.weapons.current.id, _player.weapons.magazine()])
+		if _runs > 1 and then == "next":
+			print("[dev] next world started: %s" % _director.level.id)
+			_quit(0)
+			return
 		if _runs > 1 and then == "retry" and mode != Mode.PAUSE:
 			# Retry must have produced a clean run.
-			var clean := _director.tickets == 0 and _director.wave_number == 0 and _player.health == _player.max_health
+			var clean := _director.tickets == _director.waves.starting_tickets and _director.wave_number == 0 \
+				and _player.health == _player.max_health and _director.overshield == 0.0
 			print("[dev] retry reset check: %s" % ("OK" if clean else "FAILED"))
 			_quit(0 if clean else 1)
 			return
@@ -381,9 +394,18 @@ func _do_break(delta: float) -> void:
 		_tap("interact")
 		await get_tree().physics_frame
 		await get_tree().physics_frame
-	print("[dev] kiosk: tickets %d->%d  %s %d/%d (was %d/%d)  hp %d->%d" % [
+	var waves := _director.waves
+	if buy_boost and _director.tickets >= waves.damage_boost_price and _director.damage_boost == RunDirector.Boost.NONE:
+		_tap("buy_damage_boost")
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+	if _director.tickets >= waves.overshield_price and _director.overshield < waves.overshield_amount:
+		_tap("buy_overshield")
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+	print("[dev] kiosk: tickets %d->%d  %s %d/%d (was %d/%d)  hp %d->%d  shield %d  boost %s" % [
 		before[0], _director.tickets, w.current.id, w.magazine(), w.reserve(), before[1], before[2],
-		before[3], int(_player.health)])
+		before[3], int(_player.health), int(_director.overshield), RunDirector.Boost.keys()[_director.damage_boost]])
 
 
 # --- combat ----------------------------------------------------------------------
@@ -630,8 +652,8 @@ func _after_run() -> void:
 			for u in row["unlocks"]:
 				unlocks.append(String(u.id))
 			rows.append("%s +%dxp %dkills rank %d->%d unlocks=%s" % [row["weapon"].id, row["xp_gained"], row["kills"], row["rank_before"], row["rank_after"], unlocks])
-		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d score=%d headshots=%d best_combo=%d switches=%d/%d" % [
-			r["victory"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_min_health), _director.tickets,
+		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d cashed=%d score=%d headshots=%d best_combo=%d switches=%d/%d" % [
+			r["victory"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_min_health), _director.tickets, int(r.get("tickets_cashed", 0)),
 			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0)), _switch_cancels, _switches])
 		for line in rows:
 			print("[dev]   ", line)
@@ -662,6 +684,14 @@ func _wait_for_results() -> void:
 		_clock = 0.0
 		print("[dev] pressing Main Menu")
 		Game.to_menu()
+	elif then == "next":
+		var next := screen.find_child("NextWorld", true, false) as Button
+		print("[dev] NEXT WORLD button shown: %s" % (next != null))
+		if next == null:
+			_quit(0 if not _director.result()["victory"] else 1)
+			return
+		_then_done = true
+		next.pressed.emit()
 	else:
 		_quit(0)
 

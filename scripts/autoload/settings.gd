@@ -46,6 +46,11 @@ func flash_scale() -> float:
 	return clampf(float(value("flashes")), 0.0, 1.0)
 
 
+## -1 when "Invert look Y" is on, else 1: multiplies vertical mouse look.
+func look_y_sign() -> float:
+	return -1.0 if bool(value("invert_y")) else 1.0
+
+
 func apply_all() -> void:
 	_apply_audio()
 	_apply_graphics()
@@ -57,6 +62,7 @@ func _apply_audio() -> void:
 	_set_bus("Master", float(value("master_volume")))
 	_set_bus("Music", float(value("music_volume")))
 	_set_bus("SFX", float(value("sfx_volume")))
+	_set_bus("Ambience", float(value("ambience_volume")))
 
 
 func _set_bus(bus_name: String, linear: float) -> void:

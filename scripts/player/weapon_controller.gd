@@ -40,6 +40,8 @@ var slots: Array[StringName] = [&"", &""]
 var active_slot := 0
 ## False between runs or while the results screen is up.
 var enabled := true
+## Multiplies all damage dealt (the loadout station's damage boost sets it).
+var damage_multiplier := 1.0
 ## Zombie a seeking weapon would hit right now (for the HUD lock marker).
 var lock_target: Zombie
 
@@ -678,7 +680,7 @@ func _apply_hits(hits: Dictionary, data: WeaponData) -> Array:
 		var zombie: Zombie = entry["zombie"]
 		if not is_instance_valid(zombie) or zombie.is_dead():
 			continue
-		var scale := StatusEffects.damage_scale(zombie)
+		var scale := StatusEffects.damage_scale(zombie) * damage_multiplier
 		var dmg := float(entry["damage"]) * scale
 		# A blast that hit both head and body: armour sees each part separately.
 		var heads := int(entry["heads"])

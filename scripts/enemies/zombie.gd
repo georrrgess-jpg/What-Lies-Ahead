@@ -579,9 +579,6 @@ func _die(weapon_id: StringName, hit_position := Vector3.ZERO, direction := Vect
 	died.emit(self, weapon_id)
 	var chest := global_position + Vector3.UP * 1.1 * data.body_scale
 	Fx.kill_effect(get_parent(), hit_position if hit_position != Vector3.ZERO else chest)
-	Fx.ticket_popup(get_parent(), chest + Vector3.UP * 0.9, data.tickets)
-	if killed_by_headshot:
-		Fx.ticket_popup(get_parent(), chest + Vector3.UP * 1.5, 0, "HEADSHOT", Color(1.0, 0.45, 0.7))
 	Sfx.play_at(&"zombie_pop", global_position + Vector3.UP, -1.0, randf_range(0.9, 1.1) * data.voice_pitch)
 	var clip := _death_clip(direction)
 	var events: Array = []

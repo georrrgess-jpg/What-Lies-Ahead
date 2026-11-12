@@ -19,6 +19,17 @@ extends Resource
 @export var heal_amount := 60.0
 ## How many heals can be bought per break.
 @export var heals_per_break := 1
+## Tickets the player starts the run with, so the first station visit can buy something.
+@export var starting_tickets := 100
+## Overshield: an extra health layer that absorbs damage first and lasts until
+## it is depleted or the run ends. Buying it again refills it.
+@export var overshield_price := 300
+@export var overshield_amount := 50.0
+## Damage boost: multiplies the player's damage for the whole next wave.
+@export var damage_boost_price := 400
+@export var damage_boost_scale := 1.2
+## Score per ticket still unspent when the player steps through the portal.
+@export var ticket_score_rate := 5
 
 @export_group("Mastery")
 ## Wave-clear XP for each weapon that scored a kill that wave: base + per_wave * wave number.

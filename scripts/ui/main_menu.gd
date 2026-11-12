@@ -610,12 +610,17 @@ func _build_settings() -> Control:
 	page.add_child(center)
 	var panel := PanelContainer.new()
 	center.add_child(panel)
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(960, 860)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	panel.add_child(scroll)
+	# The header (title, BACK at the top right) stays put above the scrolling list.
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 12)
+	panel.add_child(column)
 	var settings := SettingsPanel.new()
 	settings.closed.connect(_show.bind("title"))
+	column.add_child(settings.header)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(960, 780)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(scroll)
 	scroll.add_child(settings)
 	return page
 

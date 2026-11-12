@@ -8,7 +8,8 @@ extends Control
 ##   dot      centre dot only
 ##   chevron  a small inverted V with a dot (precision)
 ## The style comes from the weapon unless Settings "reticle_style" overrides it.
-## Hit markers: white for a hit, amber for a headshot, pink X for a kill.
+## Hit markers: an X that pops in and fades; white for a hit, pink for a kill,
+## gold for a headshot (longer arms on a kill).
 
 const COLORS := {
 	"white": Color(1, 1, 1),
@@ -18,6 +19,13 @@ const COLORS := {
 	"yellow": Color(1.0, 0.88, 0.3),
 }
 const STYLES := ["auto", "cross", "circle", "bracket", "dot", "chevron"]
+const HIT_LIFE := 0.26
+## Hit-marker arm length in pixels at 1080p (the HUD canvas is 1920x1080).
+const HIT_ARM := 30.0
+const KILL_ARM := 36.0
+const HIT_GAP := 12.0
+const HEAD_COLOR := Color(1.0, 0.78, 0.18)
+const DIAGONALS: Array[Vector2] = [Vector2(0.7071, 0.7071), Vector2(0.7071, -0.7071), Vector2(-0.7071, 0.7071), Vector2(-0.7071, -0.7071)]
 
 ## Spread cone radius in pixels (set by the HUD every frame).
 var spread_px := 0.0
@@ -35,7 +43,7 @@ func _ready() -> void:
 
 
 func show_hit(killed: bool, headshot: bool) -> void:
-	hit_time = 0.24
+	hit_time = HIT_LIFE
 	hit_kill = killed
 	hit_head = headshot
 	queue_redraw()
@@ -94,12 +102,19 @@ func _draw() -> void:
 	draw_circle(c, dot, col)
 
 	if hit_time > 0.0:
-		var a := clampf(hit_time / 0.24, 0.0, 1.0)
-		var hcol := UiKit.PINK if hit_kill else (UiKit.AMBER if hit_head else Color.WHITE)
-		hcol.a = a
-		var inner := 10.0 + (1.0 - a) * 6.0
-		var outer := inner + (15.0 if hit_kill else (12.0 if hit_head else 9.0))
-		for dir in [Vector2(1, 1), Vector2(1, -1), Vector2(-1, 1), Vector2(-1, -1)]:
-			var n: Vector2 = dir.normalized()
-			draw_line(c + n * (inner - 1), c + n * (outer + 1), Color(outline, outline.a * a), 7.0 if hit_kill else 6.0)
-			draw_line(c + n * inner, c + n * outer, hcol, 4.0 if hit_kill else 3.0)
+		_draw_hit_marker(c, outline)
+
+
+## The X: pops in oversized and settles over ~90 ms, drifts outwards, fades.
+func _draw_hit_marker(c: Vector2, outline: Color) -> void:
+	var age := HIT_LIFE - hit_time
+	var a := clampf(hit_time / (HIT_LIFE * 0.6), 0.0, 1.0)
+	var pop := lerpf(1.45, 1.0, ease(clampf(age / 0.09, 0.0, 1.0), 0.4))
+	var hcol: Color = HEAD_COLOR if hit_head else (UiKit.PINK if hit_kill else Color.WHITE)
+	hcol.a = a
+	var inner := (HIT_GAP + age * 40.0) * pop
+	var outer := inner + (KILL_ARM if hit_kill else HIT_ARM) * pop
+	var width := 6.0 if hit_kill else 4.5
+	for dir in DIAGONALS:
+		draw_line(c + dir * (inner - 2.0), c + dir * (outer + 2.0), Color(outline, outline.a * a), width + 4.0)
+		draw_line(c + dir * inner, c + dir * outer, hcol, width)

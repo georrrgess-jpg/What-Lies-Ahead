@@ -88,7 +88,7 @@ func _build_head() -> Control:
 		card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		head.add_child(card)
 		_loadout_cards.append(card)
-	var back_button := UiKit.soft_button("Back", 30)
+	var back_button := UiKit.soft_button("BACK", 30)
 	back_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	back_button.pressed.connect(func(): back.emit())
 	head.add_child(back_button)
