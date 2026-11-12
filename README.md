@@ -393,9 +393,9 @@ used Mesa llvmpipe, a software rasteriser):
 - **Reviews**: two independent code reviews after the content update, then a scored
   quality review (zombies, movement, weapon balance, levels/UI/audio/pacing) that drove
   the latest update. Their findings were fixed (see the git history).
-- **Export smoke test**: the exported Linux build played Neon Skyline from wave 6 to the
-  portal with the bot, showed the results and returned to the menu, and rendered Launch
-  Pad 9 on a virtual display.
+- **Export smoke test**: the exported Linux build played Summit Lodge from wave 6 to the
+  portal with the bot, showed the results and returned to the menu, and rendered Tidal
+  Tunnels on a virtual display.
 
 Not verified, or limited:
 
