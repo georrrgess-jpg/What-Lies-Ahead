@@ -72,6 +72,7 @@ var _rng := RandomNumberGenerator.new()
 
 func _initialize() -> void:
 	_rng.seed = 2077
+	_clutter_rng.seed = 404
 	level = Node3D.new()
 	level.name = "NeonSkyline"
 
@@ -293,7 +294,7 @@ func _build_east_strip() -> void:
 	# North stairway (visual steps on a smooth collision slope).
 	var pts := _wedge_points(x0, x1, RAMP_N.x, RAMP_N.y, 0.0, L1)
 	_prism(strip, "StairsN", pts, WEDGE_FACES, [wall], [0, 0, 0, 9, 9])
-	_steps("StairsNSteps", x0 + 0.5, x1 - 0.4, RAMP_N.x, RAMP_N.y, 0.0, L1, 15)
+	_steps("StairsNSteps", x0 + 0.5, x1 - 0.4, RAMP_N.x, RAMP_N.y, 0.0, L1, 15, 0.5)
 	# South ramp with painted chevrons.
 	pts = _wedge_points(x0, x1, RAMP_S.x, RAMP_S.y, 0.0, L1)
 	_prism(strip, "RampS", pts, WEDGE_FACES, [wall, _roof_material("metal")], [0, 0, 0, 1, 9])
@@ -327,7 +328,9 @@ const BOX_FACES := [[0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7], [0, 
 
 
 ## Stair treads between two heights (scenery; the collision is a smooth slope).
-func _steps(steps_name: String, x0: float, x1: float, z_low: float, z_high: float, y_low: float, y_high: float, count: int) -> void:
+## A dark plane under the treads closes the gaps between them; `margin` widens
+## it past the treads on both sides (up to the walls of a boxed-in stair).
+func _steps(steps_name: String, x0: float, x1: float, z_low: float, z_high: float, y_low: float, y_high: float, count: int, margin := 0.0) -> void:
 	var holder := Node3D.new()
 	holder.name = steps_name
 	dressing.add_child(holder)
@@ -350,6 +353,13 @@ func _steps(steps_name: String, x0: float, x1: float, z_low: float, z_high: floa
 		lip.position = Vector3((x0 + x1) * 0.5, y + 0.02, z - run * 0.5)
 		lip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		holder.add_child(lip)
+	var back := MeshInstance3D.new()
+	back.name = "Stringer"
+	var length := Vector2(z_high - z_low, y_high - y_low).length()
+	back.mesh = _box_mesh(Vector3(x1 - x0 + margin * 2.0, 0.04, length), _mat("stair_back", Color(0.09, 0.08, 0.15), 0.6))
+	back.position = Vector3((x0 + x1) * 0.5, (y_low + y_high) * 0.5 - absf(rise) * 0.5 - 0.11, (z_low + z_high) * 0.5)
+	back.rotation.x = atan2(-(y_high - y_low), z_high - z_low)
+	holder.add_child(back)
 
 
 ## Painted direction chevrons up the ramp (scenery).
@@ -541,7 +551,7 @@ func _build_edges() -> void:
 	_railing(edges, "FEWStairsWest", Vector3(wx0, 0, 3.0), Vector3(wx0, FE_LOW_W, 9.0), true)
 	_railing(edges, "FEWLowWest", Vector3(wx0, FE_LOW_W, 9.0), Vector3(wx0, FE_LOW_W, 13.0), true)
 	_railing(edges, "FEWLowSouth", Vector3(wx0, FE_LOW_W, 13.0), Vector3(FE_W_X.y, FE_LOW_W, 13.0), true)
-	_wall(edges, "FEWFacade", Vector3(A_X0 - 0.2, FE_LOW_W - 0.5, 3.0), Vector3(A_X0 - 0.2, FE_LOW_W - 0.5, 13.0), 0.0, -FE_LOW_W + 0.5, 0.4, null, true)
+	_wall(edges, "FEWFacade", Vector3(A_X0 + 0.2, FE_LOW_W - 0.5, 3.0), Vector3(A_X0 + 0.2, FE_LOW_W - 0.5, 13.0), 0.0, -FE_LOW_W + 0.5, 0.4, null, true)
 	# East fire escape.
 	var ex1 := FE_E_X.y
 	_railing(edges, "FEETopNorth", Vector3(B_X1, L1, FE_GAP.x), Vector3(ex1, L1, FE_GAP.x), true)
@@ -634,7 +644,8 @@ func _player_wall(parent: Node3D, a: Vector3, b: Vector3, from_height: float) ->
 	body.collision_mask = 0
 	parent.add_child(body)
 	var dir := Vector3(b.x - a.x, 0, b.z - a.z).normalized()
-	var side := Vector3(-dir.z, 0, dir.x) * 0.15
+	# As wide as a parapet's coping, so its top leaves no ledge to perch on.
+	var side := Vector3(-dir.z, 0, dir.x) * 0.3
 	var lo := Vector3.UP * from_height
 	var hi := Vector3.UP * WALL_H
 	var shape := CollisionShape3D.new()
@@ -674,6 +685,8 @@ func _build_entrances() -> void:
 	_collider(entrances, "FreightElevatorBody", Vector3(5.0, 4.6, 5.0), Vector3(-9.5, N_Y + 2.3, -31.0))
 	# Service hatch on the north-east landing (flush: no collision).
 	_prop(dressing, "neon_hatch", "ServiceHatch", Vector3(17.5, 0, -14.6), 0.0, Vector3(1.6, 0.1, 1.6))
+	# Its lid stands open against the parapet.
+	_no_perch(_collider(entrances, "ServiceHatchLid", Vector3(1.5, 1.5, 0.2), Vector3(17.5, 0.75, -15.5)), Vector3(1.5, 1.5, 0.2))
 
 
 # ---------------------------------------------------------------------------
@@ -713,9 +726,11 @@ func _build_props() -> void:
 	_solid_prop(props, "neon_ac_unit", "ACNorth", Vector3(7.0, 0, -13.6), 0.0, Vector3(2.6, 1.5, 1.8))
 	_solid_prop(props, "neon_ac_unit", "ACTerrace", Vector3(19.4, L1, -3.6), 90.0, Vector3(2.6, 1.5, 1.8))
 	# Vents and crates along the rim, clear of the loop.
-	_solid_prop(props, "neon_vent", "VentSouthWest", Vector3(-9.0, 0, 13.6), 0.0, Vector3(1.2, 1.6, 1.2))
-	_solid_prop(props, "neon_vent", "VentSouthEast", Vector3(10.4, 0, 13.4), 0.0, Vector3(1.2, 1.6, 1.2))
-	_solid_prop(props, "neon_vent", "VentNorthWest", Vector3(-17.6, 0, -14.5), 0.0, Vector3(1.2, 1.6, 1.2))
+	_solid_prop(props, "neon_vent", "VentSouthWest", Vector3(-9.0, 0, 13.6), 0.0, Vector3(1.2, 1.6, 1.2), false)
+	_solid_prop(props, "neon_vent", "VentSouthEast", Vector3(10.4, 0, 13.4), 0.0, Vector3(1.2, 1.6, 1.2), false)
+	_solid_prop(props, "neon_vent", "VentNorthWest", Vector3(-17.6, 0, -14.5), 0.0, Vector3(1.2, 1.6, 1.2), false)
+	for vent in [Vector3(-9.0, 1.5, 13.6), Vector3(10.4, 1.5, 13.4), Vector3(-17.6, 1.5, -14.5)]:
+		_steam("Steam%d" % dressing.get_child_count(), vent, 1.9, 3.6)
 	_solid_prop(props, "neon_crates", "CratesNorth", Vector3(-9.0, 0, -14.6), 0.0, Vector3(2.4, 1.3, 1.2))
 	_solid_prop(props, "neon_crates", "CratesSouthLanding", Vector3(19.4, 0, 13.6), 0.0, Vector3(2.4, 1.3, 1.2))
 	_solid_prop(props, "neon_crates", "CratesPortalRoof", Vector3(6.6, N_Y, -32.6), 0.0, Vector3(2.4, 1.3, 1.2))
@@ -723,16 +738,60 @@ func _build_props() -> void:
 	# Keep the corners where the east strip meets the main roof clear.
 	for entry in [[Vector3(-17.6, 0, -11.2), 0.0], [Vector3(17.0, 0, 14.4), 30.0], [Vector3(-11.8, N_Y, -33.0), 10.0], [Vector3(6.0, 0, 14.3), 60.0]]:
 		_prop(props, "neon_antenna", "Antenna%d" % props.get_child_count(), entry[0], entry[1], Vector3(0.8, 9, 0.8))
-		_collider(props, "AntennaBase%d" % props.get_child_count(), Vector3(0.9, 1.2, 0.9), entry[0] + Vector3(0, 0.6, 0))
+		_no_perch(_collider(props, "AntennaBase%d" % props.get_child_count(), Vector3(0.9, 1.2, 0.9), entry[0] + Vector3(0, 0.6, 0)), Vector3(0.9, 1.2, 0.9))
 	# Satellite dishes on the north-east landing.
-	_solid_prop(props, "neon_dish", "DishNorthEast", Vector3(19.8, 0, -15.0), -30.0, Vector3(1.4, 2.0, 1.4))
+	_solid_prop(props, "neon_dish", "DishNorthEast", Vector3(19.8, 0, -15.0), -30.0, Vector3(1.4, 2.0, 1.4), false)
 
 
-## A prop with a matching box collider.
-func _solid_prop(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw: float, size: Vector3) -> void:
+## Steam drifting up from a vent: two crossed cards with the steam shader.
+func _steam(steam_name: String, base: Vector3, width: float, height: float) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for axis in [Vector3.RIGHT, Vector3.BACK]:
+		var half: Vector3 = axis * width * 0.5
+		var quad := [[-half, Vector2(0, 1)], [half, Vector2(1, 1)], [half + Vector3.UP * height, Vector2(1, 0)], [-half + Vector3.UP * height, Vector2(0, 0)]]
+		for k in [0, 1, 2, 0, 2, 3]:
+			st.set_uv(quad[k][1])
+			st.add_vertex(quad[k][0])
+	var mesh := st.commit()
+	var m := ShaderMaterial.new()
+	m.shader = load(SHADERS + "neon_steam.gdshader")
+	m.set_shader_parameter("time_offset", _clutter_rng.randf_range(0.0, 20.0))
+	mesh.surface_set_material(0, m)
+	var mi := MeshInstance3D.new()
+	mi.name = steam_name
+	mi.mesh = mesh
+	mi.position = base
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.add_to_group("high_detail", true)
+	dressing.add_child(mi)
+
+
+## A prop with a matching box collider. `perch` false keeps the player off
+## its top (props that are not a box up there: stacks, dishes).
+func _solid_prop(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw: float, size: Vector3, perch := true) -> void:
 	_prop(parent, model, prop_name, pos, yaw, size)
 	var c := _collider(parent, prop_name + "Collision", size, pos + Vector3(0, size.y * 0.5, 0))
 	c.rotation.y = deg_to_rad(yaw)
+	if not perch:
+		_no_perch(c, size)
+
+
+## Player-only box over a collider of `size`, so the player can neither
+## mantle onto it nor land on it; shots and zombies ignore it.
+func _no_perch(body: StaticBody3D, size: Vector3) -> void:
+	var wall := StaticBody3D.new()
+	wall.name = "PlayerWall"
+	wall.collision_layer = 16
+	wall.collision_mask = 0
+	body.add_child(wall)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = Vector3(size.x, 3.0, size.z)
+	shape.shape = box
+	shape.position.y = size.y * 0.5 + 1.5
+	wall.add_child(shape)
 
 
 # ---------------------------------------------------------------------------
@@ -886,6 +945,7 @@ func _build_backdrop() -> void:
 	_neighbour(city, Vector3(-30, -3.0, -70), Vector3(20, -3.0, -40), 4)
 	_neighbour(city, Vector3(13, -4.0, -42), Vector3(36, -4.0, -24), 5)
 	_neighbour(city, Vector3(-36, -6.0, -42), Vector3(-17, -6.0, -24), 6)
+	_flush_clutter(city)
 	_towers(city)
 	_holograms(city)
 
@@ -937,14 +997,99 @@ func _neighbour(parent: Node3D, lo: Vector3, hi: Vector3, index: int) -> void:
 	for edge in [[Vector3(lo.x, top, lo.z), Vector3(hi.x, top, lo.z)], [Vector3(hi.x, top, lo.z), Vector3(hi.x, top, hi.z)],
 			[Vector3(hi.x, top, hi.z), Vector3(lo.x, top, hi.z)], [Vector3(lo.x, top, hi.z), Vector3(lo.x, top, lo.z)]]:
 		_wall(parent, "NeighbourRim%d_%d" % [index, parent.get_child_count()], edge[0], edge[1], 0.0, 0.25, 0.3, rim, false)
-	for k in 5:
-		var size := Vector3(_rng.randf_range(2, 5), _rng.randf_range(1.5, 4), _rng.randf_range(2, 5))
-		var p := Vector3(_rng.randf_range(lo.x + 3, hi.x - 3), top + size.y * 0.5, _rng.randf_range(lo.z + 3, hi.z - 3))
-		var mi := MeshInstance3D.new()
-		mi.name = "NeighbourBox%d_%d" % [index, k]
-		mi.mesh = _box_mesh(size, _mat("neighbour_box", Color(0.12, 0.11, 0.2), 0.8))
-		mi.position = p
-		parent.add_child(mi)
+	# The skyline beyond was laid out with thirty draws taken here; keep its sequence.
+	for k in 30:
+		_rng.randf()
+	_roof_clutter(lo, hi, index)
+
+
+## Rooftop furniture of a neighbouring block, collected into three city-wide
+## MultiMeshes (see _flush_clutter): stair bulkheads with a lit door, plant
+## blocks with pilot lights, glowing skylights and water tanks.
+func _roof_clutter(lo: Vector3, hi: Vector3, index: int) -> void:
+	var top := lo.y
+	var rng := _clutter_rng
+	var warm := Color(1.0, 0.74, 0.42)
+	var tints := [Color(0.3, 0.95, 1.0), Color(1.0, 0.3, 0.8), Color(0.7, 0.45, 1.0), warm]
+	for k in 3:
+		# Stair bulkhead: a block with a lit doorway on the side facing the play roof.
+		var size := Vector3(rng.randf_range(3.0, 5.0), rng.randf_range(2.6, 3.6), rng.randf_range(3.0, 5.0))
+		var p := Vector3(rng.randf_range(lo.x + 4, hi.x - 4), top + size.y * 0.5, rng.randf_range(lo.z + 4, hi.z - 4))
+		_clutter_boxes.append(Transform3D(Basis().scaled(size), p))
+		var to_centre := Vector3(-p.x, 0, -p.z)
+		var door := Vector3(signf(to_centre.x), 0, 0) if absf(to_centre.x) > absf(to_centre.z) else Vector3(0, 0, signf(to_centre.z))
+		var door_size := Vector3(0.08, 2.0, 1.1) if door.x != 0.0 else Vector3(1.1, 2.0, 0.08)
+		_clutter_lights.append([Transform3D(Basis().scaled(door_size), p + door * (size * 0.5 + Vector3.ONE * 0.03) + Vector3.DOWN * (size.y * 0.5 - 1.0)), warm])
+		_clutter_lights.append([Transform3D(Basis().scaled(Vector3(size.x + 0.1, 0.12, size.z + 0.1)), p + Vector3.UP * (size.y * 0.5 - 0.2)), tints[(index + k) % 4]])
+	for k in 4:
+		# Plant: low units in a row with a pilot light each.
+		var p := Vector3(rng.randf_range(lo.x + 3, hi.x - 3), top + 0.7, rng.randf_range(lo.z + 3, hi.z - 3))
+		_clutter_boxes.append(Transform3D(Basis().scaled(Vector3(2.6, 1.4, 1.8)), p))
+		_clutter_boxes.append(Transform3D(Basis().scaled(Vector3(2.6, 1.4, 1.8)), p + Vector3(3.0, 0, 0)))
+		_clutter_lights.append([Transform3D(Basis().scaled(Vector3(0.25, 0.25, 0.25)), p + Vector3(1.5, 0.9, 0)), tints[(index + k + 1) % 4]])
+	for k in 3:
+		# Skylight: a glowing glass strip let into the roof.
+		var long_x := rng.randf() < 0.5
+		var size := Vector3(6.0, 0.25, 2.0) if long_x else Vector3(2.0, 0.25, 6.0)
+		var p := Vector3(rng.randf_range(lo.x + 5, hi.x - 5), top + 0.3, rng.randf_range(lo.z + 5, hi.z - 5))
+		_clutter_boxes.append(Transform3D(Basis().scaled(size + Vector3(0.5, 0.2, 0.5)), p + Vector3.DOWN * 0.12))
+		_clutter_lights.append([Transform3D(Basis().scaled(size), p), (warm if k != 1 else tints[index % 3]).darkened(0.25)])
+	for k in 1 + index % 2:
+		var p := Vector3(rng.randf_range(lo.x + 4, hi.x - 4), top + 3.4, rng.randf_range(lo.z + 4, hi.z - 4))
+		_clutter_tanks.append(Transform3D(Basis(), p))
+		_clutter_boxes.append(Transform3D(Basis().scaled(Vector3(2.4, 2.0, 2.4)), p + Vector3.DOWN * 2.4))
+		_clutter_lights.append([Transform3D(Basis().scaled(Vector3(3.5, 0.18, 3.5)), p + Vector3.UP * 0.6), tints[(index + 2) % 4]])
+
+
+var _clutter_rng := RandomNumberGenerator.new()
+var _clutter_boxes: Array[Transform3D] = []
+var _clutter_tanks: Array[Transform3D] = []
+var _clutter_lights: Array = []        # [Transform3D, Color]
+
+
+## Builds the MultiMeshes for everything _roof_clutter collected.
+func _flush_clutter(parent: Node3D) -> void:
+	var dark := _mat("neighbour_box", Color(0.13, 0.12, 0.22), 0.8)
+	var unit := BoxMesh.new()
+	unit.material = dark
+	var boxes := MultiMesh.new()
+	boxes.transform_format = MultiMesh.TRANSFORM_3D
+	boxes.mesh = unit
+	boxes.instance_count = _clutter_boxes.size()
+	for i in _clutter_boxes.size():
+		boxes.set_instance_transform(i, _clutter_boxes[i])
+	var tank := CylinderMesh.new()
+	tank.top_radius = 1.7
+	tank.bottom_radius = 1.7
+	tank.height = 2.8
+	tank.radial_segments = 12
+	tank.material = _mat("neighbour_tank", Color(0.2, 0.15, 0.3), 0.6)
+	var tanks := MultiMesh.new()
+	tanks.transform_format = MultiMesh.TRANSFORM_3D
+	tanks.mesh = tank
+	tanks.instance_count = _clutter_tanks.size()
+	for i in _clutter_tanks.size():
+		tanks.set_instance_transform(i, _clutter_tanks[i])
+	var lit := StandardMaterial3D.new()
+	lit.resource_name = "NeighbourLights"
+	lit.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	lit.vertex_color_use_as_albedo = true
+	var lit_unit := BoxMesh.new()
+	lit_unit.material = lit
+	var lights := MultiMesh.new()
+	lights.transform_format = MultiMesh.TRANSFORM_3D
+	lights.use_colors = true
+	lights.mesh = lit_unit
+	lights.instance_count = _clutter_lights.size()
+	for i in _clutter_lights.size():
+		lights.set_instance_transform(i, _clutter_lights[i][0])
+		lights.set_instance_color(i, _clutter_lights[i][1])
+	for entry in [["NeighbourBlocks", boxes], ["NeighbourTanks", tanks], ["NeighbourLights", lights]]:
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = entry[0]
+		mmi.multimesh = entry[1]
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		parent.add_child(mmi)
 
 
 ## Skyline towers ringed around the block, with crowns and adverts facing in.
@@ -976,6 +1121,24 @@ func _towers(parent: Node3D) -> void:
 			_screen(parent, "TowerAd%02d" % placed, Vector3(face.x, h - sw * 0.35 - 2.0, face.z), yaw, Vector2(sw, sw * 0.5),
 				screens_left.pop_front(), 4, _rng.randf_range(2.2, 3.4), 0.0)
 		placed += 1
+	_extra_towers(parent, placed)
+
+
+## Fixed towers where the random ring leaves the skyline thin (behind the
+## start, looking south): [centre x, centre z, width, depth, roof height].
+const EXTRA_TOWERS := [
+	[-12.0, 78.0, 20.0, 18.0, 34.0], [24.0, 92.0, 22.0, 20.0, 52.0], [-48.0, 66.0, 18.0, 22.0, 22.0],
+	[58.0, 62.0, 18.0, 18.0, 28.0], [-78.0, 30.0, 20.0, 24.0, 40.0],
+]
+
+
+func _extra_towers(parent: Node3D, first_index: int) -> void:
+	for k in EXTRA_TOWERS.size():
+		var t: Array = EXTRA_TOWERS[k]
+		var lo := Vector3(t[0] - t[2] * 0.5, STREET_Y - 2.0, t[1] - t[3] * 0.5)
+		var hi := Vector3(t[0] + t[2] * 0.5, t[4], t[1] + t[3] * 0.5)
+		_tower_body(parent, "Tower%02d" % (first_index + k), lo, hi, 20.0 + first_index + k)
+		_crown(parent, first_index + k, lo, hi)
 
 
 ## Neon outline bands and blinking-red aviation lights on a tower top.
@@ -1067,7 +1230,9 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.agent_max_climb = 0.25
 	mesh.agent_max_slope = 40.0
 	mesh.region_min_size = 8.0
-	mesh.filter_baking_aabb = AABB(Vector3(-40, FE_LOW_W - 1.0, -45), Vector3(80, L1 + 1.2 - FE_LOW_W, 80))
+	# High enough to take in the props on the terrace whole: clipped at their
+	# feet they would bake as steps the zombies try to walk over.
+	mesh.filter_baking_aabb = AABB(Vector3(-40, FE_LOW_W - 1.0, -45), Vector3(80, L1 + 3.6 - FE_LOW_W, 80))
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, region)
 	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
@@ -1081,7 +1246,7 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 ## the player's start; prints a warning for any that are not.
 func _check_reachable(mesh: NavigationMesh) -> void:
 	var probes := {
-		"terrace": Vector3(17.0, L1, -1.0), "north landing": Vector3(17.0, 0, -14.5),
+		"terrace": Vector3(17.0, L1, -1.0), "north landing": Vector3(17.0, 0, -13.8),
 		"south landing": Vector3(15.6, 0, 12.4), "bridge": Vector3(-2.0, N_Y * 0.5, -20.0),
 		"portal roof": Vector3(4.0, N_Y, -27.0), "west fire escape": Vector3(-21.3, FE_LOW_W, 11.0),
 		"east fire escape": Vector3(22.8, 0, 11.0), "east fire escape top": Vector3(22.8, L1, 0.5),

@@ -427,7 +427,34 @@ def build_portal_arch():
         star("KeyStar", 0.34, 0.16, (0, -0.32, spring + arch_r + 0.2), m=mat("Yellow")),
         box("Back", (3.4, 0.12, spring + arch_r - 0.3), (0, 0.32, (spring + arch_r - 0.3) / 2), bevel=0.0, m=dark),
     ]
+    parts += portal_back(spring + arch_r - 0.3, purple, pink, teal, cyan, amber)
     save("portal_arch", [merge("PortalArch", parts)])
+
+
+def portal_back(height, frame_m, band_m, box_m, glow_m, bulb_m=None):
+    """The machine side of a portal (seen by walking round it): a framed
+    panel with ribs, a glowing core, conduits down to a power box and a row
+    of bulbs. Sits on the +Y face of the arch's back panel (y = 0.38)."""
+    y = 0.4
+    parts = [
+        box("BackFrameTop", (3.2, 0.14, 0.2), (0, y, height - 0.12), bevel=0.04, m=frame_m),
+        box("BackFrameL", (0.2, 0.14, height - 0.5), (-1.3, y, height / 2 + 0.1), bevel=0.04, m=frame_m),
+        box("BackFrameR", (0.2, 0.14, height - 0.5), (1.3, y, height / 2 + 0.1), bevel=0.04, m=frame_m),
+        cyl("BackCoreRing", 0.62, 0.16, (0, y + 0.02, 2.25), rot=rad(90, 0, 0), segs=20, bevel=0.04, m=band_m),
+        cyl("BackCore", 0.46, 0.2, (0, y + 0.04, 2.25), rot=rad(90, 0, 0), segs=20, bevel=0.04, m=box_m),
+        torus("BackCoreGlow", 0.3, 0.05, (0, y + 0.15, 2.25), rot=rad(90, 0, 0), m=glow_m, major_segs=20, minor_segs=6),
+        cyl("BackCoreEye", 0.12, 0.08, (0, y + 0.15, 2.25), rot=rad(90, 0, 0), segs=12, bevel=0.02, m=glow_m),
+        box("BackPowerBox", (1.5, 0.34, 0.8), (0, y + 0.1, 0.62), bevel=0.06, m=box_m),
+        box("BackPowerBand", (1.56, 0.36, 0.14), (0, y + 0.1, 0.84), bevel=0.03, m=band_m),
+        box("BackPowerLight", (0.5, 0.06, 0.12), (0, y + 0.29, 0.5), bevel=0.02, m=glow_m),
+    ]
+    for i, z in enumerate((1.3, 3.0)):
+        parts.append(box(f"BackRib{i}", (2.5, 0.1, 0.12), (0, y, z), bevel=0.03, m=frame_m))
+    for i, x in enumerate((-0.42, 0.42)):
+        parts.append(tube(f"BackConduit{i}", [(x, y + 0.12, 1.0), (x, y + 0.12, 1.55), (x * 0.6, y + 0.1, 1.9)], 0.06, m=band_m, segs=6))
+    if bulb_m is not None:
+        parts += bulb_row("BackBulb", (-1.05, y + 0.08, height - 0.4), (1.05, y + 0.08, height - 0.4), 6, 0.08, bulb_m)
+    return parts
 
 
 def _shop(name, body_hex, trim_hex, awning_a, awning_b, label, sign_hex):
@@ -521,6 +548,151 @@ def build_trash_bin():
         sphere("Knob", 0.07, (0, 0, 1.08), m=pink),
     ]
     save("trash_bin", [merge("TrashBin", parts)])
+
+
+def build_seagull():
+    """A gull to perch on rail posts, lamps and roofs (the kiosk mascot at life size, looking toward +X)."""
+    reset_scene()
+    from build_kiosk import build_seagull as gull_parts
+    save("seagull", [merge("Seagull", place(gull_parts(), scale=0.27))])
+
+
+def build_sailboat():
+    """Toy sailing dinghy for the bay (scenery). Bow toward +X, waterline at z = 0."""
+    reset_scene()
+    white, pink, cream, wood, teal = mat("White"), mat("Pink"), mat("Cream"), mat("Wood"), mat("Teal")
+    plan = [(-2.3, -0.8), (0.9, -0.95), (2.9, 0.0), (0.9, 0.95), (-2.3, 0.8)]
+    deck = [(x * 0.9, y * 0.82) for x, y in plan]
+    parts = [
+        prism("Hull", plan, 1.0, (0, 0, 0.15), rot=rad(90, 0, 0), m=white, bevel=0.12, segs=3),
+        prism("Stripe", [(x * 1.02, y * 1.03) for x, y in plan], 0.2, (0, 0, 0.42), rot=rad(90, 0, 0), m=pink, bevel=0.04),
+        prism("Deck", deck, 0.1, (0, 0, 0.66), rot=rad(90, 0, 0), m=wood),
+        box("Cabin", (1.3, 0.9, 0.5), (-1.0, 0, 0.92), bevel=0.1, m=teal),
+        cyl("Mast", 0.07, 6.4, (0.4, 0, 3.8), segs=8, bevel=0.0, m=wood),
+        box("Boom", (2.9, 0.08, 0.08), (-1.0, 0, 1.45), bevel=0.02, m=wood),
+        prism("MainSail", [(0.0, 0.0), (-2.7, 0.0), (0.0, 5.2)], 0.05, (0.28, 0, 1.6), m=cream),
+        prism("MainStripe", [(0.0, 1.5), (-1.92, 1.5), (-1.5, 2.3), (0.0, 2.3)], 0.07, (0.28, 0, 1.6), m=pink),
+        prism("Jib", [(0.0, 0.0), (2.2, 0.0), (0.0, 4.4)], 0.05, (0.52, 0, 1.2), m=mat("PinkLight")),
+        prism("Pennant", [(0.0, 0.0), (-0.7, 0.14), (0.0, 0.28)], 0.03, (0.36, 0, 6.7), m=pink),
+    ]
+    save("sailboat", [merge("Sailboat", parts)])
+
+
+def build_buoy():
+    """Channel marker buoy with a lamp on top. Waterline at z = 0."""
+    reset_scene()
+    red, white, dark = mat("Red"), mat("White"), mat("TealDark")
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
+    parts = [
+        cyl("Float", 0.75, 0.7, (0, 0, 0.05), segs=14, bevel=0.12, m=red),
+        cyl("Body", 0.52, 1.5, (0, 0, 1.0), segs=12, bevel=0.03, m=red, radius_top=0.24),
+        cyl("Band", 0.44, 0.34, (0, 0, 0.98), segs=12, bevel=0.02, m=white, radius_top=0.37),
+        cyl("Cage", 0.2, 0.3, (0, 0, 1.9), segs=8, bevel=0.03, m=dark),
+        bulb("Lamp", 0.17, (0, 0, 2.18), amber),
+    ]
+    save("buoy", [merge("Buoy", parts)])
+
+
+def build_lighthouse():
+    """Striped lighthouse on a rock, far out in the bay (scenery). About 30 m
+    tall; the lamp room's centre is 24.9 m above the waterline (z = 0), where
+    the level adds the turning beams."""
+    reset_scene()
+    white, pink, dark, teal = mat("White"), mat("Pink"), mat("TealDark"), mat("Teal")
+    rock = mat("Rock", "#6a4a5e", rough=0.95)
+    amber = glow("BulbAmber", "#ffc24a", 3.0)
+    glass = glow("LampRoom", "#ffe9a8", 2.0)
+    import random
+    rng = random.Random(11)
+    parts = []
+    for i in range(7):
+        a = math.tau * i / 7
+        r = rng.uniform(4.0, 7.5)
+        parts.append(sphere(f"Rock{i}", rng.uniform(3.5, 5.5), (math.cos(a) * r, math.sin(a) * r, rng.uniform(-1.2, 0.4)),
+                            scale=(1.3, 1.0, 0.55), rot=(0, 0, a), m=rock, segs=8, rings=5))
+    parts.append(sphere("RockTop", 6.5, (0, 0, 0.2), scale=(1.2, 1.1, 0.5), m=rock, segs=10, rings=6))
+    # Tower: five tapering bands, alternately white and pink.
+    base_r, top_r, h0, h = 3.6, 2.2, 2.4, 21.0
+    for i in range(5):
+        r0 = base_r + (top_r - base_r) * i / 5
+        r1 = base_r + (top_r - base_r) * (i + 1) / 5
+        parts.append(cyl(f"Band{i}", r0, h / 5, (0, 0, h0 + h / 5 * (i + 0.5)), segs=16, bevel=0.0,
+                         m=white if i % 2 == 0 else pink, radius_top=r1))
+    top = h0 + h
+    parts += [
+        cyl("Plinth", 4.2, 1.0, (0, 0, h0 - 0.3), segs=16, bevel=0.15, m=dark),
+        box("Door", (1.2, 0.3, 2.2), (0, -3.5, h0 + 1.2), bevel=0.08, m=dark),
+        cyl("Gallery", 3.2, 0.35, (0, 0, top + 0.15), segs=16, bevel=0.06, m=dark),
+        torus("GalleryRail", 3.1, 0.07, (0, 0, top + 1.2), m=teal, major_segs=20, minor_segs=5),
+        cyl("LampRoom", 1.6, 2.4, (0, 0, top + 1.5), segs=12, bevel=0.05, m=glass),
+        cyl("RoofCone", 2.3, 1.9, (0, 0, top + 3.6), segs=14, bevel=0.0, m=pink, radius_top=0.2),
+        sphere("RoofBall", 0.35, (0, 0, top + 4.7), m=amber, segs=8, rings=6),
+    ]
+    for i in range(8):
+        a = math.tau * i / 8
+        parts.append(cyl(f"RailPost{i}", 0.06, 1.1, (math.cos(a) * 3.1, math.sin(a) * 3.1, top + 0.75), segs=6, bevel=0.0, m=teal))
+        parts.append(box(f"Mullion{i}", (0.12, 0.12, 2.4), (math.cos(a) * 1.62, math.sin(a) * 1.62, top + 1.5), rot=(0, 0, a), bevel=0.0, m=dark))
+    for i, z in enumerate((h0 + 6.5, h0 + 12.5, h0 + 17.5)):
+        parts.append(box(f"Window{i}", (0.8, 0.3, 1.2), (0, -(base_r + (top_r - base_r) * (z - h0) / h) + 0.05, z), bevel=0.06, m=glass))
+    save("lighthouse", [merge("Lighthouse", parts)])
+
+
+def _signpost(name, boards):
+    """Fingerpost: a teal post with arrow boards. `boards` is a list of
+    (label, palette colour, angle in degrees seen from above with 0 = +X and
+    90 = +Y, height). The lettering reads from both sides."""
+    reset_scene()
+    teal, dark, cream, pink = mat("Teal"), mat("TealDark"), mat("Cream"), mat("Pink")
+    parts = [
+        cyl("Post", 0.09, 3.5, (0, 0, 1.75), segs=10, bevel=0.0, m=teal),
+        cyl("Foot", 0.2, 0.3, (0, 0, 0.15), segs=10, bevel=0.04, m=dark, radius_top=0.14),
+        cyl("Cap", 0.14, 0.1, (0, 0, 3.52), segs=10, bevel=0.03, m=dark),
+        sphere("Ball", 0.15, (0, 0, 3.68), m=pink, segs=10, rings=6),
+    ]
+    arrow = [(0.06, -0.19), (1.42, -0.19), (1.72, 0.0), (1.42, 0.19), (0.06, 0.19)]
+    for i, (label, color, angle, z) in enumerate(boards):
+        size = min(0.2, 1.9 / max(1, len(label)))
+        board = [
+            prism(f"Board{i}", arrow, 0.07, (0, 0, 0), m=mat(color), bevel=0.02),
+            box(f"Clamp{i}", (0.26, 0.2, 0.3), (0, 0, 0), bevel=0.03, m=dark),
+            text(f"LabelF{i}", label, size, 0.03, (0.8, -0.045, -0.01), m=cream),
+            text(f"LabelB{i}", label, size, 0.03, (0.8, 0.045, -0.01), rot=(0, 0, math.pi), m=cream),
+        ]
+        parts += place(board, (0, 0, z), rot_z=math.radians(angle))
+    save(name, [merge("Signpost", parts)])
+
+
+def build_signpost_a():
+    """Stands in the planter behind the kiosk: portal east, Ferris wheel west, prizes south."""
+    _signpost("signpost_a", [("PORTAL", "Purple", 10, 3.15), ("FERRIS WHEEL", "Pink", 196, 2.7), ("PRIZES", "Orange", 270, 2.25)])
+
+
+def build_signpost_b():
+    """Stands in the planter by the pier entrance: prizes ahead, portal beyond, arcade west, beach behind."""
+    _signpost("signpost_b", [("PRIZES", "Orange", 96, 3.15), ("PORTAL", "Purple", 62, 2.7), ("ARCADE", "Pink", 178, 2.25), ("BEACH", "Teal", 270, 1.8)])
+
+
+def build_beach_umbrella():
+    """Striped beach umbrella over a towel (scenery on the sand)."""
+    reset_scene()
+    pink, white, wood, teal, yellow = mat("Pink"), mat("White"), mat("Wood"), mat("TealLight"), mat("Yellow")
+    parts = [
+        cyl("Pole", 0.05, 2.5, (0, 0, 1.25), rot=rad(0, 8, 0), segs=6, bevel=0.0, m=wood),
+        box("Towel", (2.0, 0.9, 0.04), (0.5, -0.5, 0.02), rot=rad(0, 0, 20), bevel=0.0, m=teal),
+        box("TowelStripe", (0.3, 0.92, 0.045), (0.5, -0.5, 0.022), rot=rad(0, 0, 20), bevel=0.0, m=yellow),
+        sphere("Ball", 0.3, (-0.9, 0.5, 0.3), m=yellow, segs=10, rings=6),
+        sphere("Finial", 0.08, (0.35, 0, 2.62), m=wood, segs=6, rings=4),
+    ]
+    for i in range(8):
+        a0, a1 = math.tau * i / 8, math.tau * (i + 1) / 8
+        seg = prism(f"Panel{i}", [(0.0, 0.0), (math.cos(a0) * 1.7, math.sin(a0) * 1.7), (math.cos(a1) * 1.7, math.sin(a1) * 1.7)],
+                    0.05, (0.33, 0, 2.5), m=pink if i % 2 else white)
+        # The prism stands in XZ: lay it flat and let it droop toward the rim.
+        for v in seg.data.vertices:
+            x, y, z = v.co
+            v.co = Vector((x, z, y - 0.26 * math.hypot(x, z)))
+        parts.append(seg)
+    save("beach_umbrella", [merge("BeachUmbrella", parts)])
 
 
 if __name__ == "__main__":

@@ -32,6 +32,35 @@ const Z1 := 22.0
 # Exit spur.
 const SPUR_X0 := 8.0
 const SPUR_Z0 := -54.0
+# The Ferris wheel on its own platform beyond the ride gate.
+const WHEEL_POS := Vector3(-34.0, 0.0, -29.0)
+const WHEEL_YAW := 42.0
+const WHEEL_SCALE := 1.12
+## Lamp posts stand in the rail line (their bases are part of the fence), so
+## nothing sticks out for the player to snag on while running along a rail.
+## Each entry: rail start, rail end, wanted spot along it, yaw of the arm
+## (which reaches inward over the deck), true to keep the spot exactly.
+## Otherwise the post moves to the nearest seam between two rail modules.
+const LAMPS := [
+	[Vector3(X1, 0, SPUR_Z0), Vector3(X1, 0, Z1), Vector3(X1, 0, 14.0), 180.0, false],
+	[Vector3(X1, 0, SPUR_Z0), Vector3(X1, 0, Z1), Vector3(X1, 0, 0.0), 180.0, false],
+	[Vector3(X1, 0, SPUR_Z0), Vector3(X1, 0, Z1), Vector3(X1, 0, -14.0), 180.0, false],
+	[Vector3(X1, 0, SPUR_Z0), Vector3(X1, 0, Z1), Vector3(X1, 0, -28.0), 180.0, false],
+	[Vector3(X1, 0, SPUR_Z0), Vector3(X1, 0, Z1), Vector3(X1, 0, -42.0), 180.0, false],
+	[Vector3(SPUR_X0, 0, SPUR_Z0), Vector3(SPUR_X0, 0, Z0), Vector3(SPUR_X0, 0, -35.0), 0.0, false],
+	[Vector3(SPUR_X0, 0, SPUR_Z0), Vector3(SPUR_X0, 0, Z0), Vector3(SPUR_X0, 0, -49.0), 0.0, false],
+	# Front-left corner post, its arm on the diagonal.
+	[Vector3(X0, 0, 18.0), Vector3(X0, 0, Z1), Vector3(X0, 0, Z1), 45.0, true],
+	[Vector3(X0, 0, Z0), Vector3(X0, 0, -19.0), Vector3(X0, 0, -21.5), 0.0, false],
+	# Between the two game booths.
+	[Vector3(X0, 0, -7.0), Vector3(X0, 0, 4.0), Vector3(X0, 0, -1.1), 0.0, true],
+	[Vector3(X0, 0, Z0), Vector3(-13.0, 0, Z0), Vector3(-16.0, 0, Z0), -90.0, false],
+	[Vector3(-7.0, 0, Z0), Vector3(SPUR_X0, 0, Z0), Vector3(-3.0, 0, Z0), -90.0, false],
+	[Vector3(-7.0, 0, Z0), Vector3(SPUR_X0, 0, Z0), Vector3(5.0, 0, Z0), -90.0, false],
+	[Vector3(X0, 0, Z1), Vector3(-8.0, 0, Z1), Vector3(-14.0, 0, Z1), 90.0, false],
+	[Vector3(2.0, 0, Z1), Vector3(X1, 0, Z1), Vector3(7.0, 0, Z1), 90.0, false],
+]
+const RAIL_MODULE := 3.0
 
 var level: Node3D
 var geo: Node3D          # collidable geometry (navmesh source)
@@ -64,6 +93,7 @@ func _initialize() -> void:
 	_build_arena_props()
 	_build_exit()
 	_build_backdrop()
+	_build_set_dressing()
 	_build_string_lights()
 	_build_deck_paint()
 	_build_markers()
@@ -217,27 +247,53 @@ func _build_decks() -> void:
 	ramp.position = top_mid - normal * (DECK_THICK * 0.5)
 	_deck(decks, "RampLanding", -13.0, -7.0, Z0 - ramp_len - 5.0, Z0 - ramp_len, -drop)
 
-	# Pier pylons under the decks (scenery only).
-	var pylons := Node3D.new()
-	pylons.name = "Pylons"
-	dressing.add_child(pylons)
+	_build_pylons(angle)
+
+
+## Pier pylons under every deck, the ramp, its landing and the Ferris wheel's
+## platform, so nothing hangs over the water (scenery only, one MultiMesh).
+func _build_pylons(ramp_angle: float) -> void:
+	var under := -DECK_THICK
+	# [x, z, height of the underside it carries]
+	var spots: Array = []
+	for x in range(-24, 15, 7):
+		for z in range(-52, 23, 7):
+			if z < -24 and x < 9:
+				continue
+			spots.append(Vector3(x, under, z))
+	for z in [5.5, 11.0, 16.5, -17.5, -13.0, -8.5]:        # arcade floor, ride platform
+		spots.append(Vector3(-31.5, under, z))
+	for p in [Vector2(-31.5, -25.5), Vector2(-26.5, -25.5)]:  # walkway to the wheel
+		spots.append(Vector3(p.x, under, p.y))
+	for z in [25.5, 29.0]:                                    # entrance walk
+		for x in [-6.6, 0.6]:
+			spots.append(Vector3(x, under, z))
+	for x in [-12.1, -7.9]:
+		for z in [-28.5, -33.0]:                               # service ramp
+			spots.append(Vector3(x, (Z0 - z) * -tan(ramp_angle) - DECK_THICK / cos(ramp_angle), z))
+		spots.append(Vector3(x, -2.6 - DECK_THICK, Z0 - 15.0))  # ramp landing
+	var wheel := Transform3D(Basis(Vector3.UP, deg_to_rad(WHEEL_YAW)).scaled(Vector3.ONE * WHEEL_SCALE), WHEEL_POS)
+	for x in [-10.5, 0.0, 10.5]:
+		for z in [-3.4, 3.4]:
+			var p: Vector3 = wheel * Vector3(x, 0, z)
+			spots.append(Vector3(p.x, -0.8 * WHEEL_SCALE, p.z))
 	var pylon_mesh := CylinderMesh.new()
 	pylon_mesh.top_radius = 0.42
 	pylon_mesh.bottom_radius = 0.5
 	pylon_mesh.height = 7.0
 	pylon_mesh.radial_segments = 10
 	pylon_mesh.material = _mat("pylon", Color(0.36, 0.22, 0.2), 0.9)
-	var index := 0
-	for x in range(-24, 15, 7):
-		for z in range(-52, 23, 7):
-			if z < -24 and x < 9:
-				continue
-			var p := MeshInstance3D.new()
-			p.name = "Pylon%02d" % index
-			p.mesh = pylon_mesh
-			p.position = Vector3(x, -4.3, z)
-			pylons.add_child(p)
-			index += 1
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = pylon_mesh
+	mm.instance_count = spots.size()
+	for i in spots.size():
+		var s: Vector3 = spots[i]
+		mm.set_instance_transform(i, Transform3D(Basis(), Vector3(s.x, s.y - 3.5, s.z)))
+	var pylons := MultiMeshInstance3D.new()
+	pylons.name = "Pylons"
+	pylons.multimesh = mm
+	dressing.add_child(pylons)
 
 
 func _deck(parent: Node3D, deck_name: String, x0: float, x1: float, z0: float, z1: float, top := DECK_TOP) -> void:
@@ -342,7 +398,7 @@ func _rail(parent: Node3D, rail_name: String, a: Vector3, b: Vector3) -> void:
 	wall_shape.position.y = 1.7
 	wall.add_child(wall_shape)
 	var module_path := MODELS + "rail.glb"
-	var module_len := 3.0
+	var module_len := RAIL_MODULE
 	var count := maxi(1, int(round(length / module_len)))
 	var step := length / count
 	for i in count:
@@ -460,24 +516,30 @@ func _build_arena_props() -> void:
 	_prop(props, "popcorn_cart", "PopcornCart", Vector3(-20.5, 0, -21.2), 90.0, Vector3(1.7, 2.0, 1.0))
 	_collider(props, "PopcornCartCollision", Vector3(1.1, 2.0, 1.8), Vector3(-20.5, 1.0, -21.2))
 	_prop(dressing, "surfboards", "Surfboards", Vector3(13.45, 0, -2.6), -90.0, Vector3(0.6, 2.4, 1.6))
-	_prop(dressing, "life_ring", "LifeRing", Vector3(13.8, 0.75, 1.4), -90.0, Vector3(0.2, 0.8, 0.8))
+	_prop(dressing, "life_ring", "LifeRing", Vector3(13.8, 0.75, 3.0), -90.0, Vector3(0.2, 0.8, 0.8))
 	_prop(dressing, "life_ring", "LifeRing2", Vector3(13.8, 0.75, -30.0), -90.0, Vector3(0.2, 0.8, 0.8))
 
-	# Lamp posts on the rail lines (arm reaches inward over the deck).
-	var lamps := [
-		[Vector3(13.6, 0, 14.0), 180.0], [Vector3(13.6, 0, 0.0), 180.0], [Vector3(13.6, 0, -14.0), 180.0],
-		[Vector3(13.6, 0, -28.0), 180.0], [Vector3(13.6, 0, -42.0), 180.0],
-		[Vector3(8.4, 0, -35.0), 0.0], [Vector3(8.4, 0, -49.0), 0.0],
-		[Vector3(-24.6, 0, 20.5), 0.0], [Vector3(-24.6, 0, -21.5), 0.0], [Vector3(-24.6, 0, -1.1), 0.0],
-		[Vector3(-16.0, 0, -23.6), -90.0], [Vector3(-3.0, 0, -23.6), -90.0], [Vector3(5.0, 0, -23.6), -90.0],
-		[Vector3(-14.0, 0, 21.6), 90.0], [Vector3(7.0, 0, 21.6), 90.0],
-	]
-	i = 0
-	for entry in lamps:
-		var pos: Vector3 = entry[0]
-		_prop(dressing, "lamp_post", "Lamp%02d" % i, pos, entry[1], Vector3(0.3, 5.5, 0.3))
-		_collider(props, "Lamp%02dCollision" % i, Vector3(0.35, 5.0, 0.35), pos + Vector3(0, 2.5, 0))
-		i += 1
+	# Lamp posts in the rail lines (the rail's collision covers them).
+	for k in LAMPS.size():
+		_prop(dressing, "lamp_post", "Lamp%02d" % k, _lamp_spot(k), LAMPS[k][3], Vector3(0.3, 5.5, 0.3))
+
+
+## Where lamp `index` of LAMPS stands: on its rail's centre line, at the seam
+## between two rail modules (clear of the rail's own posts), a touch inward.
+func _lamp_spot(index: int) -> Vector3:
+	var entry: Array = LAMPS[index]
+	var a: Vector3 = entry[0]
+	var b: Vector3 = entry[1]
+	var wanted: Vector3 = entry[2]
+	var yaw := deg_to_rad(float(entry[3]))
+	var inward := Vector3(cos(yaw), 0.0, -sin(yaw)) * 0.08
+	if entry[4]:
+		return wanted + inward
+	var length := a.distance_to(b)
+	var count := maxi(1, int(round(length / RAIL_MODULE)))
+	var step := length / count
+	var along := clampi(int(round((wanted - a).dot((b - a) / length) / step)), 1, maxi(1, count - 1))
+	return a + (b - a) / length * step * along + inward
 
 
 # ---------------------------------------------------------------------------
@@ -525,8 +587,8 @@ func _build_backdrop() -> void:
 	level.add_child(backdrop)
 
 	# The giant pink Ferris wheel on the left skyline.
-	var wheel := _prop(backdrop, "ferris_wheel", "FerrisWheel", Vector3(-34.0, 0.0, -29.0), 42.0, Vector3(26, 30, 4))
-	wheel.scale = Vector3.ONE * 1.12
+	var wheel := _prop(backdrop, "ferris_wheel", "FerrisWheel", WHEEL_POS, WHEEL_YAW, Vector3(26, 30, 4))
+	wheel.scale = Vector3.ONE * WHEEL_SCALE
 	wheel.set_script(load("res://scripts/props/ferris_wheel.gd"))
 	# Walkway from the ride platform to the wheel (scenery, outside the fence).
 	var walk := MeshInstance3D.new()
@@ -537,12 +599,7 @@ func _build_backdrop() -> void:
 
 	_prop(backdrop, "coaster", "Coaster", Vector3(-22.0, -4.0, -64.0), 8.0, Vector3(60, 14, 10))
 
-	# Land side behind the pier entrance.
-	var sand := MeshInstance3D.new()
-	sand.name = "Beach"
-	sand.mesh = _box_mesh(Vector3(260, 2.0, 80), _mat("sand", Color(0.93, 0.74, 0.55), 0.95))
-	sand.position = Vector3(-10, -1.6, 76)
-	backdrop.add_child(sand)
+	_build_shore(backdrop)
 	var shops := ["beach_shop_a", "beach_shop_b", "beach_shop_c", "beach_shop_d"]
 	var x := -62.0
 	var n := 0
@@ -554,6 +611,10 @@ func _build_backdrop() -> void:
 			_prop(backdrop, "palm", "ShorePalm%02d" % n, Vector3(x + 5.5, -0.6, 36.5), n * 53.0, Vector3(0.5, 7, 0.5))
 		x += 11.0
 		n += 1
+	# Umbrellas and towels on the sand in front of the shops.
+	var umbrellas := [Vector3(-38.0, 0, 33.4), Vector3(-27.5, 0, 34.6), Vector3(-15.5, 0, 33.0), Vector3(9.5, 0, 34.2), Vector3(20.5, 0, 33.2), Vector3(31.0, 0, 34.8)]
+	for k in umbrellas.size():
+		_prop(backdrop, "beach_umbrella", "Umbrella%d" % k, umbrellas[k] + Vector3(0, BEACH_TOP, 0), k * 77.0, Vector3(3.4, 2.6, 3.4))
 
 	# Palms on their own pilings just outside the ocean rail (they frame the view right).
 	var piling := CylinderMesh.new()
@@ -572,8 +633,161 @@ func _build_backdrop() -> void:
 		_prop(backdrop, "palm", "RailPalm%d" % n_palm, spot + Vector3(0, -0.2, 0), 150.0 + n_palm * 70.0, Vector3(0.5, 9, 0.5)).scale = Vector3.ONE * 1.3
 		n_palm += 1
 
-	# A tall palm leaning in at the front-right, as in the reference frame.
+	_build_bay(backdrop)
+	# A tall palm leaning in at the front-right, as in the reference frame, on a piling of its own.
+	var corner := MeshInstance3D.new()
+	corner.name = "PalmPilingCorner"
+	corner.mesh = piling
+	corner.position = Vector3(15.6, -3.6, 17.5)
+	backdrop.add_child(corner)
 	_prop(backdrop, "palm", "CornerPalm", Vector3(15.6, -1.2, 17.5), 200.0, Vector3(0.5, 9, 0.5)).scale = Vector3.ONE * 1.35
+
+
+const BEACH_TOP := -0.6
+const OCEAN_Y := -4.2
+## The flat beach starts here (the entrance walk lands on it) and slopes
+## down into the water toward the pier.
+const BEACH_Z := 31.0
+const SHORE_Z := 22.5
+
+
+## The land side: a beach that slopes into the sea under the pier's entrance,
+## a foam line at the water's edge, a footing under the gatehouse and dunes
+## behind the shops (scenery).
+func _build_shore(backdrop: Node3D) -> void:
+	var sand := _mat("sand", Color(0.93, 0.74, 0.55), 0.95)
+	var beach := MeshInstance3D.new()
+	beach.name = "Beach"
+	beach.mesh = _box_mesh(Vector3(700, 9.0, 120), sand)
+	beach.position = Vector3(-10, BEACH_TOP - 4.5, BEACH_Z + 60.0)
+	backdrop.add_child(beach)
+	var run := BEACH_Z - SHORE_Z
+	var drop := BEACH_TOP + 5.0
+	var angle := atan2(drop, run)
+	var slope := MeshInstance3D.new()
+	slope.name = "ShoreSlope"
+	slope.mesh = _box_mesh(Vector3(700, 1.0, sqrt(run * run + drop * drop) + 0.4), sand)
+	slope.rotation.x = -angle
+	slope.position = Vector3(-10, BEACH_TOP - drop * 0.5, (BEACH_Z + SHORE_Z) * 0.5) - Vector3(0, cos(angle), -sin(angle)) * 0.5
+	slope.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	backdrop.add_child(slope)
+	# Wet sand and foam where the slope meets the water.
+	var water_z := BEACH_Z - run * (BEACH_TOP - OCEAN_Y) / drop
+	var wet := MeshInstance3D.new()
+	wet.name = "WetSand"
+	wet.mesh = _box_mesh(Vector3(700, 0.04, 2.6), _mat("sand_wet", Color(0.72, 0.5, 0.42), 0.45))
+	wet.rotation.x = -angle
+	wet.position = Vector3(-10, OCEAN_Y + 1.2 * tan(angle), water_z + 1.2) + Vector3(0, cos(angle), -sin(angle)) * 0.02
+	wet.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	backdrop.add_child(wet)
+	var foam := MeshInstance3D.new()
+	foam.name = "Foam"
+	foam.mesh = _box_mesh(Vector3(700, 0.05, 1.5), _mat("foam", Color(1.0, 0.93, 0.95), 0.5, Color(1.0, 0.8, 0.85), 0.25))
+	foam.position = Vector3(-10, OCEAN_Y + 0.03, water_z - 0.55)
+	foam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	backdrop.add_child(foam)
+	# The gatehouse stands on a footing in the sand, not in mid-air.
+	var footing := MeshInstance3D.new()
+	footing.name = "GatehouseFooting"
+	footing.mesh = _box_mesh(Vector3(12.4, 5.0, 3.5), _mat("footing", Color(0.5, 0.33, 0.36), 0.9))
+	footing.position = Vector3(-3.0, -2.52, 34.8)
+	backdrop.add_child(footing)
+	# Dunes behind the shops and headlands closing the horizon.
+	var dune := _mat("dune", Color(0.9, 0.68, 0.56), 0.95)
+	var far := _mat("headland", Color(0.66, 0.46, 0.6), 0.95)
+	var blobs := [
+		[Vector3(-70, -3.0, 76), Vector3(46, 9, 22), dune], [Vector3(-16, -3.0, 84), Vector3(52, 11, 24), dune],
+		[Vector3(44, -3.0, 78), Vector3(44, 8, 20), dune], [Vector3(96, -3.0, 70), Vector3(40, 7, 20), dune],
+		[Vector3(-128, -3.0, 68), Vector3(42, 7, 20), dune],
+		[Vector3(-190, -6.0, 120), Vector3(110, 26, 46), far], [Vector3(30, -6.0, 150), Vector3(150, 22, 40), far],
+		[Vector3(215, -6.0, 110), Vector3(100, 30, 44), far],
+	]
+	var ball := SphereMesh.new()
+	ball.radius = 1.0
+	ball.height = 2.0
+	ball.radial_segments = 20
+	ball.rings = 8
+	for k in blobs.size():
+		var mi := MeshInstance3D.new()
+		mi.name = "Dune%d" % k
+		mi.mesh = ball
+		mi.material_override = blobs[k][2]
+		mi.position = blobs[k][0]
+		mi.scale = blobs[k][1]
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		backdrop.add_child(mi)
+
+
+## Life out on the water (scenery): a lighthouse with turning beams,
+## sailboats and channel buoys that ride the swell.
+func _build_bay(backdrop: Node3D) -> void:
+	var motion: Script = load("res://scripts/props/ambient_motion.gd")
+	var lighthouse := _prop(backdrop, "lighthouse", "Lighthouse", Vector3(150.0, OCEAN_Y, -120.0), 20.0, Vector3(8, 30, 8))
+	lighthouse.scale = Vector3.ONE * LIGHTHOUSE_SCALE
+	var beams := Node3D.new()
+	beams.name = "LighthouseBeams"
+	beams.position = Vector3(150.0, OCEAN_Y + 24.9 * LIGHTHOUSE_SCALE, -120.0)
+	beams.set_script(motion)
+	beams.set("spin_degrees_per_second", 16.0)
+	backdrop.add_child(beams)
+	var cone := CylinderMesh.new()
+	cone.top_radius = 0.6
+	cone.bottom_radius = 9.0
+	cone.height = 110.0
+	cone.radial_segments = 12
+	cone.cap_top = false
+	cone.cap_bottom = false
+	var beam_mat := StandardMaterial3D.new()
+	beam_mat.resource_name = "LighthouseBeam"
+	beam_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	beam_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	beam_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	beam_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	beam_mat.albedo_color = Color(1.0, 0.82, 0.5, 0.07)
+	beam_mat.disable_fog = true
+	cone.material = beam_mat
+	for side in [-1.0, 1.0]:
+		var beam := MeshInstance3D.new()
+		beam.name = "Beam%s" % ("A" if side < 0.0 else "B")
+		beam.mesh = cone
+		beam.rotation.z = side * PI * 0.5
+		beam.position = Vector3(side * 55.6, 0, 0)
+		beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		beams.add_child(beam)
+	var boats := [[Vector3(58.0, OCEAN_Y, -34.0), 205.0, 1.5], [Vector3(92.0, OCEAN_Y, 22.0), 28.0, 1.7], [Vector3(40.0, OCEAN_Y, -92.0), 140.0, 1.4]]
+	for k in boats.size():
+		var boat := _prop(backdrop, "sailboat", "Sailboat%d" % k, boats[k][0], boats[k][1], Vector3(5, 7, 2))
+		boat.scale = Vector3.ONE * boats[k][2]
+		boat.set_script(motion)
+		boat.set("bob_height", 0.22)
+		boat.set("bob_seconds", 3.4 + 0.5 * k)
+		boat.set("rock_degrees", 4.0)
+	var buoys := [Vector3(24.0, OCEAN_Y, -18.0), Vector3(26.0, OCEAN_Y, -47.0), Vector3(31.0, OCEAN_Y, 9.0)]
+	for k in buoys.size():
+		var buoy := _prop(backdrop, "buoy", "Buoy%d" % k, buoys[k], k * 40.0, Vector3(1.4, 2.4, 1.4))
+		buoy.set_script(motion)
+		buoy.set("bob_height", 0.16)
+		buoy.set("bob_seconds", 2.6 + 0.4 * k)
+		buoy.set("rock_degrees", 7.0)
+
+const LIGHTHOUSE_SCALE := 1.5
+
+
+## Gulls perched where gulls perch, and fingerposts that point the way to the
+## station, the portal and the rides (scenery).
+func _build_set_dressing() -> void:
+	var gulls := [
+		[Vector3(9.5, 1.49, Z1), 205.0],                       # rail post by the start
+		[Vector3(X1, 1.49, -22.08), -20.0],                    # ocean rail
+		[_lamp_spot(2) + Vector3(0, 5.26, 0), 120.0],          # lamp top
+		[Vector3(-1.4, 6.95, 32.9), 100.0],                    # ticket sign
+		[Vector3(-24.9, 5.62, 7.2), -15.0],                    # arcade roof
+		[Vector3(-18.7, 0.0, -20.0), 40.0],                    # after the popcorn
+	]
+	for k in gulls.size():
+		_prop(dressing, "seagull", "Gull%d" % k, gulls[k][0], gulls[k][1], Vector3(0.7, 0.6, 0.3))
+	_prop(dressing, "signpost_a", "SignpostNorth", Vector3(0.5, 0.8, -20.5), 0.0, Vector3(0.2, 3.7, 0.2))
+	_prop(dressing, "signpost_b", "SignpostStart", Vector3(0.6, 0.8, 12.8), 0.0, Vector3(0.2, 3.7, 0.2))
 
 
 # ---------------------------------------------------------------------------
@@ -586,26 +800,18 @@ func _build_string_lights() -> void:
 	var lights := Node3D.new()
 	lights.name = "StringLights"
 	level.add_child(lights)
-	var spans := [
-		# Along the ocean rail and over the exit spur.
-		[Vector3(13.6, POLE_TOP, 14), Vector3(13.6, POLE_TOP, 0)],
-		[Vector3(13.6, POLE_TOP, 0), Vector3(13.6, POLE_TOP, -14)],
-		[Vector3(13.6, POLE_TOP, -14), Vector3(13.6, POLE_TOP, -28)],
-		[Vector3(13.6, POLE_TOP, -28), Vector3(13.6, POLE_TOP, -42)],
-		[Vector3(13.6, POLE_TOP, -28), Vector3(8.4, POLE_TOP, -35)],
-		[Vector3(13.6, POLE_TOP, -42), Vector3(8.4, POLE_TOP, -49)],
-		[Vector3(8.4, POLE_TOP, -35), Vector3(8.4, POLE_TOP, -49)],
-		# Ride side and back edge.
-		[Vector3(-24.6, POLE_TOP, 20.5), Vector3(-24.6, POLE_TOP, -1.1)],
-		[Vector3(-24.6, POLE_TOP, -1.1), Vector3(-24.6, POLE_TOP, -21.5)],
-		[Vector3(-16, POLE_TOP, -23.6), Vector3(-3, POLE_TOP, -23.6)],
-		[Vector3(-3, POLE_TOP, -23.6), Vector3(5, POLE_TOP, -23.6)],
-		[Vector3(-14, POLE_TOP, 21.6), Vector3(7, POLE_TOP, 21.6)],
-	]
+	var tops: Array[Vector3] = []
+	for k in LAMPS.size():
+		tops.append(_lamp_spot(k) + Vector3.UP * POLE_TOP)
+	var spans := []
+	# Lamp to lamp: along the ocean rail and over the exit spur, then the ride
+	# side, the back edge and the front edge (indices into LAMPS).
+	for pair in [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5], [4, 6], [5, 6], [7, 9], [9, 8], [10, 11], [11, 12], [13, 14]]:
+		spans.append([tops[pair[0]], tops[pair[1]]])
 	# Carnival strings from the kiosk's roof out to the lamp posts.
-	for target in [Vector3(13.6, POLE_TOP, 0), Vector3(-24.6, POLE_TOP, -1.1), Vector3(-3, POLE_TOP, -23.6), Vector3(7, POLE_TOP, 21.6), Vector3(-14, POLE_TOP, 21.6)]:
-		var flat := Vector3(target.x, 0, target.z).normalized()
-		spans.append([flat * 1.7 + Vector3(0, 6.7, 0), target])
+	for k in [1, 9, 11, 14, 13]:
+		var flat := Vector3(tops[k].x, 0, tops[k].z).normalized()
+		spans.append([flat * 1.7 + Vector3(0, 6.7, 0), tops[k]])
 	var i := 0
 	for span in spans:
 		_garland(lights, "Garland%02d" % i, span[0], span[1])
@@ -832,8 +1038,101 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, region)
 	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
-	region.navigation_mesh = mesh
-	print("build_prize_pier: navmesh polygons = %d" % mesh.get_polygon_count())
+	var before := mesh.get_polygon_count()
+	region.navigation_mesh = _keep_connected(mesh, [Vector3(4.5, 0.0, 14.5)])
+	print("build_prize_pier: navmesh polygons = %d (of %d before removing islands)" % [region.navigation_mesh.get_polygon_count(), before])
+	_check_reachable(region.navigation_mesh)
+
+
+## Every entrance, the ramp and the portal must be on the navmesh connected to
+## the player's start; prints a warning for any that are not.
+func _check_reachable(mesh: NavigationMesh) -> void:
+	var probes := {
+		"arcade": Vector3(-30.0, 0, 11.0), "ride gate": Vector3(-30.0, 0, -13.0),
+		"service ramp": Vector3(-10.0, -1.3, Z0 - 6.0), "ramp landing": Vector3(-10.0, -2.6, Z0 - 14.5),
+		"pier entrance": Vector3(-3.0, 0, 30.0), "exit spur": Vector3(11.0, 0, -36.0),
+		"portal": Vector3(11.0, 0, -49.5), "kiosk plaza": Vector3(0.0, 0, 7.0),
+		"ocean lane": Vector3(11.5, 0, 0.0), "back lane": Vector3(-10.0, 0, -21.0),
+	}
+	var verts := mesh.get_vertices()
+	var bad := 0
+	for probe_name in probes:
+		var p: Vector3 = probes[probe_name]
+		var found := false
+		for i in mesh.get_polygon_count():
+			if _in_polygon(verts, mesh.get_polygon(i), p):
+				found = true
+				break
+		if not found:
+			bad += 1
+			print("build_prize_pier: WARNING %s is not connected to the start" % probe_name)
+	print("build_prize_pier: reachability check, %d of %d areas connected" % [probes.size() - bad, probes.size()])
+
+
+## True if `p` lies over the convex polygon (top view) within a metre of its height.
+func _in_polygon(verts: PackedVector3Array, poly: PackedInt32Array, p: Vector3) -> bool:
+	var sign := 0.0
+	var height := 0.0
+	for k in poly.size():
+		var a := verts[poly[k]]
+		var b := verts[poly[(k + 1) % poly.size()]]
+		height += a.y
+		var c := (b.x - a.x) * (p.z - a.z) - (b.z - a.z) * (p.x - a.x)
+		if absf(c) < 1e-6:
+			continue
+		if sign == 0.0:
+			sign = signf(c)
+		elif signf(c) != sign:
+			return false
+	return absf(height / poly.size() - p.y) < 1.0
+
+
+## Drops every polygon not connected (through shared vertices) to the
+## polygon nearest one of `seeds`: the pockets baked inside the kiosk and the
+## booths go away, so closest-point queries never snap onto them.
+func _keep_connected(mesh: NavigationMesh, seeds: Array) -> NavigationMesh:
+	var verts := mesh.get_vertices()
+	var count := mesh.get_polygon_count()
+	var by_vertex := {}
+	for i in count:
+		for v in mesh.get_polygon(i):
+			if not by_vertex.has(v):
+				by_vertex[v] = []
+			by_vertex[v].append(i)
+	var keep := {}
+	var stack: Array[int] = []
+	for s in seeds:
+		var best := -1
+		var best_d := INF
+		for i in count:
+			var poly := mesh.get_polygon(i)
+			var centre := Vector3.ZERO
+			for v in poly:
+				centre += verts[v]
+			centre /= poly.size()
+			var d: float = centre.distance_to(s)
+			if d < best_d:
+				best_d = d
+				best = i
+		if best >= 0:
+			stack.append(best)
+	while not stack.is_empty():
+		var i: int = stack.pop_back()
+		if keep.has(i):
+			continue
+		keep[i] = true
+		for v in mesh.get_polygon(i):
+			for other in by_vertex[v]:
+				if not keep.has(other):
+					stack.append(other)
+	var out := NavigationMesh.new()
+	for prop in ["cell_size", "cell_height", "agent_height", "agent_radius", "agent_max_climb", "agent_max_slope"]:
+		out.set(prop, mesh.get(prop))
+	out.vertices = verts
+	for i in count:
+		if keep.has(i):
+			out.add_polygon(mesh.get_polygon(i))
+	return out
 
 
 # ---------------------------------------------------------------------------
