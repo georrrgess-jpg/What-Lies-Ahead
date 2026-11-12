@@ -76,11 +76,20 @@ UI style lives in `UiKit` (`scripts/ui/ui_kit.gd`): palette constants,
 
 ## Enemies
 
-* `EnemyData.model_scene`: custom model. It needs an `AnimationPlayer` with
-  clips `Idle`, `Walk`, `Run`, `Attack`, `Hit`, `Die` (a `-loop` suffix is
-  fine) and the body mesh named `Outfit_<outfit>`. Optional accessory meshes
-  `Acc_*` are picked through `accessory_slots`. The easiest route is to copy
-  `art/blender/build_zombie.py` (same rig and clips) into your own build script.
+* `EnemyData.model_scene`: custom model on the shared 11-bone zombie rig. Build
+  it like the world casts do: bodies, faces and accessories from
+  `art/blender/zombie_kit.py` (body mesh `Outfit_<outfit>`, faces
+  `Face_<Outfit>_<Preset>`, accessories `Acc_*` picked through
+  `accessory_slots`) and all clips from `art/blender/zombie_anim.py`
+  (`zombie_anim.bake()`: Idle, Walk, Run, Attack, Stagger, `Die_*` variants
+  including the headshot `Die_HeadPop`, Emerge, plus special clips). `bake()`
+  also writes `<model>_clips.tres` with each clip's ground speed and event
+  times, which the game uses to match the walk to real speed.
+* Look and motion fields: `clip_style` (gait family), `heavy` (heavy deaths,
+  attacks and flinch), `head_hit_scale` and `head_guard_mesh` (the head
+  hitbox is a capsule on the head bone sized from the head and face meshes),
+  `world_outfits` (`EnemyLook` per world: the Tourist and Lifeguard dress for
+  each world).
 * `EnemyData.behaviours`: `EnemyBehaviour` resources (`scripts/enemies/enemy_behaviour.gd`)
   with hooks `on_ready`, `on_physics` (return true to take over movement),
   `on_hit` (return damage to take), `on_attack`, `on_death`, and optional
@@ -120,13 +129,25 @@ generators **with a renderer** (`xvfb-run -a godot --rendering-driver opengl3
 headless renderer keeps no MultiMesh instance data, so every MultiMesh in the
 saved scene would be empty.
 
-`LevelData` sets the scene, wave set, music, ambience, accent colour and
-unlock requirement.
+`LevelData` sets the scene, wave set, music (`music` plus a `music_final` loop
+for the final wave and extraction), ambience, accent colour, heal item name,
+menu camera, loading tips and unlock requirement. After a level's look
+changes, re-render its key art with `tools/capture_keyart.gd`.
+
+The wave set (`WaveSet`, `data/levels/<level>_waves.tres`) also holds the
+station economy: prices, heal amount, break refill, starting tickets,
+overshield (`Player.set_shield`) and damage boost prices and amounts, and the
+score paid per leftover ticket.
 
 ## Audio
 
 Add a pack file in `tools/audio_packs/` (see the README there) and run
-`python tools/gen_audio.py <pack>`. Name sounds with a prefix.
+`python tools/gen_audio.py <pack>`. Name sounds with a prefix, and give each
+new sound (or prefix) a category in `audio/mix.tres`: the category sets its
+gain and bus. Categories `impact`, `confirm`, `kill_effect` and `weapon` play
+flat even through `Sfx.play_at` (distance falloff worked out once), because
+many short 3D players race Godot 4.7's audio mixer; enemy sounds stay 3D.
+Check levels with `python3 tools/audio_mix_report.py`.
 
 ## Verification tools
 

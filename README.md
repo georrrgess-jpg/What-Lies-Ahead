@@ -44,37 +44,45 @@ The Windows build is unsigned, so SmartScreen may ask for confirmation.
 | Move | W A S D |
 | Look | Mouse |
 | Sprint (forward) | Shift |
-| Jump | Space (a short grace period after leaving a ledge, and a buffered press) |
-| Slide | C or Ctrl while sprinting (jump out of a slide to keep its speed) |
+| Jump | Space (grace period after leaving a ledge, buffered presses; release early for a short hop) |
+| Mantle / vault | Jump while pushing at a ledge 0.45–1.25 m high to climb onto it; at a run, thin obstacles up to 1.1 m are vaulted |
+| Slide | C or Ctrl while sprinting (or as you land); follows slopes, tires when chained; jump out to keep its speed |
 | Fire | Left mouse button |
 | Aim down sights | Right mouse button (hold) |
 | Reload | R |
 | Switch weapon | 1 / 2, or the mouse wheel |
 | Start the next wave early | F |
 | At the loadout station: energy top-up / snack heal | E / Q |
+| At the loadout station: overshield / damage boost | G / B |
 | At the loadout station: swap the held weapon | Z / X (or ← / →) |
 | Pause | Esc or P |
 
 All of these are Godot InputMap actions (*Project → Project Settings → Input Map*); the
-two station swap actions are added at start-up by `scripts/weapons/loadout.gd` if the
-project does not define them. **Settings** (main menu or pause menu) has mouse and
-aim sensitivity, field of view, reticle style and colour, volumes, camera shake,
-flashes, a High/Low graphics preset and fullscreen.
+station swap and purchase actions are added at start-up (`scripts/weapons/loadout.gd`,
+`RunDirector.ensure_station_actions()`) if the project does not define them. Curbs up to
+0.3 m are stepped over without jumping. **Settings** (main menu or pause menu) has look
+sensitivity (1.00 = 34 cm per 360° at 800 DPI, the same at any window size), aim
+sensitivity, invert look Y, field of view (vertical), reticle style and colour, master,
+music, effects and ambience volume, camera motion, camera shake, flashes, a High/Low
+graphics preset and fullscreen.
 
 ## How a run works
 
 - **Preparation → Wave → Break → … → Extraction**, with **Defeat** reachable from any wave.
 - **Two weapons.** You carry a primary and a secondary (chosen in the **Arsenal**). Each
   keeps its own ammo for the whole run. Switching cancels a reload.
-- **The loadout station** (the kiosk with the tall beacon; a waypoint points to it during
-  breaks) sells an energy top-up for both weapons and one snack heal per break, and swaps
-  the held weapon for any unlocked one for free. Every break also gives a small free
-  refill, and a weapon that runs completely dry slowly recharges, so you are never left
-  helpless.
+- **The loadout station** (each world has its own, with a tall beacon; a waypoint points
+  to it during breaks) sells an energy top-up for both weapons, one heal per break (a
+  boardwalk snack, a noodle cup, fish & chips, space rations or hot cocoa), an
+  **overshield** (cells on the health bar that soak damage first) and a **damage boost**
+  (+20% for the next wave), and swaps the held weapon for any unlocked one for free.
+  Runs start with 100 tickets, prices rise from world to world, and tickets left over at
+  the portal turn into score. Every break also gives a small free refill, and a weapon
+  that runs completely dry slowly recharges, so you are never left helpless.
 - After the final wave the portal opens and the exit lights switch on. You must step
   through the portal to clear the level.
-- **Score.** Kills score points, multiplied by headshots and by your combo (keep
-  killing within about three seconds). Multi-kills, long shots, close calls, wave clears
+- **Score.** Kills score points (a headshot kill +50% with any weapon), multiplied by
+  your combo (keep killing within about three seconds). Multi-kills, long shots, close calls, wave clears
   and flawless waves add bonuses. Your best score per level is saved and shown on the
   Play page.
 - **Reading a fight.** Every enemy attack is telegraphed: a melee swipe winds up and only
@@ -82,8 +90,12 @@ flashes, a High/Low graphics preset and fullscreen.
   snowballs, leaps, electric charges, rushes) have their own wind-up animation, sound and
   often a ground marker. An orange arc around the reticle warns about anything winding
   up off-screen; a red arc points at whatever just hit you. A headshot during a
-  ranged wind-up cancels it, and so do a freeze or a heavy shotgun stagger. Zombies flank
-  and spread across routes, and when a squad-mate dies nearby they enrage briefly.
+  ranged wind-up cancels it, and so do a freeze or a heavy stagger (Scatter Blaster,
+  Comet). Hits flinch zombies by their weight (heavies barely slow), headshots are judged
+  against the actual head, and kills topple, faceplant, spin or (on a headshot) pop the
+  head in confetti. Zombies flank and spread across routes, and when a squad-mate dies
+  nearby they enrage briefly. Each world's own zombies lead its waves, and its final wave
+  is its biggest.
 - **World mechanics.** Neon Punks are beaten by closing in (up close they swipe instead
   of spraying); Riot Bruisers block frontal body shots until their shield breaks; Deep
   Divers' helmets shrug off headshots until cracked; Jelly Heads discharge an electric
@@ -92,17 +104,19 @@ flashes, a High/Low graphics preset and fullscreen.
 
 ## Weapons
 
-| Weapon | Type | Unlock | Notes |
+| Weapon | Niche | Unlock | Notes |
 | --- | --- | --- | --- |
-| Pulse Pistol | Pistol | Start | Accurate first shot, quick handling |
-| Ion Carbine | Carbine | Start | Automatic all-rounder |
-| Scatter Blaster | Shotgun | Start | Nine pellets; a heavy volley staggers a zombie out of its wind-up |
-| Comet Hand Cannon | Hand cannon | Player level 2 | Three-round burst revolver |
-| Arc Coil | Arc thrower | Player level 4 | Chain lightning that locks onto the zombie nearest the crosshair |
-| Bumper Lobber | Launcher | Player level 6 | Bouncing gumball bombs with splash; shows its landing arc when aiming |
-| Frostbite Cryo Beam | Beam | Player level 8 | Chills, then freezes: frozen zombies cannot attack and take +60% damage |
-| Rail Lancer | Railgun | Player level 11 | Charge shot that pierces a line of zombies |
+| Pulse Pistol | Precision | Start | Three body shots or two headshots drop a tourist; a rested shot flies dead centre |
+| Ion Carbine | Sustained fire | Start | Best sustained damage of the starters; fire in bursts or aim past 15 m |
+| Scatter Blaster | Close range | Start | Nine pellets; one shot drops a tourist inside 10 m and staggers |
+| Comet Hand Cannon | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
+| Arc Coil | Crowd control | Player level 3 | Chain lightning locking onto the zombie nearest the crosshair; shock slows |
+| Bumper Lobber | Area damage | Player level 5 | Bouncing gumball bombs with splash; shows its landing ring when aiming |
+| Frostbite Cryo Beam | Lockdown | Player level 7 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
+| Rail Lancer | Anti-heavy | Player level 9 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
 
+Weapons fire at exactly their data rate. Spread blooms under sustained fire and recovers
+shortly after the trigger rests, so bursts and aiming down sights matter at range.
 Every weapon has its own model, holographic reload animation, sounds, reticle and
 aim-down-sights behaviour. Fire modes are data (`WeaponData` fields for burst, charge,
 beam, projectile and splash, pierce, chain, chill/shock and heat), implemented once in
@@ -110,8 +124,10 @@ beam, projectile and splash, pierce, chain, chill/shock and heat), implemented o
 
 ## Progression and cosmetics
 
-- **Player level** (1–50): account XP from kills, waves, clears, first clears and
-  challenges. Levels unlock weapons and cosmetics. Shown on the HUD and the Career page.
+- **Player level** (1–50): account XP from kills, waves, clears (worth more in later
+  worlds), first clears and challenges. Levels unlock weapons (the last one at level 9,
+  around the time you reach the later worlds) and cosmetics. Shown on the HUD and the
+  Career page.
 - **Weapon mastery**: 10 ranks per weapon in Bronze, Silver, Gold, Diamond and Prismatic
   tiers, earned by using that weapon. Ranks unlock mastery camos and badges.
 - **Challenges** (Career page): account goals and per-weapon goals (headshots, long
@@ -121,7 +137,8 @@ beam, projectile and splash, pierce, chain, chill/shock and heat), implemented o
   decals, charms, gloves, kill effects, tracers, banners and titles. Weapon items are
   equipped per weapon. Everything shows in a live preview; double-click to equip.
 - **Results screen**: score count-up with breakdown, mastery XP per weapon, the Career
-  card (XP bar, level-ups, challenges completed, new rewards) and your player card.
+  card (XP bar, level-ups, challenges completed, new rewards) and your player card; after
+  a clear, **NEXT WORLD** goes straight on.
 - Progress is kept whether you win, lose or quit from the pause menu.
 
 ## Main menu
@@ -129,8 +146,10 @@ beam, projectile and splash, pierce, chain, chill/shock and heat), implemented o
 The startup sequence (pulse line, rising synthwave sun, the title dropping in letter by
 letter, then a portal iris into the menu) plays once per session; any key skips it. The
 menu sits over a live, slowly drifting 3D view of the selected world. Pages: **Play**
-(world carousel, level details, best score, loadout, Deploy), **Arsenal** (weapon stats,
-mastery and the two-slot loadout), **Locker**, **Career** and **Settings**.
+(world carousel with key art of each level, level details, best score, loadout, Deploy),
+**Arsenal** (weapon stats, mastery and the two-slot loadout), **Locker**, **Career** and
+**Settings**. Loading screens show the level's key art with a slow pan and a tip. The
+pause menu asks before Restart or Main menu.
 
 ## Editing the game data
 
@@ -239,8 +258,10 @@ They were written for Blender 5.3 and run here through the `bpy` Python module
 | --- | --- |
 | `build_props.py`, `build_kiosk.py`, `build_ferris_wheel.py` | Prize Pier props, kiosk, Ferris wheel |
 | `build_weapons.py`, `build_weapons_arsenal.py` | The eight weapon viewmodels with arms |
-| `build_zombie.py` | Shared zombie rig, outfits and clips |
-| `build_neon_*.py`, `build_aqua_*.py`, `build_dune_*.py`, `build_frost_*.py` | Each world's props, station, scenery and zombies |
+| `build_zombie.py` | Shared zombie rig, the boardwalk cast and each world's Tourist/Lifeguard outfits (`zombie_<world>.glb`) |
+| `zombie_kit.py`, `zombie_anim.py` | Shared zombie body and face kit; all zombie motion (IK gaits with planted feet, attacks, five deaths including a headshot pop, stagger, emerge). Every zombie builder calls `zombie_anim.bake()`, which also writes `art/models/<model>_clips.tres` (each clip's ground speed and event times) |
+| `build_neon_*.py`, `build_aqua_*.py`, `build_dune_*.py`, `build_frost_*.py` | Each world's props, dressing, station, scenery and zombies |
+| `build_world_portals.py` | The themed exit portals of Tidal Tunnels, Launch Pad 9 and Summit Lodge |
 | `build_operators.py`, `build_cosmetics.py` | Operators; charms and sticker decals |
 
 In the `.blend` files the *Source* collection holds the parts with live bevel
@@ -255,7 +276,9 @@ names) are described at the top of `build_weapons.py` and `build_zombie.py`.
 python tools/gen_textures.py                 # Prize Pier sky and deck
 python tools/gen_textures_neon.py            # likewise _aqua, _dune, _frost
 python tools/gen_audio.py                    # core sounds and music
-python tools/gen_audio.py neon aqua dune frost weapons progression cosmetics   # packs
+python tools/gen_audio.py neon aqua dune frost weapons progression cosmetics movement   # packs
+python tools/audio_mix_report.py             # every sound and loop as heard in game
+python tools/audio_mix_report.py --mixdown neon_skyline out.wav   # 20 s listen-proxy
 ```
 
 **Levels.** Each level has a generator in `tools/` (`build_prize_pier.gd`,
@@ -271,6 +294,18 @@ xvfb-run -a godot --rendering-driver opengl3 --path . --script res://tools/build
 (Drop `xvfb-run -a` on a desktop.) A generator **overwrites** its scene. If you prefer to
 edit a scene by hand in the editor, stop running its generator (and re-bake navigation
 from the `NavigationRegion3D` after moving collision).
+
+**Key art.** After a level's look changes, re-render its still for the loading screen and
+world card (`art/keyart/<level>.jpg`), then re-import:
+
+```bash
+xvfb-run -a godot --audio-driver Dummy --rendering-driver opengl3 --path . --resolution 1280x720 --script res://tools/capture_keyart.gd
+```
+
+**Audio mix.** Levels live in `audio/mix.tres`: each sound belongs to a category with a
+gain and a bus, plus optional per-sound trims; `Sfx` applies it to every sound and a Master
+limiter catches peaks. Music loops are mastered to one loudness, and each level
+cross-fades in time to a more driving final-wave loop.
 
 **Checking assets.** `tools/preview_model.gd` prints a model's node tree, bounds and clips
 and renders a contact sheet; see the comment at the top of the file.
