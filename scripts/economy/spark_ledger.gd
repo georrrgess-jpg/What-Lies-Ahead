@@ -2,13 +2,10 @@ class_name SparkLedger
 extends RefCounted
 ## Sparks bookkeeping for one run, created by the Wallet autoload on
 ## Events.run_started. It pays the Sparks of every kill, wave and clear into
-## the Wallet (scaled by the difficulty), tells the HUD where a Spark dropped,
+## the Wallet (scaled by the difficulty), announces where Sparks dropped,
 ## and keeps a labelled breakdown of everything earned while the run lasted
 ## (level-ups, mastery ranks and contracts included) for the results screen.
 ## Every payout has a key, so nothing is paid twice; finish() runs once.
-
-## A zombie popped at `at` and dropped `amount` Sparks (already banked).
-signal dropped(at: Vector3, amount: int)
 
 ## Breakdown labels by Wallet.earn source, in the order they are shown.
 const LABELS := {
@@ -79,7 +76,7 @@ func on_kill(enemy: Node, headshot: bool) -> void:
 		paid += _pay(rules.combo_sparks, &"combo")
 	if is_instance_valid(Progression.tracker) and paid > 0:
 		Progression.tracker.count(&"sparks", paid)
-	dropped.emit(z.global_position + Vector3.UP * (0.9 * z.data.body_scale), paid)
+	Wallet.sparks_dropped.emit(z.global_position + Vector3.UP * (0.9 * z.data.body_scale), paid)
 
 
 func on_wave_cleared(wave_number: int) -> void:

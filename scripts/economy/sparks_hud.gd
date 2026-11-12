@@ -52,8 +52,7 @@ func bind(director: RunDirector, player: Player) -> void:
 	_field.target = player
 	director.get_parent().add_child(_field)
 	_field.collected.connect(_on_collected)
-	if Wallet.run:
-		Wallet.run.dropped.connect(_on_dropped)
+	Wallet.sparks_dropped.connect(_on_dropped)
 	Wallet.earned.connect(_on_earned)
 	Progression.contract_completed.connect(_on_contract_completed)
 	director.state_changed.connect(_on_state_changed)
@@ -96,8 +95,7 @@ func _build_counter() -> void:
 	_counter.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_counter.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_counter.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_counter.offset_top = COUNTER_BOTTOM
-	_counter.offset_bottom = COUNTER_BOTTOM
+	_pin(_counter, COUNTER_BOTTOM)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	_counter.add_child(row)
@@ -114,8 +112,16 @@ func _build_counter() -> void:
 	_gain.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_gain.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_gain.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_gain.offset_top = COUNTER_BOTTOM - 62.0
-	_gain.offset_bottom = COUNTER_BOTTOM - 62.0
+	_pin(_gain, COUNTER_BOTTOM - 62.0)
+
+
+## Pins an anchored control `bottom` pixels from its anchor, centred on it.
+static func _pin(c: Control, bottom: float) -> void:
+	c.position = Vector2.ZERO
+	c.offset_left = 0.0
+	c.offset_right = 0.0
+	c.offset_top = bottom
+	c.offset_bottom = bottom
 
 
 func _refresh_counter(pulse: bool) -> void:

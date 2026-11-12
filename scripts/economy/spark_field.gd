@@ -7,8 +7,9 @@ extends MultiMeshInstance3D
 ## as it arrives (signal `collected`).
 ##
 ## One MultiMesh of camera-facing quads (scripts/economy/spark_pickup.gdshader)
-## holds every star, so a crowd dying at once costs one draw call and no
-## allocations: stars live in packed arrays and free slots are reused.
+## holds every star and its short trail, so a crowd dying at once costs one
+## draw call and no allocations: stars live in packed arrays and free slots
+## are reused.
 
 ## A star reached the player; it stood for `amount` Sparks.
 signal collected(amount: int)
@@ -24,7 +25,12 @@ const HOME_ACCEL := 34.0
 const PICKUP_RADIUS := 0.55
 ## A star that somehow never arrives is collected anyway.
 const MAX_AGE := 3.0
-const SIZE := 0.17
+const SIZE := 0.23
+## Quads per star: the star itself and two fading echoes behind it.
+const QUADS := 3
+const TRAIL_SECONDS := 0.03
+## Drawn after the kill popups (their labels use priority 10).
+const RENDER_PRIORITY := 20
 ## Stars keep at least this size on screen (metres per metre of distance), so
 ## a far-off kill still visibly pays out.
 const MIN_ANGULAR_SIZE := 0.012
@@ -53,12 +59,13 @@ func _init() -> void:
 	material.shader = load(SHADER)
 	material.set_shader_parameter("core_color", Wallet.COLOR)
 	material.set_shader_parameter("glow_color", Wallet.COLOR_GLOW)
+	material.render_priority = RENDER_PRIORITY
 	quad.material = material
 	multimesh = MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.use_custom_data = true
 	multimesh.mesh = quad
-	multimesh.instance_count = CAPACITY
+	multimesh.instance_count = CAPACITY * QUADS
 	# One hidden star is drawn for the first moments (behind the level's
 	# fade-in) so the shader is compiled before the first kill.
 	multimesh.visible_instance_count = 1
@@ -133,10 +140,17 @@ func _process(delta: float) -> void:
 		_vel[i] = v
 		var grow := clampf((age + 0.06) / 0.12, 0.0, 1.0)
 		var size := maxf(_size[i], p.distance_to(eye_pos) * MIN_ANGULAR_SIZE) * grow
-		multimesh.set_instance_transform(i, Transform3D(Basis.IDENTITY, p))
-		multimesh.set_instance_custom_data(i, Color(size, age * 5.0 + float(i), 1.0, 0.0))
+		var spin := age * 5.0 + float(i)
+		var back := v * TRAIL_SECONDS
+		var quad := i * QUADS
+		multimesh.set_instance_transform(quad, Transform3D(Basis.IDENTITY, p))
+		multimesh.set_instance_custom_data(quad, Color(size, spin, 1.0, 0.0))
+		multimesh.set_instance_transform(quad + 1, Transform3D(Basis.IDENTITY, p - back))
+		multimesh.set_instance_custom_data(quad + 1, Color(size * 0.72, spin, 0.5, 0.0))
+		multimesh.set_instance_transform(quad + 2, Transform3D(Basis.IDENTITY, p - back * 2.0))
+		multimesh.set_instance_custom_data(quad + 2, Color(size * 0.5, spin, 0.28, 0.0))
 		i += 1
-	multimesh.visible_instance_count = _live
+	multimesh.visible_instance_count = _live * QUADS
 
 
 ## Where stars fly to: the player's chest, a little in front of the camera.

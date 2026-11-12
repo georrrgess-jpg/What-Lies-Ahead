@@ -18,6 +18,9 @@ extends Node
 signal balance_changed(balance: int)
 signal earned(amount: int, source: StringName)
 signal spent(amount: int, what: StringName)
+## A zombie popped at `at` (world space) and dropped `amount` Sparks, already
+## banked: the cue for the pickup stars (scripts/economy/spark_field.gd).
+signal sparks_dropped(at: Vector3, amount: int)
 ## A run's Sparks were settled; `summary` is SparkLedger.summary().
 signal run_settled(summary: Dictionary)
 
