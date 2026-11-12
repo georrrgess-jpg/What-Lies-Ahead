@@ -286,18 +286,18 @@ func _build_floors() -> void:
 	var body := StaticBody3D.new()
 	body.name = "RotundaFloor"
 	floors.add_child(body)
-	body.position = Vector3(0, -0.25, 0)
+	body.position = Vector3(0, -1.0, 0)
 	for q in 4:
 		var mi := MeshInstance3D.new()
 		mi.name = "Sector%d" % q
-		mi.mesh = _sector_mesh(ROT_R + 0.35, TAU * q / 4.0, TAU * (q + 1) / 4.0, 0.25)
+		mi.mesh = _sector_mesh(ROT_R + 0.35, TAU * q / 4.0, TAU * (q + 1) / 4.0, 1.0)
 		mi.material_override = tiles
 		body.add_child(mi)
 	var shape := CollisionShape3D.new()
 	shape.name = "CollisionShape3D"
 	var cs := CylinderShape3D.new()
 	cs.radius = ROT_R + 0.35
-	cs.height = 0.5
+	cs.height = 2.0
 	shape.shape = cs
 	body.add_child(shape)
 	# Passages through the rotunda openings.
@@ -321,7 +321,8 @@ func _build_floors() -> void:
 		"uv_scale": 0.5, "roughness": 0.95, "specular": 0.2, "caustic_strength": 0.45}))
 
 
-func _slab(parent: Node3D, slab_name: String, x0: float, x1: float, z0: float, z1: float, material: Material, top := 0.0, thick := 0.5) -> StaticBody3D:
+## Floor slab; thick by default so nothing shoved by physics can drop through.
+func _slab(parent: Node3D, slab_name: String, x0: float, x1: float, z0: float, z1: float, material: Material, top := 0.0, thick := 2.0) -> StaticBody3D:
 	return _box(parent, slab_name, Vector3(x1 - x0, thick, z1 - z0), Vector3((x0 + x1) * 0.5, top - thick * 0.5, (z0 + z1) * 0.5), material)
 
 
@@ -681,10 +682,10 @@ func _build_kelp_gallery() -> void:
 	_light_shaft(tank, "KelpShaftA", Vector3(-21.6, HALL_H, -6.0), 1.4, HALL_H, Color(0.6, 1.0, 0.7), 0.18)
 	_light_shaft(tank, "KelpShaftB", Vector3(-21.6, HALL_H, 3.0), 1.4, HALL_H, Color(0.6, 1.0, 0.7), 0.18)
 	# Benches facing the glass.
-	for k in 3:
-		var z := -7.0 + k * 6.5
-		_prop(geo, "aqua_bench", "KelpBench%d" % k, Vector3(-16.0, 0, z), 90.0, Vector3(2.4, 0.6, 0.7))
-		_collider(geo, "KelpBenchCol%d" % k, Vector3(0.7, 0.6, 2.4), Vector3(-16.0, 0.3, z))
+	for k in 2:
+		var z := -9.0 + k * 16.0
+		_prop(geo, "aqua_bench", "KelpBench%d" % k, Vector3(-14.3, 0, z), -90.0, Vector3(2.4, 0.6, 0.7))
+		_collider(geo, "KelpBenchCol%d" % k, Vector3(0.7, 0.6, 2.4), Vector3(-14.3, 0.3, z))
 
 
 # ---------------------------------------------------------------------------
@@ -765,9 +766,9 @@ func _build_jelly_room() -> void:
 	_mesh_box(dressing, "JellyWallLed", Vector3(0.06, 0.05, 10.0), Vector3(X1 - 0.42, 0.62, zc), _glow_mat("led_violet", Color(0.8, 0.45, 1.0), 2.4))
 	_jellies(room, "WallJellies", 22, Vector3(X1 + 1.3, 3.2, zc), 0.6, 2.0, Color(0.95, 0.5, 1.0), Vector3(0.7, 1.6, 4.3))
 	# Benches.
-	for z in [-6.0, 6.0]:
-		_prop(geo, "aqua_bench", "JellyBench%d" % int(z), Vector3(15.2, 0, z), -90.0, Vector3(2.4, 0.6, 0.7))
-		_collider(geo, "JellyBenchCol%d" % int(z), Vector3(0.7, 0.6, 2.4), Vector3(15.2, 0.3, z))
+	for z in [-10.5, 10.5]:
+		_prop(geo, "aqua_bench", "JellyBench%d" % int(z), Vector3(14.3, 0, z), 90.0, Vector3(2.4, 0.6, 0.7))
+		_collider(geo, "JellyBenchCol%d" % int(z), Vector3(0.7, 0.6, 2.4), Vector3(14.3, 0.3, z))
 
 
 # ---------------------------------------------------------------------------
@@ -889,17 +890,19 @@ func _build_lobby() -> void:
 	_collider(lobby, "ShopBack", Vector3(17.0, MEZZ_Y, 0.3), Vector3(0, MEZZ_Y * 0.5, Z1 - 0.1))
 	# Touch pool at the west end of the lobby (long axis north-south).
 	_prop(lobby, "aqua_touch_pool", "TouchPool", Vector3(-19.0, 0, 18.0), 90.0, Vector3(6.4, 0.8, 3.8))
-	var pool_col := StaticBody3D.new()
-	pool_col.name = "TouchPoolCol"
-	lobby.add_child(pool_col)
-	pool_col.position = Vector3(-19.0, 0.4, 18.0)
-	var ps := CollisionShape3D.new()
-	var pcs := CylinderShape3D.new()
-	pcs.radius = 1.95
-	pcs.height = 0.8
-	ps.shape = pcs
-	ps.scale = Vector3(1.0, 1.0, 1.7)
-	pool_col.add_child(ps)
+	# Stadium-shaped collision (a box plus two round ends; shapes are never scaled).
+	_collider(lobby, "TouchPoolCol", Vector3(3.9, 0.8, 3.2), Vector3(-19.0, 0.4, 18.0))
+	for e in [-1.0, 1.0]:
+		var end := StaticBody3D.new()
+		end.name = "TouchPoolEnd%s" % ("N" if e < 0 else "S")
+		lobby.add_child(end)
+		end.position = Vector3(-19.0, 0.4, 18.0 + e * 1.6)
+		var es := CollisionShape3D.new()
+		var ec := CylinderShape3D.new()
+		ec.radius = 1.95
+		ec.height = 0.8
+		es.shape = ec
+		end.add_child(es)
 	var water := level.find_child("TouchWater", true, false)
 	if water is MeshInstance3D:
 		(water as MeshInstance3D).material_override = _water_mat("water_touch", 0.0, 0.6, {"density": 0.6, "max_distance": 1.0})

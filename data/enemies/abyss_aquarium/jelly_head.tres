@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/aqua_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/aqua_shock_aura.gd" id="4"]
+
+[sub_resource type="Resource" id="aura"]
+script = ExtResource("4")
+trigger_range = 3.0
+radius = 3.4
+charge_time = 0.95
+cooldown = 3.8
+damage = 12.0
+slow_while_charging = 0.35
+
+[resource]
+script = ExtResource("1")
+id = &"jelly_head"
+display_name = "Jelly Head"
+max_health = 60.0
+move_speed = 3.9
+speed_variance = 0.12
+turn_speed = 6.5
+tickets = 15
+score = 180
+xp = 15
+damage = 10.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.5
+attack_recover = 0.8
+lunge_speed = 3.5
+mass = 0.8
+flank_degrees = 90.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Jelly"
+body_scale = 0.9
+capsule_radius = 0.42
+capsule_height = 1.9
+head_height = 1.2
+shirt_colors = Array[Color]([Color(1, 0.82, 0.23, 1), Color(1, 0.6, 0.16, 1), Color(0.78, 0.94, 0.23, 1), Color(1, 0.42, 0.36, 1)])
+skin_colors = Array[Color]([Color(0.62, 0.81, 0.29, 1), Color(0.52, 0.77, 0.4, 1), Color(0.7, 0.78, 0.34, 1)])
+accessory_slots = PackedStringArray("Acc_Jelly_Hat")
+move_animation = &"Run"
+animation_reference_speed = 4.4
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("aura")])
+voice_sounds = Array[StringName]([&"aqua_jelly_hum_1", &"aqua_jelly_hum_2"])
+voice_interval = Vector2(2.5, 5.5)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

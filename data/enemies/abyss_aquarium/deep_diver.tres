@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/aqua_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/aqua_dive_helmet.gd" id="4"]
+
+[sub_resource type="Resource" id="helmet"]
+script = ExtResource("4")
+helmet_health = 45.0
+head_armor = 0.3
+
+[resource]
+script = ExtResource("1")
+id = &"deep_diver"
+display_name = "Deep Diver"
+max_health = 130.0
+move_speed = 2.0
+speed_variance = 0.1
+turn_speed = 4.5
+tickets = 18
+score = 220
+xp = 18
+damage = 22.0
+attack_range = 1.8
+attack_reach = 2.4
+attack_windup = 0.8
+attack_recover = 1.0
+lunge_speed = 3.0
+mass = 1.8
+flank_degrees = 45.0
+enrage_radius = 7.0
+model_scene = ExtResource("2")
+outfit = &"Diver"
+body_scale = 1.0
+capsule_radius = 0.5
+capsule_height = 2.0
+head_height = 1.3
+shirt_colors = Array[Color]([Color(1, 0.48, 0.12, 1), Color(1, 0.36, 0.16, 1), Color(1, 0.62, 0.12, 1)])
+skin_colors = Array[Color]([Color(0.62, 0.81, 0.29, 1), Color(0.52, 0.77, 0.4, 1), Color(0.7, 0.78, 0.34, 1)])
+accessory_slots = PackedStringArray("Acc_Diver_Helmet", "Acc_Diver_Torch|", "Acc_Diver_Knife|")
+move_animation = &"Walk"
+animation_reference_speed = 2.0
+avoidance_radius = 0.6
+behaviours = Array[ExtResource("3")]([SubResource("helmet")])
+voice_sounds = Array[StringName]([&"aqua_diver_breath_1", &"aqua_diver_breath_2"])
+voice_interval = Vector2(3.5, 7)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"
