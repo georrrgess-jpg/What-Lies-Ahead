@@ -84,7 +84,7 @@ def build_lift_station():
         box("BoothBase", (2.0, 2.0, 0.5), (bx, by, 0.25), bevel=0.06, m=fmat("StoneDark")),
     ]
     parts += window("BoothWin", 1.3, 0.9, (bx, by - 0.98, 2.2), mullions=(2, 1))
-    parts += window("BoothWinS", 1.3, 0.9, (bx - 0.98, by, 2.2), mullions=(2, 1), rot_z=0.0)
+    parts += window("BoothWinS", 1.3, 0.9, (bx - 0.98, by, 2.2), mullions=(2, 1), rot_z=-math.pi / 2)
     parts += snow_cap("BoothSnow", (2.2, 2.2, 0.22), (bx, by, 3.2), drips=4, seed=35)
     # 'UNLOAD HERE' board and a fence along the ramp edge.
     parts += [

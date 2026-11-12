@@ -108,14 +108,14 @@ banner = ""
 [sub_resource type="Resource" id="wave_8"]
 script = ExtResource("2")
 spawns = {
-"frost_ski_racer": 10,
+"frost_ski_racer": 9,
 "frost_frozen_tourist": 7,
 "frost_yeti": 2,
 "lifeguard_runner": 4
 }
 spawn_interval = 2.6
 burst = 3
-max_alive = 9
+max_alive = 8
 speed_scale = 1.08
 late_types_after = 0.2
 banner = "FINAL WAVE — WHITEOUT"

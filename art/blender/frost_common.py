@@ -2,7 +2,7 @@
 
 Builds on wla_common (same conventions: metres, Z up, front faces -Y, chunky
 bevelled flat-colour parts) and adds the winter kit: the resort palette,
-snow caps that drape over edges, lumpy snow mounds, icicles and window glass.
+snow caps that drape over edges, icicles, logs and lit windows.
 """
 import math
 import os
@@ -48,10 +48,9 @@ FROST = {
 }
 
 
-def fmat(name, rough=0.65, metal=0.0, emit=0.0, color=None):
-    """Material from the frost palette (or an explicit hex colour)."""
-    return mat("Frost" + name if color is None else name, FROST.get(name, color) if color is None else color,
-               rough=rough, metal=metal, emit=emit)
+def fmat(name, rough=0.65, metal=0.0, emit=0.0):
+    """Material 'Frost<name>' in the frost palette colour `name`."""
+    return mat("Frost" + name, FROST[name], rough=rough, metal=metal, emit=emit)
 
 
 def fglow(name, color, strength=3.0):
@@ -104,20 +103,6 @@ def snow_cap(name, size, loc, rot=(0, 0, 0), drips=6, seed=1, m=None):
     return parts
 
 
-def snow_mound(name, radius, height, loc, seed=1, lumps=7, m=None):
-    """Lumpy pile of snow (a few squashed spheres)."""
-    m = m or snow_mat()
-    rng = random.Random(seed)
-    parts = [sphere(name, radius, loc, scale=(1.0, 1.0, height / radius), m=m, segs=14, rings=8)]
-    for i in range(lumps):
-        a = math.tau * i / lumps + rng.uniform(-0.3, 0.3)
-        r = radius * rng.uniform(0.35, 0.6)
-        d = radius * rng.uniform(0.45, 0.75)
-        parts.append(sphere(f"{name}Lump{i}", r, (loc[0] + math.cos(a) * d, loc[1] + math.sin(a) * d, loc[2]),
-                            scale=(1.0, 1.0, height / radius * rng.uniform(0.7, 1.0)), m=m, segs=10, rings=6))
-    return parts
-
-
 def icicles(name, start, end, count, length, seed=3, m=None):
     """A row of icicles hanging from the line start -> end."""
     m = m or mat("FrostIcicle", "#bfeaff", rough=0.15, emit=0.25)
@@ -136,27 +121,22 @@ def cone_down(name, radius, length, top, m):
     return cyl(name, 0.002, length, (top[0], top[1], top[2] - length * 0.5), segs=6, bevel=0.0, m=m, radius_top=radius)
 
 
-def window(name, w, h, loc, depth=0.08, frame_m=None, glass_m=None, mullions=(1, 1), rot_z=0.0, frost=True):
-    """A lit window facing -Y: frame, glowing glass, mullions and a frosty sill."""
-    frame_m = frame_m or fmat("TimberDark")
-    glass_m = glass_m or glass_mat()
+def window(name, w, h, loc, mullions=(1, 1), rot_z=0.0, depth=0.08):
+    """A lit window facing -Y (before `rot_z`, which turns it about its own
+    centre): frame, glowing glass, mullions and a snowy sill."""
+    frame_m, glass_m = fmat("TimberDark"), glass_mat()
     parts = [
-        box(name + "Frame", (w + 0.16, depth, h + 0.16), loc, bevel=0.03, m=frame_m),
-        box(name + "Glass", (w, depth + 0.02, h), (loc[0], loc[1] - 0.01, loc[2]), bevel=0.0, m=glass_m),
+        box(name + "Frame", (w + 0.16, depth, h + 0.16), (0, 0, 0), bevel=0.03, m=frame_m),
+        box(name + "Glass", (w, depth + 0.02, h), (0, -0.01, 0), bevel=0.0, m=glass_m),
+        box(name + "Sill", (w + 0.3, depth + 0.16, 0.08), (0, -0.06, -h / 2 - 0.1), bevel=0.02, m=frame_m),
+        box(name + "SillSnow", (w + 0.26, depth + 0.14, 0.07), (0, -0.07, -h / 2 - 0.03), bevel=0.03, m=snow_mat()),
     ]
     cols, rows = mullions
     for i in range(1, cols):
-        x = loc[0] - w / 2 + w * i / cols
-        parts.append(box(f"{name}MullV{i}", (0.05, depth + 0.05, h), (x, loc[1] - 0.02, loc[2]), bevel=0.0, m=frame_m))
+        parts.append(box(f"{name}MullV{i}", (0.05, depth + 0.05, h), (-w / 2 + w * i / cols, -0.02, 0), bevel=0.0, m=frame_m))
     for j in range(1, rows):
-        z = loc[2] - h / 2 + h * j / rows
-        parts.append(box(f"{name}MullH{j}", (w, depth + 0.05, 0.05), (loc[0], loc[1] - 0.02, z), bevel=0.0, m=frame_m))
-    if frost:
-        parts.append(box(name + "Sill", (w + 0.3, depth + 0.16, 0.08), (loc[0], loc[1] - 0.06, loc[2] - h / 2 - 0.1), bevel=0.02, m=frame_m))
-        parts.append(box(name + "SillSnow", (w + 0.26, depth + 0.14, 0.07), (loc[0], loc[1] - 0.07, loc[2] - h / 2 - 0.03), bevel=0.03, m=snow_mat()))
-    if rot_z:
-        place(parts, rot_z=rot_z)
-    return parts
+        parts.append(box(f"{name}MullH{j}", (w, depth + 0.05, 0.05), (0, -0.02, -h / 2 + h * j / rows), bevel=0.0, m=frame_m))
+    return place(parts, loc, rot_z)
 
 
 def log(name, radius, length, loc, rot, m=None):

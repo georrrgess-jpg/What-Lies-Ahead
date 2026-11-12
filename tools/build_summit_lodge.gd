@@ -410,9 +410,9 @@ func _build_terrace() -> void:
 	_collider(t, "Windbreak", Vector3(0.3, 2.4, 6.4), Vector3(TERRACE_X0 + 0.2, TERRACE_Y + 1.2, -20.8))
 
 	# Railings along the front edge (gaps for the ramps and stairs) and the east side.
-	_fence_run(t, "RailFrontW", Vector3(TERRACE_X0 + 3.0, TERRACE_Y, TERRACE_Z1 + 0.15), Vector3(-3.0, TERRACE_Y, TERRACE_Z1 + 0.15), false)
-	_fence_run(t, "RailFrontE", Vector3(1.0, TERRACE_Y, TERRACE_Z1 + 0.15), Vector3(TERRACE_X1 - 3.0, TERRACE_Y, TERRACE_Z1 + 0.15), false)
-	_fence_run(t, "RailEast", Vector3(TERRACE_X1 - 0.15, TERRACE_Y, TERRACE_Z0), Vector3(TERRACE_X1 - 0.15, TERRACE_Y, TERRACE_Z1), false)
+	_fence_run(t, "RailFrontW", Vector3(TERRACE_X0 + 3.0, TERRACE_Y, TERRACE_Z1 + 0.15), Vector3(-3.0, TERRACE_Y, TERRACE_Z1 + 0.15))
+	_fence_run(t, "RailFrontE", Vector3(1.0, TERRACE_Y, TERRACE_Z1 + 0.15), Vector3(TERRACE_X1 - 3.0, TERRACE_Y, TERRACE_Z1 + 0.15))
+	_fence_run(t, "RailEast", Vector3(TERRACE_X1 - 0.15, TERRACE_Y, TERRACE_Z0), Vector3(TERRACE_X1 - 0.15, TERRACE_Y, TERRACE_Z1))
 
 	# Terrace furniture (cover up on the deck).
 	var y := TERRACE_Y
@@ -739,11 +739,11 @@ func _build_arena_props() -> void:
 		_collider(props, "Pine%dTrunk" % i, Vector3(0.7, 4.0, 0.7), p[0] + Vector3(0, 2.0, 0))
 		i += 1
 
-	# Lantern posts around the plaza and along the trails.
+	# Lantern posts around the plaza and along the edges of the trails.
 	var lamps := [
-		Vector3(-1.5, 0, -2.6), Vector3(13.0, 0, 8.4), Vector3(-1.0, 0, 9.4), Vector3(12.6, 0, -4.6),
-		Vector3(-4.6, 0, -11.2), Vector3(5.2, 0, -11.4), Vector3(-17.6, 0, -6.0), Vector3(-17.8, 0, 9.4),
-		Vector3(19.0, 0, 0.4), Vector3(4.6, 0, 20.4), Vector3(-9.0, 0, 15.6), Vector3(17.2, 0, -14.0),
+		Vector3(-1.2, 0, 0.6), Vector3(13.0, 0, 8.4), Vector3(0.6, 0, 7.2), Vector3(14.2, 0, -3.6),
+		Vector3(-4.6, 0, -11.2), Vector3(5.2, 0, -11.4), Vector3(-17.6, 0, -5.6), Vector3(-17.8, 0, 9.4),
+		Vector3(19.0, 0, 0.4), Vector3(6.2, 0, 20.6), Vector3(-9.0, 0, 15.6), Vector3(19.8, 0, -13.6),
 	]
 	i = 0
 	for p in lamps:
@@ -771,14 +771,14 @@ func _build_fences() -> void:
 	f.name = "Boundary"
 	geo.add_child(f)
 	# Lookout fence along the south edge.
-	_fence_run(f, "FenceSouth", Vector3(ARENA_X0, 0, 24.2), Vector3(ARENA_X1 + 0.5, 0, 24.2), false)
+	_fence_run(f, "FenceSouth", Vector3(ARENA_X0, 0, 24.2), Vector3(ARENA_X1 + 0.5, 0, 24.2))
 	# East: either side of the chairlift landing.
-	_fence_run(f, "FenceEastN", Vector3(24.2, 0, -15.0), Vector3(24.2, 0, -4.0), false)
-	_fence_run(f, "FenceEastS", Vector3(24.2, 0, 7.0), Vector3(24.2, 0, 24.2), false)
+	_fence_run(f, "FenceEastN", Vector3(24.2, 0, -15.0), Vector3(24.2, 0, -4.0))
+	_fence_run(f, "FenceEastS", Vector3(24.2, 0, 7.0), Vector3(24.2, 0, 24.2))
 	# West: between the gondola station and the shed, and south of the shed.
-	_fence_run(f, "FenceWestMid", Vector3(-24.6, 0, -1.6), Vector3(-24.6, 0, 11.4), false)
-	_fence_run(f, "FenceWestS", Vector3(-24.6, 0, 20.6), Vector3(-24.6, 0, 24.2), false)
-	_fence_run(f, "FenceWestN", Vector3(-24.6, 0, -15.0), Vector3(-24.6, 0, -14.4), false)
+	_fence_run(f, "FenceWestMid", Vector3(-24.6, 0, -1.6), Vector3(-24.6, 0, 11.4))
+	_fence_run(f, "FenceWestS", Vector3(-24.6, 0, 20.6), Vector3(-24.6, 0, 24.2))
+	_fence_run(f, "FenceWestN", Vector3(-24.6, 0, -15.0), Vector3(-24.6, 0, -14.4))
 
 	var walls := Node3D.new()
 	walls.name = "PlayerWalls"
@@ -813,7 +813,7 @@ func _player_wall(parent: Node3D, wall_name: String, a: Vector3, b: Vector3, hei
 
 
 ## A run of wooden fence modules with one collision box (blocks walking, not jumping).
-func _fence_run(parent: Node3D, run_name: String, a: Vector3, b: Vector3, player_wall: bool) -> void:
+func _fence_run(parent: Node3D, run_name: String, a: Vector3, b: Vector3) -> void:
 	var length := a.distance_to(b)
 	if length < 0.5:
 		return
@@ -830,8 +830,6 @@ func _fence_run(parent: Node3D, run_name: String, a: Vector3, b: Vector3, player
 	shape.shape = box
 	shape.position.y = 0.55
 	body.add_child(shape)
-	if player_wall:
-		_player_wall(body, "PlayerWall", Vector3(-length * 0.5, 0, 0), Vector3(length * 0.5, 0, 0), 4.0)
 	# The modules of a run are drawn as one MultiMesh.
 	var module_len := 2.5
 	var count := maxi(1, int(round(length / module_len)))

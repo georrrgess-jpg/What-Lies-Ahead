@@ -31,7 +31,7 @@ func _physics_process(_delta: float) -> void:
 		_player.deceleration = _base_decel * (player_grip if inside else 1.0)
 	for z in get_tree().get_nodes_in_group("zombies"):
 		if is_on_ice((z as Node3D).global_position):
-			(z as Zombie).speed_multiplier *= zombie_speed
+			(z as Zombie).speed_multiplier = minf((z as Zombie).speed_multiplier, zombie_speed)
 
 
 ## True if a world position is on the ice (and near its surface).
