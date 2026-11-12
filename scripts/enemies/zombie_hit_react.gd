@@ -10,7 +10,7 @@ extends SkeletonModifier3D
 const STIFFNESS := 260.0
 const DAMPING := 15.0
 ## Largest kick per hit (radians per second of spring velocity).
-const MAX_KICK := 18.0
+const MAX_KICK := 22.0
 
 var _spine := -1
 var _head := -1
@@ -30,7 +30,7 @@ func setup(skeleton: Skeleton3D) -> void:
 ## `local_dir` the shot direction, both in the zombie's own space (+X its
 ## left, +Y up, +Z its front, origin at its feet); `strength` is 0..1.
 func kick(local_point: Vector3, local_dir: Vector3, headshot: bool, strength: float) -> void:
-	var s := clampf(strength, 0.2, 1.0) * MAX_KICK
+	var s := clampf(strength, 0.35, 1.0) * MAX_KICK
 	var d := local_dir.normalized()
 	# Torque about the body axis: a frontal hit on the left shoulder turns it back.
 	var twist := local_point.z * d.x - local_point.x * d.z
@@ -38,7 +38,7 @@ func kick(local_point: Vector3, local_dir: Vector3, headshot: bool, strength: fl
 		twist = randf_range(-0.12, 0.12)
 	# A chest hit from the front rocks the torso back; a leg hit tips it forward.
 	var lean := (local_point.y - 0.9) * d.z if local_point.y > 0.9 else -0.3 * d.z
-	_vel.x += clampf(twist * 3.2, -1.0, 1.0) * s * 0.75
+	_vel.x += clampf(twist * 3.2, -1.0, 1.0) * s * 0.9
 	_vel.y += clampf(lean * 1.6, -1.0, 1.0) * s * 0.4
 	if headshot:
 		_vel.z += clampf(d.z, -1.0, 1.0) * s + signf(d.z) * s * 0.3

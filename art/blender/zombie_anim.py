@@ -581,7 +581,8 @@ def _key_pose(armature, frame, pose):
 
 def write_table(model_name, clips):
     """art/models/<model_name>_clips.tres: a Resource whose "clips" metadata
-    maps each clip name to {length, speed?, profile?, strike?, ...}."""
+    maps each clip's name in Godot to {length, speed?, profile?, strike?, ...}
+    (Godot's importer drops the "-loop" suffix and marks the clip looping)."""
     lines = ["[gd_resource type=\"Resource\" format=3]", "", "[resource]"]
     entries = []
     for c in clips:
@@ -593,7 +594,7 @@ def write_table(model_name, clips):
             else:
                 v = f"{v:.4g}"
             fields.append(f"\"{k}\": {v}")
-        entries.append(f"\"{c.name}\": {{{', '.join(fields)}}}")
+        entries.append(f"\"{c.name.removesuffix('-loop')}\": {{{', '.join(fields)}}}")
     lines.append("metadata/clips = {\n" + ",\n".join(entries) + "\n}")
     path = os.path.join(MODELS_DIR, model_name + "_clips.tres")
     with open(path, "w") as f:

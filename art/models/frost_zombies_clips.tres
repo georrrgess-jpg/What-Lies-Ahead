@@ -2,13 +2,13 @@
 
 [resource]
 metadata/clips = {
-"Idle-loop": {"length": 2},
-"Walk-loop": {"length": 0.625, "speed": 1.5},
-"Run-loop": {"length": 0.4167, "speed": 5.467},
-"Run_Skier-loop": {"length": 0.7292, "speed": 3.749},
-"Tuck-loop": {"length": 0.5},
-"Idle_Heavy-loop": {"length": 2},
-"Walk_Heavy-loop": {"length": 0.9583, "speed": 1.548},
+"Idle": {"length": 2},
+"Walk": {"length": 0.625, "speed": 1.5},
+"Run": {"length": 0.4167, "speed": 5.467},
+"Run_Skier": {"length": 0.7292, "speed": 3.749},
+"Tuck": {"length": 0.5},
+"Idle_Heavy": {"length": 2},
+"Walk_Heavy": {"length": 0.9583, "speed": 1.548},
 "Attack": {"length": 1.083, "strike": 0.5958},
 "Attack_Heavy": {"length": 1.25, "strike": 0.6875},
 "Throw": {"length": 1.167},

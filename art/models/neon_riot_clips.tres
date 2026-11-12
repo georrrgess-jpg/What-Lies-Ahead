@@ -2,9 +2,9 @@
 
 [resource]
 metadata/clips = {
-"Idle-loop": {"length": 2},
-"Walk-loop": {"length": 0.9167, "speed": 1.548},
-"Run-loop": {"length": 0.5417, "speed": 3.956},
+"Idle": {"length": 2},
+"Walk": {"length": 0.9167, "speed": 1.548},
+"Run": {"length": 0.5417, "speed": 3.956},
 "Attack": {"length": 1.083, "strike": 0.5958},
 "Stagger": {"length": 0.625},
 "Hit_Head": {"length": 0.3333},

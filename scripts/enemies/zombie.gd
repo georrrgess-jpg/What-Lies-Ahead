@@ -725,8 +725,10 @@ func _drive_locomotion(delta: float) -> void:
 		return
 	var v := get_real_velocity() - _knock
 	var actual := Vector2(v.x, v.z).length()
-	var profiled := _clip_info(_loco_clip).has("profile")
-	_ground_speed = lerpf(_ground_speed, actual, 1.0 - exp(-(2.0 if profiled else 10.0) * delta))
+	# A bounding gait moves at its base speed times its profile: undo the
+	# profile so the rate follows the base speed.
+	actual /= maxf(0.3, _gait_profile())
+	_ground_speed = lerpf(_ground_speed, actual, 1.0 - exp(-10.0 * delta))
 	var want := _gait_for(_ground_speed)
 	if want != _loco_clip:
 		_switch_loco(want, GAIT_BLEND)
