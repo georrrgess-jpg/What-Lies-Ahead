@@ -8,6 +8,10 @@ extends CharacterBody3D
 ## crowd can never plug a lane.
 
 signal died(zombie: Zombie, weapon_id: StringName)
+
+## Set when the finishing blow lands; read by the score keeper.
+var killed_by_headshot := false
+var kill_distance := 0.0
 ## Emitted when the zombie has made no progress for a while (or left the map).
 signal stalled(zombie: Zombie)
 
@@ -44,6 +48,12 @@ var _stall_anchor := Vector3.ZERO
 var _stall_timer := 0.0
 var _lost_timer := 0.0
 var _clear_line := false
+## Flanking: each zombie approaches from its own side (radians, relative to
+## the line from the player to the zombie), so groups spread around the
+## player instead of queueing single file. Chosen once at spawn.
+var _flank := 0.0
+## Seconds of "enraged" speed boost left (after a nearby ally dies).
+var _enrage := 0.0
 ## Charge (Bruiser): cooldown, telegraph time left, and charge time left.
 var _charge_cooldown := 2.5
 var _charge_telegraph := 0.0
@@ -71,8 +81,18 @@ func setup(enemy: EnemyData, chase_target: Player, speed_scale := 1.0) -> void:
 	speed = enemy.move_speed * speed_scale * (1.0 + randf_range(-enemy.speed_variance, enemy.speed_variance))
 
 
+## True for the invisible-to-gameplay copy drawn once at level start so its
+## materials compile early (see FxWarmup). It never joins the "zombies" group.
+var warmup_only := false
+
+
 func _ready() -> void:
-	add_to_group("zombies")
+	if warmup_only:
+		collision_layer = 0
+		collision_mask = 0
+		nav.avoidance_enabled = false
+	else:
+		add_to_group("zombies")
 	if data == null:
 		data = EnemyData.new()
 	var capsule := CapsuleShape3D.new()
@@ -84,6 +104,7 @@ func _ready() -> void:
 	nav.max_speed = speed * maxf(1.2, data.charge_speed_mult * 1.1)
 	nav.velocity_computed.connect(_on_velocity_computed)
 	_repath = randf() * REPATH_INTERVAL
+	_flank = randf_range(-1.0, 1.0) * deg_to_rad(data.flank_degrees)
 	_voice_timer = randf_range(0.5, data.voice_interval.y)
 	_stall_anchor = global_position
 	_build_model()
@@ -128,6 +149,9 @@ func take_hit(amount: float, hit_position: Vector3, direction: Vector3, weapon_i
 	Fx.hit_pop(get_parent(), hit_position, direction, headshot)
 	Sfx.play_at(&"hit_head" if headshot else &"hit_body", hit_position, -5.0, randf_range(0.92, 1.1))
 	if health <= 0.0:
+		killed_by_headshot = headshot
+		if is_instance_valid(target):
+			kill_distance = target.global_position.distance_to(global_position)
 		_die(weapon_id, hit_position)
 		return true
 	# A heavy hit knocks a zombie out of its windup: the swipe never lands.
@@ -214,7 +238,7 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 	_repath -= delta
 	if _repath <= 0.0:
 		_repath = REPATH_INTERVAL
-		nav.target_position = target.global_position
+		nav.target_position = _approach_point(distance)
 		_clear_line = (distance <= 3.5 or data.charge_speed_mult > 1.0) and _has_clear_line()
 	var dir := to_target.normalized()
 	# Close in directly for the last few metres when nothing is in the way;
@@ -226,6 +250,9 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 		if step.length() > 0.05:
 			dir = step.normalized()
 	var move_speed := speed * (0.45 if _slow > 0.0 else 1.0)
+	if _enrage > 0.0:
+		_enrage -= delta
+		move_speed *= 1.18
 	if _charge_left > 0.0:
 		move_speed = speed * data.charge_speed_mult
 	# Stop at arm's length instead of walking into (and shoving) the player.
@@ -239,6 +266,30 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 		_on_velocity_computed(desired)
 	if _anim:
 		_anim.speed_scale = clampf(move_speed / maxf(0.1, data.animation_reference_speed), 0.5, 1.8)
+
+
+## Where to path to: far away, a point beside the player on this zombie's
+## flank side; closer in, straight at the player.
+func _approach_point(distance: float) -> Vector3:
+	var p := target.global_position
+	if distance < 6.0 or absf(_flank) < 0.01:
+		return p
+	var away := global_position - p
+	away.y = 0.0
+	away = away.normalized().rotated(Vector3.UP, _flank)
+	var radius := clampf((distance - 6.0) * 0.5, 0.0, 4.5)
+	return p + away * radius
+
+
+## A nearby ally just died: speed up and roar for a few seconds.
+func enrage(seconds: float) -> void:
+	if state == State.DEAD or warmup_only:
+		return
+	var was := _enrage > 0.0
+	_enrage = maxf(_enrage, seconds)
+	if not was:
+		_voice_timer = 0.0
+		_flash(0.06)
 
 
 ## Charging enemies (the Bruiser): at mid range with a clear line, stop, roar
@@ -338,6 +389,8 @@ func _die(weapon_id: StringName, hit_position := Vector3.ZERO) -> void:
 	var chest := global_position + Vector3.UP * 1.1 * data.body_scale
 	Fx.kill_burst(get_parent(), hit_position if hit_position != Vector3.ZERO else chest)
 	Fx.ticket_popup(get_parent(), chest + Vector3.UP * 0.9, data.tickets)
+	if killed_by_headshot:
+		Fx.ticket_popup(get_parent(), chest + Vector3.UP * 1.5, 0, "HEADSHOT", Color(1.0, 0.45, 0.7))
 	Sfx.play_at(&"zombie_pop", global_position + Vector3.UP, -1.0, randf_range(0.9, 1.1) * data.voice_pitch)
 	if _anim and _anim.has_animation("Die"):
 		_anim.speed_scale = 1.15
@@ -482,6 +535,11 @@ func _flash(duration: float) -> void:
 	_flash_material.albedo_color = Color(0.6, 0.38, 0.5) * k
 	_flash_left = duration
 	_set_overlay(_flash_material)
+
+
+## Shows the hit tint immediately (used by the warm-up pass).
+func flash_now() -> void:
+	_flash(1.0)
 
 
 ## Quick squash-and-stretch so every hit visibly lands.

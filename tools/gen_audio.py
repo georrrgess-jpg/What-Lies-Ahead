@@ -172,29 +172,57 @@ def clunk(pitch=140, seconds=0.12, gain=1.0):
 # Weapons
 # ---------------------------------------------------------------------------
 
+def _laser_layer(f0, f1, d, curve, shape="saw"):
+    """Downward-zapping energy layer with a little FM wobble (the 'pew')."""
+    t = t_axis(d)
+    k = (t / d) ** curve
+    freq = f0 + (f1 - f0) * k
+    mod = 1.0 + 0.08 * np.sin(2 * np.pi * freq * 0.5 * t / max(1.0, f1 / 400))
+    return osc(2 * np.pi * np.cumsum(freq * mod) / SR, shape)
+
+
+def _sub_thump(f0, f1, d, decay):
+    return sweep(f0, f1, d, "sine", 0.35) * env(d, 0.0008, decay, power=2.0)
+
+
+def _shimmer(d, decay, centre=6500):
+    """Bright crackle tail: the energy cell discharging."""
+    n = band(noise(d), centre, centre * 0.35) * 3.0
+    sparkle = (rng.uniform(0, 1, len(n)) > 0.985).astype(float) * rng.uniform(-1, 1, len(n))
+    return (n + filt(sparkle, low=9000) * 2.0) * env(d, 0.002, decay, power=2.5)
+
+
 def pistol_fire():
-    d = 0.2
-    zap = sweep(1500, 260, d, "square", 0.55) * env(d, 0.001, 0.16, power=2.2)
-    body = sweep(420, 120, d, "sine", 0.6) * env(d, 0.001, 0.13, power=2.0)
-    snap = filt(noise(d), high=2500) * env(d, 0.0005, 0.035, power=2.0)
-    return filt(zap * 0.55 + body * 0.8 + snap * 0.5, low=9000)
+    """Pulse Pistol: crisp snap, mid 'pew', tight sub punch and a sparkly tail."""
+    d = 0.32
+    snap = filt(noise(d), high=3000) * env(d, 0.0003, 0.02, power=2.0) * 1.1
+    pew = _laser_layer(2400, 380, d, 0.45) * env(d, 0.0008, 0.16, power=2.0) * 0.5
+    body = sweep(620, 150, d, "square", 0.5) * env(d, 0.0008, 0.09, power=2.2) * 0.4
+    sub = _sub_thump(170, 48, d, 0.12) * 1.1
+    tail = _shimmer(d, 0.28) * 0.25
+    return crush(filt(snap + pew + body + sub + tail, low=12000), 1.3)
 
 
 def carbine_fire():
-    d = 0.11
-    zap = sweep(2300, 700, d, "saw", 0.5) * env(d, 0.0008, 0.085, power=1.8)
-    body = sweep(520, 190, d, "sine", 0.7) * env(d, 0.001, 0.07, power=2.0)
-    snap = filt(noise(d), high=3500) * env(d, 0.0005, 0.02, power=2.0)
-    return filt(zap * 0.5 + body * 0.6 + snap * 0.45, low=10000)
+    """Ion Carbine: fast, bright ion crack with a short electric buzz."""
+    d = 0.16
+    snap = filt(noise(d), high=4200) * env(d, 0.0003, 0.012, power=2.0)
+    pew = _laser_layer(3400, 900, d, 0.4) * env(d, 0.0006, 0.08, power=1.8) * 0.45
+    buzz = tone(110, d, "square") * env(d, 0.001, 0.07, power=1.5) * 0.18
+    sub = _sub_thump(210, 70, d, 0.06) * 0.8
+    tail = _shimmer(d, 0.12, 7500) * 0.2
+    return crush(filt(snap + pew + buzz + sub + tail, low=13000), 1.25)
 
 
 def scatter_fire():
-    d = 0.5
-    thump = sweep(210, 42, d, "sine", 0.45) * env(d, 0.001, 0.34, power=2.0)
-    blast = filt(noise(d), low=3200) * env(d, 0.001, 0.22, power=2.4)
-    fizz = filt(noise(d), high=4000) * env(d, 0.001, 0.4, power=3.0) * 0.35
-    zap = sweep(900, 150, d, "square", 0.4) * env(d, 0.001, 0.12, power=2.0) * 0.4
-    return crush(thump * 1.1 + blast * 0.9 + fizz + zap, 1.6)
+    """Scatter Blaster: huge plasma boom, rolling sub and a fizzing cooldown."""
+    d = 0.75
+    crack = filt(noise(d), high=1800) * env(d, 0.0005, 0.05, power=1.6) * 1.2
+    boom = _sub_thump(190, 30, d, 0.45) * 1.5
+    blast = filt(noise(d), low=2600) * env(d, 0.001, 0.26, power=2.2) * 0.9
+    zap = _laser_layer(1300, 140, d, 0.35, "square") * env(d, 0.001, 0.14, power=2.0) * 0.35
+    fizz = _shimmer(d, 0.6, 5200) * 0.35
+    return crush(boom + crack + blast + zap + fizz, 1.7)
 
 
 def charge(seconds, f0=300, f1=1400, gain=1.0):
@@ -433,21 +461,106 @@ def ui_click():
 
 
 def hitmarker():
-    """Short, bright 2D tick confirming a hit (plays even when the target is far away)."""
-    out = silence(0.09)
-    place(out, blip(note(31), 0.05, "square", 0.04), 0.0, 0.6)
-    place(out, click(0.015, 5200), 0.0, 0.5)
+    """Tight 2D tick confirming a hit."""
+    out = silence(0.1)
+    place(out, blip(note(31), 0.05, "square", 0.035), 0.0, 0.55)
+    place(out, click(0.015, 5600), 0.0, 0.55)
+    place(out, sweep(260, 140, 0.05, "sine") * env(0.05, 0.001, power=2.0), 0.0, 0.5)
     return out
 
 
 def kill_confirm():
-    """Satisfying arcade 'ding-pop' for a finishing blow."""
-    out = silence(0.4)
-    place(out, sweep(300, 1100, 0.05, "sine", 2.0) * env(0.05, 0.001, power=1.0), 0.0, 0.8)
-    place(out, blip(note(28), 0.22, "sine", 0.2), 0.03, 0.7)
-    place(out, blip(note(35), 0.28, "sine", 0.26), 0.08, 0.55)
-    place(out, blip(note(28), 0.08, "square", 0.06), 0.03, 0.18)
+    """Punchy arcade kill: thump, glassy 'shatter' and a bright two-note chime.
+    The game raises its pitch with the kill combo."""
+    out = silence(0.55)
+    place(out, _sub_thump(160, 55, 0.18, 0.12), 0.0, 1.1)
+    place(out, sweep(300, 1400, 0.05, "sine", 2.0) * env(0.05, 0.001, power=1.0), 0.0, 0.6)
+    glass = band(noise(0.3), 5200, 2400) * env(0.3, 0.001, 0.22, power=2.5)
+    for k in range(6):
+        place(out, blip(rng.uniform(2800, 5200), 0.07, "sine", 0.05) * 0.4, 0.01 + k * 0.022, 0.4)
+    place(out, glass, 0.0, 0.5)
+    place(out, blip(note(28), 0.22, "sine", 0.2), 0.04, 0.6)
+    place(out, blip(note(35), 0.3, "sine", 0.28), 0.1, 0.5)
+    place(out, blip(note(35), 0.1, "square", 0.08), 0.1, 0.14)
+    return crush(out, 1.2)
+
+
+def headshot_ping():
+    """Bright metallic 'ting' with a crunchy transient: unmistakably a headshot."""
+    d = 0.5
+    out = silence(d)
+    partials = [(2350, 1.0, 0.35), (3720, 0.6, 0.22), (5310, 0.4, 0.15), (6980, 0.25, 0.1)]
+    for f, g, dec in partials:
+        place(out, tone(f, d, "sine") * env(d, 0.0005, dec, power=1.6) * g, 0.0, 0.5)
+    place(out, filt(noise(0.03), high=2500) * env(0.03, 0.0003, power=2.0), 0.0, 0.9)
+    place(out, _sub_thump(320, 120, 0.08, 0.06), 0.0, 0.6)
     return out
+
+
+def combo_up():
+    """Short rising blip played on combo milestones."""
+    out = silence(0.25)
+    for i, n in enumerate((24, 28, 31)):
+        place(out, blip(note(n), 0.08, "square", 0.07), i * 0.04, 0.45)
+    return out
+
+
+def jump():
+    d = 0.18
+    step = _step(120, 200)
+    step = np.pad(step, (0, max(0, int(SR * d) - len(step))))[: int(SR * d)]
+    return band(noise(d), 900, 500) * env(d, 0.005, 0.12, power=1.5) * 1.6 + step * 0.5
+
+
+def land():
+    d = 0.3
+    step = _step(90, 0)
+    return _sub_thump(130, 40, d, 0.18) * 1.2 + np.pad(step, (0, int(SR * d) - len(step))) * 0.9
+
+
+def slide():
+    d = 0.7
+    scrape = band(noise(d), 1800, 1200) * env(d, 0.02, 0.6, power=0.9) * 1.6
+    whoosh = band(noise(d), 600, 300) * env(d, 0.01, 0.4, power=1.2)
+    return scrape + whoosh
+
+
+def reload_vent():
+    d = 0.6
+    hiss = filt(noise(d), high=2500) * env(d, 0.01, 0.55, power=1.2)
+    pop = sweep(900, 300, 0.05, "sine") * env(0.05, 0.001, power=1.5)
+    out = hiss * 0.8
+    place(out, pop, 0.0, 0.6)
+    return out
+
+
+def reload_materialize():
+    """Digital 'print' shimmer rising into a bright lock-in chime."""
+    d = 0.5
+    sweep_up = sweep(400, 2400, d * 0.7, "saw", 1.5) * env(d * 0.7, 0.02, d, power=0.6) * 0.25
+    out = silence(d)
+    place(out, filt(sweep_up, low=5000), 0.0, 1.0)
+    for i in range(10):
+        place(out, blip(rng.uniform(1800, 4200), 0.03, "square", 0.025) * 0.3, i * 0.03, 0.5)
+    place(out, blip(note(31), 0.18, "sine", 0.16), 0.33, 0.7)
+    place(out, blip(note(38), 0.18, "sine", 0.16), 0.36, 0.4)
+    return out
+
+
+def reload_clunk():
+    out = silence(0.3)
+    place(out, clunk(140, 0.16), 0.0, 1.0)
+    place(out, click(0.02, 3600), 0.0, 0.6)
+    place(out, charge(0.18, 600, 1600), 0.05, 0.4)
+    return out
+
+
+def reload_spin():
+    d = 0.5
+    t = t_axis(d)
+    rate = 18 + 40 * (t / d)
+    ticks = (np.sin(2 * np.pi * np.cumsum(rate) / SR) > 0.95).astype(float)
+    return filt(ticks, low=6000) * env(d, 0.01, d, power=0.6) * 0.8 + sweep(200, 900, d, "sine", 1.5) * env(d, 0.02, d, power=0.8) * 0.2
 
 
 def _step(seed_hz, bright):
@@ -608,6 +721,7 @@ SFX_SOUNDS = [
     runner_screech_2, zombie_windup, zombie_swipe, player_hurt, wave_start, final_wave, wave_clear,
     purchase, deny, swap, unlock, portal_open, level_clear, defeat, ui_hover, ui_click,
     hitmarker, kill_confirm, footstep_1, footstep_2, heartbeat, bruiser_roar_1, bruiser_roar_2, bruiser_slam,
+    headshot_ping, combo_up, jump, land, slide, reload_vent, reload_materialize, reload_clunk, reload_spin,
 ]
 
 # Extra takes of the most repeated sounds; the game picks one at random (name_b, name_c).
@@ -616,7 +730,7 @@ VARIANTS = [
     (hit_body, (0.9, 1.12)), (zombie_pop, (0.92, 1.09)), (footstep_1, (0.9, 1.1)), (footstep_2, (0.88, 1.12)),
     (zombie_groan_1, (0.9, 1.08)), (zombie_groan_2, (0.88, 1.1)), (zombie_groan_3, (0.92, 1.12)),
     (runner_screech_1, (0.9, 1.1)), (runner_screech_2, (0.93, 1.12)), (bruiser_roar_1, (0.9, 1.06)),
-    (zombie_swipe, (0.9, 1.1)), (hitmarker, (0.94, 1.06)),
+    (zombie_swipe, (0.9, 1.1)), (hitmarker, (0.94, 1.06)), (kill_confirm, (0.96, 1.04)), (headshot_ping, (0.96, 1.05)),
 ]
 
 

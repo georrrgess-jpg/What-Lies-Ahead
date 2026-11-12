@@ -208,7 +208,7 @@ func _build_play() -> Control:
 		_style_card(b)
 		weapons.add_child(b)
 		_weapon_buttons[weapon.id] = b
-	col.add_child(UiKit.label("You can swap weapons for free at the Prize Kiosk between waves.", 22, Color(1, 1, 1, 0.75)))
+	col.add_child(UiKit.label("You can swap weapons for free at the Loadout Station between waves.", 22, Color(1, 1, 1, 0.75)))
 
 	col.add_child(UiKit.spacer(4))
 	_start_button = UiKit.button("ENTER THE PIER", 56)

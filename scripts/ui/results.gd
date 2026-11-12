@@ -35,7 +35,7 @@ func show_result(result: Dictionary) -> void:
 	col.custom_minimum_size = Vector2(1040, 0)
 	panel.add_child(col)
 
-	var title := UiKit.arcade_label("LEVEL CLEARED!" if victory else "OVERRUN!", 110, UiKit.CYAN if victory else UiKit.PINK_LIGHT)
+	var title := UiKit.arcade_label("LEVEL CLEARED!" if victory else "OVERRUN!", 92, UiKit.CYAN if victory else UiKit.PINK_LIGHT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
 	var outcome := "You escaped %s through the portal." % level.display_name if victory \
@@ -45,15 +45,51 @@ func show_result(result: Dictionary) -> void:
 	col.add_child(sub)
 	col.add_child(UiKit.spacer(6))
 
+	# Score: big number that counts up, with NEW BEST and a breakdown.
+	var score_box := VBoxContainer.new()
+	score_box.add_theme_constant_override("separation", -6)
+	col.add_child(score_box)
+	var score_caption := UiKit.label("SCORE", 26, UiKit.CYAN, true)
+	score_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	score_box.add_child(score_caption)
+	var score_value := UiKit.arcade_label("0", 96, Color.WHITE)
+	score_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	score_box.add_child(score_value)
+	var final_score := int(result.get("score", 0))
+	var counter := create_tween()
+	counter.tween_method(func(v: float): score_value.text = ScorePanel._fmt(int(v)), 0.0, float(final_score), 1.2).set_delay(0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	if bool(result.get("new_best", false)) and final_score > 0:
+		var best := UiKit.arcade_label("NEW BEST!", 38, UiKit.AMBER)
+		best.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		score_box.add_child(best)
+		best.pivot_offset = Vector2(260, 24)
+		var pop := best.create_tween().set_loops()
+		pop.tween_property(best, "scale", Vector2.ONE * 1.08, 0.4)
+		pop.tween_property(best, "scale", Vector2.ONE, 0.4)
+	else:
+		var best_line := UiKit.label("Best: %s" % ScorePanel._fmt(int(result.get("best_score", 0))), 24, UiKit.CREAM)
+		best_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		score_box.add_child(best_line)
+	var bd: Dictionary = result.get("score_breakdown", {})
+	if not bd.is_empty():
+		var parts := []
+		for key in [["kills", "Kills"], ["headshots", "Headshots"], ["combo", "Combo"], ["multi", "Multi-kills"], ["style", "Style"], ["waves", "Waves"]]:
+			if int(bd.get(key[0], 0)) > 0:
+				parts.append("%s %s" % [key[1], ScorePanel._fmt(int(bd[key[0]]))])
+		var line := UiKit.label("  ·  ".join(parts), 22, Color(1, 1, 1, 0.75))
+		line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(line)
+
 	var stats := HBoxContainer.new()
 	stats.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats.add_theme_constant_override("separation", 22)
+	stats.add_theme_constant_override("separation", 18)
 	col.add_child(stats)
-	stats.add_child(_stat("WAVES SURVIVED", "%d / %d" % [int(result["waves_cleared"]), int(result["total_waves"])]))
-	stats.add_child(_stat("ZOMBIES POPPED", str(int(result["kills"]))))
+	stats.add_child(_stat("WAVES", "%d / %d" % [int(result["waves_cleared"]), int(result["total_waves"])]))
+	stats.add_child(_stat("KILLS", str(int(result["kills"]))))
+	stats.add_child(_stat("HEADSHOTS", str(int(result.get("headshots", 0)))))
+	stats.add_child(_stat("BEST COMBO", "x%d" % int(result.get("best_combo", 0))))
 	var secs := int(result["seconds"])
 	stats.add_child(_stat("TIME", "%d:%02d" % [secs / 60, secs % 60]))
-	stats.add_child(_stat("BEST WAVE", str(int(result["best_wave"]))))
 
 	col.add_child(UiKit.spacer(8))
 	col.add_child(UiKit.label("WEAPON MASTERY", 34, UiKit.AMBER, true))
@@ -88,11 +124,11 @@ func _stat(caption: String, value: String) -> Control:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", -8)
 	box.add_child(v)
-	box.custom_minimum_size = Vector2(220, 0)
+	box.custom_minimum_size = Vector2(180, 0)
 	var c := UiKit.label(caption, 20, UiKit.CYAN, true)
 	c.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(c)
-	var val := UiKit.label(value, 48, Color.WHITE, true)
+	var val := UiKit.label(value, 42, Color.WHITE, true)
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(val)
 	return box

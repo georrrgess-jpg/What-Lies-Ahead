@@ -16,6 +16,9 @@ var _ammo: Label
 var _weapon_name: Label
 var _tickets: Label
 var _reticle: Reticle
+var _score_panel: ScorePanel
+var _kiosk_marker: Waypoint
+var _portal_marker: Waypoint
 var _threats: ThreatRing
 var _reload_arc: ReloadArc
 var _banner: Label
@@ -56,6 +59,12 @@ func bind(run: RunDirector, p: Player) -> void:
 	run.notice.connect(_on_notice)
 	run.reward_unlocked.connect(_on_reward_unlocked)
 	run.state_changed.connect(_on_state_changed)
+	if run.score:
+		_score_panel.bind(run.score)
+	_kiosk_marker.camera = p.camera
+	_kiosk_marker.target = run.kiosk
+	_portal_marker.camera = p.camera
+	_portal_marker.target = run.portal
 	run.run_finished.connect(func(_r): _root.visible = false)
 	p.health_changed.connect(_on_health_changed)
 	p.damaged.connect(_on_damaged)
@@ -72,6 +81,20 @@ func bind(run: RunDirector, p: Player) -> void:
 	_on_health_changed(p.health, p.max_health)
 	_on_tickets_changed(run.tickets)
 	_on_state_changed(run.state)
+
+
+## Level start: hold black for a few frames (while FxWarmup compiles shaders
+## underneath), then fade the world in.
+func fade_in() -> void:
+	var black := ColorRect.new()
+	black.color = Color(0.04, 0.02, 0.08)
+	black.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(black)
+	var tw := black.create_tween()
+	tw.tween_interval(0.3)
+	tw.tween_property(black, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(black.queue_free)
 
 
 # --- construction ---------------------------------------------------------------
@@ -123,7 +146,26 @@ func _build() -> void:
 	plate.content_margin_top = 2
 	plate.content_margin_bottom = 4
 	_tickets.add_theme_stylebox_override("normal", plate)
-	_anchor(_tickets, Control.PRESET_TOP_RIGHT, Vector2(-MARGIN, 28), Control.GROW_DIRECTION_BEGIN)
+	_anchor(_tickets, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN, -186), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
+	_tickets.add_theme_font_size_override("font_size", 34)
+
+	# Upper right: score, combo and awards.
+	_score_panel = ScorePanel.new()
+	_score_panel.custom_minimum_size = Vector2(420, 0)
+	_anchor(_score_panel, Control.PRESET_TOP_RIGHT, Vector2(-MARGIN, 14), Control.GROW_DIRECTION_BEGIN)
+
+	# World markers (loadout station during breaks, portal during extraction).
+	_kiosk_marker = Waypoint.new()
+	_kiosk_marker.label = "LOADOUT STATION"
+	_kiosk_marker.visible = false
+	_root.add_child(_kiosk_marker)
+	_portal_marker = Waypoint.new()
+	_portal_marker.label = "EXIT PORTAL"
+	_portal_marker.icon = "portal"
+	_portal_marker.color = UiKit.CYAN
+	_portal_marker.offset = Vector3(0, 4.6, 0)
+	_portal_marker.visible = false
+	_root.add_child(_portal_marker)
 
 	# Lower left: segmented health.
 	_health = SegmentBar.new()
@@ -166,7 +208,7 @@ func _build() -> void:
 	_anchor(_notice, Control.PRESET_CENTER_BOTTOM, Vector2(0, -200), Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BEGIN)
 
 	# Controls reminder, shown only before the first wave.
-	_controls = UiKit.label("WASD move  ·  Shift sprint  ·  Mouse aim  ·  LMB fire  ·  R reload  ·  F start wave  ·  Esc pause\nAt the Prize Kiosk between waves:  E energy  ·  Q snack  ·  1 2 3 swap weapon", 26, UiKit.CREAM)
+	_controls = UiKit.label("WASD move  ·  Shift sprint  ·  Mouse aim  ·  LMB fire  ·  R reload  ·  F start wave  ·  Esc pause\nAt the Loadout Station between waves:  E energy  ·  Q snack  ·  1 2 3 swap weapon", 26, UiKit.CREAM)
 	_controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_controls.add_theme_color_override("font_outline_color", Color(UiKit.INK, 0.9))
 	_controls.add_theme_constant_override("outline_size", 8)
@@ -207,7 +249,7 @@ func _build() -> void:
 	_toasts = VBoxContainer.new()
 	_toasts.alignment = BoxContainer.ALIGNMENT_BEGIN
 	_toasts.add_theme_constant_override("separation", 10)
-	_anchor(_toasts, Control.PRESET_TOP_RIGHT, Vector2(-MARGIN, 110), Control.GROW_DIRECTION_BEGIN)
+	_anchor(_toasts, Control.PRESET_CENTER_RIGHT, Vector2(-MARGIN, -60), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BOTH)
 
 
 # --- per-frame ------------------------------------------------------------------
@@ -215,7 +257,14 @@ func _build() -> void:
 func _process(delta: float) -> void:
 	if director == null or player == null:
 		return
-	_reticle.spread = player.weapons.current_spread() + (0.6 if player.sprinting else 0.0)
+	# Reticle gap = the real spread cone projected onto the screen.
+	var spread_deg := player.weapons.current_spread()
+	var half_h := get_viewport().get_visible_rect().size.y * 0.5
+	_reticle.spread_px = tan(deg_to_rad(spread_deg)) / tan(deg_to_rad(player.camera.fov * 0.5)) * half_h
+	_reticle.aim = player.ads
+	if player.weapons.current:
+		var pick := String(Settings.value("reticle_style"))
+		_reticle.style = player.weapons.current.reticle_style if pick == "auto" else pick
 
 	# Health vignette: brief flash on damage plus a steady pulse when low.
 	_hurt = maxf(0.0, _hurt - delta * 1.8)
@@ -253,6 +302,8 @@ func _process(delta: float) -> void:
 				var d := player.global_position.distance_to(director.portal.global_position)
 				_objective.text = "STEP THROUGH THE PORTAL  ·  %d m" % int(d)
 
+	# Loadout marker: during breaks, whenever the player is not already at it.
+	_kiosk_marker.visible = director.is_intermission() and director.kiosk != null and not director.kiosk.player_inside
 	var show_kiosk := director.kiosk_available()
 	if show_kiosk != _kiosk.visible:
 		_kiosk.visible = show_kiosk
@@ -264,14 +315,14 @@ func _process(delta: float) -> void:
 			_kiosk_signature = signature
 			_refresh_kiosk()
 	if director.is_intermission():
-		_intermission_hint.text = "[F] Start now" if show_kiosk else "[F] Start now   ·   Prize Kiosk is open"
+		_intermission_hint.text = "[F] Start now" if show_kiosk else "[F] Start now   ·   Loadout station open: follow the marker"
 
 
 func _refresh_kiosk() -> void:
 	for c in _kiosk_rows.get_children():
 		c.queue_free()
 	var waves := director.waves
-	var title := UiKit.label("PRIZE KIOSK", 44, UiKit.AMBER, true)
+	var title := UiKit.label("LOADOUT STATION", 40, UiKit.AMBER, true)
 	_kiosk_rows.add_child(title)
 	_kiosk_rows.add_child(UiKit.label("Tickets: %d" % director.tickets, 28, UiKit.CREAM))
 	_kiosk_rows.add_child(UiKit.spacer(8))
@@ -315,6 +366,7 @@ func _kiosk_row(key: String, text: String, note: String, enabled: bool) -> Contr
 func _on_state_changed(state: RunDirector.State) -> void:
 	_intermission.visible = state == RunDirector.State.PREP or state == RunDirector.State.BREAK
 	_objective.visible = state == RunDirector.State.EXTRACTION
+	_portal_marker.visible = state == RunDirector.State.EXTRACTION
 	_controls.visible = state == RunDirector.State.PREP
 	if state == RunDirector.State.PREP:
 		_wave.text = "WAVE 01"

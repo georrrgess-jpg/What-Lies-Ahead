@@ -5,6 +5,8 @@ extends RefCounted
 
 static var _tracer_mesh: BoxMesh
 static var _beam_mesh: CylinderMesh
+static var _flash_mesh: Mesh
+static var _popup_pool: Array[Label3D] = []
 static var _spark_mesh: Mesh
 static var _materials := {}
 
@@ -81,47 +83,61 @@ static func kill_burst(parent: Node, position: Vector3) -> void:
 	_burst(parent, position, Vector3.UP, colors, 18, 5.5, 0.45, 0.11, 180.0)
 	if parent == null:
 		return
+	if _flash_mesh == null:
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.5
+		sphere.height = 1.0
+		sphere.radial_segments = 12
+		sphere.rings = 6
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		m.albedo_color = Color(1.0, 0.7, 0.9, 0.9)
+		sphere.material = m
+		_flash_mesh = sphere
 	var flash := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.5
-	sphere.height = 1.0
-	sphere.radial_segments = 12
-	sphere.rings = 6
-	flash.mesh = sphere
-	var m := StandardMaterial3D.new()
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	m.albedo_color = Color(1.0, 0.7, 0.9, 0.9 * Settings.flash_scale())
-	flash.material_override = m
+	flash.mesh = _flash_mesh
+	flash.transparency = 1.0 - 0.9 * Settings.flash_scale()
 	flash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(flash)
 	flash.global_position = position
 	flash.scale = Vector3.ONE * 0.3
 	var tw := flash.create_tween().set_parallel(true)
 	tw.tween_property(flash, "scale", Vector3.ONE * 1.3, 0.16).set_ease(Tween.EASE_OUT)
-	tw.tween_property(m, "albedo_color:a", 0.0, 0.16)
+	tw.tween_property(flash, "transparency", 1.0, 0.16)
 	tw.chain().tween_callback(flash.queue_free)
 
 
-## Floating "+N" ticket reward above a defeated zombie.
-static func ticket_popup(parent: Node, position: Vector3, tickets: int) -> void:
-	if parent == null or tickets <= 0:
+## Floating "+N" ticket reward above a defeated zombie. Labels are pooled so
+## kills don't allocate (and re-rasterise) fresh text objects.
+static func ticket_popup(parent: Node, position: Vector3, tickets: int, text_override := "", color := Color(1.0, 0.8, 0.25)) -> void:
+	if parent == null or (tickets <= 0 and text_override == ""):
 		return
-	var label := Label3D.new()
-	label.text = "+%d" % tickets
-	label.font = UiKit.display_font()
-	label.font_size = 96
-	label.pixel_size = 0.004
-	label.modulate = Color(1.0, 0.8, 0.25)
+	var label: Label3D = null
+	while not _popup_pool.is_empty() and label == null:
+		var candidate: Label3D = _popup_pool.pop_back()
+		if is_instance_valid(candidate):
+			label = candidate
+	if label == null:
+		label = Label3D.new()
+		label.font = UiKit.display_font()
+		label.font_size = 96
+		label.pixel_size = 0.004
+		label.outline_size = 22
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.no_depth_test = true
+		label.fixed_size = false
+		label.render_priority = 10
+		label.outline_render_priority = 9
+	if label.get_parent() != parent:
+		if label.get_parent():
+			label.get_parent().remove_child(label)
+		parent.add_child(label)
+	label.visible = true
+	label.text = text_override if text_override != "" else "+%d" % tickets
+	label.modulate = color
 	label.outline_modulate = Color(0.12, 0.05, 0.2)
-	label.outline_size = 22
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.fixed_size = false
-	label.render_priority = 10
-	label.outline_render_priority = 9
-	parent.add_child(label)
 	label.global_position = position
 	label.scale = Vector3.ONE * 0.5
 	var tw := label.create_tween()
@@ -130,7 +146,9 @@ static func ticket_popup(parent: Node, position: Vector3, tickets: int) -> void:
 	tw.tween_property(label, "global_position", position + Vector3.UP * 0.9, 0.9).set_ease(Tween.EASE_OUT)
 	tw.tween_property(label, "modulate:a", 0.0, 0.35).set_delay(0.6)
 	tw.tween_property(label, "outline_modulate:a", 0.0, 0.35).set_delay(0.6)
-	tw.chain().tween_callback(label.queue_free)
+	tw.chain().tween_callback(func():
+		label.visible = false
+		_popup_pool.append(label))
 
 
 static func _burst(parent: Node, position: Vector3, direction: Vector3, colors: Array, amount: int, speed: float, lifetime: float, size: float, spread := 65.0, gravity := Vector3(0, -9.0, 0)) -> void:

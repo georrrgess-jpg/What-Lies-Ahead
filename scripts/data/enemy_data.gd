@@ -14,6 +14,8 @@ extends Resource
 @export_range(0.0, 0.5) var speed_variance := 0.12
 @export var turn_speed := 6.0
 @export var tickets := 10
+## Base score for a kill (before headshot and combo multipliers).
+@export var score := 100
 @export var xp := 10
 
 @export_group("Attack")
@@ -28,6 +30,11 @@ extends Resource
 @export var lunge_speed := 3.0
 ## Heavier zombies are pushed less by knockback and stagger less often.
 @export var mass := 1.0
+## How widely this enemy flanks (degrees either side of a straight approach).
+@export var flank_degrees := 70.0
+## When an ally dies within this distance, this enemy gets enraged (0 = never).
+@export var enrage_radius := 9.0
+@export var enrage_seconds := 2.0
 
 @export_group("Charge")
 ## Speed multiplier while charging; 1 or less disables the charge.

@@ -22,6 +22,9 @@ extends Node
 ##   --shot-anim=Clip:t    pose every staged zombie at time t (seconds) of Clip
 ##   --shot-near=1         stage one zombie of each kind close to the player instead of four
 ##   --shot-fx=confetti|pop|burst|tracer|muzzle   spawn one effect 3 m in front of the camera
+##   --shot-stutter=1      kill three zombies one at a time and print every frame's duration
+##   --shot-move=1         movement probe: jump height, slide speed, rail wall
+##   --shot-ads=1          hold aim-down-sights
 ##   --shot-threat=1       a zombie behind-right of the player starts its windup (threat warning check)
 
 var path := ""
@@ -113,6 +116,8 @@ func _run() -> void:
 
 	if _arg("hud", "1") == "0":
 		director.hud.visible = false
+	if _arg("ads", "0") == "1":
+		player.ads = 1.0
 	if _arg("reload", "0") == "1":
 		player.weapons._ammo[player.weapons.current.id]["mag"] = 1
 		player.weapons.start_reload()
@@ -124,6 +129,12 @@ func _run() -> void:
 		cam.look_at_from_position(_vec(parts[0]), _vec(parts[1]))
 		cam.make_current()
 		player.view.visible = false
+	if _arg("move", "0") == "1":
+		await _move_probe(player)
+		return
+	if _arg("stutter", "0") == "1":
+		await _stutter_test(director, player)
+		return
 	var shots := int(_arg("fire", "0"))
 	if shots > 0:
 		await _wait(10)
@@ -164,6 +175,104 @@ func _run() -> void:
 		await _wait(5)
 		player.take_damage(20.0, player.global_position - player.global_transform.basis.x * 4.0)
 	await _capture(int(_arg("frames", "45")))
+
+
+func _press(action: String, down: bool) -> void:
+	var e := InputEventAction.new()
+	e.action = action
+	e.pressed = down
+	Input.parse_input_event(e)
+
+
+func _move_probe(player: Player) -> void:
+	player.set_physics_process(true)
+	player.controls_enabled = true
+	await _wait(10)
+	# 1. Jump in place.
+	var y0 := player.global_position.y
+	var top := y0
+	_press("jump", true)
+	for f in 60:
+		await get_tree().physics_frame
+		top = maxf(top, player.global_position.y)
+		if f == 2:
+			_press("jump", false)
+	print("[move] jump height %.2f m, back on floor: %s" % [top - y0, player.is_on_floor()])
+	# 2. Sprint, then slide.
+	player.set_look(0.0, 0.0)
+	_press("move_forward", true)
+	_press("sprint", true)
+	for f in 40:
+		await get_tree().physics_frame
+	var sprint := player.horizontal_speed()
+	_press("slide", true)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_press("slide", false)
+	var peak := 0.0
+	for f in 20:
+		await get_tree().physics_frame
+		peak = maxf(peak, player.horizontal_speed())
+	print("[move] sprint %.1f m/s, slide peak %.1f m/s, sliding=%s, camera y %.2f" % [sprint, peak, player.sliding, player.head.position.y])
+	_press("move_forward", false)
+	_press("sprint", false)
+	for f in 60:
+		await get_tree().physics_frame
+	# 3. Try to jump over the ocean rail (x = 14).
+	player.global_position = Vector3(12.5, 0.1, 5.0)
+	player.velocity = Vector3.ZERO
+	player.set_look(-PI * 0.5, 0.0)
+	await get_tree().physics_frame
+	_press("move_forward", true)
+	_press("sprint", true)
+	for f in 90:
+		if f % 20 == 2:
+			_press("jump", true)
+		if f % 20 == 5:
+			_press("jump", false)
+		await get_tree().physics_frame
+	_press("move_forward", false)
+	_press("sprint", false)
+	print("[move] rail test: x=%.2f (rail at 14.0) -> %s" % [player.global_position.x, "BLOCKED" if player.global_position.x < 14.0 else "ESCAPED"])
+	get_tree().quit(0)
+
+
+## Measures frame times around kills: the first kill of a session is where
+## one-off costs (shader compiles, font atlases, first audio) show up.
+func _stutter_test(director: RunDirector, player: Player) -> void:
+	await _wait(30)
+	player.set_physics_process(true)
+	player.controls_enabled = true
+	var scene: PackedScene = load(RunDirector.ZOMBIE_SCENE)
+	for round_i in 3:
+		var z: Zombie = scene.instantiate()
+		z.setup(GameData.enemy(&"tourist_shambler"), player, 1.0)
+		z.position = player.global_position + player.global_transform.basis * Vector3(0, 0, -5)
+		director._enemies_root.add_child(z)
+		director._alive.append(z)
+		z.speed = 0.0
+		z.died.connect(director._on_zombie_died)
+		await _wait(20)
+		var times: Array[int] = []
+		var last := Time.get_ticks_usec()
+		var shots := 0
+		for f in 70:
+			if is_instance_valid(z) and not z.is_dead() and f % 6 == 0:
+				_aim_at_nearest(director, player)
+				player.weapons._cooldown = 0.0
+				player.weapons._fire()
+				shots += 1
+			await get_tree().process_frame
+			var now := Time.get_ticks_usec()
+			times.append(now - last)
+			last = now
+		var sorted := times.duplicate()
+		sorted.sort()
+		var median: int = sorted[sorted.size() / 2]
+		var worst: int = sorted[-1]
+		print("[stutter] kill %d: median %.1f ms, worst %.1f ms (%.1fx), shots %d  frames>%.0fms: %s" % [round_i + 1, median / 1000.0, worst / 1000.0, float(worst) / maxf(1.0, median), shots,
+			median * 2.0 / 1000.0, times.map(func(t): return int(t / 1000)).filter(func(t): return t > median * 2.0 / 1000.0)])
+	get_tree().quit(0)
 
 
 func _aim_at_nearest(director: RunDirector, player: Player) -> void:

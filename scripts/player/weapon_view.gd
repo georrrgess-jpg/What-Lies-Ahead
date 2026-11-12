@@ -7,6 +7,10 @@ extends Node3D
 ## looks identical, but it can no longer poke through walls or zombies.
 
 const VIEW_SCALE := 0.2
+const HOLO_SHADER := "res://art/shaders/holo.gdshader"
+## Parts the reload animations may move (see art/blender/build_weapons.py).
+const ANIMATED_PARTS := ["Cell", "CellHolo", "Slide", "Hammer", "Panel", "Vents", "Barrels", "Pump",
+	"Drum", "Capsules", "CapsulesHolo", "ArmL", "ArmR"]
 
 var data: WeaponData
 var model: Node3D
@@ -22,7 +26,12 @@ var _kick := 0.0
 var _kick_rot := 0.0
 var _raise := 1.0          # 1 = lowered off-screen, 0 = in firing position
 var _reload_tween: Tween
+var _glow_mats: Array[StandardMaterial3D] = []   # per-instance copies of the cell glow
+var _glow_base := 2.6
+var _holo_mats := {}                               # part name -> ShaderMaterial
 var _rest := {}            # node -> rest Transform3D, for reload animations
+## Where the sight sits in model space; aiming puts this point on the screen centre.
+var _sight_local := Vector3(0, 0.13, 0)
 
 @onready var player: Player = owner as Player
 
@@ -49,8 +58,10 @@ func show_weapon(weapon: WeaponData) -> void:
 	model.position = Vector3.ZERO
 	_disable_shadows(model)
 	_muzzle = model.find_child("Muzzle", true, false) as Node3D
+	var sight := model.find_child("SightPoint", true, false) as Node3D
+	_sight_local = _local_to_model(sight) if sight else Vector3(0, 0.13, 0.05)
 	_rest.clear()
-	for part_name in ["Cell", "Slide", "Pump", "ArmL"]:
+	for part_name in ANIMATED_PARTS:
 		var part := model.find_child(part_name, true, false) as Node3D
 		if part:
 			_rest[part_name] = {"node": part, "transform": part.transform}
@@ -58,8 +69,19 @@ func show_weapon(weapon: WeaponData) -> void:
 	_rest["Root"] = {"node": model, "transform": model.transform}
 	_build_flash()
 	WeaponCosmetics.apply(model, weapon, Mastery.cosmetics(weapon.id))
+	_setup_reload_materials()
 	_raise = 1.0
 	_kick = 0.0
+
+
+## Position of `node` in the model's own space (works before the first frame).
+func _local_to_model(node: Node3D) -> Vector3:
+	var xf := Transform3D.IDENTITY
+	var n: Node = node
+	while n and n != model:
+		xf = (n as Node3D).transform * xf
+		n = n.get_parent()
+	return xf.origin
 
 
 func muzzle_position() -> Vector3:
@@ -95,10 +117,20 @@ func _process(delta: float) -> void:
 	var bob := Vector3(sin(_bob_time * 0.5) * 0.012, absf(cos(_bob_time * 0.5)) * -0.012, 0.0) * moving
 	var ease_raise := _raise * _raise
 
-	_holder.position = data.view_position + bob \
+	var hip_pos := data.view_position + bob \
 		+ Vector3(-_sway.x, _sway.y - ease_raise * 0.45, _kick)
-	_holder.rotation_degrees = data.view_rotation_degrees \
+	var hip_rot := data.view_rotation_degrees \
 		+ Vector3(_kick_rot + ease_raise * -35.0 + _sway.y * 60.0, -_sway.x * 80.0, -_sway.x * 60.0)
+	# Aim down sights: square the gun up and slide it so the sight lands on the
+	# exact screen centre. Kick and sway are damped so the sight picture holds.
+	var aim := ease(player.ads if player else 0.0, -1.8)
+	if _reload_tween and _reload_tween.is_valid():
+		aim *= 0.25
+	var ads_pos := Vector3(0, 0, -data.ads_depth / VIEW_SCALE) - _sight_local \
+		+ Vector3(-_sway.x * 0.3, _sway.y * 0.3, _kick * 0.5) + bob * 0.15
+	var ads_rot := Vector3(_kick_rot * 0.35, 0.0, 0.0)
+	_holder.position = hip_pos.lerp(ads_pos, aim)
+	_holder.rotation_degrees = hip_rot.lerp(ads_rot, aim)
 
 	if _flash_time > 0.0:
 		_flash_time -= delta
@@ -110,16 +142,19 @@ func _process(delta: float) -> void:
 
 
 # --- reload animations ------------------------------------------------------
-# Each weapon names a style in its data. The clips are tweens on the model's
-# named parts (Cell, Slide, Pump, ArmL), scaled to the weapon's reload_time.
+# Each weapon names a style in its data. A reload is a set of keyframe tracks
+# on the model's named parts (offsets in the model's space, rotations in
+# degrees about the part's own pivot), plus timed events: hologram build-up,
+# glow ramps, steam and sparks. Times are fractions of the reload duration.
 
 func play_reload(weapon: WeaponData, duration: float) -> void:
 	_kill_reload_tween()
 	_reset_parts()
+	_reload_tween = create_tween().set_parallel(true)
 	match weapon.reload_style:
-		&"side_swap": _reload_side_swap(duration)
+		&"side_swap": _reload_vent_purge(duration)
 		&"break_open": _reload_break_open(duration)
-		_: _reload_cell_drop(duration)
+		_: _reload_holo_print(duration)
 
 
 func cancel_reload() -> void:
@@ -136,88 +171,225 @@ func _kill_reload_tween() -> void:
 func _reset_parts() -> void:
 	for key in _rest:
 		var entry: Dictionary = _rest[key]
-		if is_instance_valid(entry["node"]):
-			entry["node"].transform = entry["transform"]
+		var node: Node3D = entry["node"]
+		if is_instance_valid(node):
+			node.transform = entry["transform"]
+			node.visible = not String(key).ends_with("Holo")
+	_set_glow(1.0)
+
+
+func _setup_reload_materials() -> void:
+	# Per-instance copies of every "Cell" glow surface so reloads can dim and
+	# flare the energy without touching other weapons.
+	_glow_mats.clear()
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var m: MeshInstance3D = mi
+		if m.name.ends_with("Holo"):
+			continue
+		for i in m.mesh.get_surface_count():
+			var mat := m.get_surface_override_material(i) as StandardMaterial3D
+			if mat == null:
+				mat = m.mesh.surface_get_material(i) as StandardMaterial3D
+			if mat == null or not (mat.resource_name == "Cell" or mat.emission_enabled and mat.resource_name.begins_with("Cell")):
+				continue
+			var copy: StandardMaterial3D = mat.duplicate()
+			m.set_surface_override_material(i, copy)
+			_glow_mats.append(copy)
+			_glow_base = copy.emission_energy_multiplier
+	_holo_mats.clear()
+	for holo_name in ["CellHolo", "CapsulesHolo"]:
+		var node := model.find_child(holo_name, true, false) as MeshInstance3D
+		if node == null:
+			continue
+		var sm := ShaderMaterial.new()
+		sm.shader = load(HOLO_SHADER)
+		var tint: Color = _glow_mats[0].albedo_color if not _glow_mats.is_empty() else Color(0.35, 0.95, 1.0)
+		sm.set_shader_parameter("holo_color", tint.lerp(Color.WHITE, 0.15))
+		sm.set_shader_parameter("span", maxf(0.02, node.mesh.get_aabb().size.y * 0.55))
+		node.material_override = sm
+		node.visible = false
+		_holo_mats[holo_name] = sm
+
+
+## 1 = normal glow, 0 = dark, >1 = flare.
+func _set_glow(k: float) -> void:
+	for m in _glow_mats:
+		m.emission_energy_multiplier = _glow_base * k
+
+
+func _set_holo(part_name: String, k: float) -> void:
+	if _holo_mats.has(part_name):
+		_holo_mats[part_name].set_shader_parameter("materialize", k)
 
 
 func _part(part_name: String) -> Node3D:
 	return _rest[part_name]["node"] if _rest.has(part_name) else null
 
 
-func _rest_xf(part_name: String) -> Transform3D:
-	return _rest[part_name]["transform"]
+func _pose(part_name: String, offset: Vector3, rot_deg: Vector3, scale_k := 1.0) -> Transform3D:
+	var rest: Transform3D = _rest[part_name]["transform"]
+	var b := rest.basis * Basis.from_euler(rot_deg * (PI / 180.0))
+	return Transform3D(b.scaled_local(Vector3.ONE * scale_k), rest.origin + offset)
 
 
-func _move(tw: Tween, part_name: String, offset: Vector3, rot_deg: Vector3, time: float) -> void:
+## Keyframe track: keys = [[t, offset, rot_deg, (scale)], ...], t in 0-1 of d.
+## The pose before the first key is the rest pose.
+func _track(part_name: String, d: float, keys: Array, trans := Tween.TRANS_SINE, ease_type := Tween.EASE_IN_OUT) -> void:
 	var node := _part(part_name)
 	if node == null:
-		tw.tween_interval(maxf(time, 0.001))
 		return
-	var rest := _rest_xf(part_name)
-	var target := Transform3D(rest.basis * Basis.from_euler(rot_deg * (PI / 180.0)), rest.origin + offset)
-	tw.tween_property(node, "transform", target, maxf(time, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var prev_t := 0.0
+	var prev := _pose(part_name, Vector3.ZERO, Vector3.ZERO)
+	for k in keys:
+		var t: float = k[0]
+		var to := _pose(part_name, k[1], k[2], k[3] if k.size() > 3 else 1.0)
+		var dur := maxf(0.001, (t - prev_t) * d)
+		if k.size() > 4 and k[4] == "hold":
+			# Jump straight to the pose at time t (after holding the previous one).
+			_reload_tween.tween_callback(func(): if is_instance_valid(node): node.transform = to).set_delay(t * d)
+		else:
+			_reload_tween.tween_property(node, "transform", to, dur).from(prev).set_delay(prev_t * d).set_trans(trans).set_ease(ease_type)
+		prev_t = t
+		prev = to
 
 
-## Pulse Pistol: tilt the gun, the cell drops out of the grip, the off hand
-## slaps a fresh one in, the slide snaps forward.
-func _reload_cell_drop(d: float) -> void:
-	var tw := create_tween().set_parallel(true)
-	_reload_tween = tw
-	_move(tw, "Root", Vector3(0.0, 0.03, 0.0), Vector3(16, 6, -24), d * 0.2)
-	_move(tw, "Cell", Vector3(0, -0.3, 0.03), Vector3.ZERO, d * 0.25)
-	_move(tw, "ArmL", Vector3(-0.06, -0.3, 0.1), Vector3.ZERO, d * 0.25)
-	_move(tw, "Slide", Vector3(0, 0, 0.05), Vector3.ZERO, d * 0.1)
-	tw.chain().tween_interval(d * 0.2)
-	tw.chain()
-	_move(tw, "Cell", Vector3.ZERO, Vector3.ZERO, d * 0.2)
-	_move(tw, "ArmL", Vector3(0, -0.03, 0), Vector3.ZERO, d * 0.2)
-	tw.chain()
-	_move(tw, "Root", Vector3.ZERO, Vector3.ZERO, d * 0.25)
-	_move(tw, "Slide", Vector3.ZERO, Vector3.ZERO, d * 0.1)
-	_move(tw, "ArmL", Vector3.ZERO, Vector3.ZERO, d * 0.25)
+func _at(t: float, d: float, fn: Callable) -> void:
+	_reload_tween.tween_callback(fn).set_delay(t * d)
 
 
-## Ion Carbine: roll the gun over, the side cell slides out, a new one
-## slides in, roll back.
-func _reload_side_swap(d: float) -> void:
-	var tw := create_tween().set_parallel(true)
-	_reload_tween = tw
-	_move(tw, "Root", Vector3(-0.03, 0.02, 0.0), Vector3(-4, 14, 42), d * 0.22)
-	_move(tw, "ArmL", Vector3(-0.1, -0.1, 0.1), Vector3.ZERO, d * 0.22)
-	tw.chain()
-	_move(tw, "Cell", Vector3(-0.3, 0.0, 0.05), Vector3.ZERO, d * 0.18)
-	_move(tw, "ArmL", Vector3(-0.32, -0.02, 0.12), Vector3.ZERO, d * 0.18)
-	tw.chain().tween_interval(d * 0.12)
-	tw.chain()
-	_move(tw, "Cell", Vector3.ZERO, Vector3.ZERO, d * 0.2)
-	_move(tw, "ArmL", Vector3(-0.1, -0.1, 0.1), Vector3.ZERO, d * 0.2)
-	tw.chain()
-	_move(tw, "Root", Vector3.ZERO, Vector3.ZERO, d * 0.28)
-	_move(tw, "ArmL", Vector3.ZERO, Vector3.ZERO, d * 0.28)
+func _glow_ramp(t0: float, t1: float, d: float, from_k: float, to_k: float) -> void:
+	_reload_tween.tween_method(_set_glow, from_k, to_k, maxf(0.001, (t1 - t0) * d)).set_delay(t0 * d)
 
 
-## Scatter Blaster: tip the barrels down, lift the drum cell out and seat a
-## new one, then two heavy pumps.
+func _holo_build(part_name: String, t0: float, t1: float, d: float) -> void:
+	var node := _part(part_name)
+	if node == null:
+		return
+	_at(t0, d, func(): node.visible = true; _set_holo(part_name, 0.0))
+	_reload_tween.tween_method(_set_holo.bind(part_name), 0.0, 1.0, maxf(0.001, (t1 - t0) * d)).set_delay(t0 * d)
+
+
+## Swap a hologram for the real part: hide the holo, show the solid one, flare.
+func _solidify(holo: String, solid: String, t: float, d: float) -> void:
+	_at(t, d, func():
+		var h := _part(holo)
+		var s := _part(solid)
+		if h:
+			h.visible = false
+		if s:
+			s.transform = _rest[solid]["transform"]
+			s.visible = true
+		Sfx.play(&"reload_materialize", -6.0, randf_range(0.97, 1.05)))
+	_glow_ramp(t, t + 0.12, d, 3.2, 1.0)
+
+
+## A puff of steam or a shower of sparks at a named empty, in the model's space.
+func _burst(t: float, d: float, anchor: String, kind: String) -> void:
+	_at(t, d, func():
+		var a := model.find_child(anchor, true, false) as Node3D if model else null
+		if a == null:
+			return
+		var origin := _local_to_model(a)
+		var b := FxBurst.new()
+		b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		model.add_child(b)
+		if kind == "steam":
+			b.setup(origin, Vector3(-0.3, 1, 0), [Color(1, 1, 1), Color(1.0, 0.8, 0.95), Color(0.8, 0.95, 1.0)],
+				14, 0.35, 0.7, 0.035, 35.0, Vector3(0, 0.25, 0), _burst_mesh())
+			Sfx.play(&"reload_vent", -7.0, randf_range(0.95, 1.05))
+		else:
+			b.setup(origin, Vector3(0, -1, 0.3), [Color(0.4, 1.0, 1.0), Color.WHITE, Color(1.0, 0.5, 0.85)],
+				12, 0.9, 0.35, 0.012, 70.0, Vector3(0, -2.0, 0), _burst_mesh()))
+
+
+static var _burst_mesh_cache: Mesh
+
+
+static func _burst_mesh() -> Mesh:
+	if _burst_mesh_cache == null:
+		var q := BoxMesh.new()
+		q.size = Vector3.ONE
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.vertex_color_use_as_albedo = true
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.no_depth_test = true
+		q.material = m
+		_burst_mesh_cache = q
+	return _burst_mesh_cache
+
+
+## Pulse Pistol "holo-print": the spent cell spins out of the grip, a new one
+## is printed in as a hologram, solidifies with a flare, and the slide snaps home.
+func _reload_holo_print(d: float) -> void:
+	_track("Root", d, [[0.14, Vector3(0, 0.02, 0), Vector3(14, 6, -26)], [0.78, Vector3(0, 0.02, 0), Vector3(14, 6, -26)],
+		[1.0, Vector3.ZERO, Vector3.ZERO]])
+	_track("Slide", d, [[0.1, Vector3(0, 0, 0.055), Vector3.ZERO], [0.8, Vector3(0, 0, 0.055), Vector3.ZERO],
+		[0.86, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_BACK, Tween.EASE_IN)
+	_track("Hammer", d, [[0.1, Vector3.ZERO, Vector3(-40, 0, 0)], [0.82, Vector3.ZERO, Vector3(-40, 0, 0)], [0.9, Vector3.ZERO, Vector3.ZERO]])
+	_glow_ramp(0.08, 0.2, d, 1.0, 0.15)
+	_track("Cell", d, [[0.14, Vector3.ZERO, Vector3.ZERO], [0.42, Vector3(0, -0.34, 0.08), Vector3(540, 0, 90), 0.7]],
+		Tween.TRANS_QUAD, Tween.EASE_IN)
+	_burst(0.16, d, "EjectPoint", "sparks")
+	_at(0.42, d, func(): var c := _part("Cell"); if c: c.visible = false)
+	_holo_build("CellHolo", 0.44, 0.74, d)
+	_solidify("CellHolo", "Cell", 0.76, d)
+	_burst(0.84, d, "VentPoint", "steam")
+	_track("ArmL", d, [[0.18, Vector3(-0.05, -0.12, 0.08), Vector3(0, 0, -12)], [0.7, Vector3(-0.05, -0.12, 0.08), Vector3(0, 0, -12)],
+		[0.92, Vector3.ZERO, Vector3.ZERO]])
+
+
+## Ion Carbine "vent purge": vents flip up and blow steam, the cage swings
+## open, the spent cell spins out sideways, a hologram cell slides in and
+## solidifies, the cage slams shut and the coils light one by one.
+func _reload_vent_purge(d: float) -> void:
+	_track("Root", d, [[0.14, Vector3(0.02, 0.02, 0), Vector3(-6, 22, 28)], [0.82, Vector3(0.02, 0.02, 0), Vector3(-6, 22, 28)],
+		[1.0, Vector3.ZERO, Vector3.ZERO]])
+	_track("Vents", d, [[0.14, Vector3.ZERO, Vector3(-70, 0, 0)], [0.86, Vector3.ZERO, Vector3(-70, 0, 0)], [0.94, Vector3.ZERO, Vector3.ZERO]],
+		Tween.TRANS_BACK, Tween.EASE_OUT)
+	_burst(0.16, d, "VentPoint", "steam")
+	_burst(0.3, d, "VentPoint", "steam")
+	_glow_ramp(0.12, 0.3, d, 1.0, 0.1)
+	_track("Panel", d, [[0.2, Vector3.ZERO, Vector3.ZERO], [0.34, Vector3.ZERO, Vector3(0, 0, 115)], [0.78, Vector3.ZERO, Vector3(0, 0, 115)],
+		[0.84, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_BACK, Tween.EASE_OUT)
+	_track("Cell", d, [[0.36, Vector3.ZERO, Vector3.ZERO], [0.56, Vector3(-0.34, -0.05, 0.0), Vector3(0, 0, 0), 0.8]], Tween.TRANS_QUAD, Tween.EASE_IN)
+	_track("ArmL", d, [[0.34, Vector3(-0.1, -0.06, 0.06), Vector3.ZERO], [0.52, Vector3(-0.32, -0.05, 0.04), Vector3.ZERO],
+		[0.74, Vector3(-0.1, -0.04, 0.04), Vector3.ZERO], [0.92, Vector3.ZERO, Vector3.ZERO]])
+	_burst(0.42, d, "EjectPoint", "sparks")
+	_at(0.56, d, func(): var c := _part("Cell"); if c: c.visible = false)
+	_track("CellHolo", d, [[0.57, Vector3(-0.22, 0, 0), Vector3.ZERO, 1.0, "hold"], [0.74, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_CUBIC, Tween.EASE_OUT)
+	_holo_build("CellHolo", 0.57, 0.74, d)
+	_solidify("CellHolo", "Cell", 0.76, d)
+	_at(0.84, d, func(): Sfx.play(&"reload_clunk", -4.0); var p := owner as Player; if p: p.add_shake(0.08))
+	# Coils light one after another.
+	_glow_ramp(0.86, 0.93, d, 0.6, 2.6)
+	_glow_ramp(0.93, 1.0, d, 2.6, 1.0)
+
+
+## Scatter Blaster "break open": the barrels drop on their hinge, both spent
+## capsules kick out, new ones print in, the drum spins up, the action slams
+## shut and the pump racks twice.
 func _reload_break_open(d: float) -> void:
-	var tw := create_tween().set_parallel(true)
-	_reload_tween = tw
-	_move(tw, "Root", Vector3(0, 0.02, 0.02), Vector3(-24, 10, 12), d * 0.2)
-	_move(tw, "Cell", Vector3(0, 0.1, 0.05), Vector3.ZERO, d * 0.2)
-	_move(tw, "ArmL", Vector3(0.02, 0.16, 0.3), Vector3.ZERO, d * 0.2)
-	tw.chain().tween_interval(d * 0.14)
-	tw.chain()
-	_move(tw, "Cell", Vector3.ZERO, Vector3.ZERO, d * 0.14)
-	_move(tw, "ArmL", Vector3(0.02, 0.1, 0.28), Vector3.ZERO, d * 0.14)
-	tw.chain()
-	_move(tw, "Root", Vector3.ZERO, Vector3.ZERO, d * 0.18)
-	_move(tw, "ArmL", Vector3.ZERO, Vector3.ZERO, d * 0.18)
+	_track("Root", d, [[0.12, Vector3(0, 0.03, 0.02), Vector3(10, 10, -14)], [0.66, Vector3(0, 0.03, 0.02), Vector3(10, 10, -14)],
+		[0.8, Vector3.ZERO, Vector3.ZERO]])
+	_track("Barrels", d, [[0.14, Vector3.ZERO, Vector3(-38, 0, 0)], [0.64, Vector3.ZERO, Vector3(-38, 0, 0)], [0.7, Vector3.ZERO, Vector3.ZERO]],
+		Tween.TRANS_BACK, Tween.EASE_OUT)
+	_glow_ramp(0.1, 0.22, d, 1.0, 0.1)
+	_track("Capsules", d, [[0.18, Vector3.ZERO, Vector3.ZERO], [0.36, Vector3(0, 0.22, 0.2), Vector3(220, 0, 0), 0.8]], Tween.TRANS_QUAD, Tween.EASE_OUT)
+	_burst(0.19, d, "EjectPoint", "sparks")
+	_at(0.36, d, func(): var c := _part("Capsules"); if c: c.visible = false)
+	_holo_build("CapsulesHolo", 0.38, 0.58, d)
+	_solidify("CapsulesHolo", "Capsules", 0.6, d)
+	_track("Drum", d, [[0.6, Vector3.ZERO, Vector3.ZERO], [0.78, Vector3.ZERO, Vector3(360, 0, 0)]], Tween.TRANS_CUBIC, Tween.EASE_OUT)
+	_at(0.62, d, func(): Sfx.play(&"reload_spin", -6.0))
+	_at(0.7, d, func(): Sfx.play(&"reload_clunk", -2.0); var p := owner as Player; if p: p.add_shake(0.12))
+	_burst(0.71, d, "VentPoint", "steam")
 	for i in 2:
-		tw.chain()
-		_move(tw, "Pump", Vector3(0, 0, 0.13), Vector3.ZERO, d * 0.08)
-		_move(tw, "ArmL", Vector3(0, 0, 0.13), Vector3.ZERO, d * 0.08)
-		tw.chain()
-		_move(tw, "Pump", Vector3.ZERO, Vector3.ZERO, d * 0.08)
-		_move(tw, "ArmL", Vector3.ZERO, Vector3.ZERO, d * 0.08)
+		var t0 := 0.74 + i * 0.12
+		_track("Pump", d, [[t0, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [t0 + 0.05, Vector3(0, 0, 0.13), Vector3.ZERO], [t0 + 0.11, Vector3.ZERO, Vector3.ZERO]],
+			Tween.TRANS_QUAD, Tween.EASE_OUT)
+		_track("ArmL", d, [[t0, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [t0 + 0.05, Vector3(0, 0, 0.13), Vector3.ZERO], [t0 + 0.11, Vector3.ZERO, Vector3.ZERO]],
+			Tween.TRANS_QUAD, Tween.EASE_OUT)
 
 
 # --- helpers ------------------------------------------------------------------

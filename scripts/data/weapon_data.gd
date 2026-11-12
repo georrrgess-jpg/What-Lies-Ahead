@@ -38,9 +38,26 @@ extends Resource
 ## Knockback per pellet that hits, in m/s. Big pushes stagger zombies out of their windup.
 @export var knockback := 0.6
 
+@export_group("Aiming")
+## Field of view multiplier when aimed down sights (lower = more zoom).
+@export var ads_fov_scale := 0.78
+## Seconds to raise the sights.
+@export var ads_time := 0.16
+## Spread multiplier when fully aimed.
+@export var ads_spread_scale := 0.3
+## How far in front of the eye the sight sits when aimed (metres).
+@export var ads_depth := 0.34
+## First shot after a pause is perfectly accurate (precision weapons).
+@export var first_shot_accurate := true
+## Reticle drawn for this weapon: "cross", "dot", "circle", "chevron" or "bracket".
+@export var reticle_style := "cross"
+
 @export_group("Feel")
 ## Camera pitch kick per shot, in degrees.
 @export var recoil_kick := 1.0
+## Sideways kick per shot (degrees). Alternates with a little randomness so
+## sustained fire walks in a learnable zig-zag rather than random noise.
+@export var recoil_yaw := 0.0
 ## How far the viewmodel punches back per shot (metres, viewmodel space).
 @export var view_kick := 0.05
 @export_range(0.0, 1.0) var shake := 0.15
@@ -51,7 +68,8 @@ extends Resource
 @export var viewmodel: PackedScene
 ## Where the viewmodel sits relative to the camera (metres, before the view scale).
 @export var view_position := Vector3(0.26, -0.3, -0.6)
-@export var view_rotation_degrees := Vector3(2.0, 6.0, 0.0)
+## Keep X and Y at 0 so the barrel points at the crosshair; Z (cant) is free.
+@export var view_rotation_degrees := Vector3(0.0, 0.0, -2.5)
 ## Which reload animation the viewmodel plays: "cell_drop", "side_swap" or "break_open".
 @export var reload_style: StringName = &"cell_drop"
 @export var fire_sound: StringName

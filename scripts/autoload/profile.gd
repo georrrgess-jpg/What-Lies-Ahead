@@ -10,6 +10,9 @@ const DEFAULT_PATH := "user://profile.json"
 
 const DEFAULT_SETTINGS := {
 	"mouse_sensitivity": 1.0,
+	"ads_sensitivity": 0.9,
+	"reticle_style": "auto",
+	"reticle_color": "white",
 	"fov": 72.0,
 	"master_volume": 0.9,
 	"music_volume": 0.55,
@@ -90,7 +93,7 @@ func level_entry(level_id: StringName) -> Dictionary:
 	var levels: Dictionary = data["levels"]
 	var key := String(level_id)
 	if not levels.has(key):
-		levels[key] = {"best_wave": 0, "completed": false, "clears": 0}
+		levels[key] = {"best_wave": 0, "completed": false, "clears": 0, "best_score": 0}
 	return levels[key]
 
 
@@ -100,6 +103,19 @@ func best_wave(level_id: StringName) -> int:
 
 func is_level_completed(level_id: StringName) -> bool:
 	return bool(level_entry(level_id)["completed"])
+
+
+func best_score(level_id: StringName) -> int:
+	return int(level_entry(level_id).get("best_score", 0))
+
+
+## Returns true if this is a new best for the level.
+func record_score(level_id: StringName, value: int) -> bool:
+	var entry := level_entry(level_id)
+	if value > int(entry.get("best_score", 0)):
+		entry["best_score"] = value
+		return true
+	return false
 
 
 func record_wave_cleared(level_id: StringName, wave_number: int) -> void:
@@ -154,6 +170,7 @@ func _migrate(raw: Dictionary) -> Dictionary:
 					"best_wave": maxi(0, int(l.get("best_wave", 0))),
 					"completed": bool(l.get("completed", false)),
 					"clears": maxi(0, int(l.get("clears", 0))),
+					"best_score": maxi(0, int(l.get("best_score", 0))),
 				}
 	if typeof(raw.get("settings")) == TYPE_DICTIONARY:
 		for key in DEFAULT_SETTINGS:

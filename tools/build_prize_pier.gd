@@ -322,6 +322,20 @@ func _rail(parent: Node3D, rail_name: String, a: Vector3, b: Vector3) -> void:
 	shape.shape = box
 	shape.position.y = 0.625
 	body.add_child(shape)
+	# Invisible wall on its own layer ("player_walls"): stops the player from
+	# jumping over the rail, but not shots, zombies or navigation.
+	var wall := StaticBody3D.new()
+	wall.name = "PlayerWall"
+	wall.collision_layer = 16
+	wall.collision_mask = 0
+	body.add_child(wall)
+	var wall_shape := CollisionShape3D.new()
+	wall_shape.name = "CollisionShape3D"
+	var wall_box := BoxShape3D.new()
+	wall_box.size = Vector3(length, 3.4, 0.3)
+	wall_shape.shape = wall_box
+	wall_shape.position.y = 1.7
+	wall.add_child(wall_shape)
 	var module_path := MODELS + "rail.glb"
 	var module_len := 3.0
 	var count := maxi(1, int(round(length / module_len)))

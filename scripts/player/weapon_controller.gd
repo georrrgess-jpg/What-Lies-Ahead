@@ -29,6 +29,9 @@ var _bloom := 0.0
 var _fire_buffer := 0.0
 var _dry_cooldown := 0.0
 var _trickle := 0.0
+var _since_shot := 10.0
+var _recoil_side := 1.0
+var _burst_count := 0
 
 @onready var player: Player = get_parent()
 
@@ -75,8 +78,20 @@ func reload_progress() -> float:
 	return 1.0 - clampf(_reload_left / maxf(0.01, current.reload_time), 0.0, 1.0)
 
 
+## Spread cone half-angle (degrees) the next shot will use, including bloom
+## and aiming. Precision weapons put a rested first shot dead centre.
 func current_spread() -> float:
-	return (current.spread_degrees + _bloom) if current else 0.0
+	if current == null:
+		return 0.0
+	var spread := current.spread_degrees + _bloom
+	if current.first_shot_accurate and _since_shot > 0.32 and current.pellets == 1:
+		spread = 0.0
+	# Moving fast or in the air costs accuracy (shown live on the reticle).
+	if player.sprinting:
+		spread += 0.8
+	if not player.is_on_floor():
+		spread += 1.5
+	return spread * lerpf(1.0, current.ads_spread_scale, player.ads)
 
 
 ## True while the weapon is out of reserve energy and slowly refilling itself.
@@ -121,6 +136,9 @@ func start_reload() -> bool:
 
 
 func _physics_process(delta: float) -> void:
+	_since_shot += delta
+	if _since_shot > 0.35:
+		_burst_count = 0
 	_cooldown = maxf(0.0, _cooldown - delta)
 	_fire_buffer = maxf(0.0, _fire_buffer - delta)
 	_dry_cooldown = maxf(0.0, _dry_cooldown - delta)
@@ -194,7 +212,7 @@ func _fire() -> void:
 	var aim := cam.global_transform.basis
 	var space := player.get_world_3d().direct_space_state
 	var muzzle := player.view.muzzle_position()
-	var spread := deg_to_rad(data.spread_degrees + _bloom)
+	var spread := deg_to_rad(current_spread())
 	var any_hit := false
 	var any_kill := false
 	var any_head := false
@@ -221,13 +239,16 @@ func _fire() -> void:
 					dmg *= data.headshot_multiplier
 				var key := zombie.get_instance_id()
 				if not hits.has(key):
-					hits[key] = {"zombie": zombie, "damage": 0.0, "push": 0.0, "head": false, "point": end, "dir": dir}
+					hits[key] = {"zombie": zombie, "damage": 0.0, "push": 0.0, "head": false, "heads": 0, "count": 0, "point": end, "dir": dir}
 				var entry: Dictionary = hits[key]
 				entry["damage"] = float(entry["damage"]) + dmg
 				entry["push"] = float(entry["push"]) + data.knockback
-				entry["head"] = bool(entry["head"]) or head
+				entry["count"] = int(entry["count"]) + 1
 				if head:
+					entry["heads"] = int(entry["heads"]) + 1
 					entry["point"] = end
+				# A blast counts as a headshot when at least a third of its hits are to the head.
+				entry["head"] = int(entry["heads"]) * 3 >= int(entry["count"])
 			else:
 				Fx.impact(player.get_parent(), end, hit["normal"], data.tracer_color)
 		# Only a few streaks per scatter blast keep the screen readable.
@@ -245,17 +266,30 @@ func _fire() -> void:
 		any_head = any_head or bool(entry["head"])
 
 	_bloom = minf(data.spread_bloom_max, _bloom + data.spread_bloom)
-	player.add_recoil(data.recoil_kick)
+	_since_shot = 0.0
+	_burst_count += 1
+	# Learnable recoil: mostly vertical, drifting side to side every few shots.
+	if _burst_count % 4 == 0:
+		_recoil_side = -_recoil_side
+	var ads_k := lerpf(1.0, 0.7, player.ads)
+	player.add_recoil(data.recoil_kick * ads_k, data.recoil_yaw * _recoil_side * randf_range(0.6, 1.0) * ads_k)
 	player.add_shake(data.shake)
 	Sfx.play(data.fire_sound, -3.0, 1.0 + randf_range(-data.fire_pitch_variance, data.fire_pitch_variance))
 	fired.emit(data)
 	if any_hit:
 		hit_confirmed.emit(any_kill, any_head)
 		# Non-positional confirms so far-away hits still register.
+		# The kill sound climbs in pitch with the combo, like an arcade multiplier.
+		var director := get_tree().get_first_node_in_group("run_director") as RunDirector
+		var combo := director.score.combo if director and director.score else 0
+		if any_head:
+			Sfx.play(&"headshot_ping", -5.0, randf_range(0.98, 1.03))
 		if any_kill:
-			Sfx.play(&"kill_confirm", -4.0, randf_range(0.97, 1.03))
-		else:
-			Sfx.play(&"hitmarker", -9.0 if not any_head else -5.0, 1.25 if any_head else randf_range(0.96, 1.04))
+			Sfx.play(&"kill_confirm", -3.0, 1.0 + minf(0.5, 0.05 * maxf(0, combo)))
+			if combo > 0 and combo % 5 == 0:
+				Sfx.play(&"combo_up", -5.0, 1.0 + minf(0.4, 0.02 * combo))
+		elif not any_head:
+			Sfx.play(&"hitmarker", -9.0, randf_range(0.96, 1.04))
 	if int(state["mag"]) <= 0 and int(state["reserve"]) > 0:
 		# Auto-reload shortly after the last shot so the player is never stuck clicking.
 		_cooldown = maxf(_cooldown, 0.2)

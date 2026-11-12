@@ -17,7 +17,11 @@ func _ready() -> void:
 
 	_section("CONTROLS")
 	_slider("mouse_sensitivity", "Mouse sensitivity", 0.2, 3.0, 0.05, func(v): return "%.2f" % v)
+	_slider("ads_sensitivity", "Aim sensitivity", 0.3, 1.5, 0.05, func(v): return "%.2f" % v)
 	_slider("fov", "Field of view", 60.0, 100.0, 1.0, func(v): return "%d°" % int(v))
+	_section("RETICLE")
+	_choice("reticle_style", "Style", [["auto", "Auto"], ["cross", "Cross"], ["circle", "Circle"], ["dot", "Dot"], ["chevron", "Chevron"]])
+	_choice("reticle_color", "Colour", [["white", "White"], ["cyan", "Cyan"], ["pink", "Pink"], ["green", "Green"], ["yellow", "Yellow"]])
 	_section("AUDIO")
 	_slider("master_volume", "Master volume", 0.0, 1.0, 0.05, _percent)
 	_slider("music_volume", "Music volume", 0.0, 1.0, 0.05, _percent)

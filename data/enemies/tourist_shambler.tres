@@ -11,6 +11,7 @@ move_speed = 2.25
 speed_variance = 0.15
 turn_speed = 5.0
 tickets = 10
+score = 100
 xp = 10
 damage = 20.0
 attack_range = 1.7

@@ -398,7 +398,7 @@ func _do_fight(delta: float) -> void:
 	if _aim_timer <= 0.0:
 		_aim_timer = 0.25
 		_aim_offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * deg_to_rad(aim_error)
-	var aim_point := target.global_position + Vector3(0, 1.0 * target.data.body_scale, 0)
+	var aim_point := target.global_position + Vector3(0, (1.0 if randf() < 0.7 else 1.45) * target.data.body_scale, 0)
 	var eye := _player.camera.global_position
 	var to := aim_point - eye
 	var yaw := atan2(-to.x, -to.z) + _aim_offset.x
@@ -551,8 +551,9 @@ func _after_run() -> void:
 			for u in row["unlocks"]:
 				unlocks.append(String(u.id))
 			rows.append("%s +%dxp %dkills rank %d->%d unlocks=%s" % [row["weapon"].id, row["xp_gained"], row["kills"], row["rank_before"], row["rank_after"], unlocks])
-		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d" % [
-			r["victory"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_min_health), _director.tickets])
+		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d score=%d headshots=%d best_combo=%d" % [
+			r["victory"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_min_health), _director.tickets,
+			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0))])
 		for line in rows:
 			print("[dev]   ", line)
 		print("[dev] profile: ", JSON.stringify(Profile.data["mastery"]), " levels=", JSON.stringify(Profile.data["levels"]))

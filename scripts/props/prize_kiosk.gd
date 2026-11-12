@@ -1,6 +1,6 @@
 class_name PrizeKiosk
 extends Node3D
-## The prize kiosk at the centre of the pier. Open during breaks: the run
+## The loadout station (the prize kiosk at the centre of the pier). Open during breaks: the run
 ## director sells ammo and heals and offers free weapon swaps while the player
 ## stands inside its zone.
 
@@ -17,8 +17,14 @@ var player_inside := false
 var _pulse := 0.0
 
 
+var _beacon: LoadoutBeacon
+
+
 func _ready() -> void:
 	add_to_group("kiosk")
+	_beacon = LoadoutBeacon.new()
+	_beacon.name = "Beacon"
+	add_child(_beacon)
 	zone.body_entered.connect(_on_body_entered)
 	zone.body_exited.connect(_on_body_exited)
 	set_open(false)
@@ -26,6 +32,8 @@ func _ready() -> void:
 
 func set_open(value: bool) -> void:
 	open = value
+	if _beacon:
+		_beacon.set_open(value)
 	if open_glow:
 		open_glow.visible = value
 	open_changed.emit(value)

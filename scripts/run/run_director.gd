@@ -19,6 +19,8 @@ signal reward_unlocked(weapon: WeaponData, reward: MasteryReward)
 signal run_finished(result: Dictionary)
 ## A stalled zombie was moved back to an entrance (removed = true if it was despawned instead).
 signal enemy_recovered(zombie: Zombie, removed: bool)
+## A zombie died (after tickets, XP and score were awarded).
+signal enemy_killed(zombie: Zombie, weapon_id: StringName)
 
 enum State { PREP, WAVE, BREAK, EXTRACTION, CLEARED, DEFEAT }
 
@@ -59,6 +61,8 @@ var _last_spawn: Node3D
 var _enemies_root: Node3D
 var _zombie_scene: PackedScene
 var _finished := false
+var score: ScoreKeeper
+var _new_best := false
 var _player_start := Vector3.ZERO
 
 
@@ -84,6 +88,9 @@ func _ready() -> void:
 
 func _begin() -> void:
 	var root := get_parent()
+	score = ScoreKeeper.new()
+	score.name = "Score"
+	add_child(score)
 	_enemies_root = Node3D.new()
 	_enemies_root.name = "Enemies"
 	root.add_child(_enemies_root)
@@ -101,6 +108,7 @@ func _begin() -> void:
 		player.global_position = spawn.global_position
 		player.set_look(spawn.global_rotation.y, 0.0)
 	player.died.connect(_on_player_died)
+	player.damaged.connect(func(amount: float, _src: Vector3): score.on_player_damaged(amount))
 	player.weapons.begin_run()
 	player.weapons.equip(Game.weapon_id)
 
@@ -110,6 +118,13 @@ func _begin() -> void:
 
 	Game.capture_mouse(true)
 	Sfx.warm_up()
+	# Compile every effect and enemy shader now, behind the fade-in, instead of
+	# mid-fight on the first kill.
+	var warm := FxWarmup.new()
+	warm.name = "FxWarmup"
+	root.add_child(warm)
+	warm.run(player.camera, _level_enemies(), GameData.weapons())
+	hud.fade_in()
 	Sfx.play_ambience(&"pier_ambience")
 	Sfx.play_music(&"boardwalk_loop")
 
@@ -117,7 +132,7 @@ func _begin() -> void:
 	_set_state(State.PREP)
 	if kiosk:
 		kiosk.set_open(true)
-	notice.emit("Get ready! Swap weapons at the Prize Kiosk.", &"info")
+	notice.emit("Get ready! Follow the marker to the Loadout Station between waves.", &"info")
 
 
 func _process(delta: float) -> void:
@@ -197,6 +212,17 @@ func heals_left() -> int:
 	return maxi(0, waves.heals_per_break - heals_this_break)
 
 
+## Every enemy type that appears in this level's waves.
+func _level_enemies() -> Array:
+	var out: Array = []
+	for wave in waves.waves:
+		for key in wave.spawns:
+			var e := GameData.enemy(StringName(String(key)))
+			if e and not out.has(e):
+				out.append(e)
+	return out
+
+
 # --- waves ---------------------------------------------------------------------
 
 func start_next_wave() -> void:
@@ -213,6 +239,7 @@ func start_next_wave() -> void:
 	_set_state(State.WAVE)
 	var final := wave_number == total_waves()
 	Sfx.play(&"final_wave" if final else &"wave_start", -2.0)
+	score.on_wave_started()
 	wave_started.emit(wave_number, total_waves(), wave.banner)
 
 
@@ -321,6 +348,15 @@ func _on_zombie_died(z: Zombie, weapon_id: StringName) -> void:
 	tickets_changed.emit(tickets)
 	_wave_kills[weapon_id] = int(_wave_kills.get(weapon_id, 0)) + 1
 	_grant(weapon_id, z.data.xp, 1)
+	var w := GameData.weapon(weapon_id)
+	# Squad reaction: allies near the fallen zombie get enraged briefly.
+	for other in _alive:
+		if is_instance_valid(other) and other.data.enrage_radius > 0.0 \
+				and other.global_position.distance_to(z.global_position) <= other.data.enrage_radius:
+			other.enrage(other.data.enrage_seconds)
+	score.on_kill(z.data.score, z.killed_by_headshot, w.headshot_multiplier if w else 1.5,
+		z.kill_distance, player.health / player.max_health if player else 1.0)
+	enemy_killed.emit(z, weapon_id)
 
 
 ## A zombie reports itself stalled when it stops making progress or loses
@@ -355,6 +391,7 @@ func _end_wave() -> void:
 		if int(_wave_kills[weapon_id]) > 0:
 			_grant(weapon_id, bonus, 0)
 	_wave_kills.clear()
+	score.on_wave_cleared(wave_number)
 	Profile.record_wave_cleared(level.id, wave_number)
 	_commit()
 	wave_cleared.emit(wave_number, total_waves())
@@ -533,6 +570,12 @@ func result() -> Dictionary:
 		"seconds": elapsed,
 		"best_wave": Profile.best_wave(level.id),
 		"weapons": weapon_rows,
+		"score": score.score if score else 0,
+		"best_score": Profile.best_score(level.id),
+		"new_best": _new_best,
+		"best_combo": score.best_combo if score else 0,
+		"headshots": score.headshot_kills if score else 0,
+		"score_breakdown": score.breakdown.duplicate() if score else {},
 	}
 
 
@@ -542,6 +585,8 @@ func _finish(victory: bool) -> void:
 	_finished = true
 	player.controls_enabled = false
 	player.weapons.enabled = false
+	_new_best = Profile.record_score(level.id, score.score)
+	Profile.save_profile()
 	var data := result()
 	run_finished.emit(data)
 	await get_tree().create_timer(0.9 if victory else 1.6).timeout
