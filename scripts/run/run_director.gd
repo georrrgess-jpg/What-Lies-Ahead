@@ -59,6 +59,7 @@ var _last_spawn: Node3D
 var _enemies_root: Node3D
 var _zombie_scene: PackedScene
 var _finished := false
+var _player_start := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -96,6 +97,7 @@ func _begin() -> void:
 	root.add_child(player)
 	var spawn := get_tree().get_first_node_in_group("player_spawn") as Node3D
 	if spawn:
+		_player_start = spawn.global_position
 		player.global_position = spawn.global_position
 		player.set_look(spawn.global_rotation.y, 0.0)
 	player.died.connect(_on_player_died)
@@ -107,6 +109,7 @@ func _begin() -> void:
 	hud.bind(self, player)
 
 	Game.capture_mouse(true)
+	Sfx.warm_up()
 	Sfx.play_ambience(&"pier_ambience")
 	Sfx.play_music(&"boardwalk_loop")
 
@@ -121,6 +124,10 @@ func _process(delta: float) -> void:
 	if player == null or _finished:
 		return
 	elapsed += delta
+	# Safety net: nothing should let the player leave the pier, but never strand them.
+	if player.global_position.y < -12.0:
+		player.global_position = _player_start
+		player.velocity = Vector3.ZERO
 	match state:
 		State.PREP, State.BREAK:
 			countdown -= delta

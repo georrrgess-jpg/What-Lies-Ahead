@@ -4,6 +4,8 @@ extends Node
 ##
 ##   --autoplay=clear     play a full run with a bot and step through the portal
 ##   --autoplay=defeat    start a run and let the zombies win
+##   --autoplay=pause     exercise the pause menu: resume, restart, main menu
+##   --autoplay=route     crowd test: do zombies use both lanes around the kiosk?
 ##   --weapon=<id>        starter weapon for the bot (default: pulse_pistol)
 ##   --swap               bot switches weapon at the kiosk every break
 ##   --aim-error=<deg>    random aim error for the bot (default 1.2)
@@ -12,11 +14,13 @@ extends Node
 ##   --max-seconds=<n>    give up after n simulated seconds (default 1500)
 ##   --shot=<file.png>    stage the reference composition and save a screenshot
 ##   --dump-profile       print the loaded profile and settings, then quit
+##   --start-wave=<n>     jump straight to wave n (testing late waves)
+##   --perf               print frame statistics every few seconds during waves
 ##
 ## The bot plays through the real input pipeline (InputEventAction), so the
 ## same code paths run as for a human player.
 
-enum Mode { NONE, CLEAR, DEFEAT, SHOT }
+enum Mode { NONE, CLEAR, DEFEAT, SHOT, PAUSE, ROUTE }
 
 var mode := Mode.NONE
 var weapon := &"pulse_pistol"
@@ -27,6 +31,10 @@ var then := ""
 var max_seconds := 1500.0
 var shot_path := ""
 var shot_args := {}
+var start_wave := 1
+var perf := false
+var _perf_timer := 0.0
+var _perf_samples: Array = []
 
 var _director: RunDirector
 var _player: Player
@@ -59,6 +67,10 @@ func _ready() -> void:
 			mode = Mode.CLEAR
 		elif arg == "--autoplay=defeat":
 			mode = Mode.DEFEAT
+		elif arg == "--autoplay=pause":
+			mode = Mode.PAUSE
+		elif arg == "--autoplay=route":
+			mode = Mode.ROUTE
 		elif arg.begins_with("--weapon="):
 			weapon = StringName(arg.trim_prefix("--weapon="))
 		elif arg == "--swap":
@@ -71,6 +83,10 @@ func _ready() -> void:
 			then = arg.trim_prefix("--then=")
 		elif arg.begins_with("--max-seconds="):
 			max_seconds = float(arg.trim_prefix("--max-seconds="))
+		elif arg.begins_with("--start-wave="):
+			start_wave = int(arg.trim_prefix("--start-wave="))
+		elif arg == "--perf":
+			perf = true
 		elif arg == "--dump-profile":
 			print("[dev] PROFILE recovered_from_bad_save=%s data=%s" % [Profile.recovered_from_bad_save, JSON.stringify(Profile.data)])
 			get_tree().quit.call_deferred()
@@ -124,6 +140,9 @@ func _physics_process(delta: float) -> void:
 		_player = _director.player
 		_runs += 1
 		_director.enemy_recovered.connect(_on_enemy_recovered)
+		if start_wave > 1 and _runs == 1:
+			_director.wave_number = start_wave - 1
+			_director.tickets = 400
 		_result_logged = false
 		_break_done = false
 		_ring_index = 0
@@ -131,12 +150,19 @@ func _physics_process(delta: float) -> void:
 		print("[dev] run %d started: state=%s tickets=%d wave=%d health=%d weapon=%s mag=%d" % [
 			_runs, RunDirector.State.keys()[_director.state], _director.tickets, _director.wave_number,
 			int(_player.health), _player.weapons.current.id, _player.weapons.magazine()])
-		if _runs > 1 and then == "retry":
+		if _runs > 1 and then == "retry" and mode != Mode.PAUSE:
 			# Retry must have produced a clean run.
 			var clean := _director.tickets == 0 and _director.wave_number == 0 and _player.health == _player.max_health
 			print("[dev] retry reset check: %s" % ("OK" if clean else "FAILED"))
 			_quit(0 if clean else 1)
 			return
+
+	if mode == Mode.PAUSE:
+		_pause_test()
+		return
+	if mode == Mode.ROUTE:
+		_route_test(delta)
+		return
 
 	if god and _player.health < _player.max_health and _player.alive:
 		_player.health = _player.max_health
@@ -149,6 +175,9 @@ func _physics_process(delta: float) -> void:
 			_clock, RunDirector.State.keys()[_director.state], _director.wave_number, _director.enemies_remaining(),
 			int(_player.health), _director.tickets, _player.weapons.current.id,
 			_player.weapons.magazine(), _player.weapons.reserve(), Engine.get_frames_per_second()])
+
+	if perf and _director.state == RunDirector.State.WAVE:
+		_sample_perf(delta)
 
 	match _director.state:
 		RunDirector.State.PREP, RunDirector.State.BREAK:
@@ -175,6 +204,127 @@ func _on_enemy_recovered(z: Zombie, removed: bool) -> void:
 		"removed" if removed else "moved", z.data.id, z.global_position.snapped(Vector3.ONE * 0.1), z.state,
 		_player.global_position.snapped(Vector3.ONE * 0.1), z.global_position.distance_to(_player.global_position),
 		z.nav.is_navigation_finished()])
+
+
+func _sample_perf(delta: float) -> void:
+	_perf_timer -= delta
+	if _perf_timer > 0.0:
+		return
+	_perf_timer = 3.0
+	var sample := {
+		"alive": _director.alive_enemies().size(),
+		"fps": Performance.get_monitor(Performance.TIME_FPS),
+		"process_ms": Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		"physics_ms": Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+		"draw_calls": Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+		"primitives": Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
+		"nodes": Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
+	}
+	_perf_samples.append(sample)
+	print("[perf] wave=%d alive=%2d fps=%5.1f process=%.2fms physics=%.2fms draws=%d prims=%d nodes=%d" % [
+		_director.wave_number, sample["alive"], sample["fps"], sample["process_ms"], sample["physics_ms"],
+		sample["draw_calls"], sample["primitives"], sample["nodes"]])
+
+
+var _route_started := false
+var _route_time := 0.0
+var _route_zombies: Array = []
+var _route_side := {}
+var _route_arrival := {}
+var _route_min_gap := INF
+
+
+## Crowd test. The player stands still (invulnerable) south of the kiosk while
+## a mixed group starts in a tight clump on the north side. Records which lane
+## each zombie takes around the kiosk, how long it needs to arrive, and how
+## close they pack, to show a crowd can pass itself and never plugs a lane.
+func _route_test(delta: float) -> void:
+	if not _route_started:
+		_route_started = true
+		_director.set_process(false)
+		_player.global_position = Vector3(0.5, 0.1, 13.0)
+		_player.set_look(0.0, 0.0)
+		var scene: PackedScene = load(RunDirector.ZOMBIE_SCENE)
+		for i in 16:
+			var id := &"lifeguard_runner" if i % 4 == 3 else &"tourist_shambler"
+			var z: Zombie = scene.instantiate()
+			z.setup(GameData.enemy(id), _player, 1.0)
+			z.position = Vector3(-2.6 + (i % 4) * 1.7, 0.1, -11.0 - (i / 4) * 1.5)
+			_director._enemies_root.add_child(z)
+			_route_zombies.append(z)
+		print("[dev] route test: 16 zombies clumped north of the kiosk, player south")
+		return
+	_route_time += delta
+	_player.health = _player.max_health
+	for z in _route_zombies:
+		var id: int = z.get_instance_id()
+		var p: Vector3 = z.global_position
+		if not _route_side.has(id) and absf(p.z) < 1.0 and absf(p.x) > 4.0:
+			_route_side[id] = "ocean side (+X)" if p.x > 0.0 else "ride side (-X)"
+		if not _route_arrival.has(id) and p.distance_to(_player.global_position) < 3.2:
+			_route_arrival[id] = _route_time
+	if _route_arrival.size() == _route_zombies.size() or _route_time > 60.0:
+		var east := 0
+		var west := 0
+		for id in _route_side:
+			if String(_route_side[id]).begins_with("ocean"):
+				east += 1
+			else:
+				west += 1
+		var times := _route_arrival.values()
+		times.sort()
+		print("[dev] ROUTE lanes: ocean side=%d ride side=%d (of %d)" % [east, west, _route_zombies.size()])
+		print("[dev] ROUTE arrived=%d/%d first=%.1fs last=%.1fs" % [times.size(), _route_zombies.size(),
+			times[0] if times.size() > 0 else -1.0, times[-1] if times.size() > 0 else -1.0])
+		var ok := times.size() == _route_zombies.size() and east > 0 and west > 0
+		print("[dev] route test: %s" % ("OK" if ok else "FAILED"))
+		_quit(0 if ok else 1)
+
+
+var _pause_step := 0
+var _pause_busy := false
+
+
+## Pause -> resume, pause -> restart run, pause -> main menu. Checks tree pause
+## state and mouse capture at each step.
+func _pause_test() -> void:
+	if _pause_busy:
+		return
+	_pause_busy = true
+	await get_tree().create_timer(0.5, true, false, true).timeout
+	var ok := true
+	_director.pause()
+	await get_tree().process_frame
+	var menu := get_tree().current_scene.get_node_or_null("PauseMenu")
+	var opened := menu != null and get_tree().paused and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE
+	print("[dev] pause %d: menu=%s paused=%s mouse_visible=%s" % [_pause_step, menu != null, get_tree().paused, Input.mouse_mode == Input.MOUSE_MODE_VISIBLE])
+	ok = ok and opened
+	if menu == null:
+		_quit(1)
+		return
+	match _pause_step:
+		0:
+			menu._open_settings()
+			menu._close_settings()
+			menu._resume()
+			await get_tree().process_frame
+			var resumed := not get_tree().paused and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+			print("[dev] resume: unpaused=%s mouse_captured=%s  -> %s" % [not get_tree().paused, Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "OK" if resumed else "FAILED"])
+			ok = ok and resumed
+		1:
+			print("[dev] restart run from pause menu")
+			menu._leave(true)
+		2:
+			print("[dev] main menu from pause menu")
+			_then_done = true
+			_clock = 0.0
+			menu._leave(false)
+	_pause_step += 1
+	if not ok:
+		_quit(1)
+		return
+	await get_tree().create_timer(0.5, true, false, true).timeout
+	_pause_busy = false
 
 
 # --- intermission ----------------------------------------------------------------

@@ -406,6 +406,7 @@ func _build_arena_props() -> void:
 		[Vector3(9.5, 0, 18.4), 0.0, true],
 		[Vector3(0.5, 0, -20.5), 0.0, false],
 		[Vector3(-20.5, 0, 20.0), 0.0, true],
+		[Vector3(0.6, 0, 12.8), -32.0, false],
 	]
 	var i := 0
 	for entry in planters:
@@ -427,8 +428,8 @@ func _build_arena_props() -> void:
 		_prop(props, "bench", "Bench%d" % i, spot, -90.0, Vector3(0.8, 0.9, 2.2))
 		_collider(props, "Bench%dCollision" % i, Vector3(0.9, 0.9, 2.2), spot + Vector3(0, 0.45, 0))
 		i += 1
-	_prop(dressing, "surfboards", "Surfboards", Vector3(13.45, 0, 11.5), -90.0, Vector3(0.6, 2.4, 1.6))
-	_prop(dressing, "life_ring", "LifeRing", Vector3(13.8, 0.75, 2.5), -90.0, Vector3(0.2, 0.8, 0.8))
+	_prop(dressing, "surfboards", "Surfboards", Vector3(13.45, 0, -2.6), -90.0, Vector3(0.6, 2.4, 1.6))
+	_prop(dressing, "life_ring", "LifeRing", Vector3(13.8, 0.75, 1.4), -90.0, Vector3(0.2, 0.8, 0.8))
 	_prop(dressing, "life_ring", "LifeRing2", Vector3(13.8, 0.75, -30.0), -90.0, Vector3(0.2, 0.8, 0.8))
 
 	# Lamp posts on the rail lines (arm reaches inward over the deck).
@@ -525,6 +526,23 @@ func _build_backdrop() -> void:
 			_prop(backdrop, "palm", "ShorePalm%02d" % n, Vector3(x + 5.5, -0.6, 36.5), n * 53.0, Vector3(0.5, 7, 0.5))
 		x += 11.0
 		n += 1
+
+	# Palms on their own pilings just outside the ocean rail (they frame the view right).
+	var piling := CylinderMesh.new()
+	piling.top_radius = 1.0
+	piling.bottom_radius = 1.15
+	piling.height = 5.0
+	piling.radial_segments = 14
+	piling.material = _mat("pylon", Color(0.36, 0.22, 0.2), 0.9)
+	var n_palm := 0
+	for spot in [Vector3(15.9, 0, -3.5), Vector3(15.9, 0, -33.0)]:
+		var base := MeshInstance3D.new()
+		base.name = "PalmPiling%d" % n_palm
+		base.mesh = piling
+		base.position = spot + Vector3(0, -2.6, 0)
+		backdrop.add_child(base)
+		_prop(backdrop, "palm", "RailPalm%d" % n_palm, spot + Vector3(0, -0.2, 0), 150.0 + n_palm * 70.0, Vector3(0.5, 9, 0.5)).scale = Vector3.ONE * 1.3
+		n_palm += 1
 
 	# A tall palm leaning in at the front-right, as in the reference frame.
 	_prop(backdrop, "palm", "CornerPalm", Vector3(15.6, -1.2, 17.5), 200.0, Vector3(0.5, 9, 0.5)).scale = Vector3.ONE * 1.35

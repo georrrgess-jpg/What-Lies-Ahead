@@ -24,7 +24,7 @@ from wla_common import *  # noqa: F401,F403
 
 def mats():
     return dict(
-        shell=mat("Shell", "#fff0d4", rough=0.42),
+        shell=mat("Shell", "#f6dfae", rough=0.42),
         trim=mat("Trim", "#6b35b8", rough=0.4),
         cell=mat("Cell", "#33f0ff", rough=0.3, emit=2.6),
         dark=mat("GunDark", "#241d3a", rough=0.5),

@@ -14,6 +14,8 @@ extends Node
 ##   --shot-zombies=0|1    stage the four reference zombies
 ##   --shot-hud=0|1
 ##   --shot-frames=n       frames to wait before capturing
+##   --shot-reload=1       start a reload just before the wait (to check reload animations)
+##   --shot-portal=1       open the portal and light the exit route
 
 var path := ""
 var args := {}
@@ -95,6 +97,7 @@ func _run() -> void:
 		director.wave_number = 3
 		director._set_state(RunDirector.State.WAVE)
 		director.hud._wave.text = "WAVE 03"
+		director.hud._notice.text = ""
 		director.kiosk.set_open(false)
 		if _arg("zombies", "1") == "1":
 			_stage_zombies(director, player)
@@ -103,6 +106,9 @@ func _run() -> void:
 
 	if _arg("hud", "1") == "0":
 		director.hud.visible = false
+	if _arg("reload", "0") == "1":
+		player.weapons._ammo[player.weapons.current.id]["mag"] = 1
+		player.weapons.start_reload()
 	await _capture(int(_arg("frames", "45")))
 
 

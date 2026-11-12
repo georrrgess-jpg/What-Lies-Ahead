@@ -191,7 +191,7 @@ def make_planks(size=1024, planks=20, seed=5):
     ph = size // planks                      # plank height in pixels (planks run along U)
     albedo = np.zeros((size, size, 3))
     height = np.ones((size, size))
-    palette = [hexc(c) for c in ("#8e4c3c", "#7e4237", "#9a5842", "#743a34", "#884a40", "#a26048")]
+    palette = [hexc(c) for c in ("#7c4638", "#6f3d34", "#87523e", "#653632", "#76443b", "#8d5842")]
     for p in range(planks):
         y0 = p * ph
         y1 = size if p == planks - 1 else y0 + ph

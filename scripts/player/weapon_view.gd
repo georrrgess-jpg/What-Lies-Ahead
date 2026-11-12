@@ -202,8 +202,8 @@ func _reload_break_open(d: float) -> void:
 	var tw := create_tween().set_parallel(true)
 	_reload_tween = tw
 	_move(tw, "Root", Vector3(0, 0.02, 0.02), Vector3(-24, 10, 12), d * 0.2)
-	_move(tw, "Cell", Vector3(0, 0.2, 0.06), Vector3.ZERO, d * 0.2)
-	_move(tw, "ArmL", Vector3(0.02, 0.22, 0.3), Vector3.ZERO, d * 0.2)
+	_move(tw, "Cell", Vector3(0, 0.1, 0.05), Vector3.ZERO, d * 0.2)
+	_move(tw, "ArmL", Vector3(0.02, 0.16, 0.3), Vector3.ZERO, d * 0.2)
 	tw.chain().tween_interval(d * 0.14)
 	tw.chain()
 	_move(tw, "Cell", Vector3.ZERO, Vector3.ZERO, d * 0.14)

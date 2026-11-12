@@ -37,6 +37,18 @@ func stream(sound: StringName) -> AudioStream:
 	return s
 
 
+## Loads every sound effect up front so the first shot or groan does not hitch.
+func warm_up() -> void:
+	var dir := DirAccess.open(SFX_DIR)
+	if dir == null:
+		return
+	for file in dir.get_files():
+		# Exported builds list "name.wav.import" instead of "name.wav".
+		var base := file.trim_suffix(".import")
+		if base.ends_with(".wav"):
+			stream(StringName(base.trim_suffix(".wav")))
+
+
 ## Non-positional one-shot (UI, the player's own weapon, announcer cues).
 func play(sound: StringName, volume_db := 0.0, pitch := 1.0) -> void:
 	var s := stream(sound)

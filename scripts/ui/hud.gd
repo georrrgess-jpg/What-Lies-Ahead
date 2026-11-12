@@ -25,6 +25,7 @@ var _intermission_hint: Label
 var _kiosk: PanelContainer
 var _kiosk_rows: VBoxContainer
 var _objective: Label
+var _controls: Label
 var _toasts: VBoxContainer
 var _vignette: TextureRect
 var _banner_tween: Tween
@@ -136,14 +137,26 @@ func _build() -> void:
 	_anchor(_status, Control.PRESET_CENTER, Vector2(0, 110), Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
 
 	# Banner and notice.
-	_banner = UiKit.arcade_label("", 96, Color.WHITE)
+	_banner = UiKit.arcade_label("", 88, Color.WHITE)
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_banner.custom_minimum_size = Vector2(1300, 0)
+	_banner.add_theme_constant_override("line_spacing", -18)
 	_banner.modulate.a = 0.0
 	_anchor(_banner, Control.PRESET_CENTER_TOP, Vector2(0, 210), Control.GROW_DIRECTION_BOTH)
 	_notice = UiKit.arcade_label("", 36, UiKit.CREAM)
 	_notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_notice.modulate.a = 0.0
 	_anchor(_notice, Control.PRESET_CENTER_BOTTOM, Vector2(0, -200), Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BEGIN)
+
+	# Controls reminder, shown only before the first wave.
+	_controls = UiKit.label("WASD move  ·  Shift sprint  ·  Mouse aim  ·  LMB fire  ·  R reload  ·  F start wave  ·  Esc pause\nAt the Prize Kiosk between waves:  E energy  ·  Q snack  ·  1 2 3 swap weapon", 26, UiKit.CREAM)
+	_controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_controls.add_theme_color_override("font_outline_color", Color(UiKit.INK, 0.9))
+	_controls.add_theme_constant_override("outline_size", 8)
+	_controls.add_theme_constant_override("line_spacing", -4)
+	_controls.visible = false
+	_anchor(_controls, Control.PRESET_CENTER_BOTTOM, Vector2(0, -40), Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BEGIN)
 
 	# Objective (extraction).
 	_objective = UiKit.arcade_label("", 44, UiKit.CYAN)
@@ -285,6 +298,7 @@ func _kiosk_row(key: String, text: String, note: String, enabled: bool) -> Contr
 func _on_state_changed(state: RunDirector.State) -> void:
 	_intermission.visible = state == RunDirector.State.PREP or state == RunDirector.State.BREAK
 	_objective.visible = state == RunDirector.State.EXTRACTION
+	_controls.visible = state == RunDirector.State.PREP
 	if state == RunDirector.State.PREP:
 		_wave.text = "WAVE 01"
 
