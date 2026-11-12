@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/launch_pad_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"launch_pad"
+display_name = "Launch Pad 9"
+blurb = "Hold the apron around the supply pod while the countdown runs, then follow the lights past the rocket to the portal."
+scene_path = "res://scenes/levels/launch_pad.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"launch_pad_loop"
+ambience = &"dune_ambience"
+music_volume_db = -9.0
+ambience_volume_db = -8.0
+accent_color = Color(1, 0.48, 0.16, 1)
+menu_camera_from = Vector3(12, 8.5, 23)
+menu_camera_to = Vector3(-3, 10.5, -10)
+loading_tips = PackedStringArray("Space Cadets crouch before they pounce. Sidestep while they are crouched and they land on nothing.", "A sputtering jetpack means a mechanic is about to fly over. Climbing the launch deck will not shake it off.", "Hazmat workers burst into a radioactive cloud when they drop. Get out of the green ring before it pops.", "The launch deck is a third route between the lanes: one ramp climbs from the plaza, the other drops into the back yard by the portal.", "Between waves, the supply pod in the plaza sells energy and snacks. Follow the beacon.")
