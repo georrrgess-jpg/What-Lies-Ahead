@@ -21,6 +21,16 @@ const MAX_VOICES := 4
 const NEAR_HEADROOM_DB := 3.0
 ## Seconds a music or ambience change takes to cross-fade.
 const CROSSFADE := 0.6
+## Positional sounds beyond this distance are not played.
+const MAX_DISTANCE := 70.0
+## Mix categories that are the player's own feedback (hits, pops, kill
+## effects, their weapon's world sounds). play_at plays them flat, with the
+## distance falloff worked out once at the start, instead of as 3D players:
+## dozens of short 3D players a second each rewrite their bus routing every
+## frame, which in Godot 4.7 races the audio mixer thread (a rare crash in
+## AudioServer::_mix_step). Enemy voices, attacks and telegraphs stay 3D,
+## where direction matters.
+const FLAT_CATEGORIES: Array[StringName] = [&"impact", &"confirm", &"kill_effect", &"weapon"]
 
 var _cache := {}
 var _variants := {}
@@ -68,10 +78,10 @@ func warm_up() -> void:
 			stream(StringName(base.trim_suffix(".wav")))
 
 
-## [gain_db, bus] of a sound, worked out once.
+## [gain_db, bus, flat] of a sound, worked out once.
 func _mix_of(sound: StringName) -> Array:
 	if not _mix.has(sound):
-		_mix[sound] = [MIX.gain_db(sound), MIX.bus_of(sound)]
+		_mix[sound] = [MIX.gain_db(sound), MIX.bus_of(sound), MIX.category_of(sound) in FLAT_CATEGORIES]
 	return _mix[sound]
 
 
@@ -124,6 +134,9 @@ func play_at(sound: StringName, position: Vector3, volume_db := 0.0, pitch := 1.
 	if s == null or scene == null:
 		return
 	var mix := _mix_of(sound)
+	if mix[2]:
+		_play_flat_at(s, sound, position, volume_db + mix[0], mix[1], pitch, unit_size)
+		return
 	var p := AudioStreamPlayer3D.new()
 	p.stream = s
 	p.bus = mix[1]
@@ -131,12 +144,31 @@ func play_at(sound: StringName, position: Vector3, volume_db := 0.0, pitch := 1.
 	p.max_db = p.volume_db + NEAR_HEADROOM_DB
 	p.pitch_scale = pitch
 	p.unit_size = unit_size
-	p.max_distance = 70.0
+	p.max_distance = MAX_DISTANCE
 	p.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
 	p.finished.connect(p.queue_free)
 	_claim_voice(sound, p)
 	scene.add_child(p)
 	p.global_position = position
+	p.play()
+
+
+## A positional sound played without a 3D player: the same inverse-distance
+## falloff a 3D player would apply, worked out once from the camera.
+func _play_flat_at(s: AudioStream, sound: StringName, position: Vector3, volume_db: float, bus: StringName, pitch: float, unit_size: float) -> void:
+	var camera := get_viewport().get_camera_3d()
+	var distance := camera.global_position.distance_to(position) if camera else unit_size
+	if distance > MAX_DISTANCE:
+		return
+	var falloff := minf(NEAR_HEADROOM_DB, linear_to_db(unit_size / maxf(distance, 0.01)))
+	var p := AudioStreamPlayer.new()
+	p.stream = s
+	p.bus = bus
+	p.volume_db = volume_db + falloff
+	p.pitch_scale = pitch
+	p.finished.connect(p.queue_free)
+	_claim_voice(sound, p)
+	add_child(p)
 	p.play()
 
 
