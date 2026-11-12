@@ -28,17 +28,16 @@ from aqua_common import *  # noqa: F401,F403
 
 def build_coral_display():
     reset_scene()
-    navy, navy_l = amat("Navy", rough=0.5), amat("NavyLight", rough=0.5)
+    # Few materials on purpose (each one is a draw call per instance).
+    navy = amat("Navy", rough=0.5)
     brass = amat("Brass", rough=0.35, metal=0.6)
     led = aglow("DisplayLed", "#ffb04a", 2.6)
     sand = amat("Sand", rough=0.9)
-    rock_m, rock_d = amat("RockLight", rough=0.85), amat("Rock", rough=0.9)
+    rock_m = amat("RockLight", rough=0.85)
     pink, coral, yellow = amat("Pink", rough=0.55), amat("Coral", rough=0.55), amat("Yellow", rough=0.55)
     violet, lime = amat("CoralViolet", "#9b5cff", rough=0.55), amat("CoralLime", "#9fe04a", rough=0.55)
     orange, teal = amat("Orange", rough=0.55), amat("TealLight", rough=0.55)
-    tip_p, tip_y = aglow("CoralTipPink", "PinkLight", 0.8), aglow("CoralTipYellow", "Yellow", 0.8)
-    cream = amat("Cream", rough=0.6)
-    plaque_glow = aglow("PlaqueGlow", "#ffd27a", 1.4)
+    navy_l, rock_d, tip_p, tip_y, cream, plaque_glow = navy, rock_m, pink, yellow, yellow, led
     L, D, H = 1.8, 0.9, 0.8
     parts = [
         box("Plinth", (L, D, H - 0.1), (0, 0, (H - 0.1) / 2), bevel=0.06, segs=2, m=navy),
@@ -61,7 +60,7 @@ def build_coral_display():
     parts += coral_branch("StagY", (0.55, 0.14, top + 0.12), 0.55, yellow, seed=7, tip=tip_y)
     parts += coral_fan("Fan", (0.22, 0.3, top + 0.08), 0.34, violet, yaw=0.15, seed=4)
     parts += coral_fan("FanB", (-0.8, 0.3, top), 0.22, orange, yaw=-0.3, seed=13)
-    parts += coral_brain("Brain", (0.2, -0.12, top + 0.06), 0.17, lime, seed=6, groove=amat("CoralLimeDark", "#5f9a24", rough=0.6))
+    parts += coral_brain("Brain", (0.2, -0.12, top + 0.06), 0.17, lime, seed=6)
     parts += coral_tubes("Tubes", (-0.25, -0.18, top), 0.36, orange, coral, seed=8)
     parts += coral_tubes("TubesB", (0.82, 0.25, top), 0.28, violet, pink, seed=14)
     parts += coral_table("Table", (0.68, -0.2, top), 0.17, teal, seed=9)
@@ -92,10 +91,9 @@ def build_planter():
     reset_scene()
     navy, teal = amat("NavyLight", rough=0.5), amat("Teal", rough=0.5)
     soil = amat("Soil", "#3a2a24", rough=0.95)
-    leaf_a, leaf_b, leaf_c = amat("LeafGreen", "#2f9e4a", rough=0.6), amat("LeafLime", "#7cc93c", rough=0.6), amat("LeafDeep", "#1f6e45", rough=0.6)
-    stem = amat("LeafStem", "#2a7a3a", rough=0.6)
+    leaf_a, leaf_b = amat("LeafGreen", "#2f9e4a", rough=0.6), amat("LeafLime", "#7cc93c", rough=0.6)
     flower_o, flower_p = amat("FlowerOrange", "#ff7a2f", rough=0.5), amat("FlowerPink", "#ff4f9a", rough=0.5)
-    flower_y = amat("FlowerYellow", "#ffd23a", rough=0.5)
+    leaf_c, stem, flower_y = leaf_a, leaf_a, flower_o
     L, D, H = 1.4, 0.7, 0.6
     parts = [
         box("Tub", (L, D, H), (0, 0, H / 2), bevel=0.1, segs=3, m=navy),
@@ -127,14 +125,13 @@ def build_planter():
 
 def build_janitor_cart():
     reset_scene()
-    grey, grey_d = amat("CartGrey", "#5a6b86", rough=0.5), amat("CartGreyDark", "#3b475c", rough=0.5)
-    yellow, yellow_d = amat("SubYellow", rough=0.45), amat("SubYellowDark", rough=0.5)
+    grey = amat("CartGrey", "#5a6b86", rough=0.5)
+    yellow = amat("SubYellow", rough=0.45)
     black = amat("Dark", rough=0.6)
-    bag = amat("BinBag", "#22283a", rough=0.4)
     steel = amat("Chrome", rough=0.25, metal=0.8)
-    mop = amat("MopHead", "#e9e2cf", rough=0.95)
-    spray_p, spray_g, spray_b = amat("SprayPink", "#ff5fa8", rough=0.4), amat("SprayGreen", "#4fe08a", rough=0.4), amat("SprayBlue", "#4fa8ff", rough=0.4)
     white = amat("White", rough=0.5)
+    spray_p, spray_g, spray_b = amat("SprayPink", "#ff5fa8", rough=0.4), amat("SprayGreen", "#4fe08a", rough=0.4), amat("SprayBlue", "#4fa8ff", rough=0.4)
+    grey_d, yellow_d, bag, mop = grey, yellow, black, white
     parts = []
     # Cart frame: two shelves on posts, a bag hoop at one end.
     for z, name in ((0.25, "ShelfLo"), (0.78, "ShelfHi")):
@@ -148,16 +145,16 @@ def build_janitor_cart():
     for i, (x, m) in enumerate(((0.0, spray_p), (0.18, spray_g), (0.36, spray_b))):
         parts.append(cyl(f"Spray{i}", 0.05, 0.2, (x, -0.1, 1.03), segs=10, bevel=0.015, m=m))
         parts.append(box(f"Nozzle{i}", (0.05, 0.08, 0.06), (x, -0.13, 1.16), bevel=0.01, m=white))
-    parts.append(box("Towels", (0.25, 0.3, 0.12), (0.5, 0.1, 0.99), bevel=0.03, m=amat("TowelTeal", "#3fd0c8", rough=0.9)))
+    parts.append(box("Towels", (0.25, 0.3, 0.12), (0.5, 0.1, 0.99), bevel=0.03, m=spray_g))
     # Mop bucket with wringer on its own castors at the -X end.
     bx = -0.5
     parts += [
         box("Bucket", (0.5, 0.42, 0.42), (bx, 0, 0.29), bevel=0.06, segs=2, m=yellow),
         box("BucketRim", (0.54, 0.46, 0.05), (bx, 0, 0.5), bevel=0.02, m=yellow_d),
-        box("Water", (0.44, 0.36, 0.02), (bx, 0, 0.47), bevel=0.0, m=amat("MopWater", "#6a8aa0", rough=0.1)),
+        box("Water", (0.44, 0.36, 0.02), (bx, 0, 0.47), bevel=0.0, m=grey),
         box("Wringer", (0.2, 0.4, 0.22), (bx + 0.12, 0, 0.6), bevel=0.04, m=grey_d),
         tube("WringLever", [(bx + 0.12, 0.18, 0.7), (bx + 0.2, 0.18, 1.05)], 0.02, m=steel, segs=6),
-        tube("MopHandle", [(bx - 0.1, 0.05, 0.45), (bx - 0.18, 0.12, 1.45)], 0.018, m=amat("MopStick", "#3fb0ff", rough=0.4), segs=6),
+        tube("MopHandle", [(bx - 0.1, 0.05, 0.45), (bx - 0.18, 0.12, 1.45)], 0.018, m=spray_b, segs=6),
         sphere("MopHeadBall", 0.12, (bx - 0.09, 0.04, 0.48), scale=(1.0, 1.0, 0.7), m=mop, segs=10, rings=6),
     ]
     for i, (x, y) in enumerate(((bx - 0.2, -0.17), (bx + 0.2, -0.17), (bx - 0.2, 0.17), (bx + 0.2, 0.17))):
@@ -202,7 +199,7 @@ def build_life_ring():
     reset_scene()
     navy, brass = amat("NavyLight", rough=0.5), amat("Brass", rough=0.35, metal=0.6)
     orange, white = amat("Orange", rough=0.5), amat("White", rough=0.5)
-    rope = amat("RopeCream", "#e8d9b0", rough=0.9)
+    rope = white
     parts = [box("Plaque", (0.95, 0.06, 1.15), (0, 0.03, 0), bevel=0.03, m=navy),
              box("PlaqueTrim", (0.99, 0.04, 0.06), (0, 0.0, -0.6), bevel=0.01, m=brass)]
     for i in range(8):
@@ -220,11 +217,11 @@ def build_life_ring():
 
 def build_feed_pallet():
     reset_scene()
-    wood, wood_d = amat("PalletWood", "#b98a52", rough=0.8), amat("PalletWoodDark", "#8a6338", rough=0.85)
-    sack, sack_d = amat("SackCream", "#efe2c2", rough=0.9), amat("SackShade", "#d6c59c", rough=0.9)
+    wood = amat("PalletWood", "#b98a52", rough=0.8)
+    sack = amat("SackCream", "#efe2c2", rough=0.9)
     orange, navy = amat("Orange", rough=0.5), amat("Navy", rough=0.5)
-    drum, drum_band = amat("DrumBlue", "#2f6fd8", rough=0.45), amat("DrumBand", "#1d3f86", rough=0.5)
-    white = amat("White", rough=0.5)
+    drum = amat("DrumBlue", "#2f6fd8", rough=0.45)
+    wood_d, sack_d, drum_band, white = wood, sack, navy, sack
     parts = []
     for i in range(3):
         parts.append(box(f"Skid{i}", (1.4, 0.1, 0.1), (-0.15, -0.45 + i * 0.45, 0.05), bevel=0.01, m=wood_d))

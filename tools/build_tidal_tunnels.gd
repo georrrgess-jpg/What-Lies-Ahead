@@ -978,8 +978,6 @@ func _build_hall_dressing() -> void:
 	_dressing(hall, "aqua_coral_display", "CoralW2", Vector3(-17.0, 0, 4.6), 90.0, Vector3(1.85, 0.85, 0.95), Vector3.ZERO, true)
 	_dressing(hall, "aqua_planter", "PlanterW", Vector3(-14.4, 0, -11.3), -90.0, Vector3(1.4, 0.6, 0.7))
 	_dressing(hall, "aqua_janitor_cart", "CartW", Vector3(-19.5, 0, -10.0), 90.0, Vector3(1.6, 1.1, 1.0), Vector3(0, 0, 0.15))
-	_omni(lights, "CoralW1Spot", Vector3(-17.0, 3.2, -6.2), WARM, 0.9, 4.5)
-	_omni(lights, "CoralW2Spot", Vector3(-17.0, 3.2, 4.6), CORAL, 0.9, 4.5)
 	# East hall (jellies): a velvet rope in front of the jelly wall (its collider
 	# fills the gap to the glass), a planter, an info kiosk and a second cart.
 	for k in 3:
@@ -995,8 +993,6 @@ func _build_hall_dressing() -> void:
 	_dressing(hall, "aqua_feed_pallet", "PalletNW", Vector3(-22.25, 0, -24.3), 0.0, Vector3(1.45, 1.1, 1.25))
 	_dressing(hall, "aqua_feed_pallet", "PalletNE", Vector3(22.25, 0, -24.3), 0.0, Vector3(1.45, 1.1, 1.25))
 	_dressing(hall, "aqua_planter", "PlanterNE", Vector3(13.9, 0, -24.6), 0.0, Vector3(1.4, 0.6, 0.7))
-	_omni(lights, "CoralNWSpot", Vector3(-19.5, 3.2, -20.0), WARM, 0.9, 4.5)
-	_omni(lights, "CoralNESpot", Vector3(19.5, 3.2, -20.0), CORAL, 0.9, 4.5)
 	# Life rings on the walls (scenery).
 	for spec in [[Vector3(-20.6, 1.9, Z0 + 0.05), 0.0], [Vector3(X1 - 0.05, 1.9, -15.5), -90.0], [Vector3(X0 + 0.05, 1.9, 14.2), 90.0],
 			[Vector3(X0 + 0.05, 1.9, -14.6), 90.0]]:
