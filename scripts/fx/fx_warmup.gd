@@ -13,6 +13,11 @@ const FRAMES := 4
 var _frames := 0
 
 
+func _init() -> void:
+	# Frees itself after a few frames even if the game is paused straight away.
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
+
 ## camera: the player's camera. enemies: EnemyData used by this level.
 func run(camera: Camera3D, enemies: Array, weapons: Array) -> void:
 	var fwd := -camera.global_transform.basis.z

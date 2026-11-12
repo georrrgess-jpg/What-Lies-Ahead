@@ -137,8 +137,18 @@ func grant(weapon_id: StringName, amount: int, kill_count := 0) -> Array[Cosmeti
 	xp_changed.emit(weapon_id)
 	for r in range(old_rank + 1, new_rank + 1):
 		rank_up.emit(w, r)
-	# Any cosmetic whose requirement just became true (rank, kills, ...).
+	# Any cosmetic whose requirement just became true. Rank rewards for this
+	# weapon are reported here; anything else (total kills, ...) is an account
+	# reward and goes to the Career instead.
 	for it in Cosmetics.check_new_unlocks():
-		unlocked.append(it)
-		reward_unlocked.emit(w, it)
+		if _is_rank_reward_for(it, weapon_id):
+			unlocked.append(it)
+			reward_unlocked.emit(w, it)
+		else:
+			Progression.credit_account_reward(it)
 	return unlocked
+
+
+static func _is_rank_reward_for(it: CosmeticItem, weapon_id: StringName) -> bool:
+	var req := it.requirement
+	return req != null and req.kind == Requirement.Kind.WEAPON_RANK and (req.target == &"" or req.target == weapon_id)

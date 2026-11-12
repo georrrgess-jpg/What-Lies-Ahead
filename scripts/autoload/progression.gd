@@ -172,6 +172,15 @@ func collect_rewards(run: RunTracker) -> void:
 	rewards_unlocked.emit(fresh)
 
 
+## Credits an account reward that became owned outside collect_rewards (for
+## example a total-kills item noticed while Mastery granted XP mid-run).
+func credit_account_reward(it: CosmeticItem) -> void:
+	if tracker and not tracker.finished:
+		tracker.rewards.append([it, &""])
+	var items: Array[CosmeticItem] = [it]
+	rewards_unlocked.emit(items)
+
+
 func _on_run_started(director: Node) -> void:
 	# Whatever is owned before the run is not a reward of this run.
 	Cosmetics.check_new_unlocks()

@@ -2,9 +2,17 @@
 
 A single-player, first-person arcade zombie survival game made with Godot 4.
 
-**World 1 — Boardwalk Breakout · Level 1 — Prize Pier.** Pick a starter weapon, hold the
-midway around the prize kiosk through eight waves, spend tickets between waves, then follow
-the lit boardwalk to the portal and step through.
+Five worlds, each one level: hold the ground around a loadout station through eight
+waves, spend tickets between waves, then follow the exit lights to the portal and step
+through. Clearing a level unlocks the next world.
+
+| # | World | Level | Setting | New enemies |
+| --- | --- | --- | --- | --- |
+| 1 | Boardwalk Breakout | Prize Pier | Sunset amusement pier | Tourist Shambler, Lifeguard Runner, Boardwalk Bruiser |
+| 2 | Neon Rooftops | Neon Skyline | Rainy rooftops above an arcade city, at night | Neon Punk, Hover Courier, Riot Bruiser |
+| 3 | Abyss Aquarium | Tidal Tunnels | After-hours aquarium: glass tunnels, tanks and a kelp atrium | Deep Diver, Mascot Inker, Jelly Head |
+| 4 | Dune Spaceport | Launch Pad 9 | Golden-hour desert spaceport around a rocket on its launch mount | Space Cadet, Jetpack Mechanic, Irradiated Hazmat |
+| 5 | Frostpeak Resort | Summit Lodge | Twilight ski resort under the aurora | Ski Racer, Yeti, Frozen Tourist |
 
 ![Reference art (left) and the game (right)](references/comparison.png)
 
@@ -14,12 +22,12 @@ the lit boardwalk to the portal and step through.
 
 1. Install **Godot 4.7.1** (standard build, not .NET). Any 4.7.x should work.
 2. Open Godot, choose **Import**, and select `project.godot` in this folder.
-   The first open imports the assets, which takes a minute.
-3. Press **F5** (Run Project). The game starts at the main menu.
+   The first open imports the assets, which takes a few minutes.
+3. Press **F5** (Run Project). The game opens with its startup sequence, then the menu.
 
 The project uses the **Compatibility (OpenGL)** renderer, the lightest desktop option.
 
-**From a build** — zipped builds are in [`builds/`](builds/):
+**From a build**: zipped builds are in [`builds/`](builds/).
 
 | File | Platform | Status |
 | --- | --- | --- |
@@ -36,90 +44,131 @@ The Windows build is unsigned, so SmartScreen may ask for confirmation.
 | Move | W A S D |
 | Look | Mouse |
 | Sprint (forward) | Shift |
+| Jump | Space (a short grace period after leaving a ledge, and a buffered press) |
+| Slide | C or Ctrl while sprinting (jump out of a slide to keep its speed) |
 | Fire | Left mouse button |
+| Aim down sights | Right mouse button (hold) |
 | Reload | R |
+| Switch weapon | 1 / 2, or the mouse wheel |
 | Start the next wave early | F |
-| Buy energy top-up (at the kiosk) | E |
-| Buy snack heal (at the kiosk) | Q |
-| Swap weapon (at the kiosk) | 1 / 2 / 3 or mouse wheel |
+| At the loadout station: energy top-up / snack heal | E / Q |
+| At the loadout station: swap the held weapon | Z / X (or ← / →) |
 | Pause | Esc or P |
 
-All of these are Godot InputMap actions (*Project → Project Settings → Input Map*).
-Mouse sensitivity, field of view, master/music/effects volume, camera shake, flashes, a
-High/Low graphics preset and fullscreen are under **Settings** (main menu or pause menu).
+All of these are Godot InputMap actions (*Project → Project Settings → Input Map*); the
+two station swap actions are added at start-up by `scripts/weapons/loadout.gd` if the
+project does not define them. **Settings** (main menu or pause menu) has mouse and
+aim sensitivity, field of view, reticle style and colour, volumes, camera shake,
+flashes, a High/Low graphics preset and fullscreen.
 
 ## How a run works
 
 - **Preparation → Wave → Break → … → Extraction**, with **Defeat** reachable from any wave.
-- Kills earn **tickets** (run-only). During breaks the **Prize Kiosk** is open: stand next
-  to it to buy a full energy top-up, buy one snack heal per break, or swap weapons for free.
-- You carry one weapon at a time. Each weapon keeps its own ammo for the whole run, so
-  swapping away and back never creates energy.
-- Every break gives the held weapon a small free refill. If a weapon runs completely dry it
-  slowly recharges on its own, so you are never left helpless.
+- **Two weapons.** You carry a primary and a secondary (chosen in the **Arsenal**). Each
+  keeps its own ammo for the whole run. Switching cancels a reload.
+- **The loadout station** (the kiosk with the tall beacon; a waypoint points to it during
+  breaks) sells an energy top-up for both weapons and one snack heal per break, and swaps
+  the held weapon for any unlocked one for free. Every break also gives a small free
+  refill, and a weapon that runs completely dry slowly recharges, so you are never left
+  helpless.
 - After the final wave the portal opens and the exit lights switch on. You must step
   through the portal to clear the level.
-- **Three enemy types.** Tourist Shamblers (wide, slow, obvious windup), Lifeguard Runners
-  (lean and fast, from wave 3) and the Boardwalk Bruiser (hulking, tough, hits hard, from
-  wave 5; at mid range it roars, then charges, so it can't simply be kited). Every
-  zombie rolls its own look from the accessory slots in its data (hats, hair,
-  sunglasses, cameras, rescue tubes) and a skin tint.
-- **Reading a fight.** A zombie's attack is telegraphed (arms thrown up, then a lunging
-  swipe) and only lands in front of it, so stepping aside or circling behind is a dodge.
-  Hits push zombies back; a heavy volley (the Scatter Blaster) staggers one out of its
-  windup. Taking damage shows a red arc pointing at the attacker, and an orange arc
-  warns about a zombie that is winding up, charging or already at your back off-screen.
-  Below 30% health a heartbeat plays.
-- **Mastery** is per weapon and permanent: XP for finishing blows, plus a wave-clear bonus
-  for every weapon that scored a kill that wave. Ranks unlock three cosmetic rewards per
-  weapon (decal, energy-cell colour, shell finish), equipped in the **Armory**. Progress is
-  kept whether you win, lose or quit from the pause menu.
+- **Score.** Kills score points, multiplied by headshots and by your combo (keep
+  killing within about three seconds). Multi-kills, long shots, close calls, wave clears
+  and flawless waves add bonuses. Your best score per level is saved and shown on the
+  Play page.
+- **Reading a fight.** Every enemy attack is telegraphed: a melee swipe winds up and only
+  lands in front of the zombie, and ranged and special attacks (sprays, lobbed ink,
+  snowballs, leaps, electric charges, rushes) have their own wind-up animation, sound and
+  often a ground marker. An orange arc around the reticle warns about anything winding
+  up off-screen; a red arc points at whatever just hit you. A headshot during a
+  ranged wind-up cancels it, and so do a freeze or a heavy shotgun stagger. Zombies flank
+  and spread across routes, and when a squad-mate dies nearby they enrage briefly.
+- **World mechanics.** Neon Punks are beaten by closing in (up close they swipe instead
+  of spraying); Riot Bruisers block frontal body shots until their shield breaks; Deep
+  Divers' helmets shrug off headshots until cracked; Jelly Heads discharge an electric
+  ring; Irradiated Hazmats leave a radiation cloud; Summit Lodge has a slippery frozen pond
+  and a final-wave whiteout.
+
+## Weapons
+
+| Weapon | Type | Unlock | Notes |
+| --- | --- | --- | --- |
+| Pulse Pistol | Pistol | Start | Accurate first shot, quick handling |
+| Ion Carbine | Carbine | Start | Automatic all-rounder |
+| Scatter Blaster | Shotgun | Start | Nine pellets; a heavy volley staggers a zombie out of its wind-up |
+| Comet Hand Cannon | Hand cannon | Player level 2 | Three-round burst revolver |
+| Arc Coil | Arc thrower | Player level 4 | Chain lightning that locks onto the zombie nearest the crosshair |
+| Bumper Lobber | Launcher | Player level 6 | Bouncing gumball bombs with splash; shows its landing arc when aiming |
+| Frostbite Cryo Beam | Beam | Player level 8 | Chills, then freezes: frozen zombies cannot attack and take +60% damage |
+| Rail Lancer | Railgun | Player level 11 | Charge shot that pierces a line of zombies |
+
+Every weapon has its own model, holographic reload animation, sounds, reticle and
+aim-down-sights behaviour. Fire modes are data (`WeaponData` fields for burst, charge,
+beam, projectile and splash, pierce, chain, chill/shock and heat), implemented once in
+`scripts/player/weapon_controller.gd` and `scripts/weapons/`.
+
+## Progression and cosmetics
+
+- **Player level** (1–50): account XP from kills, waves, clears, first clears and
+  challenges. Levels unlock weapons and cosmetics. Shown on the HUD and the Career page.
+- **Weapon mastery**: 10 ranks per weapon in Bronze, Silver, Gold, Diamond and Prismatic
+  tiers, earned by using that weapon. Ranks unlock mastery camos and badges.
+- **Challenges** (Career page): account goals and per-weapon goals (headshots, long
+  shots, combos, clean clears…) that pay XP and cosmetics.
+- **Locker**: 190 cosmetics in ten categories. Operators (nine characters that also set your
+  first-person arms), weapon finishes (including animated shader skins), energy cells,
+  decals, charms, gloves, kill effects, tracers, banners and titles. Weapon items are
+  equipped per weapon. Everything shows in a live preview; double-click to equip.
+- **Results screen**: score count-up with breakdown, mastery XP per weapon, the Career
+  card (XP bar, level-ups, challenges completed, new rewards) and your player card.
+- Progress is kept whether you win, lose or quit from the pause menu.
+
+## Main menu
+
+The startup sequence (pulse line, rising synthwave sun, the title dropping in letter by
+letter, then a portal iris into the menu) plays once per session; any key skips it. The
+menu sits over a live, slowly drifting 3D view of the selected world. Pages: **Play**
+(world carousel, level details, best score, loadout, Deploy), **Arsenal** (weapon stats,
+mastery and the two-slot loadout), **Locker**, **Career** and **Settings**.
 
 ## Editing the game data
 
 Everything you would normally tune is a Godot Resource under `data/`. Open a file in the
-Inspector, or edit the `.tres` text directly.
+Inspector, or edit the `.tres` text directly. Content is **discovered by folder**: drop a
+new file in and it appears; there is no catalog to edit.
 
 | What | Where |
 | --- | --- |
-| Weapons (damage, fire rate, magazine, reserve, spread, recoil, reload time, mastery ranks and rewards, viewmodel placement) | `data/weapons/pulse_pistol.tres`, `ion_carbine.tres`, `scatter_blaster.tres` |
-| Enemy variants (health, speed, damage, attack timing, lunge, mass, tickets, XP, outfit, accessory slots, skin and shirt colours, sounds) | `data/enemies/tourist_shambler.tres`, `lifeguard_runner.tres`, `boardwalk_bruiser.tres` |
-| Waves for Prize Pier (enemy counts per wave, spawn pacing, speed scale, banners) **and** the kiosk economy (prices, heal amount, break length, free refill, wave XP bonus) | `data/levels/prize_pier_waves.tres` |
-| Level entry (name, scene, wave set, unlock requirement) | `data/levels/prize_pier.tres` |
-| World entry (name and its list of levels) | `data/worlds/boardwalk_breakout.tres` |
-| Catalog (list of worlds, weapons and enemies) | `data/catalog.tres` |
+| Weapons (damage, fire rate, magazine, spread, recoil, ADS, fire mode, unlock, viewmodel placement) | `data/weapons/*.tres` |
+| Enemies (health, speed, damage, attack timing, behaviours, flanking, outfit and accessories) | `data/enemies/*.tres`, `data/enemies/<world>/*.tres` |
+| Waves and the station economy (counts, pacing, banners, prices, heals, refills) | `data/levels/<level>_waves.tres` |
+| Level entry (name, scene, waves, music, ambience, menu camera, loading tips, unlock) | `data/levels/<level>.tres` |
+| World entry (name, tagline, colours, levels, unlock) | `data/worlds/*.tres` |
+| Account XP rules, mastery curve, challenges | `data/progression/` |
+| Cosmetics | `data/cosmetics/<category>/*.tres` |
+| Menu pages, HUD widgets, results sections | `data/ui/*.tres` |
 
-The field meanings are documented in the scripts in `scripts/data/` (`weapon_data.gd`,
-`enemy_data.gd`, `wave_data.gd`, `wave_set.gd`, `level_data.gd`, `world_data.gd`).
+The field meanings are documented in the scripts in `scripts/data/`.
+**[docs/CONTENT_GUIDE.md](docs/CONTENT_GUIDE.md)** describes every extension point:
+requirements and unlocks, cosmetics, progression, events, menu pages, HUD widgets,
+results sections, enemy behaviours and projectiles, the weapon reload API, the level
+contract and audio packs.
 
 IDs such as `pulse_pistol` or `prize_pier` are **stable IDs** used by save files. Change
 display names freely, but do not rename an `id` after players have saves.
 
 ## Adding another level
 
-The catalog is data-driven; no code changes are needed.
-
-1. **Make the scene.** Create `scenes/levels/<your_level>.tscn`. Easiest: duplicate
-   `prize_pier.tscn` and rework it. A level scene must contain:
-   - a `NavigationRegion3D` with a baked navigation mesh covering the walkable floor
-     (static collision on physics layer 1 = "world");
-   - one `Marker3D` in the group **`player_spawn`**;
-   - several `Marker3D`s in the group **`enemy_spawn`**, placed beyond the main walking loop;
-   - an instance of `scenes/props/kiosk.tscn` and one of `scenes/props/portal.tscn`;
-   - a plain `Node` with `scripts/run/run_director.gd` attached (it runs the level and
-     creates the player and HUD).
-   - Optional: give the root `scripts/run/level_environment.gd` so the graphics preset
-     applies, and add `scripts/props/exit_light.gd` meshes along the route to the portal.
-2. **Make the waves.** Duplicate `data/levels/prize_pier_waves.tres` and edit it.
-3. **Make the level entry.** Duplicate `data/levels/prize_pier.tres`; set a new `id`,
-   `display_name`, `scene_path` and `wave_set`. To lock it behind another level, set
-   `requires_level` to that level's `id` (for example `prize_pier`).
-4. **List it.** Add the new level resource to the `levels` array of
-   `data/worlds/boardwalk_breakout.tres`. For a new world, create a `WorldData` resource and
-   add it to `worlds` in `data/catalog.tres`.
-
-The level then appears on the Play screen, locked until its requirement is cleared. Best
-wave and completion are saved per level `id` automatically.
+1. **Make the scene.** Write a generator like `tools/build_neon_skyline.gd` (or duplicate
+   a level scene and rework it). The contract is in the content guide: a baked
+   `NavigationRegion3D`, a `player_spawn` marker, `enemy_spawn` markers, a loadout
+   station using `scripts/props/prize_kiosk.gd`, an exit portal and a `RunDirector` node.
+2. **Make the waves.** Duplicate one of the `data/levels/*_waves.tres` files.
+3. **Make the level entry.** Duplicate a `data/levels/<level>.tres`, set a new `id`,
+   `scene_path`, `wave_set` and `requirement`.
+4. **List it in a world.** Add it to a world's `levels`, or create a new
+   `data/worlds/<world>.tres` with a `sort_order` and a `requirement`.
 
 ## Project layout
 
@@ -127,28 +176,34 @@ wave and completion are saved per level `id` automatically.
 project.godot            Godot project (input map, autoloads, renderer)
 data/                    Editable game data (see above)
 scenes/
-  levels/prize_pier.tscn   The level: geometry, navigation, spawn markers, kiosk, portal
-  player/player.tscn       First-person player (camera, weapon controller, viewmodel)
-  enemies/zombie.tscn      Shared zombie; the variant comes from EnemyData
-  props/kiosk.tscn         Prize kiosk     props/portal.tscn   Exit portal
-  ui/                      main_menu, hud, pause_menu, results
+  levels/                One scene per level, written by the tools/build_*.gd generators
+  player/, enemies/      First-person player; the shared zombie (variant from EnemyData)
+  props/                 Loadout stations and portals for each world
+  ui/                    main_menu, hud, pause_menu, results
 scripts/
-  autoload/   profile (save), game_data (catalog), settings, mastery, sfx, game (scene flow)
-  data/       Resource classes for weapons, enemies, waves, levels, worlds
-  player/     player.gd, weapon_controller.gd (shared combat), weapon_view.gd, cosmetics
-  enemies/    zombie.gd (navigation, avoidance, attacks, stall detection)
-  run/        run_director.gd (run state machine, waves, kiosk economy, mastery commits)
-  props/      kiosk, portal, exit lights, Ferris wheel
-  ui/         HUD, menus, armory, settings, results, shared UiKit theme
-  fx/         tracers and particle bursts
+  autoload/   profile (save), game_data (folder scan), settings, events, unlocks,
+              progression, mastery, cosmetics, sfx, game (scene flow)
+  data/       Resource classes (weapons, enemies, waves, levels, worlds, requirements,
+              cosmetics, UI extensions)
+  player/     player (movement, ADS, jump, slide), weapon_controller (shared combat),
+              weapon_view (viewmodel and reload animations), weapon_cosmetics
+  weapons/    loadout, fire-mode helpers, status effects, projectiles, beam/arc/rail
+              visuals, per-weapon reload scripts, Arsenal page
+  enemies/    zombie.gd, EnemyBehaviour base, projectiles, behaviours/ per world
+  run/        run_director (run state machine, waves, station economy), score_keeper,
+              level environments
+  progression/  run tracker, challenges, Career page, HUD widget, results card
+  cosmetics/  operators, kill effects, tracers, charms, player card, Locker support
+  ui/         HUD, menus, intro, menu backdrop, loading screen, settings, results
+  fx/         tracers, particle bursts, effect warm-up
   dev/        automated playtest bot and screenshot tool (inactive in normal play)
 art/
   blender/    Blender sources: build_*.py scripts and the .blend files they write
   models/     Exported .glb models used by the game
-  textures/   Sky panorama and deck planks        shaders/  Ocean and portal shaders
+  textures/   Generated skies and surfaces        shaders/  All game shaders
   fonts/      Lilita One and Baloo 2 (SIL Open Font License, licences included)
-audio/        Synthesised sound effects (.wav) and loops (.ogg), bus layout
-tools/        Generators: level blockout, textures, audio, model previewer
+audio/        Synthesised sound effects (.wav) and music/ambience loops (.ogg)
+tools/        Level generators, texture and audio generators, model previewer
 references/   Art reference, in-game screenshot and the side-by-side comparison
 builds/       Zipped desktop builds
 ```
@@ -157,16 +212,17 @@ Persistent state lives only in the save file, never in level scenes.
 
 ## Saves
 
-Progress is stored in `user://profile.json` (versioned):
+Progress is stored in `user://profile.json` (versioned; version 1 saves are migrated):
 
 - Linux: `~/.local/share/godot/app_userdata/What Lies Ahead/profile.json`
 - Windows: `%APPDATA%\Godot\app_userdata\What Lies Ahead\profile.json`
 - macOS: `~/Library/Application Support/Godot/app_userdata/What Lies Ahead/profile.json`
 
-It holds per-weapon mastery (XP, kills), equipped cosmetics, best wave and completion per
-level, and settings. It is written at every wave boundary, on defeat, on extraction and
-when you leave a run. A missing file starts a fresh profile. An unreadable file is set
-aside as `profile.json.unreadable-<date>` and a fresh profile is started.
+It holds account XP, per-weapon mastery, challenge progress, owned and equipped
+cosmetics, the loadout, best wave, best score and completion per level, and settings. It
+is written at every wave boundary, on defeat, on extraction, when you leave a run and
+when you equip something. A missing file starts a fresh profile. An unreadable file is
+set aside as `profile.json.unreadable-<date>` and a fresh profile is started.
 
 ## Art, audio and level pipelines
 
@@ -175,41 +231,46 @@ only third-party assets are the two fonts (see *Third-party assets*).
 
 **Models (Blender).** Each script in `art/blender/` builds its models from code, saves an
 editable `.blend` next to itself and exports an engine-ready `.glb` to `art/models/`.
+They were written for Blender 5.3 and run here through the `bpy` Python module
+(`pip install bpy`, then `python art/blender/<script>.py`), or with
+`blender --background --python art/blender/<script>.py`.
+
+| Scripts | Builds |
+| --- | --- |
+| `build_props.py`, `build_kiosk.py`, `build_ferris_wheel.py` | Prize Pier props, kiosk, Ferris wheel |
+| `build_weapons.py`, `build_weapons_arsenal.py` | The eight weapon viewmodels with arms |
+| `build_zombie.py` | Shared zombie rig, outfits and clips |
+| `build_neon_*.py`, `build_aqua_*.py`, `build_dune_*.py`, `build_frost_*.py` | Each world's props, station, scenery and zombies |
+| `build_operators.py`, `build_cosmetics.py` | Operators; charms and sticker decals |
+
+In the `.blend` files the *Source* collection holds the parts with live bevel
+modifiers, and *Export* holds the baked meshes written to the `.glb`. Naming contracts
+the game relies on (`Muzzle`, `SightPoint`, `CharmPoint`, animated part names, clip
+names) are described at the top of `build_weapons.py` and `build_zombie.py`.
+`art/blender/` has a `.gdignore`, so Godot does not try to import the `.blend` files.
+
+**Textures and audio** (need numpy, Pillow and ffmpeg):
 
 ```bash
-blender --background --python art/blender/build_props.py        # rail, lamp, planter, palm, bench, booth, gates, arcade, coaster, portal arch
-blender --background --python art/blender/build_kiosk.py
-blender --background --python art/blender/build_ferris_wheel.py
-blender --background --python art/blender/build_weapons.py      # three viewmodels with arms
-blender --background --python art/blender/build_zombie.py       # one rig, two outfits, six clips
+python tools/gen_textures.py                 # Prize Pier sky and deck
+python tools/gen_textures_neon.py            # likewise _aqua, _dune, _frost
+python tools/gen_audio.py                    # core sounds and music
+python tools/gen_audio.py neon aqua dune frost weapons progression cosmetics   # packs
 ```
 
-They were written for Blender 5.3 (run here through the `bpy` Python module:
-`pip install bpy`, then `python art/blender/build_props.py`). In the `.blend` files the
-*Source* collection holds the parts with live bevel modifiers, and *Export* holds the baked,
-joined meshes that were written to the `.glb`. You can also edit a `.blend` by hand and
-export the *Export* collection as glTF. Naming contracts the game relies on are described at
-the top of `build_weapons.py` and `build_zombie.py`. `art/blender/` has a `.gdignore`, so
-Godot does not try to import the `.blend` files.
-
-**Textures and audio.**
+**Levels.** Each level has a generator in `tools/` (`build_prize_pier.gd`,
+`build_neon_skyline.gd`, `build_tidal_tunnels.gd`, `build_launch_pad.gd`,
+`build_summit_lodge.gd`) that writes its scene and bakes navigation. Run them **with a
+renderer**, not `--headless`: the headless renderer keeps no MultiMesh instance data, so
+repeated props (lights, railings, trees) would be saved empty.
 
 ```bash
-python tools/gen_textures.py     # sky panorama, deck planks (needs numpy, Pillow)
-python tools/gen_audio.py        # all sound effects and both loops (needs numpy, ffmpeg)
+xvfb-run -a godot --rendering-driver opengl3 --path . --script res://tools/build_neon_skyline.gd
 ```
 
-**Level blockout.** `tools/build_prize_pier.gd` holds the layout of Prize Pier (deck, rails,
-entrances, props, spawn markers, lighting) and bakes the navigation mesh:
-
-```bash
-godot --headless --path . --script res://tools/build_prize_pier.gd
-```
-
-It **overwrites** `scenes/levels/prize_pier.tscn`. Use it to change the layout in bulk; if
-you prefer to edit the scene by hand in the editor, stop running the script (and re-bake
-navigation from the `NavigationRegion3D` after moving collision). Gameplay collision and
-navigation are ordinary Godot nodes in the scene.
+(Drop `xvfb-run -a` on a desktop.) A generator **overwrites** its scene. If you prefer to
+edit a scene by hand in the editor, stop running its generator (and re-bake navigation
+from the `NavigationRegion3D` after moving collision).
 
 **Checking assets.** `tools/preview_model.gd` prints a model's node tree, bounds and clips
 and renders a contact sheet; see the comment at the top of the file.
@@ -220,15 +281,16 @@ The game can play itself through the real input pipeline. These are how the buil
 verified; they do nothing unless you pass the arguments after `--`.
 
 ```bash
-# Full run with a bot, then back to the menu (fast, no window)
-godot --headless --fixed-fps 60 --path . -- --autoplay=clear --weapon=ion_carbine --then=menu
+# Full run with a bot on any level, then back to the menu (fast, no window)
+godot --headless --fixed-fps 60 --path . -- --autoplay=clear --level=neon_skyline --weapon=ion_carbine --then=menu
 
 godot --headless --fixed-fps 60 --path . -- --autoplay=defeat --then=retry   # lose, press Retry
-godot --headless --fixed-fps 60 --path . -- --autoplay=clear --swap           # swap weapon every break
+godot --headless --fixed-fps 60 --path . -- --autoplay=clear --swap           # station swaps every break
+godot --headless --fixed-fps 60 --path . -- --autoplay=clear --switch         # slot switching mid-reload
 godot --headless --fixed-fps 60 --path . -- --autoplay=route                  # crowd routing test
 godot --path . -- --autoplay=pause                                           # pause menu flow (needs a window)
 godot --path . --resolution 1672x941 -- --shot=out.png                        # reference-angle screenshot
-godot --path . -- --shot=hit.png --shot-near=1 --shot-fire=2 --shot-weapon=scatter_blaster --shot-frames=30
+godot --path . -- --shot=menu.png --shot-scene=locker --shot-locker=avatar     # any menu page
 ```
 
 Add `--profile=/some/file.json` to keep test runs away from your real save. All options are
@@ -256,57 +318,4 @@ it is not used by the game.
 
 ## Verification and known limits
 
-What was run for this handoff, on a headless Linux container (4 vCPU, **no GPU**; rendering
-used Mesa llvmpipe, a software rasteriser):
-
-- Project import and scene start-up with Godot 4.7.1, no script errors.
-- Bot-played **full clears** with each starter weapon (all 141 zombies killed, portal
-  entered, results shown, back to menu), plus six balance runs after the last wave
-  tuning (Pulse Pistol and Ion Carbine, three each): six clears, finishing with 32–68
-  health.
-- Bot **defeat**, then **Retry** (new run starts with no tickets, wave 0, full health).
-- **Pause menu** on a virtual display: mouse released on pause, recaptured on resume,
-  restart and main menu both clean.
-- **Persistence**: mastery, level completion and settings read back after a relaunch;
-  unreadable, partial and missing save files all start cleanly.
-- **Crowd routing**: 16 zombies clumped behind the kiosk used both lanes (10 and 6) and all
-  reached the player without shoving them.
-- **Late-wave load** (final wave, up to 10 zombies alive): scripts and physics each under
-  about 5 ms per frame (one 10.5 ms spike); about 580–1,160 draw calls and 200k–480k
-  triangles per frame at 1920×1080.
-- **Visual checks** of every weapon in hand, both zombie close-ups, the attack windup,
-  firing, hits, kills, damage and threat indicators, from a reproducible set of staged
-  screenshots (`scripts/dev/screenshot.gd`).
-- **Export smoke test**: the exported Linux build ran a full bot clear, defeat → retry, a
-  rendered frame and a relaunch that read the saved progress.
-
-Not verified, or limited:
-
-- **Real frame rate.** With no GPU here, 1080p ran at 1–2 fps (High) and 5–7 fps (Low) on
-  the software rasteriser. That says nothing about a normal graphics card; the draw-call
-  and triangle counts above are modest, but smooth 1080p play is untested on real hardware.
-- **Audio by ear.** Every sound is synthesised by `tools/gen_audio.py` and was checked for
-  length and level only. Nobody has listened to the mix; expect to adjust volumes.
-- **Human playtesting.** Difficulty and pacing were tuned against a bot with near-perfect
-  aim (clears take it about 5–7 minutes because it starts waves early and finish with
-  32–68 health; before the final-wave tuning it was overrun about one run in three).
-  A person has not played it, so mouse feel, the 8–12
-  minute target and first-run fairness still need a human pass.
-- **Windows build** was exported but never run.
-- **No Godot or Blender MCP connection** was available. Blender was driven through its
-  Python module, so the models were not touched up by hand in the Blender UI.
-
-Placeholders and simplifications:
-
-- Reload animations are code-driven tweens on the viewmodel parts (three distinct styles),
-  not authored animation clips.
-- UI layouts (HUD, menus) are built in code by their scripts rather than laid out as nodes
-  in the scene files.
-- Models use flat colours with one material per colour; materials are not shared between
-  `.glb` files.
-- A zombie that gets wedged is moved back to an entrance by the stall failsafe; this is
-  rare but can be seen if you are looking at it.
-- Hit sparks and confetti use a small script-driven particle system
-  (`scripts/fx/fx_burst.gd`), because `CPUParticles3D` did not render with this
-  renderer and driver. Bulb glow is faked with additive halo quads
-  (`art/shaders/bulb_halo.gdshader`) for the same reason: post-process glow barely shows.
+VERIFICATION_PLACEHOLDER
