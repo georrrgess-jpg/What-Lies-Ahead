@@ -78,7 +78,7 @@ const TELEPORT_DISTANCE := 1.5
 @export var gravity := 23.0
 ## Extra gravity on the way down, for a snappier jump.
 @export var fall_gravity_scale := 1.45
-@export var jump_velocity := 7.55
+@export var jump_velocity := 7.44
 ## Letting go of jump while rising keeps this share of the upward speed.
 @export var jump_cut := 0.65
 @export_group("Slide")
@@ -352,7 +352,7 @@ func _begin_traversal(vault: bool) -> void:
 	_coyote = 0.0
 	_jump_rising = false
 	_traverse.begin(velocity)
-	Sfx.play(&"move_vault" if vault else &"move_mantle", -7.0, randf_range(0.95, 1.05))
+	Sfx.play(&"move_vault" if vault else &"move_mantle", -5.0 if vault else -7.0, randf_range(0.95, 1.05))
 	traversal_started.emit(vault)
 
 
@@ -361,7 +361,7 @@ func _end_traversal() -> void:
 	_traverse_cool = TRAVERSE_COOLDOWN
 	if not _traverse_vault:
 		head.settle()
-		Sfx.play(&"move_mantle_land", -9.0, randf_range(0.95, 1.05))
+		Sfx.play(&"move_mantle_land", -13.0, randf_range(0.95, 1.05))
 	traversal_finished.emit(_traverse_vault)
 
 

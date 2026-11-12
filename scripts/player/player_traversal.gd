@@ -26,8 +26,9 @@ const STEP_LOOKAHEAD := 0.08
 ## Lowest ledge worth a mantle from the ground (lower ones are a plain jump).
 const LEDGE_MIN := 0.45
 ## Highest ledge, above the feet and above the floor the player last stood
-## on, so jump + mantle never reaches a perch a jump alone could not.
-const LEDGE_MAX := 1.3
+## on: what a full jump reaches, so jump + mantle never reaches a perch a jump
+## alone could not.
+const LEDGE_MAX := 1.25
 ## How far ahead of the capsule a ledge can be grabbed.
 const REACH := 0.65
 ## Clearance above the ledge while moving over it.
