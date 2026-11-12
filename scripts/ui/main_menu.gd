@@ -399,7 +399,7 @@ func _build_play() -> Control:
 	_loadout_box = VBoxContainer.new()
 	_loadout_box.add_theme_constant_override("separation", 6)
 	sv.add_child(_loadout_box)
-	if _pages.has("arsenal") or GameData.ui_extensions(UiExtension.Kind.MENU_PAGE).any(func(e): return e.id == &"arsenal"):
+	if GameData.ui_extensions(UiExtension.Kind.MENU_PAGE).any(func(e): return e.id == &"arsenal"):
 		_arsenal_button = MenuButtonFx.make("OPEN ARSENAL", UiKit.TEAL, 26, Vector2(0, 52))
 		_arsenal_button.pressed.connect(_show.bind("arsenal"))
 		sv.add_child(_arsenal_button)
@@ -501,42 +501,11 @@ func _refresh_play() -> void:
 	_start_button.disabled = not unlocked
 	_start_button.text = "DEPLOY" if unlocked else "LOCKED"
 
-	# Loadout summary.
+	# Loadout summary (chosen in the Arsenal, swapped at the Loadout Station).
 	for c in _loadout_box.get_children():
 		c.queue_free()
-	var loadout_script := "res://scripts/weapons/loadout.gd"
-	if ResourceLoader.exists(loadout_script):
-		var lo = load(loadout_script)
-		for slot in [["PRIMARY", lo.primary()], ["SECONDARY", lo.secondary()]]:
-			_loadout_box.add_child(_weapon_row(slot[0], GameData.weapon(slot[1])))
-	else:
-		# Single starter weapon, cycled here.
-		var w := GameData.weapon(_selected_weapon)
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		var prev := MenuButtonFx.make("<", UiKit.PURPLE, 28, Vector2(54, 54))
-		prev.pressed.connect(_cycle_weapon.bind(-1))
-		row.add_child(prev)
-		var wr := _weapon_row("STARTER", w)
-		wr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(wr)
-		var nxt := MenuButtonFx.make(">", UiKit.PURPLE, 28, Vector2(54, 54))
-		nxt.pressed.connect(_cycle_weapon.bind(1))
-		row.add_child(nxt)
-		_loadout_box.add_child(row)
-		var hint := UiKit.label("Swap weapons for free at the Loadout Station between waves.", 20, Color(1, 1, 1, 0.7))
-		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		hint.custom_minimum_size = Vector2(440, 0)
-		_loadout_box.add_child(hint)
-
-
-func _cycle_weapon(step: int) -> void:
-	var list := GameData.weapons().filter(func(w): return GameData.is_weapon_unlocked(w))
-	if list.is_empty():
-		return
-	var i := list.find(GameData.weapon(_selected_weapon))
-	_select_weapon(list[posmod(i + step, list.size())].id)
-	Sfx.play(&"swap", -8.0)
+	for slot in [["PRIMARY  ·  1", Loadout.primary()], ["SECONDARY  ·  2", Loadout.secondary()]]:
+		_loadout_box.add_child(_weapon_row(slot[0], GameData.weapon(slot[1])))
 
 
 func _weapon_row(caption: String, w: WeaponData) -> Control:
@@ -591,7 +560,8 @@ func _start() -> void:
 		return
 	Profile.save_profile()
 	Sfx.play(&"deploy", -2.0)
-	var weapon := &"" if ResourceLoader.exists("res://scripts/weapons/loadout.gd") and not Game.has_node("DevDriver") else _selected_weapon
+	# The saved Loadout, unless a dev run picked a weapon.
+	var weapon := _selected_weapon if Game.has_node("DevDriver") else &""
 	Game.start_level(_selected_level.id, weapon)
 
 

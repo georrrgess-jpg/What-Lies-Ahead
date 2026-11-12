@@ -19,8 +19,13 @@ extends EnemyBehaviour
 @export var block_sound: StringName = &"neon_shield_block"
 @export var break_sound: StringName = &"neon_shield_break"
 
+## Minimum seconds between block sparks/clangs, so beams and fast weapons
+## don't stack dozens of them.
+const BLOCK_FX_GAP := 0.12
+
 var _shield := 0.0
 var _mesh: Node3D
+var _next_fx_ms := 0
 
 
 func on_ready(z: Zombie) -> void:
@@ -38,8 +43,11 @@ func on_hit(z: Zombie, amount: float, hit_position: Vector3, headshot: bool) -> 
 		return amount
 	var blocked := amount * block_fraction
 	_shield -= blocked
-	Fx.impact(z.get_parent(), hit_position, to_hit.normalized(), spark_color)
-	Sfx.play_at(block_sound, hit_position, -3.0, randf_range(0.9, 1.1))
+	var now := Time.get_ticks_msec()
+	if now >= _next_fx_ms:
+		_next_fx_ms = now + int(BLOCK_FX_GAP * 1000.0)
+		Fx.impact(z.get_parent(), hit_position, to_hit.normalized(), spark_color)
+		Sfx.play_at(block_sound, hit_position, -3.0, randf_range(0.9, 1.1))
 	if _shield <= 0.0:
 		_break(z, hit_position)
 	return amount - blocked
