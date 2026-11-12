@@ -152,7 +152,8 @@ static func track_card(lvl: int, current: int) -> Control:
 # --- weapon mastery -------------------------------------------------------------------
 
 ## Tier badge, rank, XP bar, kills and the weapon's rank-by-rank reward strip.
-static func weapon_card(w: WeaponData) -> Control:
+## Owned rewards in the strip equip on click; `on_change` runs afterwards.
+static func weapon_card(w: WeaponData, on_change: Callable) -> Control:
 	var rank := Mastery.rank(w.id)
 	var tier_col := ProgStyle.rank_color(rank)
 	var card := PanelContainer.new()
@@ -189,15 +190,15 @@ static func weapon_card(w: WeaponData) -> Control:
 	var xp_text := "%s XP · fully mastered" % ProgStyle.num(Mastery.xp(w.id)) if ceiling < 0 \
 		else "%s / %s XP to rank %d" % [ProgStyle.num(Mastery.xp(w.id)), ProgStyle.num(ceiling), rank + 1]
 	v.add_child(UiKit.label(xp_text, 19, UiKit.CREAM))
-	v.add_child(_reward_strip(w, rank))
+	v.add_child(_reward_strip(w, rank, on_change))
 	return card
 
 
-static func _reward_strip(w: WeaponData, rank: int) -> Control:
+static func _reward_strip(w: WeaponData, rank: int, on_change: Callable) -> Control:
 	var strip := HBoxContainer.new()
 	strip.add_theme_constant_override("separation", 4)
 	var by_rank := {}
-	for it in Mastery.rewards(w.id):
+	for it in Mastery.rank_track(w.id):
 		if not by_rank.has(it.requirement.amount):
 			by_rank[it.requirement.amount] = it
 	for r in range(1, Mastery.max_rank() + 1):
@@ -209,12 +210,28 @@ static func _reward_strip(w: WeaponData, rank: int) -> Control:
 		var art := RewardArt.new(it, rank < r, Vector2(42, 42)) if it else RewardArt.stamp("", rank < r, Vector2(42, 42))
 		art.mouse_filter = Control.MOUSE_FILTER_PASS
 		art.tooltip_text = "Rank %d: %s (%s)" % [r, it.display_name, it.slot_label()] if it else "Rank %d" % r
+		if it and rank >= r:
+			_make_equippable(art, w.id, on_change)
 		cell.add_child(art)
 		var t := Mastery.tier(r)
 		var lab := UiKit.label(str(r), 15, t.color if rank >= r else Color(1, 1, 1, 0.4), true)
 		lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		cell.add_child(lab)
 	return strip
+
+
+## Click toggles the item on this weapon; the equipped one wears a ring.
+static func _make_equippable(art: RewardArt, weapon_id: StringName, on_change: Callable) -> void:
+	var it := art.item
+	art.equipped = Cosmetics.equipped(it.slot, weapon_id) == it
+	art.mouse_filter = Control.MOUSE_FILTER_STOP
+	art.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	art.tooltip_text += "\nClick to %s" % ("unequip" if art.equipped else "equip")
+	art.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			Cosmetics.equip(it.slot, null if art.equipped else it, weapon_id)
+			Sfx.play(&"ui_click", -6.0)
+			on_change.call())
 
 
 # --- challenges -----------------------------------------------------------------------

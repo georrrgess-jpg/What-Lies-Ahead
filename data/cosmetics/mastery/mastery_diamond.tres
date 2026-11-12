@@ -22,7 +22,7 @@ params = {
 "shader": "res://art/shaders/mastery_diamond.gdshader",
 "tier": "diamond",
 "shader_params": {
-"facet_scale": 34.0,
+"facet_scale": 52.0,
 "sparkle": 1.0
 }
 }

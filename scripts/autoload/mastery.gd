@@ -93,21 +93,32 @@ func rank_label(rank_number: int) -> String:
 	return "RANK %d · %s" % [rank_number, t.display_name.to_upper()]
 
 
-## Mastery reward items for a weapon: its own items plus the weapon-agnostic
-## camos (WEAPON_RANK with an empty target), ordered by rank.
+## Mastery reward items made for this weapon (cosmetics gated on its rank).
 func rewards(weapon_id: StringName) -> Array[CosmeticItem]:
-	var out: Array[CosmeticItem] = []
-	for it in GameData.cosmetics():
-		var req := it.requirement
-		if req and req.kind == Requirement.Kind.WEAPON_RANK and (req.target == weapon_id or req.target == &"" and it.fits_weapon(weapon_id)):
-			out.append(it)
-	out.sort_custom(func(a, b): return a.requirement.amount < b.requirement.amount if a.requirement.amount != b.requirement.amount else a.sort_order < b.sort_order)
-	return out
+	return _rank_items(weapon_id, false)
+
+
+## Everything a weapon unlocks by rank: its own rewards plus the
+## weapon-agnostic mastery camos (WEAPON_RANK with an empty target).
+func rank_track(weapon_id: StringName) -> Array[CosmeticItem]:
+	return _rank_items(weapon_id, true)
 
 
 ## Rewards that unlock exactly at `rank_number` on this weapon.
 func rewards_at(weapon_id: StringName, rank_number: int) -> Array[CosmeticItem]:
-	return rewards(weapon_id).filter(func(it): return it.requirement.amount == rank_number)
+	return rank_track(weapon_id).filter(func(it): return it.requirement.amount == rank_number)
+
+
+func _rank_items(weapon_id: StringName, include_shared: bool) -> Array[CosmeticItem]:
+	var out: Array[CosmeticItem] = []
+	for it in GameData.cosmetics():
+		var req := it.requirement
+		if req == null or req.kind != Requirement.Kind.WEAPON_RANK:
+			continue
+		if req.target == weapon_id or include_shared and req.target == &"" and it.fits_weapon(weapon_id):
+			out.append(it)
+	out.sort_custom(func(a, b): return a.requirement.amount < b.requirement.amount if a.requirement.amount != b.requirement.amount else a.sort_order < b.sort_order)
+	return out
 
 
 ## Adds XP (and optionally kills) to a weapon. Changes are in memory until the

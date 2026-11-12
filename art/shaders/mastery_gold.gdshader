@@ -38,12 +38,14 @@ void fragment() {
 	float grain = vnoise(vec2(lp.z * brush_scale * 0.05, across)) * 0.65
 		+ vnoise(vec2(lp.z * brush_scale * 0.015, across * 2.7)) * 0.35;
 
-	// Fake studio reflection: warm bright "ceiling", deep amber "floor".
+	// Fake studio reflection: a crisp bright horizon over a warm amber floor,
+	// the high-contrast banding that makes polished metal read as metal.
 	vec3 r = reflect(-VIEW, NORMAL);
-	float sky = smoothstep(-0.35, 0.75, r.y);
-	vec3 deep = gold * vec3(0.42, 0.3, 0.16);
-	vec3 bright = mix(gold, vec3(1.0, 0.97, 0.85), 0.5);
-	vec3 refl = mix(deep, bright, sky);
+	float sky = smoothstep(-0.12, 0.12, r.y) * 0.65 + smoothstep(0.2, 0.9, r.y) * 0.35;
+	float horizon = exp(-pow((r.y - 0.08) * 9.0, 2.0));
+	vec3 deep = gold * vec3(0.74, 0.58, 0.32);
+	vec3 bright = mix(gold, vec3(1.0, 0.98, 0.88), 0.6);
+	vec3 refl = mix(deep, bright, sky) + vec3(1.0, 0.95, 0.75) * horizon * 0.5;
 	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
 
 	// Glint band sweeping along the weapon; idles off-weapon between passes.
@@ -59,9 +61,10 @@ void fragment() {
 	float twinkle = step(0.975, seed) * fleck * pow(0.5 + 0.5 * sin(TIME * 4.0 + seed * 60.0), 10.0);
 
 	float polish = is_trim ? 0.25 : 1.0;
-	ALBEDO = gold * mix(0.62, 1.0, mix(1.0, grain, polish));
-	METALLIC = 0.8;
-	ROUGHNESS = mix(0.2, 0.42, grain * polish);
-	SPECULAR = 0.7;
-	EMISSION = refl * (0.22 + 0.25 * fres) + bright * glint * 1.3 + vec3(1.0, 0.95, 0.8) * twinkle * 2.5;
+	float brushed = mix(1.0, grain, polish);
+	ALBEDO = gold * mix(0.86, 1.04, brushed);
+	METALLIC = 0.5;
+	ROUGHNESS = mix(0.2, 0.34, brushed);
+	SPECULAR = 0.8;
+	EMISSION = refl * mix(0.85, 1.0, brushed) * (0.4 + 0.3 * fres) + bright * glint * 1.4 + vec3(1.0, 0.95, 0.8) * twinkle * 2.5;
 }

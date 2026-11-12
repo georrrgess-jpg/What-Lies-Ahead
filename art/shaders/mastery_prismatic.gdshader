@@ -43,12 +43,14 @@ float palette_hue(float t) {
 }
 
 void fragment() {
-	float swirl = vnoise3(lp * 7.0 + vec3(0.0, TIME * 0.25, 0.0)) * 0.7
-		+ vnoise3(lp * 19.0 - vec3(TIME * 0.15)) * 0.25;
-	float t = lp.z * 2.4 + lp.y * 1.4 + swirl - TIME * flow_speed;
-	vec3 col = mix(hue(palette_hue(t)), vec3(1.0), 0.1) * shell_color;
+	float swirl = vnoise3(lp * 6.0 + vec3(0.0, TIME * 0.25, 0.0)) * 0.35
+		+ vnoise3(lp * 17.0 - vec3(TIME * 0.15)) * 0.12;
+	float t = lp.z * 4.2 + lp.y * 2.4 + lp.x * 1.2 + swirl - TIME * flow_speed;
+	// Fine diagonal holo lines give the pearlescent, printed-foil look.
+	float lines = 0.95 + 0.05 * sin((lp.z + lp.y) * 420.0);
+	vec3 col = mix(hue(palette_hue(t)), vec3(1.0), 0.16) * shell_color * lines;
 	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
-	vec3 sheen = hue(palette_hue(t + 0.35 + fres * 0.6));
+	vec3 sheen = mix(hue(palette_hue(t + 0.35 + fres * 0.6)), vec3(1.0), 0.3);
 
 	vec3 cell = floor(lp * 80.0);
 	float seed = hash3(cell);

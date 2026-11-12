@@ -63,16 +63,22 @@ void fragment() {
 	vec3 fire = 0.5 + 0.5 * cos(6.2831 * (rnd.x * 0.5 + rnd.z * 0.3 + TIME * 0.08 + vec3(0.0, 0.33, 0.67)));
 
 	vec3 base = is_trim ? trim_color : shell_color;
-	vec3 ice = base * (0.72 + 0.28 * rnd.y);
+	// Each facet mirrors a different part of a bright "sky" over a deep blue
+	// "floor", which gives the strong light/dark mosaic of a cut stone.
+	float env = smoothstep(-0.35, 0.65, r.y);
+	float facet = 0.75 + 0.5 * fract(rnd.x * 7.31 + 0.5);
+	vec3 deep = base * vec3(0.45, 0.62, 0.85);
+	vec3 ice = mix(deep, mix(base, vec3(1.0), 0.65), env) * facet;
+	ice = mix(ice, ice * (0.75 + 0.5 * fire), 0.18);
 	float seed = hash33(id + 17.0).x;
 	float twinkle = step(0.9, seed) * pow(0.5 + 0.5 * sin(TIME * 5.0 + seed * 80.0), 14.0);
 	float strength = is_trim ? 0.45 : 1.0;
 
-	ALBEDO = ice * 0.8;
-	METALLIC = 0.35;
+	ALBEDO = ice * 0.5;
+	METALLIC = 0.2;
 	ROUGHNESS = 0.06;
 	SPECULAR = 0.9;
-	EMISSION = ice * (0.12 + 0.45 * fres)
-		+ (vec3(1.0) * flash + fire * edge * 0.45) * strength
+	EMISSION = ice * (0.55 + 0.35 * fres)
+		+ (vec3(1.0) * flash + fire * edge * 0.6) * strength
 		+ vec3(1.0) * twinkle * sparkle * 2.2 * strength;
 }

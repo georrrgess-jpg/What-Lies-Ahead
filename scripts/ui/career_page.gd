@@ -38,13 +38,17 @@ func _ready() -> void:
 	col.add_child(_track)
 	col.add_child(_tabs())
 	_scroll = ScrollContainer.new()
-	_scroll.custom_minimum_size = Vector2(0, 370)
+	_scroll.custom_minimum_size = Vector2(0, 380)
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_style_scrollbar(_scroll.get_v_scroll_bar())
 	col.add_child(_scroll)
+	var margin := MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.add_theme_constant_override("margin_right", 22)
+	_scroll.add_child(margin)
 	_content = VBoxContainer.new()
-	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_content.add_theme_constant_override("separation", 12)
-	_scroll.add_child(_content)
+	margin.add_child(_content)
 	refresh()
 
 
@@ -81,12 +85,12 @@ func _tabs() -> Control:
 		on.border_width_bottom = 6
 		b.add_theme_stylebox_override("pressed", on)
 		b.add_theme_stylebox_override("hover_pressed", on)
-		b.pressed.connect(_select_tab.bind(entry[0]))
+		b.pressed.connect(_on_tab_pressed.bind(entry[0]))
 		row.add_child(b)
 		_tab_buttons[entry[0]] = b
 		if entry[0] == "mastery":
 			b.name = "FirstFocus"
-	var hint := UiKit.label("Mastery camos unlock per weapon; equip them in the Armory.", 20, Color(1, 1, 1, 0.6))
+	var hint := UiKit.label("Mastery rewards unlock per weapon. Click an unlocked one to equip it.", 20, Color(1, 1, 1, 0.6))
 	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -103,6 +107,11 @@ func _build_track() -> void:
 		_track.add_child(CareerCards.track_card(l, lvl))
 
 
+func _on_tab_pressed(tab: String) -> void:
+	_select_tab(tab)
+	_scroll.scroll_vertical = 0
+
+
 func _select_tab(tab: String) -> void:
 	_tab = tab
 	(_tab_buttons[tab] as Button).set_pressed_no_signal(true)
@@ -111,7 +120,6 @@ func _select_tab(tab: String) -> void:
 		_build_mastery()
 	else:
 		_build_challenges()
-	_scroll.scroll_vertical = 0
 
 
 func _build_mastery() -> void:
@@ -122,7 +130,7 @@ func _build_mastery() -> void:
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_content.add_child(grid)
 	for w in GameData.weapons():
-		grid.add_child(CareerCards.weapon_card(w))
+		grid.add_child(CareerCards.weapon_card(w, _select_tab.bind("mastery")))
 
 
 func _build_challenges() -> void:
@@ -165,6 +173,14 @@ func _section(title: String, note: String) -> Control:
 	n.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(n)
 	return row
+
+
+static func _style_scrollbar(bar: ScrollBar) -> void:
+	bar.custom_minimum_size = Vector2(14, 0)
+	bar.add_theme_stylebox_override("scroll", UiKit.box(Color(UiKit.INK, 0.8), Color.TRANSPARENT, 7, 0, 0))
+	bar.add_theme_stylebox_override("grabber", UiKit.box(UiKit.PINK, Color.TRANSPARENT, 7, 0, 0))
+	bar.add_theme_stylebox_override("grabber_highlight", UiKit.box(UiKit.PINK_LIGHT, Color.TRANSPARENT, 7, 0, 0))
+	bar.add_theme_stylebox_override("grabber_pressed", UiKit.box(UiKit.CYAN, Color.TRANSPARENT, 7, 0, 0))
 
 
 static func _clear(node: Node) -> void:
