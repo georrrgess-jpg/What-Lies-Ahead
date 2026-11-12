@@ -1,6 +1,12 @@
 extends CanvasLayer
-## End-of-run screen: outcome, waves survived and mastery gained per weapon,
-## with Retry and Main Menu.
+## End-of-run screen: outcome, score, waves survived and mastery gained per
+## weapon, with the registered results sections (Career, player card) beside
+## them. After a clear, NEXT WORLD starts the next unlocked level; RETRY and
+## MAIN MENU are always there. Laid out for the 1920x1080 HUD canvas.
+
+## The panel fits the 1920x1080 canvas with a margin all round.
+const PANEL_SIZE := Vector2(1840, 1016)
+const COLUMN_WIDTH := 900.0
 
 var _root: Control
 
@@ -28,7 +34,8 @@ func show_result(result: Dictionary) -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(center)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.NAVY, 0.95), UiKit.CYAN if victory else UiKit.PINK, 30, 5, 36))
+	panel.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.NAVY, 0.95), UiKit.CYAN if victory else UiKit.PINK, 30, 5, 28))
+	panel.custom_minimum_size = PANEL_SIZE
 	center.add_child(panel)
 	# Layout: header across the top, then the run summary on the left and the
 	# registered sections (progression, player card...) scrolling on the right,
@@ -41,10 +48,11 @@ func show_result(result: Dictionary) -> void:
 	outer.add_child(header)
 	var body := HBoxContainer.new()
 	body.add_theme_constant_override("separation", 28)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	outer.add_child(body)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
-	col.custom_minimum_size = Vector2(940, 0)
+	col.custom_minimum_size = Vector2(COLUMN_WIDTH, 0)
 	body.add_child(col)
 	var sections: Array[Control] = []
 	for ext in GameData.ui_extensions(UiExtension.Kind.RESULTS_SECTION):
@@ -53,8 +61,10 @@ func show_result(result: Dictionary) -> void:
 			if section:
 				sections.append(section)
 	if not sections.is_empty():
+		# As tall as the body: only a run with many unlocks needs to scroll.
 		var scroll := ScrollContainer.new()
-		scroll.custom_minimum_size = Vector2(640, 640)
+		scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		body.add_child(scroll)
 		var side := VBoxContainer.new()
@@ -64,11 +74,14 @@ func show_result(result: Dictionary) -> void:
 		for section in sections:
 			side.add_child(section)
 
-	var title := UiKit.arcade_label("LEVEL CLEARED!" if victory else "OVERRUN!", 92, UiKit.CYAN if victory else UiKit.PINK_LIGHT)
+	var title := UiKit.arcade_label("LEVEL CLEARED!" if victory else "OVERRUN!", 84, UiKit.CYAN if victory else UiKit.PINK_LIGHT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header.add_child(title)
+	var next := next_level(level) if victory else null
 	var outcome := "You escaped %s through the portal." % level.display_name if victory \
 		else "The zombies got you on wave %d of %s." % [int(result["wave_reached"]), level.display_name]
+	if next:
+		outcome += "  Next up: World %d, %s." % [GameData.worlds().find(next.world) + 1, next.world.display_name]
 	var sub := UiKit.label(outcome, 30, UiKit.CREAM)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header.add_child(sub)
@@ -101,7 +114,7 @@ func show_result(result: Dictionary) -> void:
 	var bd: Dictionary = result.get("score_breakdown", {})
 	if not bd.is_empty():
 		var parts := []
-		for key in [["kills", "Kills"], ["headshots", "Headshots"], ["combo", "Combo"], ["multi", "Multi-kills"], ["style", "Style"], ["waves", "Waves"]]:
+		for key in [["kills", "Kills"], ["headshots", "Headshots"], ["combo", "Combo"], ["multi", "Multi-kills"], ["style", "Style"], ["waves", "Waves"], ["tickets", "Tickets cashed"]]:
 			if int(bd.get(key[0], 0)) > 0:
 				parts.append("%s %s" % [key[1], ScorePanel._fmt(int(bd[key[0]]))])
 		var line := UiKit.label("  ·  ".join(parts), 22, Color(1, 1, 1, 0.75))
@@ -110,7 +123,7 @@ func show_result(result: Dictionary) -> void:
 
 	var stats := HBoxContainer.new()
 	stats.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats.add_theme_constant_override("separation", 18)
+	stats.add_theme_constant_override("separation", 14)
 	col.add_child(stats)
 	stats.add_child(_stat("WAVES", "%d / %d" % [int(result["waves_cleared"]), int(result["total_waves"])]))
 	stats.add_child(_stat("KILLS", str(int(result["kills"]))))
@@ -131,29 +144,54 @@ func show_result(result: Dictionary) -> void:
 	# Fixed height, scrolling: weapons and unlock lines never push the buttons
 	# off screen.
 	var rs := ScrollContainer.new()
-	rs.custom_minimum_size = Vector2(0, 300)
+	rs.custom_minimum_size = Vector2(0, 160)
+	rs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	rs.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rs.add_child(rows_box)
 	col.add_child(rs)
 
-	outer.add_child(UiKit.spacer(6))
-	var buttons := HBoxContainer.new()
-	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
-	buttons.add_theme_constant_override("separation", 36)
-	outer.add_child(buttons)
-	var retry := UiKit.button("RETRY", 52)
-	retry.custom_minimum_size = Vector2(380, 96)
-	retry.pressed.connect(func(): Game.retry())
-	buttons.add_child(retry)
-	var menu := UiKit.button("MAIN MENU", 52)
-	menu.custom_minimum_size = Vector2(380, 96)
-	menu.pressed.connect(func(): Game.to_menu())
-	buttons.add_child(menu)
-	retry.grab_focus.call_deferred()
+	outer.add_child(UiKit.spacer(4))
+	outer.add_child(_buttons(next))
 
 	panel.modulate.a = 0.0
 	panel.create_tween().tween_property(panel, "modulate:a", 1.0, 0.35)
+
+
+## NEXT WORLD (primary, when there is one), then RETRY and MAIN MENU.
+func _buttons(next: LevelData) -> Control:
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	buttons.add_theme_constant_override("separation", 32)
+	var retry := UiKit.soft_button("RETRY", 44) if next else UiKit.button("RETRY", 48)
+	retry.custom_minimum_size = Vector2(320 if next else 380, 84)
+	retry.pressed.connect(func(): Game.retry())
+	var menu := UiKit.soft_button("MAIN MENU", 44) if next else UiKit.button("MAIN MENU", 48)
+	menu.custom_minimum_size = Vector2(320 if next else 380, 84)
+	menu.pressed.connect(func(): Game.to_menu())
+	if next:
+		var go := UiKit.button("NEXT WORLD", 52)
+		go.name = "NextWorld"
+		go.custom_minimum_size = Vector2(440, 84)
+		go.pressed.connect(func(): Game.start_level(next.id, &""))
+		buttons.add_child(go)
+		go.grab_focus.call_deferred()
+	else:
+		retry.grab_focus.call_deferred()
+	buttons.add_child(retry)
+	buttons.add_child(menu)
+	return buttons
+
+
+## The level after `level` in world order, if the player has unlocked it.
+static func next_level(level: LevelData) -> LevelData:
+	var found := false
+	for world in GameData.worlds():
+		for l in world.levels:
+			if found:
+				return l if GameData.is_level_unlocked(l) else null
+			found = l == level
+	return null
 
 
 func _stat(caption: String, value: String) -> Control:
@@ -162,7 +200,7 @@ func _stat(caption: String, value: String) -> Control:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", -8)
 	box.add_child(v)
-	box.custom_minimum_size = Vector2(180, 0)
+	box.custom_minimum_size = Vector2(168, 0)
 	var c := UiKit.label(caption, 20, UiKit.CYAN, true)
 	c.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(c)

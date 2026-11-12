@@ -94,7 +94,7 @@ func _header() -> Control:
 	_collection_bar.custom_minimum_size.x = 420
 	_collection_bar.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	progress.add_child(_collection_bar)
-	var back_button := UiKit.soft_button("Back", 30)
+	var back_button := UiKit.soft_button("BACK", 30)
 	back_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	back_button.pressed.connect(func(): back.emit())
 	head.add_child(back_button)
@@ -294,7 +294,7 @@ func _details() -> Control:
 	_equip.custom_minimum_size = Vector2(300, 78)
 	_equip.pressed.connect(func(): _equip_item(_selected))
 	buttons.add_child(_equip)
-	_unequip = UiKit.soft_button("Unequip", 26)
+	_unequip = UiKit.soft_button("UNEQUIP", 26)
 	_unequip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_unequip.pressed.connect(_unequip_slot)
 	buttons.add_child(_unequip)

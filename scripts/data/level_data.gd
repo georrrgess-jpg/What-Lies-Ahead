@@ -24,6 +24,8 @@ extends Resource
 ## Main-menu / world-select backdrop camera for this level's scene.
 @export var menu_camera_from := Vector3(28, 9, 18)
 @export var menu_camera_to := Vector3(-2, 3, -4)
+## The loadout station's heal, named for the world ("Hot cocoa").
+@export var heal_item_name := "Snack"
 ## Shown on the loading screen.
 @export var loading_tips: PackedStringArray = PackedStringArray()
 

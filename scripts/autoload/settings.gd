@@ -3,6 +3,12 @@ extends Node
 
 signal changed
 
+## Defaults for options Profile.DEFAULT_SETTINGS does not list (menus pass).
+const EXTRA_DEFAULTS := {
+	"invert_y": false,
+	"ambience_volume": 1.0,
+}
+
 var _headless := false
 
 
@@ -12,7 +18,7 @@ func _ready() -> void:
 
 
 func value(key: String):
-	return Profile.data["settings"].get(key, Profile.DEFAULT_SETTINGS.get(key))
+	return Profile.data["settings"].get(key, Profile.DEFAULT_SETTINGS.get(key, EXTRA_DEFAULTS.get(key)))
 
 
 func set_value(key: String, v, persist := false) -> void:
@@ -46,6 +52,11 @@ func flash_scale() -> float:
 	return clampf(float(value("flashes")), 0.0, 1.0)
 
 
+## -1 when "Invert look Y" is on, else 1: multiplies vertical mouse look.
+func look_y_sign() -> float:
+	return -1.0 if bool(value("invert_y")) else 1.0
+
+
 func apply_all() -> void:
 	_apply_audio()
 	_apply_graphics()
@@ -57,6 +68,7 @@ func _apply_audio() -> void:
 	_set_bus("Master", float(value("master_volume")))
 	_set_bus("Music", float(value("music_volume")))
 	_set_bus("SFX", float(value("sfx_volume")))
+	_set_bus("Ambience", float(value("ambience_volume")))
 
 
 func _set_bus(bus_name: String, linear: float) -> void:

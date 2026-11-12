@@ -102,6 +102,13 @@ func add_xp(amount: int) -> int:
 	return after - before
 
 
+## Level-clear XP for `level_id` (rises with the world's position).
+func clear_xp(level_id: StringName) -> int:
+	var level_data := GameData.level(level_id)
+	var world_index := GameData.worlds().find(level_data.world) if level_data else 0
+	return rules.clear_xp_for(world_index)
+
+
 # --- reward track -------------------------------------------------------------------
 
 ## Cosmetics unlocked exactly at `lvl`.

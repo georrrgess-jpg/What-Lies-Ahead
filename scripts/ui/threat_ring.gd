@@ -5,9 +5,12 @@ extends Control
 ##  - amber and pulsing, while a zombie off to the side or behind is winding
 ##    up, charging, or already within arm's reach, so the player can react.
 
-const RADIUS := 200.0
+## Radii in pixels at 1080p. Both sit well outside the reticle and carry a
+## dark under-stroke, so they stay readable over the viewmodel and bright scenery.
+const RADIUS := 270.0
 ## Warnings sit further out than damage arcs so the two never overlap.
-const WARN_RADIUS := 250.0
+const WARN_RADIUS := 340.0
+const UNDER := Color(0.04, 0.0, 0.07)
 const DAMAGE_LIFE := 1.1
 const WARN_DISTANCE := 7.0
 
@@ -69,12 +72,13 @@ func _draw() -> void:
 		var tip := c + Vector2(sin(angle), -cos(angle)) * (WARN_RADIUS + 34.0)
 		var side := Vector2(cos(angle), sin(angle)) * 18.0
 		var out := Vector2(sin(angle), -cos(angle)) * 24.0
-		draw_colored_polygon(PackedVector2Array([tip + out * 1.25, tip + side * 1.3, tip - side * 1.3]), Color(0.05, 0.0, 0.08, pulse * 0.6))
+		draw_colored_polygon(PackedVector2Array([tip + out * 1.35, tip + side * 1.45, tip - side * 1.45]), Color(UNDER, pulse * 0.8))
 		draw_colored_polygon(PackedVector2Array([tip + out, tip + side, tip - side]), Color(1.0, 0.6, 0.1, pulse))
 
 
 func _arc(c: Vector2, angle: float, half_width: float, color: Color, thickness: float, radius := RADIUS) -> void:
 	# Godot's draw_arc measures from +X; screen "up" is -90 degrees.
 	var centre := angle - PI * 0.5
-	draw_arc(c, radius, centre - half_width, centre + half_width, 24, Color(0.05, 0.0, 0.08, color.a * 0.6), thickness + 6.0, true)
+	var pad := 6.0 / radius   # the under-stroke also overhangs both ends
+	draw_arc(c, radius, centre - half_width - pad, centre + half_width + pad, 24, Color(UNDER, color.a * 0.8), thickness + 10.0, true)
 	draw_arc(c, radius, centre - half_width, centre + half_width, 24, color, thickness, true)

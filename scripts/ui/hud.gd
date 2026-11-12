@@ -1,9 +1,13 @@
 extends CanvasLayer
 ## In-game HUD. Wave upper left, segmented health lower left, ammo lower
 ## right, small centre reticle. Tickets, kiosk prompts, the intermission timer
-## and the extraction objective appear only when they matter.
+## and the extraction objective appear only when they matter. Kills pop their
+## score above the zombie; station perks (overshield, damage boost) show on the
+## health bar, a pill by the ammo and a glow on the weapon.
 
 const MARGIN := 48.0
+const BOOST_COLOR := Color(1.0, 0.42, 0.12)
+const HEADSHOT_COLOR := Color(1.0, 0.45, 0.7)
 
 var director: RunDirector
 var player: Player
@@ -16,6 +20,8 @@ var _ammo: Label
 var _slots: WeaponSlots
 var _weapon_hud: WeaponHud
 var _tickets: Label
+var _boost: Label
+var _boost_glow: BoostGlow
 var _reticle: Reticle
 var _score_panel: ScorePanel
 var _kiosk_marker: Waypoint
@@ -55,11 +61,17 @@ func bind(run: RunDirector, p: Player) -> void:
 	player = p
 	_threats.player = p
 	_threats.director = run
+	_boost_glow.player = p
 	run.wave_started.connect(_on_wave_started)
 	run.tickets_changed.connect(_on_tickets_changed)
 	run.notice.connect(_on_notice)
 	run.reward_unlocked.connect(_on_reward_unlocked)
 	run.state_changed.connect(_on_state_changed)
+	run.overshield_changed.connect(_on_overshield_changed)
+	run.damage_boost_changed.connect(_on_damage_boost_changed)
+	Events.enemy_killed.connect(_on_enemy_killed)
+	_controls.text = _controls_text(run.level)
+	KillPopup.warm_up(run.get_parent(), p.camera.global_position - p.camera.global_transform.basis.z * 3.0)
 	if run.score:
 		_score_panel.bind(run.score)
 	_kiosk_marker.camera = p.camera
@@ -81,6 +93,8 @@ func bind(run: RunDirector, p: Player) -> void:
 		p.view.show_weapon(p.weapons.current)
 	_on_health_changed(p.health, p.max_health)
 	_on_tickets_changed(run.tickets)
+	_on_overshield_changed(run.overshield, run.waves.overshield_amount)
+	_on_damage_boost_changed(run.damage_boost)
 	_on_state_changed(run.state)
 
 
@@ -156,6 +170,19 @@ func _build() -> void:
 	_anchor(_tickets, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN, -186), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
 	_tickets.add_theme_font_size_override("font_size", 34)
 
+	# Above the tickets: the station's damage boost, loaded or running.
+	_boost = UiKit.arcade_label("", 30, Color.WHITE)
+	var boost_plate := UiKit.box(Color(BOOST_COLOR.darkened(0.35), 0.9), BOOST_COLOR.lightened(0.3), 16, 3, 0)
+	boost_plate.content_margin_left = 16
+	boost_plate.content_margin_right = 16
+	boost_plate.content_margin_top = 2
+	boost_plate.content_margin_bottom = 4
+	_boost.add_theme_stylebox_override("normal", boost_plate)
+	_boost.visible = false
+	_anchor(_boost, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN, -250), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
+	_boost_glow = BoostGlow.new()
+	add_child(_boost_glow)
+
 	# Upper right: score, combo and awards.
 	_score_panel = ScorePanel.new()
 	_score_panel.custom_minimum_size = Vector2(420, 0)
@@ -197,7 +224,7 @@ func _build() -> void:
 	_reload_arc.custom_minimum_size = Vector2(120, 120)
 	_anchor(_reload_arc, Control.PRESET_CENTER, Vector2.ZERO, Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
 	_threats = ThreatRing.new()
-	_threats.custom_minimum_size = Vector2(680, 680)
+	_threats.custom_minimum_size = Vector2(ThreatRing.WARN_RADIUS, ThreatRing.WARN_RADIUS) * 2.0
 	_anchor(_threats, Control.PRESET_CENTER, Vector2.ZERO, Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
 	_status = UiKit.arcade_label("", 30, UiKit.AMBER)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -216,9 +243,8 @@ func _build() -> void:
 	_notice.modulate.a = 0.0
 	_anchor(_notice, Control.PRESET_CENTER_BOTTOM, Vector2(0, -200), Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BEGIN)
 
-	# Controls reminder, shown only before the first wave.
-	_controls = UiKit.label("WASD move  ·  Shift sprint  ·  Mouse aim  ·  LMB fire  ·  R reload  ·  1 / 2 switch  ·  F start wave  ·  Esc pause\nAt the Loadout Station between waves:  E energy  ·  Q snack  ·  %s / %s swap the held weapon" % [
-		Loadout.key_hint(&"kiosk_prev").get_slice(" / ", 0), Loadout.key_hint(&"kiosk_next").get_slice(" / ", 0)], 26, UiKit.CREAM)
+	# Controls reminder, shown only before the first wave (text set in bind()).
+	_controls = UiKit.label("", 26, UiKit.CREAM)
 	_controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_controls.add_theme_color_override("font_outline_color", Color(UiKit.INK, 0.9))
 	_controls.add_theme_constant_override("outline_size", 8)
@@ -317,15 +343,32 @@ func _process(delta: float) -> void:
 	var show_kiosk := director.kiosk_available()
 	if show_kiosk != _kiosk.visible:
 		_kiosk.visible = show_kiosk
+	# The controls reminder repeats the panel's keys: one text block at a time.
+	_controls.visible = director.state == RunDirector.State.PREP and not show_kiosk
 	if show_kiosk:
 		# Rebuild the panel only when something it shows has changed.
 		var signature := [director.tickets, player.weapons.current, player.weapons.active_slot, director.heals_left(),
-			player.health >= player.max_health, player.weapons.is_ammo_full()]
+			player.health >= player.max_health, player.weapons.is_ammo_full(), director.overshield, director.damage_boost]
 		if signature != _kiosk_signature:
 			_kiosk_signature = signature
 			_refresh_kiosk()
 	if director.is_intermission():
 		_intermission_hint.text = "[F] Start now" if show_kiosk else "[F] Start now   ·   Loadout station open: follow the marker"
+	if director.damage_boost == RunDirector.Boost.ACTIVE:
+		_boost.modulate.a = 0.8 + 0.2 * sin(Time.get_ticks_msec() * 0.008)
+
+
+## The first-wave reminder of every key, the station's included.
+func _controls_text(level: LevelData) -> String:
+	return ("WASD move  ·  Shift sprint  ·  Mouse aim  ·  LMB fire  ·  R reload  ·  1 / 2 switch  ·  F start wave  ·  Esc pause\n"
+		+ "At the Loadout Station between waves:  %s energy  ·  %s %s  ·  %s overshield  ·  %s damage boost  ·  %s / %s swap weapon") % [
+		_key(&"interact"), _key(&"interact_alt"), level.heal_item_name.to_lower(), _key(&"buy_overshield"),
+		_key(&"buy_damage_boost"), _key(&"kiosk_prev"), _key(&"kiosk_next")]
+
+
+## The first key bound to `action`, for prompts.
+func _key(action: StringName) -> String:
+	return Loadout.key_hint(action).get_slice(" / ", 0)
 
 
 func _refresh_kiosk() -> void:
@@ -337,14 +380,20 @@ func _refresh_kiosk() -> void:
 	_kiosk_rows.add_child(UiKit.label("Tickets: %d" % director.tickets, 28, UiKit.CREAM))
 	_kiosk_rows.add_child(UiKit.spacer(8))
 	var ammo_note := "full" if player.weapons.is_ammo_full() else "%d tickets" % waves.ammo_topup_price
-	_kiosk_rows.add_child(_kiosk_row("E", "Energy top-up", ammo_note, director.tickets >= waves.ammo_topup_price and not player.weapons.is_ammo_full()))
+	_kiosk_rows.add_child(_kiosk_row(_key(&"interact"), "Energy top-up", ammo_note, director.tickets >= waves.ammo_topup_price and not player.weapons.is_ammo_full()))
 	var heal_note := "%d tickets" % waves.heal_price
 	var can_heal := director.tickets >= waves.heal_price and director.heals_left() > 0 and player.health < player.max_health
 	if director.heals_left() <= 0:
 		heal_note = "sold out"
 	elif player.health >= player.max_health:
 		heal_note = "full"
-	_kiosk_rows.add_child(_kiosk_row("Q", "Boardwalk snack (+%d health)" % int(waves.heal_amount), heal_note, can_heal))
+	_kiosk_rows.add_child(_kiosk_row(_key(&"interact_alt"), "%s (+%d health)" % [director.level.heal_item_name, int(waves.heal_amount)], heal_note, can_heal))
+	var shield_full := director.overshield >= waves.overshield_amount
+	_kiosk_rows.add_child(_kiosk_row(_key(&"buy_overshield"), "Overshield (+%d shield)" % int(waves.overshield_amount),
+		"full" if shield_full else "%d tickets" % waves.overshield_price, director.tickets >= waves.overshield_price and not shield_full))
+	var loaded := director.damage_boost != RunDirector.Boost.NONE
+	_kiosk_rows.add_child(_kiosk_row(_key(&"buy_damage_boost"), "Damage boost (+%d%% next wave)" % director.boost_percent(),
+		"loaded" if loaded else "%d tickets" % waves.damage_boost_price, director.tickets >= waves.damage_boost_price and not loaded))
 	_kiosk_rows.add_child(UiKit.spacer(8))
 	_kiosk_rows.add_child(_kiosk_swap())
 
@@ -416,7 +465,6 @@ func _on_state_changed(state: RunDirector.State) -> void:
 	_intermission.visible = state == RunDirector.State.PREP or state == RunDirector.State.BREAK
 	_objective.visible = state == RunDirector.State.EXTRACTION
 	_portal_marker.visible = state == RunDirector.State.EXTRACTION
-	_controls.visible = state == RunDirector.State.PREP
 	if state == RunDirector.State.PREP:
 		_wave.text = "WAVE 01"
 
@@ -435,10 +483,43 @@ func _on_health_changed(current: float, maximum: float) -> void:
 	_health.value = current / maximum
 
 
-func _on_damaged(_amount: float, source: Vector3) -> void:
-	_hurt = 1.0
-	_health.flash = 1.0
+func _on_damaged(amount: float, source: Vector3) -> void:
+	# A hit the overshield soaked up entirely flashes the shield, not the screen.
+	if director and director.last_absorbed >= amount - 0.01:
+		_hurt = maxf(_hurt, 0.3)
+		_health.shield_flash = 1.0
+	else:
+		_hurt = 1.0
+		_health.flash = 1.0
 	_threats.add_hit(source)
+
+
+func _on_overshield_changed(value: float, _maximum: float) -> void:
+	_health.shield = value / maxf(1.0, player.max_health)
+	_health.shield_flash = 1.0
+
+
+func _on_damage_boost_changed(boost: RunDirector.Boost) -> void:
+	_boost_glow.set_boost(boost)
+	_boost.visible = boost != RunDirector.Boost.NONE
+	_boost.modulate.a = 1.0
+	if boost == RunDirector.Boost.ACTIVE:
+		_boost.text = "DAMAGE +%d%%" % director.boost_percent()
+	elif boost == RunDirector.Boost.READY:
+		_boost.text = "DAMAGE BOOST  ·  NEXT WAVE"
+
+
+## Score popup above the zombie, with its headshot / combo flavour.
+func _on_enemy_killed(enemy: Node, _weapon_id: StringName, headshot: bool, points: int) -> void:
+	var z := enemy as Zombie
+	if z == null or director == null or not z.is_inside_tree():
+		return
+	var flavour := "HEADSHOT" if headshot else ""
+	if director.score and director.score.combo > 1:
+		flavour = ("%s  x%.1f" % [flavour, director.score.multiplier()]).strip_edges()
+	var color := HEADSHOT_COLOR if headshot else UiKit.CYAN
+	var head := z.global_position + Vector3.UP * (1.1 * z.data.body_scale + 0.9)
+	KillPopup.spawn(z.get_parent(), head, points, z.data.tickets, flavour, color)
 
 
 func _on_ammo_changed(magazine: int, reserve: int) -> void:

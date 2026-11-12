@@ -12,8 +12,11 @@ static var _ribbon_mats := {}
 static var _verts := 0
 static var _cube: BoxMesh
 static var _flash: SphereMesh
-static var _ring: TorusMesh
+static var _ring: PlaneMesh
 static var _ring_mats := {}
+static var _smoke_mesh: QuadMesh
+static var _smoke_texture: ImageTexture
+static var _star: ArrayMesh
 
 
 # --- ribbons --------------------------------------------------------------------
@@ -164,44 +167,178 @@ static func flash(parent: Node, at: Vector3, color: Color, radius: float, life :
 	tw.chain().tween_callback(f.queue_free)
 
 
-## A flat shockwave ring expanding along the ground.
+## A ring racing out along the floor under `at`. It lies on the ground (found
+## with a ray), so it reads as a ring from any angle instead of a band across
+## the screen; an airburst with no floor close below has no ring.
 static func shockwave(parent: Node, at: Vector3, color: Color, radius: float) -> void:
 	if parent == null or not parent.is_inside_tree():
 		return
+	var space := (parent as Node3D).get_world_3d().direct_space_state if parent is Node3D else parent.get_viewport().world_3d.direct_space_state
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 0.3, at + Vector3.DOWN * maxf(2.5, radius), 1))
+	if hit.is_empty():
+		return
+	var normal: Vector3 = hit["normal"]
+	var r := MeshInstance3D.new()
+	r.mesh = _ring_mesh()
+	r.material_override = _ring_material(color)
+	r.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(r)
+	var basis := Basis.IDENTITY
+	if normal.dot(Vector3.UP) < 0.999:
+		basis = Basis(Quaternion(Vector3.UP, normal.normalized()))
+	r.global_transform = Transform3D(basis, Vector3(hit["position"]) + normal * 0.04)
+	r.scale = Vector3.ONE * radius * 0.25
+	var tw := r.create_tween().set_parallel(true)
+	tw.tween_property(r, "scale", Vector3.ONE * radius * 1.1, 0.36).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tw.tween_property(r, "transparency", 1.0, 0.36).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(r.queue_free)
+
+
+## Unit plane (2 m across, so scale = ring radius) for the ground ring.
+static func _ring_mesh() -> PlaneMesh:
 	if _ring == null:
-		_ring = TorusMesh.new()
-		_ring.inner_radius = 0.82
-		_ring.outer_radius = 1.0
-		_ring.rings = 32
-		_ring.ring_segments = 6
+		_ring = PlaneMesh.new()
+		_ring.size = Vector2(2.0, 2.0)
+	return _ring
+
+
+## Additive ring material per colour: a bright rim with a soft inner glow.
+static func _ring_material(color: Color) -> StandardMaterial3D:
 	var key := color.to_html()
 	if not _ring_mats.has(key):
+		var grad := Gradient.new()
+		grad.offsets = PackedFloat32Array([0.0, 0.62, 0.86, 0.93, 1.0])
+		grad.colors = PackedColorArray([Color(1, 1, 1, 0.0), Color(1, 1, 1, 0.12), Color(1, 1, 1, 0.9), Color(1, 1, 1, 1.0), Color(1, 1, 1, 0.0)])
+		var tex := GradientTexture2D.new()
+		tex.gradient = grad
+		tex.fill = GradientTexture2D.FILL_RADIAL
+		tex.fill_from = Vector2(0.5, 0.5)
+		tex.fill_to = Vector2(1.0, 0.5)
+		tex.width = 128
+		tex.height = 128
 		var m := StandardMaterial3D.new()
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-		m.albedo_color = color.lerp(Color.WHITE, 0.25)
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		m.albedo_texture = tex
+		m.albedo_color = color.lerp(Color.WHITE, 0.3)
 		_ring_mats[key] = m
-	var r := MeshInstance3D.new()
-	r.mesh = _ring
-	r.material_override = _ring_mats[key]
-	r.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	parent.add_child(r)
-	r.global_position = at + Vector3.UP * 0.12
-	r.scale = Vector3(0.3, 0.6, 0.3)
-	var tw := r.create_tween().set_parallel(true)
-	tw.tween_property(r, "scale", Vector3(radius, 0.25, radius), 0.32).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(r, "transparency", 1.0, 0.32).set_ease(Tween.EASE_IN)
-	tw.chain().tween_callback(r.queue_free)
+	return _ring_mats[key]
 
 
-## A splash weapon's detonation: flash, shockwave, sparks and confetti.
+## Soft cartoon smoke balls billowing up and out of a blast (0.6 s).
+static func smoke(parent: Node, at: Vector3, color: Color, radius: float, count := 8) -> void:
+	if parent == null or not parent.is_inside_tree():
+		return
+	var mesh := _smoke_quad()
+	var material := _smoke_material(color)
+	for i in count:
+		var dir := Vector3(randf_range(-1.0, 1.0), randf_range(0.15, 1.0), randf_range(-1.0, 1.0)).normalized()
+		var puff := MeshInstance3D.new()
+		puff.mesh = mesh
+		puff.material_override = material
+		puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		parent.add_child(puff)
+		puff.global_position = at + dir * radius * 0.15
+		var size := radius * randf_range(0.7, 1.1)
+		puff.scale = Vector3.ONE * size * 0.4
+		puff.transparency = 0.1
+		var life := randf_range(0.5, 0.65)
+		var tw := puff.create_tween().set_parallel(true)
+		tw.tween_property(puff, "global_position", at + dir * radius * randf_range(0.45, 0.7) + Vector3.UP * radius * 0.35, life).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(puff, "scale", Vector3.ONE * size, life).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(puff, "transparency", 1.0, life).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.chain().tween_callback(puff.queue_free)
+
+
+static func _smoke_quad() -> QuadMesh:
+	if _smoke_mesh == null:
+		_smoke_mesh = QuadMesh.new()
+		_smoke_mesh.size = Vector2.ONE
+	return _smoke_mesh
+
+
+## Camera-facing smoke ball per blast colour: a disc lit from the upper left
+## with a soft edge, a lilac grey leaning towards the blast colour.
+static func _smoke_material(color: Color) -> StandardMaterial3D:
+	var key := "smoke" + color.to_html()
+	if _ring_mats.has(key):
+		return _ring_mats[key]
+	if _smoke_texture == null:
+		var n := 64
+		var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+		for y in n:
+			for x in n:
+				var p := (Vector2(x, y) + Vector2(0.5, 0.5)) / n * 2.0 - Vector2.ONE
+				var a := clampf((1.0 - p.length()) / 0.25, 0.0, 1.0)
+				var light := clampf(0.82 - 0.3 * (p.x * 0.55 + p.y * 0.8), 0.5, 1.0)
+				img.set_pixel(x, y, Color(light, light, light, a * a * (3.0 - 2.0 * a)))
+		_smoke_texture = ImageTexture.create_from_image(img)
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	m.billboard_keep_scale = true
+	m.albedo_texture = _smoke_texture
+	m.albedo_color = Color(Color(0.62, 0.57, 0.7).lerp(color, 0.25), 0.9)
+	_ring_mats[key] = m
+	return m
+
+
+## A few chunky stars tumbling out of a blast.
+static func debris_stars(parent: Node, at: Vector3, color: Color, count := 5) -> void:
+	if parent == null or not parent.is_inside_tree():
+		return
+	var b := FxBurst.new()
+	b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(b)
+	b.setup(at, Vector3.UP, [color, Color(1.0, 0.85, 0.3), Color.WHITE], count, 8.0, 0.9, 0.34, 60.0, Vector3(0, -15.0, 0), _star_mesh())
+
+
+## Five-pointed star, flat in XY with some depth (FxBurst flattens Z further).
+static func _star_mesh() -> ArrayMesh:
+	if _star:
+		return _star
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rim: Array[Vector3] = []
+	for i in 10:
+		var a := PI * 0.5 + i * TAU / 10.0
+		var r := 0.5 if i % 2 == 0 else 0.22
+		rim.append(Vector3(cos(a) * r, sin(a) * r, 0.0))
+	for side in [1.0, -1.0]:
+		var centre := Vector3(0, 0, 0.25 * side)
+		for i in 10:
+			var p0: Vector3 = rim[i]
+			var p1: Vector3 = rim[(i + 1) % 10]
+			if side > 0.0:
+				st.add_vertex(centre)
+				st.add_vertex(p1)
+				st.add_vertex(p0)
+			else:
+				st.add_vertex(centre)
+				st.add_vertex(p0)
+				st.add_vertex(p1)
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.vertex_color_use_as_albedo = true
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	st.set_material(m)
+	_star = st.commit()
+	return _star
+
+
+## A splash weapon's detonation: a small hot flash, a ring racing out along the
+## floor, smoke balls, tumbling stars, sparks and confetti.
 static func explosion(parent: Node, at: Vector3, color: Color, radius: float) -> void:
-	flash(parent, at, color, radius * 0.75, 0.22)
-	shockwave(parent, Vector3(at.x, at.y - 0.3, at.z), color, radius)
-	burst(parent, at, Vector3.UP, [color, Color.WHITE, Color(1.0, 0.85, 0.3)], 34, 9.0, 0.5, 0.09, 180.0, Vector3(0, -12.0, 0))
+	flash(parent, at, color, radius * 0.5, 0.12)
+	shockwave(parent, at, color, radius)
+	smoke(parent, at, color, radius)
+	debris_stars(parent, at, color)
+	burst(parent, at, Vector3.UP, [color, Color.WHITE, Color(1.0, 0.85, 0.3)], 30, 9.0, 0.45, 0.08, 180.0, Vector3(0, -12.0, 0))
 	burst(parent, at, Vector3.UP, [Color(1.0, 0.35, 0.75), Color(0.3, 0.95, 1.0), Color(1.0, 0.85, 0.25), Color(0.6, 1.0, 0.45)],
-		40, 6.5, 1.1, 0.13, 70.0, Vector3(0, -6.0, 0))
+		32, 6.5, 1.1, 0.13, 70.0, Vector3(0, -6.0, 0))
 
 
 ## A cloud of frost (freezing, thawing, beam impacts).

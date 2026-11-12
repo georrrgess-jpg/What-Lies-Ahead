@@ -5,8 +5,9 @@ extends Resource
 ##
 ## XP needed to go from level L to L+1:
 ##   level_base_xp + level_step_xp * (L-1) + level_curve_xp * (L-1)^2
-## (rounded to 50). With the defaults a full Prize Pier clear (~40k score)
-## is worth about two levels at first; past level 25 a level takes a few runs.
+## (rounded to 50). The curve is nearly linear: early levels come every run
+## and the weapon unlocks arrive while the player is still working through the
+## worlds; level 50 takes roughly a hundred clears.
 
 @export_group("Level curve")
 @export var level_base_xp := 3500
@@ -19,8 +20,10 @@ extends Resource
 ## Wave clear: base + per_wave * wave number.
 @export var wave_xp_base := 75
 @export var wave_xp_per_wave := 25
-## Reaching the portal.
+## Reaching the portal: clear_xp, plus clear_xp_per_world for each world
+## after the first (later worlds pay more).
 @export var clear_xp := 1000
+@export var clear_xp_per_world := 250
 ## Extra, once per level, the first time it is cleared.
 @export var first_clear_xp := 1500
 
@@ -35,6 +38,11 @@ func level_cost(lvl: int) -> int:
 	var k := float(maxi(0, lvl - 1))
 	var raw := level_base_xp + level_step_xp * k + level_curve_xp * k * k
 	return int(round(raw / 50.0)) * 50
+
+
+## Level-clear XP for a level in the world at `world_index` (0 = the first world).
+func clear_xp_for(world_index: int) -> int:
+	return clear_xp + clear_xp_per_world * maxi(0, world_index)
 
 
 func wave_xp(wave_number: int) -> int:
