@@ -17,6 +17,10 @@ var player_inside := false
 var _pulse := 0.0
 
 
+## Raises or lowers the beacon (sign, rings, light column), which sits ~9.4-11.2 m
+## up by default, to suit a taller or shorter station model.
+@export var beacon_height_offset := 0.0
+
 var _beacon: LoadoutBeacon
 
 
@@ -24,6 +28,7 @@ func _ready() -> void:
 	add_to_group("kiosk")
 	_beacon = LoadoutBeacon.new()
 	_beacon.name = "Beacon"
+	_beacon.position.y = beacon_height_offset
 	add_child(_beacon)
 	zone.body_entered.connect(_on_body_entered)
 	zone.body_exited.connect(_on_body_exited)
