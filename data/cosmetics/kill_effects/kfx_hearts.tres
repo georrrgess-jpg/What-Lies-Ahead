@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+amount = 15
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_hearts"
+display_name = "Love Bomb"
+description = "Floating hearts. It is hard to stay mad."
+slot = &"kill_effect"
+rarity = 1
+requirement = SubResource("req")
+params = {
+"effect": "hearts"
+}
+sort_order = 7102

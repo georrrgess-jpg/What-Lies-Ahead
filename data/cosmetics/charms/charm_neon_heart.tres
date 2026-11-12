@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"neon_skyline"
+
+[resource]
+script = ExtResource("1")
+id = &"charm_neon_heart"
+display_name = "Neon Heart"
+description = "Glows pink across the Neon Skyline."
+slot = &"weapon_charm"
+rarity = 1
+requirement = SubResource("req")
+params = {
+"charm": "NeonHeart"
+}
+sort_order = 5106

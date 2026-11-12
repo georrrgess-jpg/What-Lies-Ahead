@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 900
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_helix"
+display_name = "Double Helix"
+description = "Two strands of energy spiralling round each shot."
+slot = &"tracer"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.2471, 0.6431, 1, 0.2078, 0.9412, 1, 1)
+params = {
+"style": "helix"
+}
+sort_order = 8105

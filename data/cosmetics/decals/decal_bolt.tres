@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 25
+
+[resource]
+script = ExtResource("1")
+id = &"decal_bolt"
+display_name = "Zap"
+description = "Lightning in sticker form."
+slot = &"weapon_decal"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.851, 0.2314, 1, 0.1098, 0.09412, 0.1882, 1, 0.1098, 0.09412, 0.1882, 1)
+params = {
+"emblem": "Bolt"
+}
+sort_order = 4001

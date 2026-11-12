@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UiExtension" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ui_extension.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/cosmetics/results_player_card.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+kind = 2
+id = &"player_card"
+title = "Player card"
+script_ref = ExtResource("2")
+order = 80
+show_on_title = false

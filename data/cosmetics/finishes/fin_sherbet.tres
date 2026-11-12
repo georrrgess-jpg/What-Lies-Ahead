@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_sherbet"
+display_name = "Sunset Sherbet"
+description = "Peach and pink, like the sky over the pier at closing time."
+slot = &"weapon_finish"
+rarity = 0
+colors = PackedColorArray(1, 0.702, 0.5412, 1, 1, 0.3098, 0.6118, 1)
+params = {
+"metallic": 0.0,
+"roughness": 0.45
+}
+sort_order = 2000

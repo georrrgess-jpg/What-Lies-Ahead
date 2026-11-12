@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"summit_lodge"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_snow_camo"
+display_name = "Snow Camo"
+description = "Blends in with the drifts around Summit Lodge."
+slot = &"weapon_finish"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.9098, 0.949, 1, 1, 0.5608, 0.6902, 0.8471, 1)
+params = {
+"shader": "res://art/shaders/skin_digicamo.gdshader",
+"shader_params": {
+"color_c": Color(1, 1, 1, 1),
+"color_d": Color(0.3725, 0.498, 0.6588, 1)
+}
+}
+sort_order = 2112

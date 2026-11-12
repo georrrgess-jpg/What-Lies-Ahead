@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+amount = 17
+
+[resource]
+script = ExtResource("1")
+id = &"banner_circuit"
+display_name = "Mainframe"
+description = "Data racing along glowing traces."
+slot = &"banner"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.01569, 0.08627, 0.05882, 1, 0.1843, 0.6588, 0.4157, 1, 0.3216, 0.9412, 0.8157, 1)
+params = {
+"style": 7
+}
+sort_order = 9106

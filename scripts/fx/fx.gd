@@ -1,7 +1,8 @@
 class_name Fx
 extends RefCounted
 ## Tiny effect spawners. Everything is short-lived and non-gory:
-## energy tracers, spark puffs and confetti pops.
+## energy tracers, spark puffs and confetti pops. The player's equipped
+## cosmetics restyle tracers (TracerStyles) and kill effects (KillEffects).
 
 static var _tracer_mesh: BoxMesh
 static var _beam_mesh: CylinderMesh
@@ -25,9 +26,19 @@ static func _unshaded(color: Color, energy := 1.0) -> StandardMaterial3D:
 
 
 ## A shot's energy streak: a thin flash from the muzzle to the hit point
-## plus a travelling bolt.
+## plus a travelling bolt, or the equipped "tracer" cosmetic's style.
 static func tracer(parent: Node, from: Vector3, to: Vector3, color: Color, width: float) -> void:
 	if parent == null or from.distance_to(to) < 0.6:
+		return
+	var style := Cosmetics.equipped(&"tracer")
+	if style and TracerStyles.draw(parent, from, to, width, style):
+		return
+	beam(parent, from, to, color, width)
+
+
+## The standard tracer beam in any colour (cosmetic tracers build on it).
+static func beam(parent: Node, from: Vector3, to: Vector3, color: Color, width: float) -> void:
+	if parent == null or not parent.is_inside_tree():
 		return
 	if _tracer_mesh == null:
 		_tracer_mesh = BoxMesh.new()
@@ -77,10 +88,12 @@ static func confetti(parent: Node, position: Vector3) -> void:
 	_burst(parent, position, Vector3.UP, colors, 60, 5.0, 1.4, 0.2, 55.0, Vector3(0, -5.0, 0))
 
 
-## The full kill effect (the instant burst plus anything the equipped
-## "kill_effect" cosmetic adds). Zombies call this when they die.
+## The full kill effect: the equipped "kill_effect" cosmetic, or the default
+## burst of stars (see KillEffects). Zombies call this when they die.
 static func kill_effect(parent: Node, position: Vector3) -> void:
-	kill_burst(parent, position)
+	if parent == null:
+		return
+	KillEffects.play(parent, position, Cosmetics.equipped(&"kill_effect"))
 
 
 ## Instant reward on the killing blow: a ring of stars and a bright flash.

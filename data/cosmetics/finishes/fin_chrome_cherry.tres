@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+amount = 14
+
+[resource]
+script = ExtResource("1")
+id = &"fin_chrome_cherry"
+display_name = "Chrome Cherry"
+description = "Candy-apple red under a mirror shine."
+slot = &"weapon_finish"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.9098, 0.149, 0.2275, 1, 0.949, 0.949, 0.9686, 1)
+params = {
+"metallic": 0.9,
+"roughness": 0.15
+}
+sort_order = 2107

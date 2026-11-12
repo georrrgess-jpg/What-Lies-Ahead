@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_confetti"
+display_name = "Confetti Pop"
+description = "The classic: a ring of stars and a bright pop."
+slot = &"kill_effect"
+rarity = 0
+params = {
+"effect": "confetti",
+"default": true
+}
+sort_order = 7000

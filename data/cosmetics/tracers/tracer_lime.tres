@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 200
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_lime"
+display_name = "Lime Laser"
+description = "Sour green beams with a citrus kick."
+slot = &"tracer"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(0.5412, 1, 0.2275, 1)
+params = {
+"style": "solid"
+}
+sort_order = 8002

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"summit_lodge"
+
+[resource]
+script = ExtResource("1")
+id = &"op_frost_guard"
+display_name = "Frost Guard"
+description = "Patrols Summit Lodge in a parka rated for blizzards and zombie hugs."
+slot = &"avatar"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.9098, 0.149, 0.2275, 1, 0.9686, 0.9569, 0.949, 1, 0.9686, 0.9569, 0.949, 1, 0.3098, 0.7059, 1, 1, 0.9686, 0.9569, 0.949, 1, 0.1843, 0.498, 0.8118, 1)
+params = {
+"model": "res://art/models/operator_frost_guard.glb",
+"pattern": "knit",
+"pattern_on": ["Glove"]
+}
+sort_order = 1104

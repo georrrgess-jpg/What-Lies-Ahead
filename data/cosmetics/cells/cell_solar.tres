@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 400
+
+[resource]
+script = ExtResource("1")
+id = &"cell_solar"
+display_name = "Solar Flare"
+description = "Bottled sunshine. Wear sunglasses."
+slot = &"weapon_cell"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.8235, 0.2275, 1)
+sort_order = 3104

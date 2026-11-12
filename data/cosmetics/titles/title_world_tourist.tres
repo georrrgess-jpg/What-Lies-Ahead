@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req_0"]
+script = ExtResource("2")
+kind = 2
+target = &"prize_pier"
+
+[sub_resource type="Resource" id="req_1"]
+script = ExtResource("2")
+kind = 2
+target = &"neon_skyline"
+
+[sub_resource type="Resource" id="req_2"]
+script = ExtResource("2")
+kind = 2
+target = &"tidal_tunnels"
+
+[sub_resource type="Resource" id="req_3"]
+script = ExtResource("2")
+kind = 2
+target = &"launch_pad"
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"summit_lodge"
+all_of = Array[ExtResource("2")]([SubResource("req_0"), SubResource("req_1"), SubResource("req_2"), SubResource("req_3")])
+
+[resource]
+script = ExtResource("1")
+id = &"title_world_tourist"
+display_name = "World Tourist"
+description = "Cleared every level in every world."
+slot = &"title"
+rarity = 2
+requirement = SubResource("req")
+params = {
+"unlock_text": "Clear every level in every world"
+}
+sort_order = 10217

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+amount = 19
+
+[resource]
+script = ExtResource("1")
+id = &"glove_checker"
+display_name = "Checkered Flag"
+description = "First across the finish line, every wave."
+slot = &"gloves"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.9686, 0.9569, 0.949, 1, 0.1098, 0.09412, 0.1882, 1, 1, 0.2471, 0.6235, 1, 0.1098, 0.09412, 0.1882, 1, 0.1098, 0.09412, 0.1882, 1)
+params = {
+"pattern": "checker",
+"pattern_on": ["Glove"]
+}
+sort_order = 6104

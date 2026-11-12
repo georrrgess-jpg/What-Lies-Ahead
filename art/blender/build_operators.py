@@ -361,7 +361,8 @@ def open_shell(name, radius, loc, opening_deg, m, scale=(1, 1, 1), segs=24, ring
 # ---------------------------------------------------------------------------
 
 def op_boardwalk_ranger():
-    """Pier ranger: teal shirt with badge, khaki shorts, ranger hat, whistle."""
+    """Pier ranger: teal shirt over a dark base layer, badge, khaki shorts,
+    ranger hat, whistle. His gloves and sleeves match the default first-person arms."""
     p = "BR_"
     skin_m = mat("Skin", "#e8b08a", rough=0.55)
     shirt = mat("Shirt", "#17a39a", rough=0.6)
@@ -374,6 +375,8 @@ def op_boardwalk_ranger():
     sock = mat("Sock", "#f7f4f2", rough=0.7)
     hair = mat("Hair", "#5a3424", rough=0.8)
     lens = mat("Lens", "#2a1f3d", rough=0.1, metal=0.4)
+    glove = mat("Glove", "#2b2836", rough=0.7)
+    under = mat("Undershirt", "#1d1b26", rough=0.8)
     parts = head_base(p, skin_m)
     parts += face(p, iris="#2f6f8f", brow="#4a2a1c", mouth="smile")
     parts += bind("Head", [
@@ -409,9 +412,8 @@ def op_boardwalk_ranger():
     parts += bind("Hips", [box(p + "Holster", (0.08, 0.1, 0.12), (-0.25, -0.02, 0.92), bevel=0.02, m=brown)])
     for side in (1, -1):
         s = "L" if side > 0 else "R"
-        parts += arm(p, side, shirt, skin_m, skin_m, cuff_m=None)
+        parts += arm(p, side, shirt, under, glove, cuff_m=pink, elbow_m=under)
         parts += bind(f"UpperArm.{s}", [box(f"{p}Roll{s}", (0.175, 0.185, 0.07), (side * 0.36, 0, 1.06), bevel=0.025, m=shirt_dark)])
-        parts += bind(f"ForeArm.{s}", [box(f"{p}Watch{s}", (0.155, 0.165, 0.035), (side * 0.385, 0, 0.82), bevel=0.012, m=brown)] if side > 0 else [])
         parts += leg(p, side, khaki, skin_m, brown, mat("Sole", "#3b2a22", rough=0.8), sock=sock, boot_h=0.2, boot_cuff=khaki_dark)
         parts += bind(f"Thigh.{s}", [box(f"{p}CargoPocket{s}", (0.05, 0.14, 0.13), (side * 0.235, 0, 0.66), bevel=0.02, m=khaki_dark)])
     return parts, "pump"
