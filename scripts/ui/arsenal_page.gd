@@ -290,6 +290,9 @@ func _build_info() -> Control:
 		b.pressed.connect(_equip_slot.bind(slot))
 		info.add_child(b)
 		_equip.append(b)
+	var hint := UiKit.label("You carry both into every run: switch with 1 / 2 or the mouse wheel. The Loadout Station swaps the held one for free between waves.", 20, Color(1, 1, 1, 0.65))
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.add_child(hint)
 	return info
 
 

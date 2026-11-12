@@ -58,11 +58,6 @@ static func damage_scale(z: Zombie) -> float:
 	return s.frozen_damage_scale if s and s.is_frozen() else 1.0
 
 
-static func is_zombie_frozen(z: Zombie) -> bool:
-	var s := z.get_node_or_null(NODE_NAME) as StatusEffects
-	return s != null and s.is_frozen()
-
-
 func _ready() -> void:
 	# Keeps ticking while the frozen zombie's own processing is switched off.
 	process_mode = Node.PROCESS_MODE_PAUSABLE
