@@ -7,7 +7,7 @@ extends RefCounted
 ##   nodes      "Decal" (emblem, hidden unless a decal is equipped),
 ##              "CharmPoint" (optional empty a charm hangs from)
 ## `loadout` is Cosmetics.weapon_loadout(weapon_id):
-##   {finish, cell, decal, charm, arms} (any may be null or missing).
+##   {finish, cell, decal, charm, sight, arms} (any may be null or missing).
 ##
 ## Finishes: flat colours ([shell, trim], params metallic/roughness), or a
 ## shader: params = {"shader": "res://art/shaders/x.gdshader", "shader_params": {...}}.
@@ -20,6 +20,8 @@ extends RefCounted
 ##   one, the weapon's own emblem is tinted. params.shader styles the fill.
 ## Charms: params.charm names a node in art/models/cosmetic_charms.glb
 ##   ("Duck" -> "Charm_Duck"), hung from CharmPoint with swing (WeaponCharm).
+## Sights: an optic clamped to the weapon's top, or its own iron sights
+##   (WeaponSights; scripts/weapons/sights/).
 ## Arms: a gloves item or an operator. colors [glove, plate, cuff, sleeve,
 ##   accent, third]; params pattern (see PATTERNS), pattern_on (material
 ##   names), scale, metallic, roughness, glow, shader + shader_on.
@@ -45,6 +47,7 @@ static func apply(model: Node3D, _weapon: WeaponData, loadout: Dictionary) -> vo
 	_apply_decal(model, loadout.get("decal"))
 	_apply_charm(model, loadout.get("charm"))
 	_apply_cell_animation(model, cell)
+	WeaponSights.apply(model, _weapon, loadout.get("sight"))
 
 
 static func shader(path: String) -> Shader:

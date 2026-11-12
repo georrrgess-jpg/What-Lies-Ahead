@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sight_bullseye"
+display_name = "Bullseye"
+description = "A stubby tube sight with a carnival target ring."
+slot = &"weapon_sight"
+rarity = 1
+price = 400
+colors = PackedColorArray(0.45, 1.0, 0.4, 1, 1.0, 0.94, 0.83, 1)
+params = {
+"optic": "Tube",
+"reticle": "circle_dot"
+}
+sort_order = 6050

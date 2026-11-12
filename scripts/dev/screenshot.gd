@@ -28,6 +28,7 @@ extends Node
 ##   --shot-stutter=1      kill three zombies one at a time and print every frame's duration
 ##   --shot-move=1         movement probe: jump height, slide speed, rail wall
 ##   --shot-ads=1          hold aim-down-sights
+##   --shot-sight=<id>     fit this sight (data/cosmetics/sights) to the weapon for the shot
 ##   --shot-threat=1       a zombie behind-right of the player starts its windup (threat warning check)
 
 var path := ""
@@ -74,6 +75,8 @@ func _run() -> void:
 		await _capture(int(_arg("frames", "30")))
 		return
 
+	if _arg("sight", "") != "":
+		WeaponSights.wear_for_session(StringName(_arg("weapon", "ion_carbine")), StringName(_arg("sight", "")))
 	Game.start_level(StringName(_arg("level", "prize_pier")), StringName(_arg("weapon", "ion_carbine")))
 	var director: RunDirector = null
 	while director == null or director.player == null:

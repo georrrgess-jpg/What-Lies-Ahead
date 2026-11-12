@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sight_star"
+display_name = "Lucky Star"
+description = "Wish upon it, then pull the trigger."
+slot = &"weapon_sight"
+rarity = 1
+price = 400
+colors = PackedColorArray(1.0, 0.86, 0.25, 1, 1.0, 0.76, 0.24, 1)
+params = {
+"optic": "Holo",
+"reticle": "star",
+"reticle_degrees": 1.0
+}
+sort_order = 6060

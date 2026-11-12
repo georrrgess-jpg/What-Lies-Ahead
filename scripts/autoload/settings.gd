@@ -11,7 +11,7 @@ const LOOK_RADIANS := TAU / (34.0 / 2.54 * 800.0)
 const LEGACY_LOOK_RADIANS := 0.0022
 const LOOK_RANGE := Vector2(0.1, 5.0)
 ## Defaults of options newer than Profile.DEFAULT_SETTINGS.
-const EXTRA_DEFAULTS := {"look_sensitivity": 1.0, "camera_motion": 1.0}
+const EXTRA_DEFAULTS := {"look_sensitivity": 1.0, "camera_motion": 1.0, "aim_mode": "hold", "sight_color": "auto"}
 
 var _headless := false
 
@@ -79,6 +79,11 @@ func camera_motion() -> float:
 ## Multiplier for screen flashes and muzzle light (0 = off).
 func flash_scale() -> float:
 	return clampf(float(value("flashes")), 0.0, 1.0)
+
+
+## True when the aim button toggles aiming down sights instead of holding it.
+func aim_toggles() -> bool:
+	return String(value("aim_mode")) == "toggle"
 
 
 ## -1 when "Invert look Y" is on, else 1: multiplies vertical mouse look.
