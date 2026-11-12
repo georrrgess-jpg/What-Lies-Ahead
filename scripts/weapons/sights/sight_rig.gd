@@ -18,7 +18,7 @@ extends Node3D
 const NEAR := 0.1
 ## Kept clear under an optic's axis / an iron sight line / a view over a
 ## blocked sight line (tangent of the angle).
-const CLEAR_OPTIC := 0.035
+const CLEAR_OPTIC := 0.045
 const CLEAR_IRONS := 0.003
 const CLEAR_OVER := 0.05
 ## Aimed field of view assumed until fit() is called (menu previews).

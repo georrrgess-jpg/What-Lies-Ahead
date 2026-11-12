@@ -20,6 +20,8 @@ uniform int pattern = 0;
 // Tangent of the angle one reticle unit spans.
 uniform float reticle_size = 0.021;
 uniform float brightness = 1.5;
+// Strength of the soft halo around the reticle.
+uniform float glow = 1.0;
 // Half-size of the window, with the longer side = 1.
 uniform vec2 lens_aspect = vec2(1.0, 1.0);
 // 1 = round window, 0 = rectangle with rounded corners.
@@ -58,17 +60,18 @@ void fragment() {
 	float mark = sight_reticle(p, pattern, vec2(px, 0.0)) * facing * power;
 	// A dark edge keeps the reticle readable on any background; a soft halo makes it glow.
 	float outline = sight_reticle(p, pattern, vec2(px, px * 1.6)) * facing * power;
-	float halo = sight_reticle(p, pattern, vec2(max(px * 5.0, 0.3), px)) * facing * power;
+	float halo = sight_reticle(p, pattern, vec2(max(px * 5.0, 0.3), px)) * facing * power * glow;
 
-	// Glass: a faint tint, two reflection streaks and a brighter grazing edge.
+	// Glass: a faint tint, two reflection streaks and a brighter grazing edge...
 	float streak = smoothstep(0.1, 0.0, abs(uv.x * 0.55 + uv.y - 0.4)) * 0.6
 		+ smoothstep(0.035, 0.0, abs(uv.x * 0.55 + uv.y - 0.12)) * 0.35;
 	float graze = pow(1.0 - abs(dot(NORMAL, VIEW)), 3.0);
-	float rim = smoothstep(-0.4, 0.0, edge);
-	float shade = clamp(rim * edge_shadow + occlude * 0.9, 0.0, 1.0);
-	vec3 glass = mix(glass_color.rgb + streak * 0.25, vec3(0.015, 0.03, 0.07) + streak * 0.12 * occlude, shade);
-	float alpha = glass_color.a + streak * 0.1 + graze * 0.35;
-	alpha = max(alpha, max(rim * edge_shadow, occlude * 0.96));
+	float sheen = clamp(glass_color.a * (1.0 + streak * 1.6) + graze * 0.35, 0.0, 1.0);
+	// ...under the dark of a tube's rim or of a closed scope.
+	float shadow = clamp(max(smoothstep(-0.4, 0.0, edge) * edge_shadow, occlude * 0.96), 0.0, 1.0);
+	float alpha = sheen + shadow * (1.0 - sheen);
+	vec3 dark = vec3(0.012, 0.02, 0.05) + streak * 0.1 * occlude;
+	vec3 glass = (dark * shadow + (glass_color.rgb + streak * 0.25) * sheen * (1.0 - shadow)) / max(alpha, 1e-4);
 
 	// Reticle: white-hot where it is solid, its colour at the edges and in the halo.
 	vec3 lit = mix(reticle_color.rgb * brightness, vec3(1.0), smoothstep(0.75, 1.0, mark) * 0.45);

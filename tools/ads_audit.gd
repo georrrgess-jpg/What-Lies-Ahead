@@ -136,7 +136,8 @@ func _run() -> void:
 	director.hud._notice.text = ""
 	director.kiosk.set_open(false)
 	_stage(director, player)
-	await _wait(10)
+	# Past the HUD's fade from black.
+	await _wait(50)
 
 	var out := _opt("out", "user://ads_audit")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out))
@@ -213,27 +214,34 @@ func _audit(player, weapon, item, sights) -> Dictionary:
 	# Fully aimed at once: the zoom is set rather than eased in.
 	player.camera.fov = player.head.base_fov * player.ads_fov_scale()
 	await _wait(SETTLE_FRAMES)
+	# Freeze the game and the shaders' clock, so the frames differ only in what is changed between them.
 	paused = true
+	Engine.time_scale = 0.0
 	var shown: Image = await _grab()
 	var rig = view._sight
 	var lens_material = rig.lens.get_surface_override_material(0) if rig and rig.lens else null
 	var green: Image = shown
 	var magenta: Image = shown
 	if lens_material:
-		var pattern = lens_material.get_shader_parameter("pattern")
-		var color = lens_material.get_shader_parameter("reticle_color")
+		# A plain dot (no glow, no over-bright core) in two colours.
+		var saved := {}
+		for key in ["pattern", "reticle_color", "brightness", "glow"]:
+			saved[key] = lens_material.get_shader_parameter(key)
 		lens_material.set_shader_parameter("pattern", 0)
+		lens_material.set_shader_parameter("brightness", 1.0)
+		lens_material.set_shader_parameter("glow", 0.0)
 		lens_material.set_shader_parameter("reticle_color", Color(0, 1, 0))
 		green = await _grab()
 		lens_material.set_shader_parameter("reticle_color", Color(1, 0, 1))
 		magenta = await _grab()
-		lens_material.set_shader_parameter("pattern", pattern)
-		lens_material.set_shader_parameter("reticle_color", color)
+		for key in saved:
+			lens_material.set_shader_parameter(key, saved[key])
 		lens_material.set_shader_parameter("power", 0.0)
 	var plain: Image = await _grab()
 	view.visible = false
 	var bare: Image = await _grab()
 	view.visible = true
+	Engine.time_scale = 1.0
 	paused = false
 
 	var size := Vector2(shown.get_width(), shown.get_height())
@@ -271,16 +279,28 @@ func _audit(player, weapon, item, sights) -> Dictionary:
 ## green dot and the frame with a magenta one, weighted by how much (the
 ## dot's coverage; whatever is behind it cancels out). (-1, -1) if none do.
 func _marked_centre(green: Image, magenta: Image, centre: Vector2) -> Vector2:
+	# The strongest difference near the centre is the dot; then its centre of mass.
 	var reach := int(green.get_height() * 0.2)
-	var sum := Vector2.ZERO
-	var weight := 0.0
+	var peak := Vector2i(-1, -1)
+	var most := 0.2
 	for y in range(int(centre.y) - reach, int(centre.y) + reach):
 		for x in range(int(centre.x) - reach, int(centre.x) + reach):
 			var d := _difference(green.get_pixel(x, y), magenta.get_pixel(x, y))
-			if d > 0.04:
+			if d > most:
+				most = d
+				peak = Vector2i(x, y)
+	if peak.x < 0:
+		return Vector2(-1.0, -1.0)
+	var sum := Vector2.ZERO
+	var weight := 0.0
+	var spot := int(green.get_height() * 0.03)
+	for y in range(peak.y - spot, peak.y + spot + 1):
+		for x in range(peak.x - spot, peak.x + spot + 1):
+			var d := _difference(green.get_pixel(x, y), magenta.get_pixel(x, y))
+			if d > 0.02:
 				sum += Vector2(x + 0.5, y + 0.5) * d
 				weight += d
-	return sum / weight if weight > 0.5 else Vector2(-1.0, -1.0)
+	return sum / weight
 
 
 func _difference(a: Color, b: Color) -> float:

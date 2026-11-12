@@ -26,14 +26,15 @@ const PATTERNS := {
 }
 ## Per optic: `round` window, `fill` (the window's half-height as a share of
 ## the aimed view's half-height: sets how close the eye sits), `edge_shadow`
-## (dark rim of a tube), `vignette` (darkening of the screen edges when
-## aimed) and `scope_view` (aimed, only the eyepiece view is shown).
+## (dark rim of a tube), `glass` (opacity of the glass tint), `glow` (halo
+## around the reticle), `vignette` (darkening of the screen edges when aimed)
+## and `scope_view` (aimed, only the eyepiece view is shown).
 const OPTICS := {
 	"Reflex": {"round": false, "fill": 0.235, "vignette": 0.26},
 	"Holo": {"round": false, "fill": 0.24, "vignette": 0.26},
-	"Tube": {"round": true, "fill": 0.28, "edge_shadow": 0.3, "vignette": 0.3},
-	"Prism": {"round": true, "fill": 0.5, "edge_shadow": 0.45, "vignette": 0.42},
-	"Scope": {"round": true, "fill": 0.84, "edge_shadow": 0.85, "vignette": 0.6, "scope_view": true},
+	"Tube": {"round": true, "fill": 0.28, "edge_shadow": 0.35, "vignette": 0.3},
+	"Prism": {"round": true, "fill": 0.5, "edge_shadow": 0.5, "vignette": 0.42},
+	"Scope": {"round": true, "fill": 0.84, "edge_shadow": 0.4, "glass": 0.015, "glow": 0.3, "vignette": 0.6, "scope_view": true},
 }
 ## Choices of the "Sight reticle colour" setting ("auto" keeps each sight's own).
 const COLORS := {
@@ -157,6 +158,8 @@ static func lens_material(item: CosmeticItem, lens: MeshInstance3D) -> ShaderMat
 	m.set_shader_parameter("lens_aspect", half / maxf(half.x, half.y))
 	m.set_shader_parameter("lens_round", 1.0 if bool(setting(item, "round", false)) else 0.0)
 	m.set_shader_parameter("edge_shadow", float(setting(item, "edge_shadow", 0.0)))
+	m.set_shader_parameter("glass_color", Color(0.6, 0.92, 1.0, float(setting(item, "glass", 0.05))))
+	m.set_shader_parameter("glow", float(setting(item, "glow", 1.0)))
 	m.set_shader_parameter("pattern", pattern_index(item))
 	m.set_shader_parameter("reticle_color", reticle_color(item))
 	m.set_shader_parameter("reticle_size", tan(deg_to_rad(float(setting(item, "reticle_degrees", 1.2)))))
