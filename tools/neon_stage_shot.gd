@@ -17,6 +17,7 @@ extends SceneTree
 ##   --fire=n                       fire n shots at the nearest staged enemy
 ##   --open=1                       open the loadout station (break-time look)
 ##   --hud=0|1  --frames=n  --weapon=<id>  --profile=<file>
+##   --perf=1                       print draw calls and primitives of the frame
 ##
 ## Script mode compiles this file before the autoloads exist, so it only uses
 ## untyped references to game classes.
@@ -159,6 +160,12 @@ func _run() -> void:
 		a.speed_scale = 0.0
 	await _wait(2)
 	await RenderingServer.frame_post_draw
+	if _opt("perf", "0") == "1":
+		print("[stage] draw calls %d, primitives %d, objects %d, nodes %d" % [
+			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+			Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
+			Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME),
+			Performance.get_monitor(Performance.OBJECT_NODE_COUNT)])
 	var img := root.get_viewport().get_texture().get_image()
 	var err := img.save_png(out_path)
 	print("[stage] saved %s error=%d" % [out_path, err])
