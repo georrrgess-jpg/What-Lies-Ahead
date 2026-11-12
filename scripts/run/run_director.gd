@@ -249,6 +249,8 @@ func start_next_wave() -> void:
 	_set_state(State.WAVE)
 	var final := wave_number == total_waves()
 	Sfx.play(&"final_wave" if final else &"wave_start", -2.0)
+	if final:
+		Sfx.play_music(level.final_music(), level.music_volume_db, true)
 	score.on_wave_started()
 	wave_started.emit(wave_number, total_waves(), wave.banner)
 
@@ -431,6 +433,7 @@ func _begin_extraction() -> void:
 	if portal:
 		portal.activate()
 	Sfx.play(&"portal_open", 0.0)
+	Sfx.play_music(level.final_music(), level.music_volume_db, true)
 	notice.emit("PORTAL OPEN — FOLLOW THE LIGHTS", &"banner")
 
 

@@ -56,7 +56,7 @@ func on_physics(z: Zombie, delta: float) -> bool:
 		if d >= min_range and d <= max_range and z.has_line_of_sight():
 			_cool = cooldown
 			_winding = windup
-			z.play_animation(&"Attack", 0.1)
+			z.play_animation(&"Spit", 0.1)
 			Sfx.play_at(windup_sound, z.global_position + Vector3.UP * 1.5, 0.0, randf_range(0.95, 1.08))
 			if _sac:
 				_sac.material_override = _glow
@@ -75,7 +75,7 @@ func _fire(z: Zombie) -> void:
 		var yaw := deg_to_rad(spread_degrees) * (i - (shots - 1) * 0.5)
 		EnemyProjectile.launch(z.get_parent(), from, from + aim.rotated(Vector3.UP, yaw), projectile_speed, damage, color, arc, 0.2, z)
 	Sfx.play_at(fire_sound, from, 0.0, randf_range(0.95, 1.1))
-	z.play_animation(&"Walk", 0.2)
+	z.play_animation(z.data.move_animation, 0.2)
 
 
 func on_death(_z: Zombie) -> void:
@@ -91,4 +91,4 @@ func is_winding_up() -> bool:
 func interrupt(z: Zombie) -> void:
 	if _winding > 0.0:
 		_winding = 0.0
-		z.play_animation(&"Walk", 0.2)
+		z.play_animation(z.data.move_animation, 0.2)

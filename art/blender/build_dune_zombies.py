@@ -1,19 +1,23 @@
-"""Dune Spaceport zombies: the boardwalk rig (build_zombie.py) in spaceport outfits.
+"""Dune Spaceport zombies: the shared zombie rig (build_zombie.py) in spaceport outfits.
 
-    Outfit_Cadet      Space Cadet: white-and-teal spacesuit, glass bubble helmet,
+    Outfit_Cadet      Space Cadet: white spacesuit with strong tintable accent panels
+                      ("Shirt"), orange gloves and boots, glass bubble helmet,
                       life-support pack. Bounds in long, low-gravity hops.
     Outfit_Mechanic   Ground-crew mechanic: tintable coveralls ("Shirt"), hi-vis vest,
                       ear defenders and a twin-tank jetpack.
-    Outfit_Hazmat     Irradiated hazmat worker: bulky yellow suit, gas-mask hood with
-                      glowing lenses, glowing canisters.
+    Outfit_Hazmat     Irradiated hazmat worker: bulky tintable suit ("Shirt"), hood,
+                      glowing canisters. Its gas masks are its faces.
 
 Accessories (Acc_<Outfit>_<Name>, rolled per zombie from EnemyData.accessory_slots):
-    Acc_Cadet_Visor, Acc_Cadet_Antenna, Acc_Cadet_Flag
-    Acc_Mechanic_Cap, Acc_Mechanic_Goggles, Acc_Mechanic_Wrench
-    Acc_Hazmat_Tank, Acc_Hazmat_Geiger
+    Acc_Cadet_Visor, Acc_Cadet_Antenna, Acc_Cadet_Flag, Acc_Cadet_Pennant
+    Acc_Mechanic_Cap, Acc_Mechanic_Goggles, Acc_Mechanic_Wrench, Acc_Mechanic_Rag
+    Acc_Hazmat_Tank, Acc_Hazmat_Geiger, Acc_Hazmat_Sign, Acc_Hazmat_Barrel
+Faces: Face_<Outfit>_<Preset> (zombie_kit.py; the Hazmat's are gas masks), one
+shown per zombie.
 
-Same bones and clips as build_zombie.py (Idle-loop, Walk-loop, Run-loop, Attack, Hit,
-Die), plus three extra clips for the Dune behaviours:
+Same bones as build_zombie.py; the clips come from zombie_anim.dune_clips (the
+Mechanic's march and wrench chop, the Hazmat trudge and shove, the shared set),
+plus three extra clips for the Dune behaviours:
     Bound-loop   the cadet's hopping gait (airborne between 20% and 80% of the cycle)
     Crouch       a deep squat with the arms swept back (leap / jetpack windup)
     Hover-loop   jetpack flight: legs dangling, arms out for balance
@@ -27,49 +31,29 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dune_kit import *  # noqa: F401,F403
-from build_zombie import (FPS, arms, bind, build_armature, clip_attack, clip_die, clip_hit, clip_idle, clip_run,  # noqa: E402
-                          clip_walk, head_parts, set_pose, skin)
+from build_zombie import FPS, bind, build_armature, skin  # noqa: E402
+import zombie_anim  # noqa: E402
+from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+                        patch, skull, tear_fn, torso)
 
 
-def glass_mat(name, color, alpha=0.3, emit=0.15):
-    """Transparent tinted glass (exported with alpha blending)."""
-    if name in bpy.data.materials:
-        return bpy.data.materials[name]
-    m = dmat(name, color, rough=0.05, emit=emit)
-    bsdf = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-    bsdf.inputs["Alpha"].default_value = alpha
-    for attr, value in (("surface_render_method", "BLENDED"), ("blend_method", "BLEND")):
-        if hasattr(m, attr):
-            try:
-                setattr(m, attr, value)
-            except (TypeError, ValueError):
-                pass
+def materials():
+    m = base_materials("dune")
+    m.update(
+        suit=dmat("CadetSuit", "#f1ede4", rough=0.55),
+        shirt=mat("Shirt", "#ff5a2a", rough=0.55),
+        rust=dmat("Rust", "#e8622a", rough=0.5),
+        glow=dglow("CadetGlow", "#ffd23a", 1.8),
+        glass=glass("HelmetGlass", "#bff4ff", alpha=0.22),
+        visor=glass("VisorGold", "#ffb02e", alpha=0.55, emit=0.6, rough=0.15),
+        hivis=dmat("HiVis", "#d8ff3a", rough=0.6),
+        burner=dglow("Burner", "#ff9a3a", 2.0),
+        glow_rad=dglow("RadGlow", "#9dff3a", 2.4),
+        lens=dglow("MaskLens", "#b8ff4a", 2.2),
+        filter=dmat("Filter", "#4a4f5a", rough=0.5),
+        steel=dmat("Steel", rough=0.4, metal=0.5),
+    )
     return m
-
-
-def suit_limbs(prefix, side, m, sleeve, glove, boot, arm_w=0.17, leg_w=0.19, cuff=None, sole=None, bulk=0.0, hand=0.0):
-    """One suited arm and leg (gloves and boots, no bare skin)."""
-    s = "L" if side > 0 else "R"
-    ax, lx = side * 0.41, side * 0.16
-    aw, lw = arm_w + bulk, leg_w + bulk
-    upper = [box(f"{prefix}UpperArm{s}", (aw, aw + 0.02, 0.32), (side * 0.395, 0, 1.1), bevel=0.07, segs=3, m=sleeve),
-             sphere(f"{prefix}Shoulder{s}", aw * 0.72, (side * 0.37, 0, 1.25), m=sleeve, segs=10, rings=7)]
-    fore = [box(f"{prefix}ForeArm{s}", (aw - 0.01, aw + 0.01, 0.32), (side * 0.42, 0, 0.82), bevel=0.06, segs=3, m=sleeve),
-            sphere(f"{prefix}Elbow{s}", aw * 0.66, (side * 0.41, 0, 0.98), m=sleeve, segs=10, rings=7)]
-    hw = aw + 0.06 + hand
-    fore += [box(f"{prefix}Glove{s}", (hw, 0.15 + hand, 0.2 + hand), (side * 0.43, -0.01, 0.6 - hand * 0.4), bevel=0.06, segs=3, m=glove),
-             box(f"{prefix}Thumb{s}", (0.06, 0.065, 0.11), (side * 0.43 - side * (hw * 0.5 + 0.01), -0.04, 0.62), bevel=0.025, m=glove)]
-    for i in range(3):
-        fore.append(box(f"{prefix}Finger{s}{i}", (0.06 + hand * 0.3, 0.065, 0.12), (side * 0.43 + (i - 1) * (0.072 + hand * 0.3), -0.02, 0.47 - hand * 0.8),
-                        rot=rad(-12, 0, 0), bevel=0.022, m=glove))
-    if cuff:
-        fore.append(box(f"{prefix}Cuff{s}", (aw + 0.05, aw + 0.07, 0.08), (side * 0.425, 0, 0.7), bevel=0.025, m=cuff))
-    thigh = [box(f"{prefix}Thigh{s}", (lw + 0.08, lw + 0.1, 0.34), (lx, 0, 0.63), bevel=0.08, segs=3, m=sleeve)]
-    shin = [box(f"{prefix}Shin{s}", (lw + 0.02, lw + 0.04, 0.34), (lx, 0, 0.35), bevel=0.07, segs=3, m=sleeve),
-            sphere(f"{prefix}Knee{s}", lw * 0.66, (lx, -0.01, 0.47), m=cuff or sleeve, segs=10, rings=7),
-            box(f"{prefix}Boot{s}", (lw + 0.1, 0.46, 0.26), (lx, -0.07, 0.14), bevel=0.08, segs=3, m=boot),
-            box(f"{prefix}Sole{s}", (lw + 0.12, 0.48, 0.07), (lx, -0.07, 0.035), bevel=0.025, m=sole or m["dark"])]
-    return bind(f"UpperArm.{s}", upper) + bind(f"ForeArm.{s}", fore) + bind(f"Thigh.{s}", thigh) + bind(f"Shin.{s}", shin)
 
 
 # ---------------------------------------------------------------------------
@@ -77,54 +61,69 @@ def suit_limbs(prefix, side, m, sleeve, glove, boot, arm_w=0.17, leg_w=0.19, cuf
 # ---------------------------------------------------------------------------
 
 def cadet(m):
+    """White suit, tintable accent panels ("Shirt"), orange gloves and boots,
+    bubble helmet, life-support pack. Eight materials."""
     p = "C_"
-    suit, teal, rust = m["suit"], m["teal"], m["rust"]
-    parts = head_parts(p, 0.56, m)
+    w = 0.56
+    suit, acc, rust, dark, glow = m["suit"], m["shirt"], m["rust"], m["dark"], m["glow"]
+    parts = head(p, m, w)
     parts += bind("Head", [
-        sphere(p + "Bubble", 0.46, (0, -0.03, 1.6), m=m["glass"], segs=20, rings=12),
-        box(p + "Glint", (0.16, 0.03, 0.05), (-0.2, -0.43, 1.78), rot=rad(0, 32, 0), bevel=0.015, m=m["glint"]),
-        box(p + "GlintB", (0.07, 0.03, 0.04), (-0.27, -0.4, 1.7), rot=rad(0, 32, 0), bevel=0.012, m=m["glint"]),
+        sphere(p + "Bubble", 0.47, (0, HEAD_Y - 0.02, 1.62), m=m["glass"], segs=24, rings=14),
+        box(p + "Glint", (0.16, 0.03, 0.05), (-0.2, HEAD_Y - 0.44, 1.8), rot=rad(0, 32, 0), bevel=0.015, m=glow),
     ])
+    tor, body = torso(p, suit, w=0.66, d=0.46, z0=0.9, belly=0.04, hunch=0.04)
+    parts += tor
+    parts += neck(p, suit, 0.26)
+    t = tor[0]
     parts += bind("Spine", [
-        torus(p + "Collar", 0.33, 0.07, (0, -0.01, 1.33), m=rust, major_segs=20, minor_segs=8),
-        box(p + "Torso", (0.64, 0.44, 0.56), (0, 0, 1.12), bevel=0.14, segs=4, m=suit),
-        box(p + "ChestPanel", (0.34, 0.08, 0.22), (0, -0.22, 1.15), bevel=0.04, m=m["panel"]),
-        box(p + "BtnA", (0.06, 0.04, 0.06), (-0.09, -0.27, 1.17), bevel=0.015, m=m["btn_red"]),
-        box(p + "BtnB", (0.06, 0.04, 0.06), (0.0, -0.27, 1.17), bevel=0.015, m=m["btn_yellow"]),
-        box(p + "BtnC", (0.06, 0.04, 0.06), (0.09, -0.27, 1.17), bevel=0.015, m=m["btn_teal"]),
-        box(p + "Hose", (0.05, 0.05, 0.2), (0.13, -0.23, 1.25), rot=rad(0, 20, 0), bevel=0.02, m=m["dark"]),
-        box(p + "Pack", (0.52, 0.3, 0.62), (0, 0.33, 1.12), bevel=0.1, segs=3, m=m["suit_shade"]),
-        box(p + "PackStripe", (0.53, 0.31, 0.1), (0, 0.33, 1.3), bevel=0.03, m=teal),
-        cyl(p + "TankL", 0.1, 0.56, (-0.17, 0.5, 1.1), segs=12, bevel=0.03, m=rust),
-        cyl(p + "TankR", 0.1, 0.56, (0.17, 0.5, 1.1), segs=12, bevel=0.03, m=rust),
-        box(p + "Shoulder", (0.7, 0.36, 0.12), (0, 0.0, 1.36), bevel=0.05, m=teal),
+        torus(p + "Collar", 0.34, 0.075, (0, -0.01, 1.34), m=acc, major_segs=24, minor_segs=8),
+        body.shell(p + "ChestPanel", acc, 1.36, 1.0, off=0.02, gap=220, gap_at=180, segs=28, steps=4, lip=0.015),
+        patch(p + "Console", t, (0, body.front(0, 1.16, off=0.02), 1.16), (0.3, 0.07, 0.18), dark, bevel=0.035),
+        box(p + "BtnA", (0.06, 0.04, 0.06), (-0.08, body.front(-0.08, 1.16, off=0.02) - 0.04, 1.17), bevel=0.015, m=glow),
+        box(p + "BtnB", (0.06, 0.04, 0.06), (0.02, body.front(0.02, 1.16, off=0.02) - 0.04, 1.17), bevel=0.015, m=acc),
+        box(p + "BtnC", (0.06, 0.04, 0.06), (0.11, body.front(0.11, 1.16, off=0.02) - 0.04, 1.14), bevel=0.015, m=glow),
+        tube(p + "Hose", [(0.14, body.front(0.14, 1.22, off=0.02) - 0.02, 1.22), (0.22, body.front(0.22, 1.3) - 0.03, 1.33),
+                          (0.24, -0.1, 1.38)], 0.028, m=dark, segs=6),
+        # Life-support pack with a stripe and twin tanks.
+        box(p + "Pack", (0.54, 0.3, 0.64), (0, 0.36, 1.12), bevel=0.1, segs=3, m=suit),
+        box(p + "PackStripe", (0.55, 0.31, 0.1), (0, 0.36, 1.3), bevel=0.03, m=acc),
+        cyl(p + "TankL", 0.1, 0.56, (-0.17, 0.53, 1.1), segs=14, bevel=0.03, m=rust),
+        cyl(p + "TankR", 0.1, 0.56, (0.17, 0.53, 1.1), segs=14, bevel=0.03, m=rust),
+        box(p + "PackLight", (0.08, 0.04, 0.05), (0, 0.52, 1.42), bevel=0.012, m=glow),
     ])
-    parts += bind("Hips", [
-        box(p + "Pants", (0.6, 0.44, 0.3), (0, 0, 0.84), bevel=0.09, segs=3, m=suit),
-        box(p + "Belt", (0.62, 0.46, 0.09), (0, 0, 0.965), bevel=0.03, m=teal),
-        box(p + "Buckle", (0.14, 0.04, 0.1), (0, -0.24, 0.965), bevel=0.02, m=rust),
-    ])
+    parts += hips(p, suit, w=0.62, d=0.46, belt=acc, buckle=rust)
     for side in (1, -1):
-        parts += suit_limbs(p, side, m, suit, rust, m["boot_white"], cuff=teal, sole=rust)
+        s = "L" if side > 0 else "R"
+        lx = side * 0.16
+        parts += arm(p, side, m, w=0.18, sleeve=suit, sleeve_len="long", cuff=acc, glove=rust, pad=acc, seed=21)
+        parts += leg(p, side, m, w=0.2, pants=suit, pants_len="long", foot="boot", shoe=rust, sole=dark, lace=acc, knee_m=acc, boot_h=0.2, tear=0)
+        parts += bind(f"Thigh.{s}", [box(f"{p}ThighPocket{s}", (0.05, 0.15, 0.14), (side * 0.27, 0, 0.64), bevel=0.02, m=acc)])
     return parts
 
 
 def cadet_accessories(m):
     p = "CA_"
-    return {
-        # Gold sun visor pulled half down inside the bubble.
+    acc = {
+        # A thin gold sun-visor band inside the bubble, above the eyes.
         "Acc_Cadet_Visor": bind("Head", [
-            sphere(p + "Visor", 0.44, (0, -0.04, 1.63), scale=(1.0, 1.0, 0.55), m=m["visor"], segs=18, rings=6),
+            skull(0.56).shell(p + "Visor", m["visor"], 1.84, 1.76, off=0.1, gap=200, gap_at=180, segs=28, steps=1, lip=0.0),
         ]),
         "Acc_Cadet_Antenna": bind("Spine", [
-            cyl(p + "Antenna", 0.018, 0.6, (0.2, 0.42, 1.65), segs=6, bevel=0.0, m=m["steel"]),
-            sphere(p + "AntennaTip", 0.05, (0.2, 0.42, 1.97), m=m["btn_red"], segs=8, rings=5),
+            cyl(p + "Antenna", 0.018, 0.6, (0.2, 0.46, 1.65), segs=6, bevel=0.0, m=m["steel"]),
+            sphere(p + "AntennaTip", 0.05, (0.2, 0.46, 1.97), m=m["glow"], segs=8, rings=5),
         ]),
         "Acc_Cadet_Flag": bind("UpperArm.L", [
-            box(p + "Patch", (0.04, 0.16, 0.12), (0.49, -0.02, 1.15), bevel=0.012, m=m["btn_teal"]),
-            star(p + "PatchStar", 0.05, 0.02, (0.51, -0.02, 1.15), rot=(0, 0, math.pi / 2), m=m["btn_yellow"]),
+            box(p + "Patch", (0.04, 0.16, 0.12), (0.5, -0.02, 1.15), bevel=0.012, m=m["shirt"]),
+            star(p + "PatchStar", 0.05, 0.02, (0.525, -0.02, 1.15), rot=(0, 0, math.pi / 2), m=m["glow"]),
+        ]),
+        "Acc_Cadet_Pennant": bind("Spine", [
+            cyl(p + "Pole", 0.012, 0.7, (-0.2, 0.5, 1.7), segs=6, bevel=0.0, m=m["steel"]),
+            box(p + "Flag", (0.02, 0.26, 0.16), (-0.2, 0.63, 1.95), bevel=0.01, m=m["shirt"]),
+            star(p + "FlagStar", 0.045, 0.024, (-0.21, 0.63, 1.95), rot=(0, 0, math.pi / 2), m=m["glow"]),
         ]),
     }
+    acc.update(faces("Cadet", m, 0.56, ("Grin", "Gape", "Derp", "Sleepy")))
+    return acc
 
 
 # ---------------------------------------------------------------------------
@@ -132,73 +131,83 @@ def cadet_accessories(m):
 # ---------------------------------------------------------------------------
 
 def mechanic(m):
+    """Tintable coveralls, hi-vis vest with silver bands, ear defenders, a
+    twin-tank jetpack (nozzles where dune_jetpack_hop.gd expects them). Eight
+    materials."""
     p = "M_"
-    coverall, vest, silver = m["shirt"], m["hivis"], m["reflect"]
-    parts = head_parts(p, 0.6, m)
-    parts += bind("Head", [
-        box(p + "Hair", (0.5, 0.12, 0.18), (0, 0.24, 1.52), bevel=0.05, m=m["hair"]),
-        box(p + "EarBand", (0.66, 0.1, 0.07), (0, 0.0, 1.88), rot=rad(0, 0, 0), bevel=0.03, m=m["dark"]),
-    ])
+    w = 0.6
+    coverall, vest, white, dark, rust = m["shirt"], m["hivis"], m["white"], m["dark"], m["rust"]
+    parts = head(p, m, w, ears=False)
+    parts += hair(p, w, dark, "fringe", 14)
+    parts += bind("Head", [band(p + "EarBand", (0, HEAD_Y, 1.93), (0, HEAD_Y, 1.87), w * 0.53 + 0.02, 0.2, dark, n=2.6, thick=0.02, segs=22)])
     for side in (-1, 1):
         parts += bind("Head", [
-            cyl(f"{p}EarCup{side}", 0.14, 0.12, (side * 0.34, 0.0, 1.6), rot=(0, math.pi / 2, 0), segs=14, bevel=0.04, m=m["rust"]),
-            box(f"{p}EarArm{side}", (0.05, 0.08, 0.26), (side * 0.33, 0.0, 1.76), bevel=0.02, m=m["dark"]),
+            cyl(f"{p}EarCup{side}", 0.14, 0.12, (side * (w * 0.5 + 0.05), HEAD_Y, 1.6), rot=(0, math.pi / 2, 0), segs=16, bevel=0.04, m=rust),
+            box(f"{p}EarArm{side}", (0.05, 0.08, 0.28), (side * (w * 0.5 + 0.04), HEAD_Y, 1.78), bevel=0.02, m=dark),
         ])
+    tor, body = torso(p, coverall, w=0.7, d=0.47, z0=0.9, belly=0.05, hunch=0.05)
+    parts += tor
+    parts += neck(p, m["skin"], 0.26)
+    hv = body.shell(p + "Vest", vest, 1.38, 0.98, off=0.026, gap=40, segs=24, steps=4, tear=tear_fn(24, 14, 1, 0.03))
     parts += bind("Spine", [
-        box(p + "Torso", (0.68, 0.46, 0.56), (0, 0, 1.13), bevel=0.14, segs=4, m=coverall),
-        box(p + "Belly", (0.6, 0.44, 0.22), (0, -0.02, 0.98), bevel=0.1, segs=3, m=coverall),
-        box(p + "Neck", (0.26, 0.24, 0.12), (0, 0, 1.4), bevel=0.05, m=m["skin"]),
-        box(p + "Vest", (0.72, 0.48, 0.42), (0, 0, 1.17), bevel=0.12, segs=3, m=vest),
-        box(p + "VestStripe", (0.73, 0.49, 0.06), (0, 0, 1.08), bevel=0.02, m=silver),
-        box(p + "VestStripeB", (0.73, 0.49, 0.06), (0, 0, 1.24), bevel=0.02, m=silver),
-        box(p + "Collar", (0.5, 0.3, 0.1), (0, -0.04, 1.37), bevel=0.04, m=coverall),
-        box(p + "Tag", (0.14, 0.03, 0.08), (0.14, -0.245, 1.3), bevel=0.01, m=m["white"]),
+        hv,
+        body.shell(p + "VestStripeA", white, 1.11, 1.06, off=0.04, gap=40, segs=24, steps=1, lip=0.012),
+        body.shell(p + "VestStripeB", white, 1.27, 1.22, off=0.04, gap=40, segs=24, steps=1, lip=0.012),
+        band(p + "Collar", (0, -0.02, 1.46), (0, -0.02, 1.37), 0.2, 0.18, coverall, n=2.6, thick=0.025, flare=0.03, segs=20),
+        patch(p + "Tag", tor[0], (0.15, body.front(0.15, 1.3), 1.3), (0.12, 0.04, 0.07), white, bevel=0.01),
         # Jetpack: frame, twin tanks with nozzles, little fins.
-        box(p + "JetFrame", (0.5, 0.12, 0.5), (0, 0.29, 1.15), bevel=0.04, m=m["dark"]),
-        cyl(p + "JetTankL", 0.14, 0.62, (-0.15, 0.42, 1.18), segs=14, bevel=0.05, m=m["white"]),
-        cyl(p + "JetTankR", 0.14, 0.62, (0.15, 0.42, 1.18), segs=14, bevel=0.05, m=m["white"]),
-        cyl(p + "JetBandL", 0.145, 0.12, (-0.15, 0.42, 1.3), segs=14, bevel=0.02, m=m["rust"]),
-        cyl(p + "JetBandR", 0.145, 0.12, (0.15, 0.42, 1.3), segs=14, bevel=0.02, m=m["rust"]),
-        sphere(p + "JetCapL", 0.14, (-0.15, 0.42, 1.49), scale=(1, 1, 0.6), m=m["rust"], segs=12, rings=6),
-        sphere(p + "JetCapR", 0.14, (0.15, 0.42, 1.49), scale=(1, 1, 0.6), m=m["rust"], segs=12, rings=6),
-        cyl(p + "NozzleL", 0.07, 0.18, (-0.15, 0.42, 0.8), segs=10, bevel=0.0, m=m["steel"], radius_top=0.1),
-        cyl(p + "NozzleR", 0.07, 0.18, (0.15, 0.42, 0.8), segs=10, bevel=0.0, m=m["steel"], radius_top=0.1),
-        cyl(p + "BurnerL", 0.055, 0.03, (-0.15, 0.42, 0.7), segs=10, bevel=0.0, m=m["burner"]),
-        cyl(p + "BurnerR", 0.055, 0.03, (0.15, 0.42, 0.7), segs=10, bevel=0.0, m=m["burner"]),
-        box(p + "FinL", (0.04, 0.16, 0.22), (-0.3, 0.46, 0.98), bevel=0.015, m=m["rust"]),
-        box(p + "FinR", (0.04, 0.16, 0.22), (0.3, 0.46, 0.98), bevel=0.015, m=m["rust"]),
-        box(p + "StrapL", (0.08, 0.5, 0.06), (-0.2, 0.05, 1.36), bevel=0.02, m=m["dark"]),
-        box(p + "StrapR", (0.08, 0.5, 0.06), (0.2, 0.05, 1.36), bevel=0.02, m=m["dark"]),
-    ])
+        box(p + "JetFrame", (0.5, 0.12, 0.5), (0, 0.31, 1.15), bevel=0.04, m=dark),
+        cyl(p + "JetTankL", 0.14, 0.62, (-0.15, 0.44, 1.18), segs=16, bevel=0.05, m=white),
+        cyl(p + "JetTankR", 0.14, 0.62, (0.15, 0.44, 1.18), segs=16, bevel=0.05, m=white),
+        cyl(p + "JetBandL", 0.145, 0.12, (-0.15, 0.44, 1.3), segs=16, bevel=0.02, m=rust),
+        cyl(p + "JetBandR", 0.145, 0.12, (0.15, 0.44, 1.3), segs=16, bevel=0.02, m=rust),
+        sphere(p + "JetCapL", 0.14, (-0.15, 0.44, 1.49), scale=(1, 1, 0.6), m=rust, segs=14, rings=6),
+        sphere(p + "JetCapR", 0.14, (0.15, 0.44, 1.49), scale=(1, 1, 0.6), m=rust, segs=14, rings=6),
+        cyl(p + "NozzleL", 0.07, 0.18, (-0.15, 0.42, 0.8), segs=12, bevel=0.0, m=dark, radius_top=0.1),
+        cyl(p + "NozzleR", 0.07, 0.18, (0.15, 0.42, 0.8), segs=12, bevel=0.0, m=dark, radius_top=0.1),
+        cyl(p + "BurnerL", 0.055, 0.03, (-0.15, 0.42, 0.7), segs=12, bevel=0.0, m=m["burner"]),
+        cyl(p + "BurnerR", 0.055, 0.03, (0.15, 0.42, 0.7), segs=12, bevel=0.0, m=m["burner"]),
+        box(p + "FinL", (0.04, 0.16, 0.22), (-0.3, 0.48, 0.98), bevel=0.015, m=rust),
+        box(p + "FinR", (0.04, 0.16, 0.22), (0.3, 0.48, 0.98), bevel=0.015, m=rust),
+    ] + [tube(f"{p}Strap{side}", [(side * 0.2, 0.27, 1.38), (side * 0.2, 0.05, 1.46), (side * 0.2, body.front(side * 0.2, 1.38, off=0.04), 1.38),
+                                  (side * 0.2, body.front(side * 0.2, 1.12, off=0.04), 1.12)], 0.025, m=dark, segs=6) for side in (1, -1)])
+    parts += hips(p, coverall, w=0.66, d=0.47, belt=dark, buckle=white)
     parts += bind("Hips", [
-        box(p + "Pants", (0.64, 0.45, 0.3), (0, 0, 0.84), bevel=0.09, segs=3, m=coverall),
-        box(p + "Belt", (0.66, 0.47, 0.08), (0, 0, 0.96), bevel=0.02, m=m["dark"]),
-        box(p + "Pouch", (0.18, 0.12, 0.16), (0.24, -0.24, 0.9), bevel=0.03, m=m["leather"]),
-        box(p + "Rag", (0.1, 0.03, 0.2), (-0.26, -0.24, 0.85), rot=rad(0, 10, 0), bevel=0.012, m=m["rust"]),
+        box(p + "Pouch", (0.18, 0.12, 0.16), (0.25, -0.25, 0.9), bevel=0.03, m=dark),
+        box(p + "Rag", (0.1, 0.03, 0.22), (-0.27, -0.25, 0.85), rot=rad(0, 10, 0), bevel=0.012, m=rust),
     ])
     for side in (1, -1):
-        parts += suit_limbs(p, side, m, coverall, m["dark"], m["leather"], arm_w=0.18, leg_w=0.2, cuff=vest, sole=m["dark"])
+        parts += arm(p, side, m, w=0.18, sleeve=coverall, sleeve_len="long", cuff=vest, glove=dark, seed=23, sleeve_tear=1)
+        parts += leg(p, side, m, w=0.2, pants=coverall, pants_len="long", foot="boot", shoe=dark, sole=dark, lace=rust, boot_h=0.16, tear=1,
+                     seed=24)
     return parts
 
 
 def mechanic_accessories(m):
     p = "MA_"
-    return {
+    w = 0.6
+    acc = {
         "Acc_Mechanic_Cap": bind("Head", [
-            sphere(p + "Cap", 0.32, (0, 0.0, 1.77), scale=(1.0, 0.95, 0.6), m=m["rust"], segs=14, rings=8),
-            box(p + "CapBrim", (0.36, 0.26, 0.045), (0, -0.36, 1.74), rot=rad(10, 0, 0), bevel=0.02, m=m["rust"]),
-            box(p + "CapPatch", (0.18, 0.04, 0.1), (0, -0.27, 1.82), rot=rad(-18, 0, 0), bevel=0.015, m=m["white"]),
+            sphere(p + "Cap", 0.33, (0, HEAD_Y, 1.8), scale=(1.0, 0.95, 0.6), m=m["rust"], segs=16, rings=8),
+            box(p + "CapBrim", (0.36, 0.26, 0.045), (0, HEAD_Y - 0.37, 1.77), rot=rad(10, 0, 0), bevel=0.02, m=m["rust"]),
+            box(p + "CapPatch", (0.18, 0.04, 0.1), (0, HEAD_Y - 0.28, 1.86), rot=rad(-18, 0, 0), bevel=0.015, m=m["white"]),
         ]),
         "Acc_Mechanic_Goggles": bind("Head", [
-            box(p + "GoggleBand", (0.64, 0.5, 0.06), (0, 0.0, 1.8), bevel=0.02, m=m["dark"]),
-            cyl(p + "GoggleL", 0.09, 0.08, (-0.12, -0.27, 1.82), rot=(math.pi / 2, 0, 0), segs=12, bevel=0.02, m=m["visor"]),
-            cyl(p + "GoggleR", 0.09, 0.08, (0.12, -0.27, 1.82), rot=(math.pi / 2, 0, 0), segs=12, bevel=0.02, m=m["visor"]),
+            band(p + "GoggleBand", (0, HEAD_Y, 1.85), (0, HEAD_Y, 1.79), w * 0.53, 0.28, m["dark"], n=3.3, thick=0.02, segs=24),
+            cyl(p + "GoggleL", 0.09, 0.08, (-0.12, HEAD_Y - 0.28, 1.83), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
+            cyl(p + "GoggleR", 0.09, 0.08, (0.12, HEAD_Y - 0.28, 1.83), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
         ]),
         "Acc_Mechanic_Wrench": bind("ForeArm.R", [
-            box(p + "WrenchShaft", (0.06, 0.05, 0.5), (-0.43, -0.12, 0.42), rot=rad(-20, 0, 0), bevel=0.015, m=m["steel"]),
-            box(p + "WrenchJaw", (0.14, 0.06, 0.12), (-0.43, -0.2, 0.18), rot=rad(-20, 0, 0), bevel=0.02, m=m["steel"]),
+            box(p + "WrenchShaft", (0.06, 0.05, 0.5), (-0.44, -0.12, 0.36), rot=rad(-20, 0, 0), bevel=0.015, m=m["steel"]),
+            box(p + "WrenchJaw", (0.14, 0.06, 0.12), (-0.44, -0.2, 0.12), rot=rad(-20, 0, 0), bevel=0.02, m=m["steel"]),
+        ]),
+        "Acc_Mechanic_Rag": bind("Head", [
+            sphere(p + "Bandana", 0.32, (0, HEAD_Y + 0.01, 1.76), scale=(1.0, 0.94, 0.62), m=m["rust"], segs=16, rings=8),
+            box(p + "Knot", (0.1, 0.08, 0.08), (0, HEAD_Y + 0.29, 1.68), bevel=0.025, m=m["rust"]),
         ]),
     }
+    acc.update(faces("Mechanic", m, 0.6, ("Grin", "Snarl", "Clench", "Derp")))
+    return acc
 
 
 # ---------------------------------------------------------------------------
@@ -206,155 +215,107 @@ def mechanic_accessories(m):
 # ---------------------------------------------------------------------------
 
 def hazmat(m):
+    """Bulky tintable suit ("Shirt") with taped seams, hood, glowing canister.
+    The mask is the face (Face_Hazmat_*)."""
     p = "H_"
-    suit, shade, tape = m["hazmat"], m["hazmat_shade"], m["tape"]
+    w = 0.68
+    suit, tape, rubber = m["shirt"], m["white"], m["dark"]
     parts = bind("Head", [
-        box(p + "Hood", (0.68, 0.62, 0.64), (0, 0.02, 1.6), bevel=0.24, segs=4, m=suit),
-        box(p + "Mask", (0.5, 0.14, 0.4), (0, -0.27, 1.58), bevel=0.12, segs=3, m=m["rubber"]),
-        cyl(p + "LensL", 0.11, 0.06, (-0.12, -0.35, 1.64), rot=(math.pi / 2, 0, 0), segs=16, bevel=0.02, m=m["lens"]),
-        cyl(p + "LensR", 0.11, 0.06, (0.12, -0.35, 1.64), rot=(math.pi / 2, 0, 0), segs=16, bevel=0.02, m=m["lens"]),
-        torus(p + "LensRimL", 0.11, 0.025, (-0.12, -0.35, 1.64), rot=(math.pi / 2, 0, 0), m=m["dark"], major_segs=14, minor_segs=5),
-        torus(p + "LensRimR", 0.11, 0.025, (0.12, -0.35, 1.64), rot=(math.pi / 2, 0, 0), m=m["dark"], major_segs=14, minor_segs=5),
-        cyl(p + "Filter", 0.11, 0.16, (0, -0.42, 1.45), rot=(math.radians(70), 0, 0), segs=14, bevel=0.03, m=m["filter"]),
-        cyl(p + "FilterCap", 0.115, 0.04, (0, -0.49, 1.42), rot=(math.radians(70), 0, 0), segs=14, bevel=0.01, m=m["dark"]),
-        cyl(p + "SideFilter", 0.08, 0.14, (0.3, -0.2, 1.48), rot=(0, math.radians(70), 0), segs=12, bevel=0.03, m=m["glow"]),
-        box(p + "HoodSeam", (0.69, 0.04, 0.64), (0, 0.02, 1.6), bevel=0.02, m=tape),
+        blob(p + "Hood", (0, HEAD_Y + 0.02, 1.27), (0, HEAD_Y + 0.02, 1.94), [(0, 0.3, 0.27), (0.4, 0.35, 0.31), (0.8, 0.35, 0.31), (1, 0.32, 0.29)],
+             suit, n=3.2, r0=0.08, r1=0.2, segs=26, mid=6),
+        band(p + "HoodTape", (0, HEAD_Y + 0.02, 1.38), (0, HEAD_Y + 0.02, 1.31), 0.315, 0.285, tape, n=3.2, thick=0.02, flare=0.01, segs=26),
     ])
+    tor, body = torso(p, suit, w=0.8, d=0.54, z0=0.88, belly=0.08, hunch=0.05, n=2.8)
+    parts += tor
+    parts += neck(p, suit, 0.34)
     parts += bind("Spine", [
-        box(p + "Torso", (0.78, 0.52, 0.6), (0, 0, 1.12), bevel=0.18, segs=4, m=suit),
-        box(p + "Belly", (0.7, 0.5, 0.26), (0, -0.02, 0.96), bevel=0.12, segs=3, m=suit),
-        box(p + "Zip", (0.06, 0.04, 0.5), (0, -0.265, 1.08), bevel=0.012, m=tape),
-        box(p + "Badge", (0.2, 0.04, 0.2), (0.18, -0.27, 1.25), bevel=0.03, m=m["white"]),
-        cyl(p + "BadgeDot", 0.035, 0.03, (0.18, -0.295, 1.25), rot=(math.pi / 2, 0, 0), segs=10, bevel=0.0, m=m["dark"]),
-        box(p + "ChestTape", (0.8, 0.54, 0.06), (0, 0, 1.33), bevel=0.02, m=tape),
+        patch(p + "Zip", tor[0], (0, body.front(0, 1.08), 1.08), (0.06, 0.04, 0.5), tape, bevel=0.012),
+        patch(p + "Badge", tor[0], (0.18, body.front(0.18, 1.25), 1.25), (0.2, 0.05, 0.2), tape, bevel=0.03),
+        body.shell(p + "ChestTape", tape, 1.36, 1.31, off=0.016, segs=24, steps=1, lip=0.01),
+        body.shell(p + "WaistTape", tape, 1.0, 0.95, off=0.02, segs=24, steps=1, lip=0.01),
     ])
     for i in range(3):
         a = math.radians(90 + i * 120)
-        parts += bind("Spine", [box(f"{p}Trefoil{i}", (0.06, 0.03, 0.06), (0.18 + math.cos(a) * 0.06, -0.3, 1.25 + math.sin(a) * 0.06),
-                                    rot=(0, -a, 0), bevel=0.0, m=m["dark"])])
-    parts += bind("Hips", [
-        box(p + "Pants", (0.7, 0.5, 0.32), (0, 0, 0.83), bevel=0.1, segs=3, m=suit),
-        box(p + "Belt", (0.72, 0.52, 0.08), (0, 0, 0.96), bevel=0.02, m=m["dark"]),
-        cyl(p + "BeltCan", 0.08, 0.2, (-0.3, -0.18, 0.88), segs=12, bevel=0.03, m=m["glow"]),
-    ])
+        x, z = 0.18 + math.cos(a) * 0.055, 1.25 + math.sin(a) * 0.055
+        parts += bind("Spine", [box(f"{p}Trefoil{i}", (0.06, 0.03, 0.06), (x, body.front(x, z) - 0.035, z), rot=(0, -a, 0), bevel=0.0, m=rubber)])
+    parts += hips(p, suit, w=0.72, d=0.52, belt=rubber, belt_z=0.965)
+    parts += bind("Hips", [cyl(p + "BeltCan", 0.08, 0.2, (-0.31, -0.19, 0.88), segs=12, bevel=0.03, m=m["glow_rad"])])
     for side in (1, -1):
-        parts += suit_limbs(p, side, m, suit, m["rubber"], m["rubber"], arm_w=0.19, leg_w=0.21, cuff=tape, sole=m["dark"], bulk=0.03)
         s = "L" if side > 0 else "R"
-        parts += bind(f"Thigh.{s}", [box(f"{p}Knee{s}", (0.3, 0.06, 0.1), (side * 0.16, -0.17, 0.6), bevel=0.02, m=shade)])
+        parts += arm(p, side, m, w=0.22, sleeve=suit, sleeve_len="long", cuff=tape, glove=rubber, hand=0.02, seed=25)
+        parts += leg(p, side, m, w=0.24, pants=suit, pants_len="long", foot="boot", shoe=rubber, sole=rubber, lace=tape, boot_h=0.26, tear=0)
+        parts += bind(f"Thigh.{s}", [box(f"{p}KneePatch{s}", (0.2, 0.05, 0.14), (side * 0.16, -0.15, 0.58), bevel=0.03, m=tape)])
     return parts
+
+
+def hazmat_masks(m):
+    """The Hazmat's faces: three gas masks (round lenses, a visor window that
+    shows the zombie behind it, a cyclops lens with twin filters)."""
+    p = "HM_"
+    fy = HEAD_Y - 0.32
+    rubber, lens, filt = m["dark"], m["lens"], m["filter"]
+
+    def mask_base(q):
+        return [box(q + "Mask", (0.5, 0.14, 0.42), (0, fy + 0.04, 1.58), bevel=0.12, segs=3, m=rubber)]
+
+    twin = mask_base(p + "A")
+    for side in (-1, 1):
+        twin += [cyl(f"{p}ALens{side}", 0.11, 0.06, (side * 0.12, fy - 0.03, 1.64), rot=(math.pi / 2, 0, 0), segs=16, bevel=0.02, m=lens),
+                 torus(f"{p}ARim{side}", 0.11, 0.025, (side * 0.12, fy - 0.035, 1.64), rot=(math.pi / 2, 0, 0), m=filt, major_segs=16, minor_segs=5)]
+    twin += [cyl(p + "AFilter", 0.11, 0.16, (0, fy - 0.1, 1.45), rot=(math.radians(70), 0, 0), segs=14, bevel=0.03, m=filt),
+             cyl(p + "ACap", 0.115, 0.04, (0, fy - 0.17, 1.42), rot=(math.radians(70), 0, 0), segs=14, bevel=0.01, m=rubber),
+             cyl(p + "ASide", 0.08, 0.14, (0.3, fy + 0.12, 1.48), rot=(0, math.radians(70), 0), segs=12, bevel=0.03, m=m["glow_rad"])]
+    window = [box(p + "BFrame", (0.54, 0.12, 0.34), (0, fy + 0.06, 1.62), bevel=0.1, segs=3, m=rubber),
+              box(p + "BWindow", (0.44, 0.06, 0.24), (0, fy + 0.0, 1.63), bevel=0.08, segs=3, m=m["glass"]),
+              cyl(p + "BFilterL", 0.07, 0.14, (0.15, fy - 0.02, 1.4), rot=(math.radians(70), 0, math.radians(-20)), segs=12, bevel=0.02, m=filt),
+              cyl(p + "BFilterR", 0.07, 0.14, (-0.15, fy - 0.02, 1.4), rot=(math.radians(70), 0, math.radians(20)), segs=12, bevel=0.02, m=filt),
+              box(p + "BChin", (0.3, 0.1, 0.12), (0, fy + 0.04, 1.42), bevel=0.04, m=rubber)]
+    # The zombie behind the window: two glowing eyes and a grin.
+    for side in (-1, 1):
+        window.append(sphere(f"{p}BEye{side}", 0.06, (side * 0.1, fy + 0.06, 1.65), scale=(1, 0.5, 1.15), m=lens, segs=10, rings=6))
+    window.append(box(p + "BMouth", (0.18, 0.03, 0.05), (0, fy + 0.07, 1.57), bevel=0.015, m=m["white"]))
+    cyclops = mask_base(p + "C") + [
+        cyl(p + "CLens", 0.15, 0.07, (0, fy - 0.03, 1.64), rot=(math.pi / 2, 0, 0), segs=20, bevel=0.025, m=lens),
+        torus(p + "CRim", 0.15, 0.03, (0, fy - 0.04, 1.64), rot=(math.pi / 2, 0, 0), m=filt, major_segs=20, minor_segs=5),
+        cyl(p + "CFilterL", 0.085, 0.16, (0.2, fy - 0.04, 1.46), rot=(math.radians(60), math.radians(-25), 0), segs=12, bevel=0.03, m=filt),
+        cyl(p + "CFilterR", 0.085, 0.16, (-0.2, fy - 0.04, 1.46), rot=(math.radians(60), math.radians(25), 0), segs=12, bevel=0.03, m=filt),
+        cyl(p + "CGlowL", 0.06, 0.03, (0.23, fy - 0.11, 1.42), rot=(math.radians(60), math.radians(-25), 0), segs=12, bevel=0.0, m=m["glow_rad"]),
+        cyl(p + "CGlowR", 0.06, 0.03, (-0.23, fy - 0.11, 1.42), rot=(math.radians(60), math.radians(25), 0), segs=12, bevel=0.0, m=m["glow_rad"]),
+    ]
+    return {"Face_Hazmat_Twin": bind("Head", twin), "Face_Hazmat_Window": bind("Head", window), "Face_Hazmat_Cyclops": bind("Head", cyclops)}
 
 
 def hazmat_accessories(m):
     p = "HA_"
-    return {
+    acc = {
         "Acc_Hazmat_Tank": bind("Spine", [
-            cyl(p + "Tank", 0.16, 0.64, (0, 0.36, 1.12), segs=14, bevel=0.06, m=m["white"]),
-            cyl(p + "TankBand", 0.165, 0.1, (0, 0.36, 1.26), segs=14, bevel=0.02, m=m["glow"]),
-            tube(p + "TankHose", [(0, 0.38, 1.46), (0.2, 0.25, 1.55), (0.28, -0.1, 1.5)], 0.03, m=m["rubber"], segs=6),
+            cyl(p + "Tank", 0.16, 0.64, (0, 0.4, 1.12), segs=16, bevel=0.06, m=m["white"]),
+            cyl(p + "TankBand", 0.165, 0.1, (0, 0.4, 1.26), segs=16, bevel=0.02, m=m["glow_rad"]),
+            tube(p + "TankHose", [(0, 0.42, 1.46), (0.2, 0.27, 1.56), (0.29, -0.1, 1.52)], 0.03, m=m["dark"], segs=6),
         ]),
         "Acc_Hazmat_Geiger": bind("ForeArm.L", [
-            box(p + "Geiger", (0.16, 0.24, 0.14), (0.46, -0.16, 0.56), bevel=0.03, m=m["filter"]),
-            box(p + "GeigerDial", (0.1, 0.03, 0.08), (0.46, -0.29, 0.58), bevel=0.01, m=m["glow"]),
-            box(p + "GeigerWand", (0.04, 0.3, 0.04), (0.46, -0.36, 0.5), bevel=0.01, m=m["dark"]),
+            box(p + "Geiger", (0.16, 0.24, 0.14), (0.47, -0.16, 0.54), bevel=0.03, m=m["filter"]),
+            box(p + "GeigerDial", (0.1, 0.03, 0.08), (0.47, -0.29, 0.56), bevel=0.01, m=m["glow_rad"]),
+            box(p + "GeigerWand", (0.04, 0.3, 0.04), (0.47, -0.36, 0.48), bevel=0.01, m=m["dark"]),
+        ]),
+        "Acc_Hazmat_Sign": bind("Spine", [
+            prism(p + "Sign", [(-0.22, -0.18), (0.22, -0.18), (0.0, 0.2)], 0.03, (0, 0.33, 1.2), rot=(0, 0, math.pi), m=m["glow"], bevel=0.01),
+            box(p + "SignMark", (0.04, 0.035, 0.14), (0, 0.35, 1.2), bevel=0.01, m=m["dark"]),
+        ]),
+        "Acc_Hazmat_Barrel": bind("ForeArm.R", [
+            cyl(p + "Barrel", 0.12, 0.26, (-0.45, -0.14, 0.42), segs=16, bevel=0.03, m=m["glow"]),
+            torus(p + "BarrelRing", 0.122, 0.015, (-0.45, -0.14, 0.47), m=m["dark"], major_segs=16, minor_segs=4),
+            cyl(p + "BarrelGoo", 0.1, 0.02, (-0.45, -0.14, 0.555), segs=14, bevel=0.0, m=m["glow_rad"]),
         ]),
     }
-
-
-# ---------------------------------------------------------------------------
-# Extra clips
-# ---------------------------------------------------------------------------
-
-def clip_bound():
-    """Low-gravity hop: squash, push off, float with arms up, land."""
-    def pose(spine, thigh, shin, upper, fore, spread, head=-6):
-        p = {"Hips": (spine * 0.3, 0, 0), "Spine": (spine, 0, 0), "Head": (head, 0, 0),
-             "Thigh.L": (thigh, 0, 0), "Thigh.R": (thigh + 6, 0, 0), "Shin.L": (shin, 0, 0), "Shin.R": (shin + 4, 0, 0)}
-        p.update(arms(upper, fore, upper + 6, fore, spread=spread))
-        return p
-    return "Bound-loop", [
-        (0, pose(26, -46, 70, -30, -30, 18), (0, 0, -0.22)),
-        (5, pose(4, 6, 6, -110, -20, 30, -14), (0, -0.04, 0.04)),
-        (10, pose(10, -24, 40, -130, -14, 38, -10), (0, -0.06, 0.06)),
-        (16, pose(14, -36, 52, -70, -24, 20), (0, -0.03, 0.0)),
-        (20, pose(26, -46, 70, -30, -30, 18), (0, 0, -0.22)),
-    ]
-
-
-def clip_crouch():
-    p = {"Hips": (12, 0, 0), "Spine": (34, 0, 0), "Head": (-24, 0, 0),
-         "Thigh.L": (-62, 0, 0), "Thigh.R": (-56, 0, 0), "Shin.L": (88, 0, 0), "Shin.R": (84, 0, 0)}
-    p.update(arms(36, -20, 40, -20, spread=24))
-    rest = {"Hips": (6, 0, 0), "Spine": (14, 0, 0), "Head": (-8, 0, 0)}
-    rest.update(arms(-40, -20, -36, -20, spread=10))
-    return "Crouch", [(0, rest, (0, 0, -0.02)), (6, p, (0, 0.04, -0.3)), (12, p, (0, 0.04, -0.32))]
-
-
-def clip_hover():
-    def pose(phase):
-        s = math.sin(phase * math.tau)
-        p = {"Hips": (4, 0, 3 * s), "Spine": (8, 0, -4 * s), "Head": (-12, 4 * s, 0),
-             "Thigh.L": (-14 + 10 * s, 0, 0), "Thigh.R": (-6 - 10 * s, 0, 0), "Shin.L": (24 + 8 * s, 0, 0), "Shin.R": (30 - 8 * s, 0, 0)}
-        p.update(arms(-30 + 6 * s, -40, -30 - 6 * s, -40, spread=62))
-        return p, (0, 0, 0.02 * s)
-    return "Hover-loop", [(round(i * 24 / 8), *pose(i / 8)) for i in range(9)]
-
-
-def build_animations(armature):
-    ad = armature.animation_data_create()
-    for make in (clip_idle, clip_walk, clip_run, clip_attack, clip_hit, clip_die, clip_bound, clip_crouch, clip_hover):
-        name, keys = make()
-        action = bpy.data.actions.new(name)
-        ad.action = action
-        for frame, pose, hips_loc in keys:
-            set_pose(armature, frame, pose, hips_loc)
-        track = ad.nla_tracks.new()
-        track.name = name
-        track.strips.new(name, 0, action)
-        ad.action = None
-    for pb in armature.pose.bones:
-        pb.rotation_quaternion = (1, 0, 0, 0)
-        pb.location = (0, 0, 0)
+    acc.update(hazmat_masks(m))
+    return acc
 
 
 def build():
     scene = reset_scene()
     scene.render.fps = FPS
-    m = dict(
-        skin=mat("Skin", "#a3d14a", rough=0.6),
-        skin_dark=mat("SkinDark", "#6da336", rough=0.65),
-        eye=mat("Eye", "#fbf6c8", rough=0.3, emit=0.55),
-        pupil=mat("Pupil", "#2a2a1e", rough=0.4),
-        mouth=mat("Mouth", "#2e1a2c", rough=0.7),
-        teeth=mat("Teeth", "#fff3d6", rough=0.4),
-        white=dmat("Hull", rough=0.45),
-        hair=mat("Hair", "#5a3424", rough=0.8),
-        dark=dmat("ZDark", "#2b2530", rough=0.6),
-        steel=dmat("Steel", rough=0.4, metal=0.5),
-        suit=dmat("CadetSuit", "#f1ede4", rough=0.55),
-        suit_shade=dmat("CadetPack", "#cfd6d8", rough=0.5),
-        teal=dmat("Teal", rough=0.45),
-        rust=dmat("Rust", rough=0.55),
-        panel=dmat("CadetPanel", "#3a3f58", rough=0.4),
-        btn_red=dglow("BtnRed", "#ff4a3a", 1.6),
-        btn_yellow=dglow("BtnYellow", "#ffd23a", 1.6),
-        btn_teal=dglow("BtnTeal", "#4af2e0", 1.6),
-        boot_white=dmat("CadetBoot", "#dfe4e6", rough=0.5),
-        glass=glass_mat("HelmetGlass", "#bff4ff", alpha=0.28),
-        glint=dglow("HelmetGlint", "#ffffff", 1.4),
-        visor=dmat("Visor", "#e8a92a", rough=0.15, metal=0.8),
-        shirt=mat("Shirt", "#ff7a2a", rough=0.65),
-        hivis=dmat("HiVis", "#d8ff3a", rough=0.6),
-        reflect=dmat("Reflect", "#e8eef2", rough=0.25, metal=0.6),
-        leather=dmat("Leather", "#5a3a28", rough=0.75),
-        burner=dglow("Burner", "#ff9a3a", 2.0),
-        hazmat=dmat("Hazmat", "#ffd21f", rough=0.45),
-        hazmat_shade=dmat("HazmatShade", "#e0a812", rough=0.5),
-        tape=dmat("Tape", "#b9c0c6", rough=0.35, metal=0.5),
-        rubber=dmat("RubberBlack", "#26222a", rough=0.55),
-        lens=dglow("MaskLens", "#b8ff4a", 2.2),
-        filter=dmat("Filter", "#4a4f5a", rough=0.5),
-        glow=dglow("RadGlow", "#9dff3a", 2.4),
-    )
+    m = materials()
     armature = build_armature()
     meshes = [
         skin("Outfit_Cadet", cadet(m), armature),
@@ -367,7 +328,7 @@ def build():
     acc.update(hazmat_accessories(m))
     for name, parts in acc.items():
         meshes.append(skin(name, parts, armature))
-    build_animations(armature)
+    zombie_anim.bake(armature, zombie_anim.dune_clips, "dune_zombies")
     save("dune_zombies", [armature] + meshes, animations=True)
 
 

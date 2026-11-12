@@ -15,10 +15,15 @@ extends Resource
 @export var requirement: Requirement
 @export var sort_order := 0
 ## Music loop and ambience bed (sound names, see Sfx / tools/gen_audio.py).
+## The generator normalises every loop to one loudness, so these levels mean
+## the same in every world.
 @export var music: StringName = &"boardwalk_loop"
+## The driving variant of `music` the run cross-fades to when the final wave
+## starts (same tempo and length, so it takes over in time). Empty = `music`.
+@export var music_final: StringName = &""
 @export var ambience: StringName = &"pier_ambience"
-@export var music_volume_db := -9.0
-@export var ambience_volume_db := -8.0
+@export var music_volume_db := -7.0
+@export var ambience_volume_db := -10.0
 ## Accent colour for menus and loading screens.
 @export var accent_color := Color("ff3fa4")
 ## Main-menu / world-select backdrop camera for this level's scene.
@@ -29,3 +34,8 @@ extends Resource
 
 ## Set by GameData at load: the world that lists this level.
 var world: WorldData
+
+
+## The loop for the final wave and extraction.
+func final_music() -> StringName:
+	return music_final if music_final != &"" else music

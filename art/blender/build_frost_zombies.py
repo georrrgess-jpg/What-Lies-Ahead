@@ -1,15 +1,20 @@
-"""Frostpeak Resort zombies: one rig (the same bones and clips as
-build_zombie.py, which this script reuses), three outfits.
+"""Frostpeak Resort zombies: one rig (the same bones as build_zombie.py, which
+this script reuses), three outfits.
 
-    Outfit_Skier    Ski Racer: skin-tight race suit, helmet with a glowing
-                    visor, chunky ski boots, crossed skis on the back
-    Outfit_Yeti     Yeti brute: a zombie in a shaggy blue yeti costume with
-                    horns, fur mitts and a big zipper down the back
-    Outfit_Frozen   Frozen Tourist: puffy jacket and bobble hat, encased in
-                    translucent ice (the ice is the Acc_Frozen_Ice mesh, which
-                    the game hides when the shell shatters)
+    Outfit_Skier    Ski Racer: skin-tight tintable race suit, helmet with a glowing
+                    visor, chunky ski boots; skis on its feet (Acc_Skier_Skis)
+    Outfit_Yeti     Yeti brute: a hulking zombie in a shaggy tintable yeti costume
+                    ("Shirt") with horns, a hood that frames its face, fur mitts
+                    and a big zipper down the back
+    Outfit_Frozen   Frozen Tourist: puffy jacket and bobble hat, encased in blue
+                    ice (the ice is the Acc_Frozen_Ice mesh, which the game hides
+                    when the shell shatters)
 
-Clips: the shared Idle-loop, Walk-loop, Run-loop, Attack, Hit, Die plus
+Bodies, heads and faces come from zombie_kit.py; each outfit has several faces
+(Face_<Outfit>_<Preset>), one shown per zombie.
+
+Clips (zombie_anim.frost_clips): the Frozen Tourist's stiff shuffle, the Ski
+Racer's skate, the Yeti's stomp and slam ("_Heavy"), the shared set, plus
     Tuck-loop   the Ski Racer's crouched downhill tuck (telegraph and rush)
     Throw       the Yeti's two-handed overhead snowball heave
 
@@ -26,24 +31,37 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from frost_common import *  # noqa: F401,F403
 import build_zombie as bz
+import zombie_anim  # noqa: E402
+from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+                        patch, skull, torso)
 
 
-def suit_limbs(prefix, m, suit, arm_w, leg_w, boot, hand=0.0, arm_out=0.0):
-    """Arms and legs in one material (suits, costumes), with chunky boots."""
-    limb_m = dict(m, skin=suit)
-    parts = []
-    for side in (1, -1):
-        parts += bz.limb_parts(prefix, side, limb_m, arm_w=arm_w, leg_w=leg_w, sleeve=None, shorts=suit, shoe=boot,
-                               sock=False, hand=hand, arm_out=arm_out)
-    return parts
+def materials():
+    m = base_materials("frost", skin="#8fc7b0", skin_dark="#5f9a86", dark="#1c2030", white="#f6f6ff")
+    m.update(
+        shirt=mat("Shirt", "#e0218a", rough=0.45),
+        navy=mat("FrostNavy", "#1c2250", rough=0.35),
+        accent=mat("FrostAccent", "#ffd23f", rough=0.5),
+        visor=mat("FrostVisor", "#ff5a2a", rough=0.15, emit=1.5),
+        ski=mat("FrostRaceSki", "#ff3f4f", rough=0.35),
+        steel=mat("FrostZSteel", "#b8bccc", rough=0.3, metal=0.6),
+        gold=mat("FrostGold", "#ffcf3f", rough=0.3, metal=0.6, emit=0.4),
+        fur_light=mat("FrostFurLight", "#dfeeff", rough=0.85),
+        horn=mat("FrostHorn", "#fff0d4", rough=0.5),
+        red=mat("FrostScarfRed", "#e2343f", rough=0.7),
+        pants=mat("FrostPants", "#232a5c", rough=0.65),
+        mitten=mat("FrostMitten", "#ffd23f", rough=0.7),
+        scarf=mat("FrostScarf", "#3fd4c4", rough=0.7),
+        beanie=mat("FrostBeanie", "#ff7a2a", rough=0.75),
+        lens=mat("CameraLens", "#5fd9ff", rough=0.15, emit=0.4),
+        ice=glass("FrozenIceShell", "#3f9dff", alpha=0.62, emit=0.55, rough=0.12),
+        ice_edge=glass("FrozenIceEdge", "#b8ecff", alpha=0.75, emit=0.9, rough=0.1),
+    )
+    return m
 
 
-def recolour(parts, names, material):
-    """Swap the material of the parts whose names end with any of `names`."""
-    for ob in parts:
-        if any(ob.name.endswith(n) for n in names):
-            ob.data.materials.clear()
-            ob.data.materials.append(material)
+def yeti_eyes(m):
+    return dict(m, eye=mat("EyeAmber", "#ffb43a", rough=0.3, emit=3.0))
 
 
 # ---------------------------------------------------------------------------
@@ -51,134 +69,178 @@ def recolour(parts, names, material):
 # ---------------------------------------------------------------------------
 
 def skier(m):
+    """Skin-tight race suit ("Shirt") with white and navy panels, helmet with a
+    glowing visor, bib 07, chunky ski boots. Seven materials."""
     p = "S_"
-    suit, panel, navy = m["shirt"], m["white"], m["navy"]
-    parts = bz.head_parts(p, 0.54, m)
+    w = 0.54
+    suit, white, navy = m["shirt"], m["white"], m["navy"]
+    parts = head(p, m, w)
+    sk = skull(w)
+    fy = face_y(w, 1.66)
     parts += bz.bind("Head", [
-        sphere(p + "Helmet", 0.31, (0, 0.04, 1.76), scale=(1.05, 1.05, 0.72), m=navy, segs=16, rings=9),
-        box(p + "HelmetStripe", (0.1, 0.62, 0.08), (0, 0.02, 1.95), bevel=0.03, m=m["accent"]),
-        box(p + "Visor", (0.6, 0.12, 0.16), (0, -0.25, 1.64), bevel=0.06, segs=3, m=m["visor"]),
-        box(p + "VisorStrap", (0.64, 0.5, 0.07), (0, 0.04, 1.64), bevel=0.03, m=navy),
-        box(p + "ChinGuard", (0.3, 0.12, 0.08), (0, -0.24, 1.3), bevel=0.03, m=navy),
+        sk.shell(p + "Helmet", navy, 1.92, 1.5, off=0.04, gap=140, segs=26, steps=5, lip=0.03),
+        sphere(p + "HelmetTop", 0.31, (0, HEAD_Y + 0.02, 1.82), scale=(1.06, 1.06, 0.66), m=navy, segs=18, rings=9),
+        box(p + "HelmetStripe", (0.1, 0.64, 0.08), (0, HEAD_Y + 0.02, 2.0), bevel=0.03, m=m["accent"]),
+        box(p + "Visor", (0.58, 0.1, 0.13), (0, fy - 0.07, 1.72), rot=rad(-6, 0, 0), bevel=0.05, segs=3, m=m["visor"]),
+        box(p + "ChinGuard", (0.3, 0.12, 0.08), (0, face_y(w, 1.3) - 0.03, 1.3), bevel=0.03, m=navy),
     ])
+    tor, body = torso(p, suit, w=0.52, d=0.37, z0=0.9, hunch=0.05)
+    parts += tor
+    parts += neck(p, navy, 0.22)
+    t = tor[0]
     parts += bz.bind("Spine", [
-        box(p + "Torso", (0.5, 0.36, 0.56), (0, 0, 1.13), bevel=0.12, segs=4, m=suit),
-        box(p + "Waist", (0.46, 0.34, 0.2), (0, 0, 0.96), bevel=0.08, segs=3, m=suit),
-        box(p + "PanelL", (0.12, 0.38, 0.5), (0.2, 0, 1.12), rot=rad(0, 18, 0), bevel=0.04, m=panel),
-        box(p + "PanelR", (0.08, 0.38, 0.5), (-0.22, 0, 1.12), rot=rad(0, -18, 0), bevel=0.03, m=navy),
-        box(p + "Collar", (0.3, 0.28, 0.12), (0, 0, 1.4), bevel=0.05, m=navy),
-        box(p + "Bib", (0.36, 0.03, 0.34), (0, -0.19, 1.13), bevel=0.02, m=panel),
-        box(p + "BibBack", (0.36, 0.03, 0.34), (0, 0.19, 1.13), bevel=0.02, m=panel),
-        text(p + "BibNum", "07", 0.2, 0.02, (0, -0.205, 1.12), m=navy),
-        text(p + "BibNumBack", "07", 0.2, 0.02, (0, 0.205, 1.12), rot=(0, 0, math.pi), m=navy),
+        body.shell(p + "PanelL", white, 1.4, 0.94, off=0.012, gap=300, gap_at=-90, segs=24, steps=4, lip=0.01),
+        patch(p + "Bib", t, (0, body.front(0, 1.13), 1.13), (0.34, 0.04, 0.32), white, bevel=0.02),
+        patch(p + "BibBack", t, (0, body.front(0, 1.13, back=True), 1.13), (0.34, 0.04, 0.32), white, bevel=0.02),
+        text(p + "BibNum", "07", 0.2, 0.02, (0, body.front(0, 1.12) - 0.03, 1.12), m=navy),
+        text(p + "BibNumBack", "07", 0.2, 0.02, (0, body.front(0, 1.12, back=True) + 0.03, 1.12), rot=(0, 0, math.pi), m=navy),
     ])
-    parts += bz.bind("Hips", [
-        box(p + "Hips", (0.48, 0.36, 0.28), (0, 0, 0.84), bevel=0.08, segs=3, m=suit),
-        box(p + "Belt", (0.5, 0.38, 0.06), (0, 0, 0.955), bevel=0.02, m=navy),
-    ])
-    limbs = suit_limbs(p, m, suit, 0.15, 0.17, m["boot"])
-    parts += limbs
-    for side, s in ((1, "L"), (-1, "R")):
+    parts += hips(p, suit, w=0.5, d=0.37, belt=navy)
+    for side in (1, -1):
+        s = "L" if side > 0 else "R"
         x = side * 0.16
-        parts += bz.bind(f"Shin.{s}", [
-            box(f"{p}BootCuff{s}", (0.26, 0.34, 0.34), (x, -0.02, 0.27), bevel=0.07, segs=3, m=m["boot"]),
-            box(f"{p}BootBuckle{s}", (0.27, 0.06, 0.04), (x, -0.2, 0.3), bevel=0.01, m=navy),
-        ])
-        parts += bz.bind(f"ForeArm.{s}", [
-            box(f"{p}Glove{s}", (0.21, 0.18, 0.24), (side * 0.43, -0.01, 0.58), bevel=0.07, segs=3, m=navy),
-            box(f"{p}Cuff{s}", (0.2, 0.2, 0.08), (side * 0.43, 0, 0.71), bevel=0.03, m=m["accent"]),
-        ])
-        parts += bz.bind(f"Thigh.{s}", [box(f"{p}Stripe{s}", (0.03, 0.08, 0.3), (side * 0.275, 0, 0.64), bevel=0.0, m=panel)])
+        parts += arm(p, side, m, w=0.15, sleeve=suit, sleeve_len="long", cuff=m["accent"], glove=navy, seed=31)
+        parts += leg(p, side, m, w=0.17, pants=suit, pants_len="long", foot="boot", shoe=white, sole=navy, lace=m["accent"], boot_h=0.24, tear=0)
+        parts += bz.bind(f"Shin.{s}", [box(f"{p}BootBuckle{s}{i}", (0.24, 0.05, 0.035), (x, -0.13, 0.2 + i * 0.09), bevel=0.01, m=navy)
+                                       for i in range(2)])
+        parts += bz.bind(f"Thigh.{s}", [box(f"{p}Stripe{s}", (0.03, 0.08, 0.3), (side * 0.255, 0, 0.64), bevel=0.0, m=white)])
     return parts
+
+
+def ski(name, x, m, tip):
+    """A race ski under the boot (Shin-bound), its tip curled up."""
+    return [
+        blob(name, (x, 0.42, 0.012), (x, -0.62, 0.012), [(0, 0.05, 0.016), (0.5, 0.055, 0.016), (1, 0.06, 0.016)], m, n=4.0, r0=0.012, r1=0.0,
+             segs=14, mid=4),
+        tube(name + "Tip", [(x, -0.62, 0.012), (x, -0.72, 0.03), (x, -0.78, 0.08)], 0.018, m=m, segs=6, radius_end=0.012),
+        box(name + "TipPlate", (0.12, 0.12, 0.022), (x, -0.73, 0.045), rot=rad(28, 0, 0), bevel=0.008, m=m),
+        box(name + "Binding", (0.13, 0.2, 0.04), (x, -0.08, 0.03), bevel=0.012, m=tip),
+    ]
 
 
 def skier_accessories(m):
     p = "SA_"
-    ski = m["ski"]
-    return {
-        "Acc_Skier_Skis": bz.bind("Spine", [
-            box(p + "SkiA", (0.09, 0.04, 1.75), (0, 0.27, 1.05), rot=rad(0, 24, 0), bevel=0.015, m=ski),
-            box(p + "SkiB", (0.09, 0.04, 1.75), (0, 0.3, 1.05), rot=rad(0, -24, 0), bevel=0.015, m=ski),
-            box(p + "SkiTipA", (0.1, 0.12, 0.08), (-0.36, 0.22, 1.86), rot=rad(-40, 24, 0), bevel=0.02, m=ski),
-            box(p + "SkiTipB", (0.1, 0.12, 0.08), (0.36, 0.25, 1.86), rot=rad(-40, -24, 0), bevel=0.02, m=ski),
-            box(p + "SkiStrap", (0.5, 0.06, 0.06), (0, 0.24, 1.05), bevel=0.02, m=m["navy"]),
-        ]),
-        "Acc_Skier_Poles": bz.bind("Spine", [
-            cyl(p + "PoleA", 0.022, 1.3, (0.12, 0.24, 1.05), rot=rad(14, 8, 0), segs=6, bevel=0.0, m=m["steel"]),
-            cyl(p + "PoleB", 0.022, 1.3, (-0.12, 0.24, 1.05), rot=rad(14, -8, 0), segs=6, bevel=0.0, m=m["steel"]),
-            cyl(p + "BasketA", 0.07, 0.02, (0.03, 0.08, 0.43), rot=rad(14, 8, 0), segs=8, bevel=0.0, m=m["navy"]),
-            cyl(p + "BasketB", 0.07, 0.02, (-0.03, 0.08, 0.43), rot=rad(14, -8, 0), segs=8, bevel=0.0, m=m["navy"]),
-        ]),
+    skis = bz.bind("Shin.L", ski(p + "SkiL", 0.16, m["ski"], m["navy"])) + bz.bind("Shin.R", ski(p + "SkiR", -0.16, m["ski"], m["navy"]))
+    poles = []
+    for side, s in ((1, "L"), (-1, "R")):
+        gx = side * 0.435
+        poles += bz.bind(f"ForeArm.{s}", [
+            cyl(f"{p}Pole{s}", 0.018, 1.0, (gx, -0.07, 0.2), rot=rad(12, 0, 0), segs=6, bevel=0.0, m=m["steel"]),
+            cyl(f"{p}Basket{s}", 0.07, 0.02, (gx, 0.0, -0.22), rot=rad(12, 0, 0), segs=10, bevel=0.0, m=m["navy"]),
+            cyl(f"{p}Grip{s}", 0.03, 0.1, (gx, -0.08, 0.56), rot=rad(12, 0, 0), segs=8, bevel=0.01, m=m["navy"]),
+        ])
+    acc = {
+        "Acc_Skier_Skis": skis,
+        "Acc_Skier_Poles": poles,
         "Acc_Skier_Medal": bz.bind("Spine", [
-            cyl(p + "Medal", 0.07, 0.02, (0.0, -0.215, 1.31), rot=rad(90, 0, 0), segs=12, bevel=0.0, m=m["gold"]),
-            tube(p + "Ribbon", [(-0.1, -0.15, 1.42), (0.0, -0.21, 1.33), (0.1, -0.15, 1.42)], 0.015, m=m["accent"], segs=5),
+            cyl(p + "Medal", 0.07, 0.02, (0.0, -0.23, 1.31), rot=rad(90, 0, 0), segs=14, bevel=0.0, m=m["gold"]),
+            tube(p + "Ribbon", [(-0.1, -0.16, 1.43), (0.0, -0.22, 1.34), (0.1, -0.16, 1.43)], 0.015, m=m["accent"], segs=5),
+        ]),
+        "Acc_Skier_Goggles": bz.bind("Head", [
+            box(p + "Goggles", (0.44, 0.08, 0.12), (0, HEAD_Y - 0.25, 1.9), rot=rad(-25, 0, 0), bevel=0.04, m=m["accent"]),
+            box(p + "GoggleLens", (0.38, 0.06, 0.09), (0, HEAD_Y - 0.28, 1.9), rot=rad(-25, 0, 0), bevel=0.03, m=m["lens"]),
         ]),
     }
+    acc.update(faces("Skier", m, 0.54, ("Grin", "Snarl", "Gape"), tongue=m["red"]))
+    return acc
 
 
 # ---------------------------------------------------------------------------
 # Yeti costume brute
 # ---------------------------------------------------------------------------
 
-def fur_clumps(prefix, bone, centre, radii, count, m, seed, size=0.11):
+def fur_clumps(prefix, bone, centre, radii, count, m, seed, size=0.11, keep=None):
+    """Shaggy fur tufts scattered over an ellipsoid; keep(x, y, z) filters them
+    (the face stays clear)."""
     rng = random.Random(seed)
     out = []
-    for i in range(count):
+    i = 0
+    while len(out) < count and i < count * 6:
+        i += 1
         a = rng.uniform(0, math.tau)
         z = rng.uniform(-1, 1)
         r = math.sqrt(1 - z * z)
         pos = (centre[0] + math.cos(a) * r * radii[0], centre[1] + math.sin(a) * r * radii[1], centre[2] + z * radii[2])
-        out.append(sphere(f"{prefix}{i:02d}", size * rng.uniform(0.75, 1.25), pos, scale=(1, 1, 1.4), m=m, segs=7, rings=5))
+        if keep and not keep(*pos):
+            continue
+        out.append(sphere(f"{prefix}{len(out):02d}", size * rng.uniform(0.75, 1.25), pos, scale=(1, 1, 1.45),
+                          rot=(rng.uniform(-0.4, 0.4), rng.uniform(-0.4, 0.4), 0), m=m, segs=8, rings=5))
     return bz.bind(bone, out)
 
 
 def yeti(m):
+    """A hulking zombie in a shaggy yeti costume ("Shirt", tinted): hood with horns
+    framing the face, white belly and face rim, fur mitts with claws."""
     p = "Y_"
-    fur, light, dark = m["fur"], m["fur_light"], m["fur_dark"]
-    parts = bz.head_parts(p, 0.62, m)
+    w = 0.64
+    fur, light, horn = m["shirt"], m["fur_light"], m["horn"]
+    parts = head(p, m, w, ears=False)
+    sk = skull(w)
     parts += bz.bind("Head", [
-        sphere(p + "Hood", 0.43, (0, 0.2, 1.68), scale=(1.22, 0.95, 1.15), m=fur, segs=16, rings=10),
-        torus(p + "HoodRim", 0.36, 0.1, (0, -0.16, 1.56), rot=rad(90, 0, 0), m=light, major_segs=20, minor_segs=7),
-        tube(p + "HornL", [(-0.3, 0.05, 1.95), (-0.48, 0.0, 2.15), (-0.5, -0.08, 2.32)], 0.08, m=m["horn"], segs=8, radius_end=0.02),
-        tube(p + "HornR", [(0.3, 0.05, 1.95), (0.48, 0.0, 2.15), (0.5, -0.08, 2.32)], 0.08, m=m["horn"], segs=8, radius_end=0.02),
-        sphere(p + "EarL", 0.1, (-0.5, 0.15, 1.72), scale=(0.6, 1, 1.3), m=fur, segs=8, rings=5),
-        sphere(p + "EarR", 0.1, (0.5, 0.15, 1.72), scale=(0.6, 1, 1.3), m=fur, segs=8, rings=5),
+        sk.shell(p + "Hood", fur, 1.98, 1.3, off=0.07, gap=138, segs=28, steps=7, lip=0.05),
+        sphere(p + "HoodTop", 0.4, (0, HEAD_Y + 0.05, 1.88), scale=(1.0, 0.98, 0.62), m=fur, segs=18, rings=9),
+        torus(p + "FaceRim", 0.31, 0.065, (0, face_y(w, 1.58) + 0.04, 1.59), rot=rad(90, 0, 0), m=light, major_segs=28, minor_segs=8),
+        tube(p + "HornL", [(-0.3, HEAD_Y + 0.06, 1.98), (-0.48, HEAD_Y + 0.0, 2.18), (-0.5, HEAD_Y - 0.09, 2.36)], 0.085, m=horn, segs=8, radius_end=0.02),
+        tube(p + "HornR", [(0.3, HEAD_Y + 0.06, 1.98), (0.48, HEAD_Y + 0.0, 2.18), (0.5, HEAD_Y - 0.09, 2.36)], 0.085, m=horn, segs=8, radius_end=0.02),
+        sphere(p + "EarL", 0.11, (-0.47, HEAD_Y + 0.12, 1.74), scale=(0.6, 1, 1.3), m=fur, segs=8, rings=5),
+        sphere(p + "EarR", 0.11, (0.47, HEAD_Y + 0.12, 1.74), scale=(0.6, 1, 1.3), m=fur, segs=8, rings=5),
     ])
-    parts += fur_clumps(p + "HoodFur", "Head", (0, 0.2, 1.72), (0.5, 0.38, 0.45), 12, fur, 3)
+    # Hood tufts on the crown and back only: the face stays clear.
+    parts += fur_clumps(p + "HoodFur", "Head", (0, HEAD_Y + 0.12, 1.78), (0.42, 0.32, 0.3), 12, fur, 3,
+                        keep=lambda x, y, z: y > HEAD_Y + 0.04 or z > 1.98)
+    tor, body = torso(p, fur, w=1.04, d=0.68, z0=0.86, z1=1.48, waist=0.86, belly=0.1, hunch=0.12, chest=1.06, n=2.8)
+    parts += tor
+    parts += neck(p, fur, 0.44, z1=1.48)
     parts += bz.bind("Spine", [
-        box(p + "Torso", (0.96, 0.64, 0.66), (0, 0, 1.12), bevel=0.24, segs=4, m=fur),
-        sphere(p + "Belly", 0.32, (0, -0.2, 1.0), scale=(1.15, 0.7, 1.1), m=light, segs=12, rings=8),
-        box(p + "Neck", (0.42, 0.36, 0.14), (0, 0, 1.42), bevel=0.06, m=fur),
-        box(p + "Zip", (0.05, 0.04, 0.6), (0, 0.33, 1.12), bevel=0.01, m=m["steel"]),
-        box(p + "ZipPull", (0.06, 0.05, 0.12), (0, 0.35, 1.38), bevel=0.01, m=m["steel"]),
+        sphere(p + "Belly", 0.3, (0, body.front(0, 1.04) + 0.07, 1.04), scale=(1.05, 0.42, 1.15), m=light, segs=18, rings=10),
+        patch(p + "Zip", tor[0], (0, body.front(0, 1.12, back=True), 1.12), (0.05, 0.04, 0.62), m["white"], bevel=0.01),
+        box(p + "ZipPull", (0.06, 0.05, 0.12), (0, body.front(0, 1.4, back=True) + 0.04, 1.4), bevel=0.01, m=m["white"]),
+        # Hulking shoulder mass.
+        blob(p + "Traps", (-0.44, 0.08, 1.44), (0.44, 0.08, 1.44), [(0, 0.08, 0.12), (0.3, 0.17, 0.16), (0.7, 0.17, 0.16), (1, 0.08, 0.12)], fur,
+             n=2.4, r0=0.05, r1=0.05, segs=16, mid=6),
     ])
-    parts += fur_clumps(p + "BodyFur", "Spine", (0, 0, 1.12), (0.5, 0.34, 0.34), 22, fur, 5, size=0.13)
-    parts += fur_clumps(p + "ShoulderFur", "Spine", (0, 0, 1.36), (0.52, 0.28, 0.08), 8, dark, 6, size=0.14)
-    parts += bz.bind("Hips", [box(p + "Hips", (0.86, 0.6, 0.34), (0, 0, 0.84), bevel=0.14, segs=3, m=fur)])
-    parts += fur_clumps(p + "HipFur", "Hips", (0, 0, 0.8), (0.45, 0.32, 0.12), 12, dark, 7, size=0.12)
-    limb_m = dict(m, white=m["claw"])
+    parts += fur_clumps(p + "BodyFur", "Spine", (0, 0.03, 1.16), (0.54, 0.38, 0.32), 22, fur, 5, size=0.14,
+                        keep=lambda x, y, z: y > -0.1 or abs(x) > 0.3)
+    parts += fur_clumps(p + "ShoulderFur", "Spine", (0, 0.06, 1.44), (0.56, 0.3, 0.08), 12, fur, 6, size=0.15)
+    parts += hips(p, fur, w=0.9, d=0.62, z0=0.72)
+    parts += fur_clumps(p + "HipFur", "Hips", (0, 0, 0.8), (0.47, 0.33, 0.1), 12, fur, 7, size=0.12)
     for side in (1, -1):
-        parts += bz.limb_parts(p, side, dict(limb_m, skin=fur), arm_w=0.26, leg_w=0.26, sleeve=None, shorts=fur, shoe=dark,
-                               sock=False, arm_out=0.08, hand=0.08)
         s = "L" if side > 0 else "R"
-        parts += fur_clumps(f"{p}ArmFur{s}", f"UpperArm.{s}", (side * 0.48, 0, 1.12), (0.12, 0.12, 0.12), 5, fur, 8 + side, size=0.1)
-        parts += fur_clumps(f"{p}ThighFur{s}", f"Thigh.{s}", (side * 0.17, 0, 0.62), (0.15, 0.15, 0.1), 5, fur, 10 + side, size=0.1)
+        parts += arm(p, side, m, w=0.3, skin=fur, sleeve=fur, sleeve_len="long", glove=fur, hand=0.1, out=0.14, nail=horn, curl=0.8, seed=33)
+        parts += leg(p, side, m, w=0.3, skin=fur, pants=fur, pants_len="long", foot="bare", tear=0)
+        parts += fur_clumps(f"{p}ArmFur{s}", f"UpperArm.{s}", (side * 0.54, 0, 1.12), (0.14, 0.14, 0.14), 6, fur, 8 + side, size=0.11)
+        parts += fur_clumps(f"{p}ForeFur{s}", f"ForeArm.{s}", (side * 0.56, 0, 0.82), (0.14, 0.14, 0.12), 5, fur, 12 + side, size=0.1)
+        parts += fur_clumps(f"{p}ThighFur{s}", f"Thigh.{s}", (side * 0.17, 0, 0.62), (0.17, 0.17, 0.1), 6, fur, 10 + side, size=0.11)
+        parts += bz.bind(f"Shin.{s}", [cyl(f"{p}Claw{s}{i}", 0.025, 0.07, (side * 0.16 + (i - 1) * 0.06, -0.27, 0.04), rot=rad(-90, 0, 0), segs=6,
+                                           bevel=0.0, m=horn, radius_top=0.004) for i in range(3)])
     return parts
 
 
 def yeti_accessories(m):
     p = "YA_"
-    return {
+    acc = {
+        # Worn low, round the neck and chest: the mouth stays clear.
         "Acc_Yeti_Scarf": bz.bind("Spine", [
-            torus(p + "Scarf", 0.3, 0.1, (0, 0, 1.43), m=m["red"], major_segs=18, minor_segs=7),
-            box(p + "ScarfTail", (0.16, 0.06, 0.5), (0.2, -0.33, 1.2), rot=rad(8, 0, 12), bevel=0.03, m=m["red"]),
-            box(p + "ScarfStripe", (0.17, 0.07, 0.06), (0.21, -0.34, 1.05), rot=rad(8, 0, 12), bevel=0.01, m=m["white"]),
+            torus(p + "Scarf", 0.42, 0.09, (0, 0.0, 1.3), rot=rad(22, 0, 0), m=m["red"], major_segs=22, minor_segs=7),
+            box(p + "ScarfTail", (0.16, 0.06, 0.46), (0.26, -0.47, 1.0), rot=rad(8, 0, 12), bevel=0.03, m=m["red"]),
+            box(p + "ScarfStripe", (0.17, 0.07, 0.06), (0.27, -0.48, 0.86), rot=rad(8, 0, 12), bevel=0.01, m=m["white"]),
         ]),
         "Acc_Yeti_Tag": bz.bind("Spine", [
-            box(p + "Tag", (0.26, 0.03, 0.16), (0.24, -0.33, 1.3), rot=rad(0, 0, -10), bevel=0.02, m=m["white"]),
-            text(p + "TagText", "STAFF", 0.06, 0.01, (0.24, -0.35, 1.3), rot=(0, 0, math.radians(-10)), m=m["navy"]),
+            box(p + "Tag", (0.26, 0.03, 0.16), (-0.24, -0.4, 1.22), rot=rad(0, 0, 10), bevel=0.02, m=m["white"]),
+            text(p + "TagText", "STAFF", 0.06, 0.01, (-0.24, -0.42, 1.22), rot=(0, 0, math.radians(10)), m=m["navy"]),
         ]),
+        "Acc_Yeti_Beanie": bz.bind("Head", [
+            sphere(p + "Beanie", 0.2, (0, HEAD_Y + 0.02, 2.12), scale=(1.0, 1.0, 0.75), m=m["beanie"], segs=14, rings=8),
+            sphere(p + "Pom", 0.07, (0, HEAD_Y + 0.02, 2.28), m=m["white"], segs=8, rings=6),
+        ]),
+        "Acc_Yeti_Goggles": bz.bind("Head", [
+            box(p + "Goggles", (0.5, 0.08, 0.13), (0, HEAD_Y - 0.25, 1.96), rot=rad(-30, 0, 0), bevel=0.04, m=m["accent"]),
+            box(p + "GoggleLens", (0.44, 0.06, 0.1), (0, HEAD_Y - 0.28, 1.96), rot=rad(-30, 0, 0), bevel=0.035, m=m["visor"]),
+        ]),
+        "Acc_Yeti_Snowball": bz.bind("ForeArm.R", [sphere(p + "Snowball", 0.14, (-0.58, -0.12, 0.42), m=m["white"], segs=14, rings=9)]),
     }
+    acc.update(faces("Yeti", yeti_eyes(m), 0.64, ("Snarl", "Clench", "Gape"), tongue=m["red"]))
+    return acc
 
 
 # ---------------------------------------------------------------------------
@@ -186,32 +248,32 @@ def yeti_accessories(m):
 # ---------------------------------------------------------------------------
 
 def frozen(m):
+    """Puffy quilted jacket ("Shirt"), scarf, ski pants, mittens, snow boots."""
     p = "F_"
-    jacket, quilt, pants = m["shirt"], m["quilt"], m["pants"]
-    parts = bz.head_parts(p, 0.62, m)
-    parts += bz.bind("Head", [box(p + "HairBack", (0.52, 0.12, 0.2), (0, 0.24, 1.5), bevel=0.05, m=m["hair"])])
-    parts += bz.bind("Spine", [
-        box(p + "Jacket", (0.78, 0.54, 0.62), (0, 0, 1.12), bevel=0.2, segs=4, m=jacket),
-        box(p + "Collar", (0.5, 0.42, 0.16), (0, 0, 1.42), bevel=0.07, m=jacket),
-        box(p + "Zip", (0.04, 0.04, 0.56), (0, -0.28, 1.12), bevel=0.01, m=m["steel"]),
-        torus(p + "Scarf", 0.27, 0.08, (0, 0, 1.44), m=m["scarf"], major_segs=18, minor_segs=6),
-        box(p + "ScarfTail", (0.14, 0.05, 0.42), (-0.16, -0.3, 1.22), rot=rad(6, 0, -10), bevel=0.02, m=m["scarf"]),
+    w = 0.62
+    jacket = m["shirt"]
+    parts = head(p, m, w)
+    parts += hair(p, w, m["dark"], "fringe", 17)
+    tor, body = torso(p, jacket, w=0.8, d=0.56, z0=0.86, belly=0.06, hunch=0.04, n=2.6)
+    parts += tor
+    parts += neck(p, m["skin"], 0.26)
+    puff = [body.shell(f"{p}Quilt{i}", jacket, z + 0.05, z - 0.05, off=0.015 + 0.012 * (i % 2), segs=24, steps=2, lip=0.02)
+            for i, z in enumerate((0.95, 1.07, 1.19, 1.31))]
+    parts += bz.bind("Spine", puff + [
+        patch(p + "Zip", tor[0], (0, body.front(0, 1.12), 1.12), (0.04, 0.05, 0.56), m["white"], bevel=0.01),
+        torus(p + "Scarf", 0.27, 0.08, (0, -0.01, 1.44), m=m["scarf"], major_segs=20, minor_segs=7),
+        box(p + "ScarfTail", (0.14, 0.05, 0.42), (-0.16, body.front(-0.16, 1.24) - 0.05, 1.24), rot=rad(6, 0, -10), bevel=0.02, m=m["scarf"]),
+        band(p + "Collar", (0, 0.0, 1.47), (0, 0.0, 1.38), 0.26, 0.24, jacket, n=2.6, thick=0.03, flare=0.03, segs=22),
     ])
-    for i, z in enumerate((0.92, 1.1, 1.28)):
-        parts += bz.bind("Spine", [box(f"{p}Quilt{i}", (0.8, 0.56, 0.05), (0, 0, z), bevel=0.02, m=quilt)])
-    parts += bz.bind("Hips", [
-        box(p + "Pants", (0.68, 0.48, 0.3), (0, 0, 0.84), bevel=0.1, segs=3, m=pants),
-        box(p + "JacketHem", (0.8, 0.56, 0.1), (0, 0, 0.98), bevel=0.04, m=jacket),
-    ])
-    limbs = []
+    parts += hips(p, m["pants"], w=0.68, d=0.48)
     for side in (1, -1):
-        limbs += bz.limb_parts(p, side, dict(m, skin=jacket), arm_w=0.2, leg_w=0.22, sleeve=jacket, shorts=pants,
-                               shoe=m["boot"], sock=False)
-    recolour(limbs, ("ShinL", "ShinR", "KneeL", "KneeR", "AnkleL", "AnkleR"), pants)
-    recolour(limbs, ("HandL", "HandR", "ThumbL", "ThumbR", "FingerL0", "FingerL1", "FingerL2", "FingerR0", "FingerR1", "FingerR2"), m["mitten"])
-    parts += limbs
-    for side, s in ((1, "L"), (-1, "R")):
-        parts += bz.bind(f"Shin.{s}", [box(f"{p}BootFur{s}", (0.3, 0.34, 0.1), (side * 0.16, -0.02, 0.24), bevel=0.04, m=m["white"])])
+        s = "L" if side > 0 else "R"
+        parts += arm(p, side, m, w=0.21, sleeve=jacket, sleeve_len="long", cuff=m["white"], glove=m["mitten"], fingers=0, seed=35)
+        parts += leg(p, side, m, w=0.22, pants=m["pants"], pants_len="long", foot="boot", shoe=m["white"], sole=m["dark"], lace=m["white"],
+                     boot_h=0.2, tear=0)
+        parts += bz.bind(f"UpperArm.{s}", [band(f"{p}ArmPuff{s}", (side * 0.39, 0, 1.18), (side * 0.4, 0, 1.08), 0.13, 0.13, jacket, n=2.4,
+                                                thick=0.02, flare=0.01, segs=16)])
+        parts += bz.bind(f"Shin.{s}", [sphere(f"{p}BootFur{s}", 0.13, (side * 0.16, 0.0, 0.33), scale=(1.0, 1.0, 0.42), m=m["white"], segs=14, rings=7)])
     return parts
 
 
@@ -226,132 +288,52 @@ def shard(name, radius, length, loc, rot, m):
 
 def frozen_accessories(m):
     p = "FA_"
-    ice = m["ice"]
+    ice, edge = m["ice"], m["ice_edge"]
     acc = {
         "Acc_Frozen_Ice": (
             bz.bind("Spine", [
-                crystal(p + "Torso", (0.98, 0.72, 0.78), (0.02, 0, 1.12), rad(4, -3, 6), ice),
-                shard(p + "ShardA", 0.1, 0.55, (0.42, 0.12, 1.5), rad(-20, 35, 0), ice),
-                shard(p + "ShardB", 0.08, 0.45, (-0.38, 0.18, 1.52), rad(-25, -40, 0), ice),
-                shard(p + "ShardC", 0.09, 0.5, (0.1, 0.36, 1.45), rad(-55, 0, 0), ice),
+                crystal(p + "Torso", (1.0, 0.76, 0.8), (0.02, 0, 1.12), rad(4, -3, 6), ice),
+                shard(p + "ShardA", 0.11, 0.6, (0.42, 0.12, 1.52), rad(-20, 35, 0), edge),
+                shard(p + "ShardB", 0.09, 0.5, (-0.4, 0.18, 1.54), rad(-25, -40, 0), edge),
+                shard(p + "ShardC", 0.1, 0.55, (0.1, 0.38, 1.47), rad(-55, 0, 0), edge),
+                shard(p + "ShardD", 0.08, 0.42, (-0.3, -0.3, 1.38), rad(30, -20, 10), edge),
             ])
-            + bz.bind("Hips", [crystal(p + "Hips", (0.86, 0.66, 0.42), (0, 0.02, 0.82), rad(0, 4, -5), ice)])
+            + bz.bind("Hips", [crystal(p + "Hips", (0.88, 0.68, 0.42), (0, 0.02, 0.82), rad(0, 4, -5), ice),
+                               shard(p + "HipShard", 0.08, 0.4, (0.36, -0.2, 0.86), rad(40, 30, 0), edge)])
             + bz.bind("Head", [
-                crystal(p + "HeadPlate", (0.34, 0.62, 0.56), (0.27, 0.04, 1.62), rad(0, -12, 8), ice),
-                shard(p + "HeadShard", 0.09, 0.45, (0.18, 0.08, 1.95), rad(0, -25, 0), ice),
+                crystal(p + "HeadPlate", (0.34, 0.64, 0.58), (0.28, HEAD_Y + 0.04, 1.64), rad(0, -12, 8), ice),
+                shard(p + "HeadShard", 0.1, 0.5, (0.18, HEAD_Y + 0.08, 1.98), rad(0, -25, 0), edge),
             ])
-            + bz.bind("Thigh.L", [crystal(p + "ThighL", (0.36, 0.4, 0.38), (0.17, 0, 0.6), rad(0, 0, 6), ice)])
-            + bz.bind("Thigh.R", [crystal(p + "ThighR", (0.36, 0.4, 0.38), (-0.17, 0, 0.6), rad(0, 0, -4), ice)])
-            + bz.bind("UpperArm.L", [crystal(p + "ArmL", (0.3, 0.32, 0.36), (0.42, 0, 1.12), rad(0, 8, 0), ice)])
+            + bz.bind("Thigh.L", [crystal(p + "ThighL", (0.38, 0.42, 0.4), (0.17, 0, 0.6), rad(0, 0, 6), ice)])
+            + bz.bind("Thigh.R", [crystal(p + "ThighR", (0.38, 0.42, 0.4), (-0.17, 0, 0.6), rad(0, 0, -4), ice)])
+            + bz.bind("UpperArm.L", [crystal(p + "ArmL", (0.32, 0.34, 0.38), (0.42, 0, 1.12), rad(0, 8, 0), ice)])
+            + bz.bind("ForeArm.R", [crystal(p + "ForeR", (0.26, 0.28, 0.3), (-0.43, 0, 0.8), rad(0, -6, 4), ice)])
         ),
         "Acc_Frozen_Beanie": bz.bind("Head", [
-            sphere(p + "Beanie", 0.31, (0, 0.02, 1.76), scale=(1.0, 1.0, 0.8), m=m["beanie"], segs=14, rings=8),
-            cyl(p + "BeanieCuff", 0.32, 0.1, (0, 0.02, 1.73), segs=16, bevel=0.03, m=m["white"]),
-            sphere(p + "Pompom", 0.1, (0, 0.02, 2.04), m=m["white"], segs=8, rings=6),
+            sphere(p + "Beanie", 0.33, (0, HEAD_Y + 0.02, 1.8), scale=(1.0, 1.0, 0.8), m=m["beanie"], segs=16, rings=9),
+            band(p + "BeanieCuff", (0, HEAD_Y, 1.8), (0, HEAD_Y, 1.7), 0.33, 0.285, m["white"], n=3.3, thick=0.03, segs=24),
+            sphere(p + "Pompom", 0.1, (0, HEAD_Y + 0.02, 2.08), m=m["white"], segs=10, rings=7),
         ]),
         "Acc_Frozen_Earmuffs": bz.bind("Head", [
-            sphere(p + "MuffL", 0.1, (-0.33, 0.02, 1.58), scale=(0.7, 1, 1), m=m["beanie"], segs=10, rings=6),
-            sphere(p + "MuffR", 0.1, (0.33, 0.02, 1.58), scale=(0.7, 1, 1), m=m["beanie"], segs=10, rings=6),
-            tube(p + "MuffBand", [(-0.32, 0.02, 1.64), (-0.2, 0.02, 1.88), (0.2, 0.02, 1.88), (0.32, 0.02, 1.64)], 0.025, m=m["steel"], segs=5),
+            sphere(p + "MuffL", 0.1, (-0.34, HEAD_Y + 0.02, 1.58), scale=(0.7, 1, 1), m=m["beanie"], segs=10, rings=6),
+            sphere(p + "MuffR", 0.1, (0.34, HEAD_Y + 0.02, 1.58), scale=(0.7, 1, 1), m=m["beanie"], segs=10, rings=6),
+            tube(p + "MuffBand", [(-0.33, HEAD_Y + 0.02, 1.64), (-0.2, HEAD_Y + 0.02, 1.92), (0.2, HEAD_Y + 0.02, 1.92), (0.33, HEAD_Y + 0.02, 1.64)],
+                 0.025, m=m["steel"], segs=5),
         ]),
         "Acc_Frozen_Camera": bz.bind("Spine", [
-            box(p + "CamBody", (0.22, 0.09, 0.14), (0.08, -0.33, 1.06), bevel=0.025, m=m["camera"]),
-            cyl(p + "CamLens", 0.045, 0.07, (0.1, -0.39, 1.05), rot=rad(90, 0, 0), segs=12, bevel=0.01, m=m["camera_lens"]),
+            box(p + "CamBody", (0.22, 0.09, 0.14), (0.08, -0.36, 1.06), bevel=0.025, m=m["dark"]),
+            cyl(p + "CamLens", 0.045, 0.07, (0.1, -0.42, 1.05), rot=rad(90, 0, 0), segs=12, bevel=0.01, m=m["lens"]),
         ]),
     }
+    acc.update(faces("Frozen", m, 0.62, ("Gape", "Clench", "Sleepy"), tongue=m["red"]))
     return acc
-
-
-# ---------------------------------------------------------------------------
-# Extra clips
-# ---------------------------------------------------------------------------
-
-def clip_tuck():
-    """Downhill tuck: crouched, chest over the knees, fists forward; a slight bob."""
-    def pose(phase):
-        s = math.sin(phase * math.tau)
-        p = {
-            "Hips": (34, 0, 0), "Spine": (30 + 3 * s, 0, 0), "Head": (-48, 0, 0),
-            "Thigh.L": (-62, 0, 0), "Thigh.R": (-62, 0, 0), "Shin.L": (86, 0, 0), "Shin.R": (86, 0, 0),
-        }
-        p.update(bz.arms(-62, -60, -62, -60, spread=6))
-        return p, (0, -0.05, -0.3 + 0.015 * s)
-    return "Tuck-loop", [(round(i * 12 / 4), *pose(i / 4)) for i in range(5)]
-
-
-def clip_throw():
-    """Two-handed overhead heave: rear back (frames 0-12), release at ~15, follow through."""
-    legs = {"Thigh.L": (-18, 0, 0), "Thigh.R": (14, 0, 0), "Shin.L": (14, 0, 0), "Shin.R": (18, 0, 0)}
-
-    def pose(spine, head, upper, fore, hips=4, spread=10):
-        p = {"Hips": (hips, 0, 0), "Spine": (spine, 0, 0), "Head": (head, 0, 0)}
-        p.update(legs)
-        p.update(bz.arms(upper, fore, upper, fore, spread=spread))
-        return p
-    return "Throw", [
-        (0, pose(12, -8, -40, -20), (0, 0, -0.02)),
-        (7, pose(-14, -22, -165, -70, hips=-4, spread=-20), (0, 0.06, 0.02)),
-        (12, pose(-20, -26, -175, -80, hips=-6, spread=-24), (0, 0.08, 0.03)),
-        (15, pose(38, 6, -70, -6, hips=12, spread=8), (0, -0.14, -0.05)),
-        (20, pose(30, 0, -40, -12, hips=9, spread=10), (0, -0.1, -0.04)),
-        (28, pose(12, -8, -40, -20), (0, 0, -0.02)),
-    ]
-
-
-def build_animations(armature):
-    ad = armature.animation_data_create()
-    makers = (bz.clip_idle, bz.clip_walk, bz.clip_run, bz.clip_attack, bz.clip_hit, bz.clip_die, clip_tuck, clip_throw)
-    for make in makers:
-        name, keys = make()
-        action = bpy.data.actions.new(name)
-        ad.action = action
-        for frame, pose, hips_loc in keys:
-            bz.set_pose(armature, frame, pose, hips_loc)
-        track = ad.nla_tracks.new()
-        track.name = name
-        track.strips.new(name, 0, action)
-        ad.action = None
-    for pb in armature.pose.bones:
-        pb.rotation_quaternion = (1, 0, 0, 0)
-        pb.location = (0, 0, 0)
 
 
 def build():
     scene = reset_scene()
     scene.render.fps = bz.FPS
-    m = dict(
-        skin=mat("Skin", "#8fc7b0", rough=0.6),
-        skin_dark=mat("SkinDark", "#5f9a86", rough=0.65),
-        eye=mat("FrostEye", "#a8f6ff", rough=0.3, emit=3.2),
-        pupil=mat("Pupil", "#1c2030", rough=0.4),
-        mouth=mat("Mouth", "#2a1a30", rough=0.7),
-        teeth=mat("Teeth", "#fff3d6", rough=0.4),
-        white=mat("White", "#f6f6ff", rough=0.6),
-        hair=mat("Hair", "#4a2c26", rough=0.8),
-        shirt=mat("Shirt", "#e0218a", rough=0.45),
-        navy=mat("FrostNavy", "#1c2250", rough=0.35),
-        accent=mat("FrostAccent", "#ffd23f", rough=0.5),
-        visor=mat("FrostVisor", "#ff5a2a", rough=0.15, emit=1.5),
-        boot=mat("FrostBoot", "#f2f2ff", rough=0.35),
-        ski=mat("FrostRaceSki", "#ff3f4f", rough=0.35),
-        steel=mat("FrostZSteel", "#b8bccc", rough=0.3, metal=0.6),
-        gold=mat("FrostGold", "#ffcf3f", rough=0.3, metal=0.6, emit=0.4),
-        fur=mat("FrostFur", "#3a7be0", rough=0.85),
-        fur_light=mat("FrostFurLight", "#8ec2ff", rough=0.85),
-        fur_dark=mat("FrostFurDark", "#24508f", rough=0.9),
-        horn=mat("FrostHorn", "#fff0d4", rough=0.5),
-        claw=mat("FrostClaw", "#fff0d4", rough=0.5),
-        red=mat("FrostScarfRed", "#e2343f", rough=0.7),
-        quilt=mat("FrostQuilt", "#3b1f5e", rough=0.6),
-        pants=mat("FrostPants", "#232a5c", rough=0.65),
-        mitten=mat("FrostMitten", "#ffd23f", rough=0.7),
-        scarf=mat("FrostScarf", "#3fd4c4", rough=0.7),
-        beanie=mat("FrostBeanie", "#ff7a2a", rough=0.75),
-        camera=mat("Camera", "#26232f", rough=0.45),
-        camera_lens=mat("CameraLens", "#5fd9ff", rough=0.15, emit=0.4),
-        ice=ice_mat(),
-    )
-    yeti_m = dict(m, eye=mat("FrostEyeAmber", "#ffb43a", rough=0.3, emit=1.8))
+    m = materials()
+    yeti_m = yeti_eyes(m)
     armature = bz.build_armature()
     meshes = [
         bz.skin("Outfit_Skier", skier(m), armature),
@@ -364,7 +346,7 @@ def build():
     accessories.update(frozen_accessories(m))
     for name, parts in accessories.items():
         meshes.append(bz.skin(name, parts, armature))
-    build_animations(armature)
+    zombie_anim.bake(armature, zombie_anim.frost_clips, "frost_zombies")
     save("frost_zombies", [armature] + meshes, animations=True)
 
 

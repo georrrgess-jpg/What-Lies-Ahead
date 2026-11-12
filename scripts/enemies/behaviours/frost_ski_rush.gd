@@ -98,7 +98,7 @@ func _rush(z: Zombie, delta: float) -> bool:
 	if _time <= 0.0 or blocked:
 		_phase = Phase.SKID
 		_time = skid_time
-		z.play_animation(&"Hit", 0.1)
+		z.play_animation(&"Stagger", 0.1)
 	return true
 
 
