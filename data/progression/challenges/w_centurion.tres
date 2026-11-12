@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"w_centurion"
+display_name = "Centurion"
+description = "Get %s kills"
+scope = 1
+stat = &"kills"
+mode = 0
+goal = 100
+param = 0
+xp = 600
+mastery_xp = 500
+sort_order = 230

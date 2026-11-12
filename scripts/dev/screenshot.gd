@@ -6,7 +6,7 @@ extends Node
 ##
 ## Options (all optional):
 ##   --shot-level=<id>     level to load (default prize_pier)
-##   --shot-scene=level|intro|menu|play|armory|settings|results|defeat|pause|kiosk
+##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|<any menu page id: play, settings, career, ...>
 ##   --shot-pos=x,y,z      player feet position
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
 ##   --shot-pitch=deg
@@ -61,7 +61,8 @@ func _run() -> void:
 		get_tree().current_scene.add_child(intro)
 		await _capture(int(_arg("frames", "120")))
 		return
-	if scene_kind in ["menu", "play", "armory", "settings"]:
+	# Anything that is not an in-level scene is treated as a menu page id.
+	if not scene_kind in ["level", "results", "defeat", "pause", "kiosk"]:
 		await _wait(10)
 		var menu := get_tree().current_scene
 		if scene_kind != "menu":

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+target = &""
+amount = 14
+
+[resource]
+script = ExtResource("1")
+id = &"cell_grape_soda"
+display_name = "Grape Soda Cell"
+description = "Energy cell for every weapon. Reach player level 14."
+slot = &"weapon_cell"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(0.706, 0.420, 1.000, 1)
+params = {
+
+}
+sort_order = 14

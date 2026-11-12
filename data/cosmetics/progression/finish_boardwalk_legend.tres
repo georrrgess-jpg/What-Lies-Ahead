@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+target = &""
+amount = 50
+
+[resource]
+script = ExtResource("1")
+id = &"finish_boardwalk_legend"
+display_name = "Boardwalk Legend"
+description = "Weapon finish for every weapon. Reach player level 50."
+slot = &"weapon_finish"
+rarity = 3
+requirement = SubResource("req")
+colors = PackedColorArray(1.000, 0.373, 0.722, 1, 0.165, 0.063, 0.314, 1)
+params = {
+"shader": "res://art/shaders/mastery_prismatic.gdshader",
+"shader_params": {
+"flow_speed": 0.16,
+"hue_offset": 0.86,
+"hue_range": 0.26
+}
+}
+sort_order = 50

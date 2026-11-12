@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+target = &""
+amount = 7
+
+[resource]
+script = ExtResource("1")
+id = &"banner_cotton_candy"
+display_name = "Cotton Candy Swirl"
+description = "Player banner. Reach player level 7."
+slot = &"banner"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(1.000, 0.561, 0.816, 1, 0.561, 0.914, 1.000, 1, 1.000, 1.000, 1.000, 1)
+params = {
+"pattern": "swirl"
+}
+sort_order = 7

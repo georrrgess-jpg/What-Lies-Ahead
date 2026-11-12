@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"well_rounded"
+display_name = "Well Rounded"
+description = "Reach mastery rank 3 with %s weapons"
+scope = 0
+stat = &"weapons_at_rank"
+mode = 1
+goal = 3
+param = 3
+xp = 1500
+mastery_xp = 0
+sort_order = 110

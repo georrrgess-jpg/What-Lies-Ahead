@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"headhunter"
+display_name = "Headhunter"
+description = "Get %s headshot kills"
+scope = 0
+stat = &"headshots"
+mode = 0
+goal = 250
+param = 0
+xp = 2000
+mastery_xp = 0
+sort_order = 100

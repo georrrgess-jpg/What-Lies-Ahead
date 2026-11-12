@@ -877,18 +877,28 @@ def run_pack(name):
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_packs"))
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     mod = importlib.import_module(name)
+    core = sys.modules.get("gen_audio")
+
+    def own(attr, default):
+        # `from gen_audio import *` also brings in the core's own lists (e.g.
+        # VARIANTS); only use what the pack itself defines.
+        value = getattr(mod, attr, default)
+        if core is not None and value is getattr(core, attr, None):
+            return default
+        return value
+
     count = 0
-    for fn in getattr(mod, "SOUNDS", []):
+    for fn in own("SOUNDS", []):
         write_wav(fn.__name__, fn())
         count += 1
-    for fn, pitches in getattr(mod, "VARIANTS", []):
+    for fn, pitches in own("VARIANTS", []):
         for suffix, pitch, seed in zip(("_b", "_c"), pitches, (101, 202)):
             write_wav(fn.__name__ + suffix, _variant(fn, pitch, seed))
-    for loop_name, fn in getattr(mod, "LOOPS", {}).items():
+    for loop_name, fn in own("LOOPS", {}).items():
         write_loop_wav(loop_name, fn())
-    for music_name, fn in getattr(mod, "MUSIC", {}).items():
+    for music_name, fn in own("MUSIC", {}).items():
         write_ogg(music_name, fn(), peak=0.75)
-    print("pack %s: %d sfx, %d loops, %d music" % (name, count, len(getattr(mod, "LOOPS", {})), len(getattr(mod, "MUSIC", {}))))
+    print("pack %s: %d sfx, %d loops, %d music" % (name, count, len(own("LOOPS", {})), len(own("MUSIC", {}))))
 
 
 def main():

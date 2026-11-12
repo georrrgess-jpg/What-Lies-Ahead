@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+target = &""
+amount = 40
+
+[resource]
+script = ExtResource("1")
+id = &"title_neon_nightmare"
+display_name = "Neon Nightmare"
+description = "Player title. Reach player level 40."
+slot = &"title"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.827, 0.420, 1.000, 1)
+params = {
+
+}
+sort_order = 40

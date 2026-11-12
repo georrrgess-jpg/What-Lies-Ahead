@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"high_roller"
+display_name = "High Roller"
+description = "Score %s points in a single run"
+scope = 0
+stat = &"run_score"
+mode = 1
+goal = 50000
+param = 0
+xp = 1500
+mastery_xp = 0
+sort_order = 60
