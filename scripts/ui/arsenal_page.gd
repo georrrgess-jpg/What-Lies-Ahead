@@ -1,20 +1,34 @@
 class_name ArsenalPage
 extends MenuPage
-## Arsenal: every weapon in a grid (locked ones show what unlocks them), a
-## large turntable preview with the weapon's equipped cosmetics, stat bars
-## computed from WeaponData, its role, traits and mastery rank, and buttons
-## to put it in the primary or secondary slot of the Loadout.
+## Arsenal: the selected weapon sits on the stand of a carnival workbench
+## booth (a 3D diorama with Prize Pier's Ferris wheel at sunset behind it;
+## drag to turn the weapon). Over it: the loadout's two slot plates in the
+## header, a signboard with the weapon's name, firing mode and mastery rank,
+## its role, six stats computed from WeaponData and the buttons that put it in
+## the primary or secondary slot, and a metal tray with every weapon as a
+## card (locked ones show what unlocks them).
 
-const CARD_SIZE := Vector2(268, 172)
+const CARD_SIZE := Vector2(206, 196)
 const THUMB_SIZE := Vector2i(252, 104)
-## Stat bars: [label, getter, max]. Values above max fill the bar.
+const BOOTH_SCENE := "res://art/models/menu_booth.glb"
+const WHEEL_SCENE := "res://art/models/ferris_wheel.glb"
+const BLUEPRINT_SHADER := "res://art/shaders/ui_blueprint.gdshader"
+## Height of the stand's turntable above the bench (see build_menu_booth.py).
+const TURNTABLE_TOP := 0.085
+const CAMERA_FROM := Vector3(0.33, 0.5, 2.6)
+const CAMERA_TO := Vector3(0.33, 0.22, 0.0)
+## The work lamp's bulb (see LAMP in build_menu_booth.py).
+const LAMP_AT := Vector3(-0.42, 0.57, -0.3)
+## Half size of a cradle pad: along the weapon, across it.
+const PAD := Vector2(0.035, 0.055)
+## Stats on the signboard, three per column: [label, getter].
 const STATS := [
-	["Damage / sec", "_stat_dps", 260.0],
-	["Burst damage", "_stat_burst", 260.0],
-	["Range", "_stat_range", 60.0],
-	["Handling", "_stat_handling", 1.0],
-	["Mobility", "_stat_mobility", 1.0],
-	["Magazine", "_stat_magazine", 1.0],
+	["DPS", "_stat_dps"],
+	["BURST", "_stat_burst"],
+	["RANGE", "_stat_range"],
+	["HANDLING", "_stat_handling"],
+	["MOBILITY", "_stat_mobility"],
+	["MAGAZINE", "_stat_magazine"],
 ]
 
 var _weapon: WeaponData
@@ -22,47 +36,77 @@ var _cards := {}
 var _thumbs: Array[SubViewport] = []
 ## Card thumbnail pivots by weapon id (rebuilt when cosmetics change).
 var _thumb_pivots := {}
+var _thumb_textures := {}
 var _name: Label
-var _category: Label
-var _rank: Label
-var _rank_bar: ProgressBar
+var _chip: KitChip
 var _role: Label
-var _traits: HFlowContainer
-var _stat_bars: Array[ProgressBar] = []
-var _stat_values: Array[Label] = []
+var _traits: HBoxContainer
+var _stat_rows: Array[StatRow] = []
+var _rank_label: Label
+var _rank_bar: ProgressBar
 var _lock_note: Label
-var _equip: Array[Button] = []
-var _loadout_cards: Array[PanelContainer] = []
+var _swap: SignButton
+var _equip_row: HBoxContainer
+var _equip: Array[SignButton] = []
+var _plates: Array[SlotPlate] = []
+var _plate_row: HBoxContainer
+var _board: KitPanel
+# The diorama.
+var _stage_view: SubViewportContainer
 var _viewport: SubViewport
+var _turntable: Node3D
 var _pivot: Node3D
 var _model: Node3D
 var _ring: MeshInstance3D
+var _forks: Array[Node3D] = []
+var _collars: Array[Node3D] = []
+var _screen_material: ShaderMaterial
+## Where each weapon sits on the stand, by weapon id (see _seat_on_stand).
+var _seats := {}
+## The weapon rests with its muzzle to the left, turned a little to the camera.
+var _yaw := PI
+var _hold := 0.0
+var _time := 0.0
+
+
+func uses_shell_header() -> bool:
+	return true
+
+
+func header_extra() -> Control:
+	return _plate_row
+
+
+func backdrop() -> Control:
+	return _stage_view
 
 
 func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-	var panel := PanelContainer.new()
-	center.add_child(panel)
+	_build_stage()
+	_build_plates()
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 16)
-	col.custom_minimum_size = Vector2(1740, 0)
-	panel.add_child(col)
-	col.add_child(_build_head())
-	var body := HBoxContainer.new()
-	body.add_theme_constant_override("separation", 26)
-	col.add_child(body)
-	body.add_child(_build_grid())
-	body.add_child(_build_preview())
-	body.add_child(_build_info())
+	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	col.add_theme_constant_override("separation", UiKit.GAP_M)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(col)
+	var top := HBoxContainer.new()
+	top.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(top)
+	top.add_child(_build_drag_area())
+	top.add_child(_build_board())
+	col.add_child(_build_tray())
+	visibility_changed.connect(func(): set_process(is_visible_in_tree()))
+	set_process(false)
 	_select(GameData.weapon(Loadout.primary()))
 
 
 func _process(delta: float) -> void:
-	if visible and _pivot:
-		_pivot.rotate_y(delta * 0.55)
+	_time += delta
+	# The weapon sways on the turntable; a drag turns it and holds it a moment.
+	_hold = maxf(0.0, _hold - delta)
+	var target := _yaw if _hold > 0.0 else _yaw + sin(_time * 0.45) * 0.32
+	_turntable.rotation.y = lerp_angle(_turntable.rotation.y, target, minf(1.0, delta * 6.0))
 
 
 func refresh() -> void:
@@ -72,89 +116,161 @@ func refresh() -> void:
 	for t in _thumbs:
 		t.render_target_update_mode = SubViewport.UPDATE_ONCE
 	_select(_weapon if _weapon else GameData.weapon(Loadout.primary()))
+	UiFx.stagger_in(_cards.values())
+	UiFx.pop_in(_board, 0.05, 0.94)
+
+
+func first_focus() -> Control:
+	return _cards.get(_weapon.id) if _weapon else null
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or KitDialog.open_count > 0:
+		return
+	for slot in 2:
+		if event.is_action_pressed("weapon_%d" % (slot + 1)):
+			_equip_slot(slot)
+			get_viewport().set_input_as_handled()
 
 
 # --- layout ----------------------------------------------------------------------
 
-func _build_head() -> Control:
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 18)
-	var title := UiKit.label("ARSENAL", 64, UiKit.AMBER, true)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(title)
+## The loadout's two plates, shown by the shell to the right of the marquee.
+func _build_plates() -> void:
+	_plate_row = HBoxContainer.new()
+	_plate_row.alignment = BoxContainer.ALIGNMENT_END
+	_plate_row.add_theme_constant_override("separation", UiKit.GAP_L)
 	for slot in 2:
-		var card := PanelContainer.new()
-		card.custom_minimum_size = Vector2(390, 0)
-		card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		head.add_child(card)
-		_loadout_cards.append(card)
-	var back_button := UiKit.soft_button("BACK", 30)
-	back_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	back_button.pressed.connect(func(): back.emit())
-	head.add_child(back_button)
-	return head
+		var plate := UiKit.slot_plate("%s  [%d]" % [String(Loadout.SLOT_NAMES[slot]).to_upper(), slot + 1], "")
+		plate.custom_minimum_size.x = 430
+		_plate_row.add_child(plate)
+		_plates.append(plate)
 
 
-func _build_grid() -> Control:
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(CARD_SIZE.x * 2 + 30, 780)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	scroll.add_child(grid)
+## The open area over the diorama: dragging it turns the weapon.
+func _build_drag_area() -> Control:
+	var area := Control.new()
+	area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	area.mouse_default_cursor_shape = Control.CURSOR_DRAG
+	area.gui_input.connect(_on_drag_input)
+	var hint := UiKit.key_prompt("LMB", "Drag to turn")
+	hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	hint.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	hint.offset_right = -UiKit.GAP_L
+	hint.modulate.a = 0.85
+	area.add_child(hint)
+	return area
+
+
+func _on_drag_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion and (event as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT:
+		_yaw += (event as InputEventMouseMotion).relative.x * 0.008
+		_hold = 2.5
+
+
+func _build_board() -> Control:
+	_board = UiKit.signboard()
+	_board.custom_minimum_size.x = 640
+	_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", UiKit.GAP_S)
+	_board.add_child(v)
+	_name = UiKit.sign_label("", 56)
+	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(_name)
+	_chip = UiKit.chip("", UiKit.CYAN, 26)
+	v.add_child(_chip)
+	_role = UiKit.label("", UiKit.SIZE_LABEL, UiKit.CREAM)
+	_role.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_role.mouse_filter = Control.MOUSE_FILTER_STOP
+	v.add_child(_role)
+	_traits = HBoxContainer.new()
+	_traits.alignment = BoxContainer.ALIGNMENT_CENTER
+	_traits.add_theme_constant_override("separation", UiKit.GAP_S)
+	v.add_child(_traits)
+	v.add_child(_rule())
+	v.add_child(_build_stats())
+	v.add_child(_rule())
+	v.add_child(_build_mastery())
+	_lock_note = UiKit.label("", UiKit.SIZE_LABEL, UiKit.AMBER, true)
+	_lock_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(_lock_note)
+	_swap = UiKit.sign_button("SWAP SLOTS", SignButton.Kind.PRIMARY, 44)
+	_swap.custom_minimum_size.y = 84
+	_swap.pressed.connect(_swap_slots)
+	v.add_child(_swap)
+	_equip_row = HBoxContainer.new()
+	_equip_row.add_theme_constant_override("separation", UiKit.GAP_M)
+	v.add_child(_equip_row)
+	for slot in 2:
+		var b := UiKit.sign_button("EQUIP %s" % String(Loadout.SLOT_NAMES[slot]).to_upper(), SignButton.Kind.PRIMARY if slot == 0 else SignButton.Kind.SECONDARY, 28)
+		b.custom_minimum_size.y = 84
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.pressed.connect(_equip_slot.bind(slot))
+		_equip_row.add_child(b)
+		_equip.append(b)
+	return _board
+
+
+func _rule() -> ColorRect:
+	var line := ColorRect.new()
+	line.color = Color(UiKit.CREAM, 0.35)
+	line.custom_minimum_size.y = 2
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return line
+
+
+## Six stats in two columns with a divider between them.
+func _build_stats() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiKit.GAP_L)
+	for column in 2:
+		var v := VBoxContainer.new()
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		v.add_theme_constant_override("separation", 0)
+		for i in 3:
+			var stat := UiKit.stat_row(STATS[column * 3 + i][0])
+			v.add_child(stat)
+			_stat_rows.append(stat)
+		row.add_child(v)
+		if column == 0:
+			var divider := _rule()
+			divider.custom_minimum_size = Vector2(2, 0)
+			row.add_child(divider)
+	return row
+
+
+func _build_mastery() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiKit.GAP_M)
+	_rank_label = UiKit.label("", 22, UiKit.AMBER, true)
+	row.add_child(_rank_label)
+	_rank_bar = UiKit.progress(0.0, 14.0, UiKit.AMBER)
+	_rank_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_rank_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(_rank_bar)
+	return row
+
+
+## The riveted tray along the bottom with every weapon as a card.
+func _build_tray() -> Control:
+	var tray := UiKit.metal_frame()
+	tray.set_padding(36, 32)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiKit.GAP_S)
+	tray.add_child(row)
 	var group := ButtonGroup.new()
 	for w in GameData.weapons():
-		var card := _weapon_card(w, group)
-		grid.add_child(card)
+		var card := UiKit.item_card(w.display_name.to_upper(), CARD_SIZE)
+		card.button_group = group
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.pressed.connect(_select.bind(w))
+		_thumb_textures[w.id] = _thumbnail(w, card)
+		card.set_image(_thumb_textures[w.id])
+		row.add_child(card)
 		_cards[w.id] = card
-		if w == GameData.weapons()[0]:
-			card.name = "FirstFocus"
-	return scroll
-
-
-func _weapon_card(w: WeaponData, group: ButtonGroup) -> Button:
-	var b := Button.new()
-	b.toggle_mode = true
-	b.button_group = group
-	b.custom_minimum_size = CARD_SIZE
-	b.focus_mode = Control.FOCUS_ALL
-	b.pressed.connect(_select.bind(w))
-	b.mouse_entered.connect(func(): Sfx.play(&"ui_hover", -14.0))
-	b.pressed.connect(func(): Sfx.play(&"ui_click", -6.0))
-	var v := VBoxContainer.new()
-	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 8)
-	v.add_theme_constant_override("separation", -2)
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(v)
-	var thumb := TextureRect.new()
-	thumb.name = "Thumb"
-	thumb.custom_minimum_size = Vector2(THUMB_SIZE)
-	thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	thumb.texture = _thumbnail(w, b)
-	v.add_child(thumb)
-	var name_label := UiKit.label(w.display_name.to_upper(), 24, Color.WHITE, true)
-	name_label.name = "Name"
-	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	v.add_child(name_label)
-	var sub := UiKit.label("", 19, UiKit.CREAM)
-	sub.name = "Sub"
-	sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	sub.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	v.add_child(sub)
-	var badge := UiKit.label("", 18, UiKit.INK, true)
-	badge.name = "Badge"
-	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	badge.add_theme_constant_override("shadow_offset_y", 0)
-	badge.position = Vector2(CARD_SIZE.x - 64, 8)
-	badge.custom_minimum_size = Vector2(54, 26)
-	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(badge)
-	return b
+	return tray
 
 
 ## A small one-shot render of the weapon for its card.
@@ -194,122 +310,6 @@ func _fill_thumb(pivot: Node3D, w: WeaponData) -> void:
 	pivot.scale = Vector3.ONE * (1.0 / maxf(0.01, maxf(bounds.size.z, bounds.size.y * 2.2)))
 
 
-func _build_preview() -> Control:
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 4)
-	var holder := SubViewportContainer.new()
-	holder.stretch = true
-	holder.custom_minimum_size = Vector2(640, 520)
-	v.add_child(holder)
-	_viewport = SubViewport.new()
-	_viewport.own_world_3d = true
-	_viewport.transparent_bg = true
-	_viewport.msaa_3d = Viewport.MSAA_4X
-	_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
-	holder.add_child(_viewport)
-	var cam := Camera3D.new()
-	cam.position = Vector3(0, 0.2, 1.32)
-	cam.rotation_degrees = Vector3(-8, 0, 0)
-	cam.fov = 38.0
-	_viewport.add_child(cam)
-	_add_lights(_viewport)
-	_ring = MeshInstance3D.new()
-	var torus := TorusMesh.new()
-	torus.inner_radius = 0.42
-	torus.outer_radius = 0.46
-	torus.rings = 48
-	torus.ring_segments = 6
-	_ring.mesh = torus
-	_ring.position = Vector3(0, -0.27, 0)
-	_ring.scale = Vector3(1, 0.4, 1)
-	_viewport.add_child(_ring)
-	var disc := MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.42
-	cyl.bottom_radius = 0.44
-	cyl.height = 0.03
-	cyl.radial_segments = 48
-	disc.mesh = cyl
-	disc.position = Vector3(0, -0.285, 0)
-	var dm := StandardMaterial3D.new()
-	dm.albedo_color = Color(UiKit.INK, 1.0).lightened(0.08)
-	dm.roughness = 0.6
-	disc.material_override = dm
-	_viewport.add_child(disc)
-	_pivot = Node3D.new()
-	_viewport.add_child(_pivot)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-	v.add_child(row)
-	var names := VBoxContainer.new()
-	names.add_theme_constant_override("separation", -8)
-	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(names)
-	_name = UiKit.label("", 50, Color.WHITE, true)
-	names.add_child(_name)
-	_category = UiKit.label("", 26, UiKit.CYAN, true)
-	names.add_child(_category)
-	var rank_box := VBoxContainer.new()
-	rank_box.add_theme_constant_override("separation", 6)
-	rank_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(rank_box)
-	_rank = UiKit.label("", 24, UiKit.INK, true)
-	_rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_rank.custom_minimum_size = Vector2(170, 38)
-	_rank.add_theme_constant_override("shadow_offset_y", 0)
-	rank_box.add_child(_rank)
-	_rank_bar = UiKit.progress(0.0, 10.0, UiKit.AMBER)
-	rank_box.add_child(_rank_bar)
-	return v
-
-
-func _build_info() -> Control:
-	var info := VBoxContainer.new()
-	info.add_theme_constant_override("separation", 8)
-	info.custom_minimum_size = Vector2(470, 0)
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_role = UiKit.label("", 23, UiKit.CREAM)
-	_role.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_role.custom_minimum_size = Vector2(460, 120)
-	info.add_child(_role)
-	_traits = HFlowContainer.new()
-	_traits.add_theme_constant_override("h_separation", 8)
-	_traits.add_theme_constant_override("v_separation", 8)
-	info.add_child(_traits)
-	info.add_child(UiKit.spacer(4))
-	for stat in STATS:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
-		var l := UiKit.label(String(stat[0]).to_upper(), 21, Color(1, 1, 1, 0.85), true)
-		l.custom_minimum_size = Vector2(170, 0)
-		row.add_child(l)
-		var bar := UiKit.progress(0.0, 16.0, UiKit.CYAN)
-		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(bar)
-		var value := UiKit.label("", 21, Color.WHITE)
-		value.custom_minimum_size = Vector2(92, 0)
-		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		row.add_child(value)
-		info.add_child(row)
-		_stat_bars.append(bar)
-		_stat_values.append(value)
-	info.add_child(UiKit.spacer(10))
-	_lock_note = UiKit.label("", 26, UiKit.AMBER, true)
-	_lock_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info.add_child(_lock_note)
-	for slot in 2:
-		var b := UiKit.button("", 34)
-		b.custom_minimum_size = Vector2(0, 82)
-		b.pressed.connect(_equip_slot.bind(slot))
-		info.add_child(b)
-		_equip.append(b)
-	var hint := UiKit.label("You carry both into every run: switch with 1 / 2 or the mouse wheel. The Loadout Station swaps the held one for free between waves.", 20, Color(1, 1, 1, 0.65))
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info.add_child(hint)
-	return info
-
-
 func _add_lights(vp: SubViewport) -> void:
 	var key := DirectionalLight3D.new()
 	key.rotation_degrees = Vector3(-35, 35, 0)
@@ -332,89 +332,242 @@ func _add_lights(vp: SubViewport) -> void:
 	vp.add_child(we)
 
 
+# --- the diorama -------------------------------------------------------------------
+
+## The booth scene in its own viewport: sunset sky, the booth model, the
+## Ferris wheel far behind, the sea, warm lamp light and the stand's moving parts.
+func _build_stage() -> void:
+	_stage_view = SubViewportContainer.new()
+	_stage_view.stretch = true
+	_stage_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_viewport = SubViewport.new()
+	_viewport.own_world_3d = true
+	_viewport.msaa_3d = Viewport.MSAA_4X
+	_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
+	_stage_view.add_child(_viewport)
+	_add_stage_environment()
+	_add_stage_lights()
+	var booth := _instance(BOOTH_SCENE)
+	if booth:
+		_viewport.add_child(booth)
+		_take_stand_parts(booth)
+	_add_scenery()
+	var cam := Camera3D.new()
+	cam.fov = 30.0
+	cam.far = 400.0
+	cam.transform = Transform3D(Basis.IDENTITY, CAMERA_FROM).looking_at(CAMERA_TO, Vector3.UP)
+	_viewport.add_child(cam)
+	_turntable = Node3D.new()
+	_viewport.add_child(_turntable)
+	_pivot = Node3D.new()
+	_turntable.add_child(_pivot)
+	for part: Node3D in _forks + _collars:
+		part.get_parent().remove_child(part)
+		_turntable.add_child(part)
+	_ring = MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.262
+	torus.outer_radius = 0.278
+	torus.rings = 48
+	torus.ring_segments = 6
+	_ring.mesh = torus
+	_ring.position.y = TURNTABLE_TOP
+	_viewport.add_child(_ring)
+
+
+static func _instance(path: String) -> Node3D:
+	return (load(path) as PackedScene).instantiate() as Node3D if ResourceLoader.exists(path) else null
+
+
+func _add_stage_environment() -> void:
+	# Dusk: deep violet overhead falling to a coral horizon.
+	var dusk := ProceduralSkyMaterial.new()
+	dusk.sky_top_color = Color("2a1d63")
+	dusk.sky_horizon_color = Color("f47f86")
+	dusk.sky_curve = 0.09
+	dusk.ground_horizon_color = Color("a8507e")
+	dusk.ground_bottom_color = Color("1a1238")
+	dusk.sun_angle_max = 0.0
+	var sky := Sky.new()
+	sky.sky_material = dusk
+	var env := Environment.new()
+	env.background_mode = Environment.BG_SKY
+	env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.5, 0.36, 0.8)
+	env.ambient_light_energy = 0.42
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	var we := WorldEnvironment.new()
+	we.environment = env
+	_viewport.add_child(we)
+
+
+## A low pink sun from behind, the work lamp (the only shadow caster) and a
+## cool fill from the camera side.
+func _add_stage_lights() -> void:
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-18, -150, 0)
+	sun.light_energy = 0.45
+	sun.light_color = Color(1.0, 0.62, 0.55)
+	_viewport.add_child(sun)
+	var lamp := SpotLight3D.new()
+	lamp.transform = Transform3D(Basis.IDENTITY, LAMP_AT).looking_at(Vector3(0.0, 0.1, 0.05), Vector3.UP)
+	lamp.spot_range = 3.0
+	lamp.spot_angle = 58.0
+	lamp.spot_angle_attenuation = 0.7
+	lamp.light_energy = 2.0
+	lamp.light_color = Color(1.0, 0.82, 0.55)
+	lamp.shadow_enabled = true
+	_viewport.add_child(lamp)
+	var fill := OmniLight3D.new()
+	fill.position = Vector3(0.9, 0.9, 1.6)
+	fill.omni_range = 5.0
+	fill.light_energy = 0.35
+	fill.light_color = Color(0.6, 0.75, 1.0)
+	_viewport.add_child(fill)
+
+
+## Pulls the stand's moving parts out of the booth model: the fork and collar
+## become two of each on the turntable; the monitor gets its blueprint shader.
+func _take_stand_parts(booth: Node3D) -> void:
+	var fork := booth.find_child("StandFork", true, false) as Node3D
+	var collar := booth.find_child("StandCollar", true, false) as Node3D
+	if fork and collar:
+		_forks = [fork, fork.duplicate() as Node3D]
+		_collars = [collar, collar.duplicate() as Node3D]
+		fork.get_parent().add_child(_forks[1])
+		collar.get_parent().add_child(_collars[1])
+	var screen := booth.find_child("BlueprintScreen", true, false) as MeshInstance3D
+	if screen and ResourceLoader.exists(BLUEPRINT_SHADER):
+		_screen_material = ShaderMaterial.new()
+		_screen_material.shader = load(BLUEPRINT_SHADER)
+		_screen_material.set_shader_parameter("thumb_aspect", float(THUMB_SIZE.x) / THUMB_SIZE.y)
+		var screen_size := screen.mesh.get_aabb().size
+		_screen_material.set_shader_parameter("screen_size", Vector2(screen_size.x, screen_size.y))
+		screen.material_override = _screen_material
+	var gull := booth.find_child("Gull", true, false) as Node3D
+	if gull:
+		gull.position = Vector3(1.3, 0.215, -7.0)
+
+
+## The sea and the Ferris wheel on the horizon.
+func _add_scenery() -> void:
+	var sea := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(900, 900)
+	sea.mesh = plane
+	var water := StandardMaterial3D.new()
+	water.albedo_color = Color("3b2a6b")
+	water.roughness = 0.3
+	water.metallic = 0.4
+	sea.material_override = water
+	sea.position = Vector3(0, -3.4, -200)
+	_viewport.add_child(sea)
+	var wheel := _instance(WHEEL_SCENE)
+	if wheel:
+		wheel.set_script(load("res://scripts/props/ferris_wheel.gd"))
+		wheel.position = Vector3(2.2, -4.3, -62.0)
+		wheel.scale = Vector3.ONE * 0.33
+		wheel.rotation_degrees.y = -12.0
+		_viewport.add_child(wheel)
+
+
 # --- selection ---------------------------------------------------------------------
 
 func _select(w: WeaponData) -> void:
 	if w == null:
 		return
+	var changed := w != _weapon
 	_weapon = w
 	var unlocked := GameData.is_weapon_unlocked(w)
-	(_cards[w.id] as Button).set_pressed_no_signal(true)
-	_name.text = w.display_name.to_upper()
-	_category.text = w.category.to_upper()
-	_role.text = w.role
+	(_cards[w.id] as ItemCard).selected = true
+	_fit_name(w.display_name.to_upper())
 	var rank := Mastery.rank(w.id)
-	_rank.text = UiKit.rank_name(rank, w.max_rank())
-	_rank.add_theme_stylebox_override("normal", UiKit.box(UiKit.AMBER if rank > 0 else Color(0.62, 0.6, 0.72), Color.TRANSPARENT, 19, 0, 4))
-	_rank_bar.value = Mastery.rank_progress(w.id)
-	_build_traits(w)
+	var tags := _trait_tags(w)
+	_chip.set_text("%s  ·  %s" % [tags[0] if not tags.is_empty() else w.category.to_upper(), UiKit.rank_name(rank, w.max_rank())])
+	_chip.set_color(w.tracer_color.lerp(Color.WHITE, 0.25))
+	_role.text = w.role.get_slice(".", 0)
+	_role.tooltip_text = w.role
+	_fill_traits(tags, w)
 	for i in STATS.size():
-		var result: Array = call(STATS[i][1], w)
-		_stat_bars[i].value = clampf(float(result[0]) / float(STATS[i][2]), 0.04, 1.0)
-		_stat_values[i].text = String(result[1])
-		_stat_bars[i].add_theme_stylebox_override("fill", UiKit.box(w.tracer_color, Color.TRANSPARENT, 8, 0, 0))
+		_stat_rows[i].set_value(String(call(STATS[i][1], w)[1]))
+	_rank_label.text = "MASTERY  %d / %d" % [rank, w.max_rank()]
+	_rank_bar.value = Mastery.rank_progress(w.id) if rank < w.max_rank() else 1.0
 	_lock_note.visible = not unlocked
 	if not unlocked:
 		_lock_note.text = "LOCKED  ·  %s" % (w.unlock.describe() if w.unlock else "")
 	var slot := Loadout.slot_of(w.id)
-	for i in 2:
-		var b := _equip[i]
-		b.disabled = not unlocked or slot == i
-		b.text = ("%s  ·  EQUIPPED" if slot == i else "EQUIP AS %s") % String(Loadout.SLOT_NAMES[i]).to_upper()
+	_swap.visible = unlocked and slot >= 0
+	_equip_row.visible = unlocked and slot < 0
 	_refresh_cards()
 	_refresh_loadout()
 	_build_preview_model()
+	_seat_on_stand()
+	if _screen_material:
+		_screen_material.set_shader_parameter("thumb", _thumb_textures[w.id])
+	if changed and is_visible_in_tree():
+		UiFx.pop_in(_name, 0.0, 0.9)
+
+
+## The name in the biggest size that fits the board.
+func _fit_name(text: String) -> void:
+	var font_size := 56
+	var room := _board.custom_minimum_size.x - 90.0
+	while font_size > 34 and UiKit.display_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > room:
+		font_size -= 2
+	_name.text = text
+	_name.add_theme_font_size_override("font_size", font_size)
 
 
 func _equip_slot(slot: int) -> void:
-	if _weapon and Loadout.set_slot(slot, _weapon.id):
-		Sfx.play(&"weap_switch", -4.0)
+	if _weapon == null or Loadout.slot_of(_weapon.id) == slot:
+		return
+	if Loadout.set_slot(slot, _weapon.id):
+		UiSound.equip()
 		_select(_weapon)
+		UiFx.pulse(_plates[slot], 1.06)
+	else:
+		UiFx.deny(_board)
+
+
+## The selected weapon changes places with the one in the other slot.
+func _swap_slots() -> void:
+	var slot := Loadout.slot_of(_weapon.id) if _weapon else -1
+	if slot >= 0:
+		_equip_slot(1 - slot)
 
 
 func _refresh_cards() -> void:
 	for id in _cards:
 		var w := GameData.weapon(id)
-		var b: Button = _cards[id]
-		var unlocked := GameData.is_weapon_unlocked(w)
-		var selected := w == _weapon
-		var normal := UiKit.box(Color(UiKit.INK, 0.78), Color(w.tracer_color, 0.35), 16, 2, 10)
-		var hover := UiKit.box(Color(UiKit.PURPLE, 0.6), Color(w.tracer_color, 0.7), 16, 3, 10)
-		var on := UiKit.box(Color(UiKit.NAVY, 0.95), w.tracer_color, 16, 5, 10)
-		b.add_theme_stylebox_override("normal", on if selected else normal)
-		b.add_theme_stylebox_override("hover", hover)
-		b.add_theme_stylebox_override("pressed", on)
-		b.add_theme_stylebox_override("hover_pressed", on)
-		b.add_theme_stylebox_override("focus", UiKit.box(Color.TRANSPARENT, UiKit.CYAN, 18, 3, 0))
-		(b.find_child("Thumb", true, false) as TextureRect).modulate = Color.WHITE if unlocked else Color(0.35, 0.32, 0.45)
-		var sub := b.find_child("Sub", true, false) as Label
-		sub.text = w.category if unlocked else "LOCKED · " + (w.unlock.describe() if w.unlock else "")
-		sub.add_theme_color_override("font_color", UiKit.CREAM if unlocked else UiKit.AMBER)
-		var badge := b.find_child("Badge", true, false) as Label
+		var card: ItemCard = _cards[id]
+		if GameData.is_weapon_unlocked(w):
+			card.set_status("")
+		else:
+			card.set_locked(_short_lock(w))
 		var slot := Loadout.slot_of(w.id)
-		badge.visible = slot >= 0
-		if slot >= 0:
-			badge.text = "1ST" if slot == Loadout.PRIMARY else "2ND"
-			badge.add_theme_stylebox_override("normal", UiKit.box(w.tracer_color, Color.TRANSPARENT, 8, 0, 2))
+		card.set_tag("" if slot < 0 else ("1ST" if slot == Loadout.PRIMARY else "2ND"), UiKit.CYAN if slot == Loadout.PRIMARY else UiKit.CREAM)
+
+
+## "Lv 5" for a player-level lock, else the requirement's own text.
+func _short_lock(w: WeaponData) -> String:
+	if w.unlock == null:
+		return "Locked"
+	if w.unlock.kind == Requirement.Kind.PLAYER_LEVEL and w.unlock.all_of.is_empty():
+		return "Lv %d" % w.unlock.amount
+	return w.unlock.describe()
 
 
 func _refresh_loadout() -> void:
+	var selected_slot := Loadout.slot_of(_weapon.id) if _weapon else -1
 	for slot in 2:
-		var card := _loadout_cards[slot]
 		var w := GameData.weapon(Loadout.slot(slot))
-		for c in card.get_children():
-			c.queue_free()
-		card.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.8), w.tracer_color if w else Color.TRANSPARENT, 14, 3, 10))
-		var v := VBoxContainer.new()
-		v.add_theme_constant_override("separation", -6)
-		card.add_child(v)
-		v.add_child(UiKit.label(String(Loadout.SLOT_NAMES[slot]).to_upper() + "  [%d]" % (slot + 1), 18, UiKit.CYAN, true))
-		v.add_child(UiKit.label(w.display_name.to_upper() if w else "—", 28, Color.WHITE, true))
+		_plates[slot].set_value(w.display_name.to_upper() if w else "EMPTY")
+		_plates[slot].active = slot == selected_slot
 
 
-func _build_traits(w: WeaponData) -> void:
-	for c in _traits.get_children():
-		c.queue_free()
+## Short tags for how the weapon fires and what its shots do.
+func _trait_tags(w: WeaponData) -> Array[String]:
 	var tags: Array[String] = []
 	if w.charge_time <= 0.0:
 		tags.append("AUTO" if w.automatic or w.beam else "SEMI")
@@ -443,17 +596,20 @@ func _build_traits(w: WeaponData) -> void:
 			tags.append("SHOCKS")
 	if w.uses_heat():
 		tags.append("HEAT")
-	for t in tags:
-		var chip := UiKit.label(t, 18, UiKit.INK, true)
-		chip.add_theme_constant_override("shadow_offset_y", 0)
-		var sb := UiKit.box(w.tracer_color.lerp(Color.WHITE, 0.35), Color.TRANSPARENT, 10, 0, 4)
-		sb.content_margin_left = 10
-		sb.content_margin_right = 10
-		chip.add_theme_stylebox_override("normal", sb)
-		_traits.add_child(chip)
+	return tags
 
 
-# --- stats: [value for the bar, text] ------------------------------------------------
+## The tags after the first (which is on the chip) as small pills.
+func _fill_traits(tags: Array[String], w: WeaponData) -> void:
+	for c in _traits.get_children():
+		_traits.remove_child(c)
+		c.queue_free()
+	_traits.visible = tags.size() > 1
+	for i in range(1, mini(tags.size(), 4)):
+		_traits.add_child(UiKit.chip(tags[i], w.tracer_color.lerp(UiKit.INK, 0.72), 18, false))
+
+
+# --- stats: [value, text] -------------------------------------------------------------
 
 ## Sustained single-target damage per second at the real fire rate, reloads
 ## (or overheat vents) included, so a big magazine and a fast reload count.
@@ -514,6 +670,108 @@ func _build_preview_model() -> void:
 	_ring.material_override = m
 	if not GameData.is_weapon_unlocked(_weapon):
 		_tint_locked(_model)
+
+
+## Rests the previewed weapon on the stand: lifts it clear of the turntable
+## and raises the two cradle forks until their pads touch its underside, so
+## nothing floats and nothing cuts into the model. Worked out once per weapon
+## from the model's triangles.
+func _seat_on_stand() -> void:
+	if _model == null or _forks.is_empty():
+		for part: Node3D in _forks + _collars:
+			part.visible = false
+		return
+	if not _seats.has(_weapon.id):
+		_pivot.position = Vector3.ZERO
+		_seats[_weapon.id] = _measure_seat()
+	var seat: Dictionary = _seats[_weapon.id]
+	_pivot.position = Vector3(0.0, seat["lift"], 0.0)
+	var along: Vector3 = seat["along"]
+	for i in 2:
+		var height: float = seat["pads"][i]
+		_forks[i].visible = height > -INF
+		_collars[i].visible = height > -INF
+		_forks[i].position = along * seat["stations"][i] + Vector3(0.0, height, 0.0)
+		_forks[i].rotation = Vector3(0.0, atan2(-along.z, along.x), 0.0)
+		_collars[i].position = along * seat["stations"][i] + Vector3(0.0, TURNTABLE_TOP, 0.0)
+
+
+## Where the weapon rests: {lift, along, stations[2], pads[2]} in turntable
+## space. `along` is the weapon's long axis; a pad height of -INF means the
+## weapon has nothing over that fork.
+func _measure_seat() -> Dictionary:
+	var along := (_pivot.basis * _model.basis * Vector3.FORWARD)
+	along.y = 0.0
+	along = along.normalized() if along.length() > 0.001 else Vector3.RIGHT
+	var across := Vector3(-along.z, 0.0, along.x)
+	# Every triangle corner as (along, across, height).
+	var corners := PackedVector3Array()
+	for mi in _model.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.mesh == null or not _shown(m):
+			continue
+		var xf := _pivot.transform * _relative(_pivot, m)
+		for v in m.mesh.get_faces():
+			var p := xf * v
+			corners.append(Vector3(p.dot(along), p.dot(across), p.y))
+	var low := INF
+	var near := INF
+	var far := -INF
+	for c in corners:
+		low = minf(low, c.z)
+		near = minf(near, c.x)
+		far = maxf(far, c.x)
+	var stations := [lerpf(near, far, 0.27), lerpf(near, far, 0.73)]
+	var pads := [_underside(corners, stations[0]), _underside(corners, stations[1])]
+	# Clear the turntable, and leave the forks room for their yokes and collars.
+	var lift := TURNTABLE_TOP + 0.04 - low
+	for pad: float in pads:
+		if pad < INF:
+			lift = maxf(lift, TURNTABLE_TOP + 0.09 - pad)
+	for i in 2:
+		pads[i] = pads[i] + lift if pads[i] < INF else -INF
+	return {"lift": lift, "along": along, "stations": stations, "pads": pads}
+
+
+## The lowest point of the model over a cradle pad centred at `station`
+## along the weapon (INF if nothing is above the pad). Samples a grid of
+## points across the pad against every triangle that overlaps it.
+func _underside(corners: PackedVector3Array, station: float) -> float:
+	var lowest := INF
+	for t in range(0, corners.size(), 3):
+		var a := corners[t]
+		var b := corners[t + 1]
+		var c := corners[t + 2]
+		if maxf(a.x, maxf(b.x, c.x)) < station - PAD.x or minf(a.x, minf(b.x, c.x)) > station + PAD.x:
+			continue
+		if maxf(a.y, maxf(b.y, c.y)) < -PAD.y or minf(a.y, minf(b.y, c.y)) > PAD.y:
+			continue
+		for corner: Vector3 in [a, b, c]:
+			if absf(corner.x - station) <= PAD.x and absf(corner.y) <= PAD.y:
+				lowest = minf(lowest, corner.z)
+		var det := (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y)
+		if absf(det) < 1e-9:
+			continue
+		for ix in 5:
+			var px := station + PAD.x * (ix - 2) * 0.5
+			for iy in 7:
+				var py := PAD.y * (iy - 3) / 3.0
+				var wa := ((b.y - c.y) * (px - c.x) + (c.x - b.x) * (py - c.y)) / det
+				var wb := ((c.y - a.y) * (px - c.x) + (a.x - c.x) * (py - c.y)) / det
+				var wc := 1.0 - wa - wb
+				if wa >= 0.0 and wb >= 0.0 and wc >= 0.0:
+					lowest = minf(lowest, wa * a.z + wb * b.z + wc * c.z)
+	return lowest
+
+
+## True when `node` and everything between it and the preview pivot is visible.
+func _shown(node: Node3D) -> bool:
+	var n: Node = node
+	while n and n != _pivot:
+		if n is Node3D and not (n as Node3D).visible:
+			return false
+		n = n.get_parent()
+	return true
 
 
 ## The viewmodel without arms, with the weapon's equipped cosmetics.

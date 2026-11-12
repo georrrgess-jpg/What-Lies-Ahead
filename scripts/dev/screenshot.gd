@@ -14,7 +14,7 @@ extends Node
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
 ##   --shot-pitch=deg
 ##   --shot-fov=deg        vertical field of view
-##   --shot-weapon=id
+##   --shot-weapon=id      (with --shot-scene=arsenal: the weapon shown on the stand)
 ##   --shot-zombies=0|1    stage the four reference zombies
 ##   --shot-hud=0|1
 ##   --shot-frames=n       frames to wait before capturing
@@ -75,6 +75,8 @@ func _run() -> void:
 			menu._show(scene_kind)
 		if scene_kind == "locker":
 			_stage_locker(menu.page("locker"))
+		if scene_kind == "arsenal" and args.has("weapon"):
+			menu.page("arsenal")._select(GameData.weapon(StringName(_arg("weapon", ""))))
 		await _capture(int(_arg("frames", "30")))
 		return
 
