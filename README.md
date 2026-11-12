@@ -348,8 +348,9 @@ used Mesa llvmpipe, a software rasteriser):
   enemy, kill effect, tracer and operator.
 - **Code review**: two independent reviews of the merged update (gameplay runtime; menus
   and meta-progression). Their findings were fixed (see the git history).
-- **Export smoke test**: see *Exporting a build*; the exported Linux build ran a bot clear
-  and a rendered frame.
+- **Export smoke test**: the exported Linux build played Neon Skyline from wave 6 to the
+  portal with the bot, showed the results and returned to the menu, and rendered Launch
+  Pad 9 on a virtual display.
 
 Not verified, or limited:
 
