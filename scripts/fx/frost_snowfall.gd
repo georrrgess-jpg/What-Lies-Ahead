@@ -17,10 +17,13 @@ const SHADER := "res://art/shaders/frost_snowfall.gdshader"
 
 var _material: ShaderMaterial
 var _time := 0.0
+## 0 = gentle snowfall, 1 = whiteout (set by FrostWeather).
+var _storm := 0.0
 
 
 func _ready() -> void:
 	add_to_group("graphics_listener")
+	add_to_group("frost_snowfall")
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	# The flakes are placed by the shader around the camera, never cull them.
 	custom_aabb = AABB(Vector3(-5000, -5000, -5000), Vector3(10000, 10000, 10000))
@@ -49,8 +52,16 @@ func apply_graphics_preset(low: bool) -> void:
 		multimesh.visible_instance_count = low_detail_flakes if low else -1
 
 
+## Whiteout amount, 0..1: bigger flakes, faster fall, a hard sideways wind.
+func set_storm(amount: float) -> void:
+	_storm = amount
+	_material.set_shader_parameter("flake_size", lerpf(0.045, 0.075, amount))
+	_material.set_shader_parameter("fall_speed", lerpf(1.3, 2.6, amount))
+
+
 func _process(delta: float) -> void:
 	_time += delta
 	# Slow gusts that lean the snowfall one way, then the other.
 	var g := sin(_time * 0.21) * 0.6 + sin(_time * 0.53 + 1.7) * 0.4
-	_material.set_shader_parameter("wind", wind + Vector2(g, g * 0.35) * gust)
+	var storm_wind := Vector2(4.5, 1.2) * _storm
+	_material.set_shader_parameter("wind", wind + storm_wind + Vector2(g, g * 0.35) * gust * (1.0 + _storm))

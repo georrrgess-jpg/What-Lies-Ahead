@@ -64,7 +64,7 @@ def snow_mat():
 
 def glass_mat():
     """Warm lit window glass (emissive amber)."""
-    return mat("FrostWindow", FROST["Glow"], rough=0.25, emit=2.6)
+    return mat("FrostWindow", FROST["Glow"], rough=0.25, emit=2.2)
 
 
 def ice_mat():

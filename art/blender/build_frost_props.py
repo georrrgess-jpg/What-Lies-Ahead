@@ -388,6 +388,24 @@ def build_marker():
     save("frost_marker", [merge("Marker", parts)])
 
 
+def build_trail_lantern():
+    """Lantern stake for the lit trail to the exit portal (1.2 m). Its glass uses
+    the material 'FrostTrailGlass', which scripts/props/frost_trail_light.gd drives."""
+    reset_scene()
+    wood, iron = fmat("TimberDark"), fmat("Charcoal", rough=0.5, metal=0.3)
+    glass = mat("FrostTrailGlass", "#ffc46b", rough=0.3, emit=1.5)
+    parts = [
+        box("Stake", (0.1, 0.1, 0.9), (0, 0, 0.45), bevel=0.02, m=wood),
+        box("Base", (0.26, 0.26, 0.05), (0, 0, 0.92), bevel=0.02, m=iron),
+        box("Glass", (0.2, 0.2, 0.24), (0, 0, 1.07), bevel=0.02, m=glass),
+        cyl("Roof", 0.19, 0.12, (0, 0, 1.25), segs=4, bevel=0.0, m=iron, radius_top=0.03),
+        sphere("RoofSnow", 0.1, (0, 0, 1.3), scale=(1.3, 1.3, 0.5), m=snow_mat(), segs=8, rings=4),
+    ]
+    for i, (dx, dy) in enumerate(((-1, -1), (1, -1), (1, 1), (-1, 1))):
+        parts.append(box(f"Frame{i}", (0.025, 0.025, 0.26), (dx * 0.1, dy * 0.1, 1.07), bevel=0.0, m=iron))
+    save("frost_trail_lantern", [merge("TrailLantern", parts)])
+
+
 def build_run_arch():
     """'SUMMIT RUN' finish arch, 10 m wide, bulbs along the banner."""
     reset_scene()
@@ -490,58 +508,83 @@ def build_snowcat():
     save("frost_snowcat", [merge("Snowcat", parts)])
 
 
-def build_peak():
-    """Distant faceted mountain (~90 m across, 70 m tall): rock below, snow above."""
-    reset_scene()
-    rng = random.Random(17)
-    rock, rock_dark, snow = mat("FrostPeakRock", "#4a4472", rough=0.9), mat("FrostPeakRockDark", "#342f58", rough=0.9), mat("FrostPeakSnow", "#d9d8f6", rough=0.85)
+def peak_massif(name, seed, summits, size=110.0, height=80.0, grid=20):
+    """Faceted mountain massif: a few gaussian summits on a jittered grid that
+    falls to nothing at the border. Snow on the high, gentle faces; rock elsewhere."""
+    rng = random.Random(seed)
+    rock, rock_dark = mat("FrostPeakRock", "#4a4472", rough=0.9), mat("FrostPeakRockDark", "#342f58", rough=0.9)
+    snow = mat("FrostPeakSnow", "#d9d8f6", rough=0.85)
+    tops = [(0.0, 0.0, height, size * 0.26)]
+    for _ in range(summits - 1):
+        a = rng.uniform(0, math.tau)
+        d = rng.uniform(0.18, 0.32) * size
+        tops.append((math.cos(a) * d, math.sin(a) * d * 0.7, height * rng.uniform(0.5, 0.8), size * rng.uniform(0.14, 0.22)))
+    half = size / 2
+    step = size / grid
     bm = bmesh.new()
-    rings, segs = 7, 14
-    verts = []
-    for r in range(rings):
-        t = r / (rings - 1)
-        ring = []
-        for s in range(segs):
-            a = math.tau * s / segs + rng.uniform(-0.12, 0.12)
-            radius = 45.0 * (1.0 - t) ** 1.25 * rng.uniform(0.75, 1.15) + 0.5
-            z = 70.0 * t + rng.uniform(-3, 3) * (1 - t)
-            ring.append(bm.verts.new((math.cos(a) * radius, math.sin(a) * radius * 0.8, z)))
-        verts.append(ring)
-    top = bm.verts.new((rng.uniform(-3, 3), rng.uniform(-3, 3), 78.0))
-    for r in range(rings - 1):
-        for s in range(segs):
-            a, b = verts[r][s], verts[r][(s + 1) % segs]
-            c, d = verts[r + 1][(s + 1) % segs], verts[r + 1][s]
-            bm.faces.new((a, b, c))
-            bm.faces.new((a, c, d))
-    for s in range(segs):
-        bm.faces.new((verts[-1][s], verts[-1][(s + 1) % segs], top))
+    verts = {}
+    for j in range(grid + 1):
+        for i in range(grid + 1):
+            edge = i in (0, grid) or j in (0, grid)
+            x = -half + i * step + (0 if edge else rng.uniform(-0.3, 0.3) * step)
+            y = -half + j * step + (0 if edge else rng.uniform(-0.3, 0.3) * step)
+            h = 0.0
+            for tx, ty, th, tr in tops:
+                dist = math.hypot(x - tx, y - ty)
+                h = max(h, th * math.exp(-(dist / tr) ** 1.4))
+            border = min(i, j, grid - i, grid - j) / (grid * 0.5)
+            h *= min(1.0, border * 2.2) ** 0.8
+            h += (rng.uniform(-1, 1) * 2.5 * (h / height + 0.2)) if not edge else -6.0
+            verts[(i, j)] = bm.verts.new((x, y, h))
+    for j in range(grid):
+        for i in range(grid):
+            a, b, c, d = verts[(i, j)], verts[(i + 1, j)], verts[(i + 1, j + 1)], verts[(i, j + 1)]
+            if (i + j) % 2:
+                bm.faces.new((a, b, c))
+                bm.faces.new((a, c, d))
+            else:
+                bm.faces.new((a, b, d))
+                bm.faces.new((b, c, d))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    me = bpy.data.meshes.new("Peak")
+    me = bpy.data.meshes.new(name)
     bm.to_mesh(me)
     bm.free()
     for m in (rock, rock_dark, snow):
         me.materials.append(m)
+    snow_line = height * 0.38
     for p in me.polygons:
         p.use_smooth = False
         zc = sum(me.vertices[v].co.z for v in p.vertices) / len(p.vertices)
-        steep = abs(p.normal.z) < 0.45
-        if zc > 34.0 + rng.uniform(-6, 6) and not (steep and rng.random() < 0.35):
+        if zc > snow_line + rng.uniform(-8, 8) and p.normal.z > 0.42:
             p.material_index = 2
-        elif steep or rng.random() < 0.3:
+        elif p.normal.z < 0.55 or rng.random() < 0.35:
             p.material_index = 1
-    ob = bpy.data.objects.new("Peak", me)
+        if p.normal.z < 0:
+            p.flip()
+    ob = bpy.data.objects.new(name, me)
     export_collection().objects.link(ob)
-    save("frost_peak", [ob])
+    return ob
+
+
+def build_peak():
+    """Distant massif with a dominant summit (~110 m across, 80 m tall)."""
+    reset_scene()
+    save("frost_peak", [peak_massif("Peak", 17, 3)])
+
+
+def build_peak_b():
+    """A broader, jagged range for the flanks of the valley."""
+    reset_scene()
+    save("frost_peak_b", [peak_massif("PeakB", 29, 5, size=140.0, height=62.0, grid=22)])
 
 
 BUILDERS = {
     "pine": build_pine, "pine_far": build_pine_far, "snowbank": build_snowbank, "ski_rack": build_ski_rack,
     "snowmobile": build_snowmobile, "fire_pit": build_fire_pit, "fire_table": build_fire_table, "lamp": build_lamp,
     "fence": build_fence, "bench": build_bench, "table": build_table, "heater": build_heater, "chair": build_chair,
-    "snowman": build_snowman, "skates": build_skates, "crates": build_crates, "logs": build_logs, "marker": build_marker,
+    "snowman": build_snowman, "skates": build_skates, "crates": build_crates, "logs": build_logs, "marker": build_marker, "trail_lantern": build_trail_lantern,
     "run_arch": build_run_arch, "signpost": build_signpost, "resort_sign": build_resort_sign,
-    "telescope": build_telescope, "snowcat": build_snowcat, "peak": build_peak,
+    "telescope": build_telescope, "snowcat": build_snowcat, "peak": build_peak, "peak_b": build_peak_b,
 }
 
 

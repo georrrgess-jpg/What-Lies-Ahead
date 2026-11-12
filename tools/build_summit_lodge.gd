@@ -42,12 +42,15 @@ const RUN_Z_BOTTOM := -16.0
 const RUN_Z_TOP := -30.0
 const RUN_TOP_Y := 4.5
 ## The flat summit plateau (terrain is flat inside, falls or rises outside).
-const PLATEAU := Rect2(-34.0, -40.0, 68.0, 68.0)
+const PLATEAU := Rect2(-34.0, -40.0, 72.0, 68.0)
 ## Player-only boundary of the arena.
 const ARENA_X0 := -24.0
 const ARENA_X1 := 23.5
 const ARENA_Z1 := 23.5
 const MOON_DIRECTION := Vector3(0.42, 0.62, 0.66)     # toward the key light (south-east, high)
+## The chairlift landing (east edge) and the direction its line climbs the mountain.
+const LANDING := Vector3(29.4, 0.0, 1.2)
+const CHAIR_DIR := Vector3(0.215, 0.0, -0.977)
 
 var level: Node3D
 var geo: Node3D          # collidable geometry (navmesh source)
@@ -359,7 +362,8 @@ func _build_lodge() -> void:
 	var lodge := Node3D.new()
 	lodge.name = "Lodge"
 	geo.add_child(lodge)
-	_prop(lodge, "frost_lodge", "LodgeModel", Vector3(-5.0, 0, TERRACE_Z0), 0.0, Vector3(26, 14, 14))
+	var model := _prop(lodge, "frost_lodge", "LodgeModel", Vector3(-5.0, 0, TERRACE_Z0), 0.0, Vector3(26, 14, 14))
+	_late(model, "res://scripts/props/frost_lodge.gd", {})
 	# Front wall with the kitchen doorway (X 7.5..9.5) at terrace level.
 	var z := TERRACE_Z0 - 0.35
 	_collider(lodge, "FrontWallWest", Vector3(23.5, 13.0, 0.7), Vector3(-4.25, 6.5, z))
@@ -546,6 +550,25 @@ func _build_pond() -> void:
 	lumps.multimesh = mm
 	lumps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	pond.add_child(lumps)
+	# Cold mist hugging the ice (same shader as the Frozen Tourist's frost
+	# cloud, so that shader is compiled before the first one bursts).
+	var mist := MeshInstance3D.new()
+	mist.name = "Mist"
+	var dome := SphereMesh.new()
+	dome.radius = 1.0
+	dome.height = 2.0
+	dome.is_hemisphere = true
+	dome.radial_segments = 32
+	dome.rings = 8
+	mist.mesh = dome
+	var mist_mat := ShaderMaterial.new()
+	mist_mat.shader = load(SHADERS + "frost_cloud.gdshader")
+	mist_mat.set_shader_parameter("strength", 0.14)
+	mist_mat.set_shader_parameter("life", 1.0)
+	mist.material_override = mist_mat
+	mist.scale = Vector3(POND_RADII.x * 0.98, 0.7, POND_RADII.y * 0.98)
+	mist.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	pond.add_child(mist)
 	var rink := Node3D.new()
 	rink.name = "IceRink"
 	pond.add_child(rink)
@@ -594,12 +617,18 @@ func _build_entrances() -> void:
 	_prop(dressing, "frost_snowcat", "Snowcat", Vector3(-29.0, 0, 25.0), 75.0, Vector3(3, 3, 5))
 	_prop(dressing, "frost_logs", "ShedLogs", Vector3(-25.8, 0, 9.6), 0.0, Vector3(2.4, 1.2, 1.2))
 
-	# 3. Chairlift landing (east): riders hop off and walk west into the plaza.
-	_prop(e, "frost_lift_station", "ChairliftLanding", Vector3(28.0, 0, 3.0), -90.0, Vector3(8, 7, 10))
-	for z in [-1.6, 7.6]:
-		for x in [24.6, 31.4]:
-			_collider(e, "LandingPost%d_%d" % [int(x), int(z + 10)], Vector3(0.6, 6.0, 0.6), Vector3(x, 3.0, z))
-	_collider(e, "LandingBack", Vector3(0.6, 3.0, 10.0), Vector3(32.5, 1.5, 3.0))
+	# 3. Chairlift landing (east): the Summit Express comes down the mountain
+	# behind it; riders hop off on the ramp and walk west into the plaza.
+	var yaw := atan2(-CHAIR_DIR.x, -CHAIR_DIR.z)
+	var basis := Basis(Vector3.UP, yaw)
+	_prop(e, "frost_lift_station", "ChairliftLanding", LANDING, rad_to_deg(yaw), Vector3(8, 7, 10))
+	var k := 0
+	for local in [Vector3(-4.6, 3.0, 3.4), Vector3(4.6, 3.0, 3.4), Vector3(-4.6, 3.0, -3.4), Vector3(4.6, 3.0, -3.4)]:
+		var post := _collider(e, "LandingPost%d" % k, Vector3(0.6, 6.0, 0.6), LANDING + basis * local)
+		post.rotation.y = yaw
+		k += 1
+	var column := _collider(e, "LandingColumn", Vector3(1.2, 4.0, 1.2), LANDING + basis * Vector3(0, 2.0, -2.0))
+	column.rotation.y = yaw
 
 
 # ---------------------------------------------------------------------------
@@ -744,8 +773,8 @@ func _build_fences() -> void:
 	# Lookout fence along the south edge.
 	_fence_run(f, "FenceSouth", Vector3(ARENA_X0, 0, 24.2), Vector3(ARENA_X1 + 0.5, 0, 24.2), false)
 	# East: either side of the chairlift landing.
-	_fence_run(f, "FenceEastN", Vector3(24.2, 0, -15.0), Vector3(24.2, 0, -3.0), false)
-	_fence_run(f, "FenceEastS", Vector3(24.2, 0, 9.0), Vector3(24.2, 0, 24.2), false)
+	_fence_run(f, "FenceEastN", Vector3(24.2, 0, -15.0), Vector3(24.2, 0, -4.0), false)
+	_fence_run(f, "FenceEastS", Vector3(24.2, 0, 7.0), Vector3(24.2, 0, 24.2), false)
 	# West: between the gondola station and the shed, and south of the shed.
 	_fence_run(f, "FenceWestMid", Vector3(-24.6, 0, -1.6), Vector3(-24.6, 0, 11.4), false)
 	_fence_run(f, "FenceWestS", Vector3(-24.6, 0, 20.6), Vector3(-24.6, 0, 24.2), false)
@@ -820,18 +849,21 @@ func _build_lifts() -> void:
 	lifts.name = "Lifts"
 	dressing.add_child(lifts)
 	# Chairlift: bull wheel in the landing, towers stepping down the east slope.
-	var chair_towers: Array[float] = [52.0, 82.0, 116.0, 156.0]
-	_lift(lifts, "Chairlift", Vector3(29.6, 5.2, 3.0), 2.3, Vector3.RIGHT, chair_towers, 9.5, "frost_lift_chair", 13.0, 2.2, "frost_lift_tower")
+	# Chairlift: from the landing's bull wheel, up the mountain to a top station.
+	var chair_towers: Array[float] = [24.0, 56.0, 94.0, 136.0, 182.0]
+	var wheel := LANDING + Basis(Vector3.UP, atan2(-CHAIR_DIR.x, -CHAIR_DIR.z)) * Vector3(0, 5.2, -1.6)
+	_lift(lifts, "Chairlift", wheel, 2.3, CHAIR_DIR, chair_towers, 9.5, "frost_lift_chair", 14.0, 2.4, "frost_lift_tower", "frost_lift_station")
 	# Gondola: from its station west and down into the valley.
 	var gondola_towers: Array[float] = [52.0, 92.0, 140.0]
-	_lift(lifts, "Gondola", Vector3(-30.0, 5.6, -8.0), 1.9, Vector3.LEFT, gondola_towers, 12.0, "frost_gondola_cabin", 38.0, 3.2, "frost_gondola_tower")
+	_lift(lifts, "Gondola", Vector3(-30.0, 5.6, -8.0), 1.9, Vector3.LEFT, gondola_towers, 12.0, "frost_gondola_cabin", 38.0, 3.2, "frost_gondola_tower", "")
 
 
 ## Builds a looped lift line: a horizontal bull wheel at `wheel`, two cables
 ## heading along `out_dir` over towers at the given distances, a return wheel
-## past the last tower, carriers spaced along the loop and a mover script.
+## past the last tower (inside `end_station`, if given), carriers spaced along
+## the loop and a mover script.
 func _lift(parent: Node3D, lift_name: String, wheel: Vector3, radius: float, out_dir: Vector3, towers: Array[float],
-		tower_height: float, carrier_model: String, spacing: float, speed: float, tower_model: String) -> void:
+		tower_height: float, carrier_model: String, spacing: float, speed: float, tower_model: String, end_station: String) -> void:
 	var holder := Node3D.new()
 	holder.name = lift_name
 	parent.add_child(holder)
@@ -842,7 +874,12 @@ func _lift(parent: Node3D, lift_name: String, wheel: Vector3, radius: float, out
 		heights.append(_terrain_height(p.x, p.z) + tower_height)
 	var end_d: float = towers[-1] + 40.0
 	var end_p := wheel + out_dir * end_d
-	var end_h := _terrain_height(end_p.x, end_p.z) + tower_height * 0.6
+	var end_ground := _terrain_height(end_p.x, end_p.z)
+	var end_h := end_ground + (5.2 if end_station != "" else tower_height * 0.6)
+	if end_station != "":
+		var yaw := atan2(out_dir.x, out_dir.z)
+		var top := _prop(holder, end_station, "TopStation", Vector3.ZERO, rad_to_deg(yaw), Vector3(8, 7, 10))
+		top.position = Vector3(end_p.x, end_ground, end_p.z) - Basis(Vector3.UP, yaw) * Vector3(0, 0, -1.6)
 	# Line A runs out on one side, line B returns on the other.
 	var line: Array[Vector3] = []
 	var stations: Array = [[0.0, wheel.y]]
@@ -884,7 +921,7 @@ func _lift(parent: Node3D, lift_name: String, wheel: Vector3, radius: float, out
 		var p0 := line[k]
 		var p1 := line[(k + 1) % line.size()]
 		var basis := Basis.looking_at((p1 - p0).normalized(), Vector3.UP)
-		mm.set_instance_transform(k, Transform3D(Basis(basis.x * 0.06, basis.y * 0.06, basis.z * p0.distance_to(p1)), (p0 + p1) * 0.5))
+		mm.set_instance_transform(k, Transform3D(Basis(basis.x * 0.1, basis.y * 0.1, basis.z * p0.distance_to(p1)), (p0 + p1) * 0.5))
 	cable.multimesh = mm
 	cable.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	holder.add_child(cable)
@@ -919,7 +956,7 @@ func _build_lights() -> void:
 	lights.name = "WarmLights"
 	level.add_child(lights)
 	# Lodge glass wall spilling onto the terrace and the plaza.
-	_omni(lights, "LodgeGlow", Vector3(-5.0, 4.2, -21.0), Color(1.0, 0.62, 0.3), 2.2, 13.0)
+	_omni(lights, "LodgeGlow", Vector3(-5.0, 4.2, -21.0), Color(1.0, 0.62, 0.3), 1.6, 13.0)
 	_omni(lights, "TerraceRoof", Vector3(-10.0, 4.4, -19.5), Color(1.0, 0.66, 0.34), 1.4, 8.0)
 	_omni(lights, "KitchenDoor", Vector3(8.5, 3.6, -23.0), Color(1.0, 0.7, 0.4), 1.4, 7.0)
 	_omni(lights, "GondolaBay", Vector3(-26.0, 4.5, -8.0), Color(0.6, 0.85, 1.0), 1.2, 9.0)
@@ -973,16 +1010,18 @@ func _build_backdrop() -> void:
 	var back := Node3D.new()
 	back.name = "Backdrop"
 	dressing.add_child(back)
-	# Distant peaks ring the summit (tallest behind the lodge).
+	# Distant massifs ring the summit (tallest behind the lodge): [position, scale, yaw, model].
 	var peaks := [
-		[Vector3(-60, -10, -330), 2.6, 10.0], [Vector3(120, -20, -300), 2.1, 70.0], [Vector3(-220, -30, -240), 2.3, 140.0],
-		[Vector3(260, -40, -150), 2.0, 200.0], [Vector3(340, -70, 120), 2.4, 30.0], [Vector3(-330, -70, 60), 2.5, 260.0],
-		[Vector3(-180, -80, 380), 2.2, 90.0], [Vector3(150, -85, 420), 2.6, 160.0], [Vector3(30, -60, -480), 3.0, 300.0],
+		[Vector3(-40, -6, -330), Vector3(2.6, 2.7, 2.2), 10.0, "frost_peak"], [Vector3(150, -14, -300), Vector3(2.2, 2.0, 2.0), 70.0, "frost_peak_b"],
+		[Vector3(-230, -20, -250), Vector3(2.3, 2.2, 2.0), 140.0, "frost_peak"], [Vector3(290, -45, -120), Vector3(2.4, 1.8, 2.2), 200.0, "frost_peak_b"],
+		[Vector3(360, -75, 140), Vector3(2.6, 2.3, 2.4), 30.0, "frost_peak"], [Vector3(-350, -75, 80), Vector3(2.8, 2.0, 2.4), 260.0, "frost_peak_b"],
+		[Vector3(-190, -85, 400), Vector3(2.4, 2.1, 2.2), 90.0, "frost_peak_b"], [Vector3(170, -90, 430), Vector3(2.7, 2.6, 2.5), 160.0, "frost_peak"],
+		[Vector3(40, -40, -520), Vector3(3.4, 3.2, 3.0), 300.0, "frost_peak"], [Vector3(-130, -40, -470), Vector3(2.6, 1.9, 2.4), 40.0, "frost_peak_b"],
 	]
 	var i := 0
 	for p in peaks:
-		var peak := _prop(back, "frost_peak", "Peak%d" % i, p[0], p[2], Vector3(80, 60, 80))
-		peak.scale = Vector3.ONE * p[1]
+		var peak := _prop(back, p[3], "Peak%d" % i, p[0], p[2], Vector3(100, 70, 100))
+		peak.scale = p[1]
 		i += 1
 	_build_forest(back)
 	_build_aurora(back)
@@ -990,6 +1029,10 @@ func _build_backdrop() -> void:
 	snowfall.name = "Snowfall"
 	level.add_child(snowfall)
 	_late(snowfall, "res://scripts/fx/frost_snowfall.gd", {})
+	var weather := Node.new()
+	weather.name = "Weather"
+	level.add_child(weather)
+	_late(weather, "res://scripts/props/frost_weather.gd", {})
 
 
 ## Pines scattered over the slopes outside the arena (one MultiMesh per surface).
@@ -1073,12 +1116,16 @@ func _build_aurora(parent: Node3D) -> void:
 		m.shader = shader
 		m.set_shader_parameter("seed", c[5])
 		m.set_shader_parameter("strength", c[6])
+		m.set_shader_parameter("speed", 1.0)
+		m.set_shader_parameter("hem_color", Color(0.32, 1.0, 0.62))
+		m.set_shader_parameter("top_color", Color(0.66, 0.34, 1.0))
 		var mi := MeshInstance3D.new()
 		mi.name = "Aurora%d" % i
 		mi.mesh = st.commit()
 		mi.material_override = m
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.extra_cull_margin = 200.0
+		mi.add_to_group("frost_aurora", true)
 		parent.add_child(mi)
 		i += 1
 
@@ -1228,29 +1275,21 @@ func _build_exit() -> void:
 	_prop(dressing, "frost_snowbank", "PortalDriftW", Vector3(-9.2, 0, 22.2), 80.0, Vector3(3.2, 1.2, 1.6)).scale = Vector3(0.7, 0.8, 0.7)
 	_prop(dressing, "frost_snowbank", "PortalDriftE", Vector3(-2.8, 0, 22.4), 100.0, Vector3(3.2, 1.2, 1.6)).scale = Vector3(0.6, 0.7, 0.6)
 
+	# Lantern stakes along both edges of the trail; they chase cyan once the portal opens.
 	var lights := Node3D.new()
 	lights.name = "ExitLights"
 	level.add_child(lights)
-	var strip := BoxMesh.new()
-	strip.size = Vector3(1.2, 0.05, 0.26)
-	var light_script: Script = load("res://scripts/props/exit_light.gd")
-	var route: Array[Vector3] = []
-	var a := Vector3(1.6, 0, 11.0)
-	var b := Vector3(-6.0, 0, 19.2)
-	var steps := 9
+	var a := Vector3(2.4, 0, 10.0)
+	var b := Vector3(-5.2, 0, 18.6)
+	var dir := (b - a).normalized()
+	var side := Vector3(-dir.z, 0, dir.x)
+	var steps := 7
 	for k in steps:
-		route.append(a.lerp(b, float(k) / (steps - 1)))
-	var yaw := atan2(-(b - a).z, (b - a).x)
-	for i in route.size():
-		var mi := MeshInstance3D.new()
-		mi.name = "ExitLight%02d" % i
-		mi.mesh = strip
-		mi.position = route[i] + Vector3(0, 0.035, 0)
-		mi.rotation.y = yaw + PI * 0.5
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		mi.set_script(light_script)
-		mi.set("order", i)
-		lights.add_child(mi)
+		var t := float(k) / (steps - 1)
+		var pos := a.lerp(b, t) + side * (1.9 if k % 2 == 0 else -1.9)
+		var lantern := _prop(lights, "frost_trail_lantern", "TrailLantern%02d" % k, pos, k * 23.0, Vector3(0.2, 1.2, 0.2))
+		_late(lantern, "res://scripts/props/frost_trail_light.gd", {"order": k})
+	dressing.get_node("Paving").add_child(_ribbon("TrailExit", [a - dir * 2.0, a.lerp(b, 0.5), b + dir * 1.6], 3.0, _path_material()))
 
 
 # ---------------------------------------------------------------------------
@@ -1271,7 +1310,7 @@ func _build_markers() -> void:
 	var points := {
 		"SpawnGondola": [Vector3(-29.0, 0.1, -8.0), 90.0],
 		"SpawnShed": [Vector3(-29.0, 0.1, 16.0), 90.0],
-		"SpawnChairlift": [Vector3(27.6, 0.1, 3.0), -90.0],
+		"SpawnChairlift": [LANDING + Vector3(-0.4, 0.1, 1.2), -100.0],
 		"SpawnSkiRun": [Vector3(17.0, RUN_TOP_Y + 0.1, RUN_Z_TOP - 5.0), 0.0],
 		"SpawnKitchen": [Vector3(8.5, TERRACE_Y + 0.1, -26.6), 0.0],
 	}

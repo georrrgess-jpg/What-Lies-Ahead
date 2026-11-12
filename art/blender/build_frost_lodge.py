@@ -64,7 +64,8 @@ def a_frame():
     parts.append(sphere("RidgeSnow", 0.6, (0, DEPTH / 2, RIDGE + 0.5), scale=(1.0, DEPTH / 1.1, 0.55), m=snow, segs=10, rings=6))
     # Glass gable with a timber grid, set just behind the roof's front edge.
     outline = [(-(HALF_W - 0.4), FLOOR), (HALF_W - 0.4, FLOOR), (0.0, RIDGE - 0.8)]
-    parts.append(prism("Gable", outline, 0.16, (0, 0.6, 0), m=glass))
+    # The game swaps this surface for an interior-mapped room (frost_lodge_interior.gdshader).
+    parts.append(prism("Gable", outline, 0.16, (0, 0.6, 0), m=mat("FrostGableGlass", FROST["Glow"], rough=0.25, emit=1.6)))
     for i, x in enumerate((-8.0, -5.4, -2.7, 2.7, 5.4, 8.0)):
         top = gable_top(x)
         parts.append(box(f"MullionV{i}", (0.22, 0.3, top - FLOOR), (x, 0.45, (top + FLOOR) / 2), bevel=0.03, m=timber))

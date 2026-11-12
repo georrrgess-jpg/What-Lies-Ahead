@@ -37,12 +37,15 @@ void fragment() {
 	float broad = texture(snow_texture, uv * 0.11 + vec2(0.37, 0.71)).g;
 	snow *= mix(0.9, 1.06, broad) * tint;
 
-	float steep = 1.0 - smoothstep(0.5, 0.78, world_normal.y);
+	// Rock on steep faces, broken up by noise so snow patches cling to it.
+	vec2 side_uv = vec2(world_pos.x + world_pos.z, world_pos.y * 1.6) * 0.035;
+	// The snow texture's green channel spans ~0.78..0.95: stretch it to 0..1.
+	float grain = clamp((texture(snow_texture, side_uv).g - 0.78) * 6.0, 0.0, 1.0);
+	float patches = clamp((texture(snow_texture, world_pos.xz * 0.013 + vec2(0.5, 0.2)).g - 0.78) * 6.0, 0.0, 1.0);
+	float steep = 1.0 - smoothstep(0.42 + patches * 0.25, 0.8, world_normal.y);
 	float rock_mask = steep * rock_amount;
-	float strata = sin(world_pos.y * 1.7 + sin(world_pos.x * 0.21 + world_pos.z * 0.17) * 2.2) * 0.5 + 0.5;
-	vec3 rock = mix(rock_dark, rock_light, smoothstep(0.35, 0.8, strata));
-	// Snow lingers on the ledges of the strata.
-	rock = mix(rock, snow * 0.92, smoothstep(0.86, 0.95, strata) * 0.8);
+	vec3 rock = mix(rock_dark, rock_light, smoothstep(0.2, 0.8, grain));
+	rock = mix(rock, snow * 0.9, smoothstep(0.75, 0.95, grain) * 0.7);
 
 	ALBEDO = mix(snow, rock, rock_mask);
 	NORMAL_MAP = texture(snow_normal, uv).rgb;
