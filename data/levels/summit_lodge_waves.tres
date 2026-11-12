@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="WaveSet" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
+
+[sub_resource type="Resource" id="wave_1"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 12,
+"lifeguard_runner": 6
+}
+spawn_interval = 1.2
+burst = 2
+max_alive = 10
+speed_scale = 1.0
+late_types_after = 0.2
+banner = ""
+
+[sub_resource type="Resource" id="wave_2"]
+script = ExtResource("2")
+spawns = {
+"boardwalk_bruiser": 3,
+"lifeguard_runner": 8
+}
+spawn_interval = 1.5
+burst = 2
+max_alive = 10
+speed_scale = 1.0
+late_types_after = 0.0
+banner = ""
+
+[resource]
+script = ExtResource("1")
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2")])
+prep_seconds = 8.0
+break_seconds = 15.0
+break_refill_fraction = 0.4
+ammo_topup_price = 150
+heal_price = 250
+heal_amount = 60.0
+heals_per_break = 1
+wave_bonus_base = 20
+wave_bonus_per_wave = 5

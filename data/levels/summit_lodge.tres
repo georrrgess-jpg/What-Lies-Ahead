@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/summit_lodge_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"summit_lodge"
+display_name = "Summit Lodge"
+blurb = "Hold the snowy plaza around the ski-rental hut, then follow the lantern trail to the portal."
+scene_path = "res://scenes/levels/summit_lodge.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"summit_lodge_loop"
+ambience = &"frost_ambience"
+music_volume_db = -9.0
+ambience_volume_db = -7.0
+accent_color = Color(0.4, 0.86, 1, 1)
+menu_camera_from = Vector3(25, 9, 21)
+menu_camera_to = Vector3(-4, 4, -12)
+loading_tips = PackedStringArray("Ski Racers crouch into a tuck before they rush downhill in a straight line. Sidestep!", "Frozen Tourists shrug off body shots until their ice shatters. Aim for the head.", "A shattered Frozen Tourist leaves a frost cloud that slows you down. Step out of it.", "The Yeti roars before it hurls a snowball. Strafe or duck behind cover.", "The frozen pond is slippery: you keep your speed, but stopping and turning take longer.", "The lodge terrace is high ground. Ramps at both ends and the central stairs lead up.")
