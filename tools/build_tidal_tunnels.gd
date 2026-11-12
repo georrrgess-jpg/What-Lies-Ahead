@@ -6,8 +6,10 @@ extends SceneTree
 ## water, coral, kelp, fish, sharks, jellies), dressing, lights, spawn markers,
 ## the loadout station, the exit portal and a baked navigation mesh.
 ##
-##   godot --headless --path . --script res://tools/build_tidal_tunnels.gd
+##   xvfb-run godot --rendering-driver opengl3 --path . --script res://tools/build_tidal_tunnels.gd
 ##
+## Run it with a renderer (not --headless): the headless dummy renderer keeps no
+## MultiMesh instance data, so the fish schools and kelp would be saved empty.
 ## NOTE: running this overwrites hand edits made to tidal_tunnels.tscn.
 ##
 ## Layout (metres, top view; -Z = north, the player starts in the south lobby):
@@ -972,8 +974,8 @@ func _build_hall_dressing() -> void:
 	var hall := _node(geo, "HallDressing")
 	# West hall (kelp gallery): two coral islands framing the rotunda opening, a
 	# planter beside the north bench, the night cleaner's cart against the glass.
-	_dressing(hall, "aqua_coral_display", "CoralW1", Vector3(-17.0, 0, -6.2), 90.0, Vector3(1.85, 0.85, 0.95))
-	_dressing(hall, "aqua_coral_display", "CoralW2", Vector3(-17.0, 0, 4.6), 90.0, Vector3(1.85, 0.85, 0.95))
+	_dressing(hall, "aqua_coral_display", "CoralW1", Vector3(-17.0, 0, -6.2), 90.0, Vector3(1.85, 0.85, 0.95), Vector3.ZERO, true)
+	_dressing(hall, "aqua_coral_display", "CoralW2", Vector3(-17.0, 0, 4.6), 90.0, Vector3(1.85, 0.85, 0.95), Vector3.ZERO, true)
 	_dressing(hall, "aqua_planter", "PlanterW", Vector3(-14.4, 0, -11.3), -90.0, Vector3(1.4, 0.6, 0.7))
 	_dressing(hall, "aqua_janitor_cart", "CartW", Vector3(-19.5, 0, -10.0), 90.0, Vector3(1.6, 1.1, 1.0), Vector3(0, 0, 0.15))
 	_omni(lights, "CoralW1Spot", Vector3(-17.0, 3.2, -6.2), WARM, 0.9, 4.5)
@@ -988,8 +990,8 @@ func _build_hall_dressing() -> void:
 	_dressing(hall, "aqua_janitor_cart", "CartE", Vector3(22.55, 0, 11.6), -90.0, Vector3(1.6, 1.1, 1.0), Vector3(0, 0, 0.15))
 	# North-west and north-east corners: a coral island each, feed pallets in
 	# the dead corners, a planter beside the east tunnel mouth.
-	_dressing(hall, "aqua_coral_display", "CoralNW", Vector3(-19.5, 0, -20.0), 0.0, Vector3(1.85, 0.85, 0.95))
-	_dressing(hall, "aqua_coral_display", "CoralNE", Vector3(19.5, 0, -20.0), 0.0, Vector3(1.85, 0.85, 0.95))
+	_dressing(hall, "aqua_coral_display", "CoralNW", Vector3(-19.5, 0, -20.0), 0.0, Vector3(1.85, 0.85, 0.95), Vector3.ZERO, true)
+	_dressing(hall, "aqua_coral_display", "CoralNE", Vector3(19.5, 0, -20.0), 0.0, Vector3(1.85, 0.85, 0.95), Vector3.ZERO, true)
 	_dressing(hall, "aqua_feed_pallet", "PalletNW", Vector3(-22.25, 0, -24.3), 0.0, Vector3(1.45, 1.1, 1.25))
 	_dressing(hall, "aqua_feed_pallet", "PalletNE", Vector3(22.25, 0, -24.3), 0.0, Vector3(1.45, 1.1, 1.25))
 	_dressing(hall, "aqua_planter", "PlanterNE", Vector3(13.9, 0, -24.6), 0.0, Vector3(1.4, 0.6, 0.7))
@@ -1007,12 +1009,26 @@ func _build_hall_dressing() -> void:
 	_hanging_sign(signs, "JellyS", "JELLY LAB", Vector3(17.6, HALL_H, 12.0), Color(1.0, 0.62, 0.42))
 
 
-## A prop with a box collider (`size` in the prop's own frame, `offset` from its origin at mid-height).
-func _dressing(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_degrees: float, size: Vector3, offset := Vector3.ZERO) -> void:
+## A prop with a box collider (`size` in the prop's own frame, `offset` from its
+## origin at mid-height). Free-standing islands pass `rounded`: their collider
+## is a stadium (round ends), so zombies rounding them slide past the corners.
+func _dressing(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_degrees: float, size: Vector3, offset := Vector3.ZERO,
+		rounded := false) -> void:
 	_prop(parent, model, prop_name, pos, yaw_degrees, size)
-	var col := _collider(parent, prop_name + "Col", size, Vector3.ZERO)
+	var r := size.z * 0.5
+	var col := _collider(parent, prop_name + "Col", Vector3(size.x - 2.0 * r, size.y, size.z) if rounded else size, Vector3.ZERO)
 	col.rotation.y = deg_to_rad(yaw_degrees)
 	col.position = pos + Vector3(0, size.y * 0.5, 0) + offset.rotated(Vector3.UP, col.rotation.y)
+	if rounded:
+		for e in [-1.0, 1.0]:
+			var cap := CollisionShape3D.new()
+			cap.name = "End%d" % int(e)
+			var cyl := CylinderShape3D.new()
+			cyl.radius = r
+			cyl.height = size.y
+			cap.shape = cyl
+			cap.position = Vector3(e * (size.x * 0.5 - r), 0, 0)
+			col.add_child(cap)
 
 
 ## A navy sign board hung from the ceiling across a hall (facing +-Z), lettered on both faces.
