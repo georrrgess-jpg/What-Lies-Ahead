@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"lifeguard_runner"
+display_name = "Lifeguard Runner"
+max_health = 55.0
+move_speed = 4.3
+speed_variance = 0.1
+turn_speed = 7.5
+tickets = 14
+xp = 14
+damage = 12.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.4
+attack_recover = 0.65
+outfit = &"Lifeguard"
+body_scale = 0.94
+capsule_radius = 0.4
+capsule_height = 1.9
+head_height = 1.2
+move_animation = &"Run"
+animation_reference_speed = 4.3
+avoidance_radius = 0.5
+voice_sounds = Array[StringName]([&"runner_screech_1", &"runner_screech_2"])
+voice_interval = Vector2(2, 4.5)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

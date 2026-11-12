@@ -1,0 +1,665 @@
+extends SceneTree
+## Blockout generator for World 1 / Level 1 "Prize Pier".
+##
+## Rebuilds scenes/levels/prize_pier.tscn from the layout below: deck, rails,
+## props, spawn markers, kiosk, portal, lighting and a baked navigation mesh.
+## The result is an ordinary scene you can keep editing in Godot.
+##
+##   godot --headless --path . --script res://tools/build_prize_pier.gd
+##
+## NOTE: running this overwrites hand edits made to prize_pier.tscn.
+##
+## Layout (metres, top view; +X = ocean side, -Z = away from the start):
+##   - Prize kiosk at the origin, the hub of the circulation loop.
+##   - Wide midway on the ride side (-X), rail-side stretch on the ocean side (+X).
+##   - Exit spur runs off the far-right corner to the portal.
+##   - Zombie entrances sit beyond the loop: arcade (left-front), Ferris wheel
+##     gate (left-back), service ramp (back) and the pier entrance (front).
+
+const OUT_PATH := "res://scenes/levels/prize_pier.tscn"
+const MODELS := "res://art/models/"
+const DECK_TOP := 0.0
+const DECK_THICK := 0.8
+
+# Main deck bounds.
+const X0 := -25.0
+const X1 := 14.0
+const Z0 := -24.0
+const Z1 := 22.0
+# Exit spur.
+const SPUR_X0 := 8.0
+const SPUR_Z0 := -54.0
+
+var level: Node3D
+var geo: Node3D          # collidable geometry (navmesh source)
+var dressing: Node3D     # non-colliding scenery
+var _materials := {}
+var _boxes := {}
+var _box_shapes := {}
+
+
+func _initialize() -> void:
+	level = Node3D.new()
+	level.name = "PrizePier"
+
+	_build_environment()
+	_build_ocean()
+
+	var nav := NavigationRegion3D.new()
+	nav.name = "NavigationRegion3D"
+	level.add_child(nav)
+	geo = Node3D.new()
+	geo.name = "Geometry"
+	nav.add_child(geo)
+	dressing = Node3D.new()
+	dressing.name = "Dressing"
+	level.add_child(dressing)
+
+	_build_decks()
+	_build_rails()
+	_build_entrances()
+	_build_arena_props()
+	_build_exit()
+	_build_backdrop()
+	_build_markers()
+
+	# Navigation needs the nodes in the tree for their global transforms.
+	get_root().add_child(level)
+	await process_frame
+	_bake_navigation(nav)
+	get_root().remove_child(level)
+
+	level.set_script(load("res://scripts/run/level_environment.gd"))
+	var director := Node.new()
+	director.name = "RunDirector"
+	director.set_script(load("res://scripts/run/run_director.gd"))
+	level.add_child(director)
+
+	_own(level)
+	var packed := PackedScene.new()
+	var err := packed.pack(level)
+	if err == OK:
+		err = ResourceSaver.save(packed, OUT_PATH)
+	print("build_prize_pier: saved %s (error %d)" % [OUT_PATH, err])
+	level.free()
+	quit(0 if err == OK else 1)
+
+
+# ---------------------------------------------------------------------------
+# Environment
+# ---------------------------------------------------------------------------
+
+func _build_environment() -> void:
+	var env := Environment.new()
+	env.background_mode = Environment.BG_SKY
+	var sky := Sky.new()
+	var sky_texture_path := "res://art/textures/sky_sunset.png"
+	if ResourceLoader.exists(sky_texture_path):
+		var pano := PanoramaSkyMaterial.new()
+		pano.panorama = load(sky_texture_path)
+		pano.energy_multiplier = 1.0
+		sky.sky_material = pano
+	else:
+		var proc := ProceduralSkyMaterial.new()
+		proc.sky_top_color = Color(0.2, 0.36, 0.86)
+		proc.sky_horizon_color = Color(1.0, 0.62, 0.62)
+		proc.ground_horizon_color = Color(1.0, 0.62, 0.62)
+		proc.ground_bottom_color = Color(0.1, 0.25, 0.45)
+		sky.sky_material = proc
+	env.sky = sky
+	# Rotate the panorama so its sun sits over the ocean, ahead and to the right.
+	env.sky_rotation = Vector3(0.0, deg_to_rad(SKY_YAW_DEGREES), 0.0)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.62, 0.5, 0.86)
+	env.ambient_light_energy = 0.85
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_white = 1.6
+	env.glow_enabled = true
+	env.glow_intensity = 0.55
+	env.glow_bloom = 0.08
+	env.glow_hdr_threshold = 1.05
+	env.fog_enabled = true
+	env.fog_light_color = Color(1.0, 0.6, 0.66)
+	env.fog_density = 0.0018
+	env.fog_sky_affect = 0.0
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 1.12
+	env.adjustment_contrast = 1.04
+	var we := WorldEnvironment.new()
+	we.name = "WorldEnvironment"
+	we.environment = env
+	level.add_child(we)
+
+	var sun := DirectionalLight3D.new()
+	sun.name = "Sun"
+	# The visible sun is on the horizon ahead-right; the key light comes from the
+	# same compass direction but higher, so shadows stay readable.
+	var azimuth := deg_to_rad(SUN_AZIMUTH_DEGREES)
+	var elevation := deg_to_rad(30.0)
+	var to_sun := Vector3(sin(azimuth) * cos(elevation), sin(elevation), -cos(azimuth) * cos(elevation))
+	sun.transform = Transform3D(Basis.looking_at(-to_sun, Vector3.UP), Vector3(0, 30, 0))
+	sun.light_color = Color(1.0, 0.76, 0.56)
+	sun.light_energy = 1.55
+	sun.shadow_enabled = true
+	sun.shadow_bias = 0.06
+	sun.shadow_normal_bias = 1.2
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	sun.directional_shadow_max_distance = 80.0
+	sun.shadow_opacity = 0.75
+	level.add_child(sun)
+
+	# Soft pink fill from the opposite side, no shadows.
+	var fill := DirectionalLight3D.new()
+	fill.name = "FillLight"
+	fill.transform = Transform3D(Basis.looking_at(Vector3(0.7, -0.45, -0.55).normalized(), Vector3.UP), Vector3(0, 30, 0))
+	fill.light_color = Color(1.0, 0.5, 0.78)
+	fill.light_energy = 0.38
+	fill.shadow_enabled = false
+	level.add_child(fill)
+
+const SUN_AZIMUTH_DEGREES := 62.0   # 0 = straight ahead (-Z), 90 = right (+X)
+const SKY_YAW_DEGREES := -62.0
+
+
+func _build_ocean() -> void:
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(1400, 1400)
+	plane.subdivide_width = 8
+	plane.subdivide_depth = 8
+	var ocean := MeshInstance3D.new()
+	ocean.name = "Ocean"
+	ocean.mesh = plane
+	ocean.position = Vector3(0, -4.2, 0)
+	ocean.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var shader_path := "res://art/shaders/ocean.gdshader"
+	if ResourceLoader.exists(shader_path):
+		var m := ShaderMaterial.new()
+		m.shader = load(shader_path)
+		ocean.material_override = m
+	else:
+		ocean.material_override = _mat("ocean", Color(0.08, 0.42, 0.6), 0.15)
+	level.add_child(ocean)
+
+
+# ---------------------------------------------------------------------------
+# Decks and rails
+# ---------------------------------------------------------------------------
+
+func _build_decks() -> void:
+	var decks := Node3D.new()
+	decks.name = "Decks"
+	geo.add_child(decks)
+	_deck(decks, "MainDeck", X0, X1, Z0, Z1)
+	_deck(decks, "ExitSpur", SPUR_X0, X1, SPUR_Z0, Z0)
+	_deck(decks, "ArcadeFloor", -33.0, X0, 4.0, 18.0)
+	_deck(decks, "RidePlatform", -33.0, X0, -19.0, -7.0)
+	_deck(decks, "EntranceWalk", -8.0, 2.0, Z1, 33.0)
+
+	# Service ramp: slopes down from the back edge to a lower landing.
+	var ramp_len := 12.0
+	var drop := 2.6
+	var slope_len := sqrt(ramp_len * ramp_len + drop * drop)
+	var angle := atan2(drop, ramp_len)
+	var ramp := _box(decks, "ServiceRamp", Vector3(6.0, DECK_THICK, slope_len), Vector3.ZERO, _deck_material())
+	ramp.rotation.x = -angle
+	# Place so the top surface meets the deck edge at Z0 and the landing below.
+	var top_mid := Vector3(-10.0, -drop * 0.5, Z0 - ramp_len * 0.5)
+	var normal := Vector3(0, cos(angle), -sin(angle))
+	ramp.position = top_mid - normal * (DECK_THICK * 0.5)
+	_deck(decks, "RampLanding", -13.0, -7.0, Z0 - ramp_len - 5.0, Z0 - ramp_len, -drop)
+
+	# Pier pylons under the decks (scenery only).
+	var pylons := Node3D.new()
+	pylons.name = "Pylons"
+	dressing.add_child(pylons)
+	var pylon_mesh := CylinderMesh.new()
+	pylon_mesh.top_radius = 0.42
+	pylon_mesh.bottom_radius = 0.5
+	pylon_mesh.height = 7.0
+	pylon_mesh.radial_segments = 10
+	pylon_mesh.material = _mat("pylon", Color(0.36, 0.22, 0.2), 0.9)
+	var index := 0
+	for x in range(-24, 15, 7):
+		for z in range(-52, 23, 7):
+			if z < -24 and x < 9:
+				continue
+			var p := MeshInstance3D.new()
+			p.name = "Pylon%02d" % index
+			p.mesh = pylon_mesh
+			p.position = Vector3(x, -4.3, z)
+			pylons.add_child(p)
+			index += 1
+
+
+func _deck(parent: Node3D, deck_name: String, x0: float, x1: float, z0: float, z1: float, top := DECK_TOP) -> void:
+	var size := Vector3(x1 - x0, DECK_THICK, z1 - z0)
+	var pos := Vector3((x0 + x1) * 0.5, top - DECK_THICK * 0.5, (z0 + z1) * 0.5)
+	_box(parent, deck_name, size, pos, _deck_material())
+
+
+func _deck_material() -> StandardMaterial3D:
+	if _materials.has("deck"):
+		return _materials["deck"]
+	var m := StandardMaterial3D.new()
+	m.resource_name = "DeckWood"
+	var tex_path := "res://art/textures/deck_planks.png"
+	if ResourceLoader.exists(tex_path):
+		m.albedo_texture = load(tex_path)
+		m.albedo_color = Color(1, 1, 1)
+		m.uv1_triplanar = true
+		m.uv1_world_triplanar = true
+		m.uv1_scale = Vector3(0.25, 0.25, 0.25)
+		var normal_path := "res://art/textures/deck_planks_normal.png"
+		if ResourceLoader.exists(normal_path):
+			m.normal_enabled = true
+			m.normal_texture = load(normal_path)
+			m.normal_scale = 0.8
+	else:
+		m.albedo_color = Color(0.6, 0.36, 0.3)
+	m.roughness = 0.5
+	m.metallic_specular = 0.55
+	_materials["deck"] = m
+	return m
+
+
+func _build_rails() -> void:
+	var rails := Node3D.new()
+	rails.name = "Rails"
+	geo.add_child(rails)
+	# Ocean side: one continuous run from the portal end to the front corner.
+	_rail(rails, "RailOcean", Vector3(X1, 0, SPUR_Z0), Vector3(X1, 0, Z1))
+	# Front edge, either side of the pier entrance.
+	_rail(rails, "RailFrontLeft", Vector3(X0, 0, Z1), Vector3(-8.0, 0, Z1))
+	_rail(rails, "RailFrontRight", Vector3(2.0, 0, Z1), Vector3(X1, 0, Z1))
+	_rail(rails, "RailEntranceL", Vector3(-8.0, 0, Z1), Vector3(-8.0, 0, 33.0))
+	_rail(rails, "RailEntranceR", Vector3(2.0, 0, Z1), Vector3(2.0, 0, 33.0))
+	# Back edge: ramp opening at X -13..-7, spur opening at X 8..14.
+	_rail(rails, "RailBackLeft", Vector3(X0, 0, Z0), Vector3(-13.0, 0, Z0))
+	_rail(rails, "RailBackMid", Vector3(-7.0, 0, Z0), Vector3(SPUR_X0, 0, Z0))
+	# Exit spur.
+	_rail(rails, "RailSpurLeft", Vector3(SPUR_X0, 0, SPUR_Z0), Vector3(SPUR_X0, 0, Z0))
+	_rail(rails, "RailSpurEnd", Vector3(SPUR_X0, 0, SPUR_Z0), Vector3(X1, 0, SPUR_Z0))
+	# Ride side (left edge), between the entrances.
+	_rail(rails, "RailLeftBack", Vector3(X0, 0, Z0), Vector3(X0, 0, -19.0))
+	_rail(rails, "RailLeftMid", Vector3(X0, 0, -7.0), Vector3(X0, 0, 4.0))
+	_rail(rails, "RailLeftFront", Vector3(X0, 0, 18.0), Vector3(X0, 0, Z1))
+	# Ride platform surround.
+	_rail(rails, "RailRideBack", Vector3(-33.0, 0, -19.0), Vector3(X0, 0, -19.0))
+	_rail(rails, "RailRideFront", Vector3(-33.0, 0, -7.0), Vector3(X0, 0, -7.0))
+	# Ramp sides and landing (low walls that follow the slope).
+	var ramp_walls := Node3D.new()
+	ramp_walls.name = "RampWalls"
+	geo.add_child(ramp_walls)
+	var teal := _mat("teal", Color(0.09, 0.56, 0.58), 0.55)
+	for side in [-13.0, -7.0]:
+		var wall := _box(ramp_walls, "RampWall%s" % ("L" if side < -10.0 else "R"), Vector3(0.3, 1.3, 12.4), Vector3(side, -0.65, Z0 - 6.0), teal)
+		wall.rotation.x = -atan2(2.6, 12.0)
+		_box(ramp_walls, "LandingWall%s" % ("L" if side < -10.0 else "R"), Vector3(0.3, 1.3, 5.0), Vector3(side, -2.6 + 0.65, Z0 - 14.5), teal)
+
+
+## A rail run: repeated rail modules plus one collision box.
+func _rail(parent: Node3D, rail_name: String, a: Vector3, b: Vector3) -> void:
+	var length := a.distance_to(b)
+	if length < 0.5:
+		return
+	var body := StaticBody3D.new()
+	body.name = rail_name
+	parent.add_child(body)
+	body.position = (a + b) * 0.5
+	var dir := (b - a).normalized()
+	body.rotation.y = atan2(-dir.z, dir.x)      # local +X runs along the rail
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = Vector3(length, 1.25, 0.3)
+	shape.shape = box
+	shape.position.y = 0.625
+	body.add_child(shape)
+	var module_path := MODELS + "rail.glb"
+	var module_len := 3.0
+	var count := maxi(1, int(round(length / module_len)))
+	var step := length / count
+	for i in count:
+		var x := -length * 0.5 + step * (i + 0.5)
+		if ResourceLoader.exists(module_path):
+			var m: Node3D = (load(module_path) as PackedScene).instantiate()
+			m.name = "Module%02d" % i
+			m.position = Vector3(x, 0, 0)
+			m.scale = Vector3(step / module_len, 1, 1)
+			body.add_child(m)
+		else:
+			var mi := MeshInstance3D.new()
+			mi.name = "Module%02d" % i
+			mi.mesh = _box_mesh(Vector3(step - 0.1, 1.1, 0.12), _mat("teal", Color(0.09, 0.56, 0.58), 0.55))
+			mi.position = Vector3(x, 0.55, 0)
+			body.add_child(mi)
+
+
+# ---------------------------------------------------------------------------
+# Zombie entrances (all beyond the main walking loop)
+# ---------------------------------------------------------------------------
+
+func _build_entrances() -> void:
+	var entrances := Node3D.new()
+	entrances.name = "Entrances"
+	geo.add_child(entrances)
+
+	# 1. Arcade: open-front stall on the left-front. Zombies emerge from inside.
+	_prop(entrances, "arcade", "Arcade", Vector3(-29.0, 0, 11.0), 90.0, Vector3(14, 6, 8))
+	_collider(entrances, "ArcadeBack", Vector3(0.4, 6, 14), Vector3(-33.0, 3, 11.0))
+	_collider(entrances, "ArcadeSideA", Vector3(8, 6, 0.4), Vector3(-29.0, 3, 4.0))
+	_collider(entrances, "ArcadeSideB", Vector3(8, 6, 0.4), Vector3(-29.0, 3, 18.0))
+	_collider(entrances, "ArcadeFrontA", Vector3(0.6, 6, 1.6), Vector3(X0, 3, 4.8))
+	_collider(entrances, "ArcadeFrontB", Vector3(0.6, 6, 1.6), Vector3(X0, 3, 17.2))
+
+	# 2. Ferris wheel gate on the left-back, leading in from the ride platform.
+	_prop(entrances, "gate_arch", "RideGate", Vector3(X0, 0, -13.0), 90.0, Vector3(8, 5, 1))
+	_collider(entrances, "RideGatePostA", Vector3(1.0, 5, 1.0), Vector3(X0, 2.5, -16.6))
+	_collider(entrances, "RideGatePostB", Vector3(1.0, 5, 1.0), Vector3(X0, 2.5, -9.4))
+	_rail(entrances, "RideGateFenceA", Vector3(X0, 0, -19.0), Vector3(X0, 0, -17.0))
+	_rail(entrances, "RideGateFenceB", Vector3(X0, 0, -9.0), Vector3(X0, 0, -7.0))
+	_collider(entrances, "RidePlatformBack", Vector3(0.4, 3, 12), Vector3(-33.0, 1.5, -13.0))
+
+	# 3. Service ramp at the back: closed by a service door at the bottom.
+	_prop(entrances, "service_door", "ServiceDoor", Vector3(-10.0, -2.6, Z0 - 17.0), 0.0, Vector3(6.4, 3.4, 0.5))
+	_collider(entrances, "ServiceDoorWall", Vector3(6.6, 4, 0.5), Vector3(-10.0, -0.6, Z0 - 17.2))
+
+	# 4. Pier entrance at the front, behind the start position.
+	_prop(entrances, "gate_arch", "PierEntrance", Vector3(-3.0, 0, Z1), 0.0, Vector3(8, 5, 1))
+	_collider(entrances, "EntrancePostA", Vector3(1.0, 5, 1.0), Vector3(-6.6, 2.5, Z1))
+	_collider(entrances, "EntrancePostB", Vector3(1.0, 5, 1.0), Vector3(0.6, 2.5, Z1))
+	_rail(entrances, "EntranceFenceA", Vector3(-8.0, 0, Z1), Vector3(-7.0, 0, Z1))
+	_rail(entrances, "EntranceFenceB", Vector3(1.0, 0, Z1), Vector3(2.0, 0, Z1))
+	_prop(entrances, "gatehouse", "Gatehouse", Vector3(-3.0, 0, 34.5), 180.0, Vector3(12, 6, 3))
+	_collider(entrances, "GatehouseWall", Vector3(12, 6, 0.6), Vector3(-3.0, 3, 33.2))
+
+
+# ---------------------------------------------------------------------------
+# Arena dressing: kiosk, sightline breaks, rail furniture
+# ---------------------------------------------------------------------------
+
+func _build_arena_props() -> void:
+	var props := Node3D.new()
+	props.name = "Props"
+	geo.add_child(props)
+
+	var kiosk: Node3D = (load("res://scenes/props/kiosk.tscn") as PackedScene).instantiate()
+	kiosk.name = "Kiosk"
+	props.add_child(kiosk)
+	kiosk.position = Vector3.ZERO
+
+	# Game booths against the ride-side fence (between the two left entrances).
+	_prop(props, "booth", "BoothA", Vector3(-22.6, 0, -3.6), 90.0, Vector3(4.6, 3.6, 3.4))
+	_collider(props, "BoothACollision", Vector3(3.6, 3.6, 4.6), Vector3(-22.9, 1.8, -3.6))
+	_prop(props, "booth", "BoothB", Vector3(-22.6, 0, 1.4), 90.0, Vector3(4.6, 3.6, 3.4))
+	_collider(props, "BoothBCollision", Vector3(3.6, 3.6, 4.6), Vector3(-22.9, 1.8, 1.4))
+
+	# Planters: occasional sightline breaks, kept clear of the main lanes.
+	var planters := [
+		[Vector3(-12.5, 0, 10.5), 25.0, true],
+		[Vector3(-13.5, 0, -11.5), -30.0, true],
+		[Vector3(9.5, 0, 18.4), 0.0, true],
+		[Vector3(0.5, 0, -20.5), 0.0, false],
+		[Vector3(-20.5, 0, 20.0), 0.0, true],
+	]
+	var i := 0
+	for entry in planters:
+		var pos: Vector3 = entry[0]
+		var yaw: float = entry[1]
+		_prop(props, "planter", "Planter%d" % i, pos, yaw, Vector3(3.2, 0.9, 1.5))
+		var c := _collider(props, "Planter%dCollision" % i, Vector3(3.2, 1.0, 1.5), pos + Vector3(0, 0.5, 0))
+		c.rotation.y = deg_to_rad(yaw)
+		if entry[2]:
+			_prop(dressing, "palm", "Palm%d" % i, pos + Vector3(0, 0.6, 0), i * 67.0, Vector3(0.5, 7, 0.5))
+			var trunk := _collider(props, "Palm%dTrunk" % i, Vector3(0.5, 5.0, 0.5), pos + Vector3(0, 2.5, 0))
+			trunk.rotation.y = deg_to_rad(yaw)
+		i += 1
+
+	# Rail-side furniture: tight to the railing so the lane stays open.
+	var bench_spots := [Vector3(13.0, 0, 6.5), Vector3(13.0, 0, -7.0), Vector3(13.0, 0, -19.0)]
+	i = 0
+	for spot in bench_spots:
+		_prop(props, "bench", "Bench%d" % i, spot, -90.0, Vector3(0.8, 0.9, 2.2))
+		_collider(props, "Bench%dCollision" % i, Vector3(0.9, 0.9, 2.2), spot + Vector3(0, 0.45, 0))
+		i += 1
+	_prop(dressing, "surfboards", "Surfboards", Vector3(13.45, 0, 11.5), -90.0, Vector3(0.6, 2.4, 1.6))
+	_prop(dressing, "life_ring", "LifeRing", Vector3(13.8, 0.75, 2.5), -90.0, Vector3(0.2, 0.8, 0.8))
+	_prop(dressing, "life_ring", "LifeRing2", Vector3(13.8, 0.75, -30.0), -90.0, Vector3(0.2, 0.8, 0.8))
+
+	# Lamp posts on the rail lines (arm reaches inward over the deck).
+	var lamps := [
+		[Vector3(13.6, 0, 14.0), 180.0], [Vector3(13.6, 0, 0.0), 180.0], [Vector3(13.6, 0, -14.0), 180.0],
+		[Vector3(13.6, 0, -28.0), 180.0], [Vector3(13.6, 0, -42.0), 180.0],
+		[Vector3(8.4, 0, -35.0), 0.0], [Vector3(8.4, 0, -49.0), 0.0],
+		[Vector3(-24.6, 0, 20.5), 0.0], [Vector3(-24.6, 0, -21.5), 0.0], [Vector3(-24.6, 0, -1.1), 0.0],
+		[Vector3(-16.0, 0, -23.6), -90.0], [Vector3(-3.0, 0, -23.6), -90.0], [Vector3(5.0, 0, -23.6), -90.0],
+		[Vector3(-14.0, 0, 21.6), 90.0], [Vector3(7.0, 0, 21.6), 90.0],
+	]
+	i = 0
+	for entry in lamps:
+		var pos: Vector3 = entry[0]
+		_prop(dressing, "lamp_post", "Lamp%02d" % i, pos, entry[1], Vector3(0.3, 5.5, 0.3))
+		_collider(props, "Lamp%02dCollision" % i, Vector3(0.35, 5.0, 0.35), pos + Vector3(0, 2.5, 0))
+		i += 1
+
+
+# ---------------------------------------------------------------------------
+# Exit route
+# ---------------------------------------------------------------------------
+
+func _build_exit() -> void:
+	var portal: Node3D = (load("res://scenes/props/portal.tscn") as PackedScene).instantiate()
+	portal.name = "Portal"
+	geo.add_child(portal)
+	portal.position = Vector3(11.0, 0, -51.0)
+
+	var lights := Node3D.new()
+	lights.name = "ExitLights"
+	level.add_child(lights)
+	var strip := BoxMesh.new()
+	strip.size = Vector3(1.8, 0.05, 0.32)
+	var light_script: Script = load("res://scripts/props/exit_light.gd")
+	# From the kiosk plaza to the spur mouth, then down the spur to the portal.
+	var route: Array[Vector3] = [Vector3(8.6, 0, -13.5), Vector3(9.6, 0, -17.0), Vector3(10.5, 0, -20.5)]
+	var z := -24.0
+	while z >= -48.0:
+		route.append(Vector3(11.0, 0, z))
+		z -= 2.4
+	for i in route.size():
+		var mi := MeshInstance3D.new()
+		mi.name = "ExitLight%02d" % i
+		mi.mesh = strip
+		mi.position = route[i] + Vector3(0, 0.03, 0)
+		if i < 3:
+			mi.rotation.y = deg_to_rad(-16.0)
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.set_script(light_script)
+		mi.set("order", i)
+		lights.add_child(mi)
+
+
+# ---------------------------------------------------------------------------
+# Skyline and surroundings (no collision)
+# ---------------------------------------------------------------------------
+
+func _build_backdrop() -> void:
+	var backdrop := Node3D.new()
+	backdrop.name = "Backdrop"
+	level.add_child(backdrop)
+
+	# The giant pink Ferris wheel on the left skyline.
+	var wheel := _prop(backdrop, "ferris_wheel", "FerrisWheel", Vector3(-41.0, -4.0, -17.0), 52.0, Vector3(4, 30, 26))
+	wheel.set_script(load("res://scripts/props/ferris_wheel.gd"))
+
+	_prop(backdrop, "coaster", "Coaster", Vector3(-30.0, -4.0, -52.0), 12.0, Vector3(60, 14, 10))
+
+	# Land side behind the pier entrance.
+	var sand := MeshInstance3D.new()
+	sand.name = "Beach"
+	sand.mesh = _box_mesh(Vector3(260, 2.0, 80), _mat("sand", Color(0.93, 0.74, 0.55), 0.95))
+	sand.position = Vector3(-10, -1.6, 76)
+	backdrop.add_child(sand)
+	var shop_colors := [Color(1.0, 0.45, 0.7), Color(0.14, 0.62, 0.66), Color(1.0, 0.75, 0.3), Color(0.55, 0.35, 0.85)]
+	var x := -62.0
+	var n := 0
+	while x < 50.0:
+		if absf(x + 3.0) > 9.0:
+			var h := 5.0 + (n % 3) * 1.5
+			var shop := MeshInstance3D.new()
+			shop.name = "Shop%02d" % n
+			shop.mesh = _box_mesh(Vector3(9.0, h, 7.0), _mat("shop%d" % (n % 4), shop_colors[n % 4], 0.8))
+			shop.position = Vector3(x, h * 0.5 - 0.6, 41.0)
+			backdrop.add_child(shop)
+			_prop(backdrop, "palm", "ShorePalm%02d" % n, Vector3(x + 5.5, -0.6, 36.5), n * 53.0, Vector3(0.5, 7, 0.5))
+		x += 11.0
+		n += 1
+
+	# A tall palm leaning in at the front-right, as in the reference frame.
+	_prop(backdrop, "palm", "CornerPalm", Vector3(15.6, -1.2, 17.5), 200.0, Vector3(0.5, 9, 0.5)).scale = Vector3.ONE * 1.35
+
+
+# ---------------------------------------------------------------------------
+# Markers
+# ---------------------------------------------------------------------------
+
+func _build_markers() -> void:
+	var start := Marker3D.new()
+	start.name = "PlayerSpawn"
+	start.position = Vector3(4.5, 0.1, 14.5)
+	start.rotation.y = deg_to_rad(8.0)       # facing the kiosk
+	start.add_to_group("player_spawn", true)
+	level.add_child(start)
+
+	var spawns := Node3D.new()
+	spawns.name = "EnemySpawns"
+	level.add_child(spawns)
+	var points := {
+		"SpawnArcade": [Vector3(-30.0, 0.1, 11.0), -90.0],
+		"SpawnRideGate": [Vector3(-30.0, 0.1, -13.0), -90.0],
+		"SpawnServiceRamp": [Vector3(-10.0, -2.5, Z0 - 14.5), 0.0],
+		"SpawnPierEntrance": [Vector3(-3.0, 0.1, 30.0), 0.0],
+	}
+	for point_name in points:
+		var m := Marker3D.new()
+		m.name = point_name
+		m.position = points[point_name][0]
+		m.rotation.y = deg_to_rad(points[point_name][1])
+		m.add_to_group("enemy_spawn", true)
+		spawns.add_child(m)
+
+
+# ---------------------------------------------------------------------------
+# Navigation
+# ---------------------------------------------------------------------------
+
+func _bake_navigation(region: NavigationRegion3D) -> void:
+	var mesh := NavigationMesh.new()
+	mesh.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
+	mesh.geometry_collision_mask = 1
+	mesh.geometry_source_geometry_mode = NavigationMesh.SOURCE_GEOMETRY_ROOT_NODE_CHILDREN
+	mesh.cell_size = 0.25
+	mesh.cell_height = 0.25
+	mesh.agent_height = 1.75
+	mesh.agent_radius = 0.5
+	mesh.agent_max_climb = 0.25
+	mesh.agent_max_slope = 40.0
+	mesh.region_min_size = 8.0
+	# Only walkable surfaces at deck height and below (keeps roofs and planter tops out).
+	mesh.filter_baking_aabb = AABB(Vector3(-60, -4.0, -70), Vector3(120, 4.6, 120))
+	var source := NavigationMeshSourceGeometryData3D.new()
+	NavigationServer3D.parse_source_geometry_data(mesh, source, region)
+	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
+	region.navigation_mesh = mesh
+	print("build_prize_pier: navmesh polygons = %d" % mesh.get_polygon_count())
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+func _mat(key: String, color: Color, roughness := 0.7, emission := Color.BLACK, energy := 0.0) -> StandardMaterial3D:
+	if _materials.has(key):
+		return _materials[key]
+	var m := StandardMaterial3D.new()
+	m.resource_name = key
+	m.albedo_color = color
+	m.roughness = roughness
+	if energy > 0.0:
+		m.emission_enabled = true
+		m.emission = emission
+		m.emission_energy_multiplier = energy
+	_materials[key] = m
+	return m
+
+
+func _box_mesh(size: Vector3, material: Material) -> BoxMesh:
+	var key := "%s|%s" % [size, material.get_instance_id()]
+	if _boxes.has(key):
+		return _boxes[key]
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	mesh.material = material
+	_boxes[key] = mesh
+	return mesh
+
+
+## Visible box with matching collision.
+func _box(parent: Node3D, box_name: String, size: Vector3, pos: Vector3, material: Material) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = box_name
+	body.position = pos
+	parent.add_child(body)
+	var mi := MeshInstance3D.new()
+	mi.name = "Mesh"
+	mi.mesh = _box_mesh(size, material)
+	body.add_child(mi)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	return body
+
+
+## Invisible collision box (for props whose art comes from a .glb).
+func _collider(parent: Node3D, collider_name: String, size: Vector3, pos: Vector3) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = collider_name
+	body.position = pos
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	return body
+
+
+## Instances art/models/<model>.glb, or a grey stand-in box if it is missing.
+func _prop(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_degrees: float, placeholder_size: Vector3) -> Node3D:
+	var path := MODELS + model + ".glb"
+	var node: Node3D
+	if ResourceLoader.exists(path):
+		node = (load(path) as PackedScene).instantiate()
+	else:
+		var mi := MeshInstance3D.new()
+		mi.mesh = _box_mesh(placeholder_size, _mat("placeholder", Color(0.75, 0.72, 0.8), 0.8))
+		var holder := Node3D.new()
+		mi.name = "Placeholder"
+		mi.position.y = placeholder_size.y * 0.5
+		holder.add_child(mi)
+		node = holder
+	node.name = prop_name
+	parent.add_child(node)
+	node.position = pos
+	node.rotation.y = deg_to_rad(yaw_degrees)
+	return node
+
+
+func _own(node: Node) -> void:
+	for child in node.get_children():
+		child.owner = level
+		if child.scene_file_path == "":
+			_own(child)

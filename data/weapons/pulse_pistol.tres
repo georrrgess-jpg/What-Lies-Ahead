@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/mastery_reward.gd" id="2"]
+
+[sub_resource type="Resource" id="reward_1"]
+script = ExtResource("2")
+id = &"pulse_pistol_decal"
+display_name = "Lucky Star"
+kind = 0
+rank_required = 1
+color = Color(1.0, 0.82, 0.2, 1)
+metallic = 0.0
+roughness = 0.5
+
+[sub_resource type="Resource" id="reward_2"]
+script = ExtResource("2")
+id = &"pulse_pistol_cell"
+display_name = "Sunset Cell"
+kind = 1
+rank_required = 3
+color = Color(1.0, 0.5, 0.15, 1)
+metallic = 0.0
+roughness = 0.5
+
+[sub_resource type="Resource" id="reward_3"]
+script = ExtResource("2")
+id = &"pulse_pistol_finish"
+display_name = "Boardwalk Gold"
+kind = 2
+rank_required = 5
+color = Color(0.95, 0.72, 0.25, 1)
+secondary_color = Color(0.1, 0.5, 0.52, 1)
+metallic = 0.85
+roughness = 0.3
+
+[resource]
+script = ExtResource("1")
+id = &"pulse_pistol"
+display_name = "Pulse Pistol"
+role = "Deliberate semi-automatic starter. Dependable single shots; headshots pay off."
+magazine_size = 12
+reserve_start = 60
+reserve_max = 96
+reload_time = 1.25
+automatic = false
+fire_interval = 0.2
+damage = 34.0
+pellets = 1
+spread_degrees = 0.25
+spread_bloom = 0.5
+spread_bloom_max = 1.6
+max_range = 80.0
+falloff_start = 35.0
+falloff_end = 80.0
+falloff_min_scale = 0.7
+headshot_multiplier = 1.6
+recoil_kick = 1.3
+view_kick = 0.05
+shake = 0.16
+tracer_color = Color(0.3, 0.95, 1.0, 1)
+tracer_width = 0.035
+view_position = Vector3(0.25, -0.27, -0.62)
+view_rotation_degrees = Vector3(1.0, 4.0, 0.0)
+reload_style = &"cell_drop"
+fire_sound = &"pistol_fire"
+reload_sound = &"pistol_reload"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.04
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
+rewards = Array[ExtResource("2")]([SubResource("reward_1"), SubResource("reward_2"), SubResource("reward_3")])

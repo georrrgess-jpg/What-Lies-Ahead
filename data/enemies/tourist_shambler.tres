@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tourist_shambler"
+display_name = "Tourist Shambler"
+max_health = 100.0
+move_speed = 1.75
+speed_variance = 0.15
+turn_speed = 5.0
+tickets = 10
+xp = 10
+damage = 20.0
+attack_range = 1.7
+attack_reach = 2.4
+attack_windup = 0.75
+attack_recover = 0.9
+outfit = &"Tourist"
+body_scale = 1.0
+capsule_radius = 0.5
+capsule_height = 1.9
+head_height = 1.2
+shirt_colors = Array[Color]([Color(1, 0.33, 0.62, 1), Color(1, 0.76, 0.18, 1), Color(0.62, 0.3, 0.86, 1), Color(0.16, 0.72, 0.74, 1)])
+move_animation = &"Walk"
+animation_reference_speed = 1.75
+avoidance_radius = 0.6
+voice_sounds = Array[StringName]([&"zombie_groan_1", &"zombie_groan_2", &"zombie_groan_3"])
+voice_interval = Vector2(3, 7)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="GameCatalog" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/game_catalog.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/world_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="4"]
+[ext_resource type="Resource" path="res://data/worlds/boardwalk_breakout.tres" id="5"]
+[ext_resource type="Resource" path="res://data/weapons/pulse_pistol.tres" id="6"]
+[ext_resource type="Resource" path="res://data/weapons/ion_carbine.tres" id="7"]
+[ext_resource type="Resource" path="res://data/weapons/scatter_blaster.tres" id="8"]
+[ext_resource type="Resource" path="res://data/enemies/tourist_shambler.tres" id="9"]
+[ext_resource type="Resource" path="res://data/enemies/lifeguard_runner.tres" id="10"]
+
+[resource]
+script = ExtResource("1")
+worlds = Array[ExtResource("2")]([ExtResource("5")])
+weapons = Array[ExtResource("3")]([ExtResource("6"), ExtResource("7"), ExtResource("8")])
+enemies = Array[ExtResource("4")]([ExtResource("9"), ExtResource("10")])

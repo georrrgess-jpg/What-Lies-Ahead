@@ -1,0 +1,230 @@
+class_name WeaponController
+extends Node
+## Shared combat code for every weapon: ammo, fire timing, reloads and hitscan.
+## All tuning comes from WeaponData resources (data/weapons/*.tres).
+##
+## Ammo is tracked per weapon for the whole run, so swapping at the kiosk and
+## swapping back returns exactly the ammo that weapon had.
+
+signal weapon_changed(data: WeaponData)
+signal ammo_changed(magazine: int, reserve: int)
+signal fired(data: WeaponData)
+signal reload_started(data: WeaponData, duration: float)
+signal reload_finished(data: WeaponData)
+signal hit_confirmed(killed: bool, headshot: bool)
+
+const MASK_WORLD := 1
+const MASK_ENEMIES := 4
+const FIRE_BUFFER := 0.14
+
+var current: WeaponData
+## False between runs or while the results screen is up.
+var enabled := true
+
+var _ammo := {}            # weapon id -> { "mag": int, "reserve": int }
+var _cooldown := 0.0
+var _reload_left := 0.0
+var _reloading := false
+var _bloom := 0.0
+var _fire_buffer := 0.0
+var _dry_cooldown := 0.0
+
+@onready var player: Player = get_parent()
+
+
+## Gives every weapon its starting ammo. Call once per run.
+func begin_run() -> void:
+	_ammo.clear()
+	for w in GameData.weapons():
+		_ammo[w.id] = {"mag": w.magazine_size, "reserve": w.reserve_start}
+
+
+func equip(weapon_id: StringName) -> bool:
+	var data := GameData.weapon(weapon_id)
+	if data == null or data == current:
+		return false
+	if not _ammo.has(data.id):
+		_ammo[data.id] = {"mag": data.magazine_size, "reserve": data.reserve_start}
+	current = data
+	_reloading = false
+	_reload_left = 0.0
+	_cooldown = 0.35
+	_bloom = 0.0
+	weapon_changed.emit(data)
+	_emit_ammo()
+	return true
+
+
+func magazine() -> int:
+	return int(_ammo[current.id]["mag"]) if current else 0
+
+
+func reserve() -> int:
+	return int(_ammo[current.id]["reserve"]) if current else 0
+
+
+func is_reloading() -> bool:
+	return _reloading
+
+
+func current_spread() -> float:
+	return (current.spread_degrees + _bloom) if current else 0.0
+
+
+func is_ammo_full() -> bool:
+	return current == null or (magazine() >= current.magazine_size and reserve() >= current.reserve_max)
+
+
+## Free break refill: adds a fraction of reserve_max to the held weapon.
+func refill_fraction(fraction: float) -> int:
+	if current == null:
+		return 0
+	var state: Dictionary = _ammo[current.id]
+	var before := int(state["reserve"])
+	state["reserve"] = mini(current.reserve_max, before + int(ceil(current.reserve_max * fraction)))
+	_emit_ammo()
+	return int(state["reserve"]) - before
+
+
+## Kiosk purchase: full magazine and full reserve for the held weapon.
+func top_up() -> void:
+	if current == null:
+		return
+	var state: Dictionary = _ammo[current.id]
+	state["mag"] = current.magazine_size
+	state["reserve"] = current.reserve_max
+	_reloading = false
+	_emit_ammo()
+
+
+func start_reload() -> bool:
+	if current == null or _reloading or magazine() >= current.magazine_size or reserve() <= 0:
+		return false
+	_reloading = true
+	_reload_left = current.reload_time
+	Sfx.play(current.reload_sound, -2.0)
+	reload_started.emit(current, current.reload_time)
+	return true
+
+
+func _physics_process(delta: float) -> void:
+	_cooldown = maxf(0.0, _cooldown - delta)
+	_fire_buffer = maxf(0.0, _fire_buffer - delta)
+	_dry_cooldown = maxf(0.0, _dry_cooldown - delta)
+	if current == null:
+		return
+	_bloom = maxf(0.0, _bloom - current.spread_bloom_max * 2.5 * delta)
+
+	if _reloading:
+		_reload_left -= delta
+		if _reload_left <= 0.0:
+			_finish_reload()
+
+	if not enabled or not player.alive or not player.controls_enabled:
+		return
+
+	if Input.is_action_just_pressed("reload"):
+		start_reload()
+
+	var wants_fire := false
+	if current.automatic:
+		wants_fire = Input.is_action_pressed("fire")
+	else:
+		# Buffer semi-auto clicks slightly so a click just before the weapon is
+		# ready still fires.
+		if Input.is_action_just_pressed("fire"):
+			_fire_buffer = FIRE_BUFFER
+		wants_fire = _fire_buffer > 0.0
+
+	if wants_fire and _cooldown <= 0.0 and not _reloading:
+		if magazine() > 0:
+			_fire_buffer = 0.0
+			_fire()
+		elif reserve() > 0:
+			start_reload()
+		elif _dry_cooldown <= 0.0:
+			_fire_buffer = 0.0
+			_dry_cooldown = 0.3
+			Sfx.play(current.empty_sound, -4.0)
+
+
+func _finish_reload() -> void:
+	_reloading = false
+	var state: Dictionary = _ammo[current.id]
+	var need := current.magazine_size - int(state["mag"])
+	var moved := mini(need, int(state["reserve"]))
+	state["mag"] = int(state["mag"]) + moved
+	state["reserve"] = int(state["reserve"]) - moved
+	_emit_ammo()
+	reload_finished.emit(current)
+
+
+func _fire() -> void:
+	var data := current
+	var state: Dictionary = _ammo[data.id]
+	state["mag"] = int(state["mag"]) - 1
+	_cooldown = data.fire_interval
+	_emit_ammo()
+
+	var cam := player.camera
+	var origin := cam.global_position
+	var aim := cam.global_transform.basis
+	var space := player.get_world_3d().direct_space_state
+	var muzzle := player.view.muzzle_position()
+	var spread := deg_to_rad(data.spread_degrees + _bloom)
+	var any_hit := false
+	var any_kill := false
+	var any_head := false
+
+	for i in data.pellets:
+		var angle := randf() * TAU
+		var radius := tan(spread) * sqrt(randf())
+		var dir := (-aim.z + aim.x * cos(angle) * radius + aim.y * sin(angle) * radius).normalized()
+		var query := PhysicsRayQueryParameters3D.create(origin, origin + dir * data.max_range, MASK_WORLD | MASK_ENEMIES)
+		query.exclude = [player.get_rid()]
+		var hit := space.intersect_ray(query)
+		var end := origin + dir * data.max_range
+		if not hit.is_empty():
+			end = hit["position"]
+			var collider = hit["collider"]
+			if collider is Zombie and not collider.is_dead():
+				var zombie: Zombie = collider
+				var head := zombie.is_head_hit(end)
+				var dmg := data.damage * _falloff(data, origin.distance_to(end))
+				if head:
+					dmg *= data.headshot_multiplier
+				var killed := zombie.take_hit(dmg, end, dir, data.id, head)
+				any_hit = true
+				any_kill = any_kill or killed
+				any_head = any_head or head
+			else:
+				Fx.impact(player.get_parent(), end, hit["normal"], data.tracer_color)
+		Fx.tracer(player.get_parent(), muzzle, end, data.tracer_color, data.tracer_width)
+
+	_bloom = minf(data.spread_bloom_max, _bloom + data.spread_bloom)
+	player.add_recoil(data.recoil_kick)
+	player.add_shake(data.shake)
+	Sfx.play(data.fire_sound, -3.0, 1.0 + randf_range(-data.fire_pitch_variance, data.fire_pitch_variance))
+	fired.emit(data)
+	if any_hit:
+		hit_confirmed.emit(any_kill, any_head)
+	if int(state["mag"]) <= 0 and int(state["reserve"]) > 0:
+		# Auto-reload shortly after the last shot so the player is never stuck clicking.
+		_cooldown = maxf(_cooldown, 0.2)
+		get_tree().create_timer(0.2, false).timeout.connect(_auto_reload.bind(data))
+
+
+func _auto_reload(for_weapon: WeaponData) -> void:
+	if current == for_weapon and magazine() <= 0:
+		start_reload()
+
+
+func _falloff(data: WeaponData, distance: float) -> float:
+	if distance <= data.falloff_start:
+		return 1.0
+	var t := clampf((distance - data.falloff_start) / maxf(0.01, data.falloff_end - data.falloff_start), 0.0, 1.0)
+	return lerpf(1.0, data.falloff_min_scale, t)
+
+
+func _emit_ammo() -> void:
+	ammo_changed.emit(magazine(), reserve())

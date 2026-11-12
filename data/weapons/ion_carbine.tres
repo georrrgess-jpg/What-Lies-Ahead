@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/mastery_reward.gd" id="2"]
+
+[sub_resource type="Resource" id="reward_1"]
+script = ExtResource("2")
+id = &"ion_carbine_decal"
+display_name = "Thunder Bolt"
+kind = 0
+rank_required = 1
+color = Color(1.0, 0.9, 0.25, 1)
+metallic = 0.0
+roughness = 0.5
+
+[sub_resource type="Resource" id="reward_2"]
+script = ExtResource("2")
+id = &"ion_carbine_cell"
+display_name = "Bubblegum Cell"
+kind = 1
+rank_required = 3
+color = Color(1.0, 0.35, 0.75, 1)
+metallic = 0.0
+roughness = 0.5
+
+[sub_resource type="Resource" id="reward_3"]
+script = ExtResource("2")
+id = &"ion_carbine_finish"
+display_name = "Midnight Chrome"
+kind = 2
+rank_required = 5
+color = Color(0.12, 0.14, 0.28, 1)
+secondary_color = Color(1.0, 0.3, 0.65, 1)
+metallic = 0.9
+roughness = 0.22
+
+[resource]
+script = ExtResource("1")
+id = &"ion_carbine"
+display_name = "Ion Carbine"
+role = "Fast automatic fire with light recoil. Chews through groups; watch the energy cell."
+magazine_size = 24
+reserve_start = 96
+reserve_max = 168
+reload_time = 1.75
+automatic = true
+fire_interval = 0.095
+damage = 17.0
+pellets = 1
+spread_degrees = 0.5
+spread_bloom = 0.28
+spread_bloom_max = 2.4
+max_range = 70.0
+falloff_start = 28.0
+falloff_end = 70.0
+falloff_min_scale = 0.6
+headshot_multiplier = 1.5
+recoil_kick = 0.42
+view_kick = 0.022
+shake = 0.07
+tracer_color = Color(0.25, 1.0, 0.95, 1)
+tracer_width = 0.028
+view_position = Vector3(0.24, -0.26, -0.6)
+view_rotation_degrees = Vector3(1.0, 4.0, 0.0)
+reload_style = &"side_swap"
+fire_sound = &"carbine_fire"
+reload_sound = &"carbine_reload"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.06
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
+rewards = Array[ExtResource("2")]([SubResource("reward_1"), SubResource("reward_2"), SubResource("reward_3")])
