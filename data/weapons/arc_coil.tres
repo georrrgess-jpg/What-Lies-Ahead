@@ -8,7 +8,7 @@
 [sub_resource type="Resource" id="unlock"]
 script = ExtResource("2")
 kind = 1
-amount = 4
+amount = 3
 
 [resource]
 script = ExtResource("1")
@@ -22,10 +22,10 @@ magazine_size = 40
 reserve_start = 160
 reserve_max = 280
 reload_time = 1.9
-emergency_recharge_interval = 0.35
+emergency_recharge_interval = 0.4
 automatic = true
 fire_interval = 0.13
-damage = 15.0
+damage = 16.0
 pellets = 1
 spread_degrees = 0.6
 spread_bloom = 0.0

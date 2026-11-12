@@ -8,7 +8,8 @@ extends Node
 ## Fire modes, picked by the data:
 ##   semi / automatic   one shot per click / while held
 ##   burst              burst_count shots per click
-##   charge             hold to charge, release to fire (damage scales)
+##   charge             hold to charge, release to fire (damage scales; only a
+##                      full charge pierces)
 ##   beam               continuous damage ticks while held, drawn as a beam
 ##   projectile         launches WeaponProjectile (gravity, bounces, splash)
 ## and on top of any of them: pierce, chain lightning, seeking, status
@@ -30,6 +31,9 @@ signal slots_changed(slots: Array, active: int)
 const MASK_WORLD := 1
 const MASK_ENEMIES := 4
 const FIRE_BUFFER := 0.14
+## Seconds after a shot before bloom starts to recover, so sustained fire
+## builds spread and short bursts (or aiming down sights) keep it tight.
+const BLOOM_RECOVER_DELAY := 0.12
 ## Seconds the old weapon takes to drop out of view when switching.
 const LOWER_TIME := 0.12
 const SWITCH_SOUND := &"weap_switch"
@@ -44,7 +48,10 @@ var enabled := true
 var lock_target: Zombie
 
 var _ammo := {}            # weapon id -> { "mag": int, "reserve": int }
+## Seconds until the next shot. Runs below zero by up to one frame so the
+## time a frame overshoots is carried into the next shot (exact fire rates).
 var _cooldown := 0.0
+var _tick := 1.0 / 60.0    # length of the last physics frame
 var _reload_left := 0.0
 var _reloading := false
 var _bloom := 0.0
@@ -297,7 +304,8 @@ func _physics_process(delta: float) -> void:
 	_since_shot += delta
 	if _since_shot > 0.35:
 		_burst_count = 0
-	_cooldown = maxf(0.0, _cooldown - delta)
+	_tick = delta
+	_cooldown = maxf(-delta, _cooldown - delta)
 	_fire_buffer = maxf(0.0, _fire_buffer - delta)
 	_dry_cooldown = maxf(0.0, _dry_cooldown - delta)
 	_switch_left = maxf(0.0, _switch_left - delta)
@@ -305,7 +313,8 @@ func _physics_process(delta: float) -> void:
 	_beam_linger = maxf(0.0, _beam_linger - delta)
 	if current == null:
 		return
-	_bloom = maxf(0.0, _bloom - current.spread_bloom_max * 2.5 * delta)
+	if _since_shot >= BLOOM_RECOVER_DELAY:
+		_bloom = maxf(0.0, _bloom - current.spread_recovery * delta)
 
 	if _reloading:
 		_reload_left -= delta
@@ -473,6 +482,7 @@ func _finish_reload() -> void:
 func _fire() -> void:
 	if current.burst_count > 1:
 		_burst_left = current.burst_count
+		_burst_timer = _overshoot()
 		_burst_step()
 	else:
 		_fire_shot(1.0, 1.0)
@@ -482,19 +492,27 @@ func _burst_step() -> void:
 	if magazine() <= 0 or _reloading:
 		_burst_left = 0
 		return
+	var carry := minf(_burst_timer, 0.0)
 	_fire_shot(1.0, 1.0)
 	_burst_left -= 1
-	_burst_timer = current.burst_interval
-	_cooldown = current.fire_interval if _burst_left <= 0 else current.burst_interval
+	_burst_timer = current.burst_interval + carry
+	_cooldown = (current.fire_interval if _burst_left <= 0 else current.burst_interval) + carry
 
 
-## Fires one shot. `scale` multiplies damage (charge), `power` 0-1 scales
-## the charge effects.
+## How far this frame ran past the moment the weapon was ready again (0 to
+## one frame), carried into the next cooldown. A weapon that has been resting
+## longer than a frame gets no credit.
+func _overshoot() -> float:
+	return _cooldown if _cooldown <= 0.0 and _cooldown > -_tick else 0.0
+
+
+## Fires one shot. `scale` multiplies damage (charge), `power` 0-1 is the
+## charge (1 for every other weapon); only a full charge pierces.
 func _fire_shot(scale: float, power: float) -> void:
 	var data := current
 	var state: Dictionary = _ammo[data.id]
 	state["mag"] = int(state["mag"]) - 1
-	_cooldown = maxf(_cooldown, data.fire_interval)
+	_cooldown = data.fire_interval + _overshoot()
 	_emit_ammo()
 
 	var cam := player.camera
@@ -510,7 +528,7 @@ func _fire_shot(scale: float, power: float) -> void:
 		if data.projectile_speed > 0.0:
 			WeaponProjectile.launch(_level(), muzzle, launch_velocity(dir, data), data, self)
 			continue
-		var end := _trace(origin, dir, data, scale, hits)
+		var end := _trace(origin, dir, data, scale, data.pierce if power >= 1.0 else 0, hits)
 		if data.beam:
 			_beam_end = end
 			_beam_linger = data.fire_interval * 1.5
@@ -555,7 +573,7 @@ static func launch_velocity(dir: Vector3, data: WeaponData) -> Vector3:
 ## Casts one shot along `dir`, through up to `pierce` extra zombies, and
 ## records its damage in `hits`. A miss with a seeking weapon locks onto the
 ## zombie nearest the crosshair. Returns where the shot ends.
-func _trace(origin: Vector3, dir: Vector3, data: WeaponData, scale: float, hits: Dictionary) -> Vector3:
+func _trace(origin: Vector3, dir: Vector3, data: WeaponData, scale: float, pierce: int, hits: Dictionary) -> Vector3:
 	var space := player.get_world_3d().direct_space_state
 	var exclude: Array[RID] = [player.get_rid()]
 	var far := origin + dir * data.max_range
@@ -575,7 +593,7 @@ func _trace(origin: Vector3, dir: Vector3, data: WeaponData, scale: float, hits:
 			var z: Zombie = collider
 			_record_ray_hit(hits, z, end, dir, data, origin.distance_to(end), scale * pow(data.pierce_falloff, passed))
 			hit_any = true
-			if passed >= data.pierce:
+			if passed >= pierce:
 				break
 			passed += 1
 			exclude.append(z.get_rid())

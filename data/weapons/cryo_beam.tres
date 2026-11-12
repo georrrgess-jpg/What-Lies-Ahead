@@ -8,7 +8,7 @@
 [sub_resource type="Resource" id="unlock"]
 script = ExtResource("2")
 kind = 1
-amount = 8
+amount = 7
 
 [resource]
 script = ExtResource("1")
@@ -19,13 +19,13 @@ display_name = "Frostbite Cryo Beam"
 role = "A freezing beam. Hold it on a zombie to slow it to a crawl, then freeze it solid: frozen zombies cannot attack, take +60% damage from every weapon and shatter when they fall. Overheats; let it cool."
 unlock = SubResource("unlock")
 magazine_size = 50
-reserve_start = 300
-reserve_max = 450
+reserve_start = 240
+reserve_max = 360
 reload_time = 1.6
-emergency_recharge_interval = 0.25
+emergency_recharge_interval = 0.33
 automatic = true
 fire_interval = 0.1
-damage = 11.0
+damage = 13.0
 pellets = 1
 spread_degrees = 0.0
 spread_bloom = 0.0
@@ -60,10 +60,10 @@ beam = true
 beam_loop_sound = &"weap_cryo_loop"
 seek_cone_degrees = 3.0
 status_effect = &"chill"
-status_amount = 0.14
+status_amount = 0.2
 status_duration = 1.8
 frozen_damage_scale = 1.6
-shatter_damage = 40.0
+shatter_damage = 60.0
 status_sound = &"weap_cryo_freeze"
 regen_rate = 14.0
 regen_delay = 0.45
@@ -72,3 +72,4 @@ impact_style = &"frost"
 viewmodel = ExtResource("3")
 reload_script = ExtResource("4")
 rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
+pierce = 1
