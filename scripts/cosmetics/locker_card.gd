@@ -8,14 +8,18 @@ const THUMB_HEIGHT := 150.0
 
 var item: CosmeticItem
 var owned := false
+## The weapon a weapon skin's thumbnail shows.
+var weapon: WeaponData
 var _equipped_badge: Control
 var _new_badge: Control
+var _thumb_rect: TextureRect
 var _selected := false
 
 
-func _init(it: CosmeticItem, is_owned: bool) -> void:
+func _init(it: CosmeticItem, is_owned: bool, shown_on: WeaponData = null) -> void:
 	item = it
 	owned = is_owned
+	weapon = shown_on
 	custom_minimum_size = CARD_SIZE
 	focus_mode = Control.FOCUS_ALL
 	toggle_mode = false
@@ -33,12 +37,18 @@ func _ready() -> void:
 	col.add_theme_constant_override("separation", 4)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(col)
+	# Titles are their own thumbnail, so they get the whole card.
+	var is_title := item.slot == &"title"
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(0, THUMB_HEIGHT + (56.0 if is_title else 0.0))
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(holder)
 	var thumb := _thumbnail()
-	thumb.custom_minimum_size = Vector2(0, THUMB_HEIGHT)
+	thumb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_child(thumb)
+	holder.add_child(thumb)
 	if not owned:
-		thumb.add_child(_lock_overlay())
+		holder.add_child(_lock_overlay())
 	var name_label := UiKit.label(item.display_name, 21, Color.WHITE if owned else Color(1, 1, 1, 0.6), true)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -47,6 +57,7 @@ func _ready() -> void:
 	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name_label.add_theme_constant_override("line_spacing", -6)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_label.visible = not is_title
 	col.add_child(name_label)
 	var strip := ColorRect.new()
 	strip.color = CosmeticItem.rarity_color(item.rarity)
@@ -99,31 +110,30 @@ func _thumbnail() -> Control:
 			return holder
 		&"title":
 			var plate := CenterContainer.new()
-			var l := UiKit.arcade_label(item.display_name.to_upper(), 26, CosmeticItem.rarity_color(item.rarity).lerp(Color.WHITE, 0.35))
+			var l := UiKit.arcade_label(item.display_name.to_upper(), 28 if item.display_name.length() < 14 else 23,
+				CosmeticItem.rarity_color(item.rarity).lerp(Color.WHITE, 0.35))
 			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			l.autowrap_mode = TextServer.AUTOWRAP_WORD
 			l.custom_minimum_size = Vector2(CARD_SIZE.x - 24, 0)
 			plate.add_child(l)
 			return plate
 		&"weapon_cell", &"kill_effect", &"tracer":
 			return CosmeticIcon.new(item)
-	var rect := TextureRect.new()
-	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	var tex := CosmeticThumbs.cached(item)
-	if tex:
-		rect.texture = tex
-	else:
-		rect.set_meta("wants_thumb", true)
-	return rect
+	_thumb_rect = TextureRect.new()
+	_thumb_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_thumb_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_thumb_rect.texture = CosmeticThumbs.cached(item, weapon)
+	return _thumb_rect
 
 
-## The Locker hands the card's TextureRect a baked thumbnail when ready.
-func thumbnail_rect() -> TextureRect:
-	for c in find_children("*", "TextureRect", true, false):
-		if c.has_meta("wants_thumb"):
-			return c
-	return null
+func wants_thumbnail() -> bool:
+	return _thumb_rect != null and _thumb_rect.texture == null
+
+
+## Receives a baked thumbnail (CosmeticThumbs).
+func set_thumbnail(tex: Texture2D) -> void:
+	if _thumb_rect:
+		_thumb_rect.texture = tex
 
 
 func _lock_overlay() -> Control:

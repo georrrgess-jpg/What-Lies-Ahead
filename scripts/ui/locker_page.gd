@@ -10,6 +10,7 @@ const GRID_COLUMNS := 5
 const PREVIEW_SIZE := Vector2(640, 470)
 
 var _slot: StringName = &"avatar"
+var _opened := false
 var _weapon_id: StringName
 var _selected: CosmeticItem
 var _tabs := {}
@@ -70,6 +71,7 @@ func _ready() -> void:
 
 
 func refresh() -> void:
+	_opened = true
 	if _grid:
 		show_category(_slot)
 
@@ -340,14 +342,14 @@ func _build_grid() -> void:
 		c.queue_free()
 	_cards.clear()
 	for it in LockerCatalog.items(_slot, _weapon_id):
-		var card := LockerCard.new(it, Cosmetics.is_owned(it, _ctx()))
+		var card := LockerCard.new(it, Cosmetics.is_owned(it, _ctx()), GameData.weapon(_weapon_id))
 		card.pressed.connect(_select.bind(it, true))
 		card.gui_input.connect(_on_card_input.bind(it))
 		_grid.add_child(card)
 		_cards.append(card)
-		var rect := card.thumbnail_rect()
-		if rect:
-			_thumbs.request(it, func(tex: Texture2D): if is_instance_valid(rect): rect.texture = tex)
+		# Thumbnails bake only once the Locker has been opened.
+		if _opened and card.wants_thumbnail():
+			_thumbs.request(it, card.set_thumbnail, card.weapon)
 	_update_states()
 
 

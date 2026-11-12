@@ -9,7 +9,9 @@ enum Mode { NONE, WEAPON, ARMS, KILL_EFFECT, TRACER }
 
 const ZOMBIE_MODEL := "res://art/models/zombie.glb"
 const KILL_LOOP := 2.4
-const SHOT_LOOP := 0.42
+const SHOT_LOOP := 0.7
+const BURST := [0.0, 0.08, 0.16]
+const TRACER_TARGET := Vector3(3.3, 1.0, -0.8)
 
 var mode := Mode.NONE
 var _viewport: SubViewport
@@ -24,6 +26,8 @@ var _yaw := -35.0
 var _dragging := false
 var _idle := 0.0
 var _muzzle := Vector3.ZERO
+var _rest := Transform3D.IDENTITY
+var _shots_fired := 0
 
 
 func _ready() -> void:
@@ -67,6 +71,7 @@ func _clear() -> void:
 	_pivot.rotation = Vector3.ZERO
 	_pivot.scale = Vector3.ONE
 	_timer = 0.0
+	_shots_fired = 0
 
 
 ## The weapon on a turntable wearing `loadout` (Cosmetics.weapon_loadout shape).
@@ -104,10 +109,10 @@ func show_arms(weapon: WeaponData, loadout: Dictionary) -> void:
 	WeaponCosmetics.apply(_model, weapon, loadout)
 	_model.position = weapon.view_position
 	_model.rotation_degrees = weapon.view_rotation_degrees
-	# Roughly the player's eye, nudged towards the hands so they sit centred.
+	# The player's own view, shifted so the hands sit in the middle of the frame.
 	var grip := weapon.view_position
-	_camera.fov = 58.0
-	_camera.look_at_from_position(Vector3(grip.x * 0.45, grip.y * 0.25 + 0.05, 0.05), grip + Vector3(-0.04, 0.04, -0.05))
+	_camera.fov = 60.0
+	_camera.look_at_from_position(Vector3(grip.x * 0.8, grip.y * 0.35, 0.12), Vector3(grip.x * 0.8, grip.y * 0.95, grip.z))
 
 
 ## A tourist zombie that pops with `item`'s kill effect every few seconds.
@@ -137,7 +142,7 @@ func show_tracer(item: CosmeticItem, weapon: WeaponData) -> void:
 	mode = Mode.TRACER
 	_item = item
 	_weapon = weapon
-	_muzzle = Vector3(-2.2, 1.2, 1.0)
+	_muzzle = Vector3(-2.7, 1.2, 0.0)
 	if weapon and weapon.viewmodel:
 		_model = weapon.viewmodel.instantiate()
 		_content.add_child(_model)
@@ -146,13 +151,15 @@ func show_tracer(item: CosmeticItem, weapon: WeaponData) -> void:
 			if arm:
 				arm.visible = false
 		WeaponCosmetics.apply(_model, weapon, Cosmetics.weapon_loadout(weapon.id))
-		_model.position = _muzzle
-		_model.look_at(Vector3(4.0, 1.0, -9.0))
+		_model.position = _muzzle + Vector3(-0.5, -0.08, 0.15)
+		_model.look_at(TRACER_TARGET)
+		_model.scale = Vector3.ONE * 2.2
+		_rest = _model.transform
 		var muzzle := _model.find_child("Muzzle", true, false) as Node3D
 		if muzzle:
 			_muzzle = _model.transform * WeaponCosmetics.to_model(_model, muzzle).origin
-	_camera.fov = 44.0
-	_camera.look_at_from_position(Vector3(-3.6, 1.75, 2.4), Vector3(0.5, 1.0, -3.0))
+	_camera.fov = 48.0
+	_camera.look_at_from_position(Vector3(0.3, 1.9, 6.6), Vector3(0.3, 1.05, -0.3))
 
 
 func _process(delta: float) -> void:
@@ -174,9 +181,13 @@ func _process(delta: float) -> void:
 				_timer = 0.0
 				_pop()
 		Mode.TRACER:
+			# Three-shot bursts.
+			if _shots_fired < BURST.size() and _timer >= BURST[_shots_fired]:
+				_shots_fired += 1
+				_shoot()
 			if _timer >= SHOT_LOOP:
 				_timer = 0.0
-				_shoot()
+				_shots_fired = 0
 
 
 func _pop() -> void:
@@ -195,16 +206,16 @@ func _pop() -> void:
 
 
 func _shoot() -> void:
-	var to := Vector3(4.0, 1.0, -9.0) + Vector3(randf_range(-0.8, 0.8), randf_range(-0.5, 0.6), randf_range(-0.5, 0.5))
-	var width := _weapon.tracer_width if _weapon else 0.05
+	var to := TRACER_TARGET + Vector3(randf_range(-0.3, 0.3), randf_range(-0.35, 0.35), randf_range(-0.3, 0.3))
+	# Drawn wider than in game: the stage camera is much further away.
+	var width := (_weapon.tracer_width if _weapon else 0.05) * 1.8
 	var color := _weapon.tracer_color if _weapon else Color(0.3, 0.95, 1.0)
 	if _item == null or not TracerStyles.draw(_content, _muzzle, to, width, _item):
 		Fx.beam(_content, _muzzle, to, color, width)
 	if _model:
 		var kick := _model.create_tween()
-		var rest := _model.transform
-		kick.tween_property(_model, "position", rest.origin + rest.basis.z * 0.08, 0.04)
-		kick.tween_property(_model, "position", rest.origin, 0.12)
+		kick.tween_property(_model, "transform", Transform3D(_rest.basis, _rest.origin + _rest.basis.z.normalized() * 0.08), 0.03)
+		kick.tween_property(_model, "transform", _rest, 0.08)
 
 
 func _gui_input(event: InputEvent) -> void:

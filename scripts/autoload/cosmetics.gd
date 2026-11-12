@@ -21,6 +21,9 @@ var _owned_at_run_start := {}
 
 func _ready() -> void:
 	Events.run_started.connect(func(_director): _owned_at_run_start = _owned_snapshot())
+	# Items already owned when the game starts are not news: only unlocks
+	# earned from here on are reported by check_new_unlocks() (HUD toasts).
+	check_new_unlocks()
 
 
 func _sec() -> Dictionary:

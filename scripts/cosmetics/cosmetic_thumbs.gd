@@ -12,7 +12,8 @@ const BAKED_SLOTS := [&"avatar", &"weapon_finish", &"weapon_charm", &"weapon_dec
 static var _cache := {}
 
 var _queue: Array = []
-var _busy := false
+var _job: Array = []
+var _frames := 0
 var _stage: Node3D
 var _camera: Camera3D
 
@@ -21,8 +22,15 @@ static func can_bake(item: CosmeticItem) -> bool:
 	return item != null and item.slot in BAKED_SLOTS
 
 
-static func cached(item: CosmeticItem) -> Texture2D:
-	return _cache.get(item.id) if item else null
+## Cache key: weapon skins are shown on the weapon they are browsed for.
+static func key(item: CosmeticItem, weapon: WeaponData) -> String:
+	if item.slot == &"weapon_finish" and weapon:
+		return "%s@%s" % [item.id, weapon.id]
+	return String(item.id)
+
+
+static func cached(item: CosmeticItem, weapon: WeaponData = null) -> Texture2D:
+	return _cache.get(key(item, weapon)) if item else null
 
 
 func _init() -> void:
@@ -34,6 +42,7 @@ func _init() -> void:
 
 
 func _ready() -> void:
+	set_process(false)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0, 0, 0, 0)
@@ -57,41 +66,62 @@ func _ready() -> void:
 
 
 ## Calls `done(texture)` once the item's thumbnail is ready (maybe right away).
-func request(item: CosmeticItem, done: Callable) -> void:
+## `weapon` picks the model weapon skins are shown on.
+func request(item: CosmeticItem, done: Callable, weapon: WeaponData = null) -> void:
 	if not can_bake(item):
 		return
-	if _cache.has(item.id):
-		done.call(_cache[item.id])
+	var k := key(item, weapon)
+	if _cache.has(k):
+		done.call(_cache[k])
 		return
-	_queue.append([item, done])
-	if not _busy:
-		_pump()
+	_queue.append([item, done, weapon, k])
+	set_process(true)
 
 
-func _pump() -> void:
-	_busy = true
+# One bake at a time: build the scene, render it once, read it back two
+# frames later (polled, so a freed Locker never leaves a coroutine behind).
+func _process(_delta: float) -> void:
+	if _job.is_empty():
+		_start_next()
+		return
+	_frames += 1
+	if _frames < 2:
+		return
+	var image := get_texture().get_image()
+	if image:
+		_cache[_job[3]] = ImageTexture.create_from_image(image)
+	_stage.queue_free()
+	_stage = null
+	_deliver(_job)
+	_job = []
+
+
+func _start_next() -> void:
 	while not _queue.is_empty():
 		var job: Array = _queue.pop_front()
 		var item: CosmeticItem = job[0]
-		if not _cache.has(item.id):
-			_stage = _build(item)
-			if _stage:
-				add_child(_stage)
-				_frame(_stage, item)
-				render_target_update_mode = SubViewport.UPDATE_ONCE
-				await RenderingServer.frame_post_draw
-				if not is_inside_tree():
-					return
-				_cache[item.id] = ImageTexture.create_from_image(get_texture().get_image())
-				_stage.queue_free()
-				_stage = null
-		var done: Callable = job[1]
-		if done.is_valid() and _cache.has(item.id):
-			done.call(_cache[item.id])
-	_busy = false
+		if _cache.has(job[3]):
+			_deliver(job)
+			continue
+		_stage = _build(item, job[2])
+		if _stage == null:
+			continue
+		add_child(_stage)
+		_frame(_stage, item)
+		render_target_update_mode = SubViewport.UPDATE_ONCE
+		_job = job
+		_frames = 0
+		return
+	set_process(false)
 
 
-func _build(item: CosmeticItem) -> Node3D:
+func _deliver(job: Array) -> void:
+	var done: Callable = job[1]
+	if done.is_valid() and _cache.has(job[3]):
+		done.call(_cache[job[3]])
+
+
+func _build(item: CosmeticItem, weapon: WeaponData) -> Node3D:
 	match item.slot:
 		&"avatar":
 			var op := Operators.instantiate(item)
@@ -102,7 +132,7 @@ func _build(item: CosmeticItem) -> Node3D:
 			op.rotation_degrees.y = 18.0
 			return op
 		&"weapon_finish":
-			return _weapon({"finish": item}, false)
+			return _weapon({"finish": item}, false, weapon)
 		&"gloves":
 			return _weapon({"arms": item}, true)
 		&"weapon_decal" when not item.params.has("emblem"):
@@ -150,7 +180,7 @@ func _weapon(loadout: Dictionary, arms_only: bool, weapon: WeaponData = null) ->
 		if child is Node3D:
 			var keep := String(child.name) == "ArmR" if arms_only else not String(child.name).begins_with("Arm")
 			child.visible = keep
-	model.rotation_degrees = Vector3(10, -65, 0) if not arms_only else Vector3(-25, 160, 0)
+	model.rotation_degrees = Vector3(10, -65, 0) if not arms_only else Vector3(15, 205, 0)
 	return model
 
 

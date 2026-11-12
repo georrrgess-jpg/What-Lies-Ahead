@@ -47,8 +47,8 @@ void fragment() {
 	float d = length(fract(c) - centre);
 	float star = step(0.82, h) * smoothstep(0.32, 0.0, d) * (0.55 + 0.45 * sin(TIME * (2.0 + h * 5.0) + h * 30.0));
 	float fres = 1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0);
-	ALBEDO = base + neb * (is_trim ? 0.15 : 0.35);
+	ALBEDO = base + neb * (is_trim ? 0.2 : 0.5);
 	METALLIC = 0.35;
 	ROUGHNESS = 0.3;
-	EMISSION = neb * (is_trim ? 0.25 : 0.6) + vec3(star) * 2.4 + nebula_b * pow(fres, 3.0) * 0.25;
+	EMISSION = neb * (is_trim ? 0.35 : 0.95) + vec3(star) * 2.4 + nebula_b * pow(fres, 3.0) * 0.25;
 }

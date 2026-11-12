@@ -108,16 +108,23 @@ static func _firework(parent: Node, at: Vector3, cols: Array) -> void:
 		"stagger": 0.08})
 	if not parent.is_inside_tree():
 		return
-	var top := at + Vector3.UP * 1.5
-	parent.get_tree().create_timer(0.22, false).timeout.connect(func():
-		if not is_instance_valid(parent) or not parent.is_inside_tree():
-			return
-		FxSwarm.spawn(parent, top, FxShapes.ball(), cols, {"count": 44, "speed": Vector2(4.0, 5.5), "life": Vector2(0.7, 1.1),
-			"size": Vector2(0.07, 0.1), "drag": 2.2, "gravity": Vector3(0, -3.0, 0)})
-		FxSwarm.spawn(parent, top, FxShapes.cube(), [Color.WHITE], {"count": 16, "speed": Vector2(1.5, 3.0), "life": Vector2(0.6, 1.0),
-			"size": Vector2(0.03, 0.05), "gravity": Vector3(0, -2.0, 0), "blink": 9.0, "stagger": 0.25})
-		_flash(parent, top, FxShapes.ball(), cols[0], 0.3, 1.6, 0.16)
-		Sfx.play_at(&"cos_kill_firework_pop", top, -5.0, randf_range(0.95, 1.05)))
+	# The burst follows on a timer owned by the parent, so it never outlives it.
+	var timer := Timer.new()
+	timer.one_shot = true
+	timer.wait_time = 0.22
+	parent.add_child(timer)
+	timer.timeout.connect(_firework_burst.bind(parent, at + Vector3.UP * 1.5, cols))
+	timer.timeout.connect(timer.queue_free)
+	timer.start()
+
+
+static func _firework_burst(parent: Node, top: Vector3, cols: Array) -> void:
+	FxSwarm.spawn(parent, top, FxShapes.ball(), cols, {"count": 44, "speed": Vector2(4.0, 5.5), "life": Vector2(0.7, 1.1),
+		"size": Vector2(0.07, 0.1), "drag": 2.2, "gravity": Vector3(0, -3.0, 0)})
+	FxSwarm.spawn(parent, top, FxShapes.cube(), [Color.WHITE], {"count": 16, "speed": Vector2(1.5, 3.0), "life": Vector2(0.6, 1.0),
+		"size": Vector2(0.03, 0.05), "gravity": Vector3(0, -2.0, 0), "blink": 9.0, "stagger": 0.25})
+	_flash(parent, top, FxShapes.ball(), cols[0], 0.3, 1.6, 0.16)
+	Sfx.play_at(&"cos_kill_firework_pop", top, -5.0, randf_range(0.95, 1.05))
 
 
 static func _hearts(parent: Node, at: Vector3, cols: Array) -> void:
