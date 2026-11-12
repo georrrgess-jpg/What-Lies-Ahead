@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"combo_artist"
+display_name = "Combo Artist"
+description = "Reach a %s-kill combo"
+scope = 0
+stat = &"best_combo"
+mode = 1
+goal = 20
+param = 0
+xp = 750
+mastery_xp = 0
+sort_order = 20

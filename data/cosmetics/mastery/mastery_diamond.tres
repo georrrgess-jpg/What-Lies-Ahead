@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+target = &""
+amount = 9
+
+[resource]
+script = ExtResource("1")
+id = &"mastery_diamond"
+display_name = "Diamond Dazzle"
+description = "Diamond mastery camo: faceted crystal that sparkles as it moves. Reach rank 9 with a weapon to use it on that weapon."
+slot = &"weapon_finish"
+rarity = 4
+requirement = SubResource("req")
+colors = PackedColorArray(0.749, 0.957, 1.000, 1, 0.184, 0.435, 0.604, 1)
+params = {
+"shader": "res://art/shaders/mastery_diamond.gdshader",
+"tier": "diamond",
+"shader_params": {
+"facet_scale": 34.0,
+"sparkle": 1.0
+}
+}
+sort_order = 109

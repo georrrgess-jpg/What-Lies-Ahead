@@ -6,7 +6,7 @@ extends Node
 ##
 ## Options (all optional):
 ##   --shot-level=<id>     level to load (default prize_pier)
-##   --shot-scene=level|menu|play|armory|settings|results|defeat|pause|kiosk
+##   --shot-scene=level|menu|play|armory|settings|career|results|defeat|pause|kiosk
 ##   --shot-pos=x,y,z      player feet position
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
 ##   --shot-pitch=deg
@@ -54,7 +54,7 @@ func _wait(frames: int) -> void:
 func _run() -> void:
 	var scene_kind := _arg("scene", "level")
 	await _wait(3)
-	if scene_kind in ["menu", "play", "armory", "settings"]:
+	if scene_kind in ["menu", "play", "armory", "settings", "career"]:
 		await _wait(10)
 		var menu := get_tree().current_scene
 		if scene_kind != "menu":

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 20
+target = &"gold_standard"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"banner_gold_standard"
+display_name = "Gold Standard"
+description = "Challenge reward."
+slot = &"banner"
+rarity = 3
+requirement = SubResource("req")
+colors = PackedColorArray(0.353, 0.227, 0.031, 1, 1.000, 0.773, 0.192, 1, 1.000, 0.949, 0.659, 1)
+params = {
+"pattern": "sunburst"
+}
+sort_order = 206

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 20
+target = &"spotless_shift"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"title_spotless"
+display_name = "Spotless"
+description = "Challenge reward."
+slot = &"title"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.910, 0.992, 1.000, 1)
+params = {
+
+}
+sort_order = 202

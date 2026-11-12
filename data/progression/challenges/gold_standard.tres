@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"gold_standard"
+display_name = "Gold Standard"
+description = "Reach Gold mastery (rank %s) with any weapon"
+scope = 0
+stat = &"max_rank"
+mode = 1
+goal = 7
+param = 0
+xp = 2500
+mastery_xp = 0
+sort_order = 120

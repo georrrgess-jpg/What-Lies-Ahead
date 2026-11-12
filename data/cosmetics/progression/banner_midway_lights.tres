@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+target = &""
+amount = 11
+
+[resource]
+script = ExtResource("1")
+id = &"banner_midway_lights"
+display_name = "Midway Lights"
+description = "Player banner. Reach player level 11."
+slot = &"banner"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(0.165, 0.102, 0.369, 1, 1.000, 0.824, 0.361, 1, 1.000, 0.247, 0.643, 1)
+params = {
+"pattern": "bulbs"
+}
+sort_order = 11

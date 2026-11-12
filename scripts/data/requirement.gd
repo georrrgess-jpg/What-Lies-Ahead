@@ -11,6 +11,9 @@ enum Kind {
 	TOTAL_KILLS,     ## lifetime kills across all weapons >= amount
 	BEST_SCORE,      ## best score on level `target` >= amount
 	GRANTED,         ## explicitly granted by code (Unlocks.grant(target))
+	## Challenge `target` completed (weapon challenges: on the weapon in context,
+	## or on any weapon without context). Fixed value: saved in .tres files.
+	CHALLENGE = 20,
 }
 
 @export var kind: Kind = Kind.NONE
@@ -41,6 +44,8 @@ func is_met(weapon_ctx: StringName = &"") -> bool:
 			return Profile.best_score(target) >= amount
 		Kind.GRANTED:
 			return Unlocks.is_granted(target)
+		Kind.CHALLENGE:
+			return Progression.is_challenge_complete(target, weapon_ctx)
 	return true
 
 
@@ -63,6 +68,8 @@ func describe() -> String:
 			text = "Score %d on %s" % [amount, l2.display_name if l2 else String(target)]
 		Kind.GRANTED:
 			text = "Special unlock"
+		Kind.CHALLENGE:
+			text = "Complete the challenge %s" % Progression.challenge_name(target)
 	for r in all_of:
 		if r and not r.is_met():
 			text = (text + " and " if text != "" else "") + r.describe()

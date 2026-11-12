@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 20
+target = &"combo_artist"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"banner_combo_carnival"
+display_name = "Combo Carnival"
+description = "Challenge reward."
+slot = &"banner"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(1.000, 0.247, 0.643, 1, 1.000, 0.761, 0.290, 1, 0.208, 0.941, 1.000, 1)
+params = {
+"pattern": "chevrons"
+}
+sort_order = 201

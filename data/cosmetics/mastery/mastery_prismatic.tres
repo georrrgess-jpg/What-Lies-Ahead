@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+target = &""
+amount = 10
+
+[resource]
+script = ExtResource("1")
+id = &"mastery_prismatic"
+display_name = "Prismatic"
+description = "Prismatic mastery camo: a flowing rainbow for weapons taken all the way. Reach rank 10 with a weapon to use it on that weapon."
+slot = &"weapon_finish"
+rarity = 4
+requirement = SubResource("req")
+colors = PackedColorArray(1.000, 1.000, 1.000, 1, 0.102, 0.063, 0.212, 1)
+params = {
+"shader": "res://art/shaders/mastery_prismatic.gdshader",
+"tier": "prismatic",
+"shader_params": {
+"flow_speed": 0.22,
+"hue_offset": 0.0,
+"hue_range": 1.0
+}
+}
+sort_order = 110
