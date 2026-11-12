@@ -11,7 +11,8 @@ parts, so every enemy shares one body language:
     * hem lips with torn notches on shirts, sleeves and shorts, belts and cuffs;
     * chunky shoes with a toe spring, boots, flip-flops and bare feet;
     * claw-ish hands: a palm, three curled fingers with claw tips and a thumb;
-    * a head (skull, nose, ears) plus a face kit: separate Face_<Outfit>_<Preset>
+    * a rounded head (a squircle capsule with cheeks and a jaw, nose, ears, a
+      stitched scar and blotches) plus a face kit: separate Face_<Outfit>_<Preset>
       meshes (eyes, lids, pupils, brows, mouth, teeth), one of which the game shows
       per zombie (scripts/enemies/zombie.gd picks one at random).
 
@@ -36,14 +37,16 @@ from mathutils import Matrix, Vector
 # zombie hunch built into the rest pose.
 HEAD_Y = -0.03
 
-# Glowing eyes: one colour and strength per world, so they read the same way in
-# every level (the night worlds need a little more).
+# Glowing eyes: the stolen Spark behind every zombie's eyes is the same warm
+# gold in every world (it is what the player banks), only a little stronger in
+# the night levels so it reads the same against the dark.
+SPARK_EYE = "#ffeeb0"
 EYE_GLOW = {
-    "boardwalk": ("#fbf6c8", 2.0),
-    "neon": ("#f2ff8a", 3.0),
-    "aqua": ("#fff3a0", 2.0),
-    "dune": ("#fbf6c8", 2.0),
-    "frost": ("#a8f6ff", 3.0),
+    "boardwalk": (SPARK_EYE, 2.2),
+    "neon": (SPARK_EYE, 3.0),
+    "aqua": (SPARK_EYE, 2.6),
+    "dune": (SPARK_EYE, 2.2),
+    "frost": (SPARK_EYE, 2.6),
 }
 
 
@@ -545,17 +548,32 @@ def foot_parts(name, x, kind, w, shoe, sole, lace, skin, boot_h=0.3, toe=None):
 # Head and face
 # ---------------------------------------------------------------------------
 
+# The head is a rounded capsule-box: a squircle section (SKULL_N; 2 would be
+# an ellipse, 4 a box) that swells at the cheeks, tapers to the jaw and domes
+# over the top. Hats, hair and bands follow `skull(w)`.
+SKULL_N = 2.7
+SKULL_Z = (1.27, 1.88)
+
+
 def _skull_keys(w):
     hw = w * 0.5
-    return [(0.0, hw * 0.74, 0.205), (0.2, hw * 0.88, 0.235), (0.45, hw, 0.255), (0.78, hw * 1.0, 0.262), (1.0, hw * 0.94, 0.25)]
-
-
-SKULL_Z = (1.27, 1.88)
+    return [(0.0, hw * 0.6, 0.19, 0.0, -0.012), (0.14, hw * 0.83, 0.226, 0.0, -0.008), (0.34, hw * 0.98, 0.25), (0.6, hw * 1.0, 0.262),
+            (0.82, hw * 0.985, 0.26), (1.0, hw * 0.9, 0.244)]
 
 
 def skull(w):
     """The Shape of a head of width w (for hair, hoods, bands)."""
-    return Shape(_skull_keys(w), SKULL_Z[0], SKULL_Z[1], 3.3, (0.0, HEAD_Y))
+    return Shape(_skull_keys(w), SKULL_Z[0], SKULL_Z[1], SKULL_N, (0.0, HEAD_Y))
+
+
+def head_band(name, w, top, bottom, m, off=0.012, thick=0.02, segs=26, flare=0.0):
+    """A band hugging a head of width w between two heights (headbands, hat
+    cuffs, goggle straps): it follows the skull's section, `off` proud of it."""
+    sk = skull(w)
+    a0, b0, cx, cy0 = sk.section(top)
+    a1, b1, _, cy1 = sk.section(bottom)
+    return band(name, (cx, cy0, top), (cx, cy1, bottom), a0 + off, b0 + off, m, n=SKULL_N, thick=thick, segs=segs, flare=flare,
+                a_bot=a1 + off, b_bot=b1 + off)
 
 
 def hair(p, w, m, style="fringe", seed=2):
@@ -572,39 +590,71 @@ def hair(p, w, m, style="fringe", seed=2):
             z = 1.56 + 0.13 * abs(math.sin(a)) ** 2 + rng.uniform(-0.02, 0.03)
             ra, rb, cx, cy = sk.section(z)
             x, y = cx + math.sin(a) * ra * 0.98, cy + math.cos(a) * rb * 0.98
-            parts.append(sphere(f"{p}Clump{i}", rng.uniform(0.065, 0.085), (x, y, z), scale=(1.0, 1.0, 1.55),
-                                rot=(math.cos(a) * 0.35, -math.sin(a) * 0.35, 0), m=m, segs=9, rings=6))
+            parts.append(sphere(f"{p}Clump{i}", rng.uniform(0.072, 0.094), (x, y, z), scale=(1.0, 1.0, 1.6),
+                                rot=(math.cos(a) * 0.35, -math.sin(a) * 0.35, 0), m=m, segs=10, rings=7))
     if style == "flat":
         parts.append(sk.shell(p + "Crop", m, 1.86, 1.6, off=0.016, gap=110, tear=tear_fn(26, seed, 5, -0.03), segs=26, steps=4, lip=0.018))
         parts.append(sphere(p + "CropTop", w * 0.47, (0, HEAD_Y + 0.02, 1.8), scale=(1.0, 0.86, 0.36), m=m, segs=16, rings=7))
     if style in ("mop", "tufts"):
-        for i in range(5 if style == "mop" else 3):
+        # Tousled locks: fat tapered curls leaning every which way from the crown.
+        for i in range(6 if style == "mop" else 3):
             a = rng.uniform(-1.2, 1.2) + (math.pi / 2 if style == "tufts" else 0.0)
-            x, y = math.sin(a) * w * 0.25, HEAD_Y + math.cos(a) * 0.12
-            parts.append(cyl(f"{p}Tuft{i}", 0.05, 0.16, (x, y, 1.9), rot=(rng.uniform(-0.6, 0.6), rng.uniform(-0.6, 0.6), 0), segs=6, bevel=0.0,
-                             m=m, radius_top=0.012))
+            x, y = math.sin(a) * w * 0.24, HEAD_Y + math.cos(a) * 0.11
+            lean = Vector((math.sin(a) * rng.uniform(0.3, 0.9), math.cos(a) * rng.uniform(0.3, 0.9) - 0.25, 1.0)).normalized()
+            base = Vector((x, y, 1.83))
+            h = rng.uniform(0.13, 0.18)
+            parts.append(tube(f"{p}Tuft{i}", [base, base + lean * h * 0.55, base + lean * h + Vector((0, -0.03, -0.01))], 0.058, m=m, segs=8,
+                              radius_end=0.014))
     return bind("Head", parts)
 
 
 def face_y(w, z):
     """Y of the skull's front surface on the centre line at height z."""
     t = (z - SKULL_Z[0]) / (SKULL_Z[1] - SKULL_Z[0])
-    _, b, _, _ = _lerp_keys(_keys(_skull_keys(w)), min(1.0, max(0.0, t)))
-    return HEAD_Y - b
+    _, b, _, dv = _lerp_keys(_keys(_skull_keys(w)), min(1.0, max(0.0, t)))
+    return HEAD_Y + dv - b
 
 
-def head(p, m, w=0.6, ears=True, nose=True, skin=None, dark=None):
-    """Head-bound skull (with jaw), nose and ears. The face is separate (see faces)."""
+def head(p, m, w=0.6, ears=True, nose=True, skin=None, dark=None, marks=True):
+    """Head-bound skull (with jaw), nose and ears, plus the outbreak's marks: a
+    stitched scar on one cheek and darker blotches (marks=False for heads that
+    are fully covered). The face is separate (see faces)."""
     skin = skin or m["skin"]
     dark = dark or m["skin_dark"]
-    parts = [blob(p + "Skull", (0, HEAD_Y, SKULL_Z[0]), (0, HEAD_Y, SKULL_Z[1]), _skull_keys(w), skin, n=3.3, r0=0.09, r1=0.15, segs=26, mid=7, cap=4)]
+    parts = [blob(p + "Skull", (0, HEAD_Y, SKULL_Z[0]), (0, HEAD_Y, SKULL_Z[1]), _skull_keys(w), skin, n=SKULL_N, r0=0.1, r1=0.17, segs=28, mid=8,
+                  cap=4)]
     if nose:
-        parts.append(sphere(p + "Nose", 0.05, (0, face_y(w, 1.5) - 0.025, 1.5), scale=(1.15, 0.85, 0.8), m=dark, segs=10, rings=6))
+        parts.append(sphere(p + "Nose", 0.05, (0, face_y(w, 1.535) - 0.026, 1.535), scale=(1.15, 0.85, 0.8), m=dark, segs=10, rings=6))
     if ears:
         for side in (-1, 1):
-            parts.append(sphere(f"{p}Ear{side}", 0.075, (side * (w * 0.5 + 0.015), HEAD_Y + 0.02, 1.57), scale=(0.55, 1.0, 1.25), m=skin, segs=10, rings=6))
-            parts.append(sphere(f"{p}EarIn{side}", 0.04, (side * (w * 0.5 + 0.045), HEAD_Y + 0.0, 1.57), scale=(0.4, 0.9, 1.1), m=dark, segs=8, rings=5))
+            parts.append(sphere(f"{p}Ear{side}", 0.075, (side * (w * 0.5 + 0.012), HEAD_Y + 0.02, 1.57), scale=(0.55, 1.0, 1.25), m=skin, segs=10, rings=6))
+            parts.append(sphere(f"{p}EarIn{side}", 0.04, (side * (w * 0.5 + 0.042), HEAD_Y + 0.0, 1.57), scale=(0.4, 0.9, 1.1), m=dark, segs=8, rings=5))
+    if marks:
+        parts += marks_parts(p, w, m, dark, seed=sum(map(ord, p)))
     return bind("Head", parts)
+
+
+def marks_parts(p, w, m, dark, seed=1):
+    """Toy wear and tear shared by the whole cast: a stitched scar low on one
+    cheek and two darker blotches on the other side of the head."""
+    sk = skull(w)
+    side = 1 if seed % 2 else -1
+    parts = []
+    # Scar: a short seam with three cross stitches, lying on the cheek.
+    z0, z1 = 1.455, 1.535
+    x0, x1 = side * w * 0.36, side * w * 0.43
+    pts = [(x0 + (x1 - x0) * t, sk.front(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t) - 0.004, z0 + (z1 - z0) * t) for t in (0.0, 0.5, 1.0)]
+    parts.append(tube(p + "Scar", pts, 0.008, m=m["dark"], segs=5))
+    for i, t in enumerate((0.2, 0.5, 0.8)):
+        cx, cz = x0 + (x1 - x0) * t, z0 + (z1 - z0) * t
+        a = (cx - side * 0.022, sk.front(cx - side * 0.022, cz + 0.014) - 0.004, cz + 0.014)
+        b = (cx + side * 0.022, sk.front(cx + side * 0.022, cz - 0.014) - 0.004, cz - 0.014)
+        parts.append(tube(f"{p}Stitch{i}", [a, b], 0.006, m=m["dark"], segs=4))
+    # Blotches on the other cheek and temple.
+    for i, (fx, z, r) in enumerate(((-0.4, 1.47, 0.03), (-0.44, 1.7, 0.036))):
+        x = side * fx * w
+        parts.append(sphere(f"{p}Blotch{i}", r, (x, sk.front(x, z) + r * 0.25, z), scale=(1.0, 0.45, 1.15), m=dark, segs=8, rings=5))
+    return parts
 
 
 # Face presets. eyes: size of the left/right eyeball (1 = normal) and their

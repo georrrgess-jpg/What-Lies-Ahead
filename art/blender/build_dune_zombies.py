@@ -31,9 +31,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dune_kit import *  # noqa: F401,F403
-from build_zombie import FPS, bind, build_armature, skin  # noqa: E402
+from build_zombie import FPS, bind, build_armature, save_zombie, skin  # noqa: E402
 import zombie_anim  # noqa: E402
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+from zombie_kit import (HEAD_Y, head_band, arm, band, base_materials, blob, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
 
 
@@ -193,7 +193,7 @@ def mechanic_accessories(m):
             box(p + "CapPatch", (0.18, 0.04, 0.1), (0, HEAD_Y - 0.28, 1.86), rot=rad(-18, 0, 0), bevel=0.015, m=m["white"]),
         ]),
         "Acc_Mechanic_Goggles": bind("Head", [
-            band(p + "GoggleBand", (0, HEAD_Y, 1.85), (0, HEAD_Y, 1.79), w * 0.53, 0.28, m["dark"], n=3.3, thick=0.02, segs=24),
+            head_band(p + "GoggleBand", w, 1.85, 1.79, m["dark"], off=0.012, thick=0.02),
             cyl(p + "GoggleL", 0.09, 0.08, (-0.12, HEAD_Y - 0.28, 1.83), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
             cyl(p + "GoggleR", 0.09, 0.08, (0.12, HEAD_Y - 0.28, 1.83), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
         ]),
@@ -329,7 +329,7 @@ def build():
     for name, parts in acc.items():
         meshes.append(skin(name, parts, armature))
     zombie_anim.bake(armature, zombie_anim.dune_clips, "dune_zombies")
-    save("dune_zombies", [armature] + meshes, animations=True)
+    save_zombie("dune_zombies", [armature] + meshes)
 
 
 if __name__ == "__main__":

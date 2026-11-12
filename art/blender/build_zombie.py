@@ -19,7 +19,11 @@ zombie_anim.py (boardwalk_clips): Idle, Walk (shamble), Run (sprint), the
 
 The body is built from chunky rigid parts (zombie_kit.py), each bound to a
 single bone (toy style, no deforming joints). The character faces -Y in Blender (+Z in Godot).
-Materials named "Shirt" can be tinted per zombie by the game.
+Parts are modelled with ordinary flat materials; skin() bakes them into the
+vertices of one shared material (ZombieBody, art/shaders/zombie_body.gdshader),
+with baked ambient occlusion, so each mesh is one surface. Parts whose material
+is named "Shirt", "Skin" or "SkinDark" are tinted per zombie by the game.
+art/blender/zombie_audit.py checks every model for parts that intersect.
 """
 import math
 import os
@@ -28,7 +32,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wla_common import *  # noqa: F401,F403
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, head, hips, leg, neck,  # noqa: E402
+from wla_common import HERE, MODELS_DIR  # noqa: E402
+import numpy as np  # noqa: E402
+from mathutils.bvhtree import BVHTree  # noqa: E402
+from zombie_kit import (HEAD_Y, head_band, arm, band, base_materials, blob, decal, face_y, faces, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso, wrap)
 from zombie_kit import hair as hair_parts  # noqa: E402
 import zombie_anim  # noqa: E402
@@ -52,6 +59,7 @@ BONES = [
 
 
 def build_armature():
+    _occluders.clear()
     data = bpy.data.armatures.new("ZombieRig")
     ob = bpy.data.objects.new("Armature", data)
     export_collection().objects.link(ob)
@@ -78,8 +86,135 @@ def bind(bone, parts):
     return list(parts)
 
 
+# One material for every opaque part: skin() bakes each part's flat material
+# into its vertices (see art/shaders/zombie_body.gdshader), so an outfit, a
+# face or an accessory is a single surface (one draw call) however many
+# colours it has. Glass stays a separate alpha-blended surface.
+BODY_MATERIAL = "ZombieBody"
+# Materials the game tints per zombie: their vertices carry a tint slot.
+TINT_SLOTS = {"Skin": 1, "SkinDark": 2, "Shirt": 3}
+EMIT_RANGE = 8.0
+# Baked ambient occlusion: `AO_RAYS` rays over the hemisphere of each vertex,
+# reaching AO_REACH metres, darkening by up to AO_STRENGTH, plus a slight
+# gradient from head (1) to feet (1 - AO_GROUND).
+AO_REACH = 0.3
+AO_STRENGTH = 0.5
+AO_GROUND = 0.1
+AO_RAYS = 14
+_occluders = {}
+
+
+def _srgb(c):
+    return 12.92 * c if c <= 0.0031308 else 1.055 * c ** (1.0 / 2.4) - 0.055
+
+
+def _finish(material):
+    """(sRGB r, g, b, roughness, metallic, emission strength, tint slot) of a
+    flat material, or None for glass."""
+    bsdf = next(n for n in material.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    if bsdf.inputs["Alpha"].default_value < 0.999:
+        return None
+    c = bsdf.inputs["Base Color"].default_value
+    return (_srgb(c[0]), _srgb(c[1]), _srgb(c[2]), bsdf.inputs["Roughness"].default_value, bsdf.inputs["Metallic"].default_value,
+            bsdf.inputs["Emission Strength"].default_value, TINT_SLOTS.get(material.name, 0))
+
+
+def _ao_rays():
+    """Fixed directions over the upper hemisphere (z = the normal)."""
+    out = []
+    for i in range(AO_RAYS):
+        z = 0.12 + 0.86 * (i + 0.5) / AO_RAYS
+        a = i * 2.39996
+        r = math.sqrt(1.0 - z * z)
+        out.append((math.cos(a) * r, math.sin(a) * r, z))
+    return out
+
+
+def _occlusion(me, others=()):
+    """Per-vertex ambient occlusion (1 = open) of `me` against itself and the
+    BVH trees in `others`. Returns (values, this mesh's tree)."""
+    cos = [v.co.copy() for v in me.vertices]
+    tree = BVHTree.FromPolygons(cos, [tuple(p.vertices) for p in me.polygons])
+    trees = (tree,) + tuple(others)
+    rays = _ao_rays()
+    out = np.ones(len(cos), dtype=np.float32)
+    for i, v in enumerate(me.vertices):
+        n = v.normal
+        t = n.orthogonal().normalized()
+        b = n.cross(t)
+        origin = v.co + n * 0.012
+        occ, buried = 0.0, 0
+        for x, y, z in rays:
+            d = t * x + b * y + n * z
+            near = AO_REACH
+            for tr in trees:
+                hit = tr.ray_cast(origin, d, near)
+                if hit[0] is not None:
+                    near = hit[3]
+            if near < AO_REACH:
+                occ += (1.0 - near / AO_REACH) ** 2
+                buried += near < 0.02
+        # A vertex buried in another part says nothing about the visible
+        # surface around it: keep it mid-grey instead of black.
+        shade = 0.5 if buried > AO_RAYS * 0.6 else min(1.0, 1.6 * occ / AO_RAYS)
+        ground = 1.0 - AO_GROUND * (1.0 - min(1.0, max(0.0, v.co.z / 1.6)))
+        out[i] = (1.0 - AO_STRENGTH * shade) * ground
+    return out, tree
+
+
+def _bake_surface(name, me):
+    """Move every flat material of `me` into per-vertex data (colour and baked
+    occlusion, finish, emission, tint slot) under the one body material."""
+    body = mat(BODY_MATERIAL, "#ffffff")
+    plain = (1.0, 1.0, 1.0, 0.6, 0.0, 0.0, 0)
+    old = list(me.materials) or [None]
+    finishes = [_finish(m) if m else plain for m in old]
+    glass = [m for m, f in zip(old, finishes) if f is None]
+    table = np.array([f if f is not None else plain for f in finishes], dtype=np.float32)
+    n_poly, n_loop = len(me.polygons), len(me.loops)
+    mi = np.zeros(n_poly, dtype=np.int32)
+    start = np.zeros(n_poly, dtype=np.int32)
+    total = np.zeros(n_poly, dtype=np.int32)
+    me.polygons.foreach_get("material_index", mi)
+    mi = np.minimum(mi, len(old) - 1)
+    me.polygons.foreach_get("loop_start", start)
+    me.polygons.foreach_get("loop_total", total)
+    order = np.argsort(start)
+    loop_mat = np.repeat(mi[order], total[order])
+    loop_vert = np.zeros(n_loop, dtype=np.int32)
+    me.loops.foreach_get("vertex_index", loop_vert)
+    # Faces and accessories are also shaded by the outfit they are worn on.
+    owner = name.split("_")[1] if name.count("_") >= 2 else ""
+    ao, tree = _occlusion(me, [_occluders[owner]] if owner in _occluders and not name.startswith("Outfit_") else [])
+    if name.startswith("Outfit_"):
+        _occluders[name[7:]] = tree
+    per = table[loop_mat]
+    for layer in list(me.uv_layers):
+        me.uv_layers.remove(layer)
+    for attr in list(me.color_attributes):
+        me.color_attributes.remove(attr)
+    col = me.color_attributes.new("Col", "FLOAT_COLOR", "CORNER")
+    rgba = np.concatenate([per[:, :3], ao[loop_vert][:, None]], axis=1).astype(np.float32)
+    col.data.foreach_set("color", rgba.ravel())
+    me.color_attributes.active_color = col
+    me.color_attributes.render_color_index = 0
+    # glTF flips V on export, so store 1 - v.
+    uv = me.uv_layers.new(name="UVMap")
+    uv.data.foreach_set("uv", np.stack([per[:, 3], 1.0 - per[:, 4]], axis=1).astype(np.float32).ravel())
+    uv2 = me.uv_layers.new(name="UV2")
+    uv2.data.foreach_set("uv", np.stack([np.minimum(per[:, 5] / EMIT_RANGE, 1.0), 1.0 - per[:, 6] / 4.0], axis=1).astype(np.float32).ravel())
+    new_index = np.array([0 if f is not None else 1 + glass.index(m) for m, f in zip(old, finishes)], dtype=np.int32)
+    me.materials.clear()
+    me.materials.append(body)
+    for g in glass:
+        me.materials.append(g)
+    me.polygons.foreach_set("material_index", new_index[mi])
+    me.update()
+
+
 def skin(name, parts, armature):
-    """Bake + join parts into one skinned mesh, each part weighted to its bone."""
+    """Bake + join parts into one skinned mesh, each part weighted to its bone,
+    with its materials baked into one surface (see _bake_surface)."""
     bpy.context.view_layer.update()
     dg = bpy.context.evaluated_depsgraph_get()
     target = bpy.data.objects.new(name, bpy.data.meshes.new(name))
@@ -100,10 +235,29 @@ def skin(name, parts, armature):
         bpy.ops.object.join()
     for p in target.data.polygons:
         p.use_smooth = True
+    _bake_surface(name, target.data)
     mod = target.modifiers.new("Armature", "ARMATURE")
     mod.object = armature
     target.parent = armature
     return target
+
+
+def save_zombie(name, export_objects):
+    """Write art/blender/<name>.blend and art/models/<name>.glb with the clips
+    and the per-vertex colours and finishes skin() baked."""
+    bpy.context.view_layer.update()
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, name + ".blend"), compress=True)
+    for ob in bpy.context.scene.objects:
+        ob.select_set(ob in export_objects)
+    path = os.path.join(MODELS_DIR, name + ".glb")
+    bpy.ops.export_scene.gltf(
+        filepath=path, export_format="GLB", use_selection=True, export_apply=False, export_yup=True, export_materials="EXPORT",
+        export_tangents=False, export_animations=True, export_animation_mode="ACTIONS", export_skins=True,
+        export_force_sampling=True, export_optimize_animation_size=False, export_texcoords=True,
+        export_vertex_color="ACTIVE", export_all_vertex_colors=False, export_active_vertex_color_when_no_material=True)
+    tris = sum(len(o.data.polygons) for o in export_objects if o.type == "MESH")
+    print(f"[wla] {name}: {len(export_objects)} export objects, ~{tris} faces -> {os.path.relpath(path)}")
+    return path
 
 
 # ---------------------------------------------------------------------------
@@ -377,7 +531,7 @@ def bruiser_accessories(m):
     pink, dark, white = m["pink"], m["dark"], m["white"]
     acc = {
         "Acc_Bruiser_Headband": bind("Head", [
-            band(p + "Headband", (0, HEAD_Y, 1.78), (0, HEAD_Y, 1.7), 0.33, 0.28, pink, n=3.3, thick=0.02, segs=26),
+            head_band(p + "Headband", 0.62, 1.78, 1.7, pink, off=0.012, thick=0.02),
             box(p + "BandKnot", (0.1, 0.1, 0.1), (0.0, HEAD_Y + 0.29, 1.73), bevel=0.03, m=pink),
             box(p + "BandTailA", (0.06, 0.18, 0.05), (0.06, HEAD_Y + 0.37, 1.66), rot=rad(-30, 0, 20), bevel=0.015, m=pink),
             box(p + "BandTailB", (0.06, 0.18, 0.05), (-0.06, HEAD_Y + 0.37, 1.64), rot=rad(-40, 0, -20), bevel=0.015, m=pink),
@@ -578,7 +732,7 @@ def lifeguard_neon_accessories(m):
             cyl(p + "GlowR", 0.06, 0.02, (-w * 0.57, HEAD_Y, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.0, m=m["glow_cyan"]),
         ]),
         "Acc_Lifeguard_Visor": bind("Head", [
-            band(p + "VisorBand", (0, HEAD_Y, 1.8), (0, HEAD_Y, 1.74), w * 0.53, 0.28, m["white"], n=3.3, thick=0.02, segs=24),
+            head_band(p + "VisorBand", w, 1.8, 1.74, m["white"], off=0.012, thick=0.02),
             box(p + "VisorBrim", (0.36, 0.22, 0.03), (0, HEAD_Y - 0.36, 1.76), rot=rad(12, 0, 0), bevel=0.012, m=m["glow_pink"]),
         ]),
         "Acc_Lifeguard_Armband": bind("UpperArm.L", [
@@ -776,7 +930,7 @@ def tourist_dune_accessories(m):
     w = BUILDS["wide"]["head"]
     return {
         "Acc_Tourist_Antennae": bind("Head", [
-            band(p + "Band", (0, HEAD_Y, 1.8), (0, HEAD_Y, 1.74), w * 0.53, 0.28, m["teal"], n=3.3, thick=0.02, segs=24),
+            head_band(p + "Band", w, 1.8, 1.74, m["teal"], off=0.012, thick=0.02),
             tube(p + "StalkL", [(0.14, HEAD_Y, 1.84), (0.2, HEAD_Y - 0.02, 2.0), (0.26, HEAD_Y - 0.06, 2.1)], 0.016, m=m["teal"], segs=6),
             tube(p + "StalkR", [(-0.14, HEAD_Y, 1.84), (-0.2, HEAD_Y - 0.02, 2.0), (-0.26, HEAD_Y - 0.06, 2.1)], 0.016, m=m["teal"], segs=6),
             sphere(p + "BallL", 0.055, (0.27, HEAD_Y - 0.07, 2.13), m=m["alien"], segs=10, rings=6),
@@ -903,7 +1057,7 @@ def tourist_frost_accessories(m):
     return {
         "Acc_Tourist_Bobble": bind("Head", [
             sphere(p + "Beanie", 0.33, (0, HEAD_Y + 0.02, 1.82), scale=(1.0, 0.98, 0.8), m=m["accent"], segs=16, rings=9),
-            band(p + "Cuff", (0, HEAD_Y, 1.8), (0, HEAD_Y, 1.7), w * 0.53, 0.285, m["shirt"], n=3.3, thick=0.03, segs=24),
+            head_band(p + "Cuff", w, 1.8, 1.7, m["shirt"], off=0.017, thick=0.03),
             sphere(p + "Pompom", 0.1, (0, HEAD_Y + 0.02, 2.1), m=m["white"], segs=10, rings=7),
         ]),
         "Acc_Tourist_Trapper": bind("Head", [
@@ -911,7 +1065,7 @@ def tourist_frost_accessories(m):
             sphere(p + "TrapTop", w * 0.52, (0, HEAD_Y, 1.86), scale=(1.0, 0.98, 0.5), m=m["cocoa"], segs=16, rings=8),
             box(p + "FlapL", (0.07, 0.2, 0.26), (w * 0.53, HEAD_Y, 1.56), bevel=0.03, m=m["white"]),
             box(p + "FlapR", (0.07, 0.2, 0.26), (-w * 0.53, HEAD_Y, 1.56), bevel=0.03, m=m["white"]),
-            band(p + "Fur", (0, HEAD_Y, 1.82), (0, HEAD_Y, 1.72), w * 0.56, 0.3, m["white"], n=3.3, thick=0.03, segs=24),
+            head_band(p + "Fur", w, 1.82, 1.72, m["white"], off=0.032, thick=0.03),
         ]),
         "Acc_Tourist_Mug": held(p, -1, [
             cyl(p + "Mug", 0.06, 0.13, (gx, gy - 0.02, gz + 0.02), segs=14, bevel=0.015, m=m["shirt"]),
@@ -949,7 +1103,7 @@ def lifeguard_frost_accessories(m):
     w = BUILDS["lean"]["head"]
     return {
         "Acc_Lifeguard_Goggles": bind("Head", [
-            band(p + "Strap", (0, HEAD_Y, 1.84), (0, HEAD_Y, 1.78), w * 0.53, 0.28, m["dark"], n=3.3, thick=0.02, segs=24),
+            head_band(p + "Strap", w, 1.84, 1.78, m["dark"], off=0.012, thick=0.02),
             box(p + "Frame", (0.34, 0.08, 0.13), (0, HEAD_Y - 0.28, 1.83), rot=rad(-15, 0, 0), bevel=0.04, m=m["white"]),
             box(p + "Lens", (0.3, 0.06, 0.1), (0, HEAD_Y - 0.31, 1.83), rot=rad(-15, 0, 0), bevel=0.035, m=m["lens"]),
         ]),
@@ -1002,7 +1156,7 @@ def build_set(name, materials, meshes):
     armature = build_armature()
     objects = [skin(mesh_name, parts, armature) for mesh_name, parts in meshes(m)]
     zombie_anim.bake(armature, zombie_anim.boardwalk_clips, name)
-    save(name, [armature] + objects, animations=True)
+    save_zombie(name, [armature] + objects)
 
 
 def build():

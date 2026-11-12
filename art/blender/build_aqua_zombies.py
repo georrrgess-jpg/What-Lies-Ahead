@@ -24,7 +24,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from aqua_common import *  # noqa: F401,F403
-from build_zombie import FPS, bind, build_armature, skin  # noqa: E402
+from build_zombie import FPS, bind, build_armature, save_zombie, skin  # noqa: E402
 import zombie_anim  # noqa: E402
 from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
@@ -334,7 +334,7 @@ def build():
         for name, parts in group.items():
             meshes.append(skin(name, parts, armature))
     zombie_anim.bake(armature, zombie_anim.aqua_clips, "aqua_zombies")
-    save("aqua_zombies", [armature] + meshes, animations=True)
+    save_zombie("aqua_zombies", [armature] + meshes)
 
 
 if __name__ == "__main__":

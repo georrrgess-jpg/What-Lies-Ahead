@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from frost_common import *  # noqa: F401,F403
 import build_zombie as bz
 import zombie_anim  # noqa: E402
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+from zombie_kit import (HEAD_Y, head_band, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, torso)
 
 
@@ -58,10 +58,6 @@ def materials():
         ice_edge=glass("FrozenIceEdge", "#b8ecff", alpha=0.75, emit=0.9, rough=0.1),
     )
     return m
-
-
-def yeti_eyes(m):
-    return dict(m, eye=mat("EyeAmber", "#ffb43a", rough=0.3, emit=3.0))
 
 
 # ---------------------------------------------------------------------------
@@ -239,7 +235,7 @@ def yeti_accessories(m):
         ]),
         "Acc_Yeti_Snowball": bz.bind("ForeArm.R", [sphere(p + "Snowball", 0.14, (-0.58, -0.12, 0.42), m=m["white"], segs=14, rings=9)]),
     }
-    acc.update(faces("Yeti", yeti_eyes(m), 0.64, ("Snarl", "Clench", "Gape"), tongue=m["red"]))
+    acc.update(faces("Yeti", m, 0.64, ("Snarl", "Clench", "Gape"), tongue=m["red"]))
     return acc
 
 
@@ -311,7 +307,7 @@ def frozen_accessories(m):
         ),
         "Acc_Frozen_Beanie": bz.bind("Head", [
             sphere(p + "Beanie", 0.33, (0, HEAD_Y + 0.02, 1.8), scale=(1.0, 1.0, 0.8), m=m["beanie"], segs=16, rings=9),
-            band(p + "BeanieCuff", (0, HEAD_Y, 1.8), (0, HEAD_Y, 1.7), 0.33, 0.285, m["white"], n=3.3, thick=0.03, segs=24),
+            head_band(p + "BeanieCuff", 0.62, 1.8, 1.7, m["white"], off=0.017, thick=0.03),
             sphere(p + "Pompom", 0.1, (0, HEAD_Y + 0.02, 2.08), m=m["white"], segs=10, rings=7),
         ]),
         "Acc_Frozen_Earmuffs": bz.bind("Head", [
@@ -333,11 +329,10 @@ def build():
     scene = reset_scene()
     scene.render.fps = bz.FPS
     m = materials()
-    yeti_m = yeti_eyes(m)
     armature = bz.build_armature()
     meshes = [
         bz.skin("Outfit_Skier", skier(m), armature),
-        bz.skin("Outfit_Yeti", yeti(yeti_m), armature),
+        bz.skin("Outfit_Yeti", yeti(m), armature),
         bz.skin("Outfit_Frozen", frozen(m), armature),
     ]
     accessories = {}
@@ -347,7 +342,7 @@ def build():
     for name, parts in accessories.items():
         meshes.append(bz.skin(name, parts, armature))
     zombie_anim.bake(armature, zombie_anim.frost_clips, "frost_zombies")
-    save("frost_zombies", [armature] + meshes, animations=True)
+    bz.save_zombie("frost_zombies", [armature] + meshes)
 
 
 if __name__ == "__main__":

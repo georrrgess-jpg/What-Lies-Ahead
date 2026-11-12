@@ -29,8 +29,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wla_common import *  # noqa: F401,F403
 import zombie_anim  # noqa: E402
-from build_zombie import FPS, bind, build_armature, skin  # noqa: E402,F401
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+from build_zombie import FPS, bind, build_armature, save_zombie, skin  # noqa: E402,F401
+from zombie_kit import (HEAD_Y, head_band, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
 
 
@@ -132,7 +132,7 @@ def punk_accessories(m):
         sphere(p + "LibCap", 0.28, (0, HEAD_Y, 1.8), scale=(1.05, 1.0, 0.5), m=m["hair_cyan"], segs=12, rings=6)])
     acc["Acc_Punk_Beanie"] = bind("Head", [
         sphere(p + "Beanie", 0.32, (0, HEAD_Y + 0.01, 1.82), scale=(1.02, 0.96, 0.75), m=m["shirt"], segs=14, rings=8),
-        band(p + "BeanieBand", (0, HEAD_Y, 1.82), (0, HEAD_Y, 1.72), w * 0.53, 0.285, m["pipe_lime"], n=3.3, thick=0.025, segs=24),
+        head_band(p + "BeanieBand", w, 1.82, 1.72, m["pipe_lime"], off=0.017, thick=0.025),
         sphere(p + "Pom", 0.07, (0, HEAD_Y + 0.02, 2.06), m=m["pipe_pink"], segs=8, rings=5),
     ])
     fy = face_y(w, 1.645)
@@ -349,7 +349,7 @@ def build_one(name, outfit, body, accessories, clips):
     for acc_name, parts in accessories(m).items():
         meshes.append(skin(acc_name, parts, armature))
     zombie_anim.bake(armature, clips, name)
-    save(name, [armature] + meshes, animations=True)
+    save_zombie(name, [armature] + meshes)
 
 
 def build():

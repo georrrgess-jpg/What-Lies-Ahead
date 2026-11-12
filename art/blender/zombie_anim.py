@@ -65,6 +65,7 @@ ARM = {"L": ("UpperArm.L", "ForeArm.L"), "R": ("UpperArm.R", "ForeArm.R")}
 # far ahead, sole this far below the shin tail (shoe and boot builds agree).
 FOOT = (0.13, 0.28, 0.055)
 REST_ANKLE = 0.06
+HEAD_FWD = -0.03    # zombie_kit.HEAD_Y: the head sits a little forward of the spine
 
 
 def B(left, forward, up):
@@ -289,7 +290,7 @@ class Clip:
         self.meta["length"] = round((len(poses) - 1) / KEY_FPS, 4)
 
 
-def keyed(rig, name, keys, loop=False, plant=True, flat=False, **meta):
+def keyed(rig, name, keys, loop=False, plant=True, flat=False, floor=False, **meta):
     """Dense clip from sparse keys. `keys` is a list of (frame, changes) or
     (frame, changes, ease); each key's spec is the previous key's spec updated
     with `changes`, and the segment arriving at a key uses its ease ("io" by
@@ -321,8 +322,56 @@ def keyed(rig, name, keys, loop=False, plant=True, flat=False, **meta):
             t = _ease(eases[i + 1], (f - f0) / max(1, f1 - f0))
             a, b = specs[i], specs[i + 1]
             spec = {k: _mix(a[k], b[k], t) for k in a}
-        poses.append(resolve(rig, spec, plant))
+        poses.append(_above_floor(rig, resolve(rig, spec, plant)) if floor else resolve(rig, spec, plant))
     return Clip(name, poses, loop=loop, **meta)
+
+
+# Points fixed to a shin or a forearm (rest offsets from the bone's tail) that
+# must stay above the floor in a collapse: heel, toe tip and ankle; the wrist
+# and the fingertips.
+_FLOOR_POINTS = {
+    "Shin": (Vector((0, FOOT[0], -FOOT[2])), Vector((0, -FOOT[1], -FOOT[2])), Vector((0, 0, 0.02))),
+    "ForeArm": (Vector((0, 0, 0.05)), Vector((0, -0.05, -0.2))),
+}
+_FLOOR_JOINT = {"Shin": 0.09, "ForeArm": 0.075}
+# Balls standing in for the trunk and head: (bone, rest centre, radius).
+_FLOOR_TRUNK = (("Hips", (0, 0, 0.86), 0.21), ("Spine", (0, 0.02, 1.2), 0.24), ("Head", (0, HEAD_FWD, 1.6), 0.29))
+
+
+def _above_floor(rig, pose):
+    """Free (FK) limbs in the death clips: where a foot, knee, hand or elbow
+    would dip into the floor, swing the thigh or upper arm and bend the knee or
+    elbow by the smallest angle that keeps it out. Returns the pose."""
+    pos, world = rig.fk(pose.rot, pose.hips)
+    low = min(rig.point(pos, world, bone, Vector(at)).z - r for bone, at, r in _FLOOR_TRUNK)
+    if low < 0.0:
+        pose.hips = pose.hips + Vector((0, 0, -low))
+    for chain in list(LEG.values()) + list(ARM.values()):
+        upper, lower = chain
+        kind = lower.split(".")[0]
+
+        def lowest(bone):
+            pos, world = rig.fk(pose.rot, pose.hips)
+            if bone == upper:
+                return pos[lower].z - _FLOOR_JOINT[kind]
+            return min(rig.point(pos, world, lower, rig.tail[lower] + off).z for off in _FLOOR_POINTS[kind])
+
+        for bone in (upper, lower):
+            if lowest(bone) >= 0.0:
+                continue
+            q = pose.rot.get(bone, Quaternion())
+            done = False
+            for step in range(1, 31):
+                for sign in (1.0, -1.0):
+                    pose.rot[bone] = q @ euler_q(sign * step * 6.0, 0, 0)
+                    if lowest(bone) >= 0.0:
+                        done = True
+                        break
+                if done:
+                    break
+            if not done:
+                pose.rot[bone] = q
+    return pose
 
 
 # ---------------------------------------------------------------------------
@@ -893,13 +942,18 @@ def attack(rig, name="Attack", height=1.55, flat=False):
     hold = dict(up, **{"Spine": (-17, 0, 10), "Head": (-4, 0, 0), "hand.L": (0.68, -0.02, 1.84),
                        "hand.R": (-0.66, -0.04, 1.82)})
     shake = dict(hold, **{"Spine": (-15, 2, 9), "hand.L": (0.66, 0.0, 1.87)})
+    # The claws come round the outside of the head (`over`) and meet in front of
+    # it, elbows out and low, so no forearm passes through the skull.
+    over = dict(hold, **{"Spine": (2, 0, 2), "Head": (-12, 0, 0), "hips": (0, 0.03, -0.05),
+                         "hand.L": (0.56, 0.4, height + 0.07), "hand.R": (-0.54, 0.38, height + 0.05),
+                         "elbow.L": (1.0, -0.2, -0.6), "elbow.R": (-1.0, -0.2, -0.6)})
     strike = {"Hips": (12, 0, -4), "Spine": (20, 0, -6), "Head": (-24, 0, 0), "hips": (0, 0.14, -0.08),
-              "hand.L": (0.14, 0.82, height), "hand.R": (-0.12, 0.8, height - 0.04),
-              "elbow.L": (0.8, -0.3, -0.5), "elbow.R": (-0.8, -0.3, -0.5), **feet(0.18, 0.2, -0.12)}
-    follow = dict(strike, **{"Spine": (24, 0, -4), "Head": (-26, 0, 0), "hand.L": (-0.1, 0.66, height - 0.25),
-                             "hand.R": (0.1, 0.62, height - 0.3)})
+              "hand.L": (0.2, 0.92, height), "hand.R": (-0.18, 0.9, height - 0.04),
+              "elbow.L": (1.0, -0.2, -0.8), "elbow.R": (-1.0, -0.2, -0.8), **feet(0.18, 0.2, -0.12)}
+    follow = dict(strike, **{"Spine": (24, 0, -4), "Head": (-26, 0, 0), "hand.L": (-0.04, 0.8, height - 0.42),
+                             "hand.R": (0.06, 0.76, height - 0.47)})
     return keyed(rig, name, [
-        (0, r), (5, up, "out"), (9, shake), (12, hold), (15, strike, "snap"), (18, follow, "out"), (26, r)],
+        (0, r), (5, up, "out"), (9, shake), (12, hold), (14, over, "in"), (15, strike, "lin"), (18, follow, "out"), (26, r)],
         flat=flat, strike=round(STRIKE * 26 / FPS, 4))
 
 
@@ -1064,7 +1118,7 @@ def die_back(rig, name="Die_Back"):
     bounce = dict(down, **{"Hips": (-78, 0, 0), "hips": (0, -0.6, -0.47), "Head": (6, 0, 0), **_legs(-22, 46, -8, 30)})
     rest = dict(down, **{"Hips": (-88, 0, 0), "Head": (18, 0, 6), **_legs(-4, 18, 8, 12)})
     return keyed(rig, name, [(0, s), (4, recoil, "snap"), (9, buckle, "in"), (13, down, "in"), (16, bounce, "out"),
-                             (19, rest, "in"), (26, rest)], impact=round(13 / FPS, 4))
+                             (19, rest, "in"), (26, rest)], floor=True, impact=round(13 / FPS, 4))
 
 
 def die_front(rig, name="Die_Front"):
@@ -1080,7 +1134,7 @@ def die_front(rig, name="Die_Front"):
     bounce = dict(down, **{"Hips": (76, 0, 0), "hips": (0, 0.42, -0.5), **_legs(-16, 40, -10, 34)})
     rest = dict(down, **{"Hips": (88, 0, 0), "Head": (-34, 0, 8), **_legs(4, 30, 8, 24)})
     return keyed(rig, name, [(0, s), (5, slump, "out"), (10, knees, "in"), (15, down, "in"), (18, bounce, "out"),
-                             (21, rest, "in"), (26, rest)], impact=round(15 / FPS, 4))
+                             (21, rest, "in"), (26, rest)], floor=True, impact=round(15 / FPS, 4))
 
 
 def die_spin(rig, name="Die_Spin"):
@@ -1097,7 +1151,7 @@ def die_spin(rig, name="Die_Spin"):
     bounce = dict(down, **{"Hips": (-76, 10, 190), "hips": (0.18, 0.4, -0.49)})
     rest = dict(down, **{"Hips": (-88, 14, 190), "Head": (16, 24, 10)})
     return keyed(rig, name, [(0, s), (6, twist, "out"), (11, crumple, "io"), (17, down, "in"), (20, bounce, "out"),
-                             (23, rest, "in"), (28, rest)], impact=round(17 / FPS, 4))
+                             (23, rest, "in"), (28, rest)], floor=True, impact=round(17 / FPS, 4))
 
 
 def die_heavy(rig, name="Die_Heavy"):
@@ -1116,7 +1170,7 @@ def die_heavy(rig, name="Die_Heavy"):
     bounce = dict(down, **{"Hips": (80, 0, 0), "hips": (0, 0.46, -0.52)})
     rest = dict(down, **{"Hips": (88, 0, 0)})
     return keyed(rig, name, [(0, s), (6, reel, "out"), (12, knees, "in"), (17, sway), (21, tip, "in"), (27, down, "in"),
-                             (30, bounce, "out"), (33, rest, "in"), (36, rest)], impact=round(27 / FPS, 4),
+                             (30, bounce, "out"), (33, rest, "in"), (36, rest)], floor=True, impact=round(27 / FPS, 4),
                  thud=round(12 / FPS, 4))
 
 
@@ -1141,7 +1195,7 @@ def die_headpop(rig, name="Die_HeadPop"):
     keys = [(0, s), (2, dict(jerk, **{"scale.Head": 1.05}), "snap"), (4, jerk, "out"), (6, swell, "out"),
             (7, dict(swell, **{"scale.Head": 1.5})), (8, dict(swell, **{"scale.Head": 1.75})), (9, popped, "lin"),
             (13, flail, "out"), (18, knees, "in"), (24, down, "in"), (27, bounce, "out"), (30, rest, "in"), (32, rest)]
-    return keyed(rig, name, keys, impact=round(24 / FPS, 4), pop=round(8.5 / FPS, 4))
+    return keyed(rig, name, keys, floor=True, impact=round(24 / FPS, 4), pop=round(8.5 / FPS, 4))
 
 
 def deaths(rig):
@@ -1159,14 +1213,17 @@ def emerge(rig, name="Emerge", heavy=False, flat=False):
     arms into the reach. 22 frames (0.92 s), ends in the ready stance."""
     w = 0.22 if heavy else 0.18
     low = {"Hips": (40, 0, 0), "Spine": (34, 0, 0), "Head": (-56, 0, 0), "hips": (0, 0.06, -0.46),
-           "foot.L": (w, 0.22, REST_ANKLE), "foot.R": (-w, -0.32, 0.14),
+           "foot.L": (w + 0.1, 0.2, REST_ANKLE), "foot.R": (-w - 0.06, -0.32, 0.14),
            "hand.L": (0.3, 0.62, 0.08), "hand.R": (-0.3, 0.58, 0.1),
-           "elbow.L": (1.0, -0.2, 0.0), "elbow.R": (-1.0, -0.2, 0.0)}
+           "elbow.L": (1.0, -0.2, 0.0), "elbow.R": (-1.0, -0.2, 0.0),
+           # Knees out to the sides while the torso is folded over them.
+           "knee.L": (1.0, 0.55, 0.0), "knee.R": (-1.0, 0.4, 0.0)}
     push = dict(low, **{"Hips": (30, 0, -6), "Spine": (30, 0, -4), "Head": (-50, 0, 0), "hips": (0, 0.04, -0.34),
                         "hand.L": (0.32, 0.6, 0.06), "hand.R": (-0.3, 0.56, 0.08), "foot.R": (-w, -0.24, REST_ANKLE)})
     rise = dict(push, **{"Hips": (10, 0, 0), "Spine": (14, 0, 0), "Head": (-20, 0, 0), "hips": (0, 0.02, -0.12),
                          "foot.R": (-w, -0.1, REST_ANKLE), "hand.L": (0.42, 0.3, 0.7), "hand.R": (-0.42, 0.26, 0.66),
-                         "elbow.L": elbow_pole(1), "elbow.R": elbow_pole(-1)})
+                         "elbow.L": elbow_pole(1), "elbow.R": elbow_pole(-1),
+                         "knee.L": (KNEE_POLE[0], KNEE_POLE[1], KNEE_POLE[2]), "knee.R": (-KNEE_POLE[0], KNEE_POLE[1], KNEE_POLE[2])})
     shake1 = dict(rise, **{"Head": (-14, 12, 14), "Spine": (10, 0, 4), "hips": (0, 0, -0.05),
                            "hand.L": (0.34, 0.5, 1.0), "hand.R": (-0.34, 0.44, 0.96)})
     shake2 = dict(shake1, **{"Head": (-14, -12, -14), "Spine": (12, 0, -4)})
