@@ -7,7 +7,10 @@ extends SceneTree
 ## loadout station, the portal, lighting, the city backdrop and a baked
 ## navigation mesh (with disconnected islands, such as prop tops, removed).
 ##
-##   godot --headless --path . --script res://tools/build_neon_skyline.gd
+##   xvfb-run -a godot --rendering-driver opengl3 --path . --script res://tools/build_neon_skyline.gd
+##
+## Run it with a renderer (not --headless): the headless renderer keeps no
+## MultiMesh instance data, so railings, lights and windows would save empty.
 ##
 ## NOTE: running this overwrites hand edits made to neon_skyline.tscn.
 ##
