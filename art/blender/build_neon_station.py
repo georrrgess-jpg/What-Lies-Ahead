@@ -28,7 +28,10 @@ def vending_machine(prefix, body_hex, glow_hex, label, dark, steel, ink):
     """One machine facing -Y, back against the mast. Origin at its back centre."""
     body = nmat(prefix + "Body", body_hex, rough=0.4, metal=0.2)
     glow = neon_glow(prefix + "Glow", glow_hex, 2.6)
-    window = nmat(prefix + "Window", "#1a1a33", rough=0.05, metal=0.3, emit=0.0)
+    # Backlit display: a dim version of the machine's glow colour.
+    g = [int(glow_hex[i:i + 2], 16) for i in (1, 3, 5)]
+    backlit = "#%02x%02x%02x" % tuple(int(c * 0.35 + 18) for c in g)
+    window = nmat(prefix + "Window", backlit, rough=0.2, emit=1.0)
     y = -0.5
     parts = [
         box(prefix + "Shell", (1.5, 1.0, 2.55), (0, y, 1.58), bevel=0.08, segs=2, m=body),
@@ -41,17 +44,17 @@ def vending_machine(prefix, body_hex, glow_hex, label, dark, steel, ink):
         box(prefix + "Slot", (0.86, 0.08, 0.26), (-0.17, y - 0.54, 0.75), bevel=0.03, m=ink),
         box(prefix + "SlotGlow", (0.7, 0.02, 0.05), (-0.17, y - 0.585, 0.86), bevel=0.0, m=glow),
         box(prefix + "Kick", (1.5, 1.0, 0.12), (0, y, 0.36), bevel=0.03, m=dark),
-        box(prefix + "SideStripL", (0.04, 0.9, 2.2), (-0.77, y, 1.6), bevel=0.0, m=glow),
-        box(prefix + "SideStripR", (0.04, 0.9, 2.2), (0.77, y, 1.6), bevel=0.0, m=glow),
+        box(prefix + "SideStripL", (0.05, 0.06, 2.2), (-0.74, y - 0.5, 1.6), bevel=0.0, m=glow),
+        box(prefix + "SideStripR", (0.05, 0.06, 2.2), (0.74, y - 0.5, 1.6), bevel=0.0, m=glow),
     ]
     # Product rows behind the window: little glowing cans and cells.
     for r in range(4):
         z = 1.3 + r * 0.36
-        parts.append(box(f"{prefix}Shelf{r}", (0.84, 0.25, 0.02), (-0.17, y - 0.38, z - 0.12), bevel=0.0, m=steel))
+        parts.append(box(f"{prefix}Shelf{r}", (0.84, 0.12, 0.025), (-0.17, y - 0.6, z - 0.1), bevel=0.0, m=steel))
         for k in range(5):
             x = -0.53 + k * 0.18
             hexc = [glow_hex, "#ffffff", "#ffd23a", glow_hex, "#3af0ff"][(k + r) % 5]
-            parts.append(cyl(f"{prefix}Item{r}{k}", 0.05, 0.17, (x, y - 0.42, z), segs=8, bevel=0.01,
+            parts.append(cyl(f"{prefix}Item{r}{k}", 0.05, 0.17, (x, y - 0.6, z), segs=8, bevel=0.01,
                              m=neon_glow(f"Item{hexc.lstrip('#')}", hexc, 1.6)))
     return parts
 
@@ -105,15 +108,17 @@ def build():
     holo = mat("NeonHoloCell", "#2ef2ff", rough=1.0)
     holo2 = mat("NeonHoloBolt", "#ff6ad0", rough=1.0)
     cell = [
-        cyl("CellBody", 0.42, 1.1, (0, 0, 6.25), segs=16, bevel=0.12, m=holo),
-        cyl("CellCap", 0.22, 0.18, (0, 0, 6.9), segs=12, bevel=0.04, m=holo),
-        torus("OrbitA", 0.85, 0.03, (0, 0, 6.25), rot=(math.radians(70), 0, 0), m=holo2, major_segs=36, minor_segs=4),
-        torus("OrbitB", 0.85, 0.03, (0, 0, 6.25), rot=(math.radians(70), 0, math.radians(90)), m=holo2, major_segs=36, minor_segs=4),
-        prism("Bolt", [(-0.06, 0.32), (-0.2, 0.0), (-0.02, 0.0), (-0.1, -0.34), (0.16, 0.08), (0.0, 0.08), (0.08, 0.32)], 0.05,
-              (0, -0.44, 6.25), m=holo2),
-        cyl("Beam", 0.55, 0.9, (0, 0, 5.65), segs=16, bevel=0.0, m=holo, radius_top=0.15),
+        cyl("CellBody", 0.6, 1.55, (0, 0, 6.3), segs=18, bevel=0.16, m=holo),
+        cyl("CellCap", 0.3, 0.25, (0, 0, 7.2), segs=12, bevel=0.05, m=holo),
+        torus("OrbitA", 1.2, 0.04, (0, 0, 6.3), rot=(math.radians(70), 0, 0), m=holo2, major_segs=40, minor_segs=4),
+        torus("OrbitB", 1.2, 0.04, (0, 0, 6.3), rot=(math.radians(70), 0, math.radians(90)), m=holo2, major_segs=40, minor_segs=4),
+        prism("Bolt", [(-0.08, 0.45), (-0.28, 0.0), (-0.03, 0.0), (-0.14, -0.48), (0.22, 0.11), (0.0, 0.11), (0.11, 0.45)], 0.07,
+              (0, -0.62, 6.3), m=holo2),
+        prism("BoltBack", [(-0.08, 0.45), (-0.28, 0.0), (-0.03, 0.0), (-0.14, -0.48), (0.22, 0.11), (0.0, 0.11), (0.11, 0.45)], 0.07,
+              (0, 0.62, 6.3), m=holo2),
+        cyl("Beam", 0.7, 0.75, (0, 0, 5.62), segs=16, bevel=0.0, m=holo, radius_top=0.2),
     ]
-    spin = merge("SpinHolo", cell, pivot=(0, 0, 6.25))
+    spin = merge("SpinHolo", cell, pivot=(0, 0, 6.3))
     save("neon_station", [station, spin])
 
 

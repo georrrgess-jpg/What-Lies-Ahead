@@ -11,10 +11,10 @@ uniform vec3 roof_color : source_color = vec3(0.06, 0.06, 0.1);
 uniform vec3 warm : source_color = vec3(1.0, 0.72, 0.4);
 uniform vec3 cool : source_color = vec3(0.35, 0.85, 1.0);
 uniform vec3 hot : source_color = vec3(1.0, 0.35, 0.8);
-uniform vec2 cell = vec2(1.8, 3.2);
-uniform vec2 window = vec2(0.62, 0.55);
+uniform vec2 cell = vec2(1.5, 3.0);
+uniform vec2 window = vec2(0.5, 0.5);
 uniform float lit_ratio : hint_range(0.0, 1.0) = 0.45;
-uniform float glow = 1.6;
+uniform float glow = 1.3;
 uniform float seed = 0.0;
 
 varying vec3 world_pos;
@@ -49,8 +49,8 @@ void fragment() {
 		// Floors light up in runs, like real offices.
 		float row = hash12(vec2(id.y + seed * 3.0, face));
 		float lit = step(1.0 - lit_ratio * (0.6 + 0.8 * row), h);
-		vec3 tone = h2 < 0.72 ? warm : (h2 < 0.86 ? cool : hot);
-		tone *= 0.55 + 0.45 * hash12(id + 9.0);
+		vec3 tone = h2 < 0.8 ? warm : (h2 < 0.91 ? cool : hot);
+		tone *= 0.4 + 0.6 * hash12(id + 9.0);
 		float flick = h2 > 0.97 ? step(0.4, fract(sin(TIME * 3.0 + h * 40.0) * 3.0)) : 1.0;
 		vec2 margin = (vec2(1.0) - window) * 0.5;
 		vec2 inside = step(margin, f) * step(f, vec2(1.0) - margin);

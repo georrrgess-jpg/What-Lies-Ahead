@@ -255,7 +255,7 @@ func _roof_material(variant := "roof") -> Material:
 			m.set_shader_parameter("tile_metres", 2.0)
 			m.set_shader_parameter("puddle_amount", 0.15)
 		_:
-			m.set_shader_parameter("puddle_amount", 0.5)
+			m.set_shader_parameter("puddle_amount", 0.32)
 	_materials[variant] = m
 	return m
 
@@ -283,7 +283,7 @@ func _build_east_strip() -> void:
 	geo.add_child(strip)
 	var x0 := A_X1
 	var x1 := B_X1
-	var wall := _mat("terrace_wall", Color(0.16, 0.13, 0.26), 0.8)
+	var wall := _facade_material()
 	# Terrace block.
 	_prism(strip, "Terrace", _box_points(Vector3(x0, 0, TERRACE.x), Vector3(x1, L1, TERRACE.y)), BOX_FACES,
 		[wall, _roof_material("terrace")], [0, 0, 0, 0, 9, 1])
@@ -736,7 +736,7 @@ func _build_signage() -> void:
 	_prop(dressing, "neon_billboard", "TerraceBillboard", Vector3(BILLBOARD.x, L1, BILLBOARD.z), -90.0, Vector3(1, 9, 10))
 	_screen(dressing, "TerraceScreen", BILLBOARD + Vector3(-0.35, L1 + 6.6, 0), -90.0, Vector2(9.6, 4.8), 0, 4, 3.0, 0.0)
 	# Rooftop sign along the back of the portal roof, facing south.
-	_prop(signs, "neon_rooftop_sign", "RooftopSign", Vector3(-1.0, N_Y, N_Z0 + 0.6), 0.0, Vector3(16, 6, 1))
+	_prop(signs, "neon_rooftop_sign", "RooftopSign", Vector3(-1.0, N_Y, N_Z0 + 0.6), 0.0, Vector3(16, 6, 1)).scale = Vector3.ONE * 1.3
 	# Blade signs on the corners.
 	_prop(dressing, "neon_blade_sign", "BladeSignSouthWest", Vector3(-18.6, 0, 14.4), 45.0, Vector3(1, 8, 2))
 	_prop(dressing, "neon_blade_sign_b", "BladeSignSouthEast", Vector3(12.9, 0, 14.6), -45.0, Vector3(1, 6, 2))
@@ -1143,6 +1143,21 @@ func _led_material(color: Color) -> StandardMaterial3D:
 	m.emission = color
 	m.emission_energy_multiplier = 2.6
 	_materials[key] = m
+	return m
+
+
+## The terrace block's walls: a low building front with a row of lit windows.
+func _facade_material() -> ShaderMaterial:
+	if _materials.has("facade"):
+		return _materials["facade"]
+	var m := ShaderMaterial.new()
+	m.shader = load(SHADERS + "neon_windows.gdshader")
+	m.set_shader_parameter("seed", 7.0)
+	m.set_shader_parameter("cell", Vector2(2.6, 3.0))
+	m.set_shader_parameter("window", Vector2(0.62, 0.42))
+	m.set_shader_parameter("lit_ratio", 0.55)
+	m.set_shader_parameter("wall_color", Color(0.16, 0.13, 0.27))
+	_materials["facade"] = m
 	return m
 
 

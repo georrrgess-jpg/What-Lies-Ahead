@@ -18,7 +18,7 @@ uniform float puddle_amount : hint_range(0.0, 1.0) = 0.5;
 uniform float sky_yaw = 0.0;
 uniform float sky_reflect = 0.55;
 uniform float streak_strength = 1.0;
-uniform float ripple_strength = 1.0;
+uniform float ripple_strength = 0.6;
 // xyz = world position of a neon light to reflect, w = radius of its glow (metres).
 uniform vec4 neon_pos[8];
 // rgb = colour, a = intensity (0 disables the slot).

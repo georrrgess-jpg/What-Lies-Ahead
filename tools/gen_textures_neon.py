@@ -158,8 +158,8 @@ def make_sky(width=4096, height=2048, seed=23):
     # so it reads clearly (thin cloud wisps cross it).
     disc = smooth(MOON_RADIUS + 0.12, MOON_RADIUS - 0.12, moon_dist)
     limb = np.clip(1 - (moon_dist / MOON_RADIUS) ** 2, 0, 1) ** 0.25
-    maria = fbm(rng, height, width, 220, 900, 3, wrap_y=False)
-    face = hexc("#f4f0ff") * (0.8 + 0.2 * limb)[..., None] * (1 - 0.12 * smooth(0.48, 0.6, maria))[..., None]
+    maria = fbm(rng, height, width, 110, 440, 3, wrap_y=False)
+    face = hexc("#f4f0ff") * (0.8 + 0.2 * limb)[..., None] * (1 - 0.14 * smooth(0.42, 0.68, maria))[..., None]
     wisp = (cover * 0.35)[..., None]
     moon_col = face * (1 - wisp) + cloud * wisp
     sky = sky * (1 - disc[..., None]) + moon_col * disc[..., None]
