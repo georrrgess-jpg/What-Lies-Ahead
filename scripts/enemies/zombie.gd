@@ -44,6 +44,10 @@ var _stall_anchor := Vector3.ZERO
 var _stall_timer := 0.0
 var _lost_timer := 0.0
 var _clear_line := false
+## Charge (Bruiser): cooldown, telegraph time left, and charge time left.
+var _charge_cooldown := 2.5
+var _charge_telegraph := 0.0
+var _charge_left := 0.0
 var _flash_left := 0.0
 ## Knockback velocity from hits; decays quickly.
 var _knock := Vector3.ZERO
@@ -77,7 +81,7 @@ func _ready() -> void:
 	shape.shape = capsule
 	shape.position.y = capsule.height * 0.5
 	nav.radius = data.avoidance_radius
-	nav.max_speed = speed * 1.2
+	nav.max_speed = speed * maxf(1.2, data.charge_speed_mult * 1.1)
 	nav.velocity_computed.connect(_on_velocity_computed)
 	_repath = randf() * REPATH_INTERVAL
 	_voice_timer = randf_range(0.5, data.voice_interval.y)
@@ -86,12 +90,18 @@ func _ready() -> void:
 	_play(data.move_animation, 0.0)
 	# Pop in rather than appearing fully formed.
 	model_root.scale = Vector3.ONE * 0.6
-	create_tween().tween_property(model_root, "scale", Vector3.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_punch_tween = create_tween()
+	_punch_tween.tween_property(model_root, "scale", Vector3.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## True while winding up an attack that has not landed yet (for threat indicators).
 func is_winding_up() -> bool:
-	return state == State.WINDUP and not _struck
+	return (state == State.WINDUP and not _struck) or _charge_telegraph > 0.0
+
+
+## True while rushing at the player (or about to).
+func is_charging() -> bool:
+	return _charge_left > 0.0 or _charge_telegraph > 0.0
 
 
 func is_dead() -> bool:
@@ -150,7 +160,7 @@ func _physics_process(delta: float) -> void:
 		_flash_left -= delta
 		if _flash_left <= 0.0:
 			_set_overlay(null)
-	_knock = _knock.move_toward(Vector3.ZERO, 16.0 * delta)
+	_knock = _knock.move_toward(Vector3.ZERO, 11.0 * delta)
 	if state == State.DEAD:
 		# Slide back with the killing blow while the death clip plays.
 		if _knock.length() > 0.05:
@@ -196,13 +206,16 @@ func _physics_process(delta: float) -> void:
 
 func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 	if target.alive and distance <= data.attack_range:
+		_charge_left = 0.0
 		_begin_attack()
+		return
+	if _update_charge(delta, to_target, distance):
 		return
 	_repath -= delta
 	if _repath <= 0.0:
 		_repath = REPATH_INTERVAL
 		nav.target_position = target.global_position
-		_clear_line = distance <= 3.5 and _has_clear_line()
+		_clear_line = (distance <= 3.5 or data.charge_speed_mult > 1.0) and _has_clear_line()
 	var dir := to_target.normalized()
 	# Close in directly for the last few metres when nothing is in the way;
 	# otherwise follow the navmesh (e.g. around a planter).
@@ -213,8 +226,12 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 		if step.length() > 0.05:
 			dir = step.normalized()
 	var move_speed := speed * (0.45 if _slow > 0.0 else 1.0)
+	if _charge_left > 0.0:
+		move_speed = speed * data.charge_speed_mult
 	# Stop at arm's length instead of walking into (and shoving) the player.
-	var desired := (dir * move_speed if distance > 1.15 else Vector3.ZERO) + _knock
+	# Knockback is added after avoidance (in _on_velocity_computed), because the
+	# avoidance agent clamps its output to max_speed and would swallow it.
+	var desired := dir * move_speed if distance > 1.15 else Vector3.ZERO
 	_face(dir, delta, 1.0)
 	if nav.avoidance_enabled:
 		nav.velocity = desired
@@ -222,6 +239,37 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 		_on_velocity_computed(desired)
 	if _anim:
 		_anim.speed_scale = clampf(move_speed / maxf(0.1, data.animation_reference_speed), 0.5, 1.8)
+
+
+## Charging enemies (the Bruiser): at mid range with a clear line, stop, roar
+## and face the player (telegraph), then rush for a short burst. Returns true
+## while the telegraph holds the zombie in place.
+func _update_charge(delta: float, to_target: Vector3, distance: float) -> bool:
+	if data.charge_speed_mult <= 1.0:
+		return false
+	_charge_cooldown -= delta
+	if _charge_left > 0.0:
+		_charge_left -= delta
+		if _charge_left <= 0.0:
+			_play(data.move_animation, 0.2)
+		return false
+	if _charge_telegraph > 0.0:
+		_charge_telegraph -= delta
+		_face(to_target, delta, 1.5)
+		_idle_move(delta)
+		if _charge_telegraph <= 0.0:
+			_charge_left = data.charge_duration
+			_play(&"Run", 0.1)
+		return true
+	if _charge_cooldown <= 0.0 and distance >= data.charge_range.x and distance <= data.charge_range.y and _clear_line:
+		_charge_cooldown = data.charge_cooldown
+		_charge_telegraph = data.charge_telegraph
+		velocity = Vector3.ZERO
+		Sfx.play_at(&"bruiser_roar_1", global_position + Vector3.UP * 1.6, 3.0, 0.9)
+		if _anim and _anim.has_animation("Hit"):
+			_anim.play("Hit", 0.1)
+		return true
+	return false
 
 
 ## True if nothing solid stands between this zombie and its target at knee height.
@@ -236,8 +284,8 @@ func _has_clear_line() -> bool:
 func _on_velocity_computed(safe_velocity: Vector3) -> void:
 	if state != State.CHASE:
 		return
-	velocity.x = safe_velocity.x
-	velocity.z = safe_velocity.z
+	velocity.x = safe_velocity.x + _knock.x
+	velocity.z = safe_velocity.z + _knock.z
 	_apply_gravity_and_move()
 
 

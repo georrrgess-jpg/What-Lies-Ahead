@@ -146,7 +146,7 @@ func _build() -> void:
 	_reload_arc.custom_minimum_size = Vector2(120, 120)
 	_anchor(_reload_arc, Control.PRESET_CENTER, Vector2.ZERO, Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
 	_threats = ThreatRing.new()
-	_threats.custom_minimum_size = Vector2(560, 560)
+	_threats.custom_minimum_size = Vector2(680, 680)
 	_anchor(_threats, Control.PRESET_CENTER, Vector2.ZERO, Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BOTH)
 	_status = UiKit.arcade_label("", 30, UiKit.AMBER)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

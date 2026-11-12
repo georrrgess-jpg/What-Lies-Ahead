@@ -379,105 +379,105 @@ height = 7.0
 radial_segments = 10
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2ke4v"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_y78aj"]
 size = Vector3(1.3, 0.04, 0.24)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vxefy"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l6txn"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kak5l"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r0x0h"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kqtfj"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tvedj"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_61uum"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_toos0"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f2d4d"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f3pdf"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dd87u"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_txkal"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o735m"]
-albedo_color = Color(0.32, 0.6, 0.66, 1)
+albedo_color = Color(0.22, 0.17, 0.2, 1)
 roughness = 0.35
 emission_enabled = true
 emission = Color(0.2, 0.95, 1, 1)
-emission_energy_multiplier = 0.15
+emission_energy_multiplier = 0.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_6vih5"]
 material = SubResource("StandardMaterial3D_6fsep")
@@ -813,29 +813,75 @@ instance_count = 20
 mesh = SubResource("ArrayMesh_hlvpt")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r2mru"]
+resource_name = "star_paint_0"
+cull_mode = 2
+albedo_color = Color(1, 0.85, 0.25, 1)
+roughness = 0.55
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_h5x8x"]
+_surfaces = [{
+"aabb": AABB(-0.47552827, 0, -0.5, 0.95105654, 1e-05, 0.9045085),
+"format": 34359738375,
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 30,
+"vertex_data": PackedByteArray("AAAAAAAAAAAAAAAAMjENJAAAAAAAAAC/kGoEPgAAAABfQTa+AAAAAAAAAAAAAAAAkGoEPgAAAABfQTa+cXjzPgAAAAB6Nx6+AAAAAAAAAAAAAAAAcXjzPgAAAAB6Nx6+B0FWPgAAAAAPO4s9AAAAAAAAAAAAAAAAB0FWPgAAAAAPO4s9GHmWPgAAAAC9G88+AAAAAAAAAAAAAAAAGHmWPgAAAAC9G88+in94IwAAAACuR2E+AAAAAAAAAAAAAAAAin94IwAAAACuR2E+GHmWvgAAAAC9G88+AAAAAAAAAAAAAAAAGHmWvgAAAAC9G88+B0FWvgAAAAAPO4s9AAAAAAAAAAAAAAAAB0FWvgAAAAAPO4s9cXjzvgAAAAB6Nx6+AAAAAAAAAAAAAAAAcXjzvgAAAAB6Nx6+kGoEvgAAAABfQTa+AAAAAAAAAAAAAAAAkGoEvgAAAABfQTa+MjENJAAAAAAAAAC//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+/")
+}]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sxhjm"]
+resource_name = "star_paint_1"
+cull_mode = 2
+albedo_color = Color(0.3, 0.9, 0.95, 1)
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ae0xc"]
+resource_name = "star_paint_2"
+cull_mode = 2
+albedo_color = Color(1, 0.45, 0.75, 1)
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6xxmp"]
+resource_name = "star_paint_3"
+cull_mode = 2
+albedo_color = Color(1, 0.85, 0.25, 1)
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_it8v1"]
+resource_name = "star_paint_4"
+cull_mode = 2
+albedo_color = Color(1, 0.45, 0.75, 1)
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rauxb"]
+resource_name = "star_paint_5"
+cull_mode = 2
+albedo_color = Color(0.3, 0.9, 0.95, 1)
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kqgmq"]
 resource_name = "deck_paint"
 albedo_color = Color(0.95, 0.3, 0.62, 1)
 roughness = 0.6
 
-[sub_resource type="BoxMesh" id="BoxMesh_h5x8x"]
-material = SubResource("StandardMaterial3D_r2mru")
+[sub_resource type="BoxMesh" id="BoxMesh_sktrf"]
+material = SubResource("StandardMaterial3D_kqgmq")
 size = Vector3(0.28, 0.01, 44)
 
-[sub_resource type="BoxMesh" id="BoxMesh_sxhjm"]
-material = SubResource("StandardMaterial3D_r2mru")
+[sub_resource type="BoxMesh" id="BoxMesh_iieyr"]
+material = SubResource("StandardMaterial3D_kqgmq")
 size = Vector3(37, 0.01, 0.28)
 
-[sub_resource type="BoxMesh" id="BoxMesh_ae0xc"]
-material = SubResource("StandardMaterial3D_r2mru")
+[sub_resource type="BoxMesh" id="BoxMesh_h3ody"]
+material = SubResource("StandardMaterial3D_kqgmq")
 size = Vector3(0.24, 0.01, 28)
 
-[node name="PrizePier" type="Node3D" unique_id=1315504973]
+[node name="PrizePier" type="Node3D" unique_id=800315701]
 script = ExtResource("1_4ufqq")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2137477310]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=241586654]
 environment = SubResource("Environment_qblnv")
 
-[node name="Sun" type="DirectionalLight3D" parent="." unique_id=798679242]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=910415552]
 transform = Transform3D(-0.9135454, -0.20336835, 0.3522443, 0, 0.86602545, 0.50000006, -0.40673664, 0.45677277, -0.7911536, 0, 30, 0)
 light_color = Color(1, 0.8, 0.62, 1)
 light_energy = 1.05
@@ -846,1040 +892,1040 @@ shadow_opacity = 0.75
 directional_shadow_mode = 1
 directional_shadow_max_distance = 80.0
 
-[node name="FillLight" type="DirectionalLight3D" parent="." unique_id=1575426231]
+[node name="FillLight" type="DirectionalLight3D" parent="." unique_id=1609989057]
 transform = Transform3D(0.92467815, -0.15192059, 0.34912828, 0, 0.9169494, 0.39900374, -0.3807498, -0.36895004, 0.847883, 0, 30, 0)
 light_color = Color(1, 0.62, 0.8, 1)
 light_energy = 0.34
 
-[node name="Ocean" type="MeshInstance3D" parent="." unique_id=307494443]
+[node name="Ocean" type="MeshInstance3D" parent="." unique_id=2003846459]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.2, 0)
 material_override = SubResource("ShaderMaterial_tjhhy")
 cast_shadow = 0
 mesh = SubResource("PlaneMesh_afvoe")
 
-[node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1962219843]
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=391872214]
 navigation_mesh = SubResource("NavigationMesh_kjs52")
 
-[node name="Geometry" type="Node3D" parent="NavigationRegion3D" unique_id=1538097478]
+[node name="Geometry" type="Node3D" parent="NavigationRegion3D" unique_id=659840263]
 
-[node name="Decks" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=1826317267]
+[node name="Decks" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=157085758]
 
-[node name="MainDeck" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=1798079158]
+[node name="MainDeck" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=1475940065]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, -0.4, -1)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/MainDeck" unique_id=37219650]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/MainDeck" unique_id=1255173023]
 mesh = SubResource("BoxMesh_8kll4")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/MainDeck" unique_id=316849771]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/MainDeck" unique_id=1067183221]
 shape = SubResource("BoxShape3D_hlp7v")
 
-[node name="ExitSpur" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=1451459164]
+[node name="ExitSpur" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=89580872]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -0.4, -39)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/ExitSpur" unique_id=2138568790]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/ExitSpur" unique_id=1254491220]
 mesh = SubResource("BoxMesh_la3av")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/ExitSpur" unique_id=223626985]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/ExitSpur" unique_id=1254164722]
 shape = SubResource("BoxShape3D_vy7hx")
 
-[node name="ArcadeFloor" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=1812873363]
+[node name="ArcadeFloor" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=1605021065]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, -0.4, 11)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/ArcadeFloor" unique_id=238890183]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/ArcadeFloor" unique_id=1213520725]
 mesh = SubResource("BoxMesh_v0j5v")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/ArcadeFloor" unique_id=526981027]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/ArcadeFloor" unique_id=1812880874]
 shape = SubResource("BoxShape3D_060aq")
 
-[node name="RidePlatform" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=1214774813]
+[node name="RidePlatform" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=467301049]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, -0.4, -13)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/RidePlatform" unique_id=973699395]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/RidePlatform" unique_id=1709238411]
 mesh = SubResource("BoxMesh_l4elp")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/RidePlatform" unique_id=1272169865]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/RidePlatform" unique_id=1888578794]
 shape = SubResource("BoxShape3D_uu776")
 
-[node name="EntranceWalk" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=1544020047]
+[node name="EntranceWalk" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=315064756]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -0.4, 27.5)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/EntranceWalk" unique_id=1822871689]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/EntranceWalk" unique_id=355148258]
 mesh = SubResource("BoxMesh_ihykp")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/EntranceWalk" unique_id=1201252731]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/EntranceWalk" unique_id=652151253]
 shape = SubResource("BoxShape3D_182qj")
 
-[node name="ServiceRamp" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=381669584]
+[node name="ServiceRamp" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=838371710]
 transform = Transform3D(1, 0, 0, 0, 0.9773231, 0.21175334, 0, -0.21175334, 0.9773231, -10, -1.6909292, -29.915298)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/ServiceRamp" unique_id=715057837]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/ServiceRamp" unique_id=1855249894]
 mesh = SubResource("BoxMesh_7fxh0")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/ServiceRamp" unique_id=1428934454]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/ServiceRamp" unique_id=2015814347]
 shape = SubResource("BoxShape3D_jtcvl")
 
-[node name="RampLanding" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=245759349]
+[node name="RampLanding" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Decks" unique_id=1285320012]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -3, -38.5)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/RampLanding" unique_id=738533035]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/Decks/RampLanding" unique_id=808909461]
 mesh = SubResource("BoxMesh_lpjio")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/RampLanding" unique_id=416648469]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Decks/RampLanding" unique_id=31168543]
 shape = SubResource("BoxShape3D_gdkwm")
 
-[node name="Rails" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=1691506818]
+[node name="Rails" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=194159031]
 
-[node name="RailOcean" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=744428035]
+[node name="RailOcean" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=721643359]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 14, 0, -16)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=496167375]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1498913174]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_5k46h")
 
 [node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1761385299 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -36.48, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1051912960 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1768378351 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -33.44, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=2048467328 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=654482659 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -30.4, 0, 0)
 
-[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=2085189705 instance=ExtResource("6_2r2j2")]
+[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1978106845 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -27.36, 0, 0)
 
-[node name="Module04" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1666876165 instance=ExtResource("6_2r2j2")]
+[node name="Module04" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1312736501 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -24.32, 0, 0)
 
-[node name="Module05" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=74830861 instance=ExtResource("6_2r2j2")]
+[node name="Module05" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1849772650 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -21.28, 0, 0)
 
-[node name="Module06" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=334544974 instance=ExtResource("6_2r2j2")]
+[node name="Module06" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1424399153 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -18.24, 0, 0)
 
-[node name="Module07" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=27847861 instance=ExtResource("6_2r2j2")]
+[node name="Module07" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=712724626 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -15.2, 0, 0)
 
-[node name="Module08" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=664075308 instance=ExtResource("6_2r2j2")]
+[node name="Module08" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=319372860 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -12.16, 0, 0)
 
-[node name="Module09" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=2015754753 instance=ExtResource("6_2r2j2")]
+[node name="Module09" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=111837221 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -9.12, 0, 0)
 
-[node name="Module10" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1991659537 instance=ExtResource("6_2r2j2")]
+[node name="Module10" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=2068621935 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -6.08, 0, 0)
 
-[node name="Module11" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1599235560 instance=ExtResource("6_2r2j2")]
+[node name="Module11" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1176037731 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, -3.04, 0, 0)
 
-[node name="Module12" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=806038096 instance=ExtResource("6_2r2j2")]
+[node name="Module12" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1391741226 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
-[node name="Module13" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=369854349 instance=ExtResource("6_2r2j2")]
+[node name="Module13" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=505788424 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 3.04, 0, 0)
 
-[node name="Module14" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=153469403 instance=ExtResource("6_2r2j2")]
+[node name="Module14" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=11488427 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 6.08, 0, 0)
 
-[node name="Module15" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=768628973 instance=ExtResource("6_2r2j2")]
+[node name="Module15" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=615706302 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 9.12, 0, 0)
 
-[node name="Module16" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=739600368 instance=ExtResource("6_2r2j2")]
+[node name="Module16" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1524148891 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 12.16, 0, 0)
 
-[node name="Module17" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=769382447 instance=ExtResource("6_2r2j2")]
+[node name="Module17" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1746992985 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 15.2, 0, 0)
 
-[node name="Module18" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=740230861 instance=ExtResource("6_2r2j2")]
+[node name="Module18" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=714865190 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 18.24, 0, 0)
 
-[node name="Module19" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1062402917 instance=ExtResource("6_2r2j2")]
+[node name="Module19" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1184770790 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 21.28, 0, 0)
 
-[node name="Module20" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1318498653 instance=ExtResource("6_2r2j2")]
+[node name="Module20" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=2008533788 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 24.32, 0, 0)
 
-[node name="Module21" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1829858553 instance=ExtResource("6_2r2j2")]
+[node name="Module21" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=82090137 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 27.36, 0, 0)
 
-[node name="Module22" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1987736977 instance=ExtResource("6_2r2j2")]
+[node name="Module22" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=372805758 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 30.4, 0, 0)
 
-[node name="Module23" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=710979767 instance=ExtResource("6_2r2j2")]
+[node name="Module23" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1821207814 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 33.44, 0, 0)
 
-[node name="Module24" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1406367618 instance=ExtResource("6_2r2j2")]
+[node name="Module24" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailOcean" unique_id=1374631317 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.0133333, 0, 0, 0, 1, 0, 0, 0, 1, 36.48, 0, 0)
 
-[node name="RailFrontLeft" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=304533561]
+[node name="RailFrontLeft" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=271258753]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 0, 22)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=27528515]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=1513571143]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_vkxde")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=1681262923 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=1753022755 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9444444, 0, 0, 0, 1, 0, 0, 0, 1, -7.0833335, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=135644625 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=1774483445 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9444444, 0, 0, 0, 1, 0, 0, 0, 1, -4.25, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=1131021245 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=880090270 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9444444, 0, 0, 0, 1, 0, 0, 0, 1, -1.4166666, 0, 0)
 
-[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=605994322 instance=ExtResource("6_2r2j2")]
+[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=1262450707 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9444444, 0, 0, 0, 1, 0, 0, 0, 1, 1.4166666, 0, 0)
 
-[node name="Module04" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=2118557846 instance=ExtResource("6_2r2j2")]
+[node name="Module04" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=1472782680 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9444444, 0, 0, 0, 1, 0, 0, 0, 1, 4.25, 0, 0)
 
-[node name="Module05" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=1093057523 instance=ExtResource("6_2r2j2")]
+[node name="Module05" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontLeft" unique_id=1642328319 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9444444, 0, 0, 0, 1, 0, 0, 0, 1, 7.0833335, 0, 0)
 
-[node name="RailFrontRight" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=423424779]
+[node name="RailFrontRight" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=749508676]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 22)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontRight" unique_id=1552505250]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontRight" unique_id=800079211]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_aeg6w")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontRight" unique_id=765157766 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontRight" unique_id=1114091773 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontRight" unique_id=52872422 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontRight" unique_id=1234056781 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontRight" unique_id=444864099 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontRight" unique_id=33431689 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
 
-[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontRight" unique_id=8090840 instance=ExtResource("6_2r2j2")]
+[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailFrontRight" unique_id=1592898132 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
 
-[node name="RailEntranceL" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1837238180]
+[node name="RailEntranceL" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1638747478]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -8, 0, 27.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceL" unique_id=98125971]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceL" unique_id=1575844807]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_1vbwi")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceL" unique_id=1749920412 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceL" unique_id=21334756 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, -4.125, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceL" unique_id=1875678743 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceL" unique_id=1191324894 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, -1.375, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceL" unique_id=751252309 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceL" unique_id=309454345 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, 1.375, 0, 0)
 
-[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceL" unique_id=1826916316 instance=ExtResource("6_2r2j2")]
+[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceL" unique_id=1185181238 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, 4.125, 0, 0)
 
-[node name="RailEntranceR" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1851719349]
+[node name="RailEntranceR" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=668061147]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 2, 0, 27.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceR" unique_id=50680894]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceR" unique_id=670479624]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_4xixv")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceR" unique_id=491897580 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceR" unique_id=1250850934 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, -4.125, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceR" unique_id=576092711 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceR" unique_id=1721444986 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, -1.375, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceR" unique_id=1606370242 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceR" unique_id=696643725 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, 1.375, 0, 0)
 
-[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceR" unique_id=1770946111 instance=ExtResource("6_2r2j2")]
+[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailEntranceR" unique_id=921108189 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, 4.125, 0, 0)
 
-[node name="RailBackLeft" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1750295391]
+[node name="RailBackLeft" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1578286123]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19, 0, -24)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailBackLeft" unique_id=1091334907]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailBackLeft" unique_id=347802463]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_7wipk")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackLeft" unique_id=697319979 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackLeft" unique_id=1152007439 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackLeft" unique_id=2007100844 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackLeft" unique_id=2005211395 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackLeft" unique_id=217262183 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackLeft" unique_id=1120215725 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
 
-[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackLeft" unique_id=392988345 instance=ExtResource("6_2r2j2")]
+[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackLeft" unique_id=2005283385 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
 
-[node name="RailBackMid" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1862292626]
+[node name="RailBackMid" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=322432951]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -24)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=1890288009]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=1335488420]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_5iji6")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=2100803226 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=1080143393 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=470765511 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=1060061075 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=972320218 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=1390409286 instance=ExtResource("6_2r2j2")]
 
-[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=913459127 instance=ExtResource("6_2r2j2")]
+[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=1911619655 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 0)
 
-[node name="Module04" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=179288197 instance=ExtResource("6_2r2j2")]
+[node name="Module04" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailBackMid" unique_id=1966974495 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
 
-[node name="RailSpurLeft" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=310414430]
+[node name="RailSpurLeft" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1266078234]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 8, 0, -39)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=782128619]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=1164698153]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_ute8a")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=235334345 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=1369157326 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=2090139979 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=317142798 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=668862301 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=951694729 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, 0)
 
-[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=918571034 instance=ExtResource("6_2r2j2")]
+[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=112737435 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, 0)
 
-[node name="Module04" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=437657410 instance=ExtResource("6_2r2j2")]
+[node name="Module04" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=1678883568 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 
-[node name="Module05" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=2114839291 instance=ExtResource("6_2r2j2")]
+[node name="Module05" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=243935735 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
 
-[node name="Module06" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=1933946994 instance=ExtResource("6_2r2j2")]
+[node name="Module06" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=1247718300 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
 
-[node name="Module07" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=1220114819 instance=ExtResource("6_2r2j2")]
+[node name="Module07" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=1776193714 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0, 0)
 
-[node name="Module08" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=1632300733 instance=ExtResource("6_2r2j2")]
+[node name="Module08" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=495608947 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, 0, 0)
 
-[node name="Module09" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=785676832 instance=ExtResource("6_2r2j2")]
+[node name="Module09" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurLeft" unique_id=1739918019 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 0, 0)
 
-[node name="RailSpurEnd" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1816419640]
+[node name="RailSpurEnd" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=9770361]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, -54)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurEnd" unique_id=7583900]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurEnd" unique_id=524101863]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_cu7ud")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurEnd" unique_id=2107214584 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurEnd" unique_id=677446653 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurEnd" unique_id=228218583 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailSpurEnd" unique_id=2075091425 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
 
-[node name="RailLeftBack" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1342097064]
+[node name="RailLeftBack" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=912409290]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -25, 0, -21.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftBack" unique_id=679776333]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftBack" unique_id=2023344762]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_xbte3")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftBack" unique_id=364956971 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftBack" unique_id=1954829236 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.8333333, 0, 0, 0, 1, 0, 0, 0, 1, -1.25, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftBack" unique_id=225856264 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftBack" unique_id=1998514291 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.8333333, 0, 0, 0, 1, 0, 0, 0, 1, 1.25, 0, 0)
 
-[node name="RailLeftMid" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1932046129]
+[node name="RailLeftMid" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=51290979]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -25, 0, -1.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftMid" unique_id=1493487594]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftMid" unique_id=734621586]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_ybegh")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftMid" unique_id=153161872 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftMid" unique_id=865496463 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, -4.125, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftMid" unique_id=108886659 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftMid" unique_id=1826895465 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, -1.375, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftMid" unique_id=1491353427 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftMid" unique_id=1037945418 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, 1.375, 0, 0)
 
-[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftMid" unique_id=1063962575 instance=ExtResource("6_2r2j2")]
+[node name="Module03" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftMid" unique_id=1885419318 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.9166667, 0, 0, 0, 1, 0, 0, 0, 1, 4.125, 0, 0)
 
-[node name="RailLeftFront" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1036486642]
+[node name="RailLeftFront" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=2004413421]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -25, 0, 20)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftFront" unique_id=1833331500]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftFront" unique_id=1090366892]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_p1spe")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftFront" unique_id=549455073 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailLeftFront" unique_id=1827758951 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(1.3333334, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
-[node name="RailRideBack" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1258024799]
+[node name="RailRideBack" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=908460917]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, 0, -19)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailRideBack" unique_id=668553765]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailRideBack" unique_id=1099396611]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_i0ddy")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideBack" unique_id=1622302776 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideBack" unique_id=86714405 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.8888889, 0, 0, 0, 1, 0, 0, 0, 1, -2.6666667, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideBack" unique_id=960284761 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideBack" unique_id=1188182586 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.8888889, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideBack" unique_id=1239029155 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideBack" unique_id=2067740434 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.8888889, 0, 0, 0, 1, 0, 0, 0, 1, 2.6666667, 0, 0)
 
-[node name="RailRideFront" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=1417302255]
+[node name="RailRideFront" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Rails" unique_id=2114343552]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, 0, -7)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailRideFront" unique_id=1377413270]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Rails/RailRideFront" unique_id=1276274375]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_ag7ip")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideFront" unique_id=1490259599 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideFront" unique_id=620633133 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.8888889, 0, 0, 0, 1, 0, 0, 0, 1, -2.6666667, 0, 0)
 
-[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideFront" unique_id=85697977 instance=ExtResource("6_2r2j2")]
+[node name="Module01" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideFront" unique_id=128583751 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.8888889, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
-[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideFront" unique_id=925641331 instance=ExtResource("6_2r2j2")]
+[node name="Module02" type="Node3D" parent="NavigationRegion3D/Geometry/Rails/RailRideFront" unique_id=2044890146 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.8888889, 0, 0, 0, 1, 0, 0, 0, 1, 2.6666667, 0, 0)
 
-[node name="RampWalls" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=53039331]
+[node name="RampWalls" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=1054095971]
 
-[node name="RampWallL" type="StaticBody3D" parent="NavigationRegion3D/Geometry/RampWalls" unique_id=791509948]
+[node name="RampWallL" type="StaticBody3D" parent="NavigationRegion3D/Geometry/RampWalls" unique_id=1257232140]
 transform = Transform3D(1, 0, 0, 0, 0.9773231, 0.21175334, 0, -0.21175334, 0.9773231, -13, -0.65, -30)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/RampWalls/RampWallL" unique_id=1103218882]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/RampWalls/RampWallL" unique_id=194790823]
 mesh = SubResource("BoxMesh_f2yml")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/RampWalls/RampWallL" unique_id=67966940]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/RampWalls/RampWallL" unique_id=528678084]
 shape = SubResource("BoxShape3D_5ygbt")
 
-[node name="LandingWallL" type="StaticBody3D" parent="NavigationRegion3D/Geometry/RampWalls" unique_id=1671669608]
+[node name="LandingWallL" type="StaticBody3D" parent="NavigationRegion3D/Geometry/RampWalls" unique_id=1181648876]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, -1.95, -38.5)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/RampWalls/LandingWallL" unique_id=1817085174]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/RampWalls/LandingWallL" unique_id=1993330434]
 mesh = SubResource("BoxMesh_7k2r3")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/RampWalls/LandingWallL" unique_id=238238430]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/RampWalls/LandingWallL" unique_id=1157518779]
 shape = SubResource("BoxShape3D_22x32")
 
-[node name="RampWallR" type="StaticBody3D" parent="NavigationRegion3D/Geometry/RampWalls" unique_id=602295024]
+[node name="RampWallR" type="StaticBody3D" parent="NavigationRegion3D/Geometry/RampWalls" unique_id=116821488]
 transform = Transform3D(1, 0, 0, 0, 0.9773231, 0.21175334, 0, -0.21175334, 0.9773231, -7, -0.65, -30)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/RampWalls/RampWallR" unique_id=290417258]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/RampWalls/RampWallR" unique_id=543225762]
 mesh = SubResource("BoxMesh_f2yml")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/RampWalls/RampWallR" unique_id=460698299]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/RampWalls/RampWallR" unique_id=652137116]
 shape = SubResource("BoxShape3D_8kc1a")
 
-[node name="LandingWallR" type="StaticBody3D" parent="NavigationRegion3D/Geometry/RampWalls" unique_id=1463445223]
+[node name="LandingWallR" type="StaticBody3D" parent="NavigationRegion3D/Geometry/RampWalls" unique_id=101601997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, -1.95, -38.5)
 
-[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/RampWalls/LandingWallR" unique_id=140859951]
+[node name="Mesh" type="MeshInstance3D" parent="NavigationRegion3D/Geometry/RampWalls/LandingWallR" unique_id=564523529]
 mesh = SubResource("BoxMesh_7k2r3")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/RampWalls/LandingWallR" unique_id=1997419225]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/RampWalls/LandingWallR" unique_id=1033081658]
 shape = SubResource("BoxShape3D_rd836")
 
-[node name="Entrances" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=1790415371]
+[node name="Entrances" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=1762519425]
 
 [node name="Arcade" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1457152205 instance=ExtResource("7_qnvn4")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -29, 0, 11)
 
-[node name="ArcadeBack" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=299409860]
+[node name="ArcadeBack" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=873662756]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33, 3, 11)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ArcadeBack" unique_id=307744327]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ArcadeBack" unique_id=1285202451]
 shape = SubResource("BoxShape3D_6711t")
 
-[node name="ArcadeSideA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1069830590]
+[node name="ArcadeSideA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1819747767]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, 3, 4)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ArcadeSideA" unique_id=190061126]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ArcadeSideA" unique_id=188707838]
 shape = SubResource("BoxShape3D_r7f7x")
 
-[node name="ArcadeSideB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1110854375]
+[node name="ArcadeSideB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=875261730]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, 3, 18)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ArcadeSideB" unique_id=327668551]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ArcadeSideB" unique_id=1834501196]
 shape = SubResource("BoxShape3D_q1w3j")
 
-[node name="ArcadeFrontA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=226131082]
+[node name="ArcadeFrontA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1670063134]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 3, 4.8)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ArcadeFrontA" unique_id=2062083742]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ArcadeFrontA" unique_id=1414229475]
 shape = SubResource("BoxShape3D_21gbi")
 
-[node name="ArcadeFrontB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=253490084]
+[node name="ArcadeFrontB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=840388940]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 3, 17.2)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ArcadeFrontB" unique_id=1194079837]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ArcadeFrontB" unique_id=702632011]
 shape = SubResource("BoxShape3D_itb01")
 
 [node name="RideGate" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=2092256349 instance=ExtResource("8_xykvq")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -25, 0, -13)
 
-[node name="RideGatePostA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1043012442]
+[node name="RideGatePostA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=72725894]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 2.5, -16.6)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/RideGatePostA" unique_id=1682415007]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/RideGatePostA" unique_id=202263078]
 shape = SubResource("BoxShape3D_8y1ak")
 
-[node name="RideGatePostB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=157678709]
+[node name="RideGatePostB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1448096619]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 2.5, -9.4)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/RideGatePostB" unique_id=1957354012]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/RideGatePostB" unique_id=697654347]
 shape = SubResource("BoxShape3D_8kwnp")
 
-[node name="RideGateFenceA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=568080383]
+[node name="RideGateFenceA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1860943021]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -25, 0, -18)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/RideGateFenceA" unique_id=872164466]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/RideGateFenceA" unique_id=1020441076]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_6jidj")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances/RideGateFenceA" unique_id=1779274093 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances/RideGateFenceA" unique_id=535574107 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.6666667, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
-[node name="RideGateFenceB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1673017266]
+[node name="RideGateFenceB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1739308447]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -25, 0, -8)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/RideGateFenceB" unique_id=1535977132]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/RideGateFenceB" unique_id=485454593]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_gmii4")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances/RideGateFenceB" unique_id=196446841 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances/RideGateFenceB" unique_id=1495836061 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.6666667, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
-[node name="RidePlatformBack" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1948365967]
+[node name="RidePlatformBack" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1792018655]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33, 1.5, -13)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/RidePlatformBack" unique_id=1960851313]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/RidePlatformBack" unique_id=1129727925]
 shape = SubResource("BoxShape3D_ut1rt")
 
 [node name="ServiceDoor" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1251589547 instance=ExtResource("9_2miq6")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -2.6, -41)
 
-[node name="ServiceDoorWall" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=200438455]
+[node name="ServiceDoorWall" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=748053564]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -0.6, -41.2)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ServiceDoorWall" unique_id=1100414506]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/ServiceDoorWall" unique_id=919583954]
 shape = SubResource("BoxShape3D_1dau7")
 
 [node name="PierEntrance" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=733154662 instance=ExtResource("10_7yfta")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -3, 0, 22)
 
-[node name="EntrancePostA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=458026698]
+[node name="EntrancePostA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=319216087]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 2.5, 22)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/EntrancePostA" unique_id=839485806]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/EntrancePostA" unique_id=686714891]
 shape = SubResource("BoxShape3D_g3kfh")
 
-[node name="EntrancePostB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=392641581]
+[node name="EntrancePostB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=2026545278]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 2.5, 22)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/EntrancePostB" unique_id=1449883588]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/EntrancePostB" unique_id=2015339004]
 shape = SubResource("BoxShape3D_tt6jv")
 
-[node name="EntranceFenceA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1271397615]
+[node name="EntranceFenceA" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1422348228]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, 22)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/EntranceFenceA" unique_id=765110258]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/EntranceFenceA" unique_id=1566874064]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_a2y8c")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances/EntranceFenceA" unique_id=1783992337 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances/EntranceFenceA" unique_id=944044515 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.33333334, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
-[node name="EntranceFenceB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=961767155]
+[node name="EntranceFenceB" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1342767471]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 22)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/EntranceFenceB" unique_id=797095036]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/EntranceFenceB" unique_id=1798140979]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
 shape = SubResource("BoxShape3D_5ipst")
 
-[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances/EntranceFenceB" unique_id=1733006557 instance=ExtResource("6_2r2j2")]
+[node name="Module00" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances/EntranceFenceB" unique_id=1238968174 instance=ExtResource("6_2r2j2")]
 transform = Transform3D(0.33333334, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="Gatehouse" type="Node3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=561758318 instance=ExtResource("11_eiwbk")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -3, 0, 33)
 
-[node name="GatehouseWall" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=764027724]
+[node name="GatehouseWall" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Entrances" unique_id=1570014536]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 3, 33.2)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/GatehouseWall" unique_id=94152782]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Entrances/GatehouseWall" unique_id=1787842380]
 shape = SubResource("BoxShape3D_7700i")
 
-[node name="Props" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=1707853362]
+[node name="Props" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=475040099]
 
-[node name="Kiosk" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=732215829 instance=ExtResource("12_de8o5")]
+[node name="Kiosk" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1752755991 instance=ExtResource("12_de8o5")]
 script = ExtResource("13_ujj4v")
 
 [node name="BoothA" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=824575692 instance=ExtResource("14_tv7xw")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -23.2, 0, -3.6)
 
-[node name="BoothACollision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=73678466]
+[node name="BoothACollision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1728905775]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.2, 1.8, -3.6)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/BoothACollision" unique_id=462284931]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/BoothACollision" unique_id=370128486]
 shape = SubResource("BoxShape3D_x1hsx")
 
-[node name="BoothB" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=887428898 instance=ExtResource("14_tv7xw")]
+[node name="BoothB" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1575324278 instance=ExtResource("14_tv7xw")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -23.2, 0, 1.4)
 
-[node name="BoothBCollision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=879042839]
+[node name="BoothBCollision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=912815049]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.2, 1.8, 1.4)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/BoothBCollision" unique_id=74353618]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/BoothBCollision" unique_id=793051298]
 shape = SubResource("BoxShape3D_u8qin")
 
 [node name="Planter0" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=531039210 instance=ExtResource("15_02dkp")]
 transform = Transform3D(0.90630776, 0, 0.42261827, 0, 1, 0, -0.42261827, 0, 0.90630776, -12.5, 0, 10.5)
 
-[node name="Planter0Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=153651602]
+[node name="Planter0Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=406521956]
 transform = Transform3D(0.90630776, 0, 0.42261827, 0, 1, 0, -0.42261827, 0, 0.90630776, -12.5, 0.5, 10.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter0Collision" unique_id=1249102091]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter0Collision" unique_id=835954468]
 shape = SubResource("BoxShape3D_wg1f2")
 
-[node name="Palm0Trunk" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=840514734]
+[node name="Palm0Trunk" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=127812345]
 transform = Transform3D(0.90630776, 0, 0.42261827, 0, 1, 0, -0.42261827, 0, 0.90630776, -12.5, 2.5, 10.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Palm0Trunk" unique_id=219259096]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Palm0Trunk" unique_id=1941496689]
 shape = SubResource("BoxShape3D_d41g6")
 
-[node name="Planter1" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=865228028 instance=ExtResource("15_02dkp")]
+[node name="Planter1" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=718881654 instance=ExtResource("15_02dkp")]
 transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, -13.5, 0, -11.5)
 
-[node name="Planter1Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=404491067]
+[node name="Planter1Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=632593039]
 transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, -13.5, 0.5, -11.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter1Collision" unique_id=1281503109]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter1Collision" unique_id=797490302]
 shape = SubResource("BoxShape3D_v8wsv")
 
-[node name="Palm1Trunk" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1513261631]
+[node name="Palm1Trunk" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1112369115]
 transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, -13.5, 2.5, -11.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Palm1Trunk" unique_id=797037581]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Palm1Trunk" unique_id=2067858459]
 shape = SubResource("BoxShape3D_o8flh")
 
-[node name="Planter2" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=12959970 instance=ExtResource("15_02dkp")]
+[node name="Planter2" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=960773966 instance=ExtResource("15_02dkp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 0, 18.4)
 
-[node name="Planter2Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1112257326]
+[node name="Planter2Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=65212688]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 0.5, 18.4)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter2Collision" unique_id=1043054732]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter2Collision" unique_id=292148428]
 shape = SubResource("BoxShape3D_irua1")
 
-[node name="Palm2Trunk" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1461052495]
+[node name="Palm2Trunk" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=959152345]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 2.5, 18.4)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Palm2Trunk" unique_id=1328294318]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Palm2Trunk" unique_id=716401308]
 shape = SubResource("BoxShape3D_6mfst")
 
-[node name="Planter3" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=588710297 instance=ExtResource("15_02dkp")]
+[node name="Planter3" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=972569091 instance=ExtResource("15_02dkp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -20.5)
 
-[node name="Planter3Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=764507641]
+[node name="Planter3Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=826260353]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.5, -20.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter3Collision" unique_id=508287415]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter3Collision" unique_id=1307353113]
 shape = SubResource("BoxShape3D_ecwmb")
 
-[node name="Planter4" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1270036614 instance=ExtResource("15_02dkp")]
+[node name="Planter4" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=170465615 instance=ExtResource("15_02dkp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0, 20)
 
-[node name="Planter4Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=872808284]
+[node name="Planter4Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=721864340]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0.5, 20)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter4Collision" unique_id=577360965]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter4Collision" unique_id=1739511141]
 shape = SubResource("BoxShape3D_nnrka")
 
-[node name="Palm4Trunk" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=510676696]
+[node name="Palm4Trunk" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=528152732]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 2.5, 20)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Palm4Trunk" unique_id=1073753767]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Palm4Trunk" unique_id=1965926836]
 shape = SubResource("BoxShape3D_qg04f")
 
-[node name="Planter5" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1813415654 instance=ExtResource("15_02dkp")]
+[node name="Planter5" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1870223561 instance=ExtResource("15_02dkp")]
 transform = Transform3D(0.8480481, 0, -0.52991927, 0, 1, 0, 0.52991927, 0, 0.8480481, 0.6, 0, 12.8)
 
-[node name="Planter5Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=57418915]
+[node name="Planter5Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1591913161]
 transform = Transform3D(0.8480481, 0, -0.52991927, 0, 1, 0, 0.52991927, 0, 0.8480481, 0.6, 0.5, 12.8)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter5Collision" unique_id=869071423]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter5Collision" unique_id=1413509111]
 shape = SubResource("BoxShape3D_k2hkr")
 
 [node name="Bench0" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1876905396 instance=ExtResource("16_ug2ud")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 13, 0, 6.5)
 
-[node name="Bench0Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1590477884]
+[node name="Bench0Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1251731738]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.45, 6.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bench0Collision" unique_id=1390716101]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bench0Collision" unique_id=241977570]
 shape = SubResource("BoxShape3D_7gqdt")
 
-[node name="Bench1" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=637925261 instance=ExtResource("16_ug2ud")]
+[node name="Bench1" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=2095001866 instance=ExtResource("16_ug2ud")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 13, 0, -7)
 
-[node name="Bench1Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1810921200]
+[node name="Bench1Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=951628295]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.45, -7)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bench1Collision" unique_id=494227852]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bench1Collision" unique_id=1436727662]
 shape = SubResource("BoxShape3D_qqql2")
 
-[node name="Bench2" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=677329567 instance=ExtResource("16_ug2ud")]
+[node name="Bench2" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1481154375 instance=ExtResource("16_ug2ud")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 13, 0, -19)
 
-[node name="Bench2Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=110908695]
+[node name="Bench2Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1263803018]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.45, -19)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bench2Collision" unique_id=495696894]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bench2Collision" unique_id=792767064]
 shape = SubResource("BoxShape3D_jysql")
 
 [node name="Bin0" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=434808540 instance=ExtResource("17_w630n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.1, 0, 8.4)
 
-[node name="Bin0Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1500236360]
+[node name="Bin0Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=72296845]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.1, 0.55, 8.4)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bin0Collision" unique_id=1382866812]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bin0Collision" unique_id=539310712]
 shape = SubResource("BoxShape3D_gtgns")
 
-[node name="Bin1" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=528405110 instance=ExtResource("17_w630n")]
+[node name="Bin1" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=128657485 instance=ExtResource("17_w630n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.1, 0, -5.1)
 
-[node name="Bin1Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=990590633]
+[node name="Bin1Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=405463033]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.1, 0.55, -5.1)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bin1Collision" unique_id=1965492115]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bin1Collision" unique_id=1953659505]
 shape = SubResource("BoxShape3D_exex5")
 
-[node name="Bin2" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1047209851 instance=ExtResource("17_w630n")]
+[node name="Bin2" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=2141765777 instance=ExtResource("17_w630n")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.1, 0, -17.1)
 
-[node name="Bin2Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=788566334]
+[node name="Bin2Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=454400892]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.1, 0.55, -17.1)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bin2Collision" unique_id=1794367005]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Bin2Collision" unique_id=357036388]
 shape = SubResource("BoxShape3D_22xey")
 
 [node name="PopcornCart" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1882804837 instance=ExtResource("18_pfhwd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -20.5, 0, -21.2)
 
-[node name="PopcornCartCollision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=2081802763]
+[node name="PopcornCartCollision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=2094712423]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 1, -21.2)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/PopcornCartCollision" unique_id=924440260]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/PopcornCartCollision" unique_id=1506191479]
 shape = SubResource("BoxShape3D_ho7se")
 
-[node name="Lamp00Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1227752223]
+[node name="Lamp00Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=461902469]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.6, 2.5, 14)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp00Collision" unique_id=1164539345]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp00Collision" unique_id=891332937]
 shape = SubResource("BoxShape3D_nx207")
 
-[node name="Lamp01Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1845821882]
+[node name="Lamp01Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1970331498]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.6, 2.5, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp01Collision" unique_id=465047535]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp01Collision" unique_id=964772753]
 shape = SubResource("BoxShape3D_wn4xk")
 
-[node name="Lamp02Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1138951297]
+[node name="Lamp02Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1863502037]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.6, 2.5, -14)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp02Collision" unique_id=780086304]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp02Collision" unique_id=1501479288]
 shape = SubResource("BoxShape3D_ol1cp")
 
-[node name="Lamp03Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=849008082]
+[node name="Lamp03Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1115658442]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.6, 2.5, -28)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp03Collision" unique_id=397935508]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp03Collision" unique_id=1111913188]
 shape = SubResource("BoxShape3D_w40w1")
 
-[node name="Lamp04Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=279116704]
+[node name="Lamp04Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=505913089]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.6, 2.5, -42)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp04Collision" unique_id=785054215]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp04Collision" unique_id=641448013]
 shape = SubResource("BoxShape3D_pfxqn")
 
-[node name="Lamp05Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=162870314]
+[node name="Lamp05Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1684311165]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.4, 2.5, -35)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp05Collision" unique_id=1237419067]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp05Collision" unique_id=1476109074]
 shape = SubResource("BoxShape3D_4y11w")
 
-[node name="Lamp06Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1919250515]
+[node name="Lamp06Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=947480258]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.4, 2.5, -49)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp06Collision" unique_id=74739237]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp06Collision" unique_id=874383903]
 shape = SubResource("BoxShape3D_s7o3n")
 
-[node name="Lamp07Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1459197186]
+[node name="Lamp07Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=491384424]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.6, 2.5, 20.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp07Collision" unique_id=179202469]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp07Collision" unique_id=555252570]
 shape = SubResource("BoxShape3D_ysqtv")
 
-[node name="Lamp08Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=50683630]
+[node name="Lamp08Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=643302881]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.6, 2.5, -21.5)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp08Collision" unique_id=1276409881]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp08Collision" unique_id=1047655888]
 shape = SubResource("BoxShape3D_yroc6")
 
-[node name="Lamp09Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=752789671]
+[node name="Lamp09Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=613370301]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.6, 2.5, -1.1)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp09Collision" unique_id=1920847955]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp09Collision" unique_id=1891396185]
 shape = SubResource("BoxShape3D_1nmot")
 
-[node name="Lamp10Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1703850518]
+[node name="Lamp10Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=793849430]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 2.5, -23.6)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp10Collision" unique_id=1482276777]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp10Collision" unique_id=2016963547]
 shape = SubResource("BoxShape3D_q2j4g")
 
-[node name="Lamp11Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=171414391]
+[node name="Lamp11Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=291423990]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 2.5, -23.6)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp11Collision" unique_id=918663824]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp11Collision" unique_id=922925966]
 shape = SubResource("BoxShape3D_jfa36")
 
-[node name="Lamp12Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1726365855]
+[node name="Lamp12Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=2077252873]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 2.5, -23.6)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp12Collision" unique_id=1869293799]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp12Collision" unique_id=1965521507]
 shape = SubResource("BoxShape3D_k6rf6")
 
-[node name="Lamp13Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=147662906]
+[node name="Lamp13Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=240170075]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 2.5, 21.6)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp13Collision" unique_id=559219916]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp13Collision" unique_id=102887988]
 shape = SubResource("BoxShape3D_5b6u6")
 
-[node name="Lamp14Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1329986447]
+[node name="Lamp14Collision" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=449770878]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2.5, 21.6)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp14Collision" unique_id=1475327987]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Lamp14Collision" unique_id=872850205]
 shape = SubResource("BoxShape3D_wt4ol")
 
-[node name="Portal" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=1247146317 instance=ExtResource("19_5hyit")]
+[node name="Portal" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=623847419 instance=ExtResource("19_5hyit")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, -51)
 script = ExtResource("20_y1534")
 
-[node name="Dressing" type="Node3D" parent="." unique_id=1061925603]
+[node name="Dressing" type="Node3D" parent="." unique_id=1833583424]
 
-[node name="Pylons" type="Node3D" parent="Dressing" unique_id=1202405315]
+[node name="Pylons" type="Node3D" parent="Dressing" unique_id=1099507022]
 
-[node name="Pylon00" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1956545670]
+[node name="Pylon00" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=311468359]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -4.3, -24)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon01" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1897997743]
+[node name="Pylon01" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1941992232]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -4.3, -17)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon02" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1673339573]
+[node name="Pylon02" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1050226946]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -4.3, -10)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon03" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1061994301]
+[node name="Pylon03" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1667112764]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -4.3, -3)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon04" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=2039490919]
+[node name="Pylon04" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=830174893]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -4.3, 4)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon05" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1197176615]
+[node name="Pylon05" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1882628558]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -4.3, 11)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon06" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=746134801]
+[node name="Pylon06" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=306734419]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -4.3, 18)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon07" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=461836193]
+[node name="Pylon07" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=2005912997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, -4.3, -24)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon08" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1864139830]
+[node name="Pylon08" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=201563404]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, -4.3, -17)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon09" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=384783523]
+[node name="Pylon09" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=16411804]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, -4.3, -10)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon10" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=2121237066]
+[node name="Pylon10" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1381297252]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, -4.3, -3)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon11" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=737454430]
+[node name="Pylon11" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=566495807]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, -4.3, 4)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon12" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1099971113]
+[node name="Pylon12" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=982883241]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, -4.3, 11)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon13" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=305618440]
+[node name="Pylon13" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1933758760]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, -4.3, 18)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon14" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1216573489]
+[node name="Pylon14" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1318000025]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -4.3, -24)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon15" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=646503923]
+[node name="Pylon15" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=61811484]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -4.3, -17)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon16" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1973176853]
+[node name="Pylon16" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1257990585]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -4.3, -10)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon17" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=22763984]
+[node name="Pylon17" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1477210332]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -4.3, -3)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon18" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=121679087]
+[node name="Pylon18" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1461705046]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -4.3, 4)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon19" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=2018638051]
+[node name="Pylon19" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1362418890]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -4.3, 11)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon20" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=340258312]
+[node name="Pylon20" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1916115807]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -4.3, 18)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon21" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1021113052]
+[node name="Pylon21" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1998113626]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -4.3, -24)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon22" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1415049021]
+[node name="Pylon22" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1459208991]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -4.3, -17)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon23" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1834214038]
+[node name="Pylon23" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=147810854]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -4.3, -10)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon24" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1278570415]
+[node name="Pylon24" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=811791612]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -4.3, -3)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon25" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1478066897]
+[node name="Pylon25" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=624206642]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -4.3, 4)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon26" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=73331216]
+[node name="Pylon26" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1240968411]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -4.3, 11)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon27" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1336939796]
+[node name="Pylon27" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1470489774]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -4.3, 18)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon28" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=499463849]
+[node name="Pylon28" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1419702796]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -4.3, -24)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon29" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1593493341]
+[node name="Pylon29" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1623096683]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -4.3, -17)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon30" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=690548202]
+[node name="Pylon30" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=231231831]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -4.3, -10)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon31" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1053125358]
+[node name="Pylon31" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=994333255]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -4.3, -3)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon32" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=412258350]
+[node name="Pylon32" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=594608475]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -4.3, 4)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon33" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=2013454129]
+[node name="Pylon33" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=346457349]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -4.3, 11)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon34" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1322231470]
+[node name="Pylon34" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=15243446]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -4.3, 18)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon35" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=719328321]
+[node name="Pylon35" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=984414933]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, -52)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon36" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=497904529]
+[node name="Pylon36" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1702730774]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, -45)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon37" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1761647591]
+[node name="Pylon37" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=805706560]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, -38)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon38" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1651257190]
+[node name="Pylon38" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1502112293]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, -31)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon39" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=2011504348]
+[node name="Pylon39" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1694626583]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, -24)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon40" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1243569887]
+[node name="Pylon40" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1705991371]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, -17)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon41" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=925507598]
+[node name="Pylon41" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=2047946391]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, -10)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon42" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1823922712]
+[node name="Pylon42" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=525844795]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, -3)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon43" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=106805650]
+[node name="Pylon43" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1595266285]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, 4)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon44" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1943055611]
+[node name="Pylon44" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1709847391]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, 11)
 mesh = SubResource("CylinderMesh_k0du6")
 
-[node name="Pylon45" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1409120033]
+[node name="Pylon45" type="MeshInstance3D" parent="Dressing/Pylons" unique_id=1543823305]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.3, 18)
 mesh = SubResource("CylinderMesh_k0du6")
 
 [node name="Palm0" type="Node3D" parent="Dressing" unique_id=2004763447 instance=ExtResource("21_adm7h")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 0.6, 10.5)
 
-[node name="Palm1" type="Node3D" parent="Dressing" unique_id=1020620924 instance=ExtResource("21_adm7h")]
+[node name="Palm1" type="Node3D" parent="Dressing" unique_id=1448152412 instance=ExtResource("21_adm7h")]
 transform = Transform3D(0.39073107, 0, 0.92050487, 0, 1, 0, -0.92050487, 0, 0.39073107, -13.5, 0.6, -11.5)
 
-[node name="Palm2" type="Node3D" parent="Dressing" unique_id=2104491173 instance=ExtResource("21_adm7h")]
+[node name="Palm2" type="Node3D" parent="Dressing" unique_id=1712938563 instance=ExtResource("21_adm7h")]
 transform = Transform3D(-0.69465846, 0, 0.7193397, 0, 1, 0, -0.7193397, 0, -0.69465846, 9.5, 0.6, 18.4)
 
-[node name="Palm4" type="Node3D" parent="Dressing" unique_id=2072724919 instance=ExtResource("21_adm7h")]
+[node name="Palm4" type="Node3D" parent="Dressing" unique_id=1458959606 instance=ExtResource("21_adm7h")]
 transform = Transform3D(-0.034899287, 0, -0.99939084, 0, 1, 0, 0.99939084, 0, -0.034899287, -20.5, 0.6, 20)
 
 [node name="Surfboards" type="Node3D" parent="Dressing" unique_id=434636509 instance=ExtResource("22_hbsa4")]
@@ -1888,64 +1934,64 @@ transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 13.4
 [node name="LifeRing" type="Node3D" parent="Dressing" unique_id=359752503 instance=ExtResource("23_lev24")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 13.8, 0.75, 1.4)
 
-[node name="LifeRing2" type="Node3D" parent="Dressing" unique_id=474085534 instance=ExtResource("23_lev24")]
+[node name="LifeRing2" type="Node3D" parent="Dressing" unique_id=665718320 instance=ExtResource("23_lev24")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 13.8, 0.75, -30)
 
 [node name="Lamp00" type="Node3D" parent="Dressing" unique_id=1513487445 instance=ExtResource("24_pxil8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 13.6, 0, 14)
 
-[node name="Lamp01" type="Node3D" parent="Dressing" unique_id=1279114760 instance=ExtResource("24_pxil8")]
+[node name="Lamp01" type="Node3D" parent="Dressing" unique_id=326761230 instance=ExtResource("24_pxil8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 13.6, 0, 0)
 
-[node name="Lamp02" type="Node3D" parent="Dressing" unique_id=1379115673 instance=ExtResource("24_pxil8")]
+[node name="Lamp02" type="Node3D" parent="Dressing" unique_id=139145052 instance=ExtResource("24_pxil8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 13.6, 0, -14)
 
-[node name="Lamp03" type="Node3D" parent="Dressing" unique_id=1449865831 instance=ExtResource("24_pxil8")]
+[node name="Lamp03" type="Node3D" parent="Dressing" unique_id=738705932 instance=ExtResource("24_pxil8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 13.6, 0, -28)
 
-[node name="Lamp04" type="Node3D" parent="Dressing" unique_id=777033928 instance=ExtResource("24_pxil8")]
+[node name="Lamp04" type="Node3D" parent="Dressing" unique_id=1708077327 instance=ExtResource("24_pxil8")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 13.6, 0, -42)
 
-[node name="Lamp05" type="Node3D" parent="Dressing" unique_id=1451548028 instance=ExtResource("24_pxil8")]
+[node name="Lamp05" type="Node3D" parent="Dressing" unique_id=865426686 instance=ExtResource("24_pxil8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.4, 0, -35)
 
-[node name="Lamp06" type="Node3D" parent="Dressing" unique_id=1537759854 instance=ExtResource("24_pxil8")]
+[node name="Lamp06" type="Node3D" parent="Dressing" unique_id=343585285 instance=ExtResource("24_pxil8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.4, 0, -49)
 
-[node name="Lamp07" type="Node3D" parent="Dressing" unique_id=362372354 instance=ExtResource("24_pxil8")]
+[node name="Lamp07" type="Node3D" parent="Dressing" unique_id=1187563100 instance=ExtResource("24_pxil8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.6, 0, 20.5)
 
-[node name="Lamp08" type="Node3D" parent="Dressing" unique_id=366099917 instance=ExtResource("24_pxil8")]
+[node name="Lamp08" type="Node3D" parent="Dressing" unique_id=1330251426 instance=ExtResource("24_pxil8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.6, 0, -21.5)
 
-[node name="Lamp09" type="Node3D" parent="Dressing" unique_id=636881247 instance=ExtResource("24_pxil8")]
+[node name="Lamp09" type="Node3D" parent="Dressing" unique_id=577001593 instance=ExtResource("24_pxil8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.6, 0, -1.1)
 
-[node name="Lamp10" type="Node3D" parent="Dressing" unique_id=205671039 instance=ExtResource("24_pxil8")]
+[node name="Lamp10" type="Node3D" parent="Dressing" unique_id=1026618101 instance=ExtResource("24_pxil8")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -16, 0, -23.6)
 
-[node name="Lamp11" type="Node3D" parent="Dressing" unique_id=287170466 instance=ExtResource("24_pxil8")]
+[node name="Lamp11" type="Node3D" parent="Dressing" unique_id=1582093024 instance=ExtResource("24_pxil8")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -3, 0, -23.6)
 
-[node name="Lamp12" type="Node3D" parent="Dressing" unique_id=1259727081 instance=ExtResource("24_pxil8")]
+[node name="Lamp12" type="Node3D" parent="Dressing" unique_id=1678702474 instance=ExtResource("24_pxil8")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 5, 0, -23.6)
 
-[node name="Lamp13" type="Node3D" parent="Dressing" unique_id=106975506 instance=ExtResource("24_pxil8")]
+[node name="Lamp13" type="Node3D" parent="Dressing" unique_id=717777401 instance=ExtResource("24_pxil8")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -14, 0, 21.6)
 
-[node name="Lamp14" type="Node3D" parent="Dressing" unique_id=1412029629 instance=ExtResource("24_pxil8")]
+[node name="Lamp14" type="Node3D" parent="Dressing" unique_id=1591822705 instance=ExtResource("24_pxil8")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 7, 0, 21.6)
 
-[node name="ExitLights" type="Node3D" parent="." unique_id=1008157231]
+[node name="ExitLights" type="Node3D" parent="." unique_id=1918266212]
 
-[node name="ExitLight00" type="MeshInstance3D" parent="ExitLights" unique_id=1316936600]
+[node name="ExitLight00" type="MeshInstance3D" parent="ExitLights" unique_id=1014666181]
 transform = Transform3D(0.9612617, 0, -0.27563736, 0, 1, 0, 0.27563736, 0, 0.9612617, 8.6, 0.03, -13.5)
 material_override = SubResource("StandardMaterial3D_2ke4v")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 
-[node name="ExitLight01" type="MeshInstance3D" parent="ExitLights" unique_id=240546589]
+[node name="ExitLight01" type="MeshInstance3D" parent="ExitLights" unique_id=237099116]
 transform = Transform3D(0.9612617, 0, -0.27563736, 0, 1, 0, 0.27563736, 0, 0.9612617, 9.6, 0.03, -17)
 material_override = SubResource("StandardMaterial3D_vxefy")
 cast_shadow = 0
@@ -1953,7 +1999,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 1
 
-[node name="ExitLight02" type="MeshInstance3D" parent="ExitLights" unique_id=1853534587]
+[node name="ExitLight02" type="MeshInstance3D" parent="ExitLights" unique_id=475136391]
 transform = Transform3D(0.9612617, 0, -0.27563736, 0, 1, 0, 0.27563736, 0, 0.9612617, 10.5, 0.03, -20.5)
 material_override = SubResource("StandardMaterial3D_l6txn")
 cast_shadow = 0
@@ -1961,7 +2007,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 2
 
-[node name="ExitLight03" type="MeshInstance3D" parent="ExitLights" unique_id=802247102]
+[node name="ExitLight03" type="MeshInstance3D" parent="ExitLights" unique_id=1760664970]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -24)
 material_override = SubResource("StandardMaterial3D_kak5l")
 cast_shadow = 0
@@ -1969,7 +2015,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 3
 
-[node name="ExitLight04" type="MeshInstance3D" parent="ExitLights" unique_id=68664908]
+[node name="ExitLight04" type="MeshInstance3D" parent="ExitLights" unique_id=2118752335]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -26.4)
 material_override = SubResource("StandardMaterial3D_r0x0h")
 cast_shadow = 0
@@ -1977,7 +2023,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 4
 
-[node name="ExitLight05" type="MeshInstance3D" parent="ExitLights" unique_id=1699568172]
+[node name="ExitLight05" type="MeshInstance3D" parent="ExitLights" unique_id=476955572]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -28.8)
 material_override = SubResource("StandardMaterial3D_kqtfj")
 cast_shadow = 0
@@ -1985,7 +2031,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 5
 
-[node name="ExitLight06" type="MeshInstance3D" parent="ExitLights" unique_id=1468094137]
+[node name="ExitLight06" type="MeshInstance3D" parent="ExitLights" unique_id=409919478]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -31.2)
 material_override = SubResource("StandardMaterial3D_tvedj")
 cast_shadow = 0
@@ -1993,7 +2039,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 6
 
-[node name="ExitLight07" type="MeshInstance3D" parent="ExitLights" unique_id=1263860150]
+[node name="ExitLight07" type="MeshInstance3D" parent="ExitLights" unique_id=96790926]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -33.6)
 material_override = SubResource("StandardMaterial3D_61uum")
 cast_shadow = 0
@@ -2001,7 +2047,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 7
 
-[node name="ExitLight08" type="MeshInstance3D" parent="ExitLights" unique_id=189488053]
+[node name="ExitLight08" type="MeshInstance3D" parent="ExitLights" unique_id=285389998]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -36)
 material_override = SubResource("StandardMaterial3D_toos0")
 cast_shadow = 0
@@ -2009,7 +2055,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 8
 
-[node name="ExitLight09" type="MeshInstance3D" parent="ExitLights" unique_id=975671000]
+[node name="ExitLight09" type="MeshInstance3D" parent="ExitLights" unique_id=1445243056]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -38.4)
 material_override = SubResource("StandardMaterial3D_f2d4d")
 cast_shadow = 0
@@ -2017,7 +2063,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 9
 
-[node name="ExitLight10" type="MeshInstance3D" parent="ExitLights" unique_id=1185634619]
+[node name="ExitLight10" type="MeshInstance3D" parent="ExitLights" unique_id=1318191268]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -40.8)
 material_override = SubResource("StandardMaterial3D_f3pdf")
 cast_shadow = 0
@@ -2025,7 +2071,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 10
 
-[node name="ExitLight11" type="MeshInstance3D" parent="ExitLights" unique_id=1598428483]
+[node name="ExitLight11" type="MeshInstance3D" parent="ExitLights" unique_id=677870805]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -43.2)
 material_override = SubResource("StandardMaterial3D_dd87u")
 cast_shadow = 0
@@ -2033,7 +2079,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 11
 
-[node name="ExitLight12" type="MeshInstance3D" parent="ExitLights" unique_id=1395522223]
+[node name="ExitLight12" type="MeshInstance3D" parent="ExitLights" unique_id=1088032749]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -45.6)
 material_override = SubResource("StandardMaterial3D_txkal")
 cast_shadow = 0
@@ -2041,7 +2087,7 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 12
 
-[node name="ExitLight13" type="MeshInstance3D" parent="ExitLights" unique_id=910913946]
+[node name="ExitLight13" type="MeshInstance3D" parent="ExitLights" unique_id=668989884]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0.03, -48)
 material_override = SubResource("StandardMaterial3D_o735m")
 cast_shadow = 0
@@ -2049,382 +2095,418 @@ mesh = SubResource("BoxMesh_y78aj")
 script = ExtResource("25_7klmu")
 order = 13
 
-[node name="Backdrop" type="Node3D" parent="." unique_id=1664431003]
+[node name="Backdrop" type="Node3D" parent="." unique_id=1362449467]
 
 [node name="FerrisWheel" type="Node3D" parent="Backdrop" unique_id=1916150389 instance=ExtResource("26_67hbr")]
 transform = Transform3D(0.8323222, 0, 0.7494263, 0, 1.12, 0, -0.7494263, 0, 0.8323222, -34, 0, -29)
 script = ExtResource("27_tlffp")
 
-[node name="RideWalkway" type="MeshInstance3D" parent="Backdrop" unique_id=1860526182]
+[node name="RideWalkway" type="MeshInstance3D" parent="Backdrop" unique_id=1076772375]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, -0.4, -23)
 mesh = SubResource("BoxMesh_6vih5")
 
 [node name="Coaster" type="Node3D" parent="Backdrop" unique_id=1794296784 instance=ExtResource("28_miiik")]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, -22, -4, -64)
 
-[node name="Beach" type="MeshInstance3D" parent="Backdrop" unique_id=659207724]
+[node name="Beach" type="MeshInstance3D" parent="Backdrop" unique_id=1505375713]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -1.6, 76)
 mesh = SubResource("BoxMesh_dlihf")
 
 [node name="Shop00" type="Node3D" parent="Backdrop" unique_id=1669204156 instance=ExtResource("29_4ymdm")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -62, -0.6, 38.5)
 
-[node name="ShorePalm00" type="Node3D" parent="Backdrop" unique_id=660941467 instance=ExtResource("21_adm7h")]
+[node name="ShorePalm00" type="Node3D" parent="Backdrop" unique_id=1717143230 instance=ExtResource("21_adm7h")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56.5, -0.6, 36.5)
 
 [node name="Shop01" type="Node3D" parent="Backdrop" unique_id=2000042447 instance=ExtResource("30_mk7a3")]
 transform = Transform3D(-1.12, 0, -9.791351e-08, 0, 1.12, 0, 9.791351e-08, 0, -1.12, -51, -0.6, 38.5)
 
-[node name="ShorePalm01" type="Node3D" parent="Backdrop" unique_id=2029701222 instance=ExtResource("21_adm7h")]
+[node name="ShorePalm01" type="Node3D" parent="Backdrop" unique_id=1292094833 instance=ExtResource("21_adm7h")]
 transform = Transform3D(0.60181504, 0, 0.79863554, 0, 1, 0, -0.79863554, 0, 0.60181504, -45.5, -0.6, 36.5)
 
 [node name="Shop02" type="Node3D" parent="Backdrop" unique_id=206950378 instance=ExtResource("31_4uc44")]
 transform = Transform3D(-1.24, 0, -1.08404244e-07, 0, 1.24, 0, 1.08404244e-07, 0, -1.24, -40, -0.6, 38.5)
 
-[node name="ShorePalm02" type="Node3D" parent="Backdrop" unique_id=760247754 instance=ExtResource("21_adm7h")]
+[node name="ShorePalm02" type="Node3D" parent="Backdrop" unique_id=1361985262 instance=ExtResource("21_adm7h")]
 transform = Transform3D(-0.27563736, 0, 0.9612617, 0, 1, 0, -0.9612617, 0, -0.27563736, -34.5, -0.6, 36.5)
 
 [node name="Shop03" type="Node3D" parent="Backdrop" unique_id=1736146484 instance=ExtResource("32_u8x5k")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -29, -0.6, 38.5)
 
-[node name="ShorePalm03" type="Node3D" parent="Backdrop" unique_id=865420149 instance=ExtResource("21_adm7h")]
+[node name="ShorePalm03" type="Node3D" parent="Backdrop" unique_id=196260826 instance=ExtResource("21_adm7h")]
 transform = Transform3D(-0.93358046, 0, 0.35836792, 0, 1, 0, -0.35836792, 0, -0.93358046, -23.5, -0.6, 36.5)
 
-[node name="Shop04" type="Node3D" parent="Backdrop" unique_id=1531326039 instance=ExtResource("29_4ymdm")]
+[node name="Shop04" type="Node3D" parent="Backdrop" unique_id=673691294 instance=ExtResource("29_4ymdm")]
 transform = Transform3D(-1.12, 0, -9.791351e-08, 0, 1.12, 0, 9.791351e-08, 0, -1.12, -18, -0.6, 38.5)
 
-[node name="ShorePalm04" type="Node3D" parent="Backdrop" unique_id=2022122772 instance=ExtResource("21_adm7h")]
+[node name="ShorePalm04" type="Node3D" parent="Backdrop" unique_id=819831616 instance=ExtResource("21_adm7h")]
 transform = Transform3D(-0.8480481, 0, -0.52991927, 0, 1, 0, 0.52991927, 0, -0.8480481, -12.5, -0.6, 36.5)
 
-[node name="Shop07" type="Node3D" parent="Backdrop" unique_id=990414370 instance=ExtResource("32_u8x5k")]
+[node name="Shop07" type="Node3D" parent="Backdrop" unique_id=1992113187 instance=ExtResource("32_u8x5k")]
 transform = Transform3D(-1.12, 0, -9.791351e-08, 0, 1.12, 0, 9.791351e-08, 0, -1.12, 15, -0.6, 38.5)
 
-[node name="ShorePalm07" type="Node3D" parent="Backdrop" unique_id=1878657037 instance=ExtResource("21_adm7h")]
+[node name="ShorePalm07" type="Node3D" parent="Backdrop" unique_id=1310607259 instance=ExtResource("21_adm7h")]
 transform = Transform3D(0.98162717, 0, 0.19080904, 0, 1, 0, -0.19080904, 0, 0.98162717, 20.5, -0.6, 36.5)
 
-[node name="Shop08" type="Node3D" parent="Backdrop" unique_id=153729714 instance=ExtResource("29_4ymdm")]
+[node name="Shop08" type="Node3D" parent="Backdrop" unique_id=417458019 instance=ExtResource("29_4ymdm")]
 transform = Transform3D(-1.24, 0, -1.08404244e-07, 0, 1.24, 0, 1.08404244e-07, 0, -1.24, 26, -0.6, 38.5)
 
-[node name="ShorePalm08" type="Node3D" parent="Backdrop" unique_id=897349757 instance=ExtResource("21_adm7h")]
+[node name="ShorePalm08" type="Node3D" parent="Backdrop" unique_id=428001316 instance=ExtResource("21_adm7h")]
 transform = Transform3D(0.4383711, 0, 0.89879405, 0, 1, 0, -0.89879405, 0, 0.4383711, 31.5, -0.6, 36.5)
 
-[node name="Shop09" type="Node3D" parent="Backdrop" unique_id=461382947 instance=ExtResource("30_mk7a3")]
+[node name="Shop09" type="Node3D" parent="Backdrop" unique_id=1884732357 instance=ExtResource("30_mk7a3")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 37, -0.6, 38.5)
 
-[node name="ShorePalm09" type="Node3D" parent="Backdrop" unique_id=1522562068 instance=ExtResource("21_adm7h")]
+[node name="ShorePalm09" type="Node3D" parent="Backdrop" unique_id=1503173788 instance=ExtResource("21_adm7h")]
 transform = Transform3D(-0.45399013, 0, 0.8910067, 0, 1, 0, -0.8910067, 0, -0.45399013, 42.5, -0.6, 36.5)
 
-[node name="Shop10" type="Node3D" parent="Backdrop" unique_id=554034992 instance=ExtResource("31_4uc44")]
+[node name="Shop10" type="Node3D" parent="Backdrop" unique_id=1517203147 instance=ExtResource("31_4uc44")]
 transform = Transform3D(-1.12, 0, -9.791351e-08, 0, 1.12, 0, 9.791351e-08, 0, -1.12, 48, -0.6, 38.5)
 
-[node name="ShorePalm10" type="Node3D" parent="Backdrop" unique_id=1136910059 instance=ExtResource("21_adm7h")]
+[node name="ShorePalm10" type="Node3D" parent="Backdrop" unique_id=1008724463 instance=ExtResource("21_adm7h")]
 transform = Transform3D(-0.9848078, 0, 0.17364812, 0, 1, 0, -0.17364812, 0, -0.9848078, 53.5, -0.6, 36.5)
 
-[node name="PalmPiling0" type="MeshInstance3D" parent="Backdrop" unique_id=690801414]
+[node name="PalmPiling0" type="MeshInstance3D" parent="Backdrop" unique_id=703623884]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.9, -2.6, -3.5)
 mesh = SubResource("CylinderMesh_qw4ii")
 
-[node name="RailPalm0" type="Node3D" parent="Backdrop" unique_id=83259140 instance=ExtResource("21_adm7h")]
+[node name="RailPalm0" type="Node3D" parent="Backdrop" unique_id=1043607299 instance=ExtResource("21_adm7h")]
 transform = Transform3D(-1.1258329, 0, 0.65000004, 0, 1.3, 0, -0.65000004, 0, -1.1258329, 15.9, -0.2, -3.5)
 
-[node name="PalmPiling1" type="MeshInstance3D" parent="Backdrop" unique_id=1009823035]
+[node name="PalmPiling1" type="MeshInstance3D" parent="Backdrop" unique_id=1496436007]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.9, -2.6, -33)
 mesh = SubResource("CylinderMesh_qw4ii")
 
-[node name="RailPalm1" type="Node3D" parent="Backdrop" unique_id=2097037995 instance=ExtResource("21_adm7h")]
+[node name="RailPalm1" type="Node3D" parent="Backdrop" unique_id=1710872445 instance=ExtResource("21_adm7h")]
 transform = Transform3D(-0.99585783, 0, -0.8356238, 0, 1.3, 0, 0.8356238, 0, -0.99585783, 15.9, -0.2, -33)
 
-[node name="CornerPalm" type="Node3D" parent="Backdrop" unique_id=2123465189 instance=ExtResource("21_adm7h")]
+[node name="CornerPalm" type="Node3D" parent="Backdrop" unique_id=2108233587 instance=ExtResource("21_adm7h")]
 transform = Transform3D(-1.2685851, 0, -0.4617272, 0, 1.35, 0, 0.4617272, 0, -1.2685851, 15.6, -1.2, 17.5)
 
-[node name="StringLights" type="Node3D" parent="." unique_id=10070060]
+[node name="StringLights" type="Node3D" parent="." unique_id=1203004487]
 
-[node name="Garland00" type="Node3D" parent="StringLights" unique_id=1408247212]
+[node name="Garland00" type="Node3D" parent="StringLights" unique_id=1858452797]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland00" unique_id=1778252149]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland00" unique_id=1742476947]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_jdhcy")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland00" unique_id=2119207555]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland00" unique_id=461776142]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_ck6bc")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland00" unique_id=1885728482 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland00" unique_id=512509646 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_dw8dh")
 
-[node name="Garland01" type="Node3D" parent="StringLights" unique_id=412530080]
+[node name="Garland01" type="Node3D" parent="StringLights" unique_id=1418295613]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland01" unique_id=1924781101]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland01" unique_id=1899682549]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_jlgjo")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland01" unique_id=390681405]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland01" unique_id=1755653666]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_w6rua")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland01" unique_id=1279213144 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland01" unique_id=478969666 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_im37c")
 
-[node name="Garland02" type="Node3D" parent="StringLights" unique_id=1490909481]
+[node name="Garland02" type="Node3D" parent="StringLights" unique_id=860213562]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland02" unique_id=1707158581]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland02" unique_id=1613257161]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_1a81g")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland02" unique_id=1164210918]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland02" unique_id=192365784]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_6n53a")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland02" unique_id=279153371 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland02" unique_id=2095326633 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_ykwdh")
 
-[node name="Garland03" type="Node3D" parent="StringLights" unique_id=1155706638]
+[node name="Garland03" type="Node3D" parent="StringLights" unique_id=712875839]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland03" unique_id=100639789]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland03" unique_id=335706762]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_4hnsn")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland03" unique_id=740009989]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland03" unique_id=254512361]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_um726")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland03" unique_id=1465203841 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland03" unique_id=841421562 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_oqp1c")
 
-[node name="Garland04" type="Node3D" parent="StringLights" unique_id=768564521]
+[node name="Garland04" type="Node3D" parent="StringLights" unique_id=1398160579]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland04" unique_id=547429383]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland04" unique_id=1150356021]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_yor61")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland04" unique_id=429531661]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland04" unique_id=305885644]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_d7pvs")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland04" unique_id=1997171347 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland04" unique_id=1738300392 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_c7q30")
 
-[node name="Garland05" type="Node3D" parent="StringLights" unique_id=1853406673]
+[node name="Garland05" type="Node3D" parent="StringLights" unique_id=1676083194]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland05" unique_id=1021424178]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland05" unique_id=72860430]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_tvib1")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland05" unique_id=1536942939]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland05" unique_id=1995714934]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_vfhd1")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland05" unique_id=503602503 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland05" unique_id=1686111074 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_e5u50")
 
-[node name="Garland06" type="Node3D" parent="StringLights" unique_id=1096268566]
+[node name="Garland06" type="Node3D" parent="StringLights" unique_id=2080786124]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland06" unique_id=564487150]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland06" unique_id=891359701]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_86b6j")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland06" unique_id=1305848580]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland06" unique_id=1360066814]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_fjf2e")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland06" unique_id=625384400 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland06" unique_id=1678500588 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_1c44y")
 
-[node name="Garland07" type="Node3D" parent="StringLights" unique_id=1376735975]
+[node name="Garland07" type="Node3D" parent="StringLights" unique_id=164618469]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland07" unique_id=32917932]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland07" unique_id=1779918861]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_1twsn")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland07" unique_id=609058216]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland07" unique_id=1154064907]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_bve2y")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland07" unique_id=767584578 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland07" unique_id=1871151923 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_acyux")
 
-[node name="Garland08" type="Node3D" parent="StringLights" unique_id=632131731]
+[node name="Garland08" type="Node3D" parent="StringLights" unique_id=1564582564]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland08" unique_id=638337294]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland08" unique_id=1077421570]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_jjii3")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland08" unique_id=1498431230]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland08" unique_id=1425260984]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_e500w")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland08" unique_id=304299950 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland08" unique_id=1014405719 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_vl3jp")
 
-[node name="Garland09" type="Node3D" parent="StringLights" unique_id=1033880259]
+[node name="Garland09" type="Node3D" parent="StringLights" unique_id=761962036]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland09" unique_id=1393890267]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland09" unique_id=1702886090]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_83l5h")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland09" unique_id=946305641]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland09" unique_id=913872777]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_7fl5j")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland09" unique_id=1526987769 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland09" unique_id=874313286 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_g03tt")
 
-[node name="Garland10" type="Node3D" parent="StringLights" unique_id=914539952]
+[node name="Garland10" type="Node3D" parent="StringLights" unique_id=1059702401]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland10" unique_id=1954891482]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland10" unique_id=2131559034]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_uqjwi")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland10" unique_id=2007136460]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland10" unique_id=311555295]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_4q8k4")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland10" unique_id=1545914146 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland10" unique_id=1977399268 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_y6kjw")
 
-[node name="Garland11" type="Node3D" parent="StringLights" unique_id=76415558]
+[node name="Garland11" type="Node3D" parent="StringLights" unique_id=1548334627]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland11" unique_id=306662408]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland11" unique_id=1470317910]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_p07w0")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland11" unique_id=298371418]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland11" unique_id=433465438]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_75xfp")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland11" unique_id=1952712686 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland11" unique_id=268174209 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_ofpdy")
 
-[node name="Garland12" type="Node3D" parent="StringLights" unique_id=932269553]
+[node name="Garland12" type="Node3D" parent="StringLights" unique_id=1460517330]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland12" unique_id=162122557]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland12" unique_id=2036664658]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_p606h")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland12" unique_id=552417065]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland12" unique_id=707523684]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_ylpy0")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland12" unique_id=1203047565 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland12" unique_id=731265180 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_ccuoc")
 
-[node name="Garland13" type="Node3D" parent="StringLights" unique_id=1336526256]
+[node name="Garland13" type="Node3D" parent="StringLights" unique_id=826334041]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland13" unique_id=306615039]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland13" unique_id=1941728655]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_o1fij")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland13" unique_id=2129660338]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland13" unique_id=1191778463]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_lxurx")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland13" unique_id=400955147 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland13" unique_id=261870386 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_f3tl0")
 
-[node name="Garland14" type="Node3D" parent="StringLights" unique_id=1513558090]
+[node name="Garland14" type="Node3D" parent="StringLights" unique_id=354104323]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland14" unique_id=621344646]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland14" unique_id=859390274]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_0kejk")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland14" unique_id=859878445]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland14" unique_id=460132136]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_ldkja")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland14" unique_id=1150710424 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland14" unique_id=1311268702 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_8dcwq")
 
-[node name="Garland15" type="Node3D" parent="StringLights" unique_id=176711935]
+[node name="Garland15" type="Node3D" parent="StringLights" unique_id=1619173139]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland15" unique_id=117052821]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland15" unique_id=1987960539]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_yksfu")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland15" unique_id=590396480]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland15" unique_id=1067930311]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_c6055")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland15" unique_id=957399274 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland15" unique_id=1838781539 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_v8uvk")
 
-[node name="Garland16" type="Node3D" parent="StringLights" unique_id=911771379]
+[node name="Garland16" type="Node3D" parent="StringLights" unique_id=2031149741]
 
-[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland16" unique_id=1887971343]
+[node name="Wire" type="MultiMeshInstance3D" parent="StringLights/Garland16" unique_id=1523749986]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_5lao3")
 
-[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland16" unique_id=1424033420]
+[node name="Bulbs" type="MultiMeshInstance3D" parent="StringLights/Garland16" unique_id=1271094944]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_u40cp")
 
-[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland16" unique_id=1922717376 groups=["high_detail"]]
+[node name="Halos" type="MultiMeshInstance3D" parent="StringLights/Garland16" unique_id=1422575616 groups=["high_detail"]]
 cast_shadow = 0
 multimesh = SubResource("MultiMesh_ox44u")
 
-[node name="DeckPaint" type="Node3D" parent="." unique_id=255766584]
+[node name="DeckPaint" type="Node3D" parent="." unique_id=914559155]
 
-[node name="Stripe0" type="MeshInstance3D" parent="DeckPaint" unique_id=258716536]
+[node name="PaintedStar0" type="MeshInstance3D" parent="DeckPaint" unique_id=913759434]
+transform = Transform3D(2.16, 0, 0, 0, 2.16, 0, 0, 0, 2.16, -14, 0.014, 4)
+material_override = SubResource("StandardMaterial3D_r2mru")
+cast_shadow = 0
+mesh = SubResource("ArrayMesh_h5x8x")
+
+[node name="PaintedStar1" type="MeshInstance3D" parent="DeckPaint" unique_id=447057116]
+transform = Transform3D(1.1934912, 0, 1.5039878, 0, 1.9200001, 0, -1.5039878, 0, 1.1934912, -12, 0.014, -16)
+material_override = SubResource("StandardMaterial3D_sxhjm")
+cast_shadow = 0
+mesh = SubResource("ArrayMesh_h5x8x")
+
+[node name="PaintedStar2" type="MeshInstance3D" parent="DeckPaint" unique_id=1081900400]
+transform = Transform3D(-0.40896368, 0, 1.7529258, 0, 1.8000001, 0, -1.7529258, 0, -0.40896368, 9, 0.014, 4)
+material_override = SubResource("StandardMaterial3D_ae0xc")
+cast_shadow = 0
+mesh = SubResource("ArrayMesh_h5x8x")
+
+[node name="PaintedStar3" type="MeshInstance3D" parent="DeckPaint" unique_id=914523098]
+transform = Transform3D(-1.8443074, 0, 0.87185496, 0, 2.0400002, 0, -0.87185496, 0, -1.8443074, 4, 0.014, -16.5)
+material_override = SubResource("StandardMaterial3D_6xxmp")
+cast_shadow = 0
+mesh = SubResource("ArrayMesh_h5x8x")
+
+[node name="PaintedStar4" type="MeshInstance3D" parent="DeckPaint" unique_id=1009201660]
+transform = Transform3D(-1.5065542, 0, -0.7434342, 0, 1.6800001, 0, 0.7434342, 0, -1.5065542, -19, 0.014, 12)
+material_override = SubResource("StandardMaterial3D_it8v1")
+cast_shadow = 0
+mesh = SubResource("ArrayMesh_h5x8x")
+
+[node name="PaintedStar5" type="MeshInstance3D" parent="DeckPaint" unique_id=1394874978]
+transform = Transform3D(-0.35413697, 0, -1.6422507, 0, 1.6800001, 0, 1.6422507, 0, -0.35413697, 11, 0.014, -36)
+material_override = SubResource("StandardMaterial3D_rauxb")
+cast_shadow = 0
+mesh = SubResource("ArrayMesh_h5x8x")
+
+[node name="Stripe0" type="MeshInstance3D" parent="DeckPaint" unique_id=1530606927]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.9, 0.012, -1)
 cast_shadow = 0
-mesh = SubResource("BoxMesh_h5x8x")
+mesh = SubResource("BoxMesh_sktrf")
 
-[node name="Stripe1" type="MeshInstance3D" parent="DeckPaint" unique_id=1021188268]
+[node name="Stripe1" type="MeshInstance3D" parent="DeckPaint" unique_id=761423871]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.9, 0.012, -1)
 cast_shadow = 0
-mesh = SubResource("BoxMesh_h5x8x")
+mesh = SubResource("BoxMesh_sktrf")
 
-[node name="Stripe2" type="MeshInstance3D" parent="DeckPaint" unique_id=567732376]
+[node name="Stripe2" type="MeshInstance3D" parent="DeckPaint" unique_id=979657721]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.012, 20.9)
 cast_shadow = 0
-mesh = SubResource("BoxMesh_sxhjm")
+mesh = SubResource("BoxMesh_iieyr")
 
-[node name="Stripe3" type="MeshInstance3D" parent="DeckPaint" unique_id=1472287479]
+[node name="Stripe3" type="MeshInstance3D" parent="DeckPaint" unique_id=2100270155]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0.012, -22.9)
 cast_shadow = 0
-mesh = SubResource("BoxMesh_sxhjm")
+mesh = SubResource("BoxMesh_iieyr")
 
-[node name="Stripe4" type="MeshInstance3D" parent="DeckPaint" unique_id=1768501320]
+[node name="Stripe4" type="MeshInstance3D" parent="DeckPaint" unique_id=941593751]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.9, 0.012, -39)
 cast_shadow = 0
-mesh = SubResource("BoxMesh_ae0xc")
+mesh = SubResource("BoxMesh_h3ody")
 
-[node name="Stripe5" type="MeshInstance3D" parent="DeckPaint" unique_id=531636269]
+[node name="Stripe5" type="MeshInstance3D" parent="DeckPaint" unique_id=822984861]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.1, 0.012, -39)
 cast_shadow = 0
-mesh = SubResource("BoxMesh_ae0xc")
+mesh = SubResource("BoxMesh_h3ody")
 
-[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=689737539 groups=["player_spawn"]]
+[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=1957052530 groups=["player_spawn"]]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 4.5, 0.1, 14.5)
 
-[node name="EnemySpawns" type="Node3D" parent="." unique_id=1978156228]
+[node name="EnemySpawns" type="Node3D" parent="." unique_id=2141112096]
 
-[node name="SpawnArcade" type="Marker3D" parent="EnemySpawns" unique_id=846452375 groups=["enemy_spawn"]]
+[node name="SpawnArcade" type="Marker3D" parent="EnemySpawns" unique_id=1917180092 groups=["enemy_spawn"]]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -30, 0.1, 11)
 
-[node name="SpawnRideGate" type="Marker3D" parent="EnemySpawns" unique_id=1430993976 groups=["enemy_spawn"]]
+[node name="SpawnRideGate" type="Marker3D" parent="EnemySpawns" unique_id=1238801485 groups=["enemy_spawn"]]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -30, 0.1, -13)
 
-[node name="SpawnServiceRamp" type="Marker3D" parent="EnemySpawns" unique_id=597441099 groups=["enemy_spawn"]]
+[node name="SpawnServiceRamp" type="Marker3D" parent="EnemySpawns" unique_id=922223415 groups=["enemy_spawn"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, -2.5, -38.5)
 
-[node name="SpawnPierEntrance" type="Marker3D" parent="EnemySpawns" unique_id=423095408 groups=["enemy_spawn"]]
+[node name="SpawnPierEntrance" type="Marker3D" parent="EnemySpawns" unique_id=1476203914 groups=["enemy_spawn"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.1, 30)
 
-[node name="RunDirector" type="Node" parent="." unique_id=1568910964]
+[node name="RunDirector" type="Node" parent="." unique_id=845320642]
 script = ExtResource("34_pf1x5")

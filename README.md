@@ -61,13 +61,15 @@ High/Low graphics preset and fullscreen are under **Settings** (main menu or pau
   through the portal to clear the level.
 - **Three enemy types.** Tourist Shamblers (wide, slow, obvious windup), Lifeguard Runners
   (lean and fast, from wave 3) and the Boardwalk Bruiser (hulking, tough, hits hard, from
-  wave 5). Every zombie rolls its own look from the accessory slots in its data (hats,
-  hair, sunglasses, cameras, rescue tubes) and a skin tint.
+  wave 5; at mid range it roars, then charges, so it can't simply be kited). Every
+  zombie rolls its own look from the accessory slots in its data (hats, hair,
+  sunglasses, cameras, rescue tubes) and a skin tint.
 - **Reading a fight.** A zombie's attack is telegraphed (arms thrown up, then a lunging
   swipe) and only lands in front of it, so stepping aside or circling behind is a dodge.
   Hits push zombies back; a heavy volley (the Scatter Blaster) staggers one out of its
-  windup. Taking damage shows a red arc pointing at the attacker, and an amber arc warns
-  about a zombie winding up off-screen. Below 30% health a heartbeat plays.
+  windup. Taking damage shows a red arc pointing at the attacker, and an orange arc
+  warns about a zombie that is winding up, charging or already at your back off-screen.
+  Below 30% health a heartbeat plays.
 - **Mastery** is per weapon and permanent: XP for finishing blows, plus a wave-clear bonus
   for every weapon that scored a kill that wave. Ranks unlock three cosmetic rewards per
   weapon (decal, energy-cell colour, shell finish), equipped in the **Armory**. Progress is

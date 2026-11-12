@@ -55,10 +55,10 @@ def arm(prefix, grip, toward, thumb_side=-1.0, underhand=False):
         parts.append(box(prefix + "Thumb", (0.034, 0.075, 0.034), (c.x + thumb_side * 0.055, c.y + 0.03, c.z + 0.055),
                          rot=rad(25, 0, 0), bevel=0.013, m=glove))
     parts += [
-        tube(prefix + "Wrist", [c + d * 0.02, c + d * 0.15], 0.064, m=glove, segs=12),
-        tube(prefix + "Cuff", [c + d * 0.12, c + d * 0.24], 0.094, m=cuff, segs=14),
-        tube(prefix + "CuffRim", [c + d * 0.235, c + d * 0.26], 0.088, m=glove, segs=14),
-        tube(prefix + "Forearm", [c + d * 0.25, c + d * 0.9], 0.078, m=sleeve, segs=12, radius_end=0.1),
+        tube(prefix + "Wrist", [c + d * 0.02, c + d * 0.08], 0.066, m=glove, segs=12),
+        tube(prefix + "Cuff", [c + d * 0.06, c + d * 0.19], 0.096, m=cuff, segs=14),
+        tube(prefix + "CuffRim", [c + d * 0.185, c + d * 0.205], 0.09, m=glove, segs=14),
+        tube(prefix + "Forearm", [c + d * 0.2, c + d * 0.9], 0.078, m=sleeve, segs=12, radius_end=0.1),
     ]
     return parts
 
@@ -124,8 +124,8 @@ def build_pulse_pistol():
     decal = [side_emblem("Emblem", star_outline(0.03), -0.048, 0.15, 0.072, M["decal"])]
     groups = dict(
         Shell=shell, Slide=slide, Cell=cell, Decal=decal,
-        ArmR=arm("R", (0.0, -0.02, -0.105), (0.16, -0.62, -0.42), thumb_side=-1.0),
-        ArmL=arm("L", (-0.03, 0.01, -0.175), (-0.42, -0.42, -0.52), thumb_side=-1.0, underhand=True),
+        ArmR=arm("R", (0.0, -0.02, -0.105), (0.42, -0.5, -0.36), thumb_side=-1.0),
+        ArmL=arm("L", (-0.07, 0.0, -0.14), (-0.55, -0.32, -0.32), thumb_side=-1.0, underhand=True),
     )
     finish("pulse_pistol", groups, (0, 0.31, 0.065), slide_child_decal=True)
 
@@ -168,7 +168,7 @@ def build_ion_carbine():
     groups = dict(
         Shell=shell, Cell=cell, Decal=decal,
         ArmR=arm("R", (0.0, -0.03, -0.15), (0.17, -0.62, -0.44), thumb_side=-1.0),
-        ArmL=arm("L", (0.0, 0.27, -0.165), (-0.5, -0.3, -0.56), thumb_side=-1.0, underhand=True),
+        ArmL=arm("L", (-0.02, 0.27, -0.16), (-0.52, -0.16, -0.46), thumb_side=-1.0, underhand=True),
     )
     finish("ion_carbine", groups, (0, 0.64, 0.035))
 
@@ -213,7 +213,7 @@ def build_scatter_blaster():
     groups = dict(
         Shell=shell, Pump=pump, Cell=cell, Decal=decal,
         ArmR=arm("R", (0.0, -0.06, -0.14), (0.17, -0.62, -0.44), thumb_side=-1.0),
-        ArmL=arm("L", (0.0, 0.31, -0.125), (-0.5, -0.26, -0.56), thumb_side=-1.0, underhand=True),
+        ArmL=arm("L", (-0.02, 0.31, -0.12), (-0.52, -0.12, -0.46), thumb_side=-1.0, underhand=True),
     )
     finish("scatter_blaster", groups, (0, 0.58, 0.045))
 

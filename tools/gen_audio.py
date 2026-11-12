@@ -614,6 +614,9 @@ SFX_SOUNDS = [
 VARIANTS = [
     (pistol_fire, (0.95, 1.06)), (carbine_fire, (0.94, 1.05)), (scatter_fire, (0.93, 1.07)),
     (hit_body, (0.9, 1.12)), (zombie_pop, (0.92, 1.09)), (footstep_1, (0.9, 1.1)), (footstep_2, (0.88, 1.12)),
+    (zombie_groan_1, (0.9, 1.08)), (zombie_groan_2, (0.88, 1.1)), (zombie_groan_3, (0.92, 1.12)),
+    (runner_screech_1, (0.9, 1.1)), (runner_screech_2, (0.93, 1.12)), (bruiser_roar_1, (0.9, 1.06)),
+    (zombie_swipe, (0.9, 1.1)), (hitmarker, (0.94, 1.06)),
 ]
 
 

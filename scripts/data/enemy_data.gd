@@ -29,6 +29,16 @@ extends Resource
 ## Heavier zombies are pushed less by knockback and stagger less often.
 @export var mass := 1.0
 
+@export_group("Charge")
+## Speed multiplier while charging; 1 or less disables the charge.
+@export var charge_speed_mult := 0.0
+## Charges start only between these distances (metres) with a clear line.
+@export var charge_range := Vector2(5.0, 13.0)
+## Roar-and-stare time before the rush; the threat ring warns during it.
+@export var charge_telegraph := 0.6
+@export var charge_duration := 1.3
+@export var charge_cooldown := 7.0
+
 @export_group("Body")
 ## Outfit mesh shown from the shared zombie model ("Tourist", "Lifeguard" or "Bruiser").
 @export var outfit: StringName = &"Tourist"

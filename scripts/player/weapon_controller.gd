@@ -232,7 +232,7 @@ func _fire() -> void:
 				Fx.impact(player.get_parent(), end, hit["normal"], data.tracer_color)
 		# Only a few streaks per scatter blast keep the screen readable.
 		if i < 4:
-			Fx.tracer(player.get_parent(), muzzle, end, data.tracer_color, data.tracer_width, cam.global_position)
+			Fx.tracer(player.get_parent(), muzzle, end, data.tracer_color, data.tracer_width)
 
 	for key in hits:
 		var entry: Dictionary = hits[key]

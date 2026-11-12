@@ -23,9 +23,8 @@ static func _unshaded(color: Color, energy := 1.0) -> StandardMaterial3D:
 
 
 ## A shot's energy streak: a thin flash from the muzzle to the hit point
-## plus a travelling bolt. `eye` is the camera position, used to skip shots
-## that would draw straight through the player's view.
-static func tracer(parent: Node, from: Vector3, to: Vector3, color: Color, width: float, eye := Vector3.INF) -> void:
+## plus a travelling bolt.
+static func tracer(parent: Node, from: Vector3, to: Vector3, color: Color, width: float) -> void:
 	if parent == null or from.distance_to(to) < 0.6:
 		return
 	if _tracer_mesh == null:

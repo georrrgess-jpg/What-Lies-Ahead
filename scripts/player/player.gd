@@ -35,6 +35,7 @@ var _shake_time := 0.0
 var _base_fov := 72.0
 var _hit_roll := 0.0
 var _death_time := 0.0
+var _head_height := 1.62
 var _step_distance := 0.0
 var _step_side := false
 var _heartbeat_timer := 0.0
@@ -42,6 +43,7 @@ var _heartbeat_timer := 0.0
 
 func _ready() -> void:
 	add_to_group("player")
+	_head_height = head.position.y
 	health = max_health
 	Settings.changed.connect(_apply_settings)
 	_apply_settings()
@@ -96,7 +98,7 @@ func _process(delta: float) -> void:
 		# Slump to the deck and roll over on defeat.
 		_death_time = minf(_death_time + delta, 1.0)
 		var k := ease(_death_time, -2.2)
-		head.position.y = lerpf(1.62, 0.45, k)
+		head.position.y = lerpf(_head_height, 0.45, k)
 		camera.rotation.z += k * 0.6
 		head.rotation.x = lerpf(_pitch, -0.25, k)
 	_footsteps(delta)

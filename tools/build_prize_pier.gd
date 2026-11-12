@@ -699,6 +699,22 @@ func _halo_mesh() -> Mesh:
 	return mesh
 
 
+## A flat five-pointed star, 1 m across, lying on the deck.
+func _star_mesh() -> Mesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var pts: Array[Vector3] = []
+	for k in 10:
+		var r := 0.5 if k % 2 == 0 else 0.22
+		var a := -PI * 0.5 + PI * k / 5.0
+		pts.append(Vector3(cos(a) * r, 0.0, sin(a) * r))
+	for k in 10:
+		for v in [Vector3.ZERO, pts[k], pts[(k + 1) % 10]]:
+			st.set_normal(Vector3.UP)
+			st.add_vertex(v)
+	return st.commit()
+
+
 ## Pink edge stripes painted on the deck, as in the reference.
 func _build_deck_paint() -> void:
 	var paint := Node3D.new()
@@ -714,6 +730,27 @@ func _build_deck_paint() -> void:
 		[Vector3(SPUR_X0 + 0.9, y, (SPUR_Z0 + Z0) * 0.5), Vector3(0.24, 0.01, Z0 - SPUR_Z0 - 2.0)],
 		[Vector3(X1 - 0.9, y, (SPUR_Z0 + Z0) * 0.5), Vector3(0.24, 0.01, Z0 - SPUR_Z0 - 2.0)],
 	]
+	# Painted stars along the loop (as on the reference deck), no collision.
+	var star_mesh := _star_mesh()
+	var spots := [
+		[Vector3(-14.0, 0.014, 4.0), 0.9, Color(1.0, 0.85, 0.25)], [Vector3(-12.0, 0.014, -16.0), 0.8, Color(0.3, 0.9, 0.95)],
+		[Vector3(9.0, 0.014, 4.0), 0.75, Color(1.0, 0.45, 0.75)], [Vector3(4.0, 0.014, -16.5), 0.85, Color(1.0, 0.85, 0.25)],
+		[Vector3(-19.0, 0.014, 12.0), 0.7, Color(1.0, 0.45, 0.75)], [Vector3(11.0, 0.014, -36.0), 0.7, Color(0.3, 0.9, 0.95)],
+	]
+	var n := 0
+	for spot in spots:
+		var star := MeshInstance3D.new()
+		star.name = "PaintedStar%d" % n
+		star.mesh = star_mesh
+		var star_mat := _mat("star_paint_%d" % n, spot[2], 0.55)
+		star_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		star.material_override = star_mat
+		star.position = spot[0]
+		star.rotation.y = n * 0.9
+		star.scale = Vector3.ONE * spot[1] * 2.4
+		star.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		paint.add_child(star)
+		n += 1
 	var i := 0
 	for stripe in stripes:
 		var mi := MeshInstance3D.new()

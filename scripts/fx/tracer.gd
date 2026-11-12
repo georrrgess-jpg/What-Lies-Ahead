@@ -15,7 +15,6 @@ var _distance := 0.0
 var _width := 0.03
 var _age := 0.0
 var _bolt: MeshInstance3D
-var _material: StandardMaterial3D
 
 
 func launch(from: Vector3, to: Vector3, width: float, bolt_mesh: Mesh, bolt_material: Material) -> void:
@@ -24,8 +23,6 @@ func launch(from: Vector3, to: Vector3, width: float, bolt_mesh: Mesh, bolt_mate
 	_distance = from.distance_to(to)
 	_dir = (to - from) / _distance
 	_width = width
-	_material = (material_override as StandardMaterial3D).duplicate()
-	material_override = _material
 	_bolt = MeshInstance3D.new()
 	_bolt.mesh = bolt_mesh
 	_bolt.material_override = bolt_material
@@ -54,7 +51,7 @@ func _update() -> void:
 	if visible:
 		var y := -b.z * _distance
 		global_transform = Transform3D(Basis(b.x * w, y, b.y * w), _from + _dir * (_distance * 0.5))
-		_material.albedo_color.a = 1.0 - t
+		transparency = t
 	if is_instance_valid(_bolt) and _bolt.is_inside_tree():
 		# The bolt starts a metre out so it never fills the screen at the muzzle.
 		var head := minf(1.0 + _age * BOLT_SPEED + BOLT_LENGTH * 0.5, _distance)

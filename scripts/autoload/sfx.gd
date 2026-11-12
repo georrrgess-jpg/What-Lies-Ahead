@@ -68,29 +68,30 @@ func _pick(sound: StringName) -> AudioStream:
 	return options[randi() % options.size()] if not options.is_empty() else null
 
 
-func _claim_voice(sound: StringName) -> bool:
-	var n := int(_voices.get(sound, 0))
-	if n >= MAX_VOICES:
-		return false
-	_voices[sound] = n + 1
-	return true
-
-
-func _release_voice(sound: StringName) -> void:
-	_voices[sound] = maxi(0, int(_voices.get(sound, 1)) - 1)
+## Keeps at most MAX_VOICES copies of a sound; when full, the oldest copy is
+## cut so the newest (usually the most important) is always heard.
+func _claim_voice(sound: StringName, player: Node) -> void:
+	var list: Array = _voices.get(sound, [])
+	list = list.filter(func(p): return is_instance_valid(p))
+	while list.size() >= MAX_VOICES:
+		var oldest: Node = list.pop_front()
+		oldest.queue_free()
+	list.append(player)
+	_voices[sound] = list
 
 
 ## Non-positional one-shot (UI, the player's own weapon, announcer cues).
 func play(sound: StringName, volume_db := 0.0, pitch := 1.0) -> void:
 	var s := _pick(sound)
-	if s == null or not _claim_voice(sound):
+	if s == null:
 		return
 	var p := AudioStreamPlayer.new()
 	p.stream = s
 	p.bus = &"SFX"
 	p.volume_db = volume_db
 	p.pitch_scale = pitch
-	p.finished.connect(func(): _release_voice(sound); p.queue_free())
+	p.finished.connect(p.queue_free)
+	_claim_voice(sound, p)
 	add_child(p)
 	p.play()
 
@@ -99,7 +100,7 @@ func play(sound: StringName, volume_db := 0.0, pitch := 1.0) -> void:
 func play_at(sound: StringName, position: Vector3, volume_db := 0.0, pitch := 1.0, unit_size := 9.0) -> void:
 	var s := _pick(sound)
 	var scene := get_tree().current_scene
-	if s == null or scene == null or not _claim_voice(sound):
+	if s == null or scene == null:
 		return
 	var p := AudioStreamPlayer3D.new()
 	p.stream = s
@@ -109,8 +110,8 @@ func play_at(sound: StringName, position: Vector3, volume_db := 0.0, pitch := 1.
 	p.unit_size = unit_size
 	p.max_distance = 70.0
 	p.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
-	p.finished.connect(func(): _release_voice(sound); p.queue_free())
-	p.tree_exiting.connect(func(): if p.playing: _release_voice(sound))
+	p.finished.connect(p.queue_free)
+	_claim_voice(sound, p)
 	scene.add_child(p)
 	p.global_position = position
 	p.play()

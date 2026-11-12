@@ -2,12 +2,12 @@ class_name ThreatRing
 extends Control
 ## Arcs around the reticle that point at danger:
 ##  - red, when the player takes a hit (fades over a second);
-##  - amber and pulsing, while a nearby zombie off to the side or behind is
-##    winding up an attack, so the player can turn or step away in time.
+##  - amber and pulsing, while a zombie off to the side or behind is winding
+##    up, charging, or already within arm's reach, so the player can react.
 
-const RADIUS := 150.0
+const RADIUS := 200.0
 ## Warnings sit further out than damage arcs so the two never overlap.
-const WARN_RADIUS := 200.0
+const WARN_RADIUS := 250.0
 const DAMAGE_LIFE := 1.1
 const WARN_DISTANCE := 7.0
 
@@ -41,9 +41,12 @@ func _process(delta: float) -> void:
 	_warnings.clear()
 	if player and director and player.alive:
 		for z in director.alive_enemies():
-			if not is_instance_valid(z) or not z.is_winding_up():
+			if not is_instance_valid(z) or z.is_dead():
 				continue
-			if z.global_position.distance_to(player.global_position) > WARN_DISTANCE:
+			var d := z.global_position.distance_to(player.global_position)
+			# Warn about windups and charges, and about anything already at your back.
+			var urgent := (z.is_winding_up() and d <= WARN_DISTANCE) or (z.is_charging() and d <= 16.0) or d <= 2.6
+			if not urgent:
 				continue
 			var angle := _screen_angle(z.global_position)
 			# Only warn about threats the player probably cannot see.
@@ -62,12 +65,12 @@ func _draw() -> void:
 		_arc(c, _screen_angle(h["pos"]), 0.55, Color(1.0, 0.12, 0.28, alpha * 0.95), 16.0 + 6.0 * (1.0 - t))
 	var pulse := 0.8 + 0.2 * sin(_time * 18.0)
 	for angle in _warnings:
-		_arc(c, angle, 0.42, Color(1.0, 0.78, 0.15, pulse), 20.0, WARN_RADIUS)
+		_arc(c, angle, 0.42, Color(1.0, 0.6, 0.1, pulse), 20.0, WARN_RADIUS)
 		var tip := c + Vector2(sin(angle), -cos(angle)) * (WARN_RADIUS + 34.0)
 		var side := Vector2(cos(angle), sin(angle)) * 18.0
 		var out := Vector2(sin(angle), -cos(angle)) * 24.0
 		draw_colored_polygon(PackedVector2Array([tip + out * 1.25, tip + side * 1.3, tip - side * 1.3]), Color(0.05, 0.0, 0.08, pulse * 0.6))
-		draw_colored_polygon(PackedVector2Array([tip + out, tip + side, tip - side]), Color(1.0, 0.78, 0.15, pulse))
+		draw_colored_polygon(PackedVector2Array([tip + out, tip + side, tip - side]), Color(1.0, 0.6, 0.1, pulse))
 
 
 func _arc(c: Vector2, angle: float, half_width: float, color: Color, thickness: float, radius := RADIUS) -> void:

@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabled;
+render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabled, fog_disabled;
 
 // Soft additive glow for the crossed halo quads around every bulb.
 uniform vec3 glow_color : source_color = vec3(1.0, 0.7, 0.3);
