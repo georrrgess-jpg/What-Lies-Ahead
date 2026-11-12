@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/frost_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/frost_ski_rush.gd" id="4"]
+
+[sub_resource type="Resource" id="rush"]
+script = ExtResource("4")
+min_range = 6.0
+max_range = 22.0
+tuck_time = 0.9
+lock_fraction = 0.45
+rush_speed = 12.5
+rush_time = 1.5
+skid_time = 0.8
+cooldown = 5.5
+damage = 12.0
+hit_radius = 1.35
+shove = 7.0
+
+[resource]
+script = ExtResource("1")
+id = &"frost_ski_racer"
+display_name = "Ski Racer"
+max_health = 70.0
+move_speed = 3.6
+speed_variance = 0.1
+turn_speed = 7.0
+tickets = 18
+score = 220
+xp = 18
+damage = 12.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.45
+attack_recover = 0.7
+lunge_speed = 4.0
+mass = 0.9
+flank_degrees = 80.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Skier"
+body_scale = 0.95
+capsule_radius = 0.4
+capsule_height = 1.9
+head_height = 1.25
+shirt_colors = Array[Color]([Color(0.88, 0.13, 0.54, 1), Color(0.15, 0.78, 0.95, 1), Color(0.55, 0.9, 0.2, 1), Color(1, 0.5, 0.12, 1)])
+skin_colors = Array[Color]([Color(0.56, 0.78, 0.69, 1), Color(0.6, 0.76, 0.8, 1), Color(0.5, 0.74, 0.6, 1)])
+accessory_slots = PackedStringArray("Acc_Skier_Skis|Acc_Skier_Skis|Acc_Skier_Poles", "Acc_Skier_Medal||")
+move_animation = &"Run"
+animation_reference_speed = 4.2
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("rush")])
+voice_sounds = Array[StringName]([&"frost_racer_whoop_1", &"frost_racer_whoop_2"])
+voice_interval = Vector2(2.5, 5.0)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

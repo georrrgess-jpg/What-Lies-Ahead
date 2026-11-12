@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WorldData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/world_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="2"]
+[ext_resource type="Resource" path="res://data/levels/summit_lodge.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("4")
+kind = 2
+target = &"launch_pad"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"frostpeak_resort"
+display_name = "Frostpeak Resort"
+blurb = "A mountaintop ski resort at twilight, under the aurora. The lifts are still running, and so are the guests."
+levels = Array[ExtResource("2")]([ExtResource("3")])
+sort_order = 50
+tagline = "Last lift of the night. Nobody checked out."
+requirement = SubResource("unlock")
+accent_color = Color(0.4, 0.86, 1, 1)
+secondary_color = Color(0.62, 1, 0.66, 1)
+backdrop_color = Color(0.078, 0.086, 0.247, 1)

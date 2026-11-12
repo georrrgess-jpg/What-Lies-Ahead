@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/frost_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/frost_ice_shell.gd" id="4"]
+
+[sub_resource type="Resource" id="shell"]
+script = ExtResource("4")
+shell_health = 55.0
+body_damage_scale = 0.4
+head_damage_scale = 0.75
+shell_prefix = "Acc_Frozen_Ice"
+cloud_radius = 3.2
+cloud_seconds = 4.5
+cloud_slow = 0.55
+
+[resource]
+script = ExtResource("1")
+id = &"frost_frozen_tourist"
+display_name = "Frozen Tourist"
+max_health = 95.0
+move_speed = 1.55
+speed_variance = 0.12
+turn_speed = 5.0
+tickets = 16
+score = 170
+xp = 15
+damage = 15.0
+attack_range = 1.7
+attack_reach = 2.3
+attack_windup = 0.8
+attack_recover = 0.85
+lunge_speed = 2.8
+mass = 1.4
+flank_degrees = 60.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Frozen"
+body_scale = 1.0
+capsule_radius = 0.48
+capsule_height = 1.9
+head_height = 1.25
+shirt_colors = Array[Color]([Color(0.88, 0.13, 0.54, 1), Color(0.48, 0.24, 0.86, 1), Color(0.1, 0.62, 0.62, 1), Color(1, 0.45, 0.16, 1)])
+skin_colors = Array[Color]([Color(0.56, 0.78, 0.69, 1), Color(0.6, 0.78, 0.85, 1), Color(0.65, 0.82, 0.76, 1)])
+accessory_slots = PackedStringArray("Acc_Frozen_Ice", "Acc_Frozen_Beanie|Acc_Frozen_Beanie|Acc_Frozen_Earmuffs|", "Acc_Frozen_Camera||")
+move_animation = &"Walk"
+animation_reference_speed = 1.8
+avoidance_radius = 0.55
+behaviours = Array[ExtResource("3")]([SubResource("shell")])
+voice_sounds = Array[StringName]([&"frost_frozen_groan_1", &"frost_frozen_groan_2"])
+voice_interval = Vector2(3.0, 6.5)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"
