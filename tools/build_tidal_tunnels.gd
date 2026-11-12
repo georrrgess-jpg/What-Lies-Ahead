@@ -51,6 +51,9 @@ const RAMP_Z0 := 21.5        # ramps run along the south wall, z 21.5..25
 const KELP_GLASS_X := -20.2
 const KELP_Z0 := -12.0
 const KELP_Z1 := 9.0
+const PORTHOLES := [45.0, 135.0, 225.0, 315.0]   # angles of the porthole tanks around the rotunda
+const PORT_HALF := 1.0       # half size of the square hole behind each porthole frame
+const PORT_Y := 2.4
 
 var level: Node3D
 var geo: Node3D          # collidable geometry (navmesh source)
@@ -300,8 +303,9 @@ func _build_floors() -> void:
 	cs.height = 2.0
 	shape.shape = cs
 	body.add_child(shape)
-	# Passages through the rotunda openings.
-	var w := tan(deg_to_rad(OPEN_HALF)) * ROT_R + 0.3
+	# Passages through the rotunda openings, wide enough to run under the jamb
+	# pillars (no gap between the round slab and the hall slabs).
+	var w := tan(deg_to_rad(OPEN_HALF)) * ROT_R + 2.2
 	_slab(floors, "PassW", -CORE - 0.2, -ROT_R + 0.6, -w, w, tiles)
 	_slab(floors, "PassE", ROT_R - 0.6, CORE + 0.2, -w, w, tiles)
 	_slab(floors, "PassS", -w, w, ROT_R - 0.6, CORE + 0.2, tiles)
@@ -379,13 +383,13 @@ func _build_rotunda() -> void:
 	for y in [0.7, 6.6]:
 		var band := MeshInstance3D.new()
 		band.name = "WindowFrame%d" % int(y)
-		band.mesh = _arc_band_mesh(ROT_R - 0.04, wa0, wa1, y - 0.08, y + 0.08, 0.16)
+		band.mesh = _arc_mesh(ROT_R - 0.04, wa0, wa1, y - 0.08, y + 0.08)
 		band.material_override = brass
 		dressing.add_child(band)
 	# Cornice with an LED strip at the top of the wall, and a low LED skirting.
-	_ring_band(dressing, "Cornice", ROT_R - 0.15, ROT_H - 0.35, ROT_H, 0.3, _mat("navy_light", Color(0.11, 0.23, 0.39), 0.5))
-	_ring_band(dressing, "CorniceLed", ROT_R - 0.32, ROT_H - 0.42, ROT_H - 0.36, 0.05, _glow_mat("led_cyan", Color(0.25, 0.95, 1.0), 2.8))
-	_ring_band(dressing, "MidLed", ROT_R - 0.02, 4.55, 4.65, 0.06, _glow_mat("led_cyan", Color(0.25, 0.95, 1.0), 2.8))
+	_ring_band(dressing, "Cornice", ROT_R - 0.15, ROT_H - 0.35, ROT_H, _mat("navy_light", Color(0.11, 0.23, 0.39), 0.5))
+	_ring_band(dressing, "CorniceLed", ROT_R - 0.32, ROT_H - 0.42, ROT_H - 0.36, _glow_mat("led_cyan", Color(0.25, 0.95, 1.0), 2.8))
+	_ring_band(dressing, "MidLed", ROT_R - 0.02, 4.55, 4.65, _glow_mat("led_cyan", Color(0.25, 0.95, 1.0), 2.8))
 	# Dome.
 	var dome := MeshInstance3D.new()
 	dome.name = "Dome"
@@ -407,7 +411,9 @@ func _build_rotunda() -> void:
 	var inlay := _node(dressing, "FloorInlay")
 	_flat_ring(inlay, "RingOuter", 10.6, 10.85, _glow_mat("inlay_cyan", Color(0.2, 0.85, 1.0), 1.2))
 	_flat_ring(inlay, "RingMid", 7.3, 7.45, _mat("inlay_brass", Color(0.84, 0.64, 0.27), 0.4))
-	_flat_ring(inlay, "RingBand", 7.45, 10.6, _mat("inlay_navy", Color(0.08, 0.15, 0.3), 0.3), 0.004)
+	_flat_ring(inlay, "RingBand", 7.45, 10.6, _caustic_mat("inlay_band", Color(0.45, 0.85, 0.95), {"albedo_tex": "aqua_floor_tiles.png",
+		"normal_tex": "aqua_floor_tiles_normal.png", "normal_strength": 0.6, "uv_scale": 0.5, "roughness": 0.18, "specular": 0.8,
+		"caustic_strength": 0.7, "caustic_scale": 0.14}), 0.004)
 	var star := _star_mesh()
 	for i in 8:
 		var a := TAU * i / 8.0 + PI / 8.0
@@ -429,15 +435,15 @@ func _build_core_faces() -> void:
 	# West and east faces (x = -+CORE), openings at z -w..w.
 	for s in [-1.0, 1.0]:
 		var x: float = s * (CORE + 0.25)
-		_wall_box(core, "Face%sN" % ("W" if s < 0 else "E"), Vector3(0.5, HALL_H, CORE - w), Vector3(x, HALL_H * 0.5, -(CORE + w) * 0.5), wall)
-		_wall_box(core, "Face%sS" % ("W" if s < 0 else "E"), Vector3(0.5, HALL_H, CORE - w), Vector3(x, HALL_H * 0.5, (CORE + w) * 0.5), wall)
-		_wall_box(core, "Face%sTop" % ("W" if s < 0 else "E"), Vector3(0.5, HALL_H - 4.6, 2.0 * w), Vector3(x, (HALL_H + 4.6) * 0.5, 0), wall)
+		_box(core, "Face%sN" % ("W" if s < 0 else "E"), Vector3(0.5, HALL_H, CORE - w), Vector3(x, HALL_H * 0.5, -(CORE + w) * 0.5), wall)
+		_box(core, "Face%sS" % ("W" if s < 0 else "E"), Vector3(0.5, HALL_H, CORE - w), Vector3(x, HALL_H * 0.5, (CORE + w) * 0.5), wall)
+		_box(core, "Face%sTop" % ("W" if s < 0 else "E"), Vector3(0.5, HALL_H - 4.6, 2.0 * w), Vector3(x, (HALL_H + 4.6) * 0.5, 0), wall)
 		# North stub between the core corner and the shark tank.
-		_wall_box(core, "FaceN%s" % ("W" if s < 0 else "E"), Vector3(CORE - TANK_X, HALL_H, 0.5), Vector3(s * (CORE + TANK_X) * 0.5, HALL_H * 0.5, -CORE - 0.25), wall)
+		_box(core, "FaceN%s" % ("W" if s < 0 else "E"), Vector3(CORE - TANK_X, HALL_H, 0.5), Vector3(s * (CORE + TANK_X) * 0.5, HALL_H * 0.5, -CORE - 0.25), wall)
 	# South face (z = CORE), opening at x -w..w; lobby side is taller.
 	for s in [-1.0, 1.0]:
-		_wall_box(core, "FaceS%s" % ("W" if s < 0 else "E"), Vector3(CORE - w, LOBBY_H, 0.5), Vector3(s * (CORE + w) * 0.5, LOBBY_H * 0.5, CORE + 0.25), wall)
-	_wall_box(core, "FaceSTop", Vector3(2.0 * w, LOBBY_H - 4.6, 0.5), Vector3(0, (LOBBY_H + 4.6) * 0.5, CORE + 0.25), wall)
+		_box(core, "FaceS%s" % ("W" if s < 0 else "E"), Vector3(CORE - w, LOBBY_H, 0.5), Vector3(s * (CORE + w) * 0.5, LOBBY_H * 0.5, CORE + 0.25), wall)
+	_box(core, "FaceSTop", Vector3(2.0 * w, LOBBY_H - 4.6, 0.5), Vector3(0, (LOBBY_H + 4.6) * 0.5, CORE + 0.25), wall)
 
 
 func _build_outer_walls() -> void:
@@ -449,23 +455,23 @@ func _build_outer_walls() -> void:
 	_wall_seg(walls, "NorthE1", Vector2(TANK_X, Z0), Vector2(15.6, Z0), HALL_H, wall)
 	_wall_seg(walls, "NorthE2", Vector2(18.4, Z0), Vector2(X1, Z0), HALL_H, wall)
 	# Door heads above the openings.
-	_wall_box(walls, "FiltHead", Vector3(3.2, HALL_H - 3.2, 0.5), Vector3(-17.0, (HALL_H + 3.2) * 0.5, Z0 - 0.25), wall)
-	_wall_box(walls, "ElevHead", Vector3(2.8, HALL_H - 3.0, 0.5), Vector3(17.0, (HALL_H + 3.0) * 0.5, Z0 - 0.25), wall)
+	_box(walls, "FiltHead", Vector3(3.2, HALL_H - 3.2, 0.5), Vector3(-17.0, (HALL_H + 3.2) * 0.5, Z0 - 0.25), wall)
+	_box(walls, "ElevHead", Vector3(2.8, HALL_H - 3.0, 0.5), Vector3(17.0, (HALL_H + 3.0) * 0.5, Z0 - 0.25), wall)
 	# West wall: staff door at z 10.4..12.6; the kelp tank covers z -12..9.
 	_wall_seg(walls, "WestN", Vector2(X0, Z0), Vector2(X0, KELP_Z0), HALL_H, wall)
 	_wall_seg(walls, "WestMid", Vector2(X0, KELP_Z1), Vector2(X0, 10.3), HALL_H, wall)
 	_wall_seg(walls, "WestS", Vector2(X0, 12.7), Vector2(X0, Z1), LOBBY_H, wall)
-	_wall_box(walls, "StaffHead", Vector3(0.5, HALL_H - 3.0, 2.4), Vector3(X0 - 0.25, (HALL_H + 3.0) * 0.5, 11.5), wall)
+	_box(walls, "StaffHead", Vector3(0.5, HALL_H - 3.0, 2.4), Vector3(X0 - 0.25, (HALL_H + 3.0) * 0.5, 11.5), wall)
 	# East wall: jelly wall tank at z -11..-1 (glass), loading bay at z 4.7..9.3.
 	_wall_seg(walls, "EastN", Vector2(X1, Z0), Vector2(X1, -11.0), HALL_H, wall)
 	_wall_seg(walls, "EastMid", Vector2(X1, -1.0), Vector2(X1, 4.6), HALL_H, wall)
 	_wall_seg(walls, "EastS", Vector2(X1, 9.4), Vector2(X1, Z1), LOBBY_H, wall)
-	_wall_box(walls, "LoadHead", Vector3(0.5, HALL_H - 3.9, 5.0), Vector3(X1 + 0.25, (HALL_H + 3.9) * 0.5, 7.0), wall)
+	_box(walls, "LoadHead", Vector3(0.5, HALL_H - 3.9, 5.0), Vector3(X1 + 0.25, (HALL_H + 3.9) * 0.5, 7.0), wall)
 	# South wall.
 	_wall_seg(walls, "South", Vector2(X0, Z1), Vector2(X1, Z1), LOBBY_H, wall)
 	# Lobby / hall transitions: the halls are lower; a header beam over each.
-	_wall_box(walls, "HeaderW", Vector3(X0 * -1.0 - CORE, LOBBY_H - HALL_H, 0.5), Vector3((X0 - CORE) * 0.5, (LOBBY_H + HALL_H) * 0.5, CORE), _plain_wall_mat())
-	_wall_box(walls, "HeaderE", Vector3(X1 - CORE, LOBBY_H - HALL_H, 0.5), Vector3((X1 + CORE) * 0.5, (LOBBY_H + HALL_H) * 0.5, CORE), _plain_wall_mat())
+	_box(walls, "HeaderW", Vector3(X0 * -1.0 - CORE, LOBBY_H - HALL_H, 0.5), Vector3((X0 - CORE) * 0.5, (LOBBY_H + HALL_H) * 0.5, CORE), _plain_wall_mat())
+	_box(walls, "HeaderE", Vector3(X1 - CORE, LOBBY_H - HALL_H, 0.5), Vector3((X1 + CORE) * 0.5, (LOBBY_H + HALL_H) * 0.5, CORE), _plain_wall_mat())
 
 
 func _build_ceilings() -> void:
@@ -779,7 +785,7 @@ func _build_pocket_tanks() -> void:
 	var holder := _node(tanks, "PocketTanks")
 	var wall := _tank_wall_mat()
 	var k := 0
-	for deg in [45.0, 135.0, 225.0, 315.0]:
+	for deg in PORTHOLES:
 		var a := deg_to_rad(deg)
 		var dir := Vector3(cos(a), 0, sin(a))
 		var centre := dir * (ROT_R + 2.0)
@@ -811,11 +817,11 @@ func _build_pocket_tanks() -> void:
 		disc.radial_segments = 32
 		port.mesh = disc
 		port.rotation.x = PI * 0.5
-		port.position = Vector3(0, 2.4, -1.9)
+		port.position = Vector3(0, PORT_Y, -1.9)
 		port.material_override = _water_mat("water_pocket", 0.7, 4.2, {"density": 0.12, "max_distance": 4.0, "caustic_strength": 1.0})
 		port.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		t.add_child(port)
-		var frame := _prop(t, "aqua_porthole", "Frame", Vector3(0, 2.4, -2.02), 180.0, Vector3(2.8, 2.8, 0.3))
+		var frame := _prop(t, "aqua_porthole", "Frame", Vector3(0, PORT_Y, -2.02), 180.0, Vector3(2.8, 2.8, 0.3))
 		frame.name = "Frame"
 		k += 1
 
@@ -973,13 +979,13 @@ func _build_entrances() -> void:
 ## (the door side). Default open side is south (+Z) for rooms north of the hall.
 func _room_walls(parent: Node3D, prefix: String, x0: float, x1: float, z0: float, z1: float, h: float, m: Material, open := "S") -> void:
 	if open != "W":
-		_wall_box(parent, prefix + "W", Vector3(0.4, h, z1 - z0), Vector3(x0 - 0.2, h * 0.5, (z0 + z1) * 0.5), m)
+		_box(parent, prefix + "W", Vector3(0.4, h, z1 - z0), Vector3(x0 - 0.2, h * 0.5, (z0 + z1) * 0.5), m)
 	if open != "E":
-		_wall_box(parent, prefix + "E", Vector3(0.4, h, z1 - z0), Vector3(x1 + 0.2, h * 0.5, (z0 + z1) * 0.5), m)
+		_box(parent, prefix + "E", Vector3(0.4, h, z1 - z0), Vector3(x1 + 0.2, h * 0.5, (z0 + z1) * 0.5), m)
 	if open != "N":
-		_wall_box(parent, prefix + "N", Vector3(x1 - x0 + 0.8, h, 0.4), Vector3((x0 + x1) * 0.5, h * 0.5, z0 - 0.2), m)
+		_box(parent, prefix + "N", Vector3(x1 - x0 + 0.8, h, 0.4), Vector3((x0 + x1) * 0.5, h * 0.5, z0 - 0.2), m)
 	if open != "S":
-		_wall_box(parent, prefix + "S", Vector3(x1 - x0 + 0.8, h, 0.4), Vector3((x0 + x1) * 0.5, h * 0.5, z1 + 0.2), m)
+		_box(parent, prefix + "S", Vector3(x1 - x0 + 0.8, h, 0.4), Vector3((x0 + x1) * 0.5, h * 0.5, z1 + 0.2), m)
 	_mesh_box(dressing, prefix + "Lid", Vector3(x1 - x0 + 0.8, 0.3, z1 - z0 + 0.8), Vector3((x0 + x1) * 0.5, h + 0.15, (z0 + z1) * 0.5), _mat("ceiling", Color(0.05, 0.08, 0.15), 0.85))
 
 
@@ -990,17 +996,23 @@ func _room_walls(parent: Node3D, prefix: String, x0: float, x1: float, z0: float
 func _build_signage() -> void:
 	var signs := _node(dressing, "Signage")
 	# Over the rotunda openings, both faces.
-	var over := [[180.0, "KELP FOREST", Color(0.55, 1.0, 0.7)], [0.0, "JELLYFISH", Color(1.0, 0.6, 0.95)], [90.0, "LOBBY & GIFT SHOP", Color(1.0, 0.85, 0.4)]]
+	var over := [[180.0, "KELP\nFOREST", Color(0.55, 1.0, 0.7)], [0.0, "JELLYFISH", Color(1.0, 0.6, 0.95)], [90.0, "LOBBY\nGIFT SHOP", Color(1.0, 0.85, 0.4)]]
 	for entry in over:
 		var a := deg_to_rad(entry[0])
 		var dir := Vector3(cos(a), 0, sin(a))
-		_label(signs, "In%d" % int(entry[0]), entry[1], dir * (ROT_R - 0.05) + Vector3(0, 5.6, 0), -a - PI * 0.5, 0.012, entry[2])
+		# Fit the widest line inside the 7 m opening (about 77 px per glyph at 128 px).
+		var widest := 0
+		for line in String(entry[1]).split("\n"):
+			widest = maxi(widest, line.length())
+		var pixel := minf(0.011, 5.6 / (widest * 77.0))
+		# Flat labels on a curved wall: pulled inward so their ends stay in front of it.
+		_label(signs, "In%d" % int(entry[0]), entry[1], dir * (ROT_R - 0.45) + Vector3(0, 6.0, 0), -a - PI * 0.5, pixel, entry[2])
 		_label(signs, "Out%d" % int(entry[0]), "ROTUNDA", dir * (CORE + 0.55) + Vector3(0, 5.2, 0), -a + PI * 0.5, 0.01, Color(0.6, 0.95, 1.0))
-	_label(signs, "SharkWindow", "SHARK BAY", Vector3(0, 7.4, -ROT_R + 0.1), 0.0, 0.014, Color(0.6, 0.95, 1.0))
+	_label(signs, "SharkWindow", "SHARK BAY", Vector3(0, 7.6, -ROT_R + 0.5), 0.0, 0.0085, Color(0.6, 0.95, 1.0))
 	_label(signs, "Welcome", "ABYSS AQUARIUM", Vector3(0, 6.3, CORE + 0.55), 0.0, 0.016, Color(1.0, 0.8, 0.35))
 	# Signposts at the hall junctions.
 	var posts := [[Vector3(-17.0, 0, -16.5), 0.0, "SHARK\nTUNNEL >"], [Vector3(17.0, 0, -16.5), 0.0, "< SHARK\nTUNNEL"],
-		[Vector3(-14.5, 0, 14.6), 0.0, "TOUCH\nPOOL"], [Vector3(15.0, 0, 14.6), 0.0, "UPPER\nDECK"]]
+		[Vector3(-15.5, 0, 14.05), 0.0, "TOUCH\nPOOL"], [Vector3(15.5, 0, 14.05), 0.0, "UPPER\nDECK"]]
 	var k := 0
 	for p in posts:
 		_prop(geo, "aqua_signpost", "Signpost%d" % k, p[0], p[1], Vector3(1.3, 2.7, 0.2))
@@ -1293,6 +1305,8 @@ func _school(parent: Node3D, sname: String, species: String, count: int, centre:
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var extent := Vector3(radii.x + jitter + 2.0, height + 4.0, radii.y + jitter + 2.0)
 	node.custom_aabb = AABB(-extent, extent * 2.0)
+	if count >= 40:
+		node.add_to_group("high_detail", true)    # big schools are dropped on the Low preset
 	parent.add_child(node)
 	return node
 
@@ -1378,12 +1392,14 @@ func _bubbles(parent: Node3D, bname: String, pos: Vector3, height: float) -> voi
 	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var half := Vector3(0.6, height * 0.5 + 0.5, 0.6)
 	p.visibility_aabb = AABB(Vector3(-half.x, -0.5, -half.z), Vector3(half.x * 2, height + 1.0, half.z * 2))
+	p.add_to_group("high_detail", true)
 	parent.add_child(p)
 
 
 func _light_shaft(parent: Node3D, sname: String, top: Vector3, width: float, length: float, colour: Color, strength: float) -> void:
 	var holder := _node(parent, sname)
 	holder.position = top
+	holder.add_to_group("high_detail", true)
 	var quad := QuadMesh.new()
 	quad.size = Vector2(width, length)
 	var mat := _shader_mat("shaft_%s_%.2f" % [colour.to_html(false), strength], "aqua_lightshaft.gdshader", {"color": colour, "strength": strength})
@@ -1445,11 +1461,6 @@ func _arc_wall(parent: Node3D, wname: String, radius: float, a0: float, a1: floa
 	parent.add_child(mi)
 
 
-const PORTHOLES := [45.0, 135.0, 225.0, 315.0]
-const PORT_HALF := 1.0      # half size of the square hole behind each porthole frame
-const PORT_Y := 2.4
-
-
 ## Lower rotunda wall (0..4.6 m) for one arc, leaving square holes where the
 ## porthole tanks are.
 func _lower_wall(parent: Node3D, wname: String, a0: float, a1: float, m: Material) -> void:
@@ -1483,12 +1494,8 @@ func _arc_colliders(parent: Node3D, cname: String, radius: float, a0: float, a1:
 		c.rotation.y = -mid + PI * 0.5
 
 
-## Thin horizontal band (trim/LED) following a ring, as an arc strip of given depth.
-func _arc_band_mesh(radius: float, a0: float, a1: float, y0: float, y1: float, _depth: float) -> ArrayMesh:
-	return _arc_mesh(radius, a0, a1, y0, y1, true)
-
-
-func _ring_band(parent: Node3D, bname: String, radius: float, y0: float, y1: float, _depth: float, m: Material) -> void:
+## A horizontal band (trim/LED) all the way round a ring, facing inward.
+func _ring_band(parent: Node3D, bname: String, radius: float, y0: float, y1: float, m: Material) -> void:
 	for arc in [[0.0, 120.0], [120.0, 240.0], [240.0, 360.0]]:
 		var mi := MeshInstance3D.new()
 		mi.name = "%s%d" % [bname, int(arc[0])]
@@ -1526,7 +1533,7 @@ func _sector_mesh(radius: float, a0: float, a1: float, top: float) -> ArrayMesh:
 	for i in steps:
 		var t0 := lerpf(a0, a1, float(i) / steps)
 		var t1 := lerpf(a0, a1, float(i + 1) / steps)
-		for v in [Vector3(0, top, 0), Vector3(cos(t1) * radius, top, sin(t1) * radius), Vector3(cos(t0) * radius, top, sin(t0) * radius)]:
+		for v in [Vector3(0, top, 0), Vector3(cos(t0) * radius, top, sin(t0) * radius), Vector3(cos(t1) * radius, top, sin(t1) * radius)]:
 			st.set_normal(Vector3.UP)
 			st.add_vertex(v)
 	return st.commit()
@@ -1600,10 +1607,6 @@ func _box(parent: Node3D, box_name: String, size: Vector3, pos: Vector3, materia
 	shape.shape = box
 	body.add_child(shape)
 	return body
-
-
-func _wall_box(parent: Node3D, wname: String, size: Vector3, pos: Vector3, material: Material) -> StaticBody3D:
-	return _box(parent, wname, size, pos, material)
 
 
 ## Wall from a to b (top view), 0.5 m thick, on the outside of the line.

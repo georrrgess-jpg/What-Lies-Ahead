@@ -1,7 +1,9 @@
 extends SceneTree
-## Developer probe for Tidal Tunnels: loads the level (without starting a run)
-## and prints navigation paths between key points, so connectivity problems
-## (ramps, doors, spawn rooms) show up without a full playthrough.
+## Developer probe for Tidal Tunnels: loads the level (without starting a run),
+## prints whether each spawn room, the tunnel and the portal deck can be
+## reached on the navmesh from the player start, and ray-tests the floor beside
+## the rotunda openings for gaps, so connectivity problems (ramps, doors, spawn
+## rooms, slab seams) show up without a full playthrough.
 ##
 ##   godot --headless --path . --script res://tools/aqua_probe.gd
 
@@ -41,4 +43,14 @@ func _initialize() -> void:
 		var closest := NavigationServer3D.map_get_closest_point(map, to)
 		print("%-11s reached=%s end=%s closest=%s points=%d" % [key, end.distance_to(to) < 1.0, end.snapped(Vector3.ONE * 0.1),
 			closest.snapped(Vector3.ONE * 0.1), path.size()])
+	# Floor check: a downward ray at points around the rotunda openings.
+	var space := root.get_world_3d().direct_space_state
+	for x in [12.9, 13.3, 13.7, 14.1]:
+		for z in [-3.5, -4.0, -4.5, -5.0, -5.5]:
+			var from := Vector3(x, 3.0, z)
+			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 10.0, 1))
+			var what := "none"
+			if not hit.is_empty():
+				what = "%s y=%.2f" % [hit["collider"].name, hit["position"].y]
+			print("floor (%.1f, %.1f): %s" % [x, z, what])
 	quit()

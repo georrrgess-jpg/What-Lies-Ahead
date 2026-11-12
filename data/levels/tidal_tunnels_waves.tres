@@ -106,16 +106,15 @@ banner = ""
 [sub_resource type="Resource" id="wave_8"]
 script = ExtResource("2")
 spawns = {
-"jelly_head": 7,
+"jelly_head": 6,
 "deep_diver": 3,
 "mascot_inker": 3,
 "lifeguard_runner": 3,
-"boardwalk_bruiser": 1,
-"tourist_shambler": 5
+"tourist_shambler": 7
 }
-spawn_interval = 2.4
-burst = 2
-max_alive = 10
+spawn_interval = 1.5
+burst = 1
+max_alive = 9
 speed_scale = 1.1
 late_types_after = 0.2
 banner = "FINAL WAVE — FEEDING TIME"

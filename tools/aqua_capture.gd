@@ -9,13 +9,19 @@ extends SceneTree
 ## --trace=n        print the player's position, state and nearest zombies every n seconds
 ## --shots=prefix   save prefix_<t>.png at each time in --shot-times (seconds of run time)
 ## --cam=a>b        capture from a free camera at a looking at b instead of the player view
-## --speed=n        Engine.time_scale while waiting between shots (1 during the capture)
+## --speed=n        Engine.time_scale while waiting between shots (1 during the capture);
+##                  while waiting, 3D is also drawn at a fraction of the resolution so
+##                  the software renderer can reach later waves in reasonable time
 ## --damage-log     print, per wave, how much damage each enemy type dealt to the player
+## --stage=a,b,c    instead of playing: stand these enemy ids in a row at --stage-at
+##                  (facing --cam), posed mid-walk, with their telegraphs showing when
+##                  --stage-tell=1, capture one shot (--shots prefix) and quit
 ##
 ## The run is reached untyped (no RunDirector/Zombie type hints): this script is
 ## compiled before the autoloads exist, so it must not pull in game classes.
 
 const MENU := "res://scenes/ui/main_menu.tscn"
+const WAIT_SCALE := 0.2
 
 var _trace := 0.0
 var _shots := ""
@@ -26,7 +32,9 @@ var _clock := 0.0
 var _next_trace := 0.0
 var _damage_log := false
 var _damage := {}
-var _wave := 0
+var _stage: PackedStringArray = []
+var _stage_at := Vector3.ZERO
+var _stage_tell := false
 
 
 func _initialize() -> void:
@@ -44,6 +52,12 @@ func _initialize() -> void:
 			_speed = float(arg.trim_prefix("--speed="))
 		elif arg == "--damage-log":
 			_damage_log = true
+		elif arg.begins_with("--stage="):
+			_stage = arg.trim_prefix("--stage=").split(",")
+		elif arg.begins_with("--stage-at="):
+			_stage_at = _vec(arg.trim_prefix("--stage-at="))
+		elif arg == "--stage-tell=1":
+			_stage_tell = true
 	_times.sort()
 	change_scene_to_file.call_deferred(MENU)
 	_run.call_deferred()
@@ -54,7 +68,13 @@ func _run() -> void:
 	while director == null or director.get("player") == null:
 		await process_frame
 		director = get_first_node_in_group("run_director")
+	if not _stage.is_empty():
+		await _stage_and_capture(director)
+		quit(0)
+		return
 	Engine.time_scale = _speed
+	if not _times.is_empty():
+		root.scaling_3d_scale = WAIT_SCALE
 	if _damage_log:
 		director.player.damaged.connect(_on_damaged.bind(director))
 		director.wave_cleared.connect(func(n: int, _total: int): _flush_damage("wave %d cleared" % n))
@@ -108,6 +128,7 @@ func _flush_damage(label: String) -> void:
 
 func _capture(director: Node, t: float) -> void:
 	Engine.time_scale = 1.0
+	root.scaling_3d_scale = 1.0
 	var cam: Camera3D = null
 	if _cam != "":
 		var parts := _cam.split(">")
@@ -126,6 +147,48 @@ func _capture(director: Node, t: float) -> void:
 		cam.queue_free()
 		director.player.camera.make_current()
 	Engine.time_scale = _speed
+	root.scaling_3d_scale = WAIT_SCALE
+
+
+## Poses the requested enemies in a row (frozen mid-walk) and captures them.
+func _stage_and_capture(director: Node) -> void:
+	for i in 10:
+		await process_frame
+	director.set_process(false)
+	director.hud.visible = false
+	var scene: PackedScene = load("res://scenes/enemies/zombie.tscn")
+	var cam_from: Vector3 = _vec(_cam.split(">")[0]) if _cam != "" else director.player.camera.global_position
+	var zombies := []
+	for i in _stage.size():
+		var data = director.get_node("/root/GameData").enemy(StringName(_stage[i]))
+		var z = scene.instantiate()
+		z.setup(data, director.player, 1.0)
+		var offset := Vector3((i - (_stage.size() - 1) * 0.5) * 1.7, 0.0, 0.0)
+		z.position = _stage_at + offset
+		director._enemies_root.add_child(z)
+		var to: Vector3 = cam_from - z.global_position
+		z.rotation.y = atan2(to.x, to.z)
+		z.speed = 0.0
+		zombies.append(z)
+	for i in 6:
+		await physics_frame
+	for z in zombies:
+		z.set_physics_process(false)
+		var anim := z.find_child("AnimationPlayer", true, false) as AnimationPlayer
+		if anim:
+			var clip := "Walk-loop" if anim.has_animation("Walk-loop") else "Walk"
+			anim.play(clip)
+			anim.seek(0.35, true)
+			anim.pause()
+		if _stage_tell:
+			for b in z.behaviours:
+				if "_charge" in b:
+					b._charge = b.charge_time * 0.25
+					b.on_physics(z, 0.0)
+				if "_winding" in b and b._sac:
+					b._sac.material_override = b._glow
+					b._glow.emission_energy_multiplier = 5.0
+	await _capture(director, 0.0)
 
 
 func _vec(text: String) -> Vector3:
