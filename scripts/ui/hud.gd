@@ -92,13 +92,13 @@ func _anchor(c: Control, preset: Control.LayoutPreset, offset: Vector2, grow_h :
 func _build() -> void:
 	# Damage vignette (behind everything else).
 	var grad := Gradient.new()
-	grad.offsets = PackedFloat32Array([0.38, 1.0])
+	grad.offsets = PackedFloat32Array([0.62, 1.0])
 	grad.colors = PackedColorArray([Color(0.55, 0.0, 0.1, 0.0), Color(0.5, 0.0, 0.12, 0.95)])
 	var tex := GradientTexture2D.new()
 	tex.gradient = grad
 	tex.fill = GradientTexture2D.FILL_RADIAL
 	tex.fill_from = Vector2(0.5, 0.5)
-	tex.fill_to = Vector2(1.0, 1.0)
+	tex.fill_to = Vector2(0.5, 1.0)   # full strength at the screen edges, not only the corners
 	tex.width = 256
 	tex.height = 256
 	_vignette = TextureRect.new()

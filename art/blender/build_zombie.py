@@ -433,8 +433,10 @@ def clip_attack():
     # a lunging two-handed swipe down and forward.
     return "Attack", [
         (0, pose(14, -8, -68, -16), (0, 0, -0.02)),
-        (6, pose(-4, -20, -138, -26, hips=-2, spread=42), (0, 0.03, 0.02)),
-        (11, pose(-8, -24, -150, -30, hips=-4, spread=46), (0, 0.05, 0.03)),
+        # Spread is negative here: once an arm is raised past horizontal, the same
+        # roll that splays a lowered arm outward would swing it across the face.
+        (6, pose(-4, -20, -138, -26, hips=-2, spread=-40), (0, 0.03, 0.02)),
+        (11, pose(-8, -24, -152, -30, hips=-4, spread=-48), (0, 0.05, 0.03)),
         (14, pose(44, 8, -40, -2, hips=12, spread=8), (0, -0.2, -0.06)),
         (18, pose(34, 2, -26, -10, hips=9, spread=10), (0, -0.16, -0.05)),
         (24, pose(14, -8, -68, -16), (0, 0, -0.02)),

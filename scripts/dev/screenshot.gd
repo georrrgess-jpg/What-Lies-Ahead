@@ -21,6 +21,8 @@ extends Node
 ##   --shot-cam=x,y,z>tx,ty,tz   free camera from x,y,z looking at tx,ty,tz (hides the viewmodel)
 ##   --shot-anim=Clip:t    pose every staged zombie at time t (seconds) of Clip
 ##   --shot-near=1         stage one zombie of each kind close to the player instead of four
+##   --shot-fx=confetti|pop|burst|tracer|muzzle   spawn one effect 3 m in front of the camera
+##   --shot-threat=1       a zombie behind-right of the player starts its windup (threat warning check)
 
 var path := ""
 var args := {}
@@ -138,6 +140,26 @@ func _run() -> void:
 					hp.append("%s %.0f%s" % [z.data.id, z.health, " dead" if z.is_dead() else ""])
 			print("[shot] after shot %d: %s  look_pitch=%.2f head_pitch=%.2f" % [i + 1, hp, player.look_pitch(), player.head.rotation.x])
 		player.set_physics_process(false)
+	var fx := _arg("fx", "")
+	if fx != "":
+		var at := player.camera.global_position - player.camera.global_transform.basis.z * 3.0
+		match fx:
+			"confetti": Fx.confetti(director.get_parent(), at)
+			"pop": Fx.hit_pop(director.get_parent(), at, -player.camera.global_transform.basis.z, true)
+			"burst": Fx.kill_burst(director.get_parent(), at)
+			"muzzle":
+				player.view.on_fired(player.weapons.current)
+				Fx.tracer(director.get_parent(), player.view.muzzle_position(), at - player.camera.global_transform.basis.z * 12.0, player.weapons.current.tracer_color, player.weapons.current.tracer_width)
+			"tracer": Fx.tracer(director.get_parent(), player.view.muzzle_position(), at - player.camera.global_transform.basis.z * 12.0, Color(0.3, 0.95, 1.0), 0.035)
+	if _arg("threat", "0") == "1":
+		var z: Zombie = (load(RunDirector.ZOMBIE_SCENE) as PackedScene).instantiate()
+		z.setup(GameData.enemy(&"tourist_shambler"), player, 1.0)
+		z.position = player.global_position + player.global_transform.basis * Vector3(1.6, 0, 1.4)
+		director._enemies_root.add_child(z)
+		director._alive.append(z)
+		z.speed = 0.0
+		await _wait(2)
+		z._begin_attack()
 	if _arg("hurt", "0") == "1":
 		await _wait(5)
 		player.take_damage(20.0, player.global_position - player.global_transform.basis.x * 4.0)
@@ -181,7 +203,10 @@ func _stage_zombies(director: RunDirector, player: Player) -> void:
 		director._alive.append(z)
 		var to_player: Vector3 = player.global_position - z.global_position
 		z.rotation.y = atan2(to_player.x, to_player.z)
-		z.set_physics_process(false)
+		# Stand still but stay live, so hit flashes clear, knockback and deaths
+		# play out, and kills are counted by the run like in real play.
+		z.speed = 0.0
+		z.died.connect(director._on_zombie_died)
 		var anim := z.find_child("AnimationPlayer", true, false) as AnimationPlayer
 		if anim and pose != "":
 			var bits := pose.split(":")

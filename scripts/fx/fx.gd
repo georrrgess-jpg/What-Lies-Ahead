@@ -67,13 +67,13 @@ static func impact(parent: Node, position: Vector3, normal: Vector3, color: Colo
 ## Colourful pop when a shot lands on a zombie.
 static func hit_pop(parent: Node, position: Vector3, direction: Vector3, headshot: bool) -> void:
 	var colors := [Color(1.0, 0.35, 0.75), Color(0.3, 0.95, 1.0), Color(1.0, 0.85, 0.25)]
-	_burst(parent, position, -direction, colors, 14 if headshot else 9, 4.5, 0.32, 0.085)
+	_burst(parent, position, -direction, colors, 12 if headshot else 6, 4.0, 0.28, 0.08)
 
 
 ## Confetti burst when a defeated zombie pops.
 static func confetti(parent: Node, position: Vector3) -> void:
 	var colors := [Color(1.0, 0.35, 0.75), Color(0.3, 0.95, 1.0), Color(1.0, 0.85, 0.25), Color(0.6, 1.0, 0.45), Color.WHITE]
-	_burst(parent, position, Vector3.UP, colors, 44, 7.0, 1.1, 0.13)
+	_burst(parent, position, Vector3.UP, colors, 60, 5.0, 1.4, 0.2, 55.0, Vector3(0, -5.0, 0))
 
 
 ## Instant reward on the killing blow: a ring of stars and a bright flash.
@@ -134,44 +134,19 @@ static func ticket_popup(parent: Node, position: Vector3, tickets: int) -> void:
 	tw.chain().tween_callback(label.queue_free)
 
 
-static func _burst(parent: Node, position: Vector3, direction: Vector3, colors: Array, amount: int, speed: float, lifetime: float, size: float, spread := 65.0) -> void:
-	if parent == null:
+static func _burst(parent: Node, position: Vector3, direction: Vector3, colors: Array, amount: int, speed: float, lifetime: float, size: float, spread := 65.0, gravity := Vector3(0, -9.0, 0)) -> void:
+	if parent == null or not parent.is_inside_tree():
 		return
 	if _spark_mesh == null:
 		var q := BoxMesh.new()
-		q.size = Vector3(1, 1, 0.35)
+		q.size = Vector3(1, 1, 1)
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.vertex_color_use_as_albedo = true
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		q.material = m
 		_spark_mesh = q
-	var p := CPUParticles3D.new()
-	p.mesh = _spark_mesh
-	p.material_override = _unshaded(Color.WHITE, 1.3)
-	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	p.one_shot = true
-	p.explosiveness = 1.0
-	p.amount = amount
-	p.lifetime = lifetime
-	p.direction = direction if direction.length() > 0.01 else Vector3.UP
-	p.spread = spread
-	p.initial_velocity_min = speed * 0.45
-	p.initial_velocity_max = speed
-	p.gravity = Vector3(0, -9.0, 0)
-	p.damping_min = 1.0
-	p.damping_max = 2.5
-	p.angular_velocity_min = -360.0
-	p.angular_velocity_max = 360.0
-	p.scale_amount_min = size * 0.6
-	p.scale_amount_max = size * 1.3
-	var curve := Curve.new()
-	curve.add_point(Vector2(0.0, 1.0))
-	curve.add_point(Vector2(0.7, 0.8))
-	curve.add_point(Vector2(1.0, 0.0))
-	p.scale_amount_curve = curve
-	var ramp := Gradient.new()
-	ramp.offsets = PackedFloat32Array()
-	ramp.colors = PackedColorArray()
-	for i in colors.size():
-		ramp.add_point(float(i) / maxf(1.0, colors.size() - 1.0), colors[i])
-	p.color_initial_ramp = ramp
-	parent.add_child(p)
-	p.global_position = position
-	p.emitting = true
-	p.get_tree().create_timer(lifetime + 0.3, false).timeout.connect(p.queue_free)
+	var burst := FxBurst.new()
+	burst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(burst)
+	burst.setup(position, direction, colors, amount, speed, lifetime, size, spread, gravity, _spark_mesh)
