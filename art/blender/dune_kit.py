@@ -189,18 +189,6 @@ def corrugated(prefix, width, height, loc=(0, 0, 0), rot_z=0.0, pitch=0.3, depth
     return place(parts, loc, rot_z)
 
 
-def ring_of(prefix, maker, count, radius, z=0.0, phase=0.0):
-    """Calls maker(name) -> [parts] built at +X and rotates copies around Z."""
-    out = []
-    for i in range(count):
-        a = phase + math.tau * i / count
-        parts = maker(f"{prefix}{i:02d}")
-        for ob in parts:
-            ob.matrix_world = Matrix.Rotation(a, 4, "Z") @ Matrix.Translation((radius, 0, z)) @ ob.matrix_basis
-        out += parts
-    return out
-
-
 def window_strip(prefix, count, spacing, size, loc, rot_z=0.0, m_frame=None, m_glass=None):
     """A row of framed windows facing -Y."""
     parts = []

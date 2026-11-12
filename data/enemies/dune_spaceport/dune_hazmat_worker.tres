@@ -8,10 +8,10 @@
 [sub_resource type="Resource" id="burst"]
 script = ExtResource("4")
 fuse = 1.1
-radius = 3.2
-burst_damage = 10.0
-cloud_seconds = 4.0
-damage_per_second = 7.0
+radius = 3.0
+burst_damage = 8.0
+cloud_seconds = 3.5
+damage_per_second = 5.0
 
 [resource]
 script = ExtResource("1")

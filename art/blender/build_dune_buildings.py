@@ -82,8 +82,8 @@ def build_hangar():
     for s in (-1, 1):
         parts.append(box(f"Pier{s}", (0.8, 0.9, DOOR_H), (s * (DOOR_W / 2 + 0.4), -hd - 0.1, DOOR_H / 2), bevel=0.1, m=rust))
         parts += hazard_band(f"PierStripe{s}", 0.8, 1.6, (s * (DOOR_W / 2 + 0.4), -hd - 0.56, 0.8), 0.0, stripe=0.25)
-        parts.append(box(f"Flood{s}", (1.0, 0.6, 0.45), (s * 4.0, -hd - 0.5, DOOR_H + 1.25), bevel=0.08, m=sdark))
-        parts.append(fbox(f"FloodLens{s}", (0.8, 0.06, 0.3), (s * 4.0, -hd - 0.82, DOOR_H + 1.2), m=lamp))
+        parts.append(box(f"Flood{s}", (0.6, 0.7, 0.45), (s * (DOOR_W / 2 + 0.4), -hd - 0.85, DOOR_H - 0.7), bevel=0.08, m=sdark))
+        parts.append(fbox(f"FloodLens{s}", (0.46, 0.06, 0.3), (s * (DOOR_W / 2 + 0.4), -hd - 1.22, DOOR_H - 0.75), m=lamp))
         parts.append(rod(f"Downpipe{s}", (s * (hw - 0.4), -hd - 0.35, 0.2), (s * (hw - 0.4), -hd - 0.35, H_WALL + 0.4), 0.12, m=rdark))
     # Big number roundel and name board on the gable.
     parts.append(cyl("Roundel", 1.25, 0.14, (0, -hd - 0.3, 8.75), rot=(math.pi / 2, 0, 0), segs=28, bevel=0.05, m=rust))

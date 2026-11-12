@@ -195,8 +195,8 @@ def build_gantry():
             um.append(tube(f"Umb{idx}Hose{k}", pts, 0.08, m=hose, segs=8))
         parts += um
     # Lift cage on the -X face and stair flights on the front.
-    parts.append(fbox("LiftShaftA", (0.12, 1.6, top - 1.0), (-h - 0.9, -0.8, top / 2), m=yellow))
-    parts.append(fbox("LiftShaftB", (0.12, 1.6, top - 1.0), (-h - 0.9, 0.8, top / 2), m=yellow))
+    for k, (dx, dy) in enumerate(((-0.75, -0.8), (-0.75, 0.8), (0.0, -0.8), (0.0, 0.8))):
+        parts.append(fbox(f"LiftRail{k}", (0.1, 0.1, top - 1.0), (-h - 0.9 + dx, dy, top / 2), m=yellow))
     parts.append(box("LiftCar", (1.5, 1.5, 2.3), (-h - 0.85, 0, 7.4), bevel=0.08, m=dmat("Teal", rough=0.45)))
     parts.append(fbox("LiftCarWin", (0.08, 0.9, 0.7), (-h - 1.62, 0, 7.9), m=glass))
     for f in range(9):
@@ -265,7 +265,9 @@ def build_launch_mount():
         parts.append(box(f"TrenchFrame{s}T", (0.4, 5.6, 0.3), (x, 0, 1.68), bevel=0.06, m=sdark))
         for k in (-1, 1):
             parts.append(box(f"TrenchFrame{s}{k}", (0.4, 0.3, 1.5), (x, k * 2.65, 0.9), bevel=0.06, m=sdark))
-        parts.append(sphere(f"Soot{s}", 2.6, (x, 0, 1.4), scale=(0.08, 1.4, 0.9), m=soot, segs=16, rings=8))
+        soot_disc = cyl(f"Soot{s}", 2.6, 0.04, (x + s * 0.03, 0, 1.0), rot=(0, math.pi / 2, 0), segs=24, bevel=0.0, m=soot)
+        soot_disc.scale = (0.4, 1.35, 1.0)
+        parts.append(soot_disc)
     # Stencil and big pad number on the front (south) face.
     parts.append(text("FaceText", "LAUNCH PAD 9", 0.62, 0.06, (-3.2, -D / 2 - 0.04, 0.95), m=dark))
     parts.append(box("FacePlate", (2.2, 0.08, 1.1), (5.6, -D / 2 - 0.02, 0.95), bevel=0.04, m=rust))

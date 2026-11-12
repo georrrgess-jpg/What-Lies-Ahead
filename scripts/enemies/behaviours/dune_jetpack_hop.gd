@@ -18,7 +18,7 @@ func _wants_leap(z: Zombie) -> bool:
 	if d < min_range or d > max_range:
 		return false
 	var higher := z.target.global_position.y - z.global_position.y > climb_trigger
-	return higher or d > max_range * 0.6 or not z.has_line_of_sight()
+	return higher or d > max_range * 0.45 or not z.has_line_of_sight()
 
 
 func _on_windup_tick(z: Zombie, delta: float) -> void:

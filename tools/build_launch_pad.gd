@@ -49,7 +49,6 @@ var geo: Node3D          # collidable geometry (navmesh source)
 var dressing: Node3D     # non-colliding scenery
 var _materials := {}
 var _meshes := {}
-var _ground_material: ShaderMaterial
 
 
 func _initialize() -> void:
@@ -75,6 +74,7 @@ func _initialize() -> void:
 	_build_cargo_lift()
 	_build_gate()
 	_build_cover()
+	_build_details()
 	_build_station_and_portal()
 	_build_markings()
 	_build_lights()
@@ -230,15 +230,14 @@ func _build_launch_mount() -> void:
 	var c := MOUNT_C
 	_prop(pad, "dune_launch_mount", "Mount", c, 0.0)
 	_collider(pad, "MountBody", Vector3(MOUNT_SIZE.x, DECK_Y, MOUNT_SIZE.y), c + Vector3(0, DECK_Y * 0.5, 0))
-	# Launch table, rocket and the tail service masts are off-limits.
-	_collider(pad, "TableBlock", Vector3(8.4, 4.0, 8.4), c + Vector3(0, DECK_Y + 2.0, 0))
+	# Launch table, rocket and the tail service masts beside it are off-limits.
+	_collider(pad, "TableBlock", Vector3(10.2, 4.0, 8.4), c + Vector3(0.9, DECK_Y + 2.0, 0))
 	_prop(pad, "dune_rocket", "Rocket", c + Vector3(0, 2.6, 0), 0.0)
 	var hull := _collider(pad, "RocketHull", Vector3(4.2, 28.0, 4.2), c + Vector3(0, 2.6 + 4.0 + 14.0, 0))
 	hull.rotation.y = deg_to_rad(45.0)
-	for z in [-2.6, 2.6]:
-		_collider(pad, "ServiceMast%d" % int(z), Vector3(1.0, 3.4, 1.0), c + Vector3(5.2, DECK_Y + 1.7, z))
 	_prop(pad, "dune_gantry", "Gantry", c + Vector3(-7.75, DECK_Y, 0), 0.0)
-	_collider(pad, "GantryBody", Vector3(5.4, 36.0, 5.4), c + Vector3(-7.75, DECK_Y + 18.0, 0))
+	# Kept inside the deck edge: tall zombies (the Bruiser) walk under the overhang.
+	_collider(pad, "GantryBody", Vector3(4.9, 36.0, 5.4), c + Vector3(-7.55, DECK_Y + 18.0, 0))
 
 	# Ramps: the model's high end sits over its origin, descending toward +Z.
 	_ramp(pad, "RampSouth", Vector3(7.0, 0, c.z + MOUNT_SIZE.y * 0.5), 0.0)
@@ -282,6 +281,50 @@ func _ramp(parent: Node3D, ramp_name: String, top: Vector3, yaw: float) -> void:
 	convex.points = pts
 	shape.shape = convex
 	body.add_child(shape)
+	# Side walls under the handrails: the ramp is only entered from its ends
+	# (otherwise the navmesh would let zombies step onto its raised edges).
+	for x in [-2.1, 2.1]:
+		var side := CollisionShape3D.new()
+		side.name = "Side%d" % int(x)
+		var box := BoxShape3D.new()
+		box.size = Vector3(0.2, DECK_Y + 1.1, 8.0)
+		side.shape = box
+		side.position = Vector3(x, (DECK_Y + 1.1) * 0.5, 4.0)
+		body.add_child(side)
+		# Round bollards cap the wall ends (foot and head), so corner-cutting
+		# zombies slide past instead of snagging.
+		for end in [Vector3(x, 0.0, 8.0), Vector3(x, DECK_Y, 0.0)]:
+			var cap := CollisionShape3D.new()
+			cap.name = "Bollard%d_%d" % [int(x), int(end.z)]
+			var cyl := CylinderShape3D.new()
+			cyl.radius = 0.32
+			cyl.height = 1.2
+			cap.shape = cyl
+			cap.position = end + Vector3(0, 0.6, 0)
+			body.add_child(cap)
+			var post := MeshInstance3D.new()
+			post.name = "BollardMesh%d_%d" % [int(x), int(end.z)]
+			post.mesh = _bollard_mesh()
+			post.position = end + Vector3(0, 0.55, 0)
+			body.add_child(post)
+
+
+func _bollard_mesh() -> Mesh:
+	if _meshes.has("bollard"):
+		return _meshes["bollard"]
+	var m := StandardMaterial3D.new()
+	m.resource_name = "BollardPaint"
+	m.albedo_texture = load(TEX + "dune_hazard.png")
+	m.uv1_scale = Vector3(2.0, 1.0, 1.0)
+	m.roughness = 0.6
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.26
+	mesh.bottom_radius = 0.3
+	mesh.height = 1.1
+	mesh.radial_segments = 14
+	mesh.material = m
+	_meshes["bollard"] = mesh
+	return mesh
 
 
 ## A rail run: repeated rail modules plus one collision box.
@@ -515,8 +558,8 @@ func _build_cover() -> void:
 	# Jersey barriers: low cover in the plaza and along the lanes.
 	var barriers := [
 		[Vector3(-6.4, 0, 16.0), 20.0], [Vector3(6.6, 0, 16.4), -24.0], [Vector3(-13.5, 0, 9.0), 90.0],
-		[Vector3(13.6, 0, 3.8), 80.0], [Vector3(-12.6, 0, -14.0), 90.0], [Vector3(13.0, 0, -13.5), 95.0],
-		[Vector3(-2.0, 0, -21.5), 0.0], [Vector3(-16.0, 0, 15.5), 0.0],
+		[Vector3(13.6, 0, 3.8), 80.0], [Vector3(-15.2, 0, -13.0), 90.0], [Vector3(15.4, 0, -13.5), 95.0],
+		[Vector3(-16.0, 0, 15.5), 0.0],
 	]
 	i = 0
 	for b in barriers:
@@ -526,7 +569,7 @@ func _build_cover() -> void:
 		i += 1
 	var smalls := [
 		["dune_crates", Vector3(14.5, 0, 11.5), 30.0, Vector3(3.2, 1.6, 1.4)],
-		["dune_crates", Vector3(-9.5, 0, -25.5), -15.0, Vector3(3.2, 1.6, 1.4)],
+		["dune_crates", Vector3(-8.2, 0, -27.4), -15.0, Vector3(3.2, 1.6, 1.4)],
 		["dune_barrels", Vector3(-23.8, 0, 11.2), 10.0, Vector3(2.2, 1.45, 2.4)],
 		["dune_barrels", Vector3(12.6, 0, -24.5), -20.0, Vector3(2.2, 1.45, 2.4)],
 		["dune_cable_reel", Vector3(23.4, 0, -12.5), 60.0, Vector3(1.4, 2.0, 2.0)],
@@ -553,6 +596,33 @@ func _build_cover() -> void:
 	_prop(dressing, "dune_sign", "PadSign", Vector3(15.5, 0, 25.4), 180.0)
 	for x in [-2.5, 2.5]:
 		_collider(cover, "PadSignLeg%d" % int(x), Vector3(0.4, 4.0, 0.4), Vector3(15.5 - x, 2.0, 25.2))
+
+
+## Lamp posts along the walls, cones at the ramp feet, warning signs by the mount.
+func _build_details() -> void:
+	var details := Node3D.new()
+	details.name = "Details"
+	geo.add_child(details)
+	var lamps := [Vector3(-24.6, 0, 18.0), Vector3(-24.6, 0, 6.0), Vector3(-24.6, 0, -2.5), Vector3(24.6, 0, 12.5),
+		Vector3(24.6, 0, -3.0), Vector3(24.6, 0, -16.5), Vector3(-5.5, 0, 24.6), Vector3(6.0, 0, 24.6),
+		Vector3(-0.5, 0, -30.6), Vector3(21.5, 0, -30.6)]
+	var i := 0
+	for spot in lamps:
+		_prop(details, "dune_lamp", "Lamp%02d" % i, spot, i * 37.0)
+		_collider(details, "Lamp%02dCollision" % i, Vector3(0.45, 4.0, 0.45), spot + Vector3(0, 2.0, 0))
+		i += 1
+	var cones := [Vector3(4.3, 0, 6.9), Vector3(9.7, 0, 6.9), Vector3(-5.1, 0, -24.9), Vector3(0.1, 0, -24.9),
+		Vector3(-15.0, 0, -4.2), Vector3(-14.3, 0, -5.4), Vector3(13.2, 0, 13.4)]
+	i = 0
+	for spot in cones:
+		_prop(dressing, "dune_cone", "Cone%02d" % i, spot, i * 23.0)
+		i += 1
+	var signs := [[Vector3(-12.4, 0, -3.0), -90.0], [Vector3(12.4, 0, -15.2), 90.0], [Vector3(-3.6, 0, 0.8), 0.0],
+		[Vector3(3.0, 0, -18.6), 180.0]]
+	i = 0
+	for spec in signs:
+		_prop(dressing, "dune_warning", "Warning%d" % i, spec[0], spec[1])
+		i += 1
 
 
 func _build_station_and_portal() -> void:
@@ -823,7 +893,7 @@ func _build_vapour() -> void:
 		var a := TAU * k / 8.0 + 0.2
 		base.append([c + Vector3(cos(a) * 2.4, 3.2, sin(a) * 2.4), a])
 	_vapour_set(vapour, "RocketBase", base, 6, {"drift": Vector3(0, 0, 2.6), "rise": 1.2, "life": 3.6,
-		"size_start": 0.8, "size_end": 2.8, "opacity": 0.5})
+		"size_start": 0.7, "size_end": 2.3, "opacity": 0.36})
 	# LOX vent high on the hull: a white plume blown sideways that sinks as it cools.
 	var vent: Array = [[c + Vector3(2.15, 24.0, 0.4), 0.0], [c + Vector3(-0.6, 15.0, 2.05), PI * 0.5]]
 	_vapour_set(vapour, "LoxVent", vent, 10, {"drift": Vector3(0, 0, 5.5), "rise": -3.5, "life": 3.0,

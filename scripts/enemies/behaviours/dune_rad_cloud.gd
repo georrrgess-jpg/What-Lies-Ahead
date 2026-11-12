@@ -11,10 +11,10 @@ const TICK := 0.5
 const COLOR := Color(0.62, 1.0, 0.25)
 
 var fuse := 1.1
-var radius := 3.2
-var burst_damage := 10.0
-var cloud_seconds := 4.0
-var damage_per_second := 7.0
+var radius := 3.0
+var burst_damage := 8.0
+var cloud_seconds := 3.5
+var damage_per_second := 5.0
 
 var _time := 0.0
 var _burst := false

@@ -75,15 +75,14 @@ banner = "WAVE 5 — RADIATION LEAK: STAY OUT OF THE GLOW"
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"dune_jet_mechanic": 5,
+"dune_jet_mechanic": 4,
 "dune_space_cadet": 6,
-"dune_hazmat_worker": 3,
-"tourist_shambler": 5,
-"boardwalk_bruiser": 1
+"dune_hazmat_worker": 2,
+"tourist_shambler": 7
 }
 spawn_interval = 2.4
 burst = 2
-max_alive = 10
+max_alive = 9
 speed_scale = 1.07
 late_types_after = 0.2
 banner = ""
@@ -91,15 +90,15 @@ banner = ""
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"dune_hazmat_worker": 4,
+"dune_hazmat_worker": 3,
 "dune_space_cadet": 7,
-"dune_jet_mechanic": 5,
-"tourist_shambler": 5,
-"boardwalk_bruiser": 2
+"dune_jet_mechanic": 4,
+"tourist_shambler": 6,
+"boardwalk_bruiser": 1
 }
 spawn_interval = 2.3
 burst = 2
-max_alive = 11
+max_alive = 9
 speed_scale = 1.08
 late_types_after = 0.15
 banner = "WAVE 7 — HEAVY LIFTERS ON THE PAD"
@@ -107,15 +106,15 @@ banner = "WAVE 7 — HEAVY LIFTERS ON THE PAD"
 [sub_resource type="Resource" id="wave_8"]
 script = ExtResource("2")
 spawns = {
-"dune_jet_mechanic": 9,
-"dune_space_cadet": 7,
-"dune_hazmat_worker": 3,
-"tourist_shambler": 4,
-"boardwalk_bruiser": 2
+"dune_jet_mechanic": 7,
+"dune_space_cadet": 6,
+"dune_hazmat_worker": 2,
+"tourist_shambler": 7,
+"boardwalk_bruiser": 1
 }
-spawn_interval = 2.6
-burst = 3
-max_alive = 13
+spawn_interval = 2.4
+burst = 2
+max_alive = 11
 speed_scale = 1.1
 late_types_after = 0.3
 banner = "FINAL WAVE — T-MINUS ZERO: JETPACK SWARM"

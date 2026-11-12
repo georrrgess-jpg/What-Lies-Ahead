@@ -14,6 +14,9 @@
     dune_cable_reel.glb    cable spool lying on its side.
     dune_windsock.glb      striped windsock on a pole.
     dune_sign.glb          roadside billboard with bulbs: "LAUNCH PAD 9".
+    dune_lamp.glb          5 m atomic-age lamp post: glowing globe inside two orbit rings.
+    dune_cone.glb          traffic cone.
+    dune_warning.glb       small warning sign on a post ("FUEL LINE · NO ENTRY").
     dune_monorail_pylon.glb / dune_monorail_beam.glb / dune_monorail_car.glb
                            T pylon, 10 m guideway along X (top at 8.7 m) and a two-car train.
 
@@ -308,6 +311,51 @@ def build_sign():
     save("dune_sign", [merge("Sign", parts)])
 
 
+def build_lamp():
+    reset_scene()
+    teal, tdark = dmat("Teal", rough=0.45), dmat("TealDark", rough=0.5)
+    rust, conc = dmat("Rust", rough=0.55), dmat("Concrete", rough=0.9)
+    steel = dmat("Steel", rough=0.4, metal=0.5)
+    globe = glow("BulbAmber", "#ffc24a", 3.0)
+    parts = [cyl("Footing", 0.42, 0.3, (0, 0, 0.15), segs=10, bevel=0.05, m=conc),
+             cyl("Base", 0.26, 0.9, (0, 0, 0.75), segs=12, bevel=0.05, m=tdark, radius_top=0.16),
+             cyl("Pole", 0.09, 3.6, (0, 0, 3.0), segs=10, bevel=0.0, m=teal),
+             cyl("Collar", 0.16, 0.18, (0, 0, 1.25), segs=12, bevel=0.04, m=rust),
+             cyl("Cup", 0.2, 0.22, (0, 0, 4.82), segs=12, bevel=0.04, m=rust, radius_top=0.28),
+             sphere("Globe", 0.32, (0, 0, 5.2), m=globe, segs=16, rings=10),
+             bulb("GlobeHalo", 0.3, (0, 0, 5.2), globe),
+             cyl("Spike", 0.03, 0.6, (0, 0, 5.75), segs=6, bevel=0.0, m=steel),
+             sphere("SpikeBall", 0.06, (0, 0, 6.08), m=rust, segs=8, rings=5)]
+    for i, rot in enumerate(((math.radians(70), 0, 0), (math.radians(70), 0, math.radians(90)))):
+        ring = torus(f"Orbit{i}", 0.52, 0.03, (0, 0, 0), m=rust, major_segs=28, minor_segs=6)
+        ring.rotation_euler = rot
+        ring.location = (0, 0, 5.2)
+        parts.append(ring)
+    save("dune_lamp", [merge("Lamp", parts)])
+
+
+def build_cone():
+    reset_scene()
+    orange, white = dmat("ConeOrange", "#ff6a1f", rough=0.55), dmat("Hull", rough=0.45)
+    dark = dmat("Rubber", rough=0.8)
+    parts = [box("ConeBase", (0.46, 0.46, 0.06), (0, 0, 0.03), bevel=0.02, m=dark),
+             cyl("ConeBody", 0.18, 0.66, (0, 0, 0.39), segs=14, bevel=0.0, m=orange, radius_top=0.035),
+             cyl("ConeBand", 0.13, 0.12, (0, 0, 0.42), segs=14, bevel=0.0, m=white, radius_top=0.105)]
+    save("dune_cone", [merge("Cone", parts)])
+
+
+def build_warning():
+    reset_scene()
+    steel, rust = dmat("Steel", rough=0.4, metal=0.5), dmat("Rust", rough=0.55)
+    yellow, dark = dmat("Hazard", rough=0.5), dmat("HazardDark", rough=0.6)
+    parts = [cyl("Post", 0.05, 1.6, (0, 0.06, 0.8), segs=8, bevel=0.0, m=steel),
+             box("Plate", (1.0, 0.05, 0.7), (0, 0, 1.45), bevel=0.03, m=yellow),
+             box("PlateRim", (1.06, 0.04, 0.76), (0, 0.02, 1.45), bevel=0.02, m=dark),
+             text("Line1", "FUEL LINE", 0.17, 0.02, (0, -0.035, 1.55), m=dark),
+             text("Line2", "NO ENTRY", 0.15, 0.02, (0, -0.035, 1.33), m=rust)]
+    save("dune_warning", [merge("Warning", parts)])
+
+
 def build_monorail():
     reset_scene()
     conc, cdark = dmat("Concrete", rough=0.9), dmat("ConcreteDark", rough=0.92)
@@ -340,6 +388,6 @@ def build_monorail():
 
 if __name__ == "__main__":
     which = sys.argv[1:] or ["container", "dish", "tank_sphere", "tank_long", "light_mast", "barrier", "barrels", "crates",
-                             "tug", "cable_reel", "windsock", "sign", "monorail"]
+                             "tug", "cable_reel", "windsock", "sign", "lamp", "cone", "warning", "monorail"]
     for key in which:
         globals()["build_" + key]()

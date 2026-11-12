@@ -6,10 +6,10 @@ extends EnemyBehaviour
 ## ring during the fuse and nothing happens.
 
 @export var fuse := 1.1
-@export var radius := 3.2
-@export var burst_damage := 10.0
-@export var cloud_seconds := 4.0
-@export var damage_per_second := 7.0
+@export var radius := 3.0
+@export var burst_damage := 8.0
+@export var cloud_seconds := 3.5
+@export var damage_per_second := 5.0
 
 
 func on_death(z: Zombie) -> void:
