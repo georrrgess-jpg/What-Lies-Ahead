@@ -615,6 +615,63 @@ def _variant(fn, pitch, seed):
     return np.interp(idx, np.arange(len(x)), x)
 
 
+def intro_boot():
+    """Startup: a CRT-style power-on blip with a rising whine."""
+    out = silence(0.6)
+    place(out, click(0.02, 3000), 0.0, 0.8)
+    place(out, sweep(60, 2400, 0.45, "sine", 2.5) * env(0.45, 0.01, 0.6, power=0.7) * 0.25, 0.02, 1.0)
+    place(out, filt(noise(0.3), high=5000) * env(0.3, 0.005, 0.25, power=1.5) * 0.3, 0.0, 1.0)
+    return out
+
+
+def intro_swell():
+    """A big synth swell under the sunrise, resolving into a chord."""
+    d = 2.2
+    out = silence(d)
+    for n, g in ((-24, 0.5), (-12, 0.35), (-5, 0.25), (0, 0.22), (4, 0.18)):
+        x = tone(note(n), d, "saw", 0.004, 5.0) * env(d, 1.2, d * 1.6, power=0.5, release=0.4)
+        place(out, filt(x, low=900 + 300 * (n + 24) / 28), 0.0, g)
+    place(out, sweep(200, 3000, 1.6, "sine", 2.0) * env(1.6, 0.8, 2.0, power=0.5) * 0.08, 0.0, 1.0)
+    return out
+
+
+def title_hit():
+    """The title lands: deep boom, bright stab and a shimmering tail."""
+    d = 1.6
+    out = silence(d)
+    place(out, sweep(110, 32, 0.9, "sine", 0.4) * env(0.9, 0.002, 0.7, power=1.6), 0.0, 1.3)
+    place(out, filt(noise(0.4), low=2500) * env(0.4, 0.001, 0.25, power=2.0), 0.0, 0.6)
+    for n in (0, 7, 12, 16, 19):
+        place(out, tone(note(n), 1.2, "square") * env(1.2, 0.003, 1.0, power=1.6) * 0.12, 0.0, 1.0)
+    place(out, _shimmer(1.4, 1.2, 6000) * 0.3, 0.05, 1.0)
+    return crush(out, 1.2)
+
+
+def title_tick():
+    return blip(note(28), 0.06, "square", 0.05) * 0.6 + np.pad(click(0.02, 4200), (0, int(SR * 0.04)))
+
+
+def ui_whoosh():
+    d = 0.45
+    t = t_axis(d)
+    n = noise(d)
+    centre = 400 + 3000 * (t / d)
+    out = np.zeros_like(n)
+    # Swept band-pass approximated by blending three bands.
+    for c, w in ((600, 300), (1500, 700), (3200, 1400)):
+        weight = np.exp(-((centre - c) / (w * 1.5)) ** 2)
+        out += band(n, c, w) * weight
+    return out * env(d, 0.12, d * 1.3, power=0.8, release=0.1) * 2.0
+
+
+def deploy():
+    out = silence(0.9)
+    place(out, sweep(150, 900, 0.4, "saw", 1.5) * env(0.4, 0.01, 0.5, power=0.8) * 0.4, 0.0, 1.0)
+    place(out, jingle([0, 7, 12], 0.07, 0.25, "square"), 0.25, 0.7)
+    place(out, _sub_thump(140, 45, 0.3, 0.2), 0.25, 1.0)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Loops
 # ---------------------------------------------------------------------------
@@ -650,6 +707,55 @@ def pier_ambience():
         for k in range(2):
             place(left, cry, at + k * 0.42, 1 - pan)
             place(right, cry, at + k * 0.42, pan)
+    stereo = np.stack([left, right], axis=1)
+    return loopable(stereo, 1.0)
+
+
+def menu_theme():
+    """Menu music: a moody, wide synthwave loop (64 s at 100 BPM), slow
+    arpeggios over a pulsing bass, with a brighter B section."""
+    bpm = 100.0
+    beat = 60.0 / bpm
+    bars = 26
+    d = bars * 4 * beat
+    left, right = silence(d), silence(d)
+
+    def both(x, at, gain, pan=0.5):
+        place(left, x, at, gain * (1 - pan) * 2)
+        place(right, x, at, gain * pan * 2)
+
+    prog = [(-15, (0, 3, 7)), (-19, (0, 4, 7)), (-12, (0, 4, 7)), (-17, (0, 4, 7))]   # F#m D A C# -> roots from A4
+    kick = sweep(120, 40, 0.3, "sine", 0.5) * env(0.3, 0.001, power=2.0)
+    snare = (filt(noise(0.3), high=1200) * 0.7 + tone(180, 0.3) * 0.2) * env(0.3, 0.001, 0.25, power=1.8)
+    for bar in range(bars):
+        root, triad = prog[(bar // 2) % 4]
+        t0 = bar * 4 * beat
+        section_b = 12 <= bar < 24
+        drums = bar >= 2
+        for b in range(4):
+            if drums:
+                both(kick, t0 + b * beat, 0.5 if b in (0, 2) else 0.25)
+                if b in (1, 3):
+                    both(snare, t0 + b * beat, 0.22)
+            for h in range(2):
+                both(filt(noise(0.04), high=7500) * env(0.04, 0.0005, power=2.5), t0 + (b + h * 0.5) * beat, 0.08 if h else 0.05, 0.65)
+        # Pulsing eighth-note bass.
+        for e in range(8):
+            x = tone(note(root - 12), beat * 0.45, "saw") * env(beat * 0.45, 0.004, beat * 0.5, power=1.2)
+            both(filt(x, low=600), t0 + e * beat * 0.5, 0.35)
+        # Pad.
+        pad = sum(tone(note(root + s2), 4 * beat, "saw", 0.003, 4.0) for s2 in triad)
+        both(filt(pad, low=1400 if section_b else 900) * env(4 * beat, 0.6, 8 * beat, power=0.4, release=0.5), t0, 0.06)
+        # Arpeggio (sixteenths in B, eighths in A).
+        steps = 16 if section_b else 8
+        for e in range(steps):
+            n = triad[e % 3] + (12 if (e // 3) % 2 else 0)
+            x = tone(note(root + 12 + n), beat * 4 / steps * 0.8, "square") * env(beat * 4 / steps * 0.8, 0.003, beat * 0.4, power=1.4)
+            both(filt(x, low=3500), t0 + e * beat * 4 / steps, 0.07, 0.25 + 0.5 * (e % 2))
+        if section_b and bar % 2 == 0:
+            for k, (n, at, ln) in enumerate([(19, 0, 1.5), (16, 1.5, 0.5), (14, 2, 2)]):
+                x = tone(note(root + n), ln * beat * 0.95, "saw", 0.006, 5.5) * env(ln * beat * 0.95, 0.02, ln * beat * 1.3, power=0.7, release=0.05)
+                both(filt(x, low=2400), t0 + at * beat, 0.09, 0.55)
     stereo = np.stack([left, right], axis=1)
     return loopable(stereo, 1.0)
 
@@ -723,6 +829,7 @@ SFX_SOUNDS = [
     purchase, deny, swap, unlock, portal_open, level_clear, defeat, ui_hover, ui_click,
     hitmarker, kill_confirm, footstep_1, footstep_2, heartbeat, bruiser_roar_1, bruiser_roar_2, bruiser_slam,
     headshot_ping, combo_up, jump, land, slide, reload_vent, reload_materialize, reload_clunk, reload_spin,
+    intro_boot, intro_swell, title_hit, title_tick, ui_whoosh, deploy,
 ]
 
 # Extra takes of the most repeated sounds; the game picks one at random (name_b, name_c).
@@ -754,6 +861,7 @@ def run_core():
     write_loop_wav("portal_hum", portal_hum())
     write_ogg("pier_ambience", pier_ambience(), peak=0.7)
     write_ogg("boardwalk_loop", boardwalk_loop(), peak=0.75)
+    write_ogg("menu_theme", menu_theme(), peak=0.72)
     print("core: %d sfx + portal_hum, pier_ambience.ogg, boardwalk_loop.ogg" % len(SFX_SOUNDS))
 
 

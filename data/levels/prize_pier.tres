@@ -7,7 +7,7 @@
 script = ExtResource("1")
 id = &"prize_pier"
 display_name = "Prize Pier"
-blurb = "Hold the midway around the prize kiosk, then follow the lights to the portal."
+blurb = "Hold the midway around the loadout station, then follow the lights to the portal."
 scene_path = "res://scenes/levels/prize_pier.tscn"
 wave_set = ExtResource("2")
 requires_level = &""

@@ -8,6 +8,8 @@ var level: LevelData
 var weapon_id: StringName
 ## Which menu page to open when the menu scene loads ("" = title).
 var menu_page := ""
+## The startup intro plays once per session.
+var intro_played := false
 
 
 func _ready() -> void:
@@ -31,8 +33,16 @@ func start_level(level_id: StringName, starter_weapon: StringName) -> bool:
 	weapon_id = starter_weapon if GameData.weapon(starter_weapon) else GameData.default_weapon_id()
 	Profile.data["last_weapon"] = String(weapon_id)
 	get_tree().paused = false
-	get_tree().change_scene_to_file(data.scene_path)
+	_load_level(data)
 	return true
+
+
+## Shows the loading card (threaded load) unless running headless tests.
+func _load_level(data: LevelData) -> void:
+	if DisplayServer.get_name() == "headless" or has_node("DevDriver"):
+		get_tree().change_scene_to_file(data.scene_path)
+	else:
+		LoadingScreen.start(get_tree(), data)
 
 
 ## Reloads the level scene, which rebuilds the run from scratch.
