@@ -51,6 +51,22 @@ EYE_GLOW = {
 }
 
 
+def glass(name, color, alpha=0.35, emit=0.15, rough=0.05):
+    """Transparent tinted glass (visors, bubble helmets), alpha-blended in Godot."""
+    if name in bpy.data.materials:
+        return bpy.data.materials[name]
+    m = mat(name, color, rough=rough, emit=emit)
+    bsdf = next(n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    bsdf.inputs["Alpha"].default_value = alpha
+    for attr, value in (("surface_render_method", "BLENDED"), ("blend_method", "BLEND")):
+        if hasattr(m, attr):
+            try:
+                setattr(m, attr, value)
+            except (TypeError, ValueError):
+                pass
+    return m
+
+
 def bind(bone, parts):
     """Tag parts with the bone they follow (same contract as build_zombie.bind)."""
     if not isinstance(parts, (list, tuple)):
@@ -331,10 +347,11 @@ class Shape:
         f = max(0.0, 1.0 - abs((x - du) / a) ** self.n) ** (1.0 / self.n)
         return dv + (b * f if back else -b * f)
 
-    def shell(self, name, m, top, bottom, off=0.022, gap=0.0, tear=None, flare=0.0, segs=24, steps=6, lip=0.02):
+    def shell(self, name, m, top, bottom, off=0.022, gap=0.0, tear=None, flare=0.0, segs=24, steps=6, lip=0.02, gap_at=0.0):
         """A layer over the profile from `top` down to `bottom` (heights), `off`
-        proud of it, open at the front over `gap` degrees, with lips at both
-        edges; `tear` (tear_fn) rags the bottom edge. Garments, vests, hair."""
+        proud of it, open over `gap` degrees centred on the front (gap_at = 0;
+        180 = the back), with lips at both edges; `tear` (tear_fn) rags the
+        bottom edge. Garments, vests, armour plates, hair."""
         rings = []
         for i in range(steps + 1):
             z = top + (bottom - top) * i / steps
@@ -351,8 +368,8 @@ class Shape:
 
         def skip(k):
             # The section's +V axis is -Y (front) for a downward loft.
-            t = math.tau * (k + 0.5) / segs
-            return abs(math.atan2(math.sin(t - math.pi / 2), math.cos(t - math.pi / 2))) < half
+            t = math.tau * (k + 0.5) / segs - math.pi / 2 - math.radians(gap_at)
+            return abs(math.atan2(math.sin(t), math.cos(t))) < half
         return loft(name, rings, m, axis=(0, 0, -1), segs=segs, cap0=False, cap1=False, jag=jag, skip=skip if gap > 0 else None)
 
 
@@ -553,7 +570,7 @@ def hair(p, w, m, style="fringe", seed=2):
     if style in ("fringe", "mop"):
         # A ring of shaggy clumps round the back of the head, ear to ear.
         for i in range(11):
-            a = math.radians(-100 + 200 * i / 10)
+            a = math.radians(-84 + 168 * i / 10)
             # Lowest at the nape, rising above the ears at the sides.
             z = 1.56 + 0.13 * abs(math.sin(a)) ** 2 + rng.uniform(-0.02, 0.03)
             ra, rb, cx, cy = sk.section(z)
@@ -646,7 +663,7 @@ def face_parts(p, f, m, w, tongue=None, eye_z=1.62, k=1.0, lid=None, brow=None):
         if tilt is not None:
             parts.append(dome(f"{p}Lid{i}", r * 1.07, (ex, ey, ez), (sc[0], sc[1] * 1.08, sc[2]), lid, tilt=math.radians(tilt),
                               roll=math.radians(-side * f["roll"]), segs=14, rings=4))
-        parts.append(sphere(f"{p}Bag{i}", r * 0.9, (ex, fy + 0.012, ez - r * 0.95), scale=(1.15, 0.45, 0.42), m=lid, segs=10, rings=5))
+        parts.append(sphere(f"{p}Bag{i}", r * 0.78, (ex + side * r * 0.08, fy + 0.016, ez - r * 0.92), scale=(1.0, 0.4, 0.3), m=lid, segs=10, rings=5))
         bt = f["brows"][i]
         parts.append(box(f"{p}Brow{i}", (r * 2.1, 0.07, 0.055 * k), (ex, face_y(w, ez + r * 1.4) - 0.005, ez + r * 1.35 + f["bz"][i]),
                          rot=rad(0, -side * bt, 0), bevel=0.022, m=brow))

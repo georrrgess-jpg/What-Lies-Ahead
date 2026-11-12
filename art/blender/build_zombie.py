@@ -224,7 +224,6 @@ def tourist_accessories(m):
         box(p + "CapBrim", (0.38, 0.28, 0.05), (0, HEAD_Y + 0.38, 1.75), rot=rad(-12, 0, 0), bevel=0.02, m=m["pink"]),
         box(p + "CapBand", (0.66, 0.54, 0.06), (0, HEAD_Y + 0.02, 1.8), bevel=0.025, m=m["pink"]),
         sphere(p + "CapButton", 0.045, (0, HEAD_Y + 0.02, 2.0), m=m["pink"], segs=8, rings=5),
-        box(p + "HairFront", (0.4, 0.1, 0.12), (0, HEAD_Y - 0.25, 1.82), rot=rad(12, 0, 0), bevel=0.04, m=m["dark"]),
     ])
     acc["Acc_Tourist_Bucket"] = bind("Head", [
         cyl(p + "BucketCrown", 0.31, 0.24, (0, HEAD_Y, 1.92), segs=20, bevel=0.06, m=m["teal"], radius_top=0.27),
