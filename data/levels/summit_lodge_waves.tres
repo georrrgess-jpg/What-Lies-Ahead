@@ -109,15 +109,15 @@ banner = ""
 script = ExtResource("2")
 spawns = {
 "frost_ski_racer": 12,
-"frost_frozen_tourist": 10,
+"frost_frozen_tourist": 8,
 "frost_yeti": 2,
 "lifeguard_runner": 3,
-"tourist_shambler": 4
+"tourist_shambler": 3
 }
-spawn_interval = 2.5
+spawn_interval = 2.8
 burst = 3
-max_alive = 13
-speed_scale = 1.1
+max_alive = 12
+speed_scale = 1.05
 late_types_after = 0.15
 banner = "FINAL WAVE — WHITEOUT"
 

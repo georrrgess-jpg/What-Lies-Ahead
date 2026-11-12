@@ -455,10 +455,13 @@ func _build_traits(w: WeaponData) -> void:
 
 # --- stats: [value for the bar, text] ------------------------------------------------
 
+## Sustained single-target damage per second at the real fire rate, reloads
+## (or overheat vents) included, so a big magazine and a fast reload count.
 func _stat_dps(w: WeaponData) -> Array:
 	return [w.damage_per_second(), "%d" % roundi(w.damage_per_second())]
 
 
+## Damage of one trigger pull: a whole burst, every pellet, a full charge.
 func _stat_burst(w: WeaponData) -> Array:
 	return [w.burst_damage(), "%d" % roundi(w.burst_damage())]
 

@@ -76,8 +76,8 @@ banner = "WAVE 5 — RIOT SQUAD ON THE ROOF"
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"neon_punk": 8,
-"hover_courier": 6,
+"neon_punk": 6,
+"hover_courier": 8,
 "lifeguard_runner": 3,
 "tourist_shambler": 2,
 "riot_bruiser": 2
@@ -92,8 +92,8 @@ banner = ""
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"hover_courier": 8,
-"neon_punk": 8,
+"hover_courier": 10,
+"neon_punk": 6,
 "tourist_shambler": 5,
 "riot_bruiser": 2
 }
@@ -107,8 +107,8 @@ banner = ""
 [sub_resource type="Resource" id="wave_8"]
 script = ExtResource("2")
 spawns = {
-"hover_courier": 10,
-"neon_punk": 10,
+"hover_courier": 14,
+"neon_punk": 6,
 "lifeguard_runner": 6,
 "riot_bruiser": 2
 }

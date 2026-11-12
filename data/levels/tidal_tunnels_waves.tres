@@ -7,13 +7,13 @@
 script = ExtResource("2")
 spawns = {
 "deep_diver": 3,
-"tourist_shambler": 5
+"tourist_shambler": 4
 }
 spawn_interval = 2.2
 burst = 1
 max_alive = 5
 speed_scale = 1.0
-late_types_after = 0.35
+late_types_after = 0.4
 banner = "TIDAL TUNNELS — DEEP DIVERS: CRACK THE VISOR"
 
 [sub_resource type="Resource" id="wave_2"]
@@ -76,9 +76,9 @@ banner = "WAVE 5 — JELLY HEADS: BACK OFF WHEN THEY CRACKLE"
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"jelly_head": 5,
-"mascot_inker": 5,
-"deep_diver": 5,
+"jelly_head": 6,
+"mascot_inker": 4,
+"deep_diver": 4,
 "tourist_shambler": 3,
 "lifeguard_runner": 2
 }
@@ -92,11 +92,11 @@ banner = ""
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"mascot_inker": 6,
-"jelly_head": 6,
-"deep_diver": 5,
+"jelly_head": 8,
+"mascot_inker": 4,
+"deep_diver": 4,
 "lifeguard_runner": 3,
-"tourist_shambler": 2
+"tourist_shambler": 3
 }
 spawn_interval = 2.2
 burst = 2
@@ -108,16 +108,16 @@ banner = ""
 [sub_resource type="Resource" id="wave_8"]
 script = ExtResource("2")
 spawns = {
-"deep_diver": 7,
+"deep_diver": 9,
 "jelly_head": 10,
-"mascot_inker": 8,
+"mascot_inker": 5,
 "lifeguard_runner": 3,
-"tourist_shambler": 2
+"tourist_shambler": 1
 }
-spawn_interval = 2.4
+spawn_interval = 2.6
 burst = 3
-max_alive = 12
-speed_scale = 1.1
+max_alive = 11
+speed_scale = 1.08
 late_types_after = 0.15
 banner = "FINAL WAVE — FEEDING TIME"
 

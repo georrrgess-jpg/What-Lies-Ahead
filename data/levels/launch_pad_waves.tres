@@ -77,12 +77,12 @@ script = ExtResource("2")
 spawns = {
 "dune_jet_mechanic": 6,
 "dune_space_cadet": 7,
-"dune_hazmat_worker": 3,
+"dune_hazmat_worker": 4,
 "tourist_shambler": 4
 }
-spawn_interval = 2.4
+spawn_interval = 2.3
 burst = 2
-max_alive = 9
+max_alive = 10
 speed_scale = 1.07
 late_types_after = 0.2
 banner = ""
@@ -90,14 +90,14 @@ banner = ""
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"dune_hazmat_worker": 5,
+"dune_hazmat_worker": 6,
 "dune_space_cadet": 7,
-"dune_jet_mechanic": 6,
+"dune_jet_mechanic": 7,
 "tourist_shambler": 4
 }
-spawn_interval = 2.3
+spawn_interval = 2.2
 burst = 2
-max_alive = 10
+max_alive = 11
 speed_scale = 1.08
 late_types_after = 0.15
 banner = "WAVE 7 — HEAVY LIFTERS ON THE PAD"
@@ -110,9 +110,9 @@ spawns = {
 "dune_hazmat_worker": 6,
 "tourist_shambler": 4
 }
-spawn_interval = 2.5
+spawn_interval = 2.3
 burst = 3
-max_alive = 13
+max_alive = 14
 speed_scale = 1.1
 late_types_after = 0.2
 banner = "FINAL WAVE — T-MINUS ZERO: JETPACK SWARM"
