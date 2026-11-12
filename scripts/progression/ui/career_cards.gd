@@ -3,9 +3,6 @@ extends RefCounted
 ## Builders for the Career page's cards: the player card, reward-track cards,
 ## weapon mastery cards and challenge tiles. Each returns a finished Control.
 
-const KIND_LABELS := {"weapon_finish": "Weapon finish", "weapon_cell": "Energy cell", "banner": "Banner", "title": "Title"}
-
-
 ## Account level, XP bar, equipped title and banner, lifetime stats.
 static func player_card() -> Control:
 	var lvl := Progression.level()
@@ -139,7 +136,7 @@ static func track_card(lvl: int, current: int) -> Control:
 	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name.custom_minimum_size = Vector2(150, 0)
 	v.add_child(name)
-	var kind := String(KIND_LABELS.get(String(item.slot), item.slot_label())) if item else "Pier Pass stamp"
+	var kind := item.slot_label() if item else "Pier Pass stamp"
 	v.add_child(UiKit.label(kind, 17, Color(accent, 0.9) if item else UiKit.AMBER))
 	card.tooltip_text = item.description if item else (stamp[1] if stamp.size() > 1 else "")
 	if is_next:
@@ -189,9 +186,31 @@ static func weapon_card(w: WeaponData, on_change: Callable) -> Control:
 	var ceiling := Mastery.rank_ceiling(rank)
 	var xp_text := "%s XP · fully mastered" % ProgStyle.num(Mastery.xp(w.id)) if ceiling < 0 \
 		else "%s / %s XP to rank %d" % [ProgStyle.num(Mastery.xp(w.id)), ProgStyle.num(ceiling), rank + 1]
-	v.add_child(UiKit.label(xp_text, 19, UiKit.CREAM))
+	var info := HBoxContainer.new()
+	v.add_child(info)
+	var xp_label := UiKit.label(xp_text, 19, UiKit.CREAM)
+	xp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_child(xp_label)
+	info.add_child(UiKit.label(_challenge_count(w.id), 19, UiKit.GREEN, true))
 	v.add_child(_reward_strip(w, rank, on_change))
+	var next := _next_reward(w.id, rank)
+	if next:
+		var t := Mastery.tier(next.requirement.amount)
+		v.add_child(UiKit.label("NEXT  ·  %s (%s) at rank %d" % [next.display_name, next.slot_label().to_lower(), next.requirement.amount], 18, t.color if t else UiKit.CREAM, true))
 	return card
+
+
+static func _next_reward(weapon_id: StringName, rank: int) -> CosmeticItem:
+	for it in Mastery.rank_track(weapon_id):
+		if it.requirement.amount > rank:
+			return it
+	return null
+
+
+static func _challenge_count(weapon_id: StringName) -> String:
+	var list := ChallengeBook.of_scope(Challenge.Scope.WEAPON)
+	var done := list.filter(func(ch): return ChallengeBook.is_complete(ch, weapon_id)).size()
+	return "CHALLENGES %d/%d" % [done, list.size()]
 
 
 static func _reward_strip(w: WeaponData, rank: int, on_change: Callable) -> Control:

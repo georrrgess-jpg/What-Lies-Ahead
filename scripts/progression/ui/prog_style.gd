@@ -11,7 +11,7 @@ const XP_COLOR := Color("7ff3e8")
 
 static func level_color(lvl: int, time := 0.0) -> Color:
 	if lvl >= Progression.MAX_LEVEL:
-		return Color.from_hsv(fposmod(time * 0.1, 1.0), 0.5, 1.0)
+		return Color.from_hsv(fposmod(0.11 + time * 0.1, 1.0), 0.5, 1.0)
 	return LEVEL_COLORS[clampi((lvl - 1) / 10, 0, LEVEL_COLORS.size() - 1)]
 
 

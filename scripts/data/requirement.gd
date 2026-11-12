@@ -69,7 +69,7 @@ func describe() -> String:
 		Kind.GRANTED:
 			text = "Special unlock"
 		Kind.CHALLENGE:
-			text = "Complete the challenge %s" % Progression.challenge_name(target)
+			text = "Complete the challenge \"%s\"" % Progression.challenge_name(target)
 	for r in all_of:
 		if r and not r.is_met():
 			text = (text + " and " if text != "" else "") + r.describe()

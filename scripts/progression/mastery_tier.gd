@@ -16,8 +16,9 @@ extends Resource
 @export var sound: StringName
 
 
-## The tier colour at `time` (seconds); animated tiers cycle through hues.
-func color_at(time: float) -> Color:
+## The tier colour at `time` (seconds); animated tiers cycle through hues,
+## starting from `color` at time 0.
+func color_at(time: float, hue_shift := 0.0) -> Color:
 	if not animated:
 		return color
-	return Color.from_hsv(fposmod(time * 0.12, 1.0), 0.55, 1.0)
+	return Color.from_hsv(fposmod(color.h + hue_shift + time * 0.12, 1.0), color.s, color.v)

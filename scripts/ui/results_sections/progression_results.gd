@@ -18,6 +18,8 @@ var _level_label: Label
 var _gain_label: Label
 var _flash_label: Label
 var _bar: ProgressBar
+var _xp_label: Label
+var _next_label: Label
 var _shown_level := 1
 var _tick := 0.0
 var _reveal := 0
@@ -78,7 +80,14 @@ func _process(delta: float) -> void:
 # --- level and XP bar ---------------------------------------------------------
 
 func _build_level(col: VBoxContainer) -> void:
-	col.add_child(_caption("ACCOUNT XP"))
+	var head := HBoxContainer.new()
+	col.add_child(head)
+	var title := UiKit.label("CAREER", 34, UiKit.AMBER, true)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(title)
+	var tag := UiKit.label("ACCOUNT XP", 18, UiKit.CYAN, true)
+	tag.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(tag)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	col.add_child(row)
@@ -94,13 +103,18 @@ func _build_level(col: VBoxContainer) -> void:
 	v.add_child(_level_label)
 	_gain_label = UiKit.arcade_label("+0 XP", 30, ProgStyle.XP_COLOR)
 	v.add_child(_gain_label)
+	_flash_label = UiKit.arcade_label("", 26, UiKit.AMBER)
+	_flash_label.custom_minimum_size = Vector2(0, 30)
+	v.add_child(_flash_label)
 	_bar = ProgStyle.bar(18.0, ProgStyle.XP_COLOR)
 	_bar.value = Progression.progress_for_xp(int(_summary["xp_before"]))
 	col.add_child(_bar)
-	_flash_label = UiKit.arcade_label("", 30, UiKit.AMBER)
-	_flash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_flash_label.custom_minimum_size = Vector2(0, 36)
-	col.add_child(_flash_label)
+	_xp_label = UiKit.label("", 18, UiKit.CREAM)
+	col.add_child(_xp_label)
+	_next_label = UiKit.label("", 18, Color(1, 1, 1, 0.7))
+	_next_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(_next_label)
+	_show_level_texts(int(_summary["xp_before"]))
 
 
 func _show_xp(value: float) -> void:
@@ -111,17 +125,28 @@ func _show_xp(value: float) -> void:
 	if lvl > _shown_level:
 		_shown_level = lvl
 		_on_level_reached(lvl)
+	_show_level_texts(xp)
 	if _tick <= 0.0 and xp < int(_summary["xp_after"]):
 		_tick = 0.075
 		Sfx.play(&"prog_xp_tick", -14.0, 0.85 + 0.6 * _bar.value)
+
+
+func _show_level_texts(xp: int) -> void:
+	var lvl := Progression.level_for_xp(xp)
+	if lvl >= Progression.MAX_LEVEL:
+		_xp_label.text = "%s XP  ·  max level" % ProgStyle.num(xp)
+		_next_label.text = ""
+		return
+	_xp_label.text = "%s / %s XP" % [ProgStyle.num(xp - Progression.xp_for_level(lvl)), ProgStyle.num(Progression.xp_for_level(lvl + 1) - Progression.xp_for_level(lvl))]
+	_next_label.text = "Level %d: %s" % [lvl + 1, Progression.reward_text(lvl + 1)]
 
 
 func _on_level_reached(lvl: int) -> void:
 	_emblem.level = lvl
 	_emblem.flash = 1.0
 	_level_label.text = "LEVEL %d" % lvl
-	_flash_label.text = "LEVEL UP!"
-	_flash_label.pivot_offset = Vector2(WIDTH * 0.5 - 20.0, 18.0)
+	_flash_label.text = "LEVEL UP!" if lvl == int(_summary["level_before"]) + 1 else "LEVEL UP! x%d" % (lvl - int(_summary["level_before"]))
+	_flash_label.pivot_offset = Vector2(0.0, 15.0)
 	_flash_label.scale = Vector2.ONE * 1.5
 	_flash_label.create_tween().tween_property(_flash_label, "scale", Vector2.ONE, 0.3) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)

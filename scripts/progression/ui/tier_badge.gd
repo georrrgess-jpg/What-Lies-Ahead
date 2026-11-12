@@ -29,7 +29,7 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
-## Shield outline scaled to `s` around `c`.
+## Shield outline centred on `c`, `w` wide and `h` tall (half extents).
 static func shield(c: Vector2, w: float, h: float) -> PackedVector2Array:
 	return PackedVector2Array([
 		c + Vector2(-w, -h), c + Vector2(0, -h * 1.12), c + Vector2(w, -h),
@@ -48,9 +48,10 @@ func _draw() -> void:
 		_number("–", c, h, Color(1, 1, 1, 0.5))
 		return
 	ProgStyle.fill_gradient(self, shield(c + Vector2(0, h * 0.1), w, h), Color(UiKit.INK, 0.55), Color(UiKit.INK, 0.55))
-	ProgStyle.fill_gradient(self, shield(c, w, h), t.highlight if not t.animated else col.lightened(0.4), col.darkened(0.5))
+	var low := t.color_at(_time, 0.4) if t.animated else col
+	ProgStyle.fill_gradient(self, shield(c, w, h), t.highlight if not t.animated else col.lightened(0.4), low.darkened(0.5))
 	var inner := shield(c, w * 0.74, h * 0.74)
-	ProgStyle.fill_gradient(self, inner, col.lightened(0.15), col.darkened(0.25))
+	ProgStyle.fill_gradient(self, inner, col.lightened(0.15), low.darkened(0.2))
 	if t.id == &"diamond" or t.animated:
 		for i in inner.size():
 			draw_line(c + Vector2(0, -h * 0.15), inner[i], Color(1, 1, 1, 0.28), maxf(1.0, h * 0.03), true)

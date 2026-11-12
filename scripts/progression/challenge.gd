@@ -47,14 +47,4 @@ func key(weapon_id: StringName = &"") -> String:
 
 
 func describe() -> String:
-	var amount := _fmt(goal)
-	return description % amount if description.contains("%s") else description
-
-
-static func _fmt(n: int) -> String:
-	var s := str(n)
-	var out := ""
-	while s.length() > 3:
-		out = "," + s.substr(s.length() - 3) + out
-		s = s.substr(0, s.length() - 3)
-	return s + out
+	return description % ProgStyle.num(goal) if description.contains("%s") else description
