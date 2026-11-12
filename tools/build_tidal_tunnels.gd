@@ -1187,6 +1187,9 @@ func _build_lights() -> void:
 	for z in [-9.0, -3.0, 3.0, 9.0]:
 		_omni(lights, "Jelly%d" % int(z), Vector3(18.2, 2.0, z), Color(0.85, 0.4, 1.0) if int(z) % 2 == 0 else Color(1.0, 0.45, 0.8), 1.5, 6.0)
 	_omni(lights, "JellyWall", Vector3(24.3, 3.0, -6.0), Color(0.75, 0.45, 1.0), 1.6, 7.0, true)
+	# Warm pools under the east hall's pendants, along the walkway by the core wall.
+	for z in [-7.0, 9.0]:
+		_omni(lights, "JellyWalk%d" % int(z), Vector3(15.4, 3.6, z), WARM, 1.1, 7.0)
 	_omni(lights, "NW", Vector3(-17.0, 4.5, -19.5), CORAL, 1.4, 9.5)
 	_omni(lights, "NE", Vector3(17.0, 4.5, -19.5), WARM, 1.4, 9.5)
 	_omni(lights, "LobbyShop", Vector3(0, 2.2, 18.5), Color(1.0, 0.72, 0.45), 1.8, 8.0)
