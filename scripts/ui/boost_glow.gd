@@ -14,6 +14,9 @@ var strength := 0.0
 var _material: ShaderMaterial
 var _model: Node3D
 var _time := 0.0
+## The overlay is drawn invisibly for a few frames at level start, so its
+## shader compiles behind the fade-in rather than at the first purchase.
+var _warm_frames := 4
 
 
 func _ready() -> void:
@@ -35,7 +38,9 @@ func set_boost(boost: RunDirector.Boost) -> void:
 func _process(delta: float) -> void:
 	if player == null or player.view == null:
 		return
-	var model := player.view.model if strength > 0.0 else null
+	var shown := strength > 0.0 or _warm_frames > 0
+	_warm_frames = maxi(0, _warm_frames - 1)
+	var model := player.view.model if shown else null
 	if model != _model:
 		if is_instance_valid(_model):
 			_apply(_model, null)

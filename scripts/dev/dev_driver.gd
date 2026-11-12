@@ -11,8 +11,8 @@ extends Node
 ##   --ring=<m>           radius of the bot's patrol ring around the loadout station
 ##   --swap               bot swaps the held weapon at the kiosk every break
 ##   --switch             bot switches to its other slot whenever it starts a reload
-##   --boost              bot also buys the damage boost whenever it can afford it
-##                        (it always buys the overshield when it can)
+##   --boost              bot buys the damage boost whenever it can afford it (before
+##                        the overshield, which it always buys when it can)
 ##   --aim-error=<deg>    random aim error for the bot (default 1.2)
 ##   --god                bot takes no damage (for flow tests, not for tuning)
 ##   --then=retry|menu|next   after the results screen, press Retry / Main Menu /
@@ -162,6 +162,8 @@ func _physics_process(delta: float) -> void:
 		_player = _director.player
 		_runs += 1
 		_director.enemy_recovered.connect(_on_enemy_recovered)
+		_director.damage_boost_changed.connect(func(b: RunDirector.Boost):
+			print("[dev] damage boost %s: damage x%.2f" % [RunDirector.Boost.keys()[b], _player.weapons.damage_multiplier]))
 		if start_wave > 1 and _runs == 1:
 			_director.wave_number = start_wave - 1
 			_director.tickets = 400
@@ -393,12 +395,12 @@ func _do_break(delta: float) -> void:
 		await get_tree().physics_frame
 		await get_tree().physics_frame
 	var waves := _director.waves
-	if _director.tickets >= waves.overshield_price and _director.overshield < waves.overshield_amount:
-		_tap("buy_overshield")
-		await get_tree().physics_frame
-		await get_tree().physics_frame
 	if buy_boost and _director.tickets >= waves.damage_boost_price and _director.damage_boost == RunDirector.Boost.NONE:
 		_tap("buy_damage_boost")
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+	if _director.tickets >= waves.overshield_price and _director.overshield < waves.overshield_amount:
+		_tap("buy_overshield")
 		await get_tree().physics_frame
 		await get_tree().physics_frame
 	print("[dev] kiosk: tickets %d->%d  %s %d/%d (was %d/%d)  hp %d->%d  shield %d  boost %s" % [

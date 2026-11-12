@@ -396,6 +396,9 @@ static func warm_up(parent: Node3D, at: Vector3) -> void:
 	frost.material_override = sm
 	holder.add_child(frost)
 	frost.global_position = at
+	# The level can be left within these frames (pause -> main menu), freeing the holder.
+	var tree := holder.get_tree()
 	for i in 4:
-		await holder.get_tree().process_frame
-	holder.queue_free()
+		await tree.process_frame
+	if is_instance_valid(holder):
+		holder.queue_free()
