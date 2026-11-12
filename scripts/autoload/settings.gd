@@ -3,6 +3,16 @@ extends Node
 
 signal changed
 
+## Mouse look at "Look sensitivity" 1.0, in radians per mouse count (screen
+## pixel): about 34 cm of mouse travel per 360° turn with an 800 DPI mouse.
+const LOOK_RADIANS := TAU / (34.0 / 2.54 * 800.0)
+## Look speed of the old "mouse_sensitivity" at 1.0 (radians per pixel of a
+## 1920x1080 window), to carry a value saved by an older version across.
+const LEGACY_LOOK_RADIANS := 0.0022
+const LOOK_RANGE := Vector2(0.1, 5.0)
+## Defaults of options newer than Profile.DEFAULT_SETTINGS.
+const EXTRA_DEFAULTS := {"look_sensitivity": 1.0, "camera_motion": 1.0}
+
 var _headless := false
 
 
@@ -12,7 +22,27 @@ func _ready() -> void:
 
 
 func value(key: String):
-	return Profile.data["settings"].get(key, Profile.DEFAULT_SETTINGS.get(key))
+	var saved: Dictionary = Profile.data["settings"]
+	if saved.has(key):
+		return saved[key]
+	if key == "look_sensitivity":
+		return _carried_look_sensitivity()
+	return Profile.DEFAULT_SETTINGS.get(key, EXTRA_DEFAULTS.get(key))
+
+
+## A profile saved before "Look sensitivity" existed keeps its own look speed:
+## a changed "mouse_sensitivity" becomes the same turn per mouse count, and the
+## old default becomes the new default.
+func _carried_look_sensitivity() -> float:
+	var old := float(Profile.data["settings"].get("mouse_sensitivity", 1.0))
+	if is_equal_approx(old, float(Profile.DEFAULT_SETTINGS.get("mouse_sensitivity", 1.0))):
+		return EXTRA_DEFAULTS["look_sensitivity"]
+	return clampf(old * LEGACY_LOOK_RADIANS / LOOK_RADIANS, LOOK_RANGE.x, LOOK_RANGE.y)
+
+
+## Mouse look in radians per mouse count, from "Look sensitivity".
+func look_radians() -> float:
+	return LOOK_RADIANS * clampf(float(value("look_sensitivity")), LOOK_RANGE.x, LOOK_RANGE.y)
 
 
 func set_value(key: String, v, persist := false) -> void:
@@ -39,6 +69,11 @@ func is_low_graphics() -> bool:
 ## Multiplier for camera shake (0 = off).
 func shake_scale() -> float:
 	return clampf(float(value("camera_shake")), 0.0, 1.0)
+
+
+## Multiplier for head bob, roll, landing dips, sway and speed FOV (0 = off).
+func camera_motion() -> float:
+	return clampf(float(value("camera_motion")), 0.0, 1.0)
 
 
 ## Multiplier for screen flashes and muzzle light (0 = off).
