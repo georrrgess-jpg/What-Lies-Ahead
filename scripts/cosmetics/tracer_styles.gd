@@ -76,7 +76,7 @@ static func _helix(from: Vector3, to: Vector3, width: float, c0: Color, c1: Colo
 	var frame := _frame(from, to)
 	var length := from.distance_to(to)
 	var n := clampi(int(length * 7.0), 12, MAX_SEGMENTS)
-	var radius := maxf(0.06, width * 1.3)
+	var radius := maxf(0.045, width)
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for strand in 2:
@@ -85,8 +85,8 @@ static func _helix(from: Vector3, to: Vector3, width: float, c0: Color, c1: Colo
 		var widths := PackedFloat32Array()
 		for i in n + 1:
 			var t := float(i) / n
-			# The helix opens up from the muzzle so it never fills the screen.
-			var r := radius * smoothstep(0.0, 0.08, t * length / 4.0)
+			# The helix opens up over the first metres so it never fills the screen.
+			var r := radius * smoothstep(0.0, 1.0, t * length / 3.0)
 			var a := t * length * 2.6 + strand * PI
 			pts.append(from + frame.z * (t * length) + (frame.x * cos(a) + frame.y * sin(a)) * r)
 			var c := c0 if strand == 0 else c1
@@ -109,7 +109,7 @@ static func _rainbow(from: Vector3, to: Vector3, width: float) -> Mesh:
 	for i in n + 1:
 		var t := float(i) / n
 		pts.append(from + frame.z * (t * length))
-		cols.append(Color.from_hsv(fmod(offset + t * length * 0.06, 1.0), 0.8, 1.0))
+		cols.append(Color.from_hsv(fmod(offset + t * length * 0.12, 1.0), 0.8, 1.0))
 		widths.append(width * (0.15 + 0.85 * minf(1.0, t * length / 3.0)) * 0.8)
 	_ribbon(st, pts, cols, widths, frame)
 	return st.commit()
@@ -147,8 +147,8 @@ static func _glitter(parent: Node, from: Vector3, to: Vector3, cols: Array, flak
 	var length := from.distance_to(to)
 	var start := from + (to - from).normalized() * minf(1.5, length * 0.3)
 	FxSwarm.spawn(parent, start, FxShapes.snowflake() if flakes else FxShapes.star(), cols, {
-		"count": clampi(int(length * 1.6), 6, 48), "shape": "line", "line_to": to, "jitter": 0.05,
-		"speed": Vector2(0.2, 0.7), "life": Vector2(0.35, 0.8), "size": Vector2(0.06, 0.11) if flakes else Vector2(0.05, 0.09),
+		"count": clampi(int(length * 2.2), 8, 60), "shape": "line", "line_to": to, "jitter": 0.12,
+		"speed": Vector2(0.2, 0.7), "life": Vector2(0.4, 0.9), "size": Vector2(0.1, 0.16) if flakes else Vector2(0.08, 0.14),
 		"gravity": Vector3(0, -0.6, 0), "drag": 1.5, "spin": 5.0, "blink": 0.0 if flakes else 6.0, "grow": 0.05})
 
 
@@ -162,7 +162,7 @@ static func _comet(parent: Node, from: Vector3, to: Vector3, c0: Color, c1: Colo
 	parent.add_child(head)
 	var start := from + (to - from).normalized() * minf(1.2, from.distance_to(to) * 0.5)
 	head.global_position = start
-	head.scale = Vector3.ONE * 0.5
+	head.scale = Vector3.ONE * 0.9
 	var time := clampf(start.distance_to(to) / 120.0, 0.03, 0.3)
 	var tw := head.create_tween()
 	tw.tween_property(head, "global_position", to, time)

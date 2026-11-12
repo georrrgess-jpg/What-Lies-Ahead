@@ -9,9 +9,12 @@ extends Control
 ## The Locker previews items on it with preview(slot, item).
 
 const COMPACT_SIZE := Vector2(560, 150)
+const SLIM_SIZE := Vector2(520, 112)
 const FULL_SIZE := Vector2(980, 176)
 
 var compact := false
+## An even shorter compact card (results screen), without the operator line.
+var slim := false
 var _banner: BannerView
 var _portrait: OperatorPreview
 var _title: Label
@@ -29,7 +32,7 @@ static func build(is_compact: bool) -> Control:
 
 
 func _ready() -> void:
-	custom_minimum_size = COMPACT_SIZE if compact else FULL_SIZE
+	custom_minimum_size = SLIM_SIZE if slim else (COMPACT_SIZE if compact else FULL_SIZE)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_banner = BannerView.new(null, 18.0)
 	_banner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -71,7 +74,7 @@ func _info_column() -> Control:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 2)
 	plate.add_child(col)
-	_title = UiKit.arcade_label("", 34 if compact else 46)
+	_title = UiKit.arcade_label("", 30 if slim else (34 if compact else 46))
 	_title.clip_text = true
 	col.add_child(_title)
 	var level_row := HBoxContainer.new()
@@ -84,6 +87,7 @@ func _info_column() -> Control:
 	_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	level_row.add_child(_bar)
 	_operator = UiKit.label("", 18 if compact else 22, UiKit.CREAM)
+	_operator.visible = not slim
 	col.add_child(_operator)
 	if not compact:
 		_stats = UiKit.label("", 20, Color(1, 1, 1, 0.75))

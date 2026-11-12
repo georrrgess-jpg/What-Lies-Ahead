@@ -22,7 +22,7 @@ static func glow_material() -> StandardMaterial3D:
 	return _mats["glow"]
 
 
-## Lit, shiny material coloured by instance colour (coins, gems).
+## Lit, shiny material coloured by instance colour (coins).
 static func shiny_material() -> StandardMaterial3D:
 	if not _mats.has("shiny"):
 		var m := StandardMaterial3D.new()
@@ -76,13 +76,12 @@ static func _cached(key: String, mesh: Mesh, material: Material) -> Mesh:
 	return mesh
 
 
-static func cube(lit := false) -> Mesh:
-	var key := "cube%s" % lit
-	if _meshes.has(key):
-		return _meshes[key]
+static func cube() -> Mesh:
+	if _meshes.has("cube"):
+		return _meshes["cube"]
 	var b := BoxMesh.new()
 	b.size = Vector3.ONE
-	return _cached(key, _to_array(b), shiny_material() if lit else glow_material())
+	return _cached("cube", _to_array(b), glow_material())
 
 
 static func ball() -> Mesh:
@@ -110,16 +109,15 @@ static func coin() -> Mesh:
 	return _cached("coin", _rotated(_to_array(c), Basis(Vector3.RIGHT, PI * 0.5)), shiny_material())
 
 
-static func star(lit := false) -> Mesh:
-	var key := "star%s" % lit
-	if _meshes.has(key):
-		return _meshes[key]
+static func star() -> Mesh:
+	if _meshes.has("star"):
+		return _meshes["star"]
 	var pts := PackedVector2Array()
 	for i in 10:
 		var r := 0.5 if i % 2 == 0 else 0.22
 		var a := PI * 0.5 + PI * i / 5.0
 		pts.append(Vector2(cos(a), sin(a)) * r)
-	return _cached(key, extrude(pts, 0.16), shiny_material() if lit else glow_material())
+	return _cached("star", extrude(pts, 0.16), glow_material())
 
 
 static func heart() -> Mesh:

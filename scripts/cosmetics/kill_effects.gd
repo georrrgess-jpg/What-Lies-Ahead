@@ -78,8 +78,9 @@ static func _bubbles(parent: Node, at: Vector3, cols: Array) -> void:
 
 
 static func _snow(parent: Node, at: Vector3, cols: Array) -> void:
-	FxSwarm.spawn(parent, at, FxShapes.snowflake(), cols, {"count": 24, "speed": Vector2(1.2, 3.6), "life": Vector2(1.1, 1.7),
-		"size": Vector2(0.13, 0.22), "gravity": Vector3(0, -0.7, 0), "drag": 2.6, "spin": 3.0, "wobble": 0.4, "grow": 0.1})
+	FxSwarm.spawn(parent, at, FxShapes.snowflake(), cols, {"count": 28, "speed": Vector2(1.4, 4.0), "life": Vector2(1.1, 1.7),
+		"size": Vector2(0.2, 0.34), "gravity": Vector3(0, -0.7, 0), "drag": 2.6, "spin": 3.0, "wobble": 0.4, "grow": 0.1})
+	_ring(parent, at + Vector3.DOWN * 0.3, Vector3.UP, Color(0.7, 0.92, 1.0), 0.0)
 	FxSwarm.spawn(parent, at, FxShapes.cube(), [Color.WHITE, Color(0.75, 0.95, 1.0)], {"count": 18, "speed": Vector2(1.0, 3.0),
 		"life": Vector2(0.4, 0.9), "size": Vector2(0.03, 0.05), "gravity": Vector3(0, -1.0, 0), "drag": 2.0, "blink": 7.0})
 	_flash(parent, at, FxShapes.ball(), Color(0.85, 0.95, 1.0), 0.4, 1.5, 0.22)
@@ -103,9 +104,10 @@ static func _coins(parent: Node, at: Vector3, cols: Array) -> void:
 
 
 static func _firework(parent: Node, at: Vector3, cols: Array) -> void:
-	FxSwarm.spawn(parent, at, FxShapes.cube(), [Color(1.0, 0.85, 0.5), Color.WHITE], {"count": 12, "shape": "up", "spread": 5.0,
-		"speed": Vector2(7.0, 9.0), "life": Vector2(0.16, 0.24), "size": Vector2(0.05, 0.08), "drag": 1.0, "gravity": Vector3.ZERO,
-		"stagger": 0.08})
+	FxSwarm.spawn(parent, at, FxShapes.ball(), [Color(1.0, 0.85, 0.5), Color.WHITE], {"count": 16, "shape": "up", "spread": 4.0,
+		"speed": Vector2(6.5, 7.0), "life": Vector2(0.18, 0.26), "size": Vector2(0.08, 0.13), "drag": 0.5, "gravity": Vector3.ZERO,
+		"stagger": 0.12})
+	_flash(parent, at, FxShapes.ball(), cols[0], 0.2, 0.7, 0.12)
 	if not parent.is_inside_tree():
 		return
 	# The burst follows on a timer owned by the parent, so it never outlives it.
@@ -150,7 +152,7 @@ static func _ring(parent: Node, at: Vector3, normal: Vector3, color: Color, dela
 	ring.transparency = 1.0 if delay > 0.0 else 0.0
 	var tw := ring.create_tween().set_parallel(true)
 	tw.tween_property(ring, "transparency", 0.0, 0.01).set_delay(delay)
-	tw.tween_property(ring, "scale", Vector3.ONE * 2.6, 0.38).set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(ring, "scale", Vector3.ONE * 2.2, 0.38).set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(ring, "transparency", 1.0, 0.3).set_delay(delay + 0.1)
 	tw.chain().tween_callback(ring.queue_free)
 

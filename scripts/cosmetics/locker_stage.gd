@@ -109,10 +109,10 @@ func show_arms(weapon: WeaponData, loadout: Dictionary) -> void:
 	WeaponCosmetics.apply(_model, weapon, loadout)
 	_model.position = weapon.view_position
 	_model.rotation_degrees = weapon.view_rotation_degrees
-	# The player's own view, shifted so the hands sit in the middle of the frame.
+	# An "inspect" view from the left: both hands, the gloves and the sleeves.
 	var grip := weapon.view_position
-	_camera.fov = 60.0
-	_camera.look_at_from_position(Vector3(grip.x * 0.8, grip.y * 0.35, 0.12), Vector3(grip.x * 0.8, grip.y * 0.95, grip.z))
+	_camera.fov = 50.0
+	_camera.look_at_from_position(grip + Vector3(-1.0, 0.3, 0.1), grip + Vector3(0.02, -0.1, 0.2))
 
 
 ## A tourist zombie that pops with `item`'s kill effect every few seconds.
