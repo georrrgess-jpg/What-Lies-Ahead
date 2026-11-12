@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+amount = 28
+
+[resource]
+script = ExtResource("1")
+id = &"decal_crown"
+display_name = "Royalty"
+description = "For rulers of the boardwalk."
+slot = &"weapon_decal"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.7608, 0.2392, 1, 0.4196, 0.2078, 0.7216, 1, 0.4196, 0.2078, 0.7216, 1)
+params = {
+"emblem": "Crown"
+}
+sort_order = 4210

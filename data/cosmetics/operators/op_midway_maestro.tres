@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+amount = 20
+
+[resource]
+script = ExtResource("1")
+id = &"op_midway_maestro"
+display_name = "Midway Maestro"
+description = "Step right up! Step right back! The ringmaster of every boardwalk brawl."
+slot = &"avatar"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.9843, 0.9804, 1, 1, 1, 0.7608, 0.2392, 1, 1, 0.9412, 0.8314, 1, 1, 0.2471, 0.6235, 1, 1, 0.9412, 0.8314, 1)
+params = {
+"model": "res://art/models/operator_midway_maestro.glb",
+"pattern": "stripes",
+"pattern_on": ["Sleeve"]
+}
+sort_order = 1206

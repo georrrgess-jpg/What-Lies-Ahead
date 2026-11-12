@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 2500
+
+[resource]
+script = ExtResource("1")
+id = &"op_glitch"
+display_name = "GL1TCH"
+description = "A rogue hologram that escaped from an arcade cabinet. Mostly friendly. Mostly."
+slot = &"avatar"
+rarity = 3
+requirement = SubResource("req")
+colors = PackedColorArray(0.2078, 0.9412, 1, 1, 1, 0.2471, 0.6431, 1, 0.07843, 0.06275, 0.1647, 1, 0.2078, 0.9412, 1, 1, 1, 0.2471, 0.6431, 1)
+params = {
+"model": "res://art/models/operator_glitch.glb",
+"shader": "res://art/shaders/skin_hologram.gdshader",
+"shader_on": ["Glove", "GlovePlate", "Sleeve"]
+}
+sort_order = 1307

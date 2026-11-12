@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 100
+
+[resource]
+script = ExtResource("1")
+id = &"fin_lemonade"
+display_name = "Pink Lemonade"
+description = "Sweet, sour and dangerously refreshing."
+slot = &"weapon_finish"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.902, 0.4196, 1, 1, 0.3725, 0.5412, 1)
+params = {
+"metallic": 0.0,
+"roughness": 0.45
+}
+sort_order = 2003

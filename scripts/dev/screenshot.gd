@@ -6,7 +6,9 @@ extends Node
 ##
 ## Options (all optional):
 ##   --shot-level=<id>     level to load (default prize_pier)
-##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|<any menu page id: play, settings, career, ...>
+##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|<any menu page id: play, settings, locker, arsenal, career, ...>
+##   --shot-locker=<slot>  with --shot-scene=locker: open that tab (avatar, weapon_finish, gloves...)
+##   --shot-item=<id>      with --shot-scene=locker: select that cosmetic (opens its tab)
 ##   --shot-pos=x,y,z      player feet position
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
 ##   --shot-pitch=deg
@@ -67,6 +69,8 @@ func _run() -> void:
 		var menu := get_tree().current_scene
 		if scene_kind != "menu":
 			menu._show(scene_kind)
+		if scene_kind == "locker":
+			_stage_locker(menu.find_child("locker", false, false))
 		await _capture(int(_arg("frames", "30")))
 		return
 
@@ -184,6 +188,18 @@ func _run() -> void:
 		await _wait(5)
 		player.take_damage(20.0, player.global_position - player.global_transform.basis.x * 4.0)
 	await _capture(int(_arg("frames", "45")))
+
+
+## Locker page: weapon (--shot-weapon), tab (--shot-locker), item (--shot-item).
+func _stage_locker(page: Node) -> void:
+	if page == null:
+		return
+	if _arg("weapon", "") != "":
+		page.select_weapon(StringName(_arg("weapon", "")))
+	if _arg("locker", "") != "":
+		page.show_category(StringName(_arg("locker", "")))
+	if _arg("item", "") != "":
+		page.select_item(StringName(_arg("item", "")))
 
 
 func _press(action: String, down: bool) -> void:

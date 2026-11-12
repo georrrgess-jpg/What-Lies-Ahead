@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"neon_skyline"
+
+[resource]
+script = ExtResource("1")
+id = &"op_neon_courier"
+display_name = "Neon Courier"
+description = "Delivers across the Neon Skyline before the lights go out. Signature required."
+slot = &"avatar"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.1059, 0.09412, 0.1569, 1, 1, 0.2471, 0.6431, 1, 0.2078, 0.9412, 1, 1, 0.1216, 0.1059, 0.2, 1, 1, 0.2471, 0.6431, 1)
+params = {
+"model": "res://art/models/operator_neon_courier.glb",
+"pattern": "neon",
+"pattern_on": ["Sleeve"],
+"glow": 1.6
+}
+sort_order = 1102

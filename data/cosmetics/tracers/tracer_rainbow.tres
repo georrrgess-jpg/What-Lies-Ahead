@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+amount = 32
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_rainbow"
+display_name = "Rainbow Road"
+description = "Every shot paints a rainbow."
+slot = &"tracer"
+rarity = 2
+requirement = SubResource("req")
+params = {
+"style": "rainbow"
+}
+sort_order = 8207

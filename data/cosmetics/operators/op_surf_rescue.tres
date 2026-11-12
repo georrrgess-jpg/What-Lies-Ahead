@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"prize_pier"
+
+[resource]
+script = ExtResource("1")
+id = &"op_surf_rescue"
+display_name = "Surf Rescue"
+description = "Off duty, never off guard. Swims out for anyone, shoots back at anything."
+slot = &"avatar"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(0.7255, 0.4667, 0.302, 1, 0.9098, 0.149, 0.2275, 1, 0.9686, 0.9569, 0.949, 1, 0.7255, 0.4667, 0.302, 1, 0.9098, 0.149, 0.2275, 1)
+params = {
+"model": "res://art/models/operator_surf_rescue.glb"
+}
+sort_order = 1001

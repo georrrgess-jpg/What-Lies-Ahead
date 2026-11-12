@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_factory"
+display_name = "Factory Beam"
+description = "Each weapon's own energy colour."
+slot = &"tracer"
+rarity = 0
+params = {
+"style": "standard",
+"default": true
+}
+sort_order = 8000

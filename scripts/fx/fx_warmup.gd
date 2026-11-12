@@ -1,6 +1,8 @@
 class_name FxWarmup
 extends Node3D
-## Draws every effect and enemy type once, right in front of the camera, while
+## Draws every effect and enemy type once (including every cosmetic kill
+## effect and tracer style, and each weapon in its equipped cosmetics), right
+## in front of the camera, while
 ## the screen is still faded in from black at level start. The GPU compiles a
 ## shader the first time a material is drawn; without this, that compile
 ## happened mid-fight on the first hit, kill, reload or zombie spawn and showed
@@ -24,6 +26,11 @@ func run(camera: Camera3D, enemies: Array, weapons: Array) -> void:
 	Fx.confetti(parent, at)
 	Fx.ticket_popup(parent, at, 1234567890)
 	Fx.tracer(parent, at - fwd, at + fwd * 6.0, Color(0.3, 0.95, 1.0), 0.05)
+	# Every cosmetic kill effect and tracer style (their meshes and materials).
+	for it in Cosmetics.items_for(&"kill_effect"):
+		KillEffects.play(parent, at, it, false)
+	for it in Cosmetics.items_for(&"tracer"):
+		TracerStyles.draw(parent, at - fwd, at + fwd * 6.0, 0.05, it)
 	var label := Label3D.new()
 	label.font = UiKit.display_font()
 	label.font_size = 96
@@ -45,13 +52,15 @@ func run(camera: Camera3D, enemies: Array, weapons: Array) -> void:
 		z.set_physics_process(false)
 		z.flash_now()
 		i += 1
-	# Each weapon's viewmodel with its hologram reload material, plus the
-	# halo, beacon and holo shaders.
+	# Each weapon's viewmodel wearing the player's cosmetics (finish shaders,
+	# arms, charm, sticker) with its hologram reload material, plus the halo,
+	# beacon and holo shaders.
 	for w in weapons:
 		if w.viewmodel == null:
 			continue
 		var m: Node3D = w.viewmodel.instantiate()
 		parent.add_child(m)
+		WeaponCosmetics.apply(m, w, Cosmetics.weapon_loadout(w.id))
 		m.global_position = at + Vector3.UP * 0.3
 		m.scale = Vector3.ONE * 0.2
 		for holo in m.find_children("*Holo", "MeshInstance3D", true, false):

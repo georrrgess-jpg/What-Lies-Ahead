@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_pier_sunset"
+display_name = "Pier Sunset"
+description = "Sunset over the water, the way every run begins."
+slot = &"banner"
+rarity = 0
+colors = PackedColorArray(1, 0.4784, 0.349, 1, 1, 0.2471, 0.6235, 1, 0.2392, 0.1216, 0.451, 1)
+params = {
+"style": 0,
+"default": true
+}
+sort_order = 9000

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+amount = 8
+
+[resource]
+script = ExtResource("1")
+id = &"banner_bubbles"
+display_name = "Fizzy"
+description = "Pink soda, rising bubbles."
+slot = &"banner"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.5412, 0.7843, 1, 1, 0.8157, 0.9098, 1, 1, 1, 1, 1)
+params = {
+"style": 8
+}
+sort_order = 9002

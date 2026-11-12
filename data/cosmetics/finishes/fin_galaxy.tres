@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"launch_pad"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_galaxy"
+display_name = "Galaxy"
+description = "A pocket universe of drifting nebulae and twinkling stars."
+slot = &"weapon_finish"
+rarity = 3
+requirement = SubResource("req")
+colors = PackedColorArray(0.02745, 0.01961, 0.102, 1, 0.08235, 0.04706, 0.2118, 1)
+params = {
+"shader": "res://art/shaders/skin_galaxy.gdshader"
+}
+sort_order = 2324

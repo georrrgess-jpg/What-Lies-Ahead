@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"launch_pad"
+
+[resource]
+script = ExtResource("1")
+id = &"glove_space"
+display_name = "Space Gauntlets"
+description = "Pressurised, insulated and covered in stars."
+slot = &"gloves"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.9569, 0.949, 0.9804, 1, 1, 0.4784, 0.1647, 1, 1, 0.4784, 0.1647, 1, 0.102, 0.07843, 0.251, 1, 1, 0.851, 0.2314, 1)
+params = {
+"pattern": "stars",
+"pattern_on": ["Sleeve"],
+"glow": 1.2
+}
+sort_order = 6208

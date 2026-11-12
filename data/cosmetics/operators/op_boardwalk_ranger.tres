@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"op_boardwalk_ranger"
+display_name = "Boardwalk Ranger"
+description = "Keeps the pier safe, one stray tourist at a time. Pink cuffs, steady hands."
+slot = &"avatar"
+rarity = 0
+colors = PackedColorArray(0.1686, 0.1569, 0.2118, 1, 0.2902, 0.2706, 0.3765, 1, 1, 0.2471, 0.6235, 1, 0.1137, 0.1059, 0.149, 1, 0.0549, 0.4784, 0.451, 1)
+params = {
+"model": "res://art/models/operator_boardwalk_ranger.glb",
+"default": true
+}
+sort_order = 1000
