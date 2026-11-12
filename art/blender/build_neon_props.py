@@ -175,8 +175,6 @@ def build_helipad():
         a = math.tau * (i + 0.5) / 16
         parts.append(cyl(f"LightBase{i:02d}", 0.12, 0.04, (math.cos(a) * 7.35, math.sin(a) * 7.35, 0.02), segs=10, bevel=0.0, m=c["steel_dark"]))
         parts.append(neon_bulb(f"Light{i:02d}", 0.07, (math.cos(a) * 7.35, math.sin(a) * 7.35, 0.07), "#36f0ff", 4.0, halo_scale=5.5))
-    for ob in parts:
-        ob.location.z += 0.0
     save("neon_helipad", [merge("Helipad", parts)])
 
 
@@ -318,8 +316,6 @@ def build_crates():
         torus("DrumHoopA", 0.305, 0.02, (0.75, 0.32, 0.3), m=c["steel_dark"], major_segs=16, minor_segs=4),
         torus("DrumHoopB", 0.305, 0.02, (0.75, 0.32, 0.65), m=c["steel_dark"], major_segs=16, minor_segs=4),
     ]
-    for ob in parts[:3]:
-        pass
     for i, (x, z) in enumerate(((-0.6, 0.4), (0.45, 0.35))):
         for side in (-1, 1):
             parts.append(box(f"Slat{i}{side}", (0.06, 1.12, 0.06), (x + side * 0.4, 0, z), bevel=0.0, m=c["steel_dark"]))
@@ -508,7 +504,7 @@ def build_skybridge():
 
 
 def build_holo_koi():
-    """Giant holographic koi (hologram material), ~8 m long, swimming in place."""
+    """Giant holographic koi (hologram material), ~8 m long, circling its pivot."""
     reset_scene()
     holo = mat("NeonHoloKoi", "#ff5ac8", rough=1.0)
     holo2 = mat("NeonHoloKoiFin", "#5af2ff", rough=1.0)
@@ -523,6 +519,8 @@ def build_holo_koi():
         parts.append(prism(f"Pectoral{s}", [(0.0, 0.0), (0.9, -0.2), (0.4, -0.9)], 0.05, (1.2, s * 0.75, -0.4),
                            rot=(math.radians(s * 50), 0, 0), m=holo2))
         parts.append(tube(f"Whisker{s}", [(3.0, s * 0.3, -0.2), (3.6, s * 0.8, -0.5), (3.9, s * 1.2, -1.0)], 0.04, m=holo2, segs=5))
+    # Offset from the pivot so the turning node swims it round in a circle.
+    place(parts, (0, -7.0, 0))
     save("neon_holo_koi", [merge("SpinKoi", parts)])
 
 
@@ -541,13 +539,50 @@ def build_holo_can():
     save("neon_holo_can", [merge("SpinCan", parts, pivot=(0, 0, 0))])
 
 
+def build_portal_arch():
+    """Neon exit gate for the portal: same opening as the shared portal arch
+    (pillars at x = +-1.75, arch springing at 2 m), dark steel with doubled
+    cyan and magenta tubes, chevron lights and an EXIT sign. Faces -Y."""
+    reset_scene()
+    c = _common()
+    steel = nmat("GateSteel", "#22223a", rough=0.35, metal=0.6)
+    trim = nmat("GateTrim", "#4a4c78", rough=0.4, metal=0.5)
+    arch_r, spring = 1.75, 2.0
+    parts = []
+    for x in (-arch_r, arch_r):
+        parts += [
+            box(f"Pillar{x}", (0.62, 0.8, spring), (x, 0, spring / 2), bevel=0.08, segs=2, m=steel),
+            box(f"Base{x}", (0.95, 1.1, 0.4), (x, 0, 0.2), bevel=0.06, m=trim),
+            box(f"Cap{x}", (0.72, 0.9, 0.18), (x, 0, spring - 0.05), bevel=0.04, m=trim),
+            box(f"PillarLed{x}", (0.08, 0.06, spring - 0.6), (x - 0.18 * (1 if x > 0 else -1), -0.42, spring / 2 + 0.1), bevel=0.0, m=c["cyan"]),
+        ]
+        for k in range(4):
+            z = 0.6 + k * 0.32
+            parts.append(prism(f"Chevron{x}{k}", [(-0.16, 0.0), (0.0, 0.12), (0.16, 0.0), (0.16, 0.06), (0.0, 0.18), (-0.16, 0.06)], 0.04,
+                               (x + 0.06 * (1 if x < 0 else -1), -0.42, z), m=c["magenta"]))
+    parts.append(tube("Arch", arc_points(arch_r, 0, 180, 24, centre=(0, 0, spring)), 0.34, m=steel, segs=10))
+    parts.append(tube("ArchInner", arc_points(arch_r - 0.3, 0, 180, 24, centre=(0, -0.3, spring)), 0.06, m=c["cyan"], segs=6))
+    parts.append(tube("ArchOuter", arc_points(arch_r + 0.33, 0, 180, 24, centre=(0, -0.1, spring)), 0.06, m=c["magenta"], segs=6))
+    for i in range(11):
+        a = math.radians(i * 18)
+        parts.append(neon_bulb(f"Bulb{i:02d}", 0.08, (math.cos(a) * (arch_r + 0.02), -0.38, spring + math.sin(a) * (arch_r + 0.02)), "#ffd27a", 3.0))
+    top = spring + arch_r + 0.55
+    parts += [
+        box("SignBox", (1.9, 0.3, 0.62), (0, -0.02, top), bevel=0.05, m=c["ink"]),
+        sign_text("SignText", "EXIT", 0.46, 0.04, (0, -0.2, top), m=c["lime"]),
+        box("SignStem", (0.2, 0.2, 0.4), (0, 0, top - 0.48), bevel=0.03, m=steel),
+        box("Back", (3.4, 0.12, spring + arch_r - 0.3), (0, 0.32, (spring + arch_r - 0.3) / 2), bevel=0.0, m=c["ink"]),
+    ]
+    save("neon_portal_arch", [merge("PortalArch", parts)])
+
+
 ALL = {
     "roof_door": build_roof_door, "freight_elevator": build_freight_elevator, "hatch": build_hatch,
     "helipad": build_helipad, "water_tower": build_water_tower, "skylight": build_skylight,
     "ac_unit": build_ac_unit, "vent": build_vent, "crates": build_crates, "antenna": build_antenna,
     "dish": build_dish, "billboard": build_billboard, "rooftop_sign": build_rooftop_sign,
     "blade_sign": build_blade_sign, "blade_sign_b": build_blade_sign_b, "skybridge": build_skybridge,
-    "holo_koi": build_holo_koi, "holo_can": build_holo_can,
+    "holo_koi": build_holo_koi, "holo_can": build_holo_can, "portal_arch": build_portal_arch,
 }
 
 

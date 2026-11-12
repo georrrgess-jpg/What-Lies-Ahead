@@ -309,7 +309,7 @@ func _wedge_points(x0: float, x1: float, z_low: float, z_high: float, y_low: flo
 		Vector3(x0, y_low, z_low), Vector3(x1, y_low, z_low),
 	])
 
-## Faces for _wedge_points: bottom, low lip, side x0, side x1, top slope, high end.
+## Faces for _wedge_points: low lip, side x0, side x1, top slope, high end.
 const WEDGE_FACES := [[0, 1, 7, 6], [0, 3, 4, 6], [1, 7, 5, 2], [6, 7, 5, 4], [3, 2, 5, 4]]
 
 
@@ -372,8 +372,8 @@ func _chevrons(parent: Node3D, chev_name: String, x: float, z_low: float, z_high
 
 
 func _duct_run(parent: Node3D, lo: Vector3, hi: Vector3) -> void:
-	var metal := _mat("duct", Color(0.42, 0.44, 0.55), 0.35, Color.BLACK, 0.0, 0.6)
-	var band := _mat("duct_band", Color(0.2, 0.2, 0.28), 0.5)
+	var metal := _mat("duct", Color(0.2, 0.2, 0.28), 0.35, Color.BLACK, 0.0, 0.7)
+	var band := _mat("duct_band", Color(0.1, 0.09, 0.14), 0.5)
 	var body := _box(parent, "DuctRun", hi - lo, (lo + hi) * 0.5, metal)
 	var z := lo.z + 1.0
 	var i := 0
@@ -385,6 +385,11 @@ func _duct_run(parent: Node3D, lo: Vector3, hi: Vector3) -> void:
 		body.add_child(flange)
 		z += 2.0
 		i += 1
+	var conduit := MeshInstance3D.new()
+	conduit.name = "Conduit"
+	conduit.mesh = _box_mesh(Vector3(0.12, 0.08, hi.z - lo.z - 0.4), _led_material(Color(0.65, 0.4, 1.0)))
+	conduit.position = Vector3(lo.x + 0.25, hi.y + 0.04, (lo.z + hi.z) * 0.5) - body.position
+	body.add_child(conduit)
 
 
 # ---------------------------------------------------------------------------
@@ -456,7 +461,7 @@ func _fire_escape_frame(frame_name: String, x0: float, x1: float, y_top: float, 
 	var lamp := MeshInstance3D.new()
 	lamp.name = "Lamp"
 	lamp.mesh = _box_mesh(Vector3(0.3, 0.18, 0.3), _mat("fe_lamp", Color(1.0, 0.6, 0.3), 0.4, Color(1.0, 0.55, 0.25), 3.0))
-	lamp.position = Vector3(wall_x - outward * 0.2 + outward * 0.35, y_top + 2.2, 4.0)
+	lamp.position = Vector3(wall_x + outward * 0.15, y_top + 2.2, 4.0)
 	holder.add_child(lamp)
 
 
@@ -705,11 +710,12 @@ func _build_props() -> void:
 	_solid_prop(props, "neon_vent", "VentSouthWest", Vector3(-9.0, 0, 13.6), 0.0, Vector3(1.2, 1.6, 1.2))
 	_solid_prop(props, "neon_vent", "VentSouthEast", Vector3(10.4, 0, 13.4), 0.0, Vector3(1.2, 1.6, 1.2))
 	_solid_prop(props, "neon_vent", "VentNorthWest", Vector3(-17.6, 0, -14.5), 0.0, Vector3(1.2, 1.6, 1.2))
-	_solid_prop(props, "neon_crates", "CratesNorthEast", Vector3(11.0, 0, -14.4), 0.0, Vector3(2.4, 1.3, 1.2))
+	_solid_prop(props, "neon_crates", "CratesNorth", Vector3(-9.0, 0, -14.6), 0.0, Vector3(2.4, 1.3, 1.2))
 	_solid_prop(props, "neon_crates", "CratesSouthLanding", Vector3(19.4, 0, 13.6), 0.0, Vector3(2.4, 1.3, 1.2))
 	_solid_prop(props, "neon_crates", "CratesPortalRoof", Vector3(6.6, N_Y, -32.6), 0.0, Vector3(2.4, 1.3, 1.2))
 	# Antenna masts with blinking beacons (thin, collision only at the base).
-	for entry in [[Vector3(-17.6, 0, -11.2), 0.0], [Vector3(20.0, 0, 14.0), 30.0], [Vector3(-11.8, N_Y, -33.0), 10.0], [Vector3(12.3, 0, 13.8), 60.0]]:
+	# Keep the corners where the east strip meets the main roof clear.
+	for entry in [[Vector3(-17.6, 0, -11.2), 0.0], [Vector3(17.0, 0, 14.4), 30.0], [Vector3(-11.8, N_Y, -33.0), 10.0], [Vector3(6.0, 0, 14.3), 60.0]]:
 		_prop(props, "neon_antenna", "Antenna%d" % props.get_child_count(), entry[0], entry[1], Vector3(0.8, 9, 0.8))
 		_collider(props, "AntennaBase%d" % props.get_child_count(), Vector3(0.9, 1.2, 0.9), entry[0] + Vector3(0, 0.6, 0))
 	# Satellite dishes on the north-east landing.
@@ -770,7 +776,7 @@ func _screen(parent: Node3D, screen_name: String, pos: Vector3, yaw: float, size
 # ---------------------------------------------------------------------------
 
 func _build_exit() -> void:
-	var portal: Node3D = (load("res://scenes/props/portal.tscn") as PackedScene).instantiate()
+	var portal: Node3D = (load("res://scenes/props/neon_portal.tscn") as PackedScene).instantiate()
 	portal.name = "Portal"
 	geo.add_child(portal)
 	portal.position = Vector3(4.0, N_Y, -29.5)
@@ -1051,7 +1057,7 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.agent_height = 1.75
 	# Generous clearance: paths stay clear of wall ends and corners even for
 	# the widest zombies, so nobody snags while cutting a corner.
-	mesh.agent_radius = 0.7
+	mesh.agent_radius = 0.8
 	mesh.agent_max_climb = 0.25
 	mesh.agent_max_slope = 40.0
 	mesh.region_min_size = 8.0
@@ -1062,6 +1068,50 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	var before := mesh.get_polygon_count()
 	region.navigation_mesh = _keep_connected(mesh, [Vector3(3.0, 0.0, 12.5)])
 	print("build_neon_skyline: navmesh polygons = %d (of %d before removing islands)" % [region.navigation_mesh.get_polygon_count(), before])
+	_check_reachable(region.navigation_mesh)
+
+
+## Every entrance, landing and the portal must be on the navmesh connected to
+## the player's start; prints a warning for any that are not.
+func _check_reachable(mesh: NavigationMesh) -> void:
+	var probes := {
+		"terrace": Vector3(17.0, L1, -1.0), "north landing": Vector3(17.0, 0, -14.5),
+		"south landing": Vector3(15.6, 0, 12.4), "bridge": Vector3(-2.0, N_Y * 0.5, -20.0),
+		"portal roof": Vector3(4.0, N_Y, -27.0), "west fire escape": Vector3(-21.3, FE_LOW_W, 11.0),
+		"east fire escape": Vector3(22.8, 0, 11.0), "east fire escape top": Vector3(22.8, L1, 0.5),
+		"freight elevator": Vector3(-9.5, N_Y, -26.6), "roof door": Vector3(-14.2, 0, -8.0),
+	}
+	var verts := mesh.get_vertices()
+	var bad := 0
+	for probe_name in probes:
+		var p: Vector3 = probes[probe_name]
+		var found := false
+		for i in mesh.get_polygon_count():
+			if _in_polygon(verts, mesh.get_polygon(i), p):
+				found = true
+				break
+		if not found:
+			bad += 1
+			print("build_neon_skyline: WARNING %s is not connected to the start" % probe_name)
+	print("build_neon_skyline: reachability check, %d of %d areas connected" % [probes.size() - bad, probes.size()])
+
+
+## True if `p` lies over the convex polygon (top view) within a metre of its height.
+func _in_polygon(verts: PackedVector3Array, poly: PackedInt32Array, p: Vector3) -> bool:
+	var sign := 0.0
+	var height := 0.0
+	for k in poly.size():
+		var a := verts[poly[k]]
+		var b := verts[poly[(k + 1) % poly.size()]]
+		height += a.y
+		var c := (b.x - a.x) * (p.z - a.z) - (b.z - a.z) * (p.x - a.x)
+		if absf(c) < 1e-6:
+			continue
+		if sign == 0.0:
+			sign = signf(c)
+		elif signf(c) != sign:
+			return false
+	return absf(height / poly.size() - p.y) < 1.0
 
 
 ## Drops every polygon not connected (through shared vertices) to the

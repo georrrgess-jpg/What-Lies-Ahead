@@ -7,14 +7,11 @@ extends "res://scripts/run/level_environment.gd"
 ##      material "NeonHalo_<hex>"  additive bulb halo in that colour;
 ##      material "NeonHolo..."     additive hologram (neon_holo.gdshader) tinted
 ##                                 from the material's colour;
-##      material "NeonScreenN"     advert screen showing row N of the atlas;
 ##      node "Blink..."            blinks on and off (aviation beacons);
 ##      node "Spin..."             turns slowly about its vertical axis.
 
 const RAIN_SHADER := "res://art/shaders/neon_rain.gdshader"
 const HOLO_SHADER := "res://art/shaders/neon_holo.gdshader"
-const SCREEN_SHADER := "res://art/shaders/neon_screen.gdshader"
-const ADS_TEXTURE := "res://art/textures/neon_ads.png"
 ## Rain layers: radius, height, streak columns. The outer layers are skipped
 ## on the Low graphics preset.
 const RAIN_LAYERS := [[3.5, 14.0, 70.0], [8.0, 22.0, 150.0], [15.0, 30.0, 260.0]]
@@ -28,7 +25,6 @@ var _spinners: Array[Node3D] = []
 var _neon_halos: Array[ShaderMaterial] = []
 var _halo_by_color := {}
 var _holo_cache := {}
-var _screen_cache := {}
 var _time := 0.0
 
 
@@ -123,8 +119,6 @@ func _apply_neon_materials(node: Node) -> void:
 			elif n.begins_with("NeonHolo"):
 				mi.set_surface_override_material(i, _holo_material(m))
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			elif n.begins_with("NeonScreen"):
-				mi.set_surface_override_material(i, _screen_material(int(n.trim_prefix("NeonScreen"))))
 	for child in node.get_children():
 		_apply_neon_materials(child)
 
@@ -154,13 +148,3 @@ func _holo_material(source: Material) -> ShaderMaterial:
 		_holo_cache[key] = m
 	return _holo_cache[key]
 
-
-func _screen_material(row: int) -> ShaderMaterial:
-	if not _screen_cache.has(row):
-		var m := ShaderMaterial.new()
-		m.shader = load(SCREEN_SHADER)
-		m.set_shader_parameter("atlas", load(ADS_TEXTURE))
-		m.set_shader_parameter("row", row)
-		m.set_shader_parameter("time_offset", row * 1.7)
-		_screen_cache[row] = m
-	return _screen_cache[row]

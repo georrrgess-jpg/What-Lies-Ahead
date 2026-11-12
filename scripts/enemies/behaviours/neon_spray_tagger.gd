@@ -3,8 +3,9 @@ extends EnemyBehaviour
 ## Neon Punk: at mid range with a clear line, stops and rattles its spray can
 ## (the telegraph: the threat ring warns and the rattle is audible), then
 ## sprays a short fan of glowing paint blobs at the player. A headshot during
-## the rattle knocks the can down and cancels the burst. Melee still works up
-## close.
+## the rattle knocks the can down and cancels the burst. Only a few punks tag
+## at once (the rest keep walking), so volleys never stack into a wall of
+## paint. Melee still works up close.
 
 @export var min_range := 4.5
 @export var max_range := 16.0
@@ -20,15 +21,22 @@ extends EnemyBehaviour
 @export var windup_clip: StringName = &"Spray"
 @export var windup_sound: StringName = &"neon_spray_rattle"
 @export var fire_sound: StringName = &"neon_spray_hiss"
+## How many punks may be shaking or spraying at the same time.
+@export var max_concurrent := 2
+
+## Behaviours currently shaking or spraying (weak references, shared by all punks).
+static var _busy: Array = []
 
 var _cool := 2.5
 var _winding := 0.0
 var _left := 0
 var _gap := 0.0
 var _color := Color.WHITE
+var _owner: WeakRef
 
 
-func on_ready(_z: Zombie) -> void:
+func on_ready(z: Zombie) -> void:
+	_owner = weakref(z)
 	_cool = randf_range(1.2, cooldown)
 	_color = colors[randi() % colors.size()] if not colors.is_empty() else Color.WHITE
 
@@ -55,6 +63,10 @@ func on_physics(z: Zombie, delta: float) -> bool:
 	if _cool <= 0.0 and z.state == Zombie.State.CHASE:
 		var d := z.distance_to_target()
 		if d >= min_range and d <= max_range and z.has_line_of_sight():
+			if _busy_count() >= max_concurrent:
+				_cool = 0.6
+				return false
+			_busy.append(weakref(self))
 			_cool = cooldown * randf_range(0.85, 1.2)
 			_winding = windup
 			z.play_animation(windup_clip, 0.1)
@@ -74,6 +86,17 @@ func on_hit(z: Zombie, amount: float, _hit_position: Vector3, headshot: bool) ->
 
 func is_winding_up() -> bool:
 	return _winding > 0.0 or _left > 0
+
+
+## Live sprayers: still shaking or spraying, on a zombie that is still alive.
+static func _busy_count() -> int:
+	_busy = _busy.filter(func(w: WeakRef) -> bool:
+		var b = w.get_ref()
+		if b == null or not b.is_winding_up():
+			return false
+		var z = b._owner.get_ref() if b._owner else null
+		return z != null and not z.is_dead())
+	return _busy.size()
 
 
 func _hold(z: Zombie, delta: float) -> void:

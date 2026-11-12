@@ -8,7 +8,8 @@
 script = ExtResource("2")
 cooldown = 6.5
 telegraph = 0.6
-land_damage = 10.0
+land_damage = 8.0
+recover = 0.8
 
 [resource]
 script = ExtResource("1")
@@ -21,7 +22,7 @@ turn_speed = 7.0
 tickets = 16
 score = 170
 xp = 16
-damage = 13.0
+damage = 11.0
 attack_range = 1.6
 attack_reach = 2.2
 attack_windup = 0.42

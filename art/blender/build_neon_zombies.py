@@ -419,16 +419,19 @@ def riot_shield(m):
     """Big riot shield held in front of the chest (bound to the spine, so it
     always covers the front)."""
     p = "RS_"
+    # Top edge at ~1.75 m once scaled: the visor stays visible as a headshot target.
     y = -0.62
+    zc = 0.9
     parts = [
-        box(p + "Panel", (0.86, 0.08, 1.2), (0.05, y, 1.0), bevel=0.06, segs=2, m=m["shield"]),
-        box(p + "Window", (0.56, 0.09, 0.22), (0.05, y - 0.005, 1.38), bevel=0.03, m=m["riot_visor"]),
-        text(p + "Text", "RIOT", 0.2, 0.03, (0.05, y - 0.05, 0.95), m=m["white"]),
-        box(p + "Stripe", (0.7, 0.09, 0.06), (0.05, y - 0.006, 0.75), bevel=0.01, m=m["stripe"]),
-        box(p + "Handle", (0.1, 0.18, 0.1), (0.2, y + 0.12, 1.0), bevel=0.02, m=m["dark"]),
+        box(p + "Panel", (0.86, 0.08, 1.16), (0.05, y, zc), bevel=0.06, segs=2, m=m["shield"]),
+        box(p + "Window", (0.56, 0.09, 0.2), (0.05, y - 0.005, zc + 0.36), bevel=0.03, m=m["riot_visor"]),
+        text(p + "Text", "RIOT", 0.2, 0.03, (0.05, y - 0.05, zc - 0.05), m=m["white"]),
+        box(p + "Stripe", (0.7, 0.09, 0.06), (0.05, y - 0.006, zc - 0.25), bevel=0.01, m=m["stripe"]),
+        box(p + "Handle", (0.1, 0.18, 0.1), (0.2, y + 0.12, zc), bevel=0.02, m=m["dark"]),
     ]
     # Glowing rim.
-    for i, (sx, sz, lx, lz) in enumerate(((0.92, 0.05, 0.05, 1.61), (0.92, 0.05, 0.05, 0.39), (0.05, 1.24, -0.41, 1.0), (0.05, 1.24, 0.51, 1.0))):
+    for i, (sx, sz, lx, lz) in enumerate(((0.92, 0.05, 0.05, zc + 0.59), (0.92, 0.05, 0.05, zc - 0.59),
+                                          (0.05, 1.2, -0.41, zc), (0.05, 1.2, 0.51, zc))):
         parts.append(box(f"{p}Rim{i}", (sx, 0.1, sz), (lx, y, lz), bevel=0.015, m=m["shield_glow"]))
     return {"Acc_Riot_Shield": bind("Spine", parts)}
 

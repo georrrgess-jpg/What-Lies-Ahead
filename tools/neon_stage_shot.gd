@@ -98,6 +98,7 @@ func _run() -> void:
 
 	var live := _opt("live", "0") == "1"
 	var scene: PackedScene = load(ZOMBIE_SCENE)
+	var poses := {}
 	for spec in zombies:
 		var bits := spec.split("@")
 		var data = root.get_node("GameData").enemy(StringName(bits[0]))
@@ -114,15 +115,18 @@ func _run() -> void:
 		z.rotation.y = atan2(to_player.x, to_player.z)
 		z.died.connect(director._on_zombie_died)
 		if not live:
+			# Stand still but keep processing (as scripts/dev/screenshot.gd does).
 			z.speed = 0.0
-			z.set_physics_process(false)
 		var anim := z.find_child("AnimationPlayer", true, false) as AnimationPlayer
 		if anim and bits.size() >= 4:
 			var clip := bits[2] if anim.has_animation(bits[2]) else bits[2] + "-loop"
 			if anim.has_animation(clip):
-				anim.play(clip)
+				# Hold the pose by playing at zero speed (a paused player stops
+				# applying its pose once the zombie stops processing).
+				anim.play(clip, 0.0)
 				anim.seek(float(bits[3]), true)
-				anim.pause()
+				anim.speed_scale = 0.0
+				poses[z] = [anim, clip, float(bits[3])]
 	if live:
 		player.set_physics_process(true)
 
@@ -147,6 +151,13 @@ func _run() -> void:
 			await _wait(3)
 		player.set_physics_process(live)
 	await _wait(int(_opt("frames", "40")))
+	# Re-apply the requested poses right before the capture.
+	for z in poses:
+		var a: AnimationPlayer = poses[z][0]
+		a.play(poses[z][1], 0.0)
+		a.seek(poses[z][2], true)
+		a.speed_scale = 0.0
+	await _wait(2)
 	await RenderingServer.frame_post_draw
 	var img := root.get_viewport().get_texture().get_image()
 	var err := img.save_png(out_path)

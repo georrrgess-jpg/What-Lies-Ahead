@@ -7,13 +7,13 @@
 [sub_resource type="Resource" id="spray"]
 script = ExtResource("2")
 min_range = 4.5
-max_range = 15.0
-cooldown = 5.0
+max_range = 14.0
+cooldown = 6.0
 windup = 0.9
 shots = 3
 damage = 5.0
-projectile_speed = 15.0
-fan_degrees = 7.5
+projectile_speed = 14.0
+fan_degrees = 9.0
 
 [resource]
 script = ExtResource("1")

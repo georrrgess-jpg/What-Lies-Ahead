@@ -5,7 +5,6 @@ and the material conventions Neon Skyline's level script understands:
 
     NeonHalo_<hex>   crossed halo quads -> additive glow in that colour
     NeonHolo...      hologram surfaces  -> additive scanline hologram shader
-    NeonScreenN      advert screens     -> row N of the advert atlas
     Blink*           objects whose name starts with "Blink" blink on and off
     Spin*            objects whose name starts with "Spin" turn slowly
 """

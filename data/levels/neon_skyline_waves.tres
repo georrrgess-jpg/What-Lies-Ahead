@@ -75,14 +75,15 @@ banner = "WAVE 5 — RIOT SQUAD ON THE ROOF"
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"neon_punk": 9,
+"neon_punk": 7,
 "hover_courier": 5,
+"tourist_shambler": 3,
 "lifeguard_runner": 4,
 "riot_bruiser": 2
 }
 spawn_interval = 2.4
 burst = 2
-max_alive = 9
+max_alive = 8
 speed_scale = 1.08
 late_types_after = 0.2
 banner = ""
@@ -91,13 +92,13 @@ banner = ""
 script = ExtResource("2")
 spawns = {
 "hover_courier": 7,
-"neon_punk": 9,
-"tourist_shambler": 6,
+"neon_punk": 7,
+"tourist_shambler": 7,
 "riot_bruiser": 2
 }
 spawn_interval = 2.3
 burst = 2
-max_alive = 11
+max_alive = 10
 speed_scale = 1.1
 late_types_after = 0.15
 banner = ""
@@ -105,14 +106,14 @@ banner = ""
 [sub_resource type="Resource" id="wave_8"]
 script = ExtResource("2")
 spawns = {
-"hover_courier": 10,
-"neon_punk": 9,
+"hover_courier": 8,
+"neon_punk": 7,
 "lifeguard_runner": 6,
-"riot_bruiser": 3
+"riot_bruiser": 2
 }
 spawn_interval = 2.8
 burst = 3
-max_alive = 13
+max_alive = 12
 speed_scale = 1.1
 late_types_after = 0.25
 banner = "FINAL WAVE — BLACKOUT RUSH"
