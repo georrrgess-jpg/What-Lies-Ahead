@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/neon_leaper.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/neon_courier.glb" id="3"]
+
+[sub_resource type="Resource" id="leap"]
+script = ExtResource("2")
+cooldown = 6.5
+telegraph = 0.6
+land_damage = 8.0
+recover = 0.8
+
+[resource]
+script = ExtResource("1")
+id = &"hover_courier"
+display_name = "Hover Courier"
+max_health = 60.0
+move_speed = 4.6
+speed_variance = 0.1
+turn_speed = 7.0
+tickets = 16
+score = 170
+xp = 16
+damage = 11.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.42
+attack_recover = 0.7
+lunge_speed = 3.5
+mass = 0.8
+flank_degrees = 100.0
+model_scene = ExtResource("3")
+outfit = &"Courier"
+body_scale = 0.9
+capsule_radius = 0.4
+capsule_height = 1.9
+head_height = 1.2
+shirt_colors = Array[Color]([Color(1, 0.48, 0.1, 1), Color(1, 0.82, 0.1, 1), Color(0.6, 1, 0.16, 1), Color(1, 0.25, 0.65, 1)])
+skin_colors = Array[Color]([Color(0.5, 0.92, 0.48, 1), Color(0.42, 0.88, 0.58, 1), Color(0.62, 0.95, 0.42, 1), Color(0.46, 0.86, 0.66, 1)])
+accessory_slots = PackedStringArray("Acc_Courier_Box", "Acc_Courier_Antenna|", "Acc_Courier_Scarf||", "Acc_Courier_Goggles||")
+move_animation = &"Run"
+animation_reference_speed = 4.8
+avoidance_radius = 0.5
+behaviours = Array[Resource]([SubResource("leap")])
+voice_sounds = Array[StringName]([&"neon_courier_chirp_1", &"neon_courier_chirp_2"])
+voice_interval = Vector2(2.5, 5)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

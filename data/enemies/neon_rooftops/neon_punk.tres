@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/neon_spray_tagger.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/neon_punk.glb" id="3"]
+
+[sub_resource type="Resource" id="spray"]
+script = ExtResource("2")
+min_range = 4.5
+max_range = 14.0
+cooldown = 6.0
+windup = 0.9
+shots = 3
+damage = 5.0
+projectile_speed = 14.0
+fan_degrees = 9.0
+
+[resource]
+script = ExtResource("1")
+id = &"neon_punk"
+display_name = "Neon Punk"
+max_health = 85.0
+move_speed = 2.45
+speed_variance = 0.14
+turn_speed = 5.5
+tickets = 13
+score = 130
+xp = 13
+damage = 16.0
+attack_range = 1.7
+attack_reach = 2.3
+attack_windup = 0.65
+attack_recover = 0.85
+lunge_speed = 3.0
+mass = 0.95
+flank_degrees = 80.0
+model_scene = ExtResource("3")
+outfit = &"Punk"
+body_scale = 0.95
+capsule_radius = 0.45
+capsule_height = 1.9
+head_height = 1.22
+shirt_colors = Array[Color]([Color(1, 0.25, 0.65, 1), Color(0.7, 1, 0.2, 1), Color(0.2, 0.92, 1, 1), Color(1, 0.55, 0.15, 1)])
+skin_colors = Array[Color]([Color(0.5, 0.92, 0.48, 1), Color(0.42, 0.88, 0.58, 1), Color(0.62, 0.95, 0.42, 1), Color(0.46, 0.86, 0.66, 1)])
+accessory_slots = PackedStringArray("Acc_Punk_Mohawk|Acc_Punk_Spikes|Acc_Punk_Beanie", "Acc_Punk_Visor||", "Acc_Punk_Chain|")
+move_animation = &"Walk"
+animation_reference_speed = 2.3
+avoidance_radius = 0.55
+behaviours = Array[Resource]([SubResource("spray")])
+voice_sounds = Array[StringName]([&"neon_punk_jeer_1", &"neon_punk_jeer_2"])
+voice_interval = Vector2(3, 6.5)
+voice_pitch = 1.0
+attack_sound = &"neon_punk_swipe"

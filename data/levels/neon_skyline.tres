@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/neon_skyline_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"neon_skyline"
+display_name = "Neon Skyline"
+blurb = "Hold the helipad vending hub through the storm, then cross the sky-bridge to the portal."
+scene_path = "res://scenes/levels/neon_skyline.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"neon_skyline_loop"
+ambience = &"neon_ambience"
+music_volume_db = -10.0
+ambience_volume_db = -9.0
+accent_color = Color(0.2, 0.95, 1, 1)
+menu_camera_from = Vector3(25, 11, 24)
+menu_camera_to = Vector3(-2, 3, -6)
+loading_tips = PackedStringArray("Neon Punks shake their spray cans before they tag you. Break line of sight or sidestep the burst.", "Hover Couriers crouch and flash before they leap. Keep moving and they land short.", "Riot Bruisers block shots to the front of their shield. Flank them, aim for the visor, or wear the shield down.", "The billboard terrace overlooks the whole roof, but its two ramps are the only ways up.", "When the portal opens, follow the lights across the sky-bridge.")
