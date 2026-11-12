@@ -2,7 +2,11 @@
 
     aqua_station.glb       the Reef Supply Ring: a yellow submarine-hull counter
                            with four docked mini-sub supply pods, wrapped around
-                           the base of the coral tank (loadout station art)
+                           the base of the coral tank (loadout station art), with
+                           diving helmets, snack tins and life rings on the ring.
+                           Node OpenLights (terminal screens and pod beacons) is
+                           shown only while the station is open
+                           (scenes/props/aqua_station.tscn).
     aqua_reef_column.glb   the towering cylindrical coral-reef tank: base drum,
                            rock spire covered in coral, glass hoops, water
                            surface and the lit crown (the glass itself is a
@@ -107,15 +111,67 @@ def build_station():
         term = [
             box(f"Term{i}Post", (0.2, 0.2, 0.55), (0, -4.25, 1.75), bevel=0.05, m=steel),
             box(f"Term{i}Body", (0.9, 0.16, 0.62), (0, -4.3, 2.22), rot=rad(-18, 0, 0), bevel=0.06, m=dark),
-            box(f"Term{i}Screen", (0.76, 0.03, 0.48), (0, -4.39, 2.22), rot=rad(-18, 0, 0), bevel=0.01, m=screen),
+            box(f"Term{i}Glass", (0.76, 0.03, 0.48), (0, -4.385, 2.22), rot=rad(-18, 0, 0), bevel=0.0, m=navy),
+            box(f"Term{i}Screen", (0.76, 0.03, 0.48), (0, -4.395, 2.22), rot=rad(-18, 0, 0), bevel=0.0, m=screen),
             box(f"Term{i}Bar", (0.92, 0.06, 0.08), (0, -4.36, 2.55), rot=rad(-18, 0, 0), bevel=0.02, m=orange),
         ]
         # Energy cells racked beside each terminal.
         for k in range(3):
-            term.append(cyl(f"Term{i}Cell{k}", 0.07, 0.34, (-0.65 + k * 0.16, -4.35, 1.66), segs=10, bevel=0.02, m=cyan))
-            term.append(cyl(f"Term{i}CellCap{k}", 0.08, 0.06, (-0.65 + k * 0.16, -4.35, 1.85), segs=10, bevel=0.02, m=steel))
+            term.append(cyl(f"Term{i}Cell{k}", 0.07, 0.34, (-0.65 + k * 0.16, -4.35, 1.66), segs=10, bevel=0.0, m=cyan))
+            term.append(cyl(f"Term{i}CellCap{k}", 0.08, 0.06, (-0.65 + k * 0.16, -4.35, 1.85), segs=10, bevel=0.0, m=steel))
         parts += place(term, rot_z=a + math.pi / 2)
-    save("aqua_station", [merge("Station", parts)])
+        # A life ring hung on the hull under each terminal.
+        parts += place(life_ring(f"Ring{i}", 0.24, (0, -4.72, 0.84)), rot_z=a + math.pi / 2)
+        # Goods in the free stretches of counter either side of the terminal.
+        parts += place(diving_helmet(f"Helmet{i}", brass, port), (math.cos(a - 0.37) * 4.18, math.sin(a - 0.37) * 4.18, 1.49),
+                       rot_z=a - 0.37 + math.pi / 2)
+        parts += place(snack_tins(f"Tins{i}", i), (math.cos(a + 0.37) * 4.18, math.sin(a + 0.37) * 4.18, 1.49),
+                       rot_z=a + 0.37 + math.pi / 2)
+    lit = [ob for ob in parts if ob.name.endswith("Screen") or ob.name.endswith("Beacon")]
+    rest = [ob for ob in parts if ob not in lit]
+    save("aqua_station", [merge("Station", rest), merge("OpenLights", lit)])
+
+
+def life_ring(prefix, radius, loc):
+    """Orange-and-white life ring facing -Y."""
+    parts = [torus(prefix + "Tube", radius, radius * 0.26, (0, 0, 0), rot=rad(90, 0, 0), m=amat("Orange", rough=0.5, emit=0.18),
+                   major_segs=16, minor_segs=6)]
+    for k in range(4):
+        a = math.tau * (k + 0.5) / 4
+        parts.append(box(f"{prefix}Wrap{k}", (radius * 0.6, radius * 0.62, radius * 0.3),
+                         (math.cos(a) * radius, 0, math.sin(a) * radius), rot=(0, -a + math.pi / 2, 0), bevel=0.02, segs=1,
+                         m=amat("White", rough=0.4)))
+    return place(parts, loc)
+
+
+def diving_helmet(prefix, brass, port):
+    """A brass diving helmet on a little stand, faceplate toward -Y."""
+    parts = [
+        box(prefix + "Stand", (0.46, 0.4, 0.08), (0, 0, 0.04), bevel=0.02, segs=1, m=amat("NavyDark", rough=0.5)),
+        cyl(prefix + "Collar", 0.2, 0.12, (0, 0, 0.14), segs=12, bevel=0.0, m=amat("Brass", rough=0.35, metal=0.6)),
+        sphere(prefix + "Dome", 0.23, (0, 0, 0.37), scale=(1, 1, 1.05), m=brass, segs=12, rings=8),
+        sphere(prefix + "Knob", 0.05, (0, 0, 0.62), m=brass, segs=6, rings=4),
+    ]
+    parts += porthole(prefix + "Face", 0.1, (0, -0.22, 0.37), frame=amat("SteelDark", rough=0.4, metal=0.5), glass=port, rivets=0)
+    for s in (-1, 1):
+        parts += place([cyl(f"{prefix}SideRim{s}", 0.075, 0.03, (0, -0.215, 0.4), rot=rad(90, 0, 0), segs=10, bevel=0.0, m=amat("SteelDark", rough=0.4, metal=0.5)),
+                        cyl(f"{prefix}SidePane{s}", 0.055, 0.04, (0, -0.22, 0.4), rot=rad(90, 0, 0), segs=10, bevel=0.0, m=port)],
+                       rot_z=s * math.radians(80))
+    return parts
+
+
+def snack_tins(prefix, seed):
+    """A stack of fish-snack tins with label bands."""
+    colours = ("Coral", "SubYellow", "TealLight", "Pink")
+    parts = []
+    for k, (dx, dy, z) in enumerate(((-0.13, 0.0, 0.0), (0.13, 0.02, 0.0), (0.0, 0.01, 0.17))):
+        c = amat(colours[(seed + k) % 4], rough=0.45)
+        parts += [
+            cyl(f"{prefix}Tin{k}", 0.11, 0.16, (dx, dy, z + 0.08), segs=12, bevel=0.0, m=c),
+            cyl(f"{prefix}Label{k}", 0.113, 0.07, (dx, dy, z + 0.08), segs=12, bevel=0.0, m=amat("White", rough=0.4)),
+        ]
+    parts.append(sphere(prefix + "Fish", 0.06, (0.0, -0.105, 0.25), scale=(1.4, 0.4, 0.8), m=amat("Orange", rough=0.5, emit=0.18), segs=8, rings=5))
+    return parts
 
 
 def build_reef_column():

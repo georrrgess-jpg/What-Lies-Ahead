@@ -651,7 +651,7 @@ func _build_station_and_portal() -> void:
 	geo.add_child(station)
 	station.position = STATION_POS
 
-	var portal: Node3D = (load("res://scenes/props/portal.tscn") as PackedScene).instantiate()
+	var portal: Node3D = (load("res://scenes/props/dune_portal.tscn") as PackedScene).instantiate()
 	portal.name = "Portal"
 	geo.add_child(portal)
 	portal.position = PORTAL_POS
