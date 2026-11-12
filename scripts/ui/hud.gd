@@ -62,6 +62,7 @@ func bind(run: RunDirector, p: Player) -> void:
 	p.weapons.weapon_changed.connect(p.view.show_weapon)
 	if p.weapons.current:
 		_on_weapon_changed(p.weapons.current)
+		_on_ammo_changed(p.weapons.magazine(), p.weapons.reserve())
 		p.view.show_weapon(p.weapons.current)
 	_on_health_changed(p.health, p.max_health)
 	_on_tickets_changed(run.tickets)

@@ -50,10 +50,12 @@ func show_weapon(weapon: WeaponData) -> void:
 	_disable_shadows(model)
 	_muzzle = model.find_child("Muzzle", true, false) as Node3D
 	_rest.clear()
-	for part_name in ["Cell", "Slide", "Pump", "ArmL", "ArmR", "Shell"]:
+	for part_name in ["Cell", "Slide", "Pump", "ArmL"]:
 		var part := model.find_child(part_name, true, false) as Node3D
 		if part:
 			_rest[part_name] = {"node": part, "transform": part.transform}
+	# "Root" tilts the whole weapon (and both hands) during reloads.
+	_rest["Root"] = {"node": model, "transform": model.transform}
 	_build_flash()
 	WeaponCosmetics.apply(model, weapon, Mastery.cosmetics(weapon.id))
 	_raise = 1.0
@@ -161,18 +163,17 @@ func _move(tw: Tween, part_name: String, offset: Vector3, rot_deg: Vector3, time
 func _reload_cell_drop(d: float) -> void:
 	var tw := create_tween().set_parallel(true)
 	_reload_tween = tw
-	_move(tw, "Shell", Vector3(0, 0.02, 0), Vector3(18, 0, -22), d * 0.2)
-	_move(tw, "Cell", Vector3(0, -0.28, 0.02), Vector3(18, 0, -22), d * 0.25)
-	_move(tw, "ArmL", Vector3(-0.05, -0.3, 0.08), Vector3(0, 0, 0), d * 0.25)
-	_move(tw, "Slide", Vector3(0, 0.02, 0.05), Vector3(18, 0, -22), d * 0.2)
+	_move(tw, "Root", Vector3(0.0, 0.03, 0.0), Vector3(16, 6, -24), d * 0.2)
+	_move(tw, "Cell", Vector3(0, -0.3, 0.03), Vector3.ZERO, d * 0.25)
+	_move(tw, "ArmL", Vector3(-0.06, -0.3, 0.1), Vector3.ZERO, d * 0.25)
+	_move(tw, "Slide", Vector3(0, 0, 0.05), Vector3.ZERO, d * 0.1)
 	tw.chain().tween_interval(d * 0.2)
 	tw.chain()
-	_move(tw, "Cell", Vector3(0, 0.02, 0), Vector3(18, 0, -22), d * 0.2)
-	_move(tw, "ArmL", Vector3(0, 0.02, 0), Vector3(0, 0, 0), d * 0.2)
+	_move(tw, "Cell", Vector3.ZERO, Vector3.ZERO, d * 0.2)
+	_move(tw, "ArmL", Vector3(0, -0.03, 0), Vector3.ZERO, d * 0.2)
 	tw.chain()
-	_move(tw, "Shell", Vector3.ZERO, Vector3.ZERO, d * 0.25)
-	_move(tw, "Cell", Vector3.ZERO, Vector3.ZERO, d * 0.25)
-	_move(tw, "Slide", Vector3.ZERO, Vector3.ZERO, d * 0.12)
+	_move(tw, "Root", Vector3.ZERO, Vector3.ZERO, d * 0.25)
+	_move(tw, "Slide", Vector3.ZERO, Vector3.ZERO, d * 0.1)
 	_move(tw, "ArmL", Vector3.ZERO, Vector3.ZERO, d * 0.25)
 
 
@@ -181,46 +182,42 @@ func _reload_cell_drop(d: float) -> void:
 func _reload_side_swap(d: float) -> void:
 	var tw := create_tween().set_parallel(true)
 	_reload_tween = tw
-	_move(tw, "Shell", Vector3(-0.03, -0.02, 0), Vector3(-6, 12, 38), d * 0.22)
-	_move(tw, "Cell", Vector3(-0.03, -0.02, 0), Vector3(-6, 12, 38), d * 0.22)
-	_move(tw, "ArmL", Vector3(-0.1, -0.12, 0.1), Vector3.ZERO, d * 0.22)
+	_move(tw, "Root", Vector3(-0.03, 0.02, 0.0), Vector3(-4, 14, 42), d * 0.22)
+	_move(tw, "ArmL", Vector3(-0.1, -0.1, 0.1), Vector3.ZERO, d * 0.22)
 	tw.chain()
-	_move(tw, "Cell", Vector3(-0.32, -0.1, 0.06), Vector3(-6, 12, 38), d * 0.18)
-	_move(tw, "ArmL", Vector3(-0.3, -0.2, 0.12), Vector3.ZERO, d * 0.18)
+	_move(tw, "Cell", Vector3(-0.3, 0.0, 0.05), Vector3.ZERO, d * 0.18)
+	_move(tw, "ArmL", Vector3(-0.32, -0.02, 0.12), Vector3.ZERO, d * 0.18)
 	tw.chain().tween_interval(d * 0.12)
 	tw.chain()
-	_move(tw, "Cell", Vector3(-0.03, -0.02, 0), Vector3(-6, 12, 38), d * 0.2)
-	_move(tw, "ArmL", Vector3(-0.1, -0.12, 0.1), Vector3.ZERO, d * 0.2)
+	_move(tw, "Cell", Vector3.ZERO, Vector3.ZERO, d * 0.2)
+	_move(tw, "ArmL", Vector3(-0.1, -0.1, 0.1), Vector3.ZERO, d * 0.2)
 	tw.chain()
-	_move(tw, "Shell", Vector3.ZERO, Vector3.ZERO, d * 0.28)
-	_move(tw, "Cell", Vector3.ZERO, Vector3.ZERO, d * 0.28)
+	_move(tw, "Root", Vector3.ZERO, Vector3.ZERO, d * 0.28)
 	_move(tw, "ArmL", Vector3.ZERO, Vector3.ZERO, d * 0.28)
 
 
-## Scatter Blaster: tip the barrels down, feed the cell, then two heavy pumps.
+## Scatter Blaster: tip the barrels down, lift the drum cell out and seat a
+## new one, then two heavy pumps.
 func _reload_break_open(d: float) -> void:
 	var tw := create_tween().set_parallel(true)
 	_reload_tween = tw
-	_move(tw, "Shell", Vector3(0, -0.04, 0.02), Vector3(-26, 8, 10), d * 0.2)
-	_move(tw, "Cell", Vector3(0, 0.16, 0.04), Vector3(-26, 8, 10), d * 0.2)
-	_move(tw, "Pump", Vector3(0, -0.04, 0.02), Vector3(-26, 8, 10), d * 0.2)
-	_move(tw, "ArmL", Vector3(0.04, 0.1, 0.1), Vector3.ZERO, d * 0.2)
-	tw.chain().tween_interval(d * 0.15)
+	_move(tw, "Root", Vector3(0, 0.02, 0.02), Vector3(-24, 10, 12), d * 0.2)
+	_move(tw, "Cell", Vector3(0, 0.2, 0.06), Vector3.ZERO, d * 0.2)
+	_move(tw, "ArmL", Vector3(0.02, 0.22, 0.3), Vector3.ZERO, d * 0.2)
+	tw.chain().tween_interval(d * 0.14)
 	tw.chain()
-	_move(tw, "Cell", Vector3(0, -0.04, 0.02), Vector3(-26, 8, 10), d * 0.15)
-	_move(tw, "ArmL", Vector3(0, -0.04, 0.02), Vector3.ZERO, d * 0.15)
+	_move(tw, "Cell", Vector3.ZERO, Vector3.ZERO, d * 0.14)
+	_move(tw, "ArmL", Vector3(0.02, 0.1, 0.28), Vector3.ZERO, d * 0.14)
 	tw.chain()
-	_move(tw, "Shell", Vector3.ZERO, Vector3.ZERO, d * 0.18)
-	_move(tw, "Cell", Vector3.ZERO, Vector3.ZERO, d * 0.18)
-	_move(tw, "Pump", Vector3.ZERO, Vector3.ZERO, d * 0.18)
+	_move(tw, "Root", Vector3.ZERO, Vector3.ZERO, d * 0.18)
 	_move(tw, "ArmL", Vector3.ZERO, Vector3.ZERO, d * 0.18)
 	for i in 2:
 		tw.chain()
-		_move(tw, "Pump", Vector3(0, 0, 0.14), Vector3.ZERO, d * 0.07)
-		_move(tw, "ArmL", Vector3(0, 0, 0.14), Vector3.ZERO, d * 0.07)
+		_move(tw, "Pump", Vector3(0, 0, 0.13), Vector3.ZERO, d * 0.08)
+		_move(tw, "ArmL", Vector3(0, 0, 0.13), Vector3.ZERO, d * 0.08)
 		tw.chain()
-		_move(tw, "Pump", Vector3.ZERO, Vector3.ZERO, d * 0.07)
-		_move(tw, "ArmL", Vector3.ZERO, Vector3.ZERO, d * 0.07)
+		_move(tw, "Pump", Vector3.ZERO, Vector3.ZERO, d * 0.08)
+		_move(tw, "ArmL", Vector3.ZERO, Vector3.ZERO, d * 0.08)
 
 
 # --- helpers ------------------------------------------------------------------

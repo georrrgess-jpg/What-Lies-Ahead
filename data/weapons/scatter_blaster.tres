@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="WeaponData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/data/mastery_reward.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/scatter_blaster.glb" id="3"]
 
 [sub_resource type="Resource" id="reward_1"]
 script = ExtResource("2")
@@ -60,8 +61,9 @@ view_kick = 0.11
 shake = 0.4
 tracer_color = Color(0.55, 0.9, 1.0, 1)
 tracer_width = 0.03
-view_position = Vector3(0.25, -0.27, -0.58)
-view_rotation_degrees = Vector3(1.0, 4.0, 0.0)
+viewmodel = ExtResource("3")
+view_position = Vector3(0.32, -0.34, -0.78)
+view_rotation_degrees = Vector3(4, 18, -4)
 reload_style = &"break_open"
 fire_sound = &"scatter_fire"
 reload_sound = &"scatter_reload"

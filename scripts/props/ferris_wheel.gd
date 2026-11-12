@@ -1,5 +1,6 @@
 extends Node3D
-## Slowly turns the Ferris wheel and keeps its gondolas hanging upright.
+## Slowly turns the Ferris wheel (about its axle, local Z) and keeps its
+## gondolas hanging upright.
 
 @export var degrees_per_second := 6.0
 
@@ -19,6 +20,6 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	var step := deg_to_rad(degrees_per_second) * delta
-	_wheel.rotate_object_local(Vector3.RIGHT, step)
+	_wheel.rotate_object_local(Vector3.BACK, step)
 	for g in _gondolas:
-		g.rotate_object_local(Vector3.RIGHT, -step)
+		g.rotate_object_local(Vector3.BACK, -step)

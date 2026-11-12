@@ -97,7 +97,7 @@ func _build_environment() -> void:
 	if ResourceLoader.exists(sky_texture_path):
 		var pano := PanoramaSkyMaterial.new()
 		pano.panorama = load(sky_texture_path)
-		pano.energy_multiplier = 1.0
+		pano.energy_multiplier = 0.92
 		sky.sky_material = pano
 	else:
 		var proc := ProceduralSkyMaterial.new()
@@ -110,17 +110,18 @@ func _build_environment() -> void:
 	# Rotate the panorama so its sun sits over the ocean, ahead and to the right.
 	env.sky_rotation = Vector3(0.0, deg_to_rad(SKY_YAW_DEGREES), 0.0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.62, 0.5, 0.86)
-	env.ambient_light_energy = 0.85
+	env.ambient_light_color = Color(0.56, 0.5, 0.84)
+	env.ambient_light_energy = 0.62
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_white = 1.6
+	env.tonemap_white = 2.2
+	env.tonemap_exposure = 0.92
 	env.glow_enabled = true
-	env.glow_intensity = 0.55
-	env.glow_bloom = 0.08
-	env.glow_hdr_threshold = 1.05
+	env.glow_intensity = 0.5
+	env.glow_bloom = 0.0
+	env.glow_hdr_threshold = 1.0
 	env.fog_enabled = true
 	env.fog_light_color = Color(1.0, 0.6, 0.66)
-	env.fog_density = 0.0018
+	env.fog_density = 0.0007
 	env.fog_sky_affect = 0.0
 	env.adjustment_enabled = true
 	env.adjustment_saturation = 1.12
@@ -138,8 +139,8 @@ func _build_environment() -> void:
 	var elevation := deg_to_rad(30.0)
 	var to_sun := Vector3(sin(azimuth) * cos(elevation), sin(elevation), -cos(azimuth) * cos(elevation))
 	sun.transform = Transform3D(Basis.looking_at(-to_sun, Vector3.UP), Vector3(0, 30, 0))
-	sun.light_color = Color(1.0, 0.76, 0.56)
-	sun.light_energy = 1.55
+	sun.light_color = Color(1.0, 0.8, 0.62)
+	sun.light_energy = 1.05
 	sun.shadow_enabled = true
 	sun.shadow_bias = 0.06
 	sun.shadow_normal_bias = 1.2
@@ -151,14 +152,15 @@ func _build_environment() -> void:
 	# Soft pink fill from the opposite side, no shadows.
 	var fill := DirectionalLight3D.new()
 	fill.name = "FillLight"
-	fill.transform = Transform3D(Basis.looking_at(Vector3(0.7, -0.45, -0.55).normalized(), Vector3.UP), Vector3(0, 30, 0))
-	fill.light_color = Color(1.0, 0.5, 0.78)
-	fill.light_energy = 0.38
+	fill.transform = Transform3D(Basis.looking_at(Vector3(-0.35, -0.4, -0.85).normalized(), Vector3.UP), Vector3(0, 30, 0))
+	fill.light_color = Color(1.0, 0.62, 0.8)
+	fill.light_energy = 0.34
 	fill.shadow_enabled = false
 	level.add_child(fill)
 
-const SUN_AZIMUTH_DEGREES := 62.0   # 0 = straight ahead (-Z), 90 = right (+X)
-const SKY_YAW_DEGREES := -62.0
+const SUN_AZIMUTH_DEGREES := 24.0   # 0 = straight ahead (-Z), 90 = right (+X)
+## The panorama's sun is at its centre, which Godot maps to +Z before rotation.
+const SKY_YAW_DEGREES := 180.0 - SUN_AZIMUTH_DEGREES
 
 
 func _build_ocean() -> void:
@@ -175,6 +177,8 @@ func _build_ocean() -> void:
 	if ResourceLoader.exists(shader_path):
 		var m := ShaderMaterial.new()
 		m.shader = load(shader_path)
+		var az := deg_to_rad(SUN_AZIMUTH_DEGREES)
+		m.set_shader_parameter("sun_direction", Vector2(sin(az), -cos(az)))
 		ocean.material_override = m
 	else:
 		ocean.material_override = _mat("ocean", Color(0.08, 0.42, 0.6), 0.15)
@@ -249,6 +253,7 @@ func _deck_material() -> StandardMaterial3D:
 		m.uv1_triplanar = true
 		m.uv1_world_triplanar = true
 		m.uv1_scale = Vector3(0.25, 0.25, 0.25)
+		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 		var normal_path := "res://art/textures/deck_planks_normal.png"
 		if ResourceLoader.exists(normal_path):
 			m.normal_enabled = true
@@ -256,8 +261,8 @@ func _deck_material() -> StandardMaterial3D:
 			m.normal_scale = 0.8
 	else:
 		m.albedo_color = Color(0.6, 0.36, 0.3)
-	m.roughness = 0.5
-	m.metallic_specular = 0.55
+	m.roughness = 0.68
+	m.metallic_specular = 0.3
 	_materials["deck"] = m
 	return m
 
@@ -353,7 +358,7 @@ func _build_entrances() -> void:
 	_collider(entrances, "ArcadeFrontB", Vector3(0.6, 6, 1.6), Vector3(X0, 3, 17.2))
 
 	# 2. Ferris wheel gate on the left-back, leading in from the ride platform.
-	_prop(entrances, "gate_arch", "RideGate", Vector3(X0, 0, -13.0), 90.0, Vector3(8, 5, 1))
+	_prop(entrances, "gate_ride", "RideGate", Vector3(X0, 0, -13.0), 90.0, Vector3(8, 5, 1))
 	_collider(entrances, "RideGatePostA", Vector3(1.0, 5, 1.0), Vector3(X0, 2.5, -16.6))
 	_collider(entrances, "RideGatePostB", Vector3(1.0, 5, 1.0), Vector3(X0, 2.5, -9.4))
 	_rail(entrances, "RideGateFenceA", Vector3(X0, 0, -19.0), Vector3(X0, 0, -17.0))
@@ -365,12 +370,12 @@ func _build_entrances() -> void:
 	_collider(entrances, "ServiceDoorWall", Vector3(6.6, 4, 0.5), Vector3(-10.0, -0.6, Z0 - 17.2))
 
 	# 4. Pier entrance at the front, behind the start position.
-	_prop(entrances, "gate_arch", "PierEntrance", Vector3(-3.0, 0, Z1), 0.0, Vector3(8, 5, 1))
+	_prop(entrances, "gate_entrance", "PierEntrance", Vector3(-3.0, 0, Z1), 180.0, Vector3(8, 5, 1))
 	_collider(entrances, "EntrancePostA", Vector3(1.0, 5, 1.0), Vector3(-6.6, 2.5, Z1))
 	_collider(entrances, "EntrancePostB", Vector3(1.0, 5, 1.0), Vector3(0.6, 2.5, Z1))
 	_rail(entrances, "EntranceFenceA", Vector3(-8.0, 0, Z1), Vector3(-7.0, 0, Z1))
 	_rail(entrances, "EntranceFenceB", Vector3(1.0, 0, Z1), Vector3(2.0, 0, Z1))
-	_prop(entrances, "gatehouse", "Gatehouse", Vector3(-3.0, 0, 34.5), 180.0, Vector3(12, 6, 3))
+	_prop(entrances, "gatehouse", "Gatehouse", Vector3(-3.0, 0, 33.0), 180.0, Vector3(12, 6, 3))
 	_collider(entrances, "GatehouseWall", Vector3(12, 6, 0.6), Vector3(-3.0, 3, 33.2))
 
 
@@ -389,10 +394,10 @@ func _build_arena_props() -> void:
 	kiosk.position = Vector3.ZERO
 
 	# Game booths against the ride-side fence (between the two left entrances).
-	_prop(props, "booth", "BoothA", Vector3(-22.6, 0, -3.6), 90.0, Vector3(4.6, 3.6, 3.4))
-	_collider(props, "BoothACollision", Vector3(3.6, 3.6, 4.6), Vector3(-22.9, 1.8, -3.6))
-	_prop(props, "booth", "BoothB", Vector3(-22.6, 0, 1.4), 90.0, Vector3(4.6, 3.6, 3.4))
-	_collider(props, "BoothBCollision", Vector3(3.6, 3.6, 4.6), Vector3(-22.9, 1.8, 1.4))
+	_prop(props, "booth", "BoothA", Vector3(-23.2, 0, -3.6), 90.0, Vector3(4.6, 3.6, 3.4))
+	_collider(props, "BoothACollision", Vector3(3.4, 3.6, 4.7), Vector3(-23.2, 1.8, -3.6))
+	_prop(props, "booth", "BoothB", Vector3(-23.2, 0, 1.4), 90.0, Vector3(4.6, 3.6, 3.4))
+	_collider(props, "BoothBCollision", Vector3(3.4, 3.6, 4.7), Vector3(-23.2, 1.8, 1.4))
 
 	# Planters: occasional sightline breaks, kept clear of the main lanes.
 	var planters := [
@@ -488,10 +493,17 @@ func _build_backdrop() -> void:
 	level.add_child(backdrop)
 
 	# The giant pink Ferris wheel on the left skyline.
-	var wheel := _prop(backdrop, "ferris_wheel", "FerrisWheel", Vector3(-41.0, -4.0, -17.0), 52.0, Vector3(4, 30, 26))
+	var wheel := _prop(backdrop, "ferris_wheel", "FerrisWheel", Vector3(-34.0, 0.0, -29.0), 42.0, Vector3(26, 30, 4))
+	wheel.scale = Vector3.ONE * 1.12
 	wheel.set_script(load("res://scripts/props/ferris_wheel.gd"))
+	# Walkway from the ride platform to the wheel (scenery, outside the fence).
+	var walk := MeshInstance3D.new()
+	walk.name = "RideWalkway"
+	walk.mesh = _box_mesh(Vector3(8.0, DECK_THICK, 8.0), _deck_material())
+	walk.position = Vector3(-29.0, -DECK_THICK * 0.5, -23.0)
+	backdrop.add_child(walk)
 
-	_prop(backdrop, "coaster", "Coaster", Vector3(-30.0, -4.0, -52.0), 12.0, Vector3(60, 14, 10))
+	_prop(backdrop, "coaster", "Coaster", Vector3(-22.0, -4.0, -64.0), 8.0, Vector3(60, 14, 10))
 
 	# Land side behind the pier entrance.
 	var sand := MeshInstance3D.new()
