@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dune_kit import *  # noqa: F401,F403
 from build_zombie import (FPS, arms, bind, build_armature, clip_attack, clip_die, clip_hit, clip_idle, clip_run,  # noqa: E402
                           clip_walk, set_pose, skin)
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
 
 

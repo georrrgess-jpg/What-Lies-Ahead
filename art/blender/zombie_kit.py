@@ -30,14 +30,10 @@ from wla_common import _finish
 import bmesh
 from mathutils import Matrix, Vector
 
-# Rest-pose landmarks of the shared rig (see build_zombie.BONES).
-SHOULDER = (0.37, 0.0, 1.25)
-ELBOW = (0.41, 0.0, 0.98)
-WRIST = (0.43, 0.0, 0.63)
-HIP = (0.16, 0.0, 0.79)
-KNEE = (0.16, 0.0, 0.45)
-ANKLE = (0.16, 0.0, 0.13)
-# The head leans forward a little: a zombie hunch built into the rest pose.
+# Parts sit on the rest-pose joints of build_zombie.BONES: shoulders (+-0.37, 0, 1.25),
+# elbows (+-0.41, 0, 0.98), wrists (+-0.43, 0, 0.63), hips (+-0.16, 0, 0.79), knees
+# (+-0.16, 0, 0.45), ankles (+-0.16, 0, 0.13). The head leans forward a little: a
+# zombie hunch built into the rest pose.
 HEAD_Y = -0.03
 
 # Glowing eyes: one colour and strength per world, so they read the same way in
@@ -404,6 +400,7 @@ def torso(p, m, w=0.62, d=0.42, z0=0.9, z1=1.44, waist=0.82, belly=0.0, hunch=0.
 
 
 def neck(p, m, w=0.24, z0=1.36, z1=1.47):
+    """Spine-bound neck, leaning forward with the head."""
     return bind("Spine", [blob(p + "Neck", (0, HEAD_Y * 0.5, z0), (0, HEAD_Y * 0.8, z1), [(0, w * 0.5, w * 0.45), (1, w * 0.46, w * 0.42)], m,
                                n=2.4, r0=0.0, r1=0.02, segs=14, mid=2)])
 

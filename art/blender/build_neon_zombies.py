@@ -24,14 +24,13 @@ The character faces -Y in Blender (+Z in Godot).
 """
 import math
 import os
-import random
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wla_common import *  # noqa: F401,F403
 from build_zombie import FPS, bind, build_armature, skin  # noqa: E402,F401
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
-                        patch, skull, tear_fn, torso, wrap)
+from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+                        patch, skull, tear_fn, torso)
 
 
 def materials():

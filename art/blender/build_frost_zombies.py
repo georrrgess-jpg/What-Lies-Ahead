@@ -30,8 +30,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from frost_common import *  # noqa: F401,F403
 import build_zombie as bz
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
-                        patch, skull, tear_fn, torso)
+from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+                        patch, skull, torso)
 
 
 def materials():
