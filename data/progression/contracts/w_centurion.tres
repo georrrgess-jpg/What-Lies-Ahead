@@ -4,14 +4,15 @@
 
 [resource]
 script = ExtResource("1")
-id = &"w_crowd_control"
-display_name = "Crowd Control"
-description = "Get %s multi-kills"
+id = &"w_centurion"
+display_name = "Centurion"
+description = "Pop %s zombies"
 scope = 1
-stat = &"multi_kills"
+stat = &"kills"
 mode = 0
-goal = 10
+goal = 60
 param = 0
-xp = 500
-mastery_xp = 400
-sort_order = 210
+xp = 300
+sparks = 40
+mastery_xp = 300
+sort_order = 130

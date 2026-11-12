@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="EconomyRules" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/economy/economy_rules.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+sparks_per_kill_ticket = 0.1
+headshot_sparks = 1
+combo_every = 10
+combo_sparks = 5
+wave_sparks = 15
+flawless_wave_sparks = 15
+clear_sparks = 150
+clear_sparks_per_world = 25
+first_clear_sparks = 150
+sparks_per_ticket = 0.05
+level_sparks_base = 50
+level_sparks_per_level = 5
+milestone_every = 5
+milestone_sparks = 100
+rank_sparks_base = 10
+rank_sparks_per_rank = 10
+prices = PackedInt32Array(150, 400, 900, 1800, 0)
+featured_count = 4
+featured_discount = 0.25
+new_slots = Array[StringName]([&"weapon_sight"])
