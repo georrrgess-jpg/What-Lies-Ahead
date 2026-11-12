@@ -84,29 +84,29 @@ banner = ""
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 14,
-"lifeguard_runner": 11,
-"boardwalk_bruiser": 2
+"tourist_shambler": 13,
+"lifeguard_runner": 9,
+"boardwalk_bruiser": 1
 }
 spawn_interval = 2.2
 burst = 2
-max_alive = 12
+max_alive = 11
 speed_scale = 1.1
-late_types_after = 0.1
+late_types_after = 0.25
 banner = ""
 
 [sub_resource type="Resource" id="wave_8"]
 script = ExtResource("2")
 spawns = {
-"lifeguard_runner": 18,
+"lifeguard_runner": 14,
 "tourist_shambler": 10,
 "boardwalk_bruiser": 2
 }
 spawn_interval = 2.6
 burst = 3
-max_alive = 14
+max_alive = 12
 speed_scale = 1.12
-late_types_after = 0.25
+late_types_after = 0.1
 banner = "FINAL WAVE — LIFEGUARD RUSH"
 
 [resource]
@@ -114,10 +114,13 @@ script = ExtResource("1")
 waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7"), SubResource("wave_8")])
 prep_seconds = 12.0
 break_seconds = 20.0
-break_refill_fraction = 0.35
+break_refill_fraction = 0.25
 ammo_topup_price = 150
 heal_price = 250
 heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 20
 wave_bonus_per_wave = 5
+overshield_price = 450
+overshield_amount = 25.0
+damage_boost_price = 400

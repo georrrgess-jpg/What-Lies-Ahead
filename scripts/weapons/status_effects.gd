@@ -10,6 +10,9 @@ extends Node3D
 ##           kill while frozen shatters them into shards that hurt neighbours.
 ##   shock   a short jolt that slows the zombie for a moment.
 ##
+## Heavy zombies resist: chill builds slower, freezes thaw sooner and shocks
+## slow them less (all scaled by EnemyData.mass).
+##
 ## Slows go through Zombie.speed_multiplier (set every frame). Freezing
 ## disables the zombie's processing; this node keeps running (PAUSABLE) to
 ## thaw it again.
@@ -80,7 +83,6 @@ func apply(weapon: WeaponData, amount: float) -> void:
 		&"chill":
 			if is_frozen():
 				return
-			# Heavy zombies resist the cold.
 			chill = minf(1.0, chill + amount / sqrt(maxf(0.5, zombie.data.mass)))
 			_chill_hold = CHILL_HOLD
 			if chill >= 1.0:
@@ -91,7 +93,7 @@ func apply(weapon: WeaponData, amount: float) -> void:
 
 
 func _freeze(weapon: WeaponData) -> void:
-	frozen_left = weapon.status_duration
+	frozen_left = weapon.status_duration / sqrt(maxf(1.0, zombie.data.mass))
 	frozen_damage_scale = weapon.frozen_damage_scale
 	shatter_damage = weapon.shatter_damage
 	zombie.interrupt()
@@ -125,7 +127,7 @@ func _physics_process(delta: float) -> void:
 	shock_left = maxf(0.0, shock_left - delta)
 	var mult := lerpf(1.0, CHILL_MIN_SPEED, chill)
 	if shock_left > 0.0:
-		mult *= SHOCK_SPEED
+		mult *= lerpf(1.0, SHOCK_SPEED, 1.0 / maxf(1.0, zombie.data.mass))
 	zombie.speed_multiplier *= mult
 	_update_visuals(delta)
 	if chill <= 0.0 and shock_left <= 0.0 and frozen_left <= 0.0:

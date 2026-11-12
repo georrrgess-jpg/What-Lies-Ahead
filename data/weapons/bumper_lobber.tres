@@ -8,7 +8,7 @@
 [sub_resource type="Resource" id="unlock"]
 script = ExtResource("2")
 kind = 1
-amount = 6
+amount = 5
 
 [resource]
 script = ExtResource("1")
@@ -16,15 +16,15 @@ id = &"bumper_lobber"
 sort_order = 60
 category = "Launcher"
 display_name = "Bumper Lobber"
-role = "Lobs bouncing gumball bombs that pop in a wide blast. Clears crowds and corners and never hurts you; slow shots with an arc to master. Aim down sights to see the landing ring."
+role = "Lobs bouncing gumball bombs that pop in a wide blast: clears crowds and corners and never hurts you. Slow, arcing shots that cannot headshot; aim down sights to see the landing ring."
 unlock = SubResource("unlock")
-magazine_size = 5
-reserve_start = 30
-reserve_max = 50
-reload_time = 2.4
-emergency_recharge_interval = 1.6
+magazine_size = 6
+reserve_start = 36
+reserve_max = 60
+reload_time = 2.1
+emergency_recharge_interval = 2.8
 automatic = false
-fire_interval = 0.62
+fire_interval = 0.6
 damage = 95.0
 pellets = 1
 spread_degrees = 0.4

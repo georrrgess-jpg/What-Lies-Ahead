@@ -8,7 +8,7 @@
 [sub_resource type="Resource" id="unlock"]
 script = ExtResource("2")
 kind = 1
-amount = 4
+amount = 3
 
 [resource]
 script = ExtResource("1")
@@ -16,16 +16,16 @@ id = &"arc_coil"
 sort_order = 50
 category = "Arc Thrower"
 display_name = "Arc Coil"
-role = "Short-range chain lightning. Each zap locks onto the zombie nearest your crosshair and arcs to three more nearby; shocked zombies stumble. Weak at range and against Bruisers."
+role = "Short-range chain lightning. Each zap locks onto the zombie nearest your crosshair and arcs to three more; shocked zombies stumble. Weak past 15 m, and heavies shrug off the shock."
 unlock = SubResource("unlock")
-magazine_size = 40
-reserve_start = 160
-reserve_max = 280
-reload_time = 1.9
-emergency_recharge_interval = 0.35
+magazine_size = 50
+reserve_start = 200
+reserve_max = 320
+reload_time = 1.7
+emergency_recharge_interval = 0.4
 automatic = true
-fire_interval = 0.13
-damage = 15.0
+fire_interval = 0.12
+damage = 17.0
 pellets = 1
 spread_degrees = 0.6
 spread_bloom = 0.0
@@ -58,7 +58,7 @@ move_speed_scale = 0.96
 equip_time = 0.32
 chain_count = 3
 chain_range = 6.5
-chain_falloff = 0.78
+chain_falloff = 0.82
 seek_cone_degrees = 8.0
 chain_sound = &"weap_arc_chain"
 status_effect = &"shock"

@@ -1,8 +1,8 @@
 class_name ScoreKeeper
 extends Node
-## Run score. Every kill is worth the enemy's base points, multiplied by:
-##   - headshot multiplier (finishing blow to the head),
-##   - combo multiplier (kills chained within COMBO_WINDOW of each other),
+## Run score. Every kill is worth the enemy's base points, plus HEADSHOT_BONUS
+## of them when the finishing blow hit the head (the same for every weapon),
+## all multiplied by the combo multiplier (kills chained within COMBO_WINDOW),
 ## plus flat bonuses for multi-kills (several kills within MULTI_WINDOW),
 ## longshots, close calls (kill while under 25% health), and wave clears
 ## (with a no-damage bonus). The run director owns one of these; the HUD and
@@ -13,6 +13,8 @@ signal combo_changed(combo: int, multiplier: float, time_left: float)
 ## A labelled award to flash on screen: "HEADSHOT", "DOUBLE KILL", ...
 signal award(text: String, points: int, color: Color)
 
+## Extra share of a kill's base points for a headshot finish.
+const HEADSHOT_BONUS := 0.5
 const COMBO_WINDOW := 3.2
 const MULTI_WINDOW := 0.6
 const COMBO_STEP := 0.1          # +10% per chained kill
@@ -55,7 +57,7 @@ func _process(delta: float) -> void:
 
 
 ## Call on every kill. Returns the points it was worth.
-func on_kill(base_points: int, headshot: bool, headshot_mult: float, distance: float, player_health_frac: float) -> int:
+func on_kill(base_points: int, headshot: bool, distance: float, player_health_frac: float) -> int:
 	kills += 1
 	combo += 1
 	best_combo = maxi(best_combo, combo)
@@ -64,7 +66,7 @@ func on_kill(base_points: int, headshot: bool, headshot_mult: float, distance: f
 	var head_bonus := 0.0
 	if headshot:
 		headshot_kills += 1
-		head_bonus = base * (headshot_mult - 1.0)
+		head_bonus = base * HEADSHOT_BONUS
 	var subtotal := base + head_bonus
 	var combo_bonus := subtotal * (multiplier() - 1.0)
 	var gained := int(round(subtotal + combo_bonus))

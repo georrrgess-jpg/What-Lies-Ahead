@@ -6,85 +6,85 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 7,
-"frost_frozen_tourist": 5
+"frost_frozen_tourist": 6,
+"tourist_shambler": 4
 }
 spawn_interval = 2.0
 burst = 1
 max_alive = 6
 speed_scale = 1.0
-late_types_after = 0.3
+late_types_after = 0.4
 banner = "SUMMIT LODGE — THE GUESTS ARE FROZEN"
 
 [sub_resource type="Resource" id="wave_2"]
 script = ExtResource("2")
 spawns = {
-"frost_frozen_tourist": 8,
-"tourist_shambler": 6,
+"frost_frozen_tourist": 9,
+"tourist_shambler": 3,
 "lifeguard_runner": 3
 }
 spawn_interval = 1.8
 burst = 1
 max_alive = 8
 speed_scale = 1.0
-late_types_after = 0.3
+late_types_after = 0.25
 banner = ""
 
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 7,
-"frost_ski_racer": 5,
-"frost_frozen_tourist": 5
+"frost_ski_racer": 6,
+"frost_frozen_tourist": 6,
+"tourist_shambler": 4
 }
 spawn_interval = 1.8
 burst = 1
 max_alive = 9
 speed_scale = 1.0
-late_types_after = 0.35
+late_types_after = 0.3
 banner = "WAVE 3 — SKI RACERS ON THE SLOPE"
 
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
 "frost_frozen_tourist": 7,
-"frost_ski_racer": 5,
-"lifeguard_runner": 4,
-"tourist_shambler": 4
+"frost_ski_racer": 8,
+"lifeguard_runner": 2,
+"tourist_shambler": 2
 }
 spawn_interval = 1.7
 burst = 1
 max_alive = 8
 speed_scale = 1.03
-late_types_after = 0.25
+late_types_after = 0.2
 banner = ""
 
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"frost_frozen_tourist": 6,
 "frost_yeti": 1,
-"frost_ski_racer": 5,
-"tourist_shambler": 5
+"frost_frozen_tourist": 7,
+"frost_ski_racer": 6,
+"tourist_shambler": 4
 }
 spawn_interval = 1.6
 burst = 1
 max_alive = 9
 speed_scale = 1.05
-late_types_after = 0.25
+late_types_after = 0.05
 banner = "WAVE 5 — THE YETI WAKES"
 
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"frost_ski_racer": 6,
-"frost_frozen_tourist": 6,
+"frost_ski_racer": 7,
+"frost_frozen_tourist": 7,
 "frost_yeti": 1,
-"lifeguard_runner": 5
+"lifeguard_runner": 3
 }
 spawn_interval = 2.3
 burst = 2
-max_alive = 9
+max_alive = 10
 speed_scale = 1.08
 late_types_after = 0.2
 banner = ""
@@ -92,32 +92,33 @@ banner = ""
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"frost_frozen_tourist": 7,
-"frost_ski_racer": 6,
+"frost_frozen_tourist": 8,
+"frost_ski_racer": 7,
 "frost_yeti": 2,
-"lifeguard_runner": 4,
+"lifeguard_runner": 3,
 "tourist_shambler": 3
 }
 spawn_interval = 2.2
 burst = 2
-max_alive = 10
-speed_scale = 1.1
-late_types_after = 0.15
+max_alive = 11
+speed_scale = 1.14
+late_types_after = 0.2
 banner = ""
 
 [sub_resource type="Resource" id="wave_8"]
 script = ExtResource("2")
 spawns = {
-"frost_ski_racer": 9,
-"frost_frozen_tourist": 7,
+"frost_ski_racer": 12,
+"frost_frozen_tourist": 8,
 "frost_yeti": 2,
-"lifeguard_runner": 4
+"lifeguard_runner": 3,
+"tourist_shambler": 3
 }
-spawn_interval = 2.6
+spawn_interval = 2.5
 burst = 3
-max_alive = 8
-speed_scale = 1.08
-late_types_after = 0.2
+max_alive = 13
+speed_scale = 1.1
+late_types_after = 0.15
 banner = "FINAL WAVE — WHITEOUT"
 
 [resource]
@@ -125,10 +126,13 @@ script = ExtResource("1")
 waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7"), SubResource("wave_8")])
 prep_seconds = 12.0
 break_seconds = 20.0
-break_refill_fraction = 0.5
-ammo_topup_price = 150
-heal_price = 250
+break_refill_fraction = 0.3
+ammo_topup_price = 190
+heal_price = 300
 heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 20
 wave_bonus_per_wave = 5
+overshield_price = 600
+overshield_amount = 25.0
+damage_boost_price = 600

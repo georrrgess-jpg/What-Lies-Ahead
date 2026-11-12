@@ -384,14 +384,13 @@ func _on_zombie_died(z: Zombie, weapon_id: StringName) -> void:
 	tickets_changed.emit(tickets)
 	_wave_kills[weapon_id] = int(_wave_kills.get(weapon_id, 0)) + 1
 	_grant(weapon_id, z.data.xp, 1)
-	var w := GameData.weapon(weapon_id)
 	# Squad reaction: allies near the fallen zombie get enraged briefly.
 	for other in _alive:
 		if is_instance_valid(other) and other.data.enrage_radius > 0.0 \
 				and other.global_position.distance_to(z.global_position) <= other.data.enrage_radius:
 			other.enrage(other.data.enrage_seconds)
-	var points := score.on_kill(z.data.score, z.killed_by_headshot, w.headshot_multiplier if w else 1.5,
-		z.kill_distance, player.health / player.max_health if player else 1.0)
+	var points := score.on_kill(z.data.score, z.killed_by_headshot, z.kill_distance,
+		player.health / player.max_health if player else 1.0)
 	Events.enemy_killed.emit(z, weapon_id, z.killed_by_headshot, points)
 	enemy_killed.emit(z, weapon_id)
 

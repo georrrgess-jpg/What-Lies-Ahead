@@ -37,6 +37,9 @@ extends Resource
 ## Extra spread added per shot (recovers quickly when not firing).
 @export var spread_bloom := 0.0
 @export var spread_bloom_max := 0.0
+## Degrees per second the bloom recovers once the trigger has rested briefly
+## (WeaponController.BLOOM_RECOVER_DELAY). Lower = spamming costs more accuracy.
+@export var spread_recovery := 6.0
 @export var max_range := 70.0
 @export var falloff_start := 30.0
 @export var falloff_end := 70.0
@@ -216,9 +219,11 @@ func cycle_time() -> float:
 	return fire_interval + charge_time + (burst_count - 1) * burst_interval
 
 
-## Sustained single-target damage per second while the magazine lasts.
+## Sustained single-target damage per second with the trigger held (or
+## clicked as fast as it fires), reloads and overheat vents included.
 func damage_per_second() -> float:
-	return burst_damage() / maxf(0.05, cycle_time())
+	var pulls := ceilf(float(magazine_size) / maxi(1, burst_count))
+	return burst_damage() * pulls / maxf(0.05, pulls * cycle_time() + reload_time)
 
 
 ## Distance (m) at which the weapon still does most of its work.

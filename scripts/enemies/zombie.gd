@@ -427,7 +427,8 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 		step.y = 0.0
 		if step.length() > 0.05:
 			dir = step.normalized()
-	var move_speed := speed * (0.45 if _slow > 0.0 else 1.0)
+	# A hit makes a zombie flinch to 45% speed; above mass 1.5 less so (not at all at 4).
+	var move_speed := speed * (lerpf(1.0, 0.45, clampf(1.6 - 0.4 * data.mass, 0.0, 1.0)) if _slow > 0.0 else 1.0)
 	if _enrage > 0.0:
 		_enrage -= delta
 		move_speed *= 1.18
