@@ -64,8 +64,9 @@ def summit_lodge_loop(intense=False):
     and a sub-bass push, then it turns back to A.
 
     intense=True is the final-wave variant (summit_lodge_final): sixteenth hats,
-    bells on every eighth, claps, crashes and risers throughout, the sub push in
-    both sections and a celesta line over section A. Same tempo and length, so
+    bells on every eighth, claps, crashes and risers throughout, a galloping
+    sixteenth bass with a kick pickup, the sub push in both sections and a
+    celesta line over section A. Same tempo and length, so
     the game cross-fades between the two in time."""
     bpm = 124.0
     beat = 60.0 / bpm
@@ -111,10 +112,15 @@ def summit_lodge_loop(intense=False):
             if fill and b >= 2:
                 for s in range(4):
                     both(snare, t0 + (b + s * 0.25) * beat, 0.16 + 0.04 * s)
-        # Driving bass: eighth notes, octave jump on the last of each beat.
-        for e in range(8):
-            n = root - 12 + (12 if e % 4 == 3 else 0)
-            both(filt(pluck_bass(note(n), beat * 0.45), low=1200), t0 + e * beat * 0.5, 0.55)
+        # Driving bass: eighth notes with an octave jump (a sixteenth gallop and
+        # a kick pickup when intense).
+        steps = 16 if intense else 8
+        for e in range(steps):
+            n = root - 12 + (12 if (e % 4 == 2 if intense else e % 4 == 3) else 0)
+            ln = beat * 4 / steps * 0.9
+            both(filt(pluck_bass(note(n), ln), low=1200), t0 + e * beat * 4 / steps, 0.5 if intense else 0.55)
+        if intense:
+            both(kick, t0 + 3.5 * beat, 0.3)
         if busy and bar % 2 == 0:
             both(sweep(note(root - 24) * 1.02, note(root - 24), 4 * beat, "sine") * env(4 * beat, 0.01, 4 * beat, power=0.8), t0, 0.35)
         # Celesta arpeggio: rising in A, rippling in B.
