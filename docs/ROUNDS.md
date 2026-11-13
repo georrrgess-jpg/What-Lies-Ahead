@@ -96,8 +96,8 @@ Shared rules (`AlphaBossBehaviour`):
   player 20% of their reserve energy, so the fight never runs dry.
 * While it stands, its escorts are capped at 40% of the wave's crowd, and keep
   trickling in (2 every 7 s) if the horde runs out.
-* When it falls the horde breaks: nothing else spawns and whoever is left
-  sprints in.
+* When it falls the horde breaks: nothing else spawns, and the usual
+  close-out (below) brings the last few in.
 * It moves with a capsule no bigger than a regular heavy (so it fits every
   doorway its horde uses) and is shot through a full-size one.
 

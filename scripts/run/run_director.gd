@@ -627,11 +627,9 @@ func _on_boss_phase(z: Zombie, _phase: int) -> void:
 func _on_boss_down(z: Zombie) -> void:
 	boss = null
 	_bosses_defeated += 1
-	# The horde breaks: nothing more arrives and whoever is left rushes in.
+	# The horde breaks: nothing more arrives (the usual close-out sends the
+	# last few in once only a handful stand).
 	_queue.clear()
-	for other in _alive:
-		if is_instance_valid(other) and other != bounty:
-			other.hurry = true
 	Sfx.play(&"rounds_boss_down", 0.0)
 	notice.emit("%s DEFEATED!" % z.data.display_name.to_upper(), &"banner")
 	boss_changed.emit(null)
