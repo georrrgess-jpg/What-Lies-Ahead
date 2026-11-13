@@ -159,7 +159,7 @@ func _build_environment() -> void:
 	env.glow_hdr_threshold = 1.05
 	env.fog_enabled = true
 	env.fog_light_color = Color(1.0, 0.86, 0.93)
-	env.fog_density = 0.0028
+	env.fog_density = 0.0018
 	env.fog_sky_affect = 0.0
 	env.adjustment_enabled = true
 	env.adjustment_saturation = 1.2
@@ -262,11 +262,11 @@ func _build_river() -> void:
 	surface.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	dressing.add_child(surface)
 	# Bank railings with gaps for the bridges.
-	var edges: Array[float] = [-HALL_X + 0.6]
+	var edges: Array[float] = [-HALL_X]
 	for b in BRIDGES:
 		edges.append(float(b[0]) - float(b[1]) * 0.5 - 0.35)
 		edges.append(float(b[0]) + float(b[1]) * 0.5 + 0.35)
-	edges.append(HALL_X - 0.6)
+	edges.append(HALL_X)
 	var walls := _player_walls()
 	for k in range(0, edges.size(), 2):
 		for side in [[RIVER_Z0 - 0.25, "N"], [RIVER_Z1 + 0.25, "S"]]:
@@ -527,10 +527,10 @@ func _build_entrances() -> void:
 		roof.basis = basis
 		roof.position = Vector3(c.x, y + DOOR_H + 0.25, c.z) - inward * (WALL_THICK + RECESS) * 0.5
 		# Stacked crates inside the bay, beside the way in.
-		_prop(dressing, "candy_crates", "%sBayCrates" % d[0], back + inward * 1.4 + side * (DOOR_W * 0.5 - 0.9) + Vector3(0, y, 0), rad_to_deg(yaw) + 90.0, Vector3(2, 1.6, 1.2))
+		_prop(dressing, "candy_crates", "%sBayCrates" % d[0], back + inward * 1.4 + side * (DOOR_W * 0.5 - 0.9), rad_to_deg(yaw) + 90.0, Vector3(2, 1.6, 1.2))
 		# Keep the player out of the bay.
-		_player_wall(walls, "%sBay" % d[0], c - side * DOOR_W * 0.5 + Vector3(0, y, 0) - inward * 0.3, c + side * DOOR_W * 0.5 + Vector3(0, y, 0) - inward * 0.3, 8.0)
-		_omni(dressing, "%sLight" % d[0], c + inward * 1.6 + Vector3(0, y + DOOR_H + 0.4, 0), Color(1.0, 0.72, 0.4), 1.4, 7.5)
+		_player_wall(walls, "%sBay" % d[0], c - side * DOOR_W * 0.5 - inward * 0.3, c + side * DOOR_W * 0.5 - inward * 0.3, 8.0)
+		_omni(dressing, "%sLight" % d[0], c + inward * 1.6 + Vector3(0, DOOR_H + 0.4, 0), Color(1.0, 0.72, 0.4), 1.4, 7.5)
 
 
 # ---------------------------------------------------------------------------
@@ -543,34 +543,39 @@ func _build_roof() -> void:
 	dressing.add_child(roof)
 	var bays := 8
 	var depth := (HALL_Z1 - HALL_Z0) / bays
-	var panel := _mat("roof_under", Color(1.0, 0.93, 0.9), 0.8)
+	var panel := _mat("roof_face", Color(1.0, 0.86, 0.92), 0.8, Color(1.0, 0.8, 0.9), 0.25)
 	var glass := StandardMaterial3D.new()
 	glass.resource_name = "CandySkylight"
 	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glass.albedo_color = Color(0.86, 0.95, 1.0, 0.16)
+	glass.albedo_color = Color(0.86, 0.95, 1.0, 0.18)
 	glass.roughness = 0.1
 	glass.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var slope := atan2(ROOF_HIGH - ROOF_LOW, depth)
 	var slope_len := sqrt(depth * depth + (ROOF_HIGH - ROOF_LOW) * (ROOF_HIGH - ROOF_LOW))
 	var truss_xf: Array[Transform3D] = []
-	var mullion_xf: Array[Transform3D] = []
+	var bar_xf: Array[Transform3D] = []
+	var tilt := Basis(Vector3.RIGHT, -slope)
 	for i in bays:
-		var zs := HALL_Z1 - depth * i           # south edge: the glass
+		var zs := HALL_Z1 - depth * i           # south edge: the high side of the glazed slope
 		var zn := zs - depth
-		var mid := Vector3(0, (ROOF_LOW + ROOF_HIGH) * 0.5 + 0.2, (zs + zn) * 0.5)
-		var p := _visual_box(roof, "Slope%d" % i, Vector3(HALL_X * 2.0 + 2.0, 0.35, slope_len + 0.3), mid, panel)
-		p.rotation.x = -slope
-		p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var g := _visual_box(roof, "Glass%d" % i, Vector3(HALL_X * 2.0, ROOF_HIGH - ROOF_LOW, 0.06), Vector3(0, (ROOF_LOW + ROOF_HIGH) * 0.5, zs - 0.1), glass)
+		var mid := Vector3(0, (ROOF_LOW + ROOF_HIGH) * 0.5 + 0.1, (zs + zn) * 0.5)
+		# The glazed slope and the solid upright face between two bays.
+		var g := _visual_box(roof, "Glass%d" % i, Vector3(HALL_X * 2.0, 0.06, slope_len), mid, glass)
+		g.rotation.x = -slope
 		g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var f := _visual_box(roof, "Face%d" % i, Vector3(HALL_X * 2.0, ROOF_HIGH - ROOF_LOW, 0.3), Vector3(0, (ROOF_LOW + ROOF_HIGH) * 0.5, zs - 0.15), panel)
+		f.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		# Glazing bars: rafters down the slope every 4 m, purlins across it.
 		for k in 17:
-			var x := -HALL_X + k * 4.0
-			mullion_xf.append(Transform3D(Basis().scaled(Vector3(0.16, ROOF_HIGH - ROOF_LOW, 0.2)), Vector3(x, (ROOF_LOW + ROOF_HIGH) * 0.5, zs - 0.1)))
+			bar_xf.append(Transform3D(tilt * Basis.from_scale(Vector3(0.14, 0.16, slope_len)), mid + Vector3(-HALL_X + k * 4.0, -0.1, 0)))
+		for k in 3:
+			var off := (k + 1) * slope_len / 4.0 - slope_len * 0.5
+			bar_xf.append(Transform3D(tilt * Basis.from_scale(Vector3(HALL_X * 2.0, 0.12, 0.12)), mid + tilt * Vector3(0, -0.1, off)))
 		if i == 0:
 			continue
-		# A Warren truss under the glass line: chords and diagonals.
-		truss_xf.append(Transform3D(Basis().scaled(Vector3(HALL_X * 2.0, 0.3, 0.3)), Vector3(0, ROOF_LOW - 0.15, zs)))
-		truss_xf.append(Transform3D(Basis().scaled(Vector3(HALL_X * 2.0, 0.3, 0.3)), Vector3(0, ROOF_LOW - 1.65, zs)))
+		# A Warren truss under the upright face: chords and diagonals.
+		truss_xf.append(Transform3D(Basis.from_scale(Vector3(HALL_X * 2.0, 0.3, 0.3)), Vector3(0, ROOF_LOW - 0.15, zs)))
+		truss_xf.append(Transform3D(Basis.from_scale(Vector3(HALL_X * 2.0, 0.3, 0.3)), Vector3(0, ROOF_LOW - 1.65, zs)))
 		for k in 32:
 			var x0 := -HALL_X + k * 2.0
 			var up := k % 2 == 0
@@ -579,8 +584,9 @@ func _build_roof() -> void:
 			var d := b - a
 			var basis := Basis(Vector3.BACK, atan2(d.y, d.x)) * Basis.from_scale(Vector3(d.length(), 0.16, 0.16))
 			truss_xf.append(Transform3D(basis, (a + b) * 0.5))
-	_multimesh(roof, "Trusses", _box_mesh(Vector3.ONE, _mat("truss", Color(0.45, 0.82, 0.72), 0.45)), truss_xf, true)
-	_multimesh(roof, "Mullions", _box_mesh(Vector3.ONE, _mat("truss", Color(0.45, 0.82, 0.72), 0.45)), mullion_xf, false)
+	var steel := _box_mesh(Vector3.ONE, _mat("truss", Color(0.45, 0.82, 0.72), 0.45))
+	_multimesh(roof, "Trusses", steel, truss_xf, true)
+	_multimesh(roof, "GlazingBars", steel, bar_xf, true)
 	# The big hanging sign over the main bridge.
 	_prop(dressing, "candy_sign", "FactorySign", Vector3(0, 9.6, (RIVER_Z0 + RIVER_Z1) * 0.5), 0.0, Vector3(11, 3, 0.4))
 
@@ -640,7 +646,7 @@ func _build_station() -> void:
 	disc.height = 0.03
 	disc.radial_segments = 48
 	pad.mesh = disc
-	pad.material_override = _mat("pad", Color(1.0, 0.78, 0.88), 0.6)
+	pad.material_override = _mat("pad", Color(1.0, 0.6, 0.78), 0.6)
 	pad.position = STATION + Vector3(0, 0.012, 0)
 	pad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	dressing.add_child(pad)
@@ -709,7 +715,7 @@ func _build_vats() -> void:
 		if paddle:
 			_late(paddle, "res://scripts/props/candy_spinner.gd", {"axis": Vector3.UP, "degrees_per_second": 55.0})
 		_post(v, "Vat%dBody" % int(absf(p.x)), 2.45, 4.0, p)
-		_player_block(v, "Vat%dCap" % int(absf(p.x)), Vector3(5.6, 6.0, 1.4), p + Vector3(0, 7.0, 0))
+		_player_block(v, "Vat%dCap" % int(absf(p.x)), Vector3(5.4, 4.0, 5.4), p + Vector3(0, 6.0, 0))
 
 
 # ---------------------------------------------------------------------------
@@ -967,6 +973,7 @@ func _build_exit() -> void:
 	portal.name = "Portal"
 	geo.add_child(portal)
 	portal.position = PORTAL
+	_player_block(geo, "PortalCap", Vector3(6.0, 4.0, 1.6), PORTAL + Vector3(0, 6.2, 0))
 	var lights := Node3D.new()
 	lights.name = "ExitLights"
 	level.add_child(lights)
@@ -1076,7 +1083,7 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.agent_max_slope = 40.0
 	mesh.region_min_size = 14.0
 	# Walkable surfaces up to the mezzanine (keeps roofs and machine tops out).
-	mesh.filter_baking_aabb = AABB(Vector3(-HALL_X - 9.0, -1.0, HALL_Z0 - 1.0), Vector3(HALL_X * 2.0 + 18.0, MEZZ_Y + 1.2, HALL_Z1 - HALL_Z0 + 10.0))
+	mesh.filter_baking_aabb = AABB(Vector3(-HALL_X - 9.0, -1.0, HALL_Z0 - 1.0), Vector3(HALL_X * 2.0 + 18.0, MEZZ_Y + 0.8, HALL_Z1 - HALL_Z0 + 10.0))
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, region)
 	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
