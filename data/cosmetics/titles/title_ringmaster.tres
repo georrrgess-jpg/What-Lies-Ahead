@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"title_ringmaster"
+display_name = "Ringmaster"
+description = "Ladies, gentlemen and zombies..."
+slot = &"title"
+rarity = 2
+price = 1500
+sort_order = 10241

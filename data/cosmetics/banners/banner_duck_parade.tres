@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_duck_parade"
+display_name = "Duck Parade"
+description = "A line of rubber ducks bobbing along on the waves."
+slot = &"banner"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.35, 0.75, 1, 1, 1, 0.85, 0.2, 1, 1, 0.5, 0.15, 1)
+params = {
+"style": 21
+}
+sort_order = 9022

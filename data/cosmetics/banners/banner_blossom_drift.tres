@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_blossom_drift"
+display_name = "Blossom Drift"
+description = "A cherry branch in bloom with petals drifting on the breeze."
+slot = &"banner"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.65, 0.85, 1, 1, 1, 0.7, 0.8, 1, 0.35, 0.2, 0.2, 1)
+params = {
+"style": 39
+}
+sort_order = 9228

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_balloon"
+display_name = "Balloon Buddy"
+description = "A twisted balloon poodle squeaks out, wobbles, then pops into rubber scraps and confetti."
+slot = &"kill_effect"
+rarity = 1
+price = 650
+params = {
+"effect": "balloon"
+}
+sort_order = 7109

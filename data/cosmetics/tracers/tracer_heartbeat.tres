@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_heartbeat"
+display_name = "Heartbeat"
+description = "A heart-monitor line with a spike every few metres and a blip racing down it."
+slot = &"tracer"
+rarity = 2
+price = 1500
+colors = PackedColorArray(1, 0.26, 0.42, 1, 1, 1, 1, 1)
+params = {
+"style": "heartbeat"
+}
+sort_order = 8209

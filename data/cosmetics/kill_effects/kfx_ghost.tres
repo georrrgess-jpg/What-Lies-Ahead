@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+target = &"rail_lancer"
+amount = 4
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_ghost"
+display_name = "Boo!"
+description = "A little bedsheet ghost bobs up out of a puff of mist, waves and fades away."
+slot = &"kill_effect"
+rarity = 1
+requirement = SubResource("req")
+params = {
+"effect": "ghost"
+}
+sort_order = 7111

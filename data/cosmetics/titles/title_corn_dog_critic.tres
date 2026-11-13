@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"title_corn_dog_critic"
+display_name = "Corn Dog Critic"
+description = "Has opinions about batter."
+slot = &"title"
+rarity = 0
+price = 250
+sort_order = 10037

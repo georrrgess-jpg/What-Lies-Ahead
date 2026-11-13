@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_pinata"
+display_name = "Pinata Party"
+description = "Wrapped candies bounce and paper streamers fly in fiesta colours."
+slot = &"kill_effect"
+rarity = 0
+price = 250
+params = {
+"effect": "pinata"
+}
+sort_order = 7002

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_hypno_spiral"
+display_name = "Hypno Spiral"
+description = "You are getting very... sleepy... spend Sparks."
+slot = &"banner"
+rarity = 0
+price = 250
+colors = PackedColorArray(1, 0.25, 0.6, 1, 1, 0.95, 0.9, 1, 0.2, 0.05, 0.3, 1)
+params = {
+"style": 24
+}
+sort_order = 9023
