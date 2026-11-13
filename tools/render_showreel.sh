@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Renders the in-engine showreel (scripts/cinematics/, docs/SHOWREEL.md) to
 #   media/what-lies-ahead-showreel.mp4        H.264 + AAC, 1280x720 @ 30 fps
-#   media/what-lies-ahead-showreel-sheet.jpg  contact sheet, one frame per shot
+#   media/what-lies-ahead-showreel-sheet.jpg  contact sheet, one frame per shot (next to --out)
 #
 # Godot's movie maker renders the reel in segments (a few shots each) under
 # xvfb with the OpenGL driver; each finished segment is kept in build/showreel/,
@@ -13,11 +13,11 @@
 #   tools/render_showreel.sh --segment 12     # seconds per segment (default 10)
 #
 # GODOT (default: godot) is the editor binary; run from the project root.
+# The project's window override makes the movie 1600x900; it is scaled to 720p.
 set -euo pipefail
 
 GODOT=${GODOT:-godot}
 OUT=media/what-lies-ahead-showreel.mp4
-SHEET=media/what-lies-ahead-showreel-sheet.jpg
 WORK=build/showreel
 SEGMENT=10
 LIMIT=100000
@@ -30,6 +30,7 @@ while [ $# -gt 0 ]; do
 		*) echo "unknown option $1" >&2; exit 2 ;;
 	esac
 done
+SHEET="${OUT%.mp4}-sheet.jpg"
 mkdir -p "$WORK" "$(dirname "$OUT")"
 
 # The shot list: "SHOT <index> <id> <start> <length>".
@@ -58,8 +59,8 @@ for seg in "${segments[@]}"; do
 	avi="$WORK/seg_${from}_${to}.avi"
 	if [ ! -s "$avi.done" ]; then
 		echo "rendering $from s - $to s"
-		log=$(xvfb-run -a -s "-screen 0 1280x720x24" "$GODOT" --rendering-driver opengl3 --path . \
-			--write-movie "$avi" --fixed-fps $FPS --resolution 1280x720 \
+		log=$(xvfb-run < /dev/null -a -s "-screen 0 1280x720x24" "$GODOT" --rendering-driver opengl3 --path . \
+			--write-movie "$avi" --fixed-fps $FPS \
 			--script res://scripts/cinematics/showreel_render.gd \
 			-- --showreel --showreel-from="$from" --showreel-to="$to" 2>&1 | grep '^\[showreel\] start frame' || true)
 		# Frames written before the reel's first frame are trimmed when joining.
@@ -81,9 +82,11 @@ for avi in "${parts[@]}"; do
 done
 concat=""
 for ((i = 0; i < n; i++)); do concat+="[v$i][a$i]"; done
-filter+="${concat}concat=n=$n:v=1:a=1[v][a]"
-ffmpeg -v error -y "${inputs[@]}" -filter_complex "$filter" -map "[v]" -map "[a]" \
-	-c:v libx264 -preset slow -crf 22 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 160k "$OUT"
+filter+="${concat}concat=n=$n:v=1:a=1[vc][a];[vc]scale=1280:720:flags=lanczos[v]"
+# About 2.2 Mbit/s of video keeps the 70 s reel under ~25 MB.
+ffmpeg -nostdin -v error -y "${inputs[@]}" -filter_complex "$filter" -map "[v]" -map "[a]" \
+	-c:v libx264 -preset slow -crf 24 -maxrate 2200k -bufsize 4400k -pix_fmt yuv420p -movflags +faststart \
+	-c:a aac -b:a 160k "$OUT"
 
 # Contact sheet: the frame 60% into every rendered shot.
 rm -f "$WORK"/sheet_*.png
@@ -91,9 +94,7 @@ total=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$OUT")
 while read -r _ index id start length; do
 	at=$(awk "BEGIN{print $start + $length * 0.6}")
 	awk "BEGIN{exit !($at < $total)}" || break
-	ffmpeg -v error -y -ss "$at" -i "$OUT" -frames:v 1 -vf "scale=480:270,drawtext=text='$index $id':x=8:y=8:fontsize=18:fontcolor=white:box=1:boxcolor=black@0.5" \
-		"$WORK/sheet_$(printf %02d "$index").png" 2>/dev/null \
-		|| ffmpeg -v error -y -ss "$at" -i "$OUT" -frames:v 1 -vf scale=480:270 "$WORK/sheet_$(printf %02d "$index").png"
+	ffmpeg -nostdin -v error -y -ss "$at" -i "$OUT" -frames:v 1 -vf scale=480:270 "$WORK/sheet_$(printf %02d "$index").png"
 done < "$WORK/shots.txt"
-ffmpeg -v error -y -pattern_type glob -i "$WORK/sheet_*.png" -vf "tile=4x7:padding=4" -frames:v 1 -q:v 3 "$SHEET"
+ffmpeg -nostdin -v error -y -pattern_type glob -i "$WORK/sheet_*.png" -vf "tile=4x7:padding=4" -frames:v 1 -q:v 3 "$SHEET"
 ls -l "$OUT" "$SHEET"
