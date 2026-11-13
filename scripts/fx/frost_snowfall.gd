@@ -11,6 +11,8 @@ const SHADER := "res://art/shaders/frost_snowfall.gdshader"
 @export var flakes := 2600
 @export var low_detail_flakes := 1100
 @export var box_size := Vector3(40.0, 22.0, 40.0)
+## Roofed volumes (world space) the snow does not fall in; at most 8.
+@export var shelters: Array[AABB] = []
 ## Base wind (world XZ, m/s) and how far gusts swing it.
 @export var wind := Vector2(0.7, 0.25)
 @export var gust := 1.4
@@ -30,6 +32,7 @@ func _ready() -> void:
 	_material = ShaderMaterial.new()
 	_material.shader = load(SHADER)
 	_material.set_shader_parameter("box_size", box_size)
+	_apply_shelters()
 	var quad := QuadMesh.new()
 	quad.size = Vector2(2.0, 2.0)
 	quad.material = _material
@@ -44,6 +47,20 @@ func _ready() -> void:
 		mm.set_instance_transform(i, Transform3D(Basis(), seed_pos))
 	multimesh = mm
 	apply_graphics_preset(Settings.is_low_graphics())
+
+
+func _apply_shelters() -> void:
+	var lows := PackedVector3Array()
+	var highs := PackedVector3Array()
+	for box in shelters.slice(0, 8):
+		lows.append(box.position)
+		highs.append(box.end)
+	_material.set_shader_parameter("shelter_count", lows.size())
+	# Uniform arrays are fixed size: pad to 8.
+	lows.resize(8)
+	highs.resize(8)
+	_material.set_shader_parameter("shelter_min", lows)
+	_material.set_shader_parameter("shelter_max", highs)
 
 
 ## Called by the settings screen through the "graphics_listener" group.

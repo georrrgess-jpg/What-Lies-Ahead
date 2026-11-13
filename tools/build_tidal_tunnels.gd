@@ -52,6 +52,8 @@ const MEZZ_Z := 20.5         # mezzanine front edge
 const MEZZ_X := 10.0         # mezzanine half-width (ramps beyond it)
 const RAMP_LEN := 8.0
 const RAMP_Z0 := 21.5        # ramps run along the south wall, z 21.5..25
+const RAMP_WALL := 0.3       # thickness of the wall along a ramp's open side
+const RAIL_H := 1.15         # glass rails: top above the walking surface
 const KELP_GLASS_X := -20.2
 const KELP_Z0 := -12.0
 const KELP_Z1 := 9.0
@@ -360,7 +362,7 @@ func _build_rotunda() -> void:
 		var a1: float = deg_to_rad(arc[1])
 		_lower_wall(rot, "Wall%d" % int(arc[0]), a0, a1, lower)
 		_arc_wall(rot, "WallUp%d" % int(arc[0]), ROT_R, a0, a1, 4.6, ROT_H, upper)
-		_arc_colliders(rot, "WallCol%d" % int(arc[0]), ROT_R + ROT_WALL * 0.5, a0, a1, ROT_H, ROT_WALL)
+		_arc_colliders(rot, "WallCol%d" % int(arc[0]), ROT_R, a0, a1, ROT_H, ROT_WALL)
 	# Over the openings and the window: lintels, and a soffit over each passage.
 	for centre in [0.0, 90.0, 180.0]:
 		var a0 := deg_to_rad(centre - OPEN_HALF)
@@ -374,7 +376,9 @@ func _build_rotunda() -> void:
 	var wa1 := deg_to_rad(303.0)
 	_arc_wall(rot, "WindowHead", ROT_R, wa0, wa1, 6.6, ROT_H, upper)
 	_arc_wall(rot, "WindowSill", ROT_R, wa0, wa1, 0.0, 0.7, _mat("navy", Color(0.08, 0.14, 0.27), 0.5))
-	_arc_colliders(rot, "WindowCol", ROT_R + 0.1, wa0, wa1, ROT_H, 0.4)
+	# The window's collision stands 0.1 m proud of the wall (in front of the
+	# mullions), easing back to the wall line at both ends.
+	_arc_colliders(rot, "WindowCol", ROT_R, wa0, wa1, ROT_H, 0.4, 0.1)
 	# Window glass (shark tank behind).
 	var glass := MeshInstance3D.new()
 	glass.name = "SharkWindow"
@@ -420,6 +424,16 @@ func _build_rotunda() -> void:
 				_recolor(pillar, "PillarLed", _glow_mat("led_amber", Color(1.0, 0.68, 0.3), 2.6))
 			var c := _collider(geo, "PillarCol%d%s" % [int(centre), "A" if s < 0 else "B"], Vector3(1.6, 9.0, 1.8), p + Vector3(0, 4.5, 0))
 			c.rotation.y = -a
+	# Behind the jamb pillars: solid fills between the rotunda wall and the core
+	# walls (that space has no floor; nobody may squeeze into it).
+	for centre in [0.0, 90.0, 180.0]:
+		var ac := deg_to_rad(centre)
+		var radial := Vector3(cos(ac), 0, sin(ac))
+		var side := Vector3(-radial.z, 0, radial.x)
+		for s in [-1.0, 1.0]:
+			var fill := _collider(geo, "JambFill%d%s" % [int(centre), "A" if s < 0 else "B"], Vector3(2.4, 6.0, 1.9),
+				radial * 12.85 + side * s * 4.8 + Vector3(0, 3.0, 0))
+			fill.rotation.y = -ac + PI * 0.5
 	# Floor inlay rings around the station (scenery).
 	var inlay := _node(dressing, "FloorInlay")
 	_flat_ring(inlay, "RingOuter", 10.6, 10.85, _glow_mat("inlay_cyan", Color(0.2, 0.85, 1.0), 1.2))
@@ -493,7 +507,10 @@ func _build_ceilings() -> void:
 	# Coffer beams under the lobby ceiling so it reads as a structure, not a void.
 	var beam := _mat("beam", Color(0.1, 0.17, 0.3), 0.6)
 	for bx in range(-20, 21, 5):
-		_mesh_box(ceil, "LobbyBeamX%d" % bx, Vector3(0.35, 0.5, Z1 - CORE), Vector3(bx, LOBBY_H - 0.25, (CORE + Z1) * 0.5), beam)
+		# The centre beam ends at the cross beam in front of the portal arch
+		# (4.6 m tall on the 3.2 m deck: it would run through the EXIT sign).
+		var z_end := MEZZ_Z if bx == 0 else Z1
+		_mesh_box(ceil, "LobbyBeamX%d" % bx, Vector3(0.35, 0.5, z_end - CORE), Vector3(bx, LOBBY_H - 0.25, (CORE + z_end) * 0.5), beam)
 	for bz in [16.5, 20.5]:
 		_mesh_box(ceil, "LobbyBeamZ%d" % int(bz), Vector3(X1 - X0, 0.5, 0.35), Vector3(0, LOBBY_H - 0.25, bz), beam)
 	for bz in range(-12, 13, 6):
@@ -579,12 +596,19 @@ func _build_shark_tank() -> void:
 	var zn := TUN_Z - TUN_HALF - 0.45
 	var zs := TUN_Z + TUN_HALF + 0.45
 	_mesh_box(tank, "SandN", Vector3(2.0 * TANK_X, 0.3, zn - Z0), Vector3(0, 0.05, (Z0 + zn) * 0.5), _sand_mat())
-	_mesh_box(tank, "SandS", Vector3(2.0 * TANK_X, 0.3, -9.5 - zs), Vector3(0, 0.05, (zs - 9.5) * 0.5), _sand_mat())
+	# South of the tunnel the tank ends at the rotunda's curved window: box
+	# pieces up to the window's deepest point, then a fill cut to the arc, so
+	# neither the sand nor the water surface pokes into the rotunda.
+	var bay_z := -ROT_R - 0.6
+	_mesh_box(tank, "SandS", Vector3(2.0 * TANK_X, 0.3, bay_z - zs), Vector3(0, 0.05, (zs + bay_z) * 0.5), _sand_mat())
+	_bay_fill(tank, "SandBay", bay_z, 0.2, true, _sand_mat())
 	for s in [-1.0, 1.0]:
-		_mesh_box(tank, "BayEdge%d" % int(s), Vector3(0.4, 7.0, 4.0), Vector3(s * 6.75, 3.5, -11.6), wall)
-	var surface := _mesh_box(tank, "Surface", Vector3(2.0 * TANK_X, 0.1, -Z0 - 9.0), Vector3(0, 6.6, (Z0 - 9.0) * 0.5),
-		_caustic_mat("water_surface", Color(0.1, 0.55, 0.7), {"caustic_strength": 2.2, "caustic_color": Color(0.6, 1.0, 1.0), "caustic_scale": 0.25, "roughness": 0.1}))
+		# Ends where it meets the rotunda wall (it must not come through it).
+		_mesh_box(tank, "BayEdge%d" % int(s), Vector3(0.4, 7.0, 3.3), Vector3(s * 6.75, 3.5, -11.95), wall)
+	var surface_mat := _caustic_mat("water_surface", Color(0.1, 0.55, 0.7), {"caustic_strength": 2.2, "caustic_color": Color(0.6, 1.0, 1.0), "caustic_scale": 0.25, "roughness": 0.1})
+	var surface := _mesh_box(tank, "Surface", Vector3(2.0 * TANK_X, 0.1, bay_z - Z0), Vector3(0, 6.6, (Z0 + bay_z) * 0.5), surface_mat)
 	surface.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_bay_fill(tank, "SurfaceBay", bay_z, 6.55, false, surface_mat)
 	# Tunnel: ribs, mouths, glass, collision.
 	var ribs := _node(geo, "Tunnel")
 	var x := -TANK_X
@@ -630,6 +654,30 @@ func _build_shark_tank() -> void:
 	_school(tank, "BaySardines", "FishSardine", 50, Vector3(0, 2.8, -14.7), Vector2(5.5, 0.7), Vector2(0.55, 0.55), 0.25, 0.8, 0.3)
 	_school(tank, "BackSnappers", "FishSnapper", 8, Vector3(0, 2.0, -24.0), Vector2(8.5, 0.5), Vector2(-0.18, -0.12), 0.3, 1.0, 0.8)
 	_school(tank, "TopTangs", "FishTang", 10, Vector3(0, 5.4, TUN_Z), Vector2(7.5, 2.0), Vector2(0.3, 0.4), 0.3, 1.2, 0.5)
+
+
+## Flat fill of the window bay: from z = `z_back` out to the rotunda window's
+## arc, at height y, facing up (sand) or down (the water surface from below).
+func _bay_fill(parent: Node3D, fname: String, z_back: float, y: float, face_up: bool, material: Material) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var r := ROT_R + 0.03
+	var half := 6.55            # inside the bay's side walls
+	var steps := 26
+	var normal := Vector3.UP if face_up else Vector3.DOWN
+	for i in steps:
+		var xa := lerpf(-half, half, float(i) / steps)
+		var xb := lerpf(-half, half, float(i + 1) / steps)
+		var quad := [Vector3(xa, y, z_back), Vector3(xb, y, z_back), Vector3(xb, y, -sqrt(r * r - xb * xb)), Vector3(xa, y, -sqrt(r * r - xa * xa))]
+		for idx in ([0, 1, 2, 0, 2, 3] if face_up else [0, 2, 1, 0, 3, 2]):
+			st.set_normal(normal)
+			st.add_vertex(quad[idx])
+	var mi := MeshInstance3D.new()
+	mi.name = fname
+	mi.mesh = st.commit()
+	mi.material_override = material
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
 
 
 ## Arch-shaped glass for the tunnel, from x0 to x1, centred on z = 0.
@@ -688,6 +736,7 @@ func _build_kelp_gallery() -> void:
 	# Frame: sill, header and mullions.
 	var navy := _mat("navy", Color(0.08, 0.14, 0.27), 0.5)
 	_mesh_box(dressing, "KelpSill", Vector3(0.5, 0.7, len_z + 0.4), Vector3(KELP_GLASS_X + 0.15, 0.35, zc), navy)
+	_collider(geo, "KelpSillCol", Vector3(0.4, 0.7, len_z), Vector3(KELP_GLASS_X + 0.2, 0.35, zc))
 	_mesh_box(dressing, "KelpHeader", Vector3(0.5, 0.5, len_z + 0.4), Vector3(KELP_GLASS_X + 0.15, HALL_H - 0.25, zc), navy)
 	_mesh_box(dressing, "KelpSillLed", Vector3(0.06, 0.05, len_z), Vector3(KELP_GLASS_X + 0.42, 0.62, zc), _glow_mat("led_green", Color(0.4, 1.0, 0.7), 2.2))
 	for k in 8:
@@ -871,31 +920,66 @@ func _build_lobby() -> void:
 		var mid := Vector3((top_x + bottom_x) * 0.5, MEZZ_Y * 0.5, (RAMP_Z0 + Z1) * 0.5)
 		var normal := Vector3(sin(angle) * s, cos(angle), 0)
 		ramp.position = mid - normal * 0.175
-		# Skirt under the ramp's open side so nothing walks beneath it.
-		var skirt := _box(lobby, "RampSkirt%s" % ("W" if s < 0 else "E"), Vector3(slope_len, 2.6, 0.3), Vector3.ZERO, slab_m)
-		skirt.rotation.z = angle * -s
-		skirt.position = mid - normal * 1.45 + Vector3(0, 0, RAMP_Z0 - (RAMP_Z0 + Z1) * 0.5 + 0.15)
-		# Glass rail along the open side, over a solid side wall, so the ramp can
-		# only be entered from its foot (the player cannot step onto its edge).
-		var start := Vector3(minf(top_x, bottom_x), MEZZ_Y if s > 0 else 0.0, RAMP_Z0 + 0.1)
+		# The ramp's open side is one wall from the floor to the top of the glass
+		# rail, with upright ends (a tilted box would lean over the floor at the
+		# foot and wedge whoever brushes past it), so the ramp can only be entered
+		# from its foot and nothing walks beneath it.
+		var side_name := "W" if s < 0 else "E"
+		var wall_z0 := RAMP_Z0 - 0.02      # just proud of the ramp slab's side face
+		var wall_z1 := RAMP_Z0 + RAMP_WALL
+		_prism_mesh(lobby, "RampSkirt%s" % side_name, [Vector2(bottom_x, 0.0), Vector2(top_x, 0.0), Vector2(top_x, MEZZ_Y - 0.04),
+			Vector2(bottom_x, -0.04)], wall_z0, wall_z1, slab_m)
+		_prism_collider(lobby, "RampSide%s" % side_name, [Vector2(bottom_x, 0.0), Vector2(top_x, 0.0), Vector2(top_x, MEZZ_Y + RAIL_H),
+			Vector2(bottom_x, RAIL_H)], wall_z0, wall_z1)
+		var side_cap := _prism_collider(lobby, "RampSideCap%s" % side_name, [Vector2(bottom_x, RAIL_H), Vector2(top_x, MEZZ_Y + RAIL_H),
+			Vector2(top_x, MEZZ_Y + RAIL_H + 2.0), Vector2(bottom_x, RAIL_H + 2.0)], wall_z0, wall_z1)
+		side_cap.collision_layer = 16
+		side_cap.collision_mask = 0
+		var start := Vector3(minf(top_x, bottom_x), MEZZ_Y if s > 0 else 0.0, RAMP_Z0 + RAMP_WALL * 0.5)
 		var run := Vector3(RAMP_LEN, -MEZZ_Y if s > 0 else MEZZ_Y, 0.0)
 		for k in 3:
-			var rail := _prop(dressing, "aqua_glass_rail", "RampRail%s%d" % ["W" if s < 0 else "E", k], start + run * (k / 3.0), 0.0, Vector3(3, 1.1, 0.1))
+			var rail := _prop(dressing, "aqua_glass_rail", "RampRail%s%d" % [side_name, k], start + run * (k / 3.0), 0.0, Vector3(3, 1.1, 0.1))
 			rail.rotation.z = atan2(run.y, run.x)
 			rail.scale.x = slope_len / 9.0
-		var side := _collider(lobby, "RampSide%s" % ("W" if s < 0 else "E"), Vector3(slope_len + 0.4, 1.3, 0.3), mid + normal * 0.5 + Vector3(0, 0, RAMP_Z0 - 0.05 - mid.z))
-		side.rotation.z = angle * -s
+		# A round newel post caps the wall's foot, so zombies cutting the corner slide past.
 		var post := StaticBody3D.new()
-		post.name = "RampPost%s" % ("W" if s < 0 else "E")
+		post.name = "RampPost%s" % side_name
 		lobby.add_child(post)
-		post.position = Vector3(bottom_x, 0.6, RAMP_Z0 - 0.05)
+		post.position = Vector3(bottom_x, RAIL_H * 0.5, RAMP_Z0 + RAMP_WALL * 0.5)
 		var pshape := CollisionShape3D.new()
 		var cyl_shape := CylinderShape3D.new()
-		cyl_shape.radius = 0.25
-		cyl_shape.height = 1.2
+		cyl_shape.radius = 0.22
+		cyl_shape.height = RAIL_H
 		pshape.shape = cyl_shape
 		post.add_child(pshape)
-		_mesh_box(dressing, "RampPostMesh%s" % ("W" if s < 0 else "E"), Vector3(0.3, 1.2, 0.3), post.position, _mat("chrome", Color(0.79, 0.83, 0.89), 0.25))
+		var newel := MeshInstance3D.new()
+		newel.name = "Mesh"
+		var newel_mesh := CylinderMesh.new()
+		newel_mesh.top_radius = 0.2
+		newel_mesh.bottom_radius = 0.22
+		newel_mesh.height = RAIL_H
+		newel_mesh.radial_segments = 16
+		newel_mesh.rings = 1
+		newel_mesh.material = _mat("chrome", Color(0.79, 0.83, 0.89), 0.25)
+		newel.mesh = newel_mesh
+		post.add_child(newel)
+		var cap := MeshInstance3D.new()
+		cap.name = "Cap"
+		var cap_mesh := SphereMesh.new()
+		cap_mesh.radius = 0.2
+		cap_mesh.height = 0.26
+		cap_mesh.radial_segments = 16
+		cap_mesh.rings = 6
+		cap_mesh.material = _glow_mat("led_cyan", Color(0.25, 0.95, 1.0), 2.8)
+		cap.mesh = cap_mesh
+		cap.position.y = RAIL_H * 0.5 + 0.02
+		post.add_child(cap)
+		# The deck's short end between the balustrade and the ramp rail.
+		var end_len := RAMP_Z0 + RAMP_WALL - (MEZZ_Z + 0.12)
+		var end_rail := _prop(dressing, "aqua_glass_rail", "MezzRailEnd%s" % side_name, Vector3(top_x - s * 0.1, MEZZ_Y, MEZZ_Z + 0.12), -90.0, Vector3(3, 1.1, 0.1))
+		end_rail.scale.x = end_len / 3.0
+		_collider(lobby, "MezzRailEndCol%s" % side_name, Vector3(0.2, 1.2, end_len), Vector3(top_x - s * 0.1, MEZZ_Y + 0.6, MEZZ_Z + 0.12 + end_len * 0.5))
+		_player_block(lobby, "MezzRailEndCap%s" % side_name, Vector3(0.2, 2.0, end_len + 0.2), Vector3(top_x - s * 0.1, MEZZ_Y + 2.2, MEZZ_Z + 0.12 + end_len * 0.5))
 		# Solid block under the mezzanine beside the shop (between shop and ramps).
 		_box(lobby, "UnderMezz%s" % ("W" if s < 0 else "E"), Vector3(1.5, MEZZ_Y - 0.35, Z1 - MEZZ_Z), Vector3(s * (MEZZ_X - 0.75), (MEZZ_Y - 0.35) * 0.5, (MEZZ_Z + Z1) * 0.5), slab_m)
 	# Mezzanine balustrade along the front edge.
@@ -906,6 +990,7 @@ func _build_lobby() -> void:
 		x += 2.0 * MEZZ_X / 7.0
 		n += 1
 	_collider(lobby, "MezzRailCol", Vector3(2.0 * MEZZ_X, 1.2, 0.2), Vector3(0, MEZZ_Y + 0.6, MEZZ_Z + 0.12))
+	_player_block(lobby, "MezzRailCap", Vector3(2.0 * MEZZ_X + 0.4, 2.0, 0.2), Vector3(0, MEZZ_Y + 2.2, MEZZ_Z + 0.12))
 	# Gift shop under the mezzanine (front at z = MEZZ_Z, facing north).
 	_prop(lobby, "aqua_gift_shop", "GiftShop", Vector3(0, 0, MEZZ_Z), 180.0, Vector3(17, 3.2, 4.4))
 	for s in [-1.0, 1.0]:
@@ -933,7 +1018,7 @@ func _build_lobby() -> void:
 	if water is MeshInstance3D:
 		(water as MeshInstance3D).material_override = _water_mat("water_touch", 0.0, 0.6, {"density": 0.6, "max_distance": 1.0})
 	# Hanging whale sculpture over the lobby, swimming toward the rotunda.
-	var whale := _prop(dressing, "aqua_whale", "Whale", Vector3(-4.0, 5.9, 18.0), 200.0, Vector3(2, 2, 9))
+	var whale := _prop(dressing, "aqua_whale", "Whale", Vector3(-6.2, 5.6, 17.9), 104.0, Vector3(2, 2, 9))
 	whale.rotation.z = deg_to_rad(4.0)
 	# Pendant lamps.
 	for px in [-16.0, -8.0, 8.0, 16.0]:
@@ -959,9 +1044,10 @@ func _build_lobby() -> void:
 	for spot in [Vector3(-9.0, 0, 15.0), Vector3(9.0, 0, 15.0)]:
 		_prop(lobby, "aqua_info_kiosk", "InfoKiosk%d" % int(spot.x), spot, 0.0, Vector3(1, 2.5, 0.5))
 		_collider(lobby, "InfoKioskCol%d" % int(spot.x), Vector3(1.0, 2.4, 0.5), spot + Vector3(0, 1.2, 0))
+		_player_block(lobby, "InfoKioskCap%d" % int(spot.x), Vector3(1.0, 1.6, 0.5), spot + Vector3(0, 3.2, 0))
 	for spot in [Vector3(-7.4, 0, 19.8), Vector3(7.4, 0, 19.8), Vector3(-16.0, 0, -12.5), Vector3(16.0, 0, 12.6), Vector3(-22.4, 0, -14.0)]:
 		_prop(lobby, "aqua_bin", "Bin%d%d" % [int(spot.x), int(spot.z)], spot, 0.0, Vector3(0.6, 1, 0.6))
-		_collider(lobby, "BinCol%d%d" % [int(spot.x), int(spot.z)], Vector3(0.6, 1.0, 0.6), spot + Vector3(0, 0.5, 0))
+		_post(lobby, "BinCol%d%d" % [int(spot.x), int(spot.z)], 0.32, 1.0, spot)
 
 
 # ---------------------------------------------------------------------------
@@ -974,25 +1060,41 @@ func _build_hall_dressing() -> void:
 	var hall := _node(geo, "HallDressing")
 	# West hall (kelp gallery): two coral islands framing the rotunda opening, a
 	# planter beside the north bench, the night cleaner's cart against the glass.
-	_dressing(hall, "aqua_coral_display", "CoralW1", Vector3(-17.0, 0, -6.2), 90.0, Vector3(1.85, 0.85, 0.95), Vector3.ZERO, true)
-	_dressing(hall, "aqua_coral_display", "CoralW2", Vector3(-17.0, 0, 4.6), 90.0, Vector3(1.85, 0.85, 0.95), Vector3.ZERO, true)
-	_dressing(hall, "aqua_planter", "PlanterW", Vector3(-14.4, 0, -11.3), -90.0, Vector3(1.4, 0.6, 0.7))
+	_dressing(hall, "aqua_coral_display", "CoralW1", Vector3(-17.0, 0, -6.2), 90.0, Vector3(1.85, CORAL_H, 0.95), Vector3.ZERO, true)
+	_dressing(hall, "aqua_coral_display", "CoralW2", Vector3(-17.0, 0, 4.6), 90.0, Vector3(1.85, CORAL_H, 0.95), Vector3.ZERO, true)
+	_dressing(hall, "aqua_planter", "PlanterW", Vector3(-14.4, 0, -11.3), -90.0, Vector3(1.4, PLANTER_H, 0.7))
 	_dressing(hall, "aqua_janitor_cart", "CartW", Vector3(-19.5, 0, -10.0), 90.0, Vector3(1.6, 1.1, 1.0), Vector3(0, 0, 0.15))
 	# East hall (jellies): a velvet rope in front of the jelly wall (its collider
 	# fills the gap to the glass), a planter, an info kiosk and a second cart.
 	for k in 3:
 		_prop(hall, "aqua_rope_barrier", "RopeE%d" % k, Vector3(22.25, 0, -9.0 + k * 3.0), 90.0, Vector3(3, 1, 0.3))
-	_collider(hall, "RopeECol", Vector3(1.0, 1.0, 10.0), Vector3(22.5, 0.5, -6.0))
-	_dressing(hall, "aqua_planter", "PlanterE", Vector3(22.6, 0, 1.8), -90.0, Vector3(1.4, 0.6, 0.7))
+	# Its top leans back to the glass, too steep to stand on or mantle onto.
+	_wedge_collider(hall, "RopeECol", [Vector2(22.05, 0.0), Vector2(22.05, 1.0), Vector2(X1, 2.5), Vector2(X1, 0.0)], -11.0, -1.0)
+	for e in [[-1.0, 1.0, "S"], [-11.0, -1.0, "N"]]:
+		var guide := StaticBody3D.new()
+		guide.name = "RopeEGuide%s" % e[2]
+		hall.add_child(guide)
+		var guide_shape := CollisionShape3D.new()
+		guide_shape.name = "CollisionShape3D"
+		var guide_hull := ConvexPolygonShape3D.new()
+		var guide_pts := PackedVector3Array()
+		# Like the barrier itself, the top leans back to the wall (nothing to stand on).
+		for point in [Vector3(22.05, 0.0, e[0]), Vector3(22.05, 1.0, e[0]), Vector3(X1, 0.0, e[0]), Vector3(X1, 2.5, e[0]),
+				Vector3(X1, 0.0, e[0] + 1.5 * e[1]), Vector3(X1, 2.5, e[0] + 1.5 * e[1])]:
+			guide_pts.append(point)
+		guide_hull.points = guide_pts
+		guide_shape.shape = guide_hull
+		guide.add_child(guide_shape)
+	_dressing(hall, "aqua_planter", "PlanterE", Vector3(22.6, 0, 1.8), -90.0, Vector3(1.4, PLANTER_H, 0.7))
 	_dressing(hall, "aqua_info_kiosk", "KioskE", Vector3(14.3, 0, -6.6), 90.0, Vector3(1.0, 2.4, 0.5))
 	_dressing(hall, "aqua_janitor_cart", "CartE", Vector3(22.55, 0, 11.6), -90.0, Vector3(1.6, 1.1, 1.0), Vector3(0, 0, 0.15))
 	# North-west and north-east corners: a coral island each, feed pallets in
 	# the dead corners, a planter beside the east tunnel mouth.
-	_dressing(hall, "aqua_coral_display", "CoralNW", Vector3(-19.5, 0, -20.0), 0.0, Vector3(1.85, 0.85, 0.95), Vector3.ZERO, true)
-	_dressing(hall, "aqua_coral_display", "CoralNE", Vector3(19.5, 0, -20.0), 0.0, Vector3(1.85, 0.85, 0.95), Vector3.ZERO, true)
+	_dressing(hall, "aqua_coral_display", "CoralNW", Vector3(-19.5, 0, -20.0), 0.0, Vector3(1.85, CORAL_H, 0.95), Vector3.ZERO, true)
+	_dressing(hall, "aqua_coral_display", "CoralNE", Vector3(19.5, 0, -20.0), 0.0, Vector3(1.85, CORAL_H, 0.95), Vector3.ZERO, true)
 	_dressing(hall, "aqua_feed_pallet", "PalletNW", Vector3(-22.25, 0, -24.3), 0.0, Vector3(1.45, 1.1, 1.25))
 	_dressing(hall, "aqua_feed_pallet", "PalletNE", Vector3(22.25, 0, -24.3), 0.0, Vector3(1.45, 1.1, 1.25))
-	_dressing(hall, "aqua_planter", "PlanterNE", Vector3(13.9, 0, -24.6), 0.0, Vector3(1.4, 0.6, 0.7))
+	_dressing(hall, "aqua_planter", "PlanterNE", Vector3(13.9, 0, -24.6), 0.0, Vector3(1.4, PLANTER_H, 0.7))
 	# Life rings on the walls (scenery).
 	for spec in [[Vector3(-20.6, 1.9, Z0 + 0.05), 0.0], [Vector3(X1 - 0.05, 1.9, -15.5), -90.0], [Vector3(X0 + 0.05, 1.9, 14.2), 90.0],
 			[Vector3(X0 + 0.05, 1.9, -14.6), 90.0]]:
@@ -1078,14 +1180,82 @@ func _build_entrances() -> void:
 	_room_walls(ent, "Dock", X1, X1 + 4.4, 4.6, 9.4, 4.0, wall, "W")
 	_collider(ent, "DockCrates", Vector3(1.2, 1.8, 1.6), Vector3(X1 + 3.0, 0.9, 5.4))
 	_collider(ent, "DockCrates2", Vector3(2.2, 1.2, 1.4), Vector3(X1 + 2.9, 0.6, 8.6))
+	_collider(ent, "DockCratesBack", Vector3(0.8, 1.8, 1.6), Vector3(X1 + 4.0, 0.9, 5.4))
 	# 4. Staff door on the west wall.
 	_prop(ent, "aqua_staff_door", "StaffDoor", Vector3(X0, 0, 11.5), 90.0, Vector3(3, 3, 0.5))
 	_slab(ent, "StaffFloor", X0 - 4.0, X0 + 0.1, 10.3, 12.7, concrete)
 	_room_walls(ent, "Staff", X0 - 4.0, X0, 10.3, 12.7, 3.0, wall, "E")
+	_dress_back_rooms()
 	# Red emergency beacons above each door (light + pulsing via the Ambience animation).
 	for spot in [Vector3(-17.0, 3.6, Z0 + 0.6), Vector3(17.0, 3.8, Z0 + 0.6), Vector3(X1 - 0.6, 4.4, 7.0), Vector3(X0 + 0.6, 3.4, 11.5), Vector3(0.0, 2.9, MEZZ_Z - 0.4)]:
 		var l := _omni(lights, "Emergency%d%d" % [int(spot.x), int(spot.z)], spot, Color(1.0, 0.18, 0.15), 1.4, 5.0)
 		l.add_to_group("aqua_emergency", true)
+
+
+## Scenery inside the entrance rooms (no collision: nothing for a zombie to
+## catch on as it climbs in): what each room is for, at a glance from the hall.
+func _dress_back_rooms() -> void:
+	var rooms := _node(dressing, "BackRooms")
+	var steel := _mat("room_steel", Color(0.3, 0.36, 0.46), 0.45)
+	var dark := _mat("room_dark", Color(0.05, 0.08, 0.14), 0.7)
+	var teal := _mat("room_teal", Color(0.1, 0.5, 0.56), 0.5)
+	var coral := _mat("room_coral", Color(0.86, 0.42, 0.3), 0.55)
+	var hazard := _mat("room_hazard", Color(0.95, 0.72, 0.18), 0.6)
+	var lamp := _glow_mat("room_lamp", Color(1.0, 0.86, 0.62), 2.4)
+	var cyan := _glow_mat("led_cyan", Color(0.25, 0.95, 1.0), 2.8)
+	var label_colour := Color(1.0, 0.86, 0.55)
+
+	# Filtration room: pipe run and a gauge board on the back wall, a caged lamp.
+	var fz := Z0 - 5.4
+	for y in [2.9, 3.5]:
+		_mesh_box(rooms, "FiltPipe%d" % int(y * 10), Vector3(5.6, 0.22, 0.22), Vector3(-17.0, y, fz + 0.2), teal if y < 3.0 else steel)
+	for x in [-19.2, -17.0, -14.8]:
+		_mesh_box(rooms, "FiltBracket%d" % int(absf(x) * 10), Vector3(0.12, 1.0, 0.1), Vector3(x, 3.2, fz + 0.08), dark)
+	_mesh_box(rooms, "FiltBoard", Vector3(1.5, 1.0, 0.08), Vector3(-17.0, 1.6, fz + 0.05), dark)
+	for k in 3:
+		_mesh_box(rooms, "FiltGauge%d" % k, Vector3(0.3, 0.3, 0.05), Vector3(-17.45 + k * 0.45, 1.75, fz + 0.1), cyan if k != 1 else _glow_mat("led_amber", Color(1.0, 0.68, 0.3), 2.6))
+	_mesh_box(rooms, "FiltBoardStrip", Vector3(1.2, 0.12, 0.05), Vector3(-17.0, 1.3, fz + 0.1), hazard)
+	_mesh_box(rooms, "FiltLamp", Vector3(1.6, 0.08, 0.3), Vector3(-17.0, 4.5, Z0 - 2.7), lamp)
+	_label(rooms, "FiltLabel", "PUMP ROOM 2", Vector3(-17.0, 2.45, fz + 0.06), 0.0, 0.0022, label_colour)
+
+	# Service elevator: lit ceiling panel, a floor indicator and a handrail in the car.
+	_mesh_box(rooms, "ElevLamp", Vector3(1.6, 0.06, 1.6), Vector3(17.0, 2.95, Z0 - 1.45), lamp)
+	_mesh_box(rooms, "ElevRail", Vector3(2.3, 0.07, 0.07), Vector3(17.0, 1.0, Z0 - 2.75), steel)
+	_mesh_box(rooms, "ElevPanel", Vector3(0.7, 0.34, 0.05), Vector3(17.0, 2.4, Z0 - 2.84), dark)
+	_label(rooms, "ElevLabel", "LEVEL B1", Vector3(17.0, 2.4, Z0 - 2.8), 0.0, 0.002, Color(1.0, 0.45, 0.35))
+
+	# Loading bay: the roller door the deliveries (and now the zombies) come
+	# through on the far wall, with hazard jambs and a bay number.
+	var dx := X1 + 4.4
+	_mesh_box(rooms, "DockShutter", Vector3(0.1, 3.0, 3.4), Vector3(dx - 0.06, 1.5, 7.0), steel)
+	for k in 6:
+		_mesh_box(rooms, "DockSlat%d" % k, Vector3(0.14, 0.06, 3.4), Vector3(dx - 0.08, 0.35 + k * 0.5, 7.0), dark)
+	for z in [5.2, 8.8]:
+		_mesh_box(rooms, "DockJamb%d" % int(z * 10), Vector3(0.16, 3.1, 0.2), Vector3(dx - 0.1, 1.55, z), hazard)
+	_mesh_box(rooms, "DockHead", Vector3(0.16, 0.22, 3.8), Vector3(dx - 0.1, 3.1, 7.0), hazard)
+	_mesh_box(rooms, "DockLamp", Vector3(0.3, 0.08, 2.2), Vector3(X1 + 2.2, 3.95, 7.0), lamp)
+	_label(rooms, "DockLabel", "BAY 2", Vector3(dx - 0.14, 3.5, 7.0), -PI * 0.5, 0.003, label_colour)
+
+	# Staff corridor: lockers along the far wall, a noticeboard, a strip light.
+	var sx := X0 - 4.0
+	var locker_colours := [teal, coral, teal]
+	for k in 3:
+		var lz := 10.75 + k * 0.75
+		_mesh_box(rooms, "Locker%d" % k, Vector3(0.45, 1.9, 0.7), Vector3(sx + 0.25, 0.95, lz), locker_colours[k])
+		_mesh_box(rooms, "LockerVent%d" % k, Vector3(0.03, 0.2, 0.4), Vector3(sx + 0.49, 1.55, lz), dark)
+		_mesh_box(rooms, "LockerHandle%d" % k, Vector3(0.04, 0.16, 0.05), Vector3(sx + 0.5, 1.0, lz + 0.22), steel)
+	_mesh_box(rooms, "StaffLamp", Vector3(2.4, 0.08, 0.3), Vector3(X0 - 2.0, 2.95, 11.5), lamp)
+	_label(rooms, "StaffLabel", "STAFF", Vector3(sx + 0.06, 2.4, 11.5), PI * 0.5, 0.0026, label_colour)
+
+	# Gift shop: the stockroom door on the back wall (the stockroom spawn comes through it).
+	var bz := Z1 - 0.27
+	_mesh_box(rooms, "StockFrame", Vector3(2.5, 2.5, 0.08), Vector3(0.0, 1.25, bz), _mat("navy_light", Color(0.11, 0.23, 0.39), 0.5))
+	for s in [-1.0, 1.0]:
+		_mesh_box(rooms, "StockDoor%d" % int(s), Vector3(1.06, 2.2, 0.08), Vector3(s * 0.56, 1.1, bz - 0.04), coral)
+		_mesh_box(rooms, "StockWindow%d" % int(s), Vector3(0.36, 0.5, 0.04), Vector3(s * 0.56, 1.6, bz - 0.09), _glow_mat("stock_window", Color(1.0, 0.8, 0.72), 1.6))
+		_mesh_box(rooms, "StockPush%d" % int(s), Vector3(0.7, 0.07, 0.06), Vector3(s * 0.56, 1.05, bz - 0.1), steel)
+	_mesh_box(rooms, "StockKick", Vector3(2.2, 0.3, 0.03), Vector3(0.0, 0.17, bz - 0.09), steel)
+	_label(rooms, "StockLabel", "STOCKROOM", Vector3(0.0, 2.72, bz - 0.06), PI, 0.0024, label_colour)
 
 
 ## Three walls (and a lid) around a spawn room; `open` names the side left open
@@ -1095,10 +1265,13 @@ func _room_walls(parent: Node3D, prefix: String, x0: float, x1: float, z0: float
 		_box(parent, prefix + "W", Vector3(0.4, h, z1 - z0), Vector3(x0 - 0.2, h * 0.5, (z0 + z1) * 0.5), m)
 	if open != "E":
 		_box(parent, prefix + "E", Vector3(0.4, h, z1 - z0), Vector3(x1 + 0.2, h * 0.5, (z0 + z1) * 0.5), m)
+	# The walls across the open side's ends stop flush with the opening.
+	var xa := x0 - (0.0 if open == "W" else 0.4)
+	var xb := x1 + (0.0 if open == "E" else 0.4)
 	if open != "N":
-		_box(parent, prefix + "N", Vector3(x1 - x0 + 0.8, h, 0.4), Vector3((x0 + x1) * 0.5, h * 0.5, z0 - 0.2), m)
+		_box(parent, prefix + "N", Vector3(xb - xa, h, 0.4), Vector3((xa + xb) * 0.5, h * 0.5, z0 - 0.2), m)
 	if open != "S":
-		_box(parent, prefix + "S", Vector3(x1 - x0 + 0.8, h, 0.4), Vector3((x0 + x1) * 0.5, h * 0.5, z1 + 0.2), m)
+		_box(parent, prefix + "S", Vector3(xb - xa, h, 0.4), Vector3((xa + xb) * 0.5, h * 0.5, z1 + 0.2), m)
 	_mesh_box(dressing, prefix + "Lid", Vector3(x1 - x0 + 0.8, 0.3, z1 - z0 + 0.8), Vector3((x0 + x1) * 0.5, h + 0.15, (z0 + z1) * 0.5), _mat("ceiling", Color(0.05, 0.08, 0.15), 0.85))
 
 
@@ -1120,18 +1293,18 @@ func _build_signage() -> void:
 		var pixel := minf(0.011, 5.6 / (widest * 77.0))
 		# Flat labels on a curved wall: pulled inward so their ends stay in front of it.
 		_label(signs, "In%d" % int(entry[0]), entry[1], dir * (ROT_R - 0.45) + Vector3(0, 6.0, 0), -a - PI * 0.5, pixel, entry[2])
-		_label(signs, "Out%d" % int(entry[0]), "ROTUNDA", dir * (CORE + 0.55) + Vector3(0, 5.2, 0), -a + PI * 0.5, 0.01, Color(1.0, 0.86, 0.55))
+		_label(signs, "Out%d" % int(entry[0]), "ROTUNDA", dir * (CORE + 0.55) + Vector3(0, 5.15, 0), -a + PI * 0.5, 0.0085, Color(1.0, 0.86, 0.55))
 	_label(signs, "SharkWindow", "SHARK BAY", Vector3(0, 7.6, -ROT_R + 0.5), 0.0, 0.0085, Color(1.0, 0.62, 0.45))
-	_label(signs, "Welcome", "ABYSS AQUARIUM", Vector3(0, 6.3, CORE + 0.55), 0.0, 0.016, Color(1.0, 0.8, 0.35))
+	_label(signs, "Welcome", "ABYSS AQUARIUM", Vector3(0, 6.75, CORE + 0.55), 0.0, 0.0135, Color(1.0, 0.8, 0.35))
 	# Signposts at the hall junctions.
 	var posts := [[Vector3(-17.0, 0, -16.5), 0.0, "SHARK\nTUNNEL >"], [Vector3(17.0, 0, -16.5), 0.0, "< SHARK\nTUNNEL"],
 		[Vector3(-15.5, 0, 14.05), 0.0, "TOUCH\nPOOL"], [Vector3(15.5, 0, 14.05), 0.0, "UPPER\nDECK"]]
 	var k := 0
 	for p in posts:
-		_prop(geo, "aqua_signpost", "Signpost%d" % k, p[0], p[1], Vector3(1.3, 2.7, 0.2))
-		_collider(geo, "SignpostCol%d" % k, Vector3(0.5, 2.0, 0.3), p[0] + Vector3(0, 1.0, 0))
-		_label(signs, "Post%dF" % k, p[2], p[0] + Vector3(0, 2.1, 0.075), deg_to_rad(p[1]), 0.0028, Color(1.0, 0.9, 0.55))
-		_label(signs, "Post%dB" % k, p[2], p[0] + Vector3(0, 2.1, -0.075), deg_to_rad(p[1]) + PI, 0.0028, Color(1.0, 0.9, 0.55))
+		_prop(geo, "aqua_signpost", "Signpost%d" % k, p[0], p[1], Vector3(1.3, 3.2, 0.2))
+		_post(geo, "SignpostCol%d" % k, 0.2, 3.2, p[0])
+		_label(signs, "Post%dF" % k, p[2], p[0] + Vector3(0, 2.6, 0.075), deg_to_rad(p[1]), 0.0028, Color(1.0, 0.9, 0.55))
+		_label(signs, "Post%dB" % k, p[2], p[0] + Vector3(0, 2.6, -0.075), deg_to_rad(p[1]) + PI, 0.0028, Color(1.0, 0.9, 0.55))
 		k += 1
 	# Exit signs.
 	for e in [[Vector3(-17.0, 3.4, Z0 + 0.3), 0.0], [Vector3(17.0, 3.6, Z0 + 0.3), 0.0], [Vector3(X0 + 0.3, 3.3, 11.5), 90.0], [Vector3(X1 - 0.3, 4.2, 2.0), -90.0]]:
@@ -1176,6 +1349,10 @@ func _label(parent: Node3D, lname: String, text: String, pos: Vector3, yaw: floa
 # a lit building at night rather than a blue void.
 # ---------------------------------------------------------------------------
 
+## Collider heights of the coral islands and planters: above what a jump or a
+## mantle reaches (1.25 m), so nobody ends up standing inside the coral or the leaves.
+const CORAL_H := 1.4
+const PLANTER_H := 1.35
 const WARM := Color(1.0, 0.72, 0.42)
 const CORAL := Color(1.0, 0.52, 0.4)
 
@@ -1206,7 +1383,7 @@ func _build_lights() -> void:
 	_omni(lights, "NE", Vector3(17.0, 4.5, -19.5), WARM, 1.4, 9.5)
 	_omni(lights, "LobbyShop", Vector3(0, 2.2, 18.5), Color(1.0, 0.72, 0.45), 1.8, 8.0)
 	_omni(lights, "ShopInside", Vector3(0, 2.0, 22.5), Color(1.0, 0.8, 0.55), 1.4, 7.0)
-	_omni(lights, "Whale", Vector3(-4.0, 7.2, 16.5), Color(0.55, 0.8, 1.0), 1.0, 8.0)
+	_omni(lights, "Whale", Vector3(-6.0, 7.3, 16.8), Color(0.55, 0.8, 1.0), 1.0, 8.0)
 	_omni(lights, "LobbyW", Vector3(-14.0, 5.0, 18.5), WARM, 1.5, 11.0)
 	_omni(lights, "LobbyE", Vector3(14.0, 5.0, 18.5), Color(1.0, 0.5, 0.85), 1.2, 11.0)
 	_omni(lights, "Mezz", Vector3(0, MEZZ_Y + 3.0, 22.8), Color(0.5, 0.85, 1.0), 1.1, 9.0)
@@ -1276,13 +1453,13 @@ func _build_exit() -> void:
 		route.append(Vector3(xx, MEZZ_Y, 23.4))
 	var holder := _node(level, "ExitLights")
 	var strip := BoxMesh.new()
-	strip.size = Vector3(1.1, 0.04, 0.24)
+	strip.size = Vector3(1.1, 0.012, 0.24)
 	var light_script: Script = load("res://scripts/props/exit_light.gd")
 	for i in route.size():
 		var mi := MeshInstance3D.new()
 		mi.name = "ExitLight%02d" % i
 		mi.mesh = strip
-		mi.position = route[i] + Vector3(0, 0.03, 0)
+		mi.position = route[i] + Vector3(0, 0.016, 0)
 		var nxt: Vector3 = route[mini(i + 1, route.size() - 1)]
 		var prv: Vector3 = route[maxi(i - 1, 0)]
 		var d := nxt - prv
@@ -1335,7 +1512,10 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.cell_size = 0.25
 	mesh.cell_height = 0.25
 	mesh.agent_height = 1.75
-	mesh.agent_radius = 0.5
+	# Paths keep 0.75 m off walls and props (a multiple of the cell size): the
+	# narrow channels a 0.5 m radius left beside signposts and wall corners
+	# squeezed Deep Divers until they stalled.
+	mesh.agent_radius = 0.75
 	mesh.agent_max_climb = 0.25
 	mesh.agent_max_slope = 32.0
 	mesh.region_min_size = 6.0
@@ -1344,8 +1524,62 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, region)
 	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
-	region.navigation_mesh = mesh
-	print("build_tidal_tunnels: navmesh polygons = %d" % mesh.get_polygon_count())
+	var before := mesh.get_polygon_count()
+	region.navigation_mesh = _largest_island(mesh)
+	print("build_tidal_tunnels: navmesh polygons = %d (dropped %d on prop tops)" % [region.navigation_mesh.get_polygon_count(),
+		before - region.navigation_mesh.get_polygon_count()])
+
+
+## Keeps only the largest connected set of polygons: the bake leaves small
+## walkable islands on the station counter, the touch pool and the shop
+## fittings; nothing can reach those, and a path must never end on one.
+func _largest_island(mesh: NavigationMesh) -> NavigationMesh:
+	var count := mesh.get_polygon_count()
+	var parent := PackedInt32Array()
+	parent.resize(count)
+	for i in count:
+		parent[i] = i
+	var owner_of := {}
+	for i in count:
+		for v in mesh.get_polygon(i):
+			if owner_of.has(v):
+				var a := _find(parent, i)
+				var b := _find(parent, owner_of[v])
+				parent[a] = b
+			else:
+				owner_of[v] = i
+	var sizes := {}
+	for i in count:
+		var r := _find(parent, i)
+		sizes[r] = int(sizes.get(r, 0)) + 1
+	var best := -1
+	for r in sizes:
+		if best < 0 or sizes[r] > sizes[best]:
+			best = r
+	var out: NavigationMesh = mesh.duplicate()
+	out.clear_polygons()
+	var verts := mesh.get_vertices()
+	var remap := {}
+	var kept := PackedVector3Array()
+	for i in count:
+		if _find(parent, i) != best:
+			continue
+		var mapped := PackedInt32Array()
+		for v in mesh.get_polygon(i):
+			if not remap.has(v):
+				remap[v] = kept.size()
+				kept.append(verts[v])
+			mapped.append(remap[v])
+		out.add_polygon(mapped)
+	out.vertices = kept
+	return out
+
+
+func _find(parent: PackedInt32Array, i: int) -> int:
+	while parent[i] != i:
+		parent[i] = parent[parent[i]]
+		i = parent[i]
+	return i
 
 
 # ---------------------------------------------------------------------------
@@ -1610,16 +1844,30 @@ func _lower_wall(parent: Node3D, wname: String, a0: float, a1: float, m: Materia
 	_arc_wall(parent, "%s_%d" % [wname, k], ROT_R, start, a1, 0.0, 4.6, m)
 
 
-## Box colliders following an arc.
-func _arc_colliders(parent: Node3D, cname: String, radius: float, a0: float, a1: float, h: float, thick: float) -> void:
-	var steps := maxi(1, int(ceil(absf(a1 - a0) * radius / 1.6)))
+## Collision for a curved wall: one body of convex wedges whose inner faces
+## meet edge to edge on the circle of radius `inner` (no overlaps and no seams
+## for a capsule sliding along the wall to catch on). `proud` moves the inner
+## face that far toward the centre, easing back to `inner` over the last few
+## degrees at both ends.
+func _arc_colliders(parent: Node3D, cname: String, inner: float, a0: float, a1: float, h: float, thick: float, proud := 0.0) -> void:
+	var body := StaticBody3D.new()
+	body.name = cname
+	parent.add_child(body)
+	var steps := maxi(1, int(ceil(absf(a1 - a0) * inner / 0.55)))
+	var ease_angle := deg_to_rad(3.0)
 	for i in steps:
-		var t0 := lerpf(a0, a1, float(i) / steps)
-		var t1 := lerpf(a0, a1, float(i + 1) / steps)
-		var mid := (t0 + t1) * 0.5
-		var chord := 2.0 * radius * sin(absf(t1 - t0) * 0.5) + 0.12
-		var c := _collider(parent, "%s_%02d" % [cname, i], Vector3(chord, h, thick), Vector3(cos(mid) * radius, h * 0.5, sin(mid) * radius))
-		c.rotation.y = -mid + PI * 0.5
+		var pts := PackedVector3Array()
+		for t in [lerpf(a0, a1, float(i) / steps), lerpf(a0, a1, float(i + 1) / steps)]:
+			var r0 := inner - proud * smoothstep(0.0, ease_angle, minf(t - a0, a1 - t))
+			for r in [r0, inner + thick]:
+				for y in [0.0, h]:
+					pts.append(Vector3(cos(t) * r, y, sin(t) * r))
+		var shape := CollisionShape3D.new()
+		shape.name = "Wedge%02d" % i
+		var convex := ConvexPolygonShape3D.new()
+		convex.points = pts
+		shape.shape = convex
+		body.add_child(shape)
 
 
 ## A horizontal band (trim/LED) all the way round a ring, facing inward.
@@ -1707,6 +1955,74 @@ func _star_mesh() -> Mesh:
 	return st.commit()
 
 
+## Points of a prism: the flat outline `pts` (x, y) at z0 and at z1.
+func _prism_points(pts: Array, z0: float, z1: float) -> PackedVector3Array:
+	var out := PackedVector3Array()
+	for z in [z0, z1]:
+		for p in pts:
+			out.append(Vector3((p as Vector2).x, (p as Vector2).y, z))
+	return out
+
+
+## Visible prism (a convex outline in the x-y plane, extruded from z0 to z1), flat shaded.
+func _prism_mesh(parent: Node3D, pname: String, pts: Array, z0: float, z1: float, material: Material) -> MeshInstance3D:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var n := pts.size()
+	var centre := Vector2.ZERO
+	for p in pts:
+		centre += p as Vector2
+	centre /= n
+	for k in n:
+		var a: Vector2 = pts[k]
+		var b: Vector2 = pts[(k + 1) % n]
+		# End caps (fans around the centre), then the side quad of this edge.
+		for cap in [[z0, Vector3.FORWARD], [z1, Vector3.BACK]]:
+			var z: float = cap[0]
+			var tri := [Vector3(centre.x, centre.y, z), Vector3(a.x, a.y, z), Vector3(b.x, b.y, z)]
+			if (tri[1] - tri[0]).cross(tri[2] - tri[0]).dot(cap[1]) > 0.0:
+				tri.reverse()
+			for v in tri:
+				st.set_normal(cap[1])
+				st.add_vertex(v)
+		var edge := b - a
+		var out := Vector3(edge.y, -edge.x, 0.0).normalized()
+		if out.dot(Vector3(a.x - centre.x, a.y - centre.y, 0.0)) < 0.0:
+			out = -out
+		var quad := [Vector3(a.x, a.y, z0), Vector3(b.x, b.y, z0), Vector3(b.x, b.y, z1), Vector3(a.x, a.y, z1)]
+		var order := [0, 1, 2, 0, 2, 3]
+		if (quad[1] - quad[0]).cross(quad[2] - quad[0]).dot(out) > 0.0:
+			order = [0, 2, 1, 0, 3, 2]
+		for idx in order:
+			st.set_normal(out)
+			st.add_vertex(quad[idx])
+	var mi := MeshInstance3D.new()
+	mi.name = pname
+	mi.mesh = st.commit()
+	mi.material_override = material
+	parent.add_child(mi)
+	return mi
+
+
+## Invisible convex collider: the x-y outline `pts` swept from z0 to z1.
+func _wedge_collider(parent: Node3D, cname: String, pts: Array, z0: float, z1: float) -> StaticBody3D:
+	return _prism_collider(parent, cname, pts, z0, z1)
+
+
+## Invisible convex prism collider (same outline convention as _prism_mesh).
+func _prism_collider(parent: Node3D, cname: String, pts: Array, z0: float, z1: float) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = cname
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var convex := ConvexPolygonShape3D.new()
+	convex.points = _prism_points(pts, z0, z1)
+	shape.shape = convex
+	body.add_child(shape)
+	return body
+
+
 func _box_mesh(size: Vector3, material: Material) -> BoxMesh:
 	var key := "%s|%s" % [size, material.get_instance_id()]
 	if _boxes.has(key):
@@ -1758,6 +2074,43 @@ func _mesh_box(parent: Node3D, mname: String, size: Vector3, pos: Vector3, mater
 	mi.position = pos
 	parent.add_child(mi)
 	return mi
+
+
+## Invisible upright cylinder collider for posts, poles and trunks: a zombie
+## pressing on a round post slides off it, where the flat face of a box post
+## can hold one that walks straight into it.
+func _post(parent: Node3D, post_name: String, radius: float, height: float, base: Vector3) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = post_name
+	body.position = base + Vector3(0, height * 0.5, 0)
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var cyl := CylinderShape3D.new()
+	cyl.radius = radius
+	cyl.height = height
+	shape.shape = cyl
+	body.add_child(shape)
+	return body
+
+
+## Invisible player-only collider (physics layer 5: zombies, bullets and the
+## navmesh ignore it): keeps the player off perches and out of gaps.
+func _player_block(parent: Node3D, block_name: String, size: Vector3, pos: Vector3, yaw := 0.0) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = block_name
+	body.collision_layer = 16
+	body.collision_mask = 0
+	body.position = pos
+	body.rotation.y = yaw
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	return body
 
 
 ## Invisible collision box (for props whose art comes from a .glb).
