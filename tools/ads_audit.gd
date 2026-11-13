@@ -37,7 +37,10 @@ extends SceneTree
 ##               weapon or its sight starts
 ##   frame/upper share of the whole frame, and of its upper half, the weapon covers
 ## A combination fails when aim_err or shot_err is above MAX_ERROR or cover
-## is above MAX_COVER.
+## is above MAX_COVER. Iron sights are judged differently: their post and
+## ring belong in the window, so what must stay clear is the spot just above
+## the point of aim (`above`, the share hidden of a small box over the
+## centre, at most MAX_ABOVE).
 ##
 ## The motion probe (--probe=1) plays a few weapons while aiming: strafing,
 ## walking, jumping, turning and firing. Every frame it compares where the
@@ -60,6 +63,7 @@ const STATE_WAVE := 1
 const WINDOW := 16
 const MAX_ERROR := 1.0
 const MAX_COVER := 0.02
+const MAX_ABOVE := 0.15
 ## A pixel differs when a channel changes by more than this (a lens's faint
 ## tint and reflections stay below it).
 const DIFF := 0.2
@@ -272,9 +276,13 @@ func _audit(player, weapon, item, sights) -> Dictionary:
 		"aim_err": aim_point.distance_to(centre) if aim_point.x >= 0.0 else 999.0,
 		"shot_err": shot_px.distance_to(aim_point) if aim_point.x >= 0.0 else 999.0,
 		"cover": cover["window"], "clear": cover["clear"], "frame": cover["frame"], "upper": cover["upper"],
-		"note": note, "image": shown,
+		"above": cover["above"], "note": note, "image": shown,
 	}
-	row["ok"] = row["aim_err"] <= MAX_ERROR and row["shot_err"] <= MAX_ERROR and row["cover"] <= MAX_COVER
+	var clear_view: bool = row["cover"] <= MAX_COVER
+	if lens_material == null:
+		clear_view = row["above"] <= MAX_ABOVE
+		row["note"] += "  (iron sights: %.0f%% hidden just above the aim point)" % (row["above"] * 100.0)
+	row["ok"] = row["aim_err"] <= MAX_ERROR and row["shot_err"] <= MAX_ERROR and clear_view
 	return row
 
 
@@ -330,6 +338,13 @@ func _cover(plain: Image, bare: Image, centre: Vector2, size: Vector2) -> Dictio
 		for x in range(cx - half, cx + half):
 			if _difference(plain.get_pixel(x, y), bare.get_pixel(x, y)) > DIFF:
 				hidden += 1
+	# The spot just above the point of aim.
+	var spot := maxi(2, int(round(6 * size.y / 540.0)))
+	var above := 0
+	for y in range(cy - spot - 2, cy - 2):
+		for x in range(cx - spot, cx + spot):
+			if _difference(plain.get_pixel(x, y), bare.get_pixel(x, y)) > DIFF:
+				above += 1
 	# Clear view straight down from the centre (three columns, two rows in a row).
 	var clear := int(size.y) - cy
 	for y in range(cy, int(size.y) - 1):
@@ -354,7 +369,7 @@ func _cover(plain: Image, bare: Image, centre: Vector2, size: Vector2) -> Dictio
 			if y < cy:
 				upper_samples += 1
 				upper += 1 if differs else 0
-	return {"window": float(hidden) / float(4 * half * half), "clear": clear,
+	return {"window": float(hidden) / float(4 * half * half), "clear": clear, "above": float(above) / float(2 * spot * spot),
 		"frame": float(all) / float(samples), "upper": float(upper) / float(upper_samples)}
 
 

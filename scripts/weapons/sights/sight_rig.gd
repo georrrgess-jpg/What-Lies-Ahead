@@ -25,6 +25,7 @@ const CLEAR_OVER := 0.05
 const DEFAULT_FOV := 50.0
 const RISER_SIZE := Vector2(0.034, 0.052)
 const MAX_RISER := 0.14
+const MAX_IRON_LIFT := 0.024
 
 var item: CosmeticItem
 ## The optic draws its own reticle (the HUD's is hidden while aimed).
@@ -186,6 +187,7 @@ func _fit_irons(half: float) -> Vector3:
 	if blocked:
 		eye.y = profile.needed_height(eye_z, CLEAR_OVER, NEAR)
 	_hide_blocking_irons(eye)
+	eye.y += _lift_over_irons(eye)
 	return eye
 
 
@@ -205,6 +207,22 @@ func _hide_blocking_irons(eye: Vector3) -> void:
 	var hidden: Array = _blocking_irons[key]
 	for part in _irons:
 		(part as Node3D).visible = not hidden.has(String(part.name))
+
+
+## A bead or post that stands on the sight line itself would sit on the
+## target: the eye rises until the point of aim shows just over its tip.
+func _lift_over_irons(eye: Vector3) -> float:
+	if _irons.is_empty():
+		return 0.0
+	var key := _key("lift")
+	if not _blocking_irons.has(key):
+		var rays: Array[Vector3] = [Vector3(0.0, 0.003, -1.0).normalized()]
+		var lift := 0.0
+		while lift < MAX_IRON_LIFT and _irons.any(func(part: Node) -> bool:
+				return (part as Node3D).visible and SightProfile.rays_blocked(_model, part, eye + Vector3(0.0, lift, 0.0), rays) > 0):
+			lift += 0.002
+		_blocking_irons[key] = lift
+	return _blocking_irons[key]
 
 
 ## Menus paint the reticle on the glass; the viewmodel turns that off and
