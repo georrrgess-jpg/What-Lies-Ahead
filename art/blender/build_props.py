@@ -191,9 +191,15 @@ def build_booth():
         box("Counter", (w, 0.5, 1.0), (0, -d / 2 + 0.25, 0.6), bevel=0.06, m=teal),
         box("CounterTop", (w + 0.16, 0.66, 0.1), (0, -d / 2 + 0.25, 1.14), bevel=0.04, m=pink),
         box("CounterStripe", (w + 0.02, 0.52, 0.16), (0, -d / 2 + 0.25, 0.45), bevel=0.02, m=cream),
-        box("BackWall", (w, 0.2, 3.0), (0, d / 2 - 0.1, 1.6), bevel=0.04, m=dark),
+        box("BackWall", (w - 0.3, 0.12, 3.0), (0, d / 2 - 0.16, 1.6), bevel=0.04, m=dark),
+        # Outside of the back wall: teal with a pink band, like the sides.
+        box("BackSkin", (w, 0.1, 3.0), (0, d / 2 - 0.05, 1.6), bevel=0.04, m=teal),
+        box("BackBand", (w + 0.02, 0.12, 0.2), (0, d / 2 - 0.05, 2.75), bevel=0.03, m=pink),
         box("SideL", (0.2, d, 3.0), (-w / 2 + 0.1, 0, 1.6), bevel=0.04, m=teal),
         box("SideR", (0.2, d, 3.0), (w / 2 - 0.1, 0, 1.6), bevel=0.04, m=teal),
+        # A roof over the whole stall, tucked under the header and the awning.
+        box("Roof", (w + 0.2, d + 0.1, 0.16), (0, 0.05, 3.18), bevel=0.05, m=pink),
+        box("Ceiling", (w - 0.4, d - 0.4, 0.04), (0, 0, 3.09), bevel=0.0, m=cream),
         box("Header", (w + 0.3, 0.3, 0.7), (0, -d / 2 - 0.15, 3.55), bevel=0.08, m=pink),
         star("HeaderStar", 0.34, 0.1, (0, -d / 2 - 0.34, 3.56), m=yellow),
     ]
@@ -257,30 +263,72 @@ def build_gate_ride():
 
 
 def build_gatehouse():
-    """Ticket building that closes the pier entrance. 12 m wide, dark doorway facing -Y."""
+    """Ticket building that closes the pier entrance: 12 m wide, two ticket
+    windows either side of a covered gateway with turnstiles, shut by a
+    lattice gate on the pier side (-Y). The beach side (+Y) is open, signed
+    and has steps down to the sand."""
     reset_scene()
     teal, pink, cream, dark = mat("Teal"), mat("Pink"), mat("Cream"), mat("Dark")
     amber = glow("BulbAmber", "#ffc24a", 3.0)
-    hot, yellow = mat("PinkDark"), mat("Yellow")
+    warm = glow("TicketWarm", "#ffd68a", 1.1)
+    hot, yellow, wood = mat("PinkDark"), mat("Yellow"), mat("Wood")
+    metal = mat("GateMetal", "GreyLight", rough=0.35, metal=0.6)
+    gw = 5.0          # gateway width
     parts = [
-        box("Body", (12.0, 3.0, 5.2), (0, 1.5, 2.6), bevel=0.15, segs=3, m=teal),
-        box("Plinth", (12.3, 3.2, 0.5), (0, 1.5, 0.25), bevel=0.08, m=hot),
-        box("Doorway", (5.0, 0.4, 3.6), (0, -0.05, 1.8), bevel=0.05, m=dark),
+        box("Lintel", (gw + 0.2, 3.0, 1.6), (0, 1.5, 4.4), bevel=0.15, segs=3, m=teal),
+        box("PassageFloor", (gw, 3.2, 0.06), (0, 1.5, 0.03), bevel=0.0, m=wood),
+        box("PassageLight", (gw - 1.4, 1.6, 0.05), (0, 1.5, 3.58), bevel=0.0, m=warm),
         box("DoorFrame", (5.6, 0.3, 0.4), (0, -0.1, 3.75), bevel=0.08, m=pink),
         box("Roof", (12.6, 3.6, 0.5), (0, 1.5, 5.4), bevel=0.15, m=pink),
         box("Sign", (7.0, 0.4, 1.3), (0, -0.1, 6.3), bevel=0.2, segs=3, m=hot),
         text("SignText", "TICKETS", 0.8, 0.12, (0, -0.36, 6.28), m=cream),
+        text("SignTextBack", "PRIZE PIER", 0.7, 0.12, (0, 0.16, 6.28), rot=(0, 0, math.pi), m=cream),
+        text("GateNote", "CLOSED", 0.22, 0.04, (0, -0.05, 1.8), m=cream),
+        box("GateNotePlate", (1.3, 0.06, 0.42), (0, 0.0, 1.8), bevel=0.03, m=hot),
     ]
-    for x in (-2.8, 2.8):
-        parts.append(box(f"DoorPost{x}", (0.4, 0.34, 3.6), (x, -0.1, 1.8), bevel=0.08, m=pink))
-    for x in (-4.4, 4.4):
+    for x in (-1, 1):
+        cx = x * (gw / 2 + 1.75)
         parts += [
-            box(f"Window{x}", (1.8, 0.2, 1.5), (x, -0.02, 2.5), bevel=0.06, m=dark),
-            box(f"WindowSill{x}", (2.1, 0.4, 0.16), (x, -0.1, 1.68), bevel=0.05, m=cream),
+            box(f"Wing{x}", (3.5, 3.0, 5.2), (cx, 1.5, 2.6), bevel=0.15, segs=3, m=teal),
+            box(f"Plinth{x}", (3.65, 3.2, 0.5), (x * (gw / 2 + 1.825), 1.5, 0.25), bevel=0.08, m=hot),
+            box(f"DoorPost{x}", (0.4, 0.34, 3.6), (x * 2.8, -0.1, 1.8), bevel=0.08, m=pink),
+            box(f"BackPost{x}", (0.4, 0.34, 3.6), (x * 2.8, 3.1, 1.8), bevel=0.08, m=pink),
+        ]
+        # A lit ticket window with a half-drawn blind, a mullion and a sill.
+        wx = x * 4.4
+        parts += [
+            box(f"Window{x}", (1.7, 0.1, 1.4), (wx, -0.03, 2.5), bevel=0.03, m=warm),
+            box(f"WindowFrame{x}", (1.95, 0.14, 0.14), (wx, -0.05, 3.25), bevel=0.03, m=cream),
+            box(f"Blind{x}", (1.7, 0.08, 0.45), (wx, -0.09, 2.98), bevel=0.02, m=cream),
+            box(f"Mullion{x}", (0.08, 0.1, 1.4), (wx, -0.08, 2.5), bevel=0.0, m=dark),
+            box(f"WindowSill{x}", (2.1, 0.4, 0.16), (wx, -0.1, 1.68), bevel=0.05, m=cream),
         ]
         parts += _awning(f"WinAwning{x}", 2.3, 0.9, 3.75, 3.35, -0.02, -0.85, 5, pink, cream, 0.07)
         for p in parts[-10:]:
-            p.location.x += x
+            p.location.x += wx
+    # Steps down from the gateway to the sand on the beach side.
+    parts += [
+        box("StepUpper", (gw, 0.5, 0.45), (0, 3.8, -0.425), bevel=0.04, m=wood),
+        box("StepLower", (gw, 0.5, 0.25), (0, 4.3, -0.525), bevel=0.04, m=wood),
+    ]
+    # Turnstiles across the gateway.
+    for i, tx in enumerate((-1.6, 0.0, 1.6)):
+        parts += [
+            cyl(f"Turnstile{i}", 0.14, 1.0, (tx, 1.6, 0.5), segs=12, bevel=0.03, m=metal),
+            sphere(f"TurnstileHub{i}", 0.16, (tx, 1.6, 1.0), m=pink, segs=10, rings=6),
+        ]
+        for k in range(3):
+            a = math.tau * k / 3 + 0.4
+            parts.append(box(f"TurnstileArm{i}{k}", (0.55, 0.06, 0.06), (tx + math.cos(a) * 0.3, 1.6 + math.sin(a) * 0.3, 0.92),
+                             rot=(0, 0, a), bevel=0.0, m=metal))
+    # The lattice gate, shut, on the pier side.
+    parts += [
+        box("GateTop", (gw, 0.1, 0.12), (0, 0.06, 3.5), bevel=0.02, m=metal),
+        box("GateMid", (gw, 0.1, 0.1), (0, 0.06, 1.8), bevel=0.02, m=metal),
+        box("GateLow", (gw, 0.1, 0.12), (0, 0.06, 0.14), bevel=0.02, m=metal),
+    ]
+    for i in range(17):
+        parts.append(box(f"GateBar{i:02d}", (0.05, 0.05, 3.4), (-gw / 2 + 0.2 + i * (gw - 0.4) / 16, 0.06, 1.8), bevel=0.0, m=metal))
     parts += bulb_row("SignBulbT", (-3.3, -0.36, 6.85), (3.3, -0.36, 6.85), 14, 0.09, amber)
     parts += bulb_row("SignBulbB", (-3.3, -0.36, 5.72), (3.3, -0.36, 5.72), 14, 0.09, amber)
     parts.append(star("SignStarL", 0.4, 0.14, (-2.9, -0.36, 6.28), m=yellow))
@@ -289,14 +337,29 @@ def build_gatehouse():
 
 
 def build_service_door():
-    """Roll-up service door at the bottom of the ramp. 6.4 m wide, faces -Y."""
+    """Roll-up service door at the bottom of the ramp, 6.4 m wide, facing -Y,
+    in the front of the maintenance shed it belongs to (7.4 x 5 m, behind +Y)."""
     reset_scene()
     teal, dark, yellow, grey = mat("TealDark"), mat("Dark"), mat("Yellow"), mat("Grey", rough=0.5, metal=0.3)
+    body, roof, cream, hot = mat("Teal"), mat("PinkDark"), mat("Cream"), mat("Pink")
+    lamp = glow("ShedLamp", "#ffd68a", 2.5)
     parts = [
         box("Frame", (6.6, 0.5, 3.9), (0, 0.25, 1.95), bevel=0.08, m=teal),
         box("Opening", (5.2, 0.3, 3.0), (0, -0.02, 1.5), bevel=0.03, m=dark),
         box("Roller", (5.5, 0.5, 0.5), (0, -0.05, 3.2), bevel=0.12, m=grey),
+        box("ShedBody", (7.4, 5.0, 4.4), (0, 3.0, 2.2), bevel=0.1, segs=3, m=body),
+        box("ShedBase", (7.6, 5.2, 0.4), (0, 3.0, 0.2), bevel=0.05, m=teal),
+        box("ShedRoof", (8.0, 5.7, 0.35), (0, 2.95, 4.55), bevel=0.1, m=roof),
+        box("ShedSign", (3.8, 0.2, 0.62), (0, 0.42, 5.05), bevel=0.08, m=hot),
+        text("ShedSignText", "STAFF ONLY", 0.36, 0.06, (0, 0.3, 5.03), m=cream),
+        box("LampHood", (0.6, 0.34, 0.16), (0, 0.32, 4.2), bevel=0.04, m=dark),
+        box("LampGlow", (0.46, 0.2, 0.06), (0, 0.3, 4.1), bevel=0.0, m=lamp),
     ]
+    for x in (-1, 1):
+        parts += [
+            box(f"SideWindow{x}", (0.1, 1.4, 0.9), (x * 3.71, 3.0, 2.6), bevel=0.02, m=mat("ShopGlass", "#3b2f63", rough=0.15, metal=0.2)),
+            box(f"SideSill{x}", (0.2, 1.6, 0.1), (x * 3.74, 3.0, 2.1), bevel=0.02, m=cream),
+        ]
     for i in range(9):
         parts.append(box(f"Hazard{i}", (0.34, 0.06, 0.34), (-2.9 + i * 0.725, -0.03, 3.62), rot=rad(0, 45, 0), bevel=0.0,
                          m=yellow if i % 2 == 0 else dark))
@@ -314,7 +377,12 @@ def build_arcade():
     hot, yellow = mat("PinkDark"), mat("Yellow")
     w, d, h = 14.0, 8.0, 5.2
     parts = [
-        box("Back", (w, 0.4, h), (0, d / 2 - 0.2, h / 2), bevel=0.06, m=inner),
+        box("Back", (w - 0.6, 0.3, h), (0, d / 2 - 0.25, h / 2), bevel=0.06, m=inner),
+        # Outside of the back wall (seen from the beach and the wheel): teal, banded, signed.
+        box("BackSkin", (w, 0.12, h), (0, d / 2 - 0.06, h / 2), bevel=0.06, m=teal),
+        box("BackBand", (w + 0.04, 0.16, 0.3), (0, d / 2 - 0.06, h - 1.0), bevel=0.04, m=pink),
+        box("BackBase", (w + 0.04, 0.16, 0.5), (0, d / 2 - 0.06, 0.25), bevel=0.04, m=hot),
+        text("BackSign", "ARCADE", 0.9, 0.1, (0, d / 2 + 0.02, h - 2.0), rot=(0, 0, math.pi), m=cream),
         box("SideL", (0.4, d, h), (-w / 2 + 0.2, 0, h / 2), bevel=0.06, m=teal),
         box("SideR", (0.4, d, h), (w / 2 - 0.2, 0, h / 2), bevel=0.06, m=teal),
         box("Roof", (w + 0.6, d + 0.6, 0.45), (0, 0, h + 0.2), bevel=0.12, m=pink),
@@ -343,7 +411,46 @@ def build_arcade():
             box(f"CabPanel{i}", (1.0, 0.45, 0.1), (x, y - 0.6, 1.1), rot=rad(-20, 0, 0), bevel=0.03, m=cream),
             sphere(f"CabStick{i}", 0.07, (x - 0.2, y - 0.62, 1.22), m=mat("Red")),
         ]
+    # Along each side wall: claw machines between two more cabinets, facing in.
+    glass = mat("ClawGlass", "#bfefff", rough=0.08, emit=0.35)
+    neon = [glow("NeonPink", "#ff5cc0", 2.4), glow("NeonCyan", "#33f0ff", 2.4)]
+    for side, rot_z in ((-1, math.pi / 2), (1, -math.pi / 2)):
+        x = side * (w / 2 - 0.4 - 0.6)
+        for k, y in enumerate((-2.2, -0.9, 0.4, 1.7)):
+            unit = _claw_machine(f"Side{side}{k}", bodies[k % 3], glass, screens[k % 3]) if k in (1, 2) \
+                else _cabinet(f"Side{side}{k}", bodies[(k + 1) % 3], bodies[k % 3], screens[(k + 2) % 3], cream)
+            parts += place(unit, (x, y, 0), rot_z=rot_z)
+        parts.append(box(f"NeonStrip{side}", (0.08, d - 1.6, 0.1), (side * (w / 2 - 0.44), -0.2, h - 1.0), bevel=0.02, m=neon[side > 0]))
     save("arcade", [merge("Arcade", parts)])
+
+
+def _cabinet(prefix, body, hood, screen, panel):
+    """Upright arcade cabinet at the origin, facing -Y (1.1 x 1.0 m)."""
+    return [
+        box(f"{prefix}Cab", (1.1, 1.0, 2.3), (0, 0, 1.15), bevel=0.08, m=body),
+        box(f"{prefix}Hood", (1.16, 0.6, 0.5), (0, -0.3, 2.35), bevel=0.08, m=hood),
+        box(f"{prefix}Screen", (0.84, 0.06, 0.66), (0, -0.5, 1.62), rot=rad(-12, 0, 0), bevel=0.03, m=screen),
+        box(f"{prefix}Panel", (1.0, 0.45, 0.1), (0, -0.6, 1.1), rot=rad(-20, 0, 0), bevel=0.03, m=panel),
+        sphere(f"{prefix}Stick", 0.07, (-0.2, -0.62, 1.22), m=mat("Red")),
+    ]
+
+
+def _claw_machine(prefix, body, glass, marquee):
+    """Claw crane at the origin, facing -Y: cabinet, open case lit from a back
+    pane, prizes and the claw, marquee on top."""
+    parts = [
+        box(f"{prefix}Base", (1.15, 1.1, 0.95), (0, 0, 0.475), bevel=0.07, m=body),
+        box(f"{prefix}BackPane", (1.05, 0.05, 1.05), (0, 0.5, 1.5), bevel=0.0, m=glass),
+        box(f"{prefix}Top", (1.2, 1.15, 0.32), (0, 0, 2.18), bevel=0.06, m=body),
+        box(f"{prefix}Marquee", (0.9, 0.06, 0.2), (0, -0.59, 2.18), bevel=0.02, m=marquee),
+        box(f"{prefix}Chute", (0.36, 0.08, 0.3), (0.3, -0.56, 0.62), bevel=0.03, m=mat("Dark")),
+        cyl(f"{prefix}Claw", 0.06, 0.4, (0, 0, 1.85), segs=8, bevel=0.0, m=mat("GreyLight")),
+    ]
+    for i, (px, py) in enumerate(((-0.52, -0.5), (0.52, -0.5), (-0.52, 0.5), (0.52, 0.5))):
+        parts.append(box(f"{prefix}Corner{i}", (0.08, 0.08, 1.06), (px, py, 1.5), bevel=0.02, m=body))
+    for i, (px, py, c) in enumerate(((-0.25, -0.2, "PinkLight"), (0.2, 0.15, "Yellow"), (-0.1, 0.25, "BlueLight"))):
+        parts.append(sphere(f"{prefix}Prize{i}", 0.17, (px, py, 1.15), m=mat(c), segs=10, rings=6))
+    return parts
 
 
 def build_surfboards():
