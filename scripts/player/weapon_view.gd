@@ -17,6 +17,12 @@ extends Node3D
 ## holds while the weapon still sways, kicks and breathes a little. Shots go
 ## where the player's unshaken aim points, and an optic's reticle is drawn at
 ## exactly that point. A long scope shows only its eyepiece view once it is up.
+## The sight comes up on Player.aim_blend, the same blend the zoom runs on,
+## and seats with a small settle about the eye as it arrives.
+##
+## A shot kicks a goal (pushed back, muzzle up) that recovers on its own; the
+## weapon follows it through a stiff, slightly springy spring, so the kick
+## rises over a few frames and settles instead of jumping.
 ##
 ## The whole rig is scaled down and held very close to the camera. On screen it
 ## looks identical, but it can no longer poke through walls or zombies.
@@ -57,6 +63,15 @@ const RETICLE_IN := 0.45
 const SCOPE_IN := 0.9
 ## Initial spring velocity per unit of wanted peak (for the pose springs).
 const KICK_GAIN := 30.0
+## Weight in the raise: a spring trails the aim blend, and how far it trails
+## (or runs past, as the sight arrives) turns the weapon about the eye and
+## moves it along the sight line, per unit of blend (muzzle up in degrees,
+## back toward the eye in view units). About 0.3 degrees of settle on arrival.
+const SEAT := Vector3(2.0, 0.0, 0.03)
+## How fast a shot's kick goal recovers (1/s: push back, muzzle up), and the
+## spring the weapon follows it with (rad/s, damping).
+const KICK_RECOVER := Vector2(14.0, 12.0)
+const KICK_FOLLOW := Vector2(48.0, 0.55)
 const HOLO_SHADER := "res://art/shaders/holo.gdshader"
 ## Parts the reload animations may move (see art/blender/weapon_kit.py).
 const ANIMATED_PARTS := ["Cell", "CellHolo", "Slide", "Hammer", "Panel", "Vents", "Barrels", "Pump",
@@ -75,8 +90,17 @@ var _pose_pos := MotionSpring.new(15.0, 0.6)
 var _pose_rot := MotionSpring.new(15.0, 0.6)
 ## Lag behind the look: x yaw, y pitch (degrees).
 var _look := MotionSpring.new(10.0, 0.5)
+## A shot's kick: where it is headed (x push back in view units, y muzzle up
+## in degrees), the spring that follows it, and where that is now.
+var _kick_goal := Vector2.ZERO
+var _kick_follow := MotionSpring.new(KICK_FOLLOW.x, KICK_FOLLOW.y)
 var _kick := 0.0
 var _kick_rot := 0.0
+## Trails the aim blend for the weight of the raise and the settle.
+var _seat := MotionSpring.new(20.0, 0.5)
+## How far a charge has pulled the weapon back (view units); it eases home
+## after the shot instead of snapping.
+var _charge_pull := 0.0
 var _raise := 1.0          # 1 = lowered off-screen, 0 = in firing position
 var _reload_tween: Tween
 var _glow_mats: Array[StandardMaterial3D] = []   # per-instance copies of the cell glow
@@ -184,7 +208,11 @@ func _build_model(weapon: WeaponData) -> void:
 	_setup_reload_materials()
 	_fit_sight()
 	_raise = 1.0
+	_kick_goal = Vector2.ZERO
+	_kick_follow.reset()
 	_kick = 0.0
+	_kick_rot = 0.0
+	_charge_pull = 0.0
 
 
 # --- aim down sights --------------------------------------------------------------
@@ -247,11 +275,19 @@ func sight_has_reticle() -> bool:
 
 
 ## Aimed rotation (degrees): a share of the kick, the look lag and the
-## movement poses, plus a slow breathing drift.
-func _aim_rotation(look_rot: Vector3, pose_rot: Vector3) -> Vector3:
+## movement poses, the seating settle, plus a slow breathing drift.
+func _aim_rotation(look_rot: Vector3, pose_rot: Vector3, seat: Vector3) -> Vector3:
 	var breath := AIM_BREATH * Settings.camera_motion()
-	return Vector3(_kick_rot * 0.35, 0.0, 0.0) + (look_rot + pose_rot) * AIM_SWAY_ROT \
+	return Vector3(_kick_rot * 0.35 + seat.x, 0.0, 0.0) + (look_rot + pose_rot) * AIM_SWAY_ROT \
 		+ Vector3(sin(_time * 1.3) * breath.x, sin(_time * 0.8 + 1.0) * breath.y, 0.0)
+
+
+## The weight of the raise at shown aim `aim`: the muzzle trails low on the
+## way up, then runs a little past and settles as the sight arrives (x muzzle
+## up in degrees, z back toward the eye in view units). Continuous, so no jolt.
+func _seat_motion(aim: float, delta: float) -> Vector3:
+	var trail := _seat.update(Vector3.ONE * aim, delta).x - aim
+	return SEAT * trail * Settings.camera_motion()
 
 
 ## Lights the optic's reticle at the true point of aim, switches a long scope
@@ -303,8 +339,8 @@ func muzzle_position() -> Vector3:
 
 
 func on_fired(weapon: WeaponData) -> void:
-	_kick = minf(_kick + weapon.view_kick, weapon.view_kick * 2.2)
-	_kick_rot = minf(_kick_rot + weapon.recoil_kick * 1.6, 14.0)
+	_kick_goal.x = minf(_kick_goal.x + weapon.view_kick, weapon.view_kick * 2.2)
+	_kick_goal.y = minf(_kick_goal.y + weapon.recoil_kick * 1.6, 14.0)
 	if weapon.beam:
 		return
 	_flash_time = 0.05
@@ -330,12 +366,12 @@ func _process(delta: float) -> void:
 			return
 	else:
 		_raise = move_toward(_raise, 0.0, delta / maxf(0.05, data.equip_time))
-	_kick = lerpf(_kick, 0.0, 1.0 - exp(-14.0 * delta))
-	_kick_rot = lerpf(_kick_rot, 0.0, 1.0 - exp(-12.0 * delta))
+	_update_kick(delta)
 	var ease_raise := _raise * _raise
 	# Aim down sights: square the weapon up and bring its sight line onto the
 	# eye. Motion and kick are damped so the sight picture holds.
-	var aim := ease(player.ads if player else 0.0, -1.8)
+	var aim := player.aim_blend if player else 0.0
+	var seat := _seat_motion(aim, delta)
 
 	var pose_pos := _pose_pos.update(_pose_target_pos(), delta)
 	var pose_rot := _pose_rot.update(_pose_target_rot(), delta)
@@ -351,9 +387,9 @@ func _process(delta: float) -> void:
 	var hip_rot := data.view_rotation_degrees + pose_rot + look_rot \
 		+ Vector3(_kick_rot + ease_raise * -35.0, 0.0, bob.z)
 	# The weapon turns about the eye, so its sight stays in front of it.
-	var ads_rot := _aim_rotation(look_rot, pose_rot)
+	var ads_rot := _aim_rotation(look_rot, pose_rot, seat)
 	var ads_pos := -(Basis.from_euler(ads_rot * (PI / 180.0)) * _eye_local) \
-		+ (look_pos + pose_pos * 0.5) * AIM_SWAY_POS + Vector3(0.0, 0.0, _kick * 0.5) + bob_pos * AIM_BOB
+		+ (look_pos + pose_pos * 0.5) * AIM_SWAY_POS + Vector3(0.0, 0.0, _kick * 0.5 + seat.z) + bob_pos * AIM_BOB
 	_holder.position = hip_pos.lerp(ads_pos + charge * 0.4, aim)
 	_holder.rotation_degrees = hip_rot.lerp(ads_rot, aim)
 	_update_sight(aim)
@@ -365,6 +401,15 @@ func _process(delta: float) -> void:
 				_flash.visible = false
 			if _flash_light:
 				_flash_light.visible = false
+
+
+## The kick's goal recovers and the weapon follows it.
+func _update_kick(delta: float) -> void:
+	_kick_goal.x *= exp(-KICK_RECOVER.x * delta)
+	_kick_goal.y *= exp(-KICK_RECOVER.y * delta)
+	var follow := _kick_follow.update(Vector3(_kick_goal.x, _kick_goal.y, 0.0), delta)
+	_kick = follow.x
+	_kick_rot = follow.y
 
 
 ## Where the movement poses pull the weapon (view units): sprint, slide,
@@ -412,7 +457,8 @@ func _weapon_state(delta: float) -> Vector3:
 	var w := player.weapons if player else null
 	if w == null or w.current != data:
 		return Vector3.ZERO
-	var charge := w.charge_progress()
+	var charge := w.shown_charge()
+	_charge_pull = maxf(charge * 0.035, lerpf(_charge_pull, 0.0, 1.0 - exp(-20.0 * delta)))
 	var reloading := _reload_tween != null and _reload_tween.is_valid()
 	if not reloading and (charge > 0.0 or data.uses_heat() or data.charge_time > 0.0):
 		var flicker := 0.85 + 0.15 * sin(_time * 45.0)
@@ -422,8 +468,9 @@ func _weapon_state(delta: float) -> Vector3:
 		_flash.scale = Vector3.ONE * randf_range(0.5, 0.75) * lerpf(0.5, 1.0, Settings.flash_scale())
 		_flash.rotate_object_local(Vector3.UP, delta * 9.0)
 		_flash_time = 0.06
+	# A tremble from fast sines: the same at any frame rate, no per-frame jumps.
 	var shake := charge * charge * 0.006
-	return Vector3(randf_range(-shake, shake), randf_range(-shake, shake), charge * 0.035)
+	return Vector3(sin(_time * 71.0) * shake, sin(_time * 53.0 + 2.0) * shake, _charge_pull)
 
 
 # --- reload animations ------------------------------------------------------

@@ -3,9 +3,10 @@ extends RefCounted
 ## A damped spring for procedural camera and viewmodel motion. `value` chases
 ## the target passed to update(); kick() adds velocity for one-off jolts
 ## (landings, jumps). It integrates in small sub-steps, so it behaves the same
-## at 30 fps and 240 fps and never blows up on a long frame.
+## at 30 fps and 240 fps and never blows up on a long frame (stiff springs,
+## such as recoil's, included).
 
-const MAX_STEP := 1.0 / 120.0
+const MAX_STEP := 1.0 / 240.0
 const MAX_DELTA := 0.1
 
 var value := Vector3.ZERO

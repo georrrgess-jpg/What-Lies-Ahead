@@ -202,6 +202,14 @@ func charge_progress() -> float:
 	return clampf(_charge / current.charge_time, 0.0, 1.0)
 
 
+## The charge as drawn this frame: it keeps building between physics ticks,
+## so the viewmodel and the HUD ring fill smoothly at any refresh rate.
+func shown_charge() -> float:
+	if not _charging or current == null or current.charge_time <= 0.0:
+		return 0.0
+	return clampf((_charge + _tick * Engine.get_physics_interpolation_fraction()) / current.charge_time, 0.0, 1.0)
+
+
 func is_charging() -> bool:
 	return _charging
 
@@ -228,9 +236,23 @@ func move_scale() -> float:
 ## Spread cone half-angle (degrees) the next shot will use, including bloom
 ## and aiming. Precision weapons put a rested first shot dead centre.
 func current_spread() -> float:
+	return _spread(_bloom, player.ads)
+
+
+## current_spread() as drawn this frame (the HUD reticle): the bloom keeps
+## recovering between physics ticks and the aim is the shown one, so the
+## reticle moves smoothly at any refresh rate.
+func shown_spread() -> float:
+	var bloom := _bloom
+	if current and _since_shot >= BLOOM_RECOVER_DELAY:
+		bloom = maxf(0.0, bloom - current.spread_recovery * _tick * Engine.get_physics_interpolation_fraction())
+	return _spread(bloom, player.aim_blend)
+
+
+func _spread(bloom: float, aim: float) -> float:
 	if current == null:
 		return 0.0
-	var spread := current.spread_degrees + _bloom
+	var spread := current.spread_degrees + bloom
 	if current.first_shot_accurate and _since_shot > 0.32 and current.pellets == 1:
 		spread = 0.0
 	# Moving fast or in the air costs accuracy (shown live on the reticle).
@@ -238,7 +260,7 @@ func current_spread() -> float:
 		spread += 0.8
 	if not player.is_on_floor():
 		spread += 1.5
-	return spread * lerpf(1.0, current.ads_spread_scale, player.ads)
+	return spread * lerpf(1.0, current.ads_spread_scale, aim)
 
 
 ## True while the weapon is out of reserve energy and slowly refilling itself.
