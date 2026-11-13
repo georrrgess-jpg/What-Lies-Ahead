@@ -35,6 +35,7 @@ func _initialize() -> void:
 func _run() -> void:
 	await process_frame
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+	RenderingServer.set_default_clear_color(Color(0.16, 0.13, 0.24))
 	var cosmetics: Node = root.get_node("Cosmetics")
 	var data: Node = root.get_node("GameData")
 	var slot := StringName(String(opts.get("slot", "weapon_cell")))

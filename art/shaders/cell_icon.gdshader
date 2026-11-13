@@ -14,7 +14,7 @@ uniform float aspect = 2.6;
 void fragment() {
 	vec2 span = vec2(1.0, aspect);
 	vec2 p = vec2(UV.x, 1.0 - UV.y) * span;
-	vec4 o = cell_fx(fx, p, span, TIME, color_a.rgb, color_b.rgb);
+	vec4 o = cell_fx_over(fx, p, span, TIME, color_a.rgb, color_b.rgb);
 	vec3 c = mix(color_a.rgb, o.rgb, clamp(o.a, 0.0, 1.0));
 	// Capsule mask, a glassy highlight down the left and two dark bands.
 	vec2 q = vec2(abs(UV.x - 0.5), abs(UV.y - 0.5) * aspect);

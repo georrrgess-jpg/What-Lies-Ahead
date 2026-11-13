@@ -30,7 +30,7 @@ void fragment() {
 	float unit = max(min(side, box_size.y), 1e-5);
 	vec2 span = vec2(side, box_size.y) / unit;
 	vec2 p = vec2(wide_x ? n.x : n.z, n.y) * span;
-	vec4 o = cell_fx(fx, p, span, TIME, color_a.rgb, color_b.rgb);
+	vec4 o = cell_fx_over(fx, p, span, TIME, color_a.rgb, color_b.rgb);
 	ALBEDO = o.rgb * energy;
 	ALPHA = clamp(o.a, 0.0, 1.0);
 }

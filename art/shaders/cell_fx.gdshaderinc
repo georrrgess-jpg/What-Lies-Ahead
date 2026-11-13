@@ -40,6 +40,12 @@ vec4 cfx_rising(vec2 p, float t, float rise, float cell, vec3 col, bool ring) {
 	return vec4(col, clamp(k, 0.0, 1.0) * 0.95);
 }
 
+// How far the glow under a pattern is dimmed so light marks on it stand out
+// (bubbles, glints, snow, streaks, arcs, ripples, a scanning band, bulbs).
+float cell_fx_dim(int fx) {
+	return (fx == 1 || fx == 6 || fx == 7 || fx == 8 || fx == 10 || fx == 12 || fx == 13 || fx == 15) ? 0.55 : 0.0;
+}
+
 vec4 cell_fx(int fx, vec2 p, vec2 span, float t, vec3 a, vec3 b) {
 	bool tall = span.y > span.x;
 	float along = tall ? p.y : p.x;
@@ -154,4 +160,12 @@ vec4 cell_fx(int fx, vec2 p, vec2 span, float t, vec3 a, vec3 b) {
 		return vec4(mix(b, vec3(1.0), curtain * 0.3), curtain * 0.85);
 	}
 	return vec4(0.0);
+}
+
+// The pattern over a glow of colour `a`, dimmed where the pattern is clear.
+vec4 cell_fx_over(int fx, vec2 p, vec2 span, float t, vec3 a, vec3 b) {
+	vec4 o = cell_fx(fx, p, span, t, a, b);
+	float dim = cell_fx_dim(fx);
+	vec3 rgb = mix(a * 0.3, o.rgb, clamp(o.a, 0.0, 1.0));
+	return vec4(rgb, max(clamp(o.a, 0.0, 1.0), dim));
 }
