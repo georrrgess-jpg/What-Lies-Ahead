@@ -135,6 +135,13 @@ fullscreen.
 | Frostbite Cryo Beam | Lockdown | Player level 9 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
 | Rail Lancer | Anti-heavy | Player level 12 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
 
+`python3 tools/balance_report.py` prints each weapon's time-to-kill, sustained DPS and
+ammo economy from data. The latest balance pass (about 150 bot runs) evened the worlds
+out: alphas get tougher world by world (Big Bruno 1,800 hp up to Old Frostbite 2,200),
+finale spikes and projectile volleys were eased, and the weaker weapons (Ion Carbine,
+Cryo Beam, Bumper Lobber, Rail Lancer) were buffed; the bot now clears 50 of 55 Standard
+runs and 11 of 17 Hard runs. Details in [docs/ROUNDS.md](docs/ROUNDS.md).
+
 Weapons fire at exactly their data rate. Spread blooms under sustained fire and recovers
 shortly after the trigger rests, so bursts and aiming down sights matter at range.
 Every weapon has its own model, holographic reload animation, sounds and reticle.
