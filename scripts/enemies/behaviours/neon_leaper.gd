@@ -121,7 +121,7 @@ func _land(z: Zombie) -> void:
 	_flight = -1.0
 	_recover = recover
 	z.global_position = _to + Vector3.UP * 0.05
-	z.reset_stall()
+	z.reset_stall(false)
 	z.play_animation(crouch_clip, 0.05)
 	Sfx.play_at(land_sound, _to + Vector3.UP * 0.3, 0.0, randf_range(0.9, 1.05))
 	for i in 8:

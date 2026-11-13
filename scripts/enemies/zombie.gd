@@ -35,6 +35,8 @@ const HURRY_SPEED := 1.35
 ## body gets a second, full-size shape that only shots collide with.
 const MOVE_RADIUS_MAX := 0.8
 const MOVE_HEIGHT_MAX := 2.4
+## Off the navmesh by more than this (m), an unsticking zombie steps back onto it.
+const UNSTICK_MIN := 0.25
 ## Strength of an alpha's hit flash, as a share of a regular zombie's.
 const BOSS_FLASH := 0.3
 ## Behaviour fields that hold damage dealt to the player (scaled by the difficulty).
@@ -95,6 +97,8 @@ var flee_points: PackedVector3Array
 var _rank_overlay: Material
 var _boss_flash: StandardMaterial3D
 var _body_shape: CollisionShape3D
+## True once _try_unstick() has had its go since the zombie last made progress.
+var _unstuck := false
 
 var _state_time := 0.0
 var _repath := 0.0
@@ -798,19 +802,40 @@ func _check_stall(delta: float, distance: float) -> void:
 	var moved := global_position.distance_to(_stall_anchor)
 	_stall_anchor = global_position
 	if state == State.CHASE and moved < STALL_DISTANCE and distance > data.attack_reach + 1.0:
-		stalled.emit(self)
+		if not _try_unstick():
+			stalled.emit(self)
+	elif moved >= STALL_DISTANCE:
+		_unstuck = false
 
 
-## Called by the director after it relocates a stalled zombie: it climbs in
-## again from the entrance.
-func reset_stall() -> void:
+## Called after the zombie is moved: by the director after it relocates a
+## stalled zombie (it climbs in again from the entrance), or by a leap that
+## landed (`emerge` false: it just carries on).
+func reset_stall(emerge := true) -> void:
 	_stall_timer = 0.0
 	_lost_timer = 0.0
 	_stall_anchor = global_position
 	_repath = 0.0
+	_unstuck = false
 	velocity = Vector3.ZERO
-	if state == State.CHASE and speed > 0.0 and _has_clip(&"Emerge"):
+	if emerge and state == State.CHASE and speed > 0.0 and _has_clip(&"Emerge"):
 		_begin_emerge()
+
+
+## First answer to a stall, before the director has to relocate anything:
+## step onto the nearest navmesh point (a leap or a shove can leave a zombie
+## just off it, where it cannot path) and plan a fresh route. Returns false
+## if the zombie is already on the navmesh, or this was tried already.
+func _try_unstick() -> bool:
+	if _unstuck:
+		return false
+	_unstuck = true
+	var ground := NavigationServer3D.map_get_closest_point(get_world_3d().navigation_map, global_position)
+	_repath = 0.0
+	_flank = 0.0
+	if ground.distance_to(global_position) > UNSTICK_MIN:
+		global_position = ground + Vector3.UP * 0.05
+	return true
 
 
 # --- locomotion ------------------------------------------------------------------
