@@ -14,7 +14,7 @@ extends Control
 ##   panel.set_next_wave("START WAVE 4", 18)
 ##   panel.open() / panel.close()
 
-const WIDTH := 600.0
+const WIDTH := 700.0
 const SLIDE := 60.0
 
 var _board: KitPanel

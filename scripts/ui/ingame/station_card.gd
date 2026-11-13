@@ -1,7 +1,7 @@
 class_name StationCard
 extends PanelContainer
-## One purchase of the loadout station as a card: the key that buys it, an
-## icon, what it is and what it does, and its price in tickets. The price
+## One purchase of the loadout station as a card: the key that buys it, what
+## it is and what it does, its price in tickets and an icon. The price
 ## turns red when the player cannot pay; an offer that is not for sale right
 ## now shows why instead ("FULL", "SOLD OUT", "LOADED") and dims.
 
@@ -49,30 +49,34 @@ func _build(key: String, icon: StringName, title: String, effect: String, accent
 	head.add_theme_constant_override("separation", 10)
 	col.add_child(head)
 	head.add_child(UiKit.key_glyph(key, 46.0))
-	_title = UiKit.label(title, 26, UiKit.CREAM, true)
+	_title = UiKit.label(title, 22, UiKit.CREAM, true)
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_title.clip_text = true
 	head.add_child(_title)
-	_icon = HudIcon.make(icon, 38.0, accent)
-	head.add_child(_icon)
 	_effect = UiKit.label(effect, 22, UiKit.MUTED)
 	col.add_child(_effect)
-	col.add_child(UiKit.spacer(4))
+	var foot := HBoxContainer.new()
+	foot.add_theme_constant_override("separation", 8)
+	col.add_child(foot)
 	_price_row = HBoxContainer.new()
 	_price_row.add_theme_constant_override("separation", 8)
-	col.add_child(_price_row)
+	_price_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	foot.add_child(_price_row)
 	_ticket = HudIcon.make(&"ticket", 30.0, UiKit.AMBER)
 	_price_row.add_child(_ticket)
 	_price = UiKit.label("", 30, UiKit.AMBER, true)
 	_price_row.add_child(_price)
 	_done_row = HBoxContainer.new()
 	_done_row.add_theme_constant_override("separation", 8)
+	_done_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_done_row.visible = false
-	col.add_child(_done_row)
+	foot.add_child(_done_row)
 	_done_row.add_child(HudIcon.make(&"check", 28.0, UiKit.GREEN))
 	_done = UiKit.label("", 26, UiKit.GREEN, true)
 	_done_row.add_child(_done)
+	_icon = HudIcon.make(icon, 40.0, accent)
+	foot.add_child(_icon)
 
 
 ## Changes what the offer does ("+60 health").

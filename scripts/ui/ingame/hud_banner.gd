@@ -88,6 +88,8 @@ func _line_label(font_size: int, top: float, height: float) -> Label:
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	l.offset_left = 0
+	l.offset_right = 0
 	l.offset_top = top
 	l.offset_bottom = top + height
 	l.modulate.a = 0.0

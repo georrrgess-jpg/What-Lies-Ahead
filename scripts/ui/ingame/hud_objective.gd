@@ -50,6 +50,11 @@ func _init() -> void:
 	_prompt.add_child(_prompt_text)
 
 
+## The objective shown now ("" when there is none).
+func current() -> String:
+	return _shown_text
+
+
 ## Sets the objective. `value` is the chip after the text ("0:18", "34 m");
 ## `key` and `prompt` add a key cap and what it does. Empty parts are hidden.
 func set_objective(icon: StringName, text: String, accent := UiKit.CYAN, value := "", key := "", prompt := "") -> void:

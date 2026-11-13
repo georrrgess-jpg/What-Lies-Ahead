@@ -187,6 +187,11 @@ func push_card(card: Control, seconds := 4.5) -> void:
 	_stack.push_card(card, HudStack.Priority.REWARD, seconds)
 
 
+## What the objective pill asks of the player right now (for the pause menu).
+func objective_text() -> String:
+	return _objective.current()
+
+
 ## Names the round in the wave header ("BLITZ", "BOSS ROUND"); "" clears it.
 func set_round_type(text: String, color := UiKit.CYAN) -> void:
 	_header.set_chip(text.to_upper(), color)
@@ -241,6 +246,8 @@ func _build() -> void:
 	_banner = HudBanner.new()
 	_root.add_child(_banner)
 	_banner.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_banner.offset_left = 0
+	_banner.offset_right = 0
 	_banner.offset_top = 178
 	_banner.offset_bottom = 408
 	_notice = _NoticeProxy.new()
@@ -429,7 +436,9 @@ func _process(delta: float) -> void:
 	_update_weapon_status()
 	_header.set_wave(director.wave_number, director.total_waves())
 	if director.state == RunDirector.State.WAVE:
-		_header.set_remaining(director.enemies_remaining(), _wave_total)
+		var left := director.enemies_remaining()
+		_wave_total = maxi(_wave_total, left)
+		_header.set_remaining(left, _wave_total)
 	_update_objective()
 	# Loadout marker: during breaks, whenever the player is not already at it.
 	var marker := director.is_intermission() and director.kiosk != null and not director.kiosk.player_inside
@@ -571,6 +580,8 @@ func _on_state_changed(state: RunDirector.State) -> void:
 	_objective_key = -1
 	_portal_marker.visible = state == RunDirector.State.EXTRACTION
 	match state:
+		RunDirector.State.WAVE:
+			_header.set_chip("", UiKit.CYAN)
 		RunDirector.State.PREP:
 			_header.set_remaining(-1, 0)
 			_header.set_chip("GET READY", UiKit.CYAN)
