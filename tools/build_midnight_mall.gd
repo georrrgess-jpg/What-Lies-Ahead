@@ -1207,6 +1207,13 @@ func _build_entrances() -> void:
 	_bbox("navy", Vector3(7.0, 1.3, 0.1), Vector3(0, UP + 3.6, Z1 - 0.2))
 	_label(signs, "NowShowing", "NOW SHOWING", Vector3(0, UP + 3.95, Z1 - 0.27), PI, 0.0045, AMBER * 1.6)
 	_label(signs, "Feature", "ATTACK OF THE 50 FT SHOPPER", Vector3(0, UP + 3.4, Z1 - 0.27), PI, 0.0026, CREAM * 1.4)
+	# Ticket machines fill the lobby's front corners: the doors lead straight to the stand.
+	for x in [-3.85, 3.85]:
+		var c := Vector3(x, UP, 26.0)
+		_bbox("navy", Vector3(3.7, 2.4, 3.2), c + Vector3(0, 1.2, 0))
+		_bbox("neon_teal" if x < 0.0 else "neon_pink", Vector3(3.72, 0.06, 3.22), c + Vector3(0, 2.4, 0))
+		_bbox("panel_light", Vector3(1.6, 0.8, 0.04), c + Vector3(-signf(x) * 0.3, 1.5, 1.62))
+		_collider(e, "TicketMachines%d" % int(x), Vector3(3.7, 2.4, 3.2), c + Vector3(0, 1.2, 0))
 	for x in [-4.6, 4.6]:
 		_bbox("chrome", Vector3(1.0, 1.5, 0.1), Vector3(x, UP + 1.9, Z1 - 0.2))
 		_bbox("neon_violet" if x < 0.0 else "neon_teal", Vector3(0.84, 1.3, 0.04), Vector3(x, UP + 1.9, Z1 - 0.27))
