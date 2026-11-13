@@ -251,10 +251,11 @@ func _begin() -> void:
 	if kiosk:
 		kiosk.set_open(true)
 	if resumed_from > 0:
-		notice.emit("CHECKPOINT — WAVE %d" % resumed_from, &"banner")
+		notice.emit("CHECKPOINT — WAVE %d" % resumed_from, &"banner_wave")
 		notice.emit("Continuing from the checkpoint: rewards -%d%%" % int(round((1.0 - Difficulty.CONTINUE_REWARD_SCALE) * 100.0)), &"info")
 	else:
 		notice.emit("Get ready! Follow the marker to the Loadout Station between waves.", &"info")
+	_announce_next()
 	run_started.emit()
 	Events.run_started.emit(self)
 
@@ -426,17 +427,25 @@ func start_next_wave() -> void:
 		_twist.begin()
 	score.on_wave_started()
 	wave_started.emit(wave_number, total_waves(), _banner_for(wave, final))
-	if wave.hint != "":
-		notice.emit(wave.hint, &"info")
 
 
-## "WAVE 3 — RUNNER RUSH", "FINAL WAVE — BIG BRUNO", or the wave's own banner.
+## "WAVE 3 — RUNNER RUSH: <hint>" (the HUD shows the kicker, the round's
+## title and the hint as its subtitle), or the wave's own banner.
 func _banner_for(wave: WaveData, final: bool) -> String:
 	if wave.banner != "":
 		return wave.banner
 	if wave.title == "":
 		return ""
-	return ("FINAL WAVE — %s" if final else "WAVE %d — %%s" % wave_number) % wave.title
+	var text := ("FINAL WAVE — %s" if final else "WAVE %d — %%s" % wave_number) % wave.title
+	return text + (": " + wave.hint if wave.hint != "" else "")
+
+
+## The round chip during an intermission: the tier and the wave coming next.
+func _announce_next() -> void:
+	var text := Difficulty.label(difficulty)
+	if wave_number < total_waves() and waves.waves[wave_number].title != "":
+		text += "  ·  NEXT: " + waves.waves[wave_number].title
+	notice.emit(text, &"round")
 
 
 ## Opens with the first listed enemy type, then mixes the rest in once
@@ -604,7 +613,7 @@ func _spawn_boss(wave: WaveData) -> void:
 	z.phase_reached.connect(_on_boss_phase)
 	boss = z
 	Sfx.play(&"rounds_boss_intro", 0.0)
-	notice.emit("%s HAS ARRIVED" % z.data.display_name.to_upper(), &"bad")
+	notice.emit("%s — HAS ARRIVED" % z.data.display_name.to_upper(), &"banner_boss")
 	boss_changed.emit(z)
 
 
@@ -631,7 +640,7 @@ func _on_boss_down(z: Zombie) -> void:
 	# last few in once only a handful stand).
 	_queue.clear()
 	Sfx.play(&"rounds_boss_down", 0.0)
-	notice.emit("%s DEFEATED!" % z.data.display_name.to_upper(), &"banner")
+	notice.emit("%s — DEFEATED!" % z.data.display_name.to_upper(), &"banner_boss")
 	boss_changed.emit(null)
 
 
@@ -809,11 +818,12 @@ func _begin_break() -> void:
 	if kiosk:
 		kiosk.set_open(true)
 	Sfx.play(&"wave_clear", -2.0)
-	var banner := "WAVE %d CLEARED  ·  GRADE %s" % [wave_number, _grades.back()]
+	var banner := "WAVE %d CLEARED — GRADE %s" % [wave_number, _grades.back()]
 	if wave_number + 1 == waves.checkpoint_wave:
-		banner += "\nCHECKPOINT REACHED"
+		banner += " · CHECKPOINT REACHED"
 		Sfx.play(&"rounds_checkpoint", -3.0)
-	notice.emit(banner, &"banner")
+	notice.emit(banner, &"banner_cleared")
+	_announce_next()
 	var extras := PackedStringArray()
 	if _wave_paid > 0:
 		extras.append("+%d tickets" % _wave_paid)
@@ -833,7 +843,7 @@ func _begin_extraction() -> void:
 		portal.activate()
 	Sfx.play(&"portal_open", 0.0)
 	Sfx.play_music(level.final_music(), level.music_volume_db, true)
-	notice.emit("PORTAL OPEN — FOLLOW THE LIGHTS", &"banner")
+	notice.emit("PORTAL OPEN — FOLLOW THE LIGHTS", &"banner_portal")
 
 
 func _on_portal_entered() -> void:
