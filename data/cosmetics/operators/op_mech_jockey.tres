@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+target = &"rail_lancer"
+amount = 8
+
+[resource]
+script = ExtResource("1")
+id = &"op_mech_jockey"
+display_name = "Mech Jockey"
+description = "Pilot of mech unit 07, currently between mechs. The shoulder armour and the headset say otherwise."
+slot = &"avatar"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.2275, 0.2275, 0.2902, 1, 0.8471, 0.3529, 0.06275, 1, 0.2275, 0.2275, 0.2902, 1, 1, 0.4784, 0.102, 1)
+params = {
+"model": "res://art/models/operator_mech_jockey.glb",
+"kit": "Circuit",
+"metallic": 0.3
+}
+sort_order = 1221

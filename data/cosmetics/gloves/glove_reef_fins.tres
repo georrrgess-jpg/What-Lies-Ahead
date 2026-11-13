@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 2200
+
+[resource]
+script = ExtResource("1")
+id = &"glove_reef_fins"
+display_name = "Reef Fins"
+description = "Wetsuit gloves with a coral fin on the back of the hand and another down the forearm. Tidal Tunnels approved."
+slot = &"gloves"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.07843, 0.6392, 0.6275, 1, 1, 0.4784, 0.3529, 1, 1, 0.851, 0.2314, 1, 0.1137, 0.1843, 0.3608, 1, 0.0549, 0.4784, 0.451, 1, 1, 0.851, 0.2314, 1)
+params = {
+"kit": "Fins",
+"pattern": "stripes",
+"pattern_on": ["Sleeve"]
+}
+sort_order = 6123

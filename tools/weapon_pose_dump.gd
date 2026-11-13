@@ -3,7 +3,9 @@ extends SceneTree
 ## viewmodel is at each sample, for the intersection audit
 ## (art/blender/audit_weapons.py):
 ##
-##   godot --headless --path . --script res://tools/weapon_pose_dump.gd -- <out.json> [--samples=25]
+##   godot --headless --path . --script res://tools/weapon_pose_dump.gd -- <out.json> [--samples=25] [--kits]
+##
+## --kits shows every glove shape (ArmRKit*, ArmLKit*) so the audit checks them too.
 ##
 ## out.json: {weapon_id: {"times": [...], "parts": {node: [[12 floats of the
 ## node's transform in model space (Godot axes), visible 0/1], ...]}}}
@@ -21,8 +23,11 @@ func _run() -> void:
 	await process_frame
 	var out_path := ""
 	var samples := 25
+	var kits := false
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--samples="):
+		if a == "--kits":
+			kits = true
+		elif a.begins_with("--samples="):
 			samples = int(a.trim_prefix("--samples="))
 		elif out_path == "":
 			out_path = a
@@ -33,6 +38,9 @@ func _run() -> void:
 		view.show_weapon(w)
 		view.set_process(false)
 		var model: Node3D = view.model
+		if kits:
+			for kit in model.find_children("Arm?Kit*", "Node3D", true, false):
+				(kit as Node3D).visible = true
 		view.play_reload(w, 1.0)
 		var tween: Tween = view._reload_tween
 		tween.pause()

@@ -66,7 +66,11 @@ pause menu (`result["abandoned"] == true`). `result` is `RunDirector.result()`.
   `equipped`, `weapon_loadout(weapon_id)`, `check_new_unlocks()`.
 * Weapon models are recoloured by `scripts/player/weapon_cosmetics.gd` via
   their material names: `Shell`, `Trim`, `Cell`, `GunDark`, `GunSteel`,
-  `GunPink`, and arms `Glove`, `GlovePlate`, `Cuff`, `Sleeve`.
+  `GunPink`, and arms `Glove`, `GloveTip` (finger tips), `GlovePlate`, `Cuff`, `Sleeve`.
+  The arms also carry hidden glove shapes (`ArmRKit<Shape>` / `ArmLKit<Shape>`, built by
+  `weapon_kit.py` `GLOVE_KITS`: Gauntlet, Fingerless, Tape, Mitten, Circuit, Wraps, Fins, Studs,
+  Crystal, Claws, Bell, Frill); a gloves item or operator shows them with `params.kit` (a name or
+  a list) and bares the finger tips with `params.fingerless` (`params.skin` colour).
 
 ## UI extensions (`data/ui/*.tres`, type `UiExtension`)
 

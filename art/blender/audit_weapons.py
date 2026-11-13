@@ -153,8 +153,13 @@ def audit(name, poses, verbose=True):
             n, spot = where(trees[arm], trees[k])
             if n:
                 bad("hands", f"{arm} cuts into {k} at rest ({n} face pairs {spot})")
-    if len(arms) == 2 and overlaps(arms[0], arms[1], trees):
+    if overlaps("ArmL", "ArmR", trees):
         bad("hands", "ArmL cuts into ArmR at rest")
+    # Glove shapes (ArmRKit*, ArmLKit*) must also clear the other hand.
+    for kit in [k for k in arms if "Kit" in k]:
+        other = "ArmL" if kit.startswith("ArmR") else "ArmR"
+        if overlaps(kit, other, trees):
+            bad("hands", f"{kit} cuts into {other} at rest")
 
     # --- reload -----------------------------------------------------------------------
     joints = set()
@@ -189,7 +194,8 @@ def audit(name, poses, verbose=True):
         live = [k for k in posed if shown.get(k, False)]
         for arm in [k for k in live if k.startswith("Arm")]:
             for k in live:
-                if k == arm or (k.startswith("Arm") and k < arm):
+                # A hand's glove shapes sit on it by design: only the other hand counts.
+                if k == arm or (k.startswith("Arm") and (k < arm or k[:4] == arm[:4])):
                     continue
                 n, spot = where(posed[arm], posed[k])
                 if n:
