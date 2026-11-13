@@ -6,12 +6,12 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"candy_gummy": 9,
+"candy_gummy": 10,
 "tourist_shambler": 5
 }
 spawn_interval = 1.8
 burst = 1
-max_alive = 8
+max_alive = 9
 speed_scale = 1.0
 late_types_after = 0.3
 banner = ""
@@ -28,8 +28,8 @@ spawns = {
 }
 spawn_interval = 1.05
 burst = 1
-max_alive = 10
-speed_scale = 1.0
+max_alive = 11
+speed_scale = 1.05
 late_types_after = 0.0
 banner = ""
 kind = &"rush"
@@ -67,8 +67,8 @@ spawns = {
 }
 spawn_interval = 3.4
 burst = 5
-max_alive = 12
-speed_scale = 1.04
+max_alive = 13
+speed_scale = 1.06
 late_types_after = 0.0
 banner = ""
 kind = &"ambush"
@@ -85,7 +85,7 @@ spawns = {
 }
 spawn_interval = 1.27
 burst = 1
-max_alive = 12
+max_alive = 13
 speed_scale = 1.06
 late_types_after = 0.2
 banner = ""
@@ -105,7 +105,7 @@ spawns = {
 }
 spawn_interval = 1.4
 burst = 1
-max_alive = 12
+max_alive = 13
 speed_scale = 1.0
 late_types_after = 0.12
 banner = ""

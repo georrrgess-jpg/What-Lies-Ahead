@@ -272,7 +272,7 @@ func _build_river() -> void:
 		for side in [[RIVER_Z0 - 0.25, "N"], [RIVER_Z1 + 0.25, "S"]]:
 			var z: float = side[0]
 			_fence_run(river, "Rail%s%d" % [side[1], k / 2], Vector3(edges[k], 0, z), Vector3(edges[k + 1], 0, z))
-			_player_wall(walls, "Bank%s%d" % [side[1], k / 2], Vector3(edges[k], 0, z), Vector3(edges[k + 1], 0, z), 4.0)
+			_player_wall(walls, "Bank%s%d" % [side[1], k / 2], Vector3(edges[k], 0, z), Vector3(edges[k + 1], 0, z), 9.0)
 	# Bridges.
 	for b in BRIDGES:
 		var x: float = b[0]
@@ -283,7 +283,7 @@ func _build_river() -> void:
 		for s: float in [-1.0, 1.0]:
 			var sx := x + s * (bw * 0.5 + 0.12)
 			_collider(river, bridge.name + "Side%s" % ("L" if s < 0 else "R"), Vector3(0.3, 1.2, 9.0), Vector3(sx, 0.6, cz))
-			_player_wall(walls, bridge.name + "Side%s" % ("L" if s < 0 else "R"), Vector3(sx, 0, cz - 4.5), Vector3(sx, 0, cz + 4.5), 4.0)
+			_player_wall(walls, bridge.name + "Side%s" % ("L" if s < 0 else "R"), Vector3(sx, 0, cz - 4.5), Vector3(sx, 0, cz + 4.5), 9.0)
 	# The chocolate waterfall pours from a pipe in the west wall.
 	var spout_pos := Vector3(-HALL_X + 0.4, 3.6, cz)
 	_prop(dressing, "candy_spout", "ChocolateSpout", spout_pos, 90.0, Vector3(2.6, 2.6, 3))
@@ -295,6 +295,7 @@ func _build_river() -> void:
 	dressing.add_child(fall)
 	# The culvert where it leaves through the east wall (dark, behind a grille).
 	_visual_box(dressing, "CulvertDark", Vector3(0.2, 3.4, w), Vector3(HALL_X + WALL_THICK + 0.6, 0.2, cz), _mat("void", Color(0.06, 0.03, 0.04), 1.0))
+	_collider(river, "CulvertGrille", Vector3(0.4, 3.8, w), Vector3(HALL_X + 0.3, 0.2, cz))
 	for k in 7:
 		_visual_box(dressing, "CulvertBar%d" % k, Vector3(0.16, 2.6, 0.16), Vector3(HALL_X + 0.3, 0.4, RIVER_Z0 + 0.75 * (k + 1)), _mat("steel_dark", Color(0.42, 0.4, 0.52), 0.4))
 
