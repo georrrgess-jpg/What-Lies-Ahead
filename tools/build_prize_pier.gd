@@ -599,6 +599,9 @@ func _build_arena_props() -> void:
 			_prop(dressing, "palm", "Palm%d" % i, pos + Vector3(0, 0.6, 0), i * 67.0, Vector3(0.5, 7, 0.5))
 			var trunk := _collider(props, "Palm%dTrunk" % i, Vector3(0.5, 5.0, 0.5), pos + Vector3(0, 2.5, 0))
 			trunk.rotation.y = deg_to_rad(yaw)
+		else:
+			# A signpost's arrows fill this one's top: no perching inside them.
+			_no_perch(c, Vector3(3.2, 1.0, 1.5))
 		i += 1
 
 	# Rail-side furniture: tight to the railing so the lane stays open.
@@ -908,8 +911,18 @@ func _build_set_dressing() -> void:
 	]
 	for k in gulls.size():
 		_prop(dressing, "seagull", "Gull%d" % k, gulls[k][0], gulls[k][1], Vector3(0.7, 0.6, 0.3))
-	_prop(dressing, "signpost_a", "SignpostNorth", Vector3(0.5, 0.8, -20.5), 0.0, Vector3(0.2, 3.7, 0.2))
-	_prop(dressing, "signpost_b", "SignpostStart", Vector3(0.6, 0.8, 12.8), 0.0, Vector3(0.2, 3.7, 0.2))
+	_signpost("signpost_a", "SignpostNorth", Vector3(0.5, 0.8, -20.5), Vector3(-1.65, 2.06, -0.33), Vector3(1.69, 3.83, 1.71))
+	_signpost("signpost_b", "SignpostStart", Vector3(0.6, 0.8, 12.8), Vector3(-1.71, 1.61, -1.7), Vector3(0.82, 3.83, 1.71))
+
+
+## A signpost on a planter, and a player-only box round its arrows (`lo` ..
+## `hi` in the model's space): they hang out over the deck at jump height, so
+## a jumping head (and the camera in it) stops short of the boards.
+func _signpost(model: String, prop_name: String, pos: Vector3, lo: Vector3, hi: Vector3) -> void:
+	_prop(dressing, model, prop_name, pos, 0.0, Vector3(0.2, 3.7, 0.2))
+	var guard := _collider(geo.get_node("Props"), prop_name + "Guard", hi - lo + Vector3.ONE * 0.1, pos + (lo + hi) * 0.5)
+	guard.collision_layer = 16
+	guard.collision_mask = 0
 
 
 # ---------------------------------------------------------------------------
