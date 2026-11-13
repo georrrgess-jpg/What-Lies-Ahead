@@ -124,6 +124,16 @@ func _on_portal_entered() -> void:
 		course.finish()
 
 
+## The course ended (portal or skipped to the end): the run is over, so the
+## pause menu cannot open over the graduation card.
+func end_course() -> void:
+	if _finished:
+		return
+	_finished = true
+	_set_state(State.CLEARED)
+	_freeze_player()
+
+
 ## Leaving from the pause menu: RESTART replays Boot Camp, MAIN MENU leaves it.
 func abandon(retry: bool) -> void:
 	_settle_abandoned()

@@ -360,7 +360,8 @@ func _reward_row(paid: Dictionary) -> Control:
 	row.add_theme_constant_override("separation", UiKit.GAP_L)
 	var sparks := int(paid.get("sparks", 0))
 	if sparks <= 0:
-		row.add_child(UiKit.label("Reward already collected  ·  replay any time", UiKit.SIZE_LABEL, UiKit.MUTED))
+		var note := "Finish live fire to earn the graduation bonus" if paid.get("unearned", false) else "Reward already collected  ·  replay any time"
+		row.add_child(UiKit.label(note, UiKit.SIZE_LABEL, UiKit.MUTED))
 		return row
 	var plate := UiKit.card_panel(16)
 	var inner := HBoxContainer.new()

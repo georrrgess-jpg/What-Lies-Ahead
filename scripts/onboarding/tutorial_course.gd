@@ -369,7 +369,8 @@ func _tick_skip(delta: float) -> void:
 # --- the end --------------------------------------------------------------------------
 
 ## The course is over (portal, or the last section skipped): pay the reward
-## once and show the graduation card.
+## once and show the graduation card. Skipping live fire counts as skipping
+## the tutorial: no graduation bonus, which then waits for a full replay.
 func finish() -> void:
 	if done:
 		return
@@ -379,7 +380,12 @@ func finish() -> void:
 	_clear_zombies()
 	_lower_all()
 	run.set_station_open(false)
-	var paid := Onboarding.complete_tutorial()
+	run.end_course()
+	var paid := {"sparks": 0, "item": null, "unearned": true}
+	if skipped_sections.has(2):
+		Onboarding.mark_tutorial_skipped()
+	else:
+		paid = Onboarding.complete_tutorial()
 	paid["seconds"] = run.elapsed - _start_time
 	paid["steps"] = completed.size()
 	paid["skipped"] = skipped_sections.size()

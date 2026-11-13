@@ -216,6 +216,7 @@ func _cut_to(i: int) -> void:
 
 func _end_montage() -> void:
 	Engine.time_scale = 1.0
+	Sfx.cut_positional()
 	_stage = null
 	_word.modulate.a = 0.0
 	if _viewport:

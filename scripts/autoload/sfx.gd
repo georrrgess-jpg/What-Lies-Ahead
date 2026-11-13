@@ -170,6 +170,12 @@ func _release(p: Node) -> void:
 
 ## Cuts every positional one-shot (they belong to the scene that just left).
 func _on_scene_changed() -> void:
+	cut_positional()
+
+
+## Stops every positional one-shot still playing (scene changes, and the
+## trailer or intro montage handing back to the menu).
+func cut_positional() -> void:
 	for p in _busy.duplicate():
 		if p is AudioStreamPlayer3D:
 			_release(p)

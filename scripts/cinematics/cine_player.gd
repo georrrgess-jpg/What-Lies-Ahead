@@ -133,6 +133,7 @@ func finish() -> void:
 	_done = true
 	Engine.time_scale = 1.0
 	_music.stop()
+	Sfx.cut_positional()
 	if report:
 		_print_report()
 	if render_mode:
