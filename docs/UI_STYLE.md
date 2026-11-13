@@ -42,7 +42,7 @@ the right or bottom edge; use anchors and containers. All sizes below are canvas
 | Constant | Hex | Use |
 | --- | --- | --- |
 | `UiKit.PINK` | `#ff3fa4` | The primary action, selection of toggles, "NEW" |
-| `UiKit.CYAN` | `#35f0ff` | Focus ring, selected card, active slot, section captions |
+| `UiKit.CYAN` | `#35f0ff` | Selected card, active slot, section captions |
 | `UiKit.AMBER` | `#ffc24a` | Warnings, locks, level, mastery, titles of dialogs |
 | `UiKit.TEAL` / `UiKit.METAL` | `#17a3a3` / `#2b918c` | Secondary buttons, painted metal |
 | `UiKit.CREAM` | `#fff3dc` | Sign lettering and body text on dark panels |
@@ -102,8 +102,9 @@ deploy.pressed.connect(_deploy)
 
 `UiKit.button()` and `UiKit.soft_button()` (older names) return the pink and teal sign
 buttons. Every `SignButton` grows 4% and sends a shine across on hover **or keyboard
-focus**, squashes when pressed, shows the cyan focus ring, greys out when `disabled`, and
-plays its own sounds. One pink button per screen.
+focus**, squashes when pressed, shows the focus ring (warm white with an amber glow, so it
+is never mistaken for the cyan of a selection), greys out when `disabled`, and plays its
+own sounds. One pink button per screen.
 
 Icons in `art/ui`: `icon_spark`, `icon_lock`, `icon_gear`, `icon_power`, `icon_home`,
 `icon_play`, `icon_film`, `icon_tutorial`, `icon_arrow_left/right`, `icon_check`,
@@ -157,8 +158,8 @@ card.selected = true                 # cyan outline (one per group)
 card.pressed.connect(_select.bind(item))
 ```
 
-States: normal, hover (lighter rim, +3.5%), focus (cyan ring), selected (cyan outline and
-glow), locked (dim picture, amber padlock line). Cards go in a `metal_frame()`.
+States: normal, hover (lighter rim, +3.5%), focus (warm white ring), selected (cyan
+outline and glow), locked (dim picture, amber padlock line). Cards go in a `metal_frame()`.
 
 ### Stats, bars, tabs
 
@@ -231,7 +232,7 @@ theirs; call these only for your own interactions (`UiSound.equip()` after equip
 ## Focus and navigation
 
 Everything interactive must be reachable without a mouse. Kit controls are focusable and
-show the cyan ring. Name the control that should start with focus `FirstFocus` (or
+show the focus ring. Name the control that should start with focus `FirstFocus` (or
 override `first_focus()`); keep neighbours in reading order (containers do this for you);
 use `UiKit.scroll()` so focus scrolls lists. In the menu, Esc / BACK goes back, Q / E
 (PageUp / PageDown, shoulder buttons) step through the sections of the top bar.

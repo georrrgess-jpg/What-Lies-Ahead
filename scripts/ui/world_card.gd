@@ -136,7 +136,7 @@ func refresh() -> void:
 	for i in _stars.get_child_count():
 		(_stars.get_child(i) as TextureRect).texture = KitTex.tex(&"icon_star" if i < most else &"icon_star_empty")
 	if _unlocked:
-		_status.text = "BEST %s" % ScorePanel._fmt(best) if best > 0 else "NOT PLAYED YET"
+		_status.text = "BEST %s" % ScorePanel._fmt(best) if best > 0 else ("CLEARED" if most >= 3 else "NOT PLAYED YET")
 		_status.add_theme_color_override("font_color", Color.WHITE)
 	else:
 		_status.text = "LOCKED  ·  " + world.requirement.describe()
