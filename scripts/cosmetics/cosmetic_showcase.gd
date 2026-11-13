@@ -144,6 +144,8 @@ func show_item(it: CosmeticItem, weapon: WeaponData, flourish := false) -> void:
 	_lens.visible = it.slot == &"weapon_sight"
 	if _lens.visible:
 		_lens_view.item = it
+	# With the lens window open, the weapon turns in the room right of it.
+	_stage.offset_left = _lens.get_combined_minimum_size().x + 16.0 if _lens.visible else 0.0
 	_hint.text = ""
 	match it.slot:
 		&"avatar":
