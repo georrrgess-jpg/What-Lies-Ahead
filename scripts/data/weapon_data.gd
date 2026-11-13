@@ -50,13 +50,15 @@ extends Resource
 @export var knockback := 0.6
 
 @export_group("Aiming")
-## Field of view multiplier when aimed down sights (lower = more zoom).
+## Field of view multiplier when aimed down sights (lower = more zoom). A
+## magnified sight (Locker > Sights) zooms further on top of this.
 @export var ads_fov_scale := 0.78
 ## Seconds to raise the sights.
 @export var ads_time := 0.16
 ## Spread multiplier when fully aimed.
 @export var ads_spread_scale := 0.3
-## How far in front of the eye the sight sits when aimed (metres).
+## How far in front of the eye the weapon's own sight point (SightPoint) sits
+## when aimed with its iron sights (metres). Optics set their own distance.
 @export var ads_depth := 0.34
 ## First shot after a pause is perfectly accurate (precision weapons).
 @export var first_shot_accurate := true

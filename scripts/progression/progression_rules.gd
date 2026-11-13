@@ -1,18 +1,19 @@
 class_name ProgressionRules
 extends Resource
-## Account level tuning: the level curve, how runs pay out XP, and the flavour
-## reward for levels that have no cosmetic. Lives in data/progression/rules.tres.
+## Account level tuning: the level curve and how runs pay out XP. Lives in
+## data/progression/rules.tres (what levels pay in Sparks is in economy.tres).
 ##
 ## XP needed to go from level L to L+1:
 ##   level_base_xp + level_step_xp * (L-1) + level_curve_xp * (L-1)^2
-## (rounded to 50). The curve is nearly linear: early levels come every run
-## and the weapon unlocks arrive while the player is still working through the
-## worlds; level 50 takes roughly a hundred clears.
+## (rounded to 50). The curve is linear: the first session brings several
+## levels, every weapon is unlocked within the first half-dozen clears, and
+## the cap (level 40) takes a typical player about 48 clears. Check changes
+## with tools/economy_model.py.
 
 @export_group("Level curve")
-@export var level_base_xp := 3500
-@export var level_step_xp := 380
-@export var level_curve_xp := 2.0
+@export var level_base_xp := 1800
+@export var level_step_xp := 400
+@export var level_curve_xp := 0.0
 
 @export_group("Run payout")
 ## Account XP per point of score.
@@ -28,8 +29,8 @@ extends Resource
 @export var first_clear_xp := 1500
 
 @export_group("Reward track")
-## Shown for levels that unlock no cosmetic: "Name|description" per level
-## (index = level; empty = nothing to show).
+## Optional flavour for a level that gives neither a weapon nor a cosmetic:
+## "Name|description" per level (index = level; empty = nothing to show).
 @export var stamps: PackedStringArray = PackedStringArray()
 
 

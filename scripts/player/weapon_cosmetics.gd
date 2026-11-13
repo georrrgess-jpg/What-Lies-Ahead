@@ -1,13 +1,17 @@
 class_name WeaponCosmetics
 extends RefCounted
 ## Applies equipped cosmetics to a weapon model (viewmodel or menu preview).
-## Weapon models follow one naming contract (art/blender/build_weapons.py):
+## Weapon models follow one naming contract (art/blender/weapon_kit.py):
 ##   materials  "Shell" (main colour), "Trim" (panels), "Cell" (energy glow),
 ##              arms "Glove", "GlovePlate", "Cuff", "Sleeve"
 ##   nodes      "Decal" (emblem, hidden unless a decal is equipped),
-##              "CharmPoint" (optional empty a charm hangs from)
+##              "CharmPoint" (the eye of the charm lug a charm hangs from),
+##              "ArmL"/"ArmR" (first-person arms), "*Holo" (hologram copies
+##              of the cell, shown only during reloads)
+## Menu previews show the bare weapon: prepare_preview() hides the arms and
+## hologram parts wherever they sit in the model.
 ## `loadout` is Cosmetics.weapon_loadout(weapon_id):
-##   {finish, cell, decal, charm, arms} (any may be null or missing).
+##   {finish, cell, decal, charm, sight, arms} (any may be null or missing).
 ##
 ## Finishes: flat colours ([shell, trim], params metallic/roughness), or a
 ## shader: params = {"shader": "res://art/shaders/x.gdshader", "shader_params": {...}}.
@@ -20,6 +24,8 @@ extends RefCounted
 ##   one, the weapon's own emblem is tinted. params.shader styles the fill.
 ## Charms: params.charm names a node in art/models/cosmetic_charms.glb
 ##   ("Duck" -> "Charm_Duck"), hung from CharmPoint with swing (WeaponCharm).
+## Sights: an optic clamped to the weapon's top, or its own iron sights
+##   (WeaponSights; scripts/weapons/sights/).
 ## Arms: a gloves item or an operator. colors [glove, plate, cuff, sleeve,
 ##   accent, third]; params pattern (see PATTERNS), pattern_on (material
 ##   names), scale, metallic, roughness, glow, shader + shader_on.
@@ -45,6 +51,41 @@ static func apply(model: Node3D, _weapon: WeaponData, loadout: Dictionary) -> vo
 	_apply_decal(model, loadout.get("decal"))
 	_apply_charm(model, loadout.get("charm"))
 	_apply_cell_animation(model, cell)
+	WeaponSights.apply(model, _weapon, loadout.get("sight"))
+
+
+## Gets a freshly instantiated weapon model ready for a menu preview: hides
+## the hologram copies of the cell and (unless `with_arms`) the first-person
+## arms, wherever they are parented.
+static func prepare_preview(model: Node3D, with_arms := false) -> void:
+	for node in model.find_children("*", "Node3D", true, false):
+		var node_name := String(node.name)
+		if node_name.ends_with("Holo") or (not with_arms and node_name.begins_with("Arm")):
+			(node as Node3D).visible = false
+
+
+## Bounds of the visible meshes of a weapon model, in the model's own space
+## (works outside the scene tree; a hanging charm is left out).
+static func visible_bounds(model: Node3D) -> AABB:
+	var result := AABB()
+	var first := true
+	for node in model.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi.mesh == null or mi.get_parent().name == "WeaponCharm" or not _shown_in(model, mi):
+			continue
+		var box := to_model(model, mi) * mi.mesh.get_aabb()
+		result = box if first else result.merge(box)
+		first = false
+	return result
+
+
+static func _shown_in(model: Node3D, node: Node3D) -> bool:
+	var n: Node = node
+	while n and n != model:
+		if n is Node3D and not (n as Node3D).visible:
+			return false
+		n = n.get_parent()
+	return true
 
 
 static func shader(path: String) -> Shader:
@@ -243,8 +284,8 @@ static func _apply_charm(model: Node3D, charm: CosmeticItem) -> void:
 		return
 	var swing := WeaponCharm.new()
 	swing.name = "WeaponCharm"
-	swing.setup(mesh)
 	var anchor := model.find_child("CharmPoint", true, false) as Node3D
+	swing.setup(mesh, model, anchor)
 	if anchor:
 		anchor.add_child(swing)
 	else:

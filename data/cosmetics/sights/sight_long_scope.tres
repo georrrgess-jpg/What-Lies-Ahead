@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+target = &"rail_lancer"
+amount = 1
+
+[resource]
+script = ExtResource("1")
+id = &"sight_long_scope"
+display_name = "Lancer Scope"
+description = "A long scope made for the Rail Lancer: line up the far end of the pier. Reach rank 1 with the Rail Lancer to fit it."
+slot = &"weapon_sight"
+weapon_id = &"rail_lancer"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(1.0, 0.3, 0.45, 1, 0.07, 0.71, 0.64, 1)
+params = {
+"ads_time": 1.25,
+"optic": "Scope",
+"reticle": "scope",
+"reticle_degrees": 0.5,
+"zoom": 1.9
+}
+sort_order = 6090

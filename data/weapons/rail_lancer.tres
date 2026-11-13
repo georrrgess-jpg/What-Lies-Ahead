@@ -8,7 +8,7 @@
 [sub_resource type="Resource" id="unlock"]
 script = ExtResource("2")
 kind = 1
-amount = 9
+amount = 12
 
 [resource]
 script = ExtResource("1")
@@ -36,10 +36,10 @@ falloff_end = 120.0
 falloff_min_scale = 0.8
 headshot_multiplier = 1.5
 knockback = 6.0
-ads_fov_scale = 0.42
+ads_fov_scale = 0.5
 ads_time = 0.22
 ads_spread_scale = 0.0
-ads_depth = 0.13
+ads_depth = 0.075
 first_shot_accurate = true
 reticle_style = "chevron"
 recoil_kick = 4.5

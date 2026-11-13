@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sight_irons"
+display_name = "Iron Sights"
+description = "The sights the weapon came with. Nothing to fog up, nothing to drop."
+slot = &"weapon_sight"
+rarity = 0
+params = {
+"default": true
+}
+sort_order = 6000
