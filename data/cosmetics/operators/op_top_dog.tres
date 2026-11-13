@@ -9,7 +9,7 @@ display_name = "Top Dog"
 description = "Runs the bravest hot-dog stand on Prize Pier. Ketchup on the right hip, mustard on the left, apron always on."
 slot = &"avatar"
 rarity = 0
-price = 250
+price = 500
 colors = PackedColorArray(0.9686, 0.9569, 0.949, 1, 0.9098, 0.149, 0.2275, 1, 0.9098, 0.149, 0.2275, 1, 0.9686, 0.9569, 0.949, 1, 0.9098, 0.149, 0.2275, 1)
 params = {
 "model": "res://art/models/operator_top_dog.glb",

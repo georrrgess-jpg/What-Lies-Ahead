@@ -9,7 +9,7 @@ display_name = "Spectrum Rush"
 description = "Every colour at once, in bands racing along the cell. The showiest cell on the pier."
 slot = &"weapon_cell"
 rarity = 3
-price = 5600
+price = 3500
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
 params = {
 "fx": "rainbow"

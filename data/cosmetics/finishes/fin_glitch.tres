@@ -9,7 +9,7 @@ display_name = "Corrupted"
 description = "Something went wrong with this one. That is the point."
 slot = &"weapon_finish"
 rarity = 3
-price = 3000
+price = 3250
 colors = PackedColorArray(0.07059, 0.0549, 0.1176, 1, 0.149, 0.1255, 0.2, 1)
 params = {
 "shader": "res://art/shaders/skin_glitch.gdshader"

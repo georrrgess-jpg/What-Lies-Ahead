@@ -9,7 +9,7 @@ display_name = "Ghost Party"
 description = "Little ghosts floating, waving and having a lovely time."
 slot = &"banner"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.2, 0.1, 0.35, 1, 0.95, 0.95, 1, 1, 0.6, 1, 0.6, 1)
 params = {
 "style": 23

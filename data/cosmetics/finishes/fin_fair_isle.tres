@@ -9,7 +9,7 @@ display_name = "Fair Isle"
 description = "A knitted ski sweater, stitch by stitch: bands of zigzags, diamonds and snowflake crosses."
 slot = &"weapon_finish"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.949, 0.9176, 0.8588, 1, 0.5412, 0.102, 0.1333, 1)
 params = {
 "shader": "res://art/shaders/finish_textile.gdshader",

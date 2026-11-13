@@ -9,7 +9,7 @@ display_name = "Checkered Flag"
 description = "First across the finish line, every wave."
 slot = &"gloves"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.9686, 0.9569, 0.949, 1, 0.1098, 0.09412, 0.1882, 1, 1, 0.2471, 0.6235, 1, 0.1098, 0.09412, 0.1882, 1, 0.1098, 0.09412, 0.1882, 1)
 params = {
 "pattern": "checker",

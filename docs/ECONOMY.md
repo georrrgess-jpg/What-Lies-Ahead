@@ -25,7 +25,7 @@ All amounts are in `data/progression/economy.tres` (`EconomyRules`).
 | Headshot finishing blow | +1 | |
 | Every 10th kill of a combo | +5 | |
 | Wave cleared | 15 | +15 if the wave was flawless |
-| Level cleared | 150, +25 per world after the first | first clear of a level: +150, once |
+| Level cleared | 150, +25 per world after the first (Prize Pier 150 to Sky Harbor 375) | first clear of a level: +150, once |
 | Tickets left at the portal | 1 per 20 tickets | only when the level is cleared |
 | Player level L | 50 + 5 L | +100 on every fifth level |
 | Mastery rank R | 10 + 10 R | 650 for a weapon's ten ranks |
@@ -55,30 +55,58 @@ breakdown and the contracts.
 
 ## Spending Sparks
 
-Price ladder by rarity: **Common 250, Rare 650, Epic 1,500, Legendary 3,000**
-(`EconomyRules.prices`). The two best items of each shop section (one for sights and titles) are
-**showpieces** at about three times their old price: **Rare 1,250, Epic 2,800,
-Legendary 5,600** (`EconomyRules.premium_prices`): Holo Foil and Lava Flow (finishes),
-8-Bit (sight), Prism Core and Heartbeat (cells), Golden Touch and Holo Hands (gloves),
-Golden Ticket and Plush Zombie (charms), Coin Shower and Starburst (kill effects), Golden
-Comet and Rainbow Road (tracers), Holo Diamond and Holo Heart (decals), Signal Lost and
-Lava Lamp (banners), Prize Hoarder (title). Every price is on one of the two ladders
-(the probe checks it). An item is in the shop when its `CosmeticItem.price` is above 0;
-it is owned once bought. A `requirement` on a priced item only gates the purchase (sights
-that open at a mastery rank).
+**The price rule.** Every price is a multiple of 250 Sparks (`EconomyRules.price_step`)
+and at least its rarity's ladder price: **Common 250, Rare 750, Epic 1,500,
+Legendary 3,000** (`EconomyRules.prices`). The rarities do not overlap (the dearest
+rare costs less than the cheapest epic, and so on). An ordinary item costs its ladder
+price; a **showpiece** costs more, and the very best items each have their own price,
+ranked by how much they show on screen (operators, then animated finishes, gloves, kill
+effects and tracers, then cells, sights and charms, then decals, banners and titles):
 
-For sale (194 items, 277,350 Sparks, sights included, after the content update that
-doubled the cosmetics): the original 69 (115,250 Sparks) plus 27 new weapon finishes,
+| Price | Item | |
+| --- | --- | --- |
+| 10,000 | Wind-Up Wally | operator (the dearest item of the shop) |
+| 9,500 | Pixel Pal | operator |
+| 9,000 | Quicksilver | animated finish |
+| 8,500 | Holo Foil | animated finish |
+| 8,000 | Lava Flow | animated finish |
+| 7,500 | Prism Shards | gloves (crystal model, hologram) |
+| 7,000 | Event Horizon | kill effect |
+| 6,500 | Coin Shower | kill effect |
+| 6,000 | Golden Touch | gloves |
+| 5,500 | Marquee Lights | animated finish |
+| 5,000 | Holo Hands | gloves |
+| 4,500 | Thunderhead | animated finish |
+| 4,000 | Golden Comet | tracer |
+| 3,750 | Solar Flare | animated finish |
+| 3,500 | Spectrum Rush | energy cell |
+| 3,250 | Corrupted | animated finish |
+| 3,000 | the other legendaries | Prism Core, Gemcut, Golden Ticket, Champion, Holo Diamond, Holo Heart, Signal Lost, Spiral Galaxy, The Final Boss, Ticket Roll |
+
+Below that: epic showpieces at 2,500 (Stunt Ace, Ferris Wheel, Starburst, Rainbow Road,
+Neon Tube, Heartbeat, Plush Zombie, 8-Bit, Zombie Eye) and 2,000 (Lava Lamp, Main
+Character), the epic ladder at 1,500; Halfpipe (operator) 1,250, Prize Hoarder 1,000,
+the rare ladder at 750; Top Dog (operator) 500, the common ladder at 250. Operators
+always cost more than anything else of their rarity. `tools/economy_probe.gd` checks the
+rule, the non-overlapping rarities, that the 15 dearest items each have their own price
+and that the dearest is an operator. An item is in the shop when its
+`CosmeticItem.price` is above 0; it is owned once bought. A `requirement` on a priced
+item only gates the purchase (sights that open at a mastery rank).
+
+For sale (194 items, 283,250 Sparks, sights included; 277,350 before the price rule):
+the original 69 plus 27 new weapon finishes,
 5 operators, 9 gloves, and the new cells, charms, decals, sights, kill effects, tracers,
 banners and titles that are not earned. New earned items use the item's own
 `requirement` (lifetime kills, weapon mastery rank, best score, world clears). Earned, never sold: the
-level track, the five world sets (36 items, on the first clear of each level, and World
-Tourist for all five), mastery camos, cells and decals, milestone rewards, and quiet
+level track, the world sets (on the first clear of each of the ten levels, and World
+Tourist for clearing the first five), mastery camos, cells and decals, milestone rewards, and quiet
 goals for lifetime kills (15 items, 50 to 10,000 kills) and best score on Prize Pier
 (5 items).
 
-**Featured.** Four items a day are 25% off (`featured_count`, `featured_discount`;
-rounded to 5 Sparks: 190, 490, 1,125, 2,250, and 940, 2,100, 4,200 for showpieces), one of
+**Featured.** Four items a day are 20% off (`featured_count`, `featured_discount`).
+On the 250 rule a 20% cut is always a round number: 200, 600, 1,200, 2,400, and 2,600 to
+8,000 for the showpieces (`EconomyRules.discounted()` rounds to 50 below 1,000 and to
+100 above, which these prices never need), so the "20% OFF" on the card is exact. One of
 each rarity where possible. The selection depends only on the day and on what the
 player did not own when the day's selection was first asked for; it is stored for the
 day, so buying a featured item does not pull another one into the discount. It changes
@@ -118,8 +146,8 @@ set `flash = 1.0` for a flare. Sounds: `eco_spark_tick`, `eco_spark_bank`, `eco_
 | `items(slot := &"")` | every priced item (owned or not), cheapest first |
 | `for_sale(slot := &"")` | priced items not owned yet |
 | `featured()` | today's featured items (`Array[CosmeticItem]`, may include ones bought today) |
-| `is_featured(it)`, `discount(it)` | discount is 0-1 (0.25 when featured, else 0) |
-| `price(it)` | what it costs now (discounts rounded to 5); `base_price(it)` is the full price |
+| `is_featured(it)`, `discount(it)` | discount is 0-1 (0.2 when featured, else 0) |
+| `price(it)` | what it costs now (`EconomyRules.discounted`: a featured price is exactly 20% off and round); `base_price(it)` is the full price |
 | `seconds_to_rotation()`, `day()` | time to the next featured change; the local day number |
 | `pick_featured(day)` | the selection a given day would produce (for previews and tests) |
 | `is_open(it)` | its requirement, if any, allows buying; `lock_text(it)` says why not |
@@ -255,11 +283,17 @@ headshots, combo multiplier 1.35, the first two waves flawless, half the tickets
 | Runs as a main to mastery rank 10 | 19 | 14 |
 | Goals on the Career page | 52 | 14 (3 contracts + 11 milestones) |
 | Currency | none | Sparks: 55,700 earned by the cap |
-| Items for sale | 0 | 194, 277,350 Sparks (69 and 47,150 before the price rise and the new cosmetics) |
-| Clears to buy everything | - | 109 (163 runs; 38 clears before the price rise) |
-| Runs of saving from a new profile to afford | - | a common or a rare 1, an epic 2, a legendary 4, a 5,600 showpiece 5 |
-| Sparks per run | - | 988 in the first 15 runs, 637 after the cap |
-| Sparks per session of three runs | - | 2,835 in the first five sessions, 1,862 after the cap |
+| Items for sale | 0 | 194, 283,250 Sparks (69 and 47,150 before the price rise and the new cosmetics) |
+| Clears to buy everything | - | 259 (388 runs) |
+| Runs of saving from a new profile to afford | - | a common or a rare 1, an epic 2, a legendary 4, the cheapest showpiece above the ladder (3,250) 4, a 6,500 showpiece 7, the dearest item (Wind-Up Wally, 10,000) 9 |
+| Sparks per run | - | 1,137 in the first 15 runs, 723 after the cap |
+| Sparks per session of three runs | - | 3,412 in the first five sessions, 2,170 after the cap |
+
+The price rule of update 6 (multiples of 250, 20% featured, a spread at the top) moved
+the shop from 277,350 to 283,250 Sparks (+2%) and the runs to afford each ladder price
+not at all; before it, 20 items cost exactly 5,600 and 10 cost 2,800 (the 1,250 / 2,800 /
+5,600 showpieces took 2, 4 and 5 runs of saving). Ten worlds since update 5: the rows
+above come from the current model.
 
 Where the Sparks come from, up to the cap: zombies 22%, level clears 17%, waves 17%,
 level-ups 12%, contracts 8%, mastery ranks 8%, headshots 5%, tickets 5%, milestones 3%,

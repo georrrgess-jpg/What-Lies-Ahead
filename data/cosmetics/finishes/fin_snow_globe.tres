@@ -9,7 +9,7 @@ display_name = "Snow Globe"
 description = "Glossy navy glass with fat snowflakes drifting down and a warm glow below. Polished silver trim."
 slot = &"weapon_finish"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.0392, 0.0784, 0.2392, 1, 0.8, 0.8196, 0.8784, 1)
 params = {
 "shader": "res://art/shaders/finish_snowglobe.gdshader"

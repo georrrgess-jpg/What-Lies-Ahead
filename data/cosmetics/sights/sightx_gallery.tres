@@ -16,7 +16,7 @@ description = "A round sight ringed with carnival bulbs; the reticle is a ring o
 slot = &"weapon_sight"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 colors = PackedColorArray(1, 0.698, 0.1216, 1, 0.9098, 0.149, 0.2275, 1)
 params = {
 "optic": "Gallery",

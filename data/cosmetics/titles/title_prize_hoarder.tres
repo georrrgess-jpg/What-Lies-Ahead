@@ -9,5 +9,5 @@ display_name = "Prize Hoarder"
 description = "The locker is getting full."
 slot = &"title"
 rarity = 1
-price = 1250
+price = 1000
 sort_order = 10112

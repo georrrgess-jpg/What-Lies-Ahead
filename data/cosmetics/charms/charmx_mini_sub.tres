@@ -9,7 +9,7 @@ display_name = "Mini Sub"
 description = "A yellow submarine with portholes and a periscope, straight from the tunnels."
 slot = &"weapon_charm"
 rarity = 1
-price = 650
+price = 750
 params = {
 "charm": "MiniSub"
 }

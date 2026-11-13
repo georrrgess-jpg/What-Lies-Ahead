@@ -9,7 +9,7 @@ display_name = "Champion"
 description = "A gold rosette with a star and a CHAMP ribbon, printed on holographic foil that shimmers as it turns."
 slot = &"weapon_decal"
 rarity = 3
-price = 5600
+price = 3000
 colors = PackedColorArray(1, 0.7608, 0.2392, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
 params = {
 "emblem": "Champion",

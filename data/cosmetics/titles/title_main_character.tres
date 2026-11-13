@@ -9,5 +9,5 @@ display_name = "Main Character"
 description = "The camera follows them around."
 slot = &"title"
 rarity = 2
-price = 2800
+price = 2000
 sort_order = 10242

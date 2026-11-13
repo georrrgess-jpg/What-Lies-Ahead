@@ -9,7 +9,7 @@ display_name = "Solar Flare"
 description = "The surface of a star: boiling plasma granules, and flares that swell and burst white-hot. Sunspot-dark trim with a fiery rim."
 slot = &"weapon_finish"
 rarity = 3
-price = 3000
+price = 3750
 colors = PackedColorArray(0.749, 0.1216, 0.0196, 1, 0.1216, 0.0392, 0.0196, 1)
 params = {
 "shader": "res://art/shaders/finish_solar.gdshader"

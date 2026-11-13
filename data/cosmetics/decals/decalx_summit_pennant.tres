@@ -16,7 +16,7 @@ description = "A felt pennant with snowy peaks and pines. Sold once you clear Su
 slot = &"weapon_decal"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 colors = PackedColorArray(0.1176, 0.5882, 0.549, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
 params = {
 "emblem": "SummitPennant",

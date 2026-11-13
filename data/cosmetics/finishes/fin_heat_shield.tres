@@ -9,7 +9,7 @@ display_name = "Heat Shield"
 description = "Black ceramic hex tiles with grey grout, like a shuttle's belly, and white tiles on the trim."
 slot = &"weapon_finish"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.102, 0.102, 0.1176, 1, 0.9098, 0.902, 0.8784, 1)
 params = {
 "shader": "res://art/shaders/finish_graphic.gdshader",

@@ -9,7 +9,7 @@ display_name = "Stunt Ace"
 description = "Rides the Wall of Death twice nightly in starred white leather. Zombies are just slower traffic."
 slot = &"avatar"
 rarity = 2
-price = 1500
+price = 2500
 colors = PackedColorArray(0.9098, 0.149, 0.2275, 1, 1, 0.7608, 0.2392, 1, 0.9686, 0.9569, 0.949, 1, 0.9686, 0.9569, 0.949, 1, 0.1843, 0.3098, 0.8118, 1, 0.9098, 0.149, 0.2275, 1)
 params = {
 "model": "res://art/models/operator_stunt_ace.glb",

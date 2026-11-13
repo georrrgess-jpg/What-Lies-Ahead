@@ -16,7 +16,7 @@ description = "A round penguin in a red bobble hat and a teal scarf. Sold once y
 slot = &"weapon_charm"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 params = {
 "charm": "Penguin"
 }

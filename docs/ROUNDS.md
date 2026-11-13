@@ -9,7 +9,7 @@ Data: `data/levels/<level>_waves.tres` (`WaveSet` + `WaveData`),
 ## Shape of a level
 
 Preparation, then waves with a break after each, then extraction through the
-portal. Prize Pier has **6 waves**, the other four worlds **7**. A wave lasts
+portal. Prize Pier has **6 waves**, the other nine worlds **7**. A wave lasts
 30-50 s, so with breaks a good run takes about 6-7 minutes on Prize Pier (the
 first level, straight after the tutorial) and 7-9 minutes elsewhere; the old
 8 flat waves ran 9-11. Fewer, bigger waves leave room for each to be about
@@ -26,6 +26,16 @@ Every level uses the same arc, with its own cast:
 | 5 | Jackpot Siege (twist: double tickets) | Blackout Ambush (twist: lights out) | The Golden Jelly (bounty) | Radiation Leak (siege) | The Golden Racer (bounty) |
 | 6 | **Big Bruno** | Riot Line (siege) | Feeding Frenzy (twist: enraged horde) | Zero-G Scramble (twist: low gravity) | Cold Front (ranged) |
 | 7 | | **Captain Lockdown** | **Inky the Great** | **Chief Burnout** | **Old Frostbite** (twist: whiteout) |
+
+| Wave | Midnight Mall | Lost Temple | Candy Works | Lava Lagoon | Sky Harbor |
+|---|---|---|---|---|---|
+| 1 | After Hours | The Queue Line | First Shift | Aloha | Boarding Call |
+| 2 | Power Walk (rush) | Vine Swingers (rush) | Conveyor Rush | Fire Dance (rush) | Freefall (rush) |
+| 3 | Security Breach (siege) | The Overgrowth (siege) | Taffy Time (ranged) | Last Call (ranged) | Balloon Barrage (ranged) |
+| 4 | Closing Time (ambush) **checkpoint** | Stampede (ambush) **checkpoint** | Shift Change (ambush) **checkpoint** | The Golden Dancer (bounty) **checkpoint** | The Golden Diver (bounty) **checkpoint** |
+| 5 | Power Cut (twist: power cut) | The Golden Explorer (bounty) | The Golden Gummy (bounty) | Lava Flow (ambush) | Heavy Weather (siege) |
+| 6 | The Golden Walker (bounty) | Monsoon (twist: monsoon) | Sugar Rush (twist: sugar rush) | Eruption (twist: eruption) | Gale Force (twist: gale) |
+| 7 | **The Night Manager** | **The Idol Keeper** | **The Confectioner** | **Kahuna Krakatoa** | **Captain Cumulus** |
 
 Breaks are 18 s (24 s before the finale, 14 s of preparation on Prize Pier,
 12 s elsewhere) and can always be skipped with the start-wave key. The HUD
@@ -91,9 +101,19 @@ pings are a full-screen overlay (`rounds_hud.gd`, `data/ui/hud_rounds.tres`).
 | Tidal Tunnels | Inky the Great | 2100 | Mascot Inker (the world has no heavy) | 5-glob lobbed ink volley at range; a fan of 7 slow ink orbs at mid range; ground slam |
 | Launch Pad 9 | Chief Burnout | 2000 | Jetpack Mechanic (no heavy) | jetpack hop with a 3 m landing blast; 3-flare volley; ground slam; a slow, heavy swing |
 | Summit Lodge | Old Frostbite | 2200 | Yeti | big snowball lob; 3-snowball fan; ground slam |
+| Midnight Mall | The Night Manager | 2250 | Mall Walker | power-walk burst with a shove; 4-orb volley; ground slam |
+| Lost Temple | The Idol Keeper | 2300 | Overgrown | vine lash that leaves slowing brambles; 4-orb volley; ground slam |
+| Candy Works | The Confectioner | 2350 | Taffy Puller | taffy yank; 5-orb volley; ground slam |
+| Lava Lagoon | Kahuna Krakatoa | 2400 | Tiki Bartender | lobbed coconut bombs; 3-orb volley; ground slam |
+| Sky Harbor | Captain Cumulus | 2500 | Sky Diver | dive from on high with a landing ring; 4-orb volley; ground slam |
 
-Alpha health climbs with the worlds (the first one, right after the tutorial,
-is the softest and the most telegraphed). The finale's horde lists its slow
+Alpha health climbs with the worlds, 1,800 to 2,500 in steps of 50-100 (the
+first one, right after the tutorial, is the softest and the most telegraphed;
+Captain Lockdown adds a 500-point shield, and Chief Burnout stays at 2,000
+because his jetpack hop already makes him a harder fight than Inky: at 2,150
+the bot lost both Launch Pad finales it played). The
+alphas of worlds 6-10 hit no harder than Old Frostbite (melee 16-24, slam
+13-20): what makes them tougher is health and their world's own pattern. The finale's horde lists its slow
 regular first: that type opens the wave and is the one that keeps trickling in
 as escorts while the alpha stands, so a finale is about the alpha, not about a
 stream of runners.
@@ -220,11 +240,28 @@ Retry and Main Menu drop the checkpoint. The result carries `resumed_from`,
 ## Station economy
 
 Income is kill tickets, the bounty prize (150-225), the alpha (200) and wave
-grades (up to 60 a wave). Prices rise with the world (energy 150-190, heal
-250-300, overshield 450-600, damage boost 400-600). A break usually affords
-one small purchase or half a big one, so energy, a heal, the overshield and
-the boost compete in every break; the Jackpot wave on Prize Pier is where a
-new player first has enough for the overshield or the boost.
+grades (up to 60 a wave). Every station price is a multiple of 25 and rises
+(or holds) world by world:
+
+| World | Energy | Heal | Overshield | Damage boost | Checkpoint tickets |
+|---|---|---|---|---|---|
+| Prize Pier | 150 | 250 | 450 | 400 | 350 |
+| Neon Skyline | 150 | 250 | 450 | 425 | 375 |
+| Tidal Tunnels | 175 | 275 | 450 | 450 | 400 |
+| Launch Pad 9 | 175 | 275 | 500 | 500 | 425 |
+| Summit Lodge | 200 | 300 | 600 | 600 | 450 |
+| Midnight Mall | 200 | 325 | 625 | 625 | 475 |
+| Lost Temple | 200 | 325 | 625 | 625 | 475 |
+| Candy Works | 200 | 325 | 650 | 650 | 475 |
+| Lava Lagoon | 200 | 325 | 650 | 650 | 475 |
+| Sky Harbor | 225 | 350 | 700 | 675 | 500 |
+
+A break usually affords one small purchase or half a big one, so energy, a
+heal, the overshield and the boost compete in every break; the Jackpot wave on
+Prize Pier is where a new player first has enough for the overshield or the
+boost. A Standard clear earns about 1,800-2,600 tickets (the later worlds have
+more and richer zombies) and the bot spends 1,500 on Prize Pier and 2,200-2,800
+from Summit Lodge on.
 
 ## Result keys and signals added
 
@@ -273,3 +310,41 @@ After: Standard 50/55 (the remaining losses are finales and one early Tidal
 Tunnels ink wave before the Inker was softened), Hard 11/17 (was 3/10 and 0/5),
 Casual 5/5. `python3 tools/balance_report.py` prints the weapons' time-to-kill
 table from data.
+
+### Worlds 6-10 in scope (update 6)
+
+The five new worlds were tuned on their own; this pass measured all ten
+together (bot, max profile, one run per cell per weapon, Pulse Pistol and Ion
+Carbine on Standard, the Ion Carbine on Hard and Casual). Clears, and the mean
+health left over the clears; run time is in game seconds (waves and breaks).
+
+| World | Alpha health | Standard before | Standard after | Hard before / after | Casual before / after | Run time (s) | Clear bonus (Sparks) |
+|---|---|---|---|---|---|---|---|
+| Prize Pier | 1800 | 2/2, 60 | 2/2, 55 | - | - | 220 | 150 |
+| Neon Skyline | 1900 + 500 | 1/2, 82 | 2/2, 82 | - | - | 250 | 175 |
+| Tidal Tunnels | 2100 | 2/2, 85 | 1/2, 28 | - | - | 280 | 200 |
+| Launch Pad 9 | 2000 | 2/2, 87 | 2/2, 37 | - | - | 280 | 225 |
+| Summit Lodge | 2200 | 2/2, 57 | 2/2, 66 | - | - | 280 | 250 |
+| Midnight Mall | 2050 -> 2250 | 1/4, 73 | 2/2, 55 | 0/1 / 0/1 | 1/1, 90 / 1/1, 100 | 295 | 275 |
+| Lost Temple | 2300 | 3/4, 53 | 2/2, 38 | 0/1 / 1/1, 49 | 1/1, 100 / 1/1, 100 | 300 | 300 |
+| Candy Works | 2500 -> 2350 | 1/4, 70 | 2/2, 89 | 0/1 / 1/1, 42 | 1/1, 100 / 1/1, 100 | 405 | 325 |
+| Lava Lagoon | 2050 -> 2400 | 2/4, 36 | 1/2, 34 | 1/1, 49 / 1/1, 23 | 1/1, 100 / 1/1, 100 | 330 | 350 |
+| Sky Harbor | 2700 -> 2500 | 2/4, 74 | 4/4, 41 | 0/1 / 1/1, 26 | 1/1, 100 / 1/1, 88 | 350 | 375 |
+
+Before, the new worlds were a cliff after Summit Lodge (Standard 9/20 against
+9/10 for worlds 1-5, nearly every loss in a finale: the Confectioner and the
+Night Manager dealt 60-95 per finale, Lava Lagoon's and Lost Temple's escorts
+40-45), and the alphas did not follow the curve (the Night Manager and Kahuna
+Krakatoa had less health than Old Frostbite, Captain Cumulus jumped to 2,700).
+After: Standard 11/12 for worlds 6-10. What changed: alpha health 2,250 /
+2,300 / 2,350 / 2,400 / 2,500; the Night Manager swings for 16 and slams for 18,
+the Confectioner swings for 20; Gummy Bears have 100 health (Candy Works' waves
+ran 40% longer than anyone else's); finale caps 11 (Lost Temple, Lava Lagoon,
+two shamblers fewer there), 13 (Candy Works), 14 with two Sky Divers fewer (Sky
+Harbor); Sky Harbor's gale wave cap 13 with two shamblers fewer; Midnight Mall's
+siege cap 10 with a walker fewer and a shambler fewer in wave 1. Station prices
+are on multiples of 25 and rise world by world (see above). Candy Works is
+still the longest run (about 6.5 minutes against 5-6): its last zombie or two
+of a wave can take 30-60 s to reach the player (93 s a run against about 30
+elsewhere), which is map and close-out work, not wave data.
+

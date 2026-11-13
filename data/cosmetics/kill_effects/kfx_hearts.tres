@@ -9,7 +9,7 @@ display_name = "Love Bomb"
 description = "Floating hearts. It is hard to stay mad."
 slot = &"kill_effect"
 rarity = 1
-price = 650
+price = 750
 params = {
 "effect": "hearts"
 }

@@ -9,7 +9,7 @@ display_name = "Carbon Neon"
 description = "Carbon-fibre twill under a clear coat, its weave shimmering as it turns, with glowing pink trim."
 slot = &"weapon_finish"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.1098, 0.1098, 0.1333, 1, 0.102, 0.102, 0.1255, 1)
 params = {
 "shader": "res://art/shaders/finish_textile.gdshader",

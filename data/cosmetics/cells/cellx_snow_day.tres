@@ -16,7 +16,7 @@ description = "Ice-blue glow with snow drifting down inside. Sold once you clear
 slot = &"weapon_cell"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 colors = PackedColorArray(0.4353, 0.8235, 1, 1, 1, 1, 1, 1)
 params = {
 "fx": "snow"

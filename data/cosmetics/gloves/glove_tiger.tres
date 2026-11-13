@@ -9,7 +9,7 @@ display_name = "Tiger Grip"
 description = "Bold stripes for a bold grip."
 slot = &"gloves"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(1, 0.5412, 0.1647, 1, 0.1098, 0.09412, 0.1882, 1, 0.9686, 0.9569, 0.949, 1, 1, 0.5412, 0.1647, 1, 0.1098, 0.09412, 0.1882, 1)
 params = {
 "pattern": "tiger",

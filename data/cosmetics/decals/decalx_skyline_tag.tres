@@ -16,7 +16,7 @@ description = "A spray-painted ZAP! tag with a crown and drips, peeled off a Neo
 slot = &"weapon_decal"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 colors = PackedColorArray(1, 0.3098, 0.6902, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
 params = {
 "emblem": "SkylineTag",

@@ -9,7 +9,7 @@ display_name = "Barber Pole"
 description = "Red and white candy stripes that never stop climbing."
 slot = &"weapon_cell"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(1, 0.1647, 0.2275, 1, 1, 1, 1, 1)
 params = {
 "fx": "stripes"

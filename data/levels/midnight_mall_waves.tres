@@ -7,7 +7,7 @@
 script = ExtResource("2")
 spawns = {
 "mall_walker": 7,
-"tourist_shambler": 6,
+"tourist_shambler": 5,
 "mall_flinger": 1
 }
 spawn_interval = 1.8
@@ -42,12 +42,12 @@ script = ExtResource("2")
 spawns = {
 "boardwalk_bruiser": 1,
 "mall_flinger": 4,
-"mall_walker": 10,
+"mall_walker": 9,
 "tourist_shambler": 3
 }
 spawn_interval = 1.35
 burst = 1
-max_alive = 11
+max_alive = 10
 speed_scale = 1.0
 late_types_after = 0.12
 banner = ""
@@ -145,7 +145,7 @@ checkpoint_wave = 4
 checkpoint_tickets = 475
 break_refill_fraction = 0.3
 ammo_topup_price = 200
-heal_price = 320
+heal_price = 325
 heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 20

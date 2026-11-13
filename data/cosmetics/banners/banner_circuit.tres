@@ -9,7 +9,7 @@ display_name = "Mainframe"
 description = "Data racing along glowing traces."
 slot = &"banner"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.01569, 0.08627, 0.05882, 1, 0.1843, 0.6588, 0.4157, 1, 0.3216, 0.9412, 0.8157, 1)
 params = {
 "style": 7

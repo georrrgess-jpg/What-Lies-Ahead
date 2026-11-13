@@ -9,7 +9,7 @@ display_name = "Balloon Sky"
 description = "A striped hot-air balloon drifting between fluffy clouds."
 slot = &"banner"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.55, 0.8, 1, 1, 1, 0.4, 0.45, 1, 1, 0.85, 0.3, 1)
 params = {
 "style": 33

@@ -90,7 +90,7 @@ kind = &"bounty"
 title = "THE GOLDEN EXPLORER"
 hint = "Pop the golden explorer before it gets away."
 bounty = &"jungle_explorer"
-bounty_tickets = 230
+bounty_tickets = 225
 
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
@@ -123,7 +123,7 @@ spawns = {
 }
 spawn_interval = 2.2
 burst = 2
-max_alive = 12
+max_alive = 11
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
@@ -140,14 +140,14 @@ waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), S
 prep_seconds = 12.0
 break_seconds = 18.0
 checkpoint_wave = 4
-checkpoint_tickets = 460
+checkpoint_tickets = 475
 break_refill_fraction = 0.3
-ammo_topup_price = 195
-heal_price = 310
+ammo_topup_price = 200
+heal_price = 325
 heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 20
 wave_bonus_per_wave = 5
-overshield_price = 620
+overshield_price = 625
 overshield_amount = 25.0
-damage_boost_price = 620
+damage_boost_price = 625

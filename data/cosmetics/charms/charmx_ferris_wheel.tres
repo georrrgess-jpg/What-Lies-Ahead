@@ -9,7 +9,7 @@ display_name = "Ferris Wheel"
 description = "A whole Ferris wheel on a keyring: the wheel really turns, cars, bulbs and all."
 slot = &"weapon_charm"
 rarity = 2
-price = 2800
+price = 2500
 params = {
 "charm": "FerrisWheel",
 "spin": 70

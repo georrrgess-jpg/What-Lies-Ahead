@@ -9,7 +9,7 @@ display_name = "Hot Streak"
 description = "For when you just cannot miss."
 slot = &"weapon_decal"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(1, 0.4157, 0.1647, 1, 0.1098, 0.09412, 0.1882, 1, 1, 0.851, 0.2314, 1)
 params = {
 "emblem": "Flame"

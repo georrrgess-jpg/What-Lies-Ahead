@@ -9,7 +9,7 @@ display_name = "Holo Diamond"
 description = "A holographic diamond that flashes every colour."
 slot = &"weapon_decal"
 rarity = 3
-price = 5600
+price = 3000
 colors = PackedColorArray(0.749, 0.9569, 1, 1, 1, 1, 1, 1, 0.1843, 0.6902, 0.8471, 1)
 params = {
 "emblem": "Diamond",

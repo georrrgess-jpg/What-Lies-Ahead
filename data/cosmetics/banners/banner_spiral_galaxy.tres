@@ -9,7 +9,7 @@ display_name = "Spiral Galaxy"
 description = "A whole galaxy turning slowly, its arms full of stars."
 slot = &"banner"
 rarity = 3
-price = 5600
+price = 3000
 colors = PackedColorArray(0.03, 0.02, 0.1, 1, 0.6, 0.35, 1, 1, 1, 0.85, 0.65, 1)
 params = {
 "style": 38

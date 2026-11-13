@@ -44,15 +44,18 @@ extends Resource
 @export var rank_sparks_per_rank := 10
 
 @export_group("Shop")
-## Price ladder by CosmeticItem.Rarity (COMMON, RARE, EPIC, LEGENDARY, MASTERY).
-## Items carry their own `price`; the ladder is what new items should use.
-@export var prices: PackedInt32Array = PackedInt32Array([250, 650, 1500, 3000, 0])
-## The showpiece price by rarity: the two or three best items of each shop
-## section cost this instead of the ladder price (0 = no showpiece tier).
-@export var premium_prices: PackedInt32Array = PackedInt32Array([0, 1250, 2800, 5600, 0])
-## Items in the daily featured selection, and their discount (0-1).
+## Price ladder by CosmeticItem.Rarity (COMMON, RARE, EPIC, LEGENDARY, MASTERY):
+## the least an item of that rarity costs. Items carry their own `price`; the
+## ladder is what an ordinary item of the rarity uses, a showpiece costs more
+## (up to the best items of the shop, each on its own price).
+@export var prices: PackedInt32Array = PackedInt32Array([250, 750, 1500, 3000, 0])
+## Every shop price is a multiple of this.
+@export var price_step := 250
+## Items in the daily featured selection, and their discount (0-1). With
+## prices on the 250 step, 20% always lands on a round number (200, 600,
+## 1,200, 2,400 ...).
 @export var featured_count := 4
-@export var featured_discount := 0.25
+@export var featured_discount := 0.2
 ## Slots whose shop items are flagged NEW until the player has looked at them.
 @export var new_slots: Array[StringName] = [&"weapon_sight"]
 
@@ -88,6 +91,14 @@ func price_for(rarity: CosmeticItem.Rarity) -> int:
 	return prices[int(rarity)] if int(rarity) < prices.size() else 0
 
 
-## The showpiece price for a rarity (0 if the rarity has none).
-func premium_for(rarity: CosmeticItem.Rarity) -> int:
-	return premium_prices[int(rarity)] if int(rarity) < premium_prices.size() else 0
+## Whether `price` is on the price rule (a positive multiple of price_step).
+func is_clean_price(price: int) -> bool:
+	return price > 0 and price % price_step == 0
+
+
+## `price` less `off` (0-1), rounded to 50 Sparks below 1,000 and to 100 from
+## 1,000, so a discounted price reads as cleanly as a full one.
+func discounted(price: int, off: float) -> int:
+	var raw := price * (1.0 - off)
+	var step := 50.0 if raw < 1000.0 else 100.0
+	return maxi(int(step), int(round(raw / step) * step))

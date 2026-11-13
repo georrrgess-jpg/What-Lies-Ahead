@@ -9,5 +9,5 @@ display_name = "Bumper Car Bandit"
 description = "Never once drove the right way."
 slot = &"title"
 rarity = 1
-price = 650
+price = 750
 sort_order = 10140
