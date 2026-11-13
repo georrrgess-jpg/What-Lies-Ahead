@@ -45,17 +45,22 @@ pause menu (`result["abandoned"] == true`). `result` is `RunDirector.result()`.
   Ranks (10, in Bronze/Silver/Gold/Diamond/Prismatic tiers) come from the shared
   curve in `data/progression/mastery_curve.tres`, copied into every weapon's
   `rank_xp` at startup, so new weapons need no rank table of their own.
-* Account XP rules (per kill, wave, clear, first clear) are in
-  `data/progression/rules.tres`; challenges are `.tres` files in
-  `data/progression/challenges/` (WEAPON challenges exist once per weapon).
+* Account XP rules (per kill, wave, clear, first clear) and the level curve are in
+  `data/progression/rules.tres`; Sparks payouts and shop prices in
+  `data/progression/economy.tres`; contracts are `.tres` files in
+  `data/progression/contracts/` and milestones in `data/progression/challenges/`.
+  The whole economy, its numbers and the `Wallet` / `ShopCatalog` API are in
+  [ECONOMY.md](ECONOMY.md); check a change with `python3 tools/economy_model.py`.
 
 ## Cosmetics
 
 * `CosmeticItem` (`scripts/data/cosmetic_item.gd`): `id`, `display_name`,
   `slot`, `weapon_id` (empty = fits all), `rarity`, `requirement`, `colors`,
-  `params`.
-* Slots in use: `weapon_finish`, `weapon_cell`, `weapon_decal`, `weapon_charm`
-  (per weapon) and `gloves`, `kill_effect`, `tracer`, `banner`, `title`,
+  `params`, `price` (Sparks; above 0 puts it in the Shop, and then `requirement`
+  only gates the purchase).
+* Slots in use: `weapon_finish`, `weapon_cell`, `weapon_decal`, `weapon_charm`,
+  `weapon_sight` (per weapon; a sight's model is a glb built by
+  `art/blender/build_sights.py`, its reticle and zoom in `params`) and `gloves`, `kill_effect`, `tracer`, `banner`, `title`,
   `avatar` (global). New slots can be added.
 * `Cosmetics` autoload: `items_for(slot, weapon_id)`, `is_owned`, `equip`,
   `equipped`, `weapon_loadout(weapon_id)`, `check_new_unlocks()`.
@@ -107,8 +112,12 @@ UI style lives in `UiKit` (`scripts/ui/ui_kit.gd`): palette constants,
 * `WeaponData` holds all tuning, aiming (`ads_*`), reticle style, recoil,
   viewmodel placement and `reload_style` / `reload_script`.
 * A viewmodel `.glb` follows the node contract documented at the top of
-  `art/blender/build_weapons.py` (Shell, Cell, CellHolo, ArmL/ArmR, Muzzle,
-  SightPoint, EjectPoint, VentPoint...).
+  `art/blender/build_weapons.py` and `art/blender/weapon_kit.py` (Shell, Cell,
+  CellHolo, ArmL/ArmR, Muzzle, SightPoint, EjectPoint, VentPoint...). For aiming:
+  a `SightMount` empty on the top rail where an optic's base sits, a `SightPoint`
+  empty on the eye line of the built-in sights, built-in sight parts named
+  `IronSight*` (hidden when an optic is fitted), a `CharmPoint`, and nothing else
+  rising into the sight line. `tools/ads_audit.gd` checks every weapon × sight.
 * Custom reloads: `reload_script` with `func play(view: WeaponView, d: float)`
   using `view.track / at / glow_ramp / holo_build / solidify / burst /
   hide_part / register_part` (see `weapon_view.gd`).
