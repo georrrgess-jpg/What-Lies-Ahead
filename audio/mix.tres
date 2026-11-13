@@ -137,7 +137,19 @@ sound_category = Dictionary[StringName, StringName]({
 &"neon_ambience": &"ambience",
 &"aqua_ambience": &"ambience",
 &"dune_ambience": &"ambience",
-&"frost_ambience": &"ambience"
+&"frost_ambience": &"ambience",
+&"lava_": &"enemy_voice",
+&"lava_dancer_spin": &"enemy_telegraph",
+&"lava_dancer_dash": &"enemy_telegraph",
+&"lava_bartender_call": &"enemy_telegraph",
+&"lava_coconut_throw": &"enemy_telegraph",
+&"lava_kahuna_roar": &"enemy_telegraph",
+&"lava_bomb_whistle": &"enemy_telegraph",
+&"lava_bomb_impact": &"enemy_attack",
+&"lava_eruption_rumble": &"cue",
+&"lava_lagoon_loop": &"music",
+&"lava_lagoon_final": &"music",
+&"lava_ambience": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
