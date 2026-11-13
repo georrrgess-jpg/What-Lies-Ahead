@@ -394,7 +394,7 @@ def op_deep_diver():
 def op_frost_guard():
     """Summit Lodge patroller: quilted parka with a fur-trimmed hood, goggles,
     knit scarf, mittens and snow boots."""
-    k = Kit("FG_", "#f2c8a8", dict(shoulder=1.08, chest=1.05, waist=1.2, hip=1.08, depth=1.02, arm=1.18, leg=1.06))
+    k = Kit("FG_", "#f2c8a8", dict(shoulder=1.02, chest=1.03, waist=1.14, hip=1.06, depth=1.02, arm=1.16, leg=1.06))
     parka = mat("Parka", "#4fb4ff", rough=0.55)
     parka_dark = mat("ParkaDark", "#2f7fcf", rough=0.55)
     fur = mat("Fur", "#f7f4f2", rough=0.95)
@@ -518,7 +518,7 @@ def op_astro_cadet():
 def op_midway_maestro():
     """Carnival barker: striped blazer over a waistcoat belly, bow tie, straw
     boater and a grand curled moustache."""
-    k = Kit("MM_", "#f2c09a", dict(belly=0.7, waist=1.18, chest=1.04, hip=1.05))
+    k = Kit("MM_", "#f2c09a", dict(belly=0.7, waist=1.16, chest=1.0, hip=1.05))
     pink = mat("StripePink", "#ff3f9f", rough=0.5)
     cream = mat("StripeCream", "#fff0d4", rough=0.5)
     straw = mat("Straw", "#f2cf7a", rough=0.75)
