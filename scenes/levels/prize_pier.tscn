@@ -340,6 +340,15 @@ size = Vector3(3.4, 3.6, 4.7)
 [sub_resource type="BoxShape3D" id="BoxShape3D_kak5l"]
 size = Vector3(3.2, 1, 1.5)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_sgnpch"]
+size = Vector3(3.2, 3, 1.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sgnpna"]
+size = Vector3(3.44, 1.87, 2.14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sgnpst"]
+size = Vector3(2.63, 2.32, 3.51)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_r0x0h"]
 size = Vector3(0.5, 5, 0.5)
 
@@ -2049,6 +2058,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.5, -20.5)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter3Collision" unique_id=394676535]
 shape = SubResource("BoxShape3D_f2d4d")
 
+[node name="PlayerWall" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props/Planter3Collision" unique_id=1849302117]
+collision_layer = 16
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter3Collision/PlayerWall" unique_id=1849302118]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("BoxShape3D_sgnpch")
+
 [node name="Planter4" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=2068971355 instance=ExtResource("15_lev24")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0, 20)
 
@@ -2072,6 +2089,14 @@ transform = Transform3D(0.8480481, 0, -0.52991927, 0, 1, 0, 0.52991927, 0, 0.848
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter5Collision" unique_id=1598673229]
 shape = SubResource("BoxShape3D_txkal")
+
+[node name="PlayerWall" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props/Planter5Collision" unique_id=1849302119]
+collision_layer = 16
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/Planter5Collision/PlayerWall" unique_id=1849302120]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("BoxShape3D_sgnpch")
 
 [node name="Bench0" type="Node3D" parent="NavigationRegion3D/Geometry/Props" unique_id=381565112 instance=ExtResource("16_pxil8")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 13, 0, 6.5)
@@ -2149,6 +2174,22 @@ collision_mask = 0
 [node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/SurfboardsCollision/PlayerWall" unique_id=801908036]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7, 0)
 shape = SubResource("BoxShape3D_iw2bf")
+
+[node name="SignpostNorthGuard" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1849302121]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.52, 3.745, -19.81)
+collision_layer = 16
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/SignpostNorthGuard" unique_id=1849302122]
+shape = SubResource("BoxShape3D_sgnpna")
+
+[node name="SignpostStartGuard" type="StaticBody3D" parent="NavigationRegion3D/Geometry/Props" unique_id=1849302123]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.155, 3.52, 12.805)
+collision_layer = 16
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Geometry/Props/SignpostStartGuard" unique_id=1849302124]
+shape = SubResource("BoxShape3D_sgnpst")
 
 [node name="Portal" type="Node3D" parent="NavigationRegion3D/Geometry" unique_id=424019180 instance=ExtResource("19_tlffp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, -51)

@@ -9,7 +9,9 @@ extends SceneTree
 ##     xvfb-run -a godot --audio-driver Dummy --rendering-driver opengl3 --path . --fixed-fps 60 \
 ##         --resolution 960x540 --script res://tools/move_probe.gd -- --frames=<dir>
 ##     saves <dir>/<move>_<tick>.png for a slide, a dash to the right, a mantle
-##     onto the planter and a long drop.
+##     onto the planter, a landing roll and a mantle at the signpost planter
+##     (its arrows are fenced off); with --level=boot_camp, the crate mantle,
+##     the barrier vault and the slide under the low sign, every other tick.
 ##
 ## Each scenario drives the player with InputMap actions and calls its
 ## _physics_process itself (the body's own physics processing is off), timing
@@ -29,8 +31,14 @@ const ACTIONS := ["move_forward", "move_back", "move_left", "move_right", "sprin
 const OPEN := Vector3(-14.0, 0.1, 2.0)
 ## Beside the ocean rail (x = 14), facing along it.
 const RAIL_SIDE := Vector3(13.4, 0.1, 2.0)
-## In front of a 1 m planter (Planter5, centre (0.6, 0, 12.8)), facing it.
-const PLANTER := Vector3(0.6, 0.1, 15.5)
+## In front of a 1 m planter (Planter0, centre (-12.5, 0, 10.5)), clear of
+## its palm, facing it.
+const PLANTER := Vector3(-11.6, 0.1, 13.0)
+## Boot Camp's movement lane (x -4.5..4.5, run toward -Z): a 1.2 m crate
+## stack at z -38, a 1 m barrier at z -45, a low sign at z -52.5.
+const CAMP_CRATE := Vector3(1.0, 0.1, -32.0)
+const CAMP_BARRIER := Vector3(1.0, 0.1, -38.0)
+const CAMP_SIGN := Vector3(1.0, 0.1, -45.0)
 const RAIL_X := 14.0
 
 var opts := {}
@@ -54,7 +62,10 @@ func _opt(key: String, default_value: String) -> String:
 
 func _run() -> void:
 	var game: Node = root.get_node("Game")
-	game.level = root.get_node("GameData").level(StringName(_opt("level", "prize_pier")))
+	var id := StringName(_opt("level", "prize_pier"))
+	game.level = root.get_node("GameData").level(id)
+	if game.level == null:
+		game.level = load("res://data/tutorial/%s.tres" % id)
 	game.weapon_id = &"pulse_pistol"
 	change_scene_to_file(game.level.scene_path)
 	var director = null
@@ -166,6 +177,9 @@ func _print_rows() -> void:
 
 func _film(dir: String) -> void:
 	DirAccess.make_dir_recursive_absolute(dir)
+	if _opt("level", "prize_pier") == "boot_camp":
+		await _film_course(dir)
+		return
 	await _rest(OPEN)
 	await _shoot(dir, "slide", 40, [16, 20, 26, 36], func(i): return ["move_forward", "sprint"] + (["slide"] if i == 14 else []))
 	await _rest(OPEN + Vector3(-3, 0, 0))
@@ -176,15 +190,31 @@ func _film(dir: String) -> void:
 	await _place(OPEN, 0.0)
 	player.global_position = OPEN + Vector3.UP * 4.0
 	await _shoot(dir, "drop", 44, [24, 31, 34, 40], func(_i): return ["move_left"])
+	await _place(Vector3(0.6, 0.1, 15.5), 0.0)
+	await _shoot(dir, "signpost", 40, range(10, 40, 3), func(i): return ["move_forward"] + (["jump"] if i % 10 < 3 else []))
+
+
+## Boot Camp: the crate mantle, the barrier vault at a sprint and the slide
+## under the low sign, a frame every other tick.
+func _film_course(dir: String) -> void:
+	await _place(CAMP_CRATE, 0.0)
+	await _shoot(dir, "crate", 70, range(44, 70, 2), func(i): return ["move_forward"] + (["jump"] if i % 12 < 3 else []))
+	await _place(CAMP_BARRIER, 0.0)
+	await _shoot(dir, "barrier", 70, range(46, 70, 2), func(i): return ["move_forward", "sprint"] + (["jump"] if i % 12 < 3 else []))
+	await _rest(CAMP_SIGN)
+	await _shoot(dir, "lowsign", 60, range(10, 60, 2), func(i): return ["move_forward", "sprint"] + (["slide"] if i == 12 else []))
 
 
 ## Runs `ticks` ticks with `step.call(i)` held, saving the frame after each tick in `at`.
 func _shoot(dir: String, name: String, ticks: int, at: Array, step: Callable) -> void:
 	for i in ticks:
 		var was_floor: bool = player.is_on_floor()
+		var was_moving: bool = player.is_traversing()
 		await _step(step.call(i))
 		if player.is_on_floor() != was_floor:
 			print("[move] %s: %s at tick %d" % [name, "landed" if was_floor == false else "left the floor", i])
+		if player.is_traversing() and not was_moving:
+			print("[move] %s: %s at tick %d" % [name, "vault" if player.traversal_is_vault() else "mantle", i])
 		if at.has(i):
 			await RenderingServer.frame_post_draw
 			var file := "%s/%s_%02d.png" % [dir, name, i]
