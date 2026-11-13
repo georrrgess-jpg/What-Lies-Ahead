@@ -15,7 +15,7 @@ windup = 1.2
 lock_fraction = 0.4
 overshoot = 3.0
 width = 2.4
-damage = 12.0
+damage = 11.0
 bramble_seconds = 3.0
 bramble_slow = 0.62
 
@@ -26,7 +26,7 @@ slam_damage = 20.0
 slam_cooldown = 9.0
 volley_shots = 5
 volley_min_range = 8.0
-volley_damage = 7.0
+volley_damage = 5.5
 volley_speed = 12.0
 volley_spread_degrees = 13.0
 volley_arc = 0.35

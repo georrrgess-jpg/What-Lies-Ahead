@@ -41,9 +41,8 @@ hint = "They steer slowly at full stride: sidestep and shoot."
 script = ExtResource("2")
 spawns = {
 "riot_bruiser": 1,
-"boardwalk_bruiser": 1,
 "mall_flinger": 4,
-"mall_walker": 8,
+"mall_walker": 10,
 "tourist_shambler": 3
 }
 spawn_interval = 1.35
@@ -79,14 +78,13 @@ hint = "Every door at once: use the escalators to break the crowd."
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"mall_walker": 10,
-"mall_flinger": 4,
-"neon_punk": 3,
-"tourist_shambler": 6
+"mall_walker": 12,
+"mall_flinger": 5,
+"tourist_shambler": 5
 }
 spawn_interval = 1.3
 burst = 1
-max_alive = 12
+max_alive = 11
 speed_scale = 1.06
 late_types_after = 0.2
 banner = ""
@@ -121,13 +119,13 @@ bounty_tickets = 225
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 10,
-"mall_walker": 8,
+"mall_walker": 9,
 "mall_flinger": 3,
 "lifeguard_runner": 2
 }
 spawn_interval = 2.0
 burst = 2
-max_alive = 13
+max_alive = 12
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""

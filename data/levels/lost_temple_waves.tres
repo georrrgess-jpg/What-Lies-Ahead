@@ -11,7 +11,7 @@ spawns = {
 }
 spawn_interval = 1.7
 burst = 1
-max_alive = 8
+max_alive = 9
 speed_scale = 1.0
 late_types_after = 0.35
 banner = ""
@@ -28,7 +28,7 @@ spawns = {
 }
 spawn_interval = 1.05
 burst = 1
-max_alive = 11
+max_alive = 12
 speed_scale = 1.0
 late_types_after = 0.0
 banner = ""
@@ -45,7 +45,7 @@ spawns = {
 }
 spawn_interval = 1.3
 burst = 1
-max_alive = 12
+max_alive = 13
 speed_scale = 1.0
 late_types_after = 0.12
 banner = ""
@@ -59,12 +59,12 @@ surge_count = 5
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 12,
-"jungle_explorer": 12,
+"jungle_explorer": 13,
 "lifeguard_runner": 4
 }
 spawn_interval = 3.2
 burst = 5
-max_alive = 13
+max_alive = 14
 speed_scale = 1.04
 late_types_after = 0.0
 banner = ""
@@ -77,10 +77,10 @@ script = ExtResource("2")
 spawns = {
 "tourist_shambler": 10,
 "jungle_explorer": 12,
-"jungle_overgrown": 2,
+"jungle_overgrown": 3,
 "lifeguard_runner": 4
 }
-spawn_interval = 1.22
+spawn_interval = 1.15
 burst = 1
 max_alive = 13
 speed_scale = 1.06
@@ -95,14 +95,14 @@ bounty_tickets = 230
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"jungle_overgrown": 2,
+"jungle_overgrown": 3,
 "mascot_inker": 3,
 "jungle_explorer": 10,
 "tourist_shambler": 10
 }
 spawn_interval = 1.36
 burst = 1
-max_alive = 13
+max_alive = 14
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
