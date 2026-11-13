@@ -1,8 +1,8 @@
 class_name LoadingScreen
 extends CanvasLayer
 ## Full-screen card shown while a level loads: the level's key art with a slow
-## Ken Burns pan, the world and level name in the level's accent colours, a tip
-## and a progress bar. The level scene is loaded on a background thread, then
+## Ken Burns pan, a kit signboard with the world, level, difficulty and the
+## loadout, a tip, and a marquee progress bar whose bulbs light up as it loads. The level scene is loaded on a background thread, then
 ## swapped in. A level without key art gets drifting accent stripes instead.
 
 ## Ken Burns: the art slowly zooms in and slides over this many seconds.
@@ -12,7 +12,7 @@ const PAN_ZOOM := Vector2(1.04, 1.13)
 var level: LevelData
 var _progress := 0.0
 var _shown_progress := 0.0
-var _bar: ProgressBar
+var _bar: _BulbBar
 var _status: Label
 var _art: TextureRect
 var _time := 0.0
@@ -106,45 +106,78 @@ func _shade(back: Color) -> Control:
 	return shade
 
 
-## World line, level name, tagline and a tip, on the left.
+## The signboard on the left: world, level name, tagline, difficulty and
+## the two weapons carried in, then a tip on a neon plate.
 func _text_column(world: WorldData, accent: Color) -> Control:
 	var col := VBoxContainer.new()
 	col.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
 	col.grow_vertical = Control.GROW_DIRECTION_BOTH
-	col.offset_left = 140
-	col.add_theme_constant_override("separation", 4)
+	col.offset_left = 120
+	col.offset_top = -40
+	col.offset_bottom = -40
+	col.add_theme_constant_override("separation", UiKit.GAP_M)
+	var board := UiKit.signboard()
+	board.set_padding(40, 30)
+	board.custom_minimum_size.x = 860
+	col.add_child(board)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", UiKit.GAP_S)
+	board.add_child(v)
 	var world_idx := GameData.worlds().find(world) + 1
-	col.add_child(UiKit.arcade_label("WORLD %d  ·  %s" % [world_idx, world.display_name.to_upper() if world else ""], 36, world.secondary_color if world else UiKit.CYAN))
-	col.add_child(UiKit.arcade_label(level.display_name.to_upper(), 120, Color.WHITE))
-	col.add_child(UiKit.label(world.tagline if world else "", 30, UiKit.CREAM))
-	col.add_child(UiKit.spacer(40))
+	v.add_child(UiKit.chip("WORLD %d  ·  %s" % [world_idx, world.display_name.to_upper() if world else ""], world.secondary_color if world else UiKit.CYAN, 24))
+	var title := UiKit.sign_label(level.display_name.to_upper(), 92)
+	v.add_child(title)
+	if world and world.tagline != "":
+		v.add_child(UiKit.body(world.tagline, 780, UiKit.SIZE_BODY, UiKit.CREAM))
+	v.add_child(UiKit.spacer(UiKit.GAP_XS))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiKit.GAP_M)
+	v.add_child(row)
+	var slots := Loadout.run_slots(Game.weapon_id if Game.weapon_id != &"" else Loadout.primary())
+	for i in 2:
+		var w := GameData.weapon(slots[i])
+		if w:
+			var plate := UiKit.slot_plate("%s [%d]" % [String(Loadout.SLOT_NAMES[i]).to_upper(), i + 1], w.display_name.to_upper(), UiKit.CYAN)
+			plate.active = i == 0
+			plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(plate)
+	var diff := HBoxContainer.new()
+	diff.add_theme_constant_override("separation", UiKit.GAP_S)
+	v.add_child(diff)
+	diff.add_child(UiKit.label("DIFFICULTY", UiKit.SIZE_LABEL, UiKit.MUTED, true))
+	diff.add_child(UiKit.chip(Difficulty.label(Difficulty.current()), UiKit.AMBER, 22))
 	var tip_text := level.loading_tips[randi() % level.loading_tips.size()] if level.loading_tips.size() > 0 else "Headshots multiply your score."
-	var tip_box := PanelContainer.new()
-	tip_box.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.78), accent, 16, 3, 18))
-	tip_box.custom_minimum_size = Vector2(820, 0)
-	var tip := UiKit.label("TIP  ·  " + tip_text, 28, Color.WHITE)
-	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	tip_box.add_child(tip)
+	var tip_box := UiKit.neon_panel(accent)
+	tip_box.set_padding(26, 14)
+	tip_box.custom_minimum_size.x = 860
+	var tip_row := HBoxContainer.new()
+	tip_row.add_theme_constant_override("separation", UiKit.GAP_M)
+	tip_box.add_child(tip_row)
+	tip_row.add_child(UiKit.chip("TIP", accent, 22))
+	tip_row.add_child(UiKit.body(tip_text, 700, UiKit.SIZE_BODY, Color.WHITE))
 	col.add_child(tip_box)
+	UiFx.stagger_in.call_deferred([board, tip_box], 0.1, 0.12)
 	return col
 
 
-## "LOADING 42%" over a bar along the bottom, plus an accent strip at the edge.
+## "LOADING 42%" over a marquee bar of bulbs along the bottom, plus an accent
+## strip at the screen edge.
 func _add_progress(root: Control, accent: Color) -> void:
 	_status = UiKit.arcade_label("LOADING", 30, Color.WHITE)
 	root.add_child(_status)
 	_status.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	_status.offset_left = 140
+	_status.offset_left = 120
 	_status.offset_right = 700
-	_status.offset_top = -142
-	_status.offset_bottom = -100
-	_bar = UiKit.progress(0.0, 16.0, accent)
+	_status.offset_top = -150
+	_status.offset_bottom = -108
+	_bar = _BulbBar.new()
+	_bar.accent = accent
 	root.add_child(_bar)
 	_bar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	_bar.offset_left = 140
-	_bar.offset_right = -140
-	_bar.offset_top = -92
-	_bar.offset_bottom = -76
+	_bar.offset_left = 120
+	_bar.offset_right = -120
+	_bar.offset_top = -104
+	_bar.offset_bottom = -58
 	var strip := ColorRect.new()
 	strip.color = accent
 	root.add_child(strip)
@@ -219,3 +252,42 @@ class _Stripes:
 			draw_colored_polygon(pts, Color(c, 0.07))
 			x += w * 2.0
 			i += 1
+
+
+## The marquee progress bar: a dark rail with a row of bulbs that light up
+## as the level loads, the newest one flaring. Redraws only when it changes.
+class _BulbBar:
+	extends Control
+	const SPACING := 40.0
+	var accent := UiKit.PINK
+	var value := 0.0:
+		set(v):
+			var lit := int(v * _count())
+			value = v
+			if lit != _lit:
+				_lit = lit
+				queue_redraw()
+	var _lit := -1
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		resized.connect(queue_redraw)
+
+	func _count() -> int:
+		return maxi(1, int((size.x - SPACING) / SPACING) + 1)
+
+	func _draw() -> void:
+		var rail := UiKit.box(Color(UiKit.INK, 0.86), Color(accent, 0.8), int(size.y * 0.5), 3, 0)
+		draw_style_box(rail, Rect2(Vector2.ZERO, size))
+		var on := KitTex.tex(&"bulb_on")
+		var off := KitTex.tex(&"bulb_off")
+		if on == null or off == null:
+			return
+		var n := _count()
+		var bulb := size.y - 12.0
+		var step := (size.x - SPACING) / maxf(1.0, n - 1)
+		for i in n:
+			var c := Vector2(SPACING * 0.5 + step * i, size.y * 0.5)
+			var lit := i < _lit
+			var r := bulb * (1.2 if lit and i == _lit - 1 else 1.0)
+			draw_texture_rect(on if lit else off, Rect2(c - Vector2(r, r) * 0.5, Vector2(r, r)), false)

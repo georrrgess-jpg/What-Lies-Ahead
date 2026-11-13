@@ -6,7 +6,7 @@ extends Node
 ##
 ## Options (all optional):
 ##   --shot-level=<id>     level to load (default prize_pier)
-##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|kit|<any menu page id: play, settings, locker, arsenal, career, ...>
+##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|kit|loading|<any menu page id: play, settings, locker, arsenal, career, ...>
 ##                         (kit = the UI kit gallery, scripts/ui/kit/kit_gallery.gd)
 ##   --shot-keys=a,b,...   on a menu page: press these in turn before the capture and print the
 ##                         page and the focused control after each (keyboard-only navigation
@@ -41,6 +41,7 @@ extends Node
 ##   --shot-ads=1          hold aim-down-sights (0.5 = half-way through raising the sight)
 ##   --shot-sight=<id>     fit this sight (data/cosmetics/sights) to the weapon for the shot
 ##   --shot-threat=1       a zombie behind-right of the player starts its windup (threat warning check)
+##   --shot-banner=wave|final|cleared|boss|portal|victory|defeat   play that HUD banner before the capture
 
 var path := ""
 var args := {}
@@ -111,6 +112,9 @@ func _run() -> void:
 		if scene_kind == "kit":
 			# The UI kit's gallery: every component on one screen.
 			menu.add_child(KitGallery.new())
+		elif scene_kind == "loading":
+			# The loading card over the menu, caught before the level swaps in.
+			LoadingScreen.start(get_tree(), GameData.level(StringName(_arg("level", "prize_pier"))))
 		elif scene_kind != "menu":
 			menu._show(scene_kind)
 		_stage_wallet()
@@ -157,8 +161,15 @@ func _run() -> void:
 	player.camera.fov = fov
 
 	if scene_kind == "kiosk":
+		# A break at the station: the player stands in it with a boost loaded.
+		director.wave_number = 3
+		director.countdown = 18.0
+		director._set_state(RunDirector.State.BREAK)
+		director.kiosk.set_open(true)
+		director.kiosk.player_inside = true
 		director.tickets = 260
 		director.tickets_changed.emit(260)
+		director._set_damage_boost(RunDirector.Boost.READY)
 		player.health = 60.0
 		player.health_changed.emit(60.0, 100.0)
 	elif scene_kind in ["results", "defeat"]:
@@ -169,6 +180,8 @@ func _run() -> void:
 		director.wave_number = 8 if scene_kind == "results" else 6
 		director.waves_cleared = 8 if scene_kind == "results" else 5
 		director.state = RunDirector.State.CLEARED if scene_kind == "results" else RunDirector.State.DEFEAT
+		# A defeat past a checkpoint offers CONTINUE FROM WAVE 5.
+		Game.checkpoint_wave = 5 if scene_kind == "defeat" else 0
 		var screen = (load(RunDirector.RESULTS_SCENE) as PackedScene).instantiate()
 		director.get_parent().add_child(screen)
 		screen.show_result(director.result())
@@ -243,10 +256,36 @@ func _run() -> void:
 		z.speed = 0.0
 		await _wait(2)
 		z._begin_attack()
+	if _arg("banner", "") != "":
+		await _wait(20)
+		_stage_banner(director, _arg("banner", ""))
 	if _arg("hurt", "0") == "1":
 		await _wait(5)
 		player.take_damage(20.0, player.global_position - player.global_transform.basis.x * 4.0)
 	await _capture(int(_arg("frames", "45")))
+
+
+## --shot-banner: plays one of the HUD's big moments the way the run sends it.
+func _stage_banner(director: RunDirector, kind: String) -> void:
+	var total := director.total_waves()
+	match kind:
+		"wave":
+			director.wave_started.emit(4, total, "WAVE 4 — RUNNERS INCOMING")
+		"final":
+			director.wave_started.emit(total, total, "FINAL WAVE — LIFEGUARD RUSH")
+		"cleared":
+			director.score.on_wave_cleared(3)
+			director.notice.emit("WAVE 3 CLEARED  +12 energy", &"banner")
+		"boss":
+			director.wave_started.emit(5, total, "")
+			director.notice.emit("BOSS — BIG TOP BRUISER", &"banner_boss")
+		"portal":
+			director._set_state(RunDirector.State.EXTRACTION)
+			director.notice.emit("PORTAL OPEN — FOLLOW THE LIGHTS", &"banner")
+		"victory", "defeat":
+			director.wave_number = 6
+			director.state = RunDirector.State.CLEARED if kind == "victory" else RunDirector.State.DEFEAT
+			director.hud._on_run_finished(director.result())
 
 
 ## Locker page: weapon (--shot-weapon), tab (--shot-locker), item (--shot-item).
