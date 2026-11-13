@@ -11,7 +11,7 @@ target = &"summit_lodge"
 [resource]
 script = ExtResource("1")
 id = &"sightx_frostbite"
-display_name = "Frostbite"
+display_name = "Icicle"
 description = "A frosted tube with icy fins and a snowflake reticle. Sold once you clear Summit Lodge."
 slot = &"weapon_sight"
 rarity = 1

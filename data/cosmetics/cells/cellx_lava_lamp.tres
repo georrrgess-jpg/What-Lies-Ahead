@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = &"cellx_lava_lamp"
-display_name = "Lava Lamp"
+display_name = "Groovy Goo"
 description = "Fat orange blobs rising and sinking through deep red, groovy and slow."
 slot = &"weapon_cell"
 rarity = 2

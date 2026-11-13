@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = &"sightx_starburst"
-display_name = "Starburst"
+display_name = "Supernova"
 description = "A star-shaped bezel round the glass, and eight rays that point at the target."
 slot = &"weapon_sight"
 rarity = 1

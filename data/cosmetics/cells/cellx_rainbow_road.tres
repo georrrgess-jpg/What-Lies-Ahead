@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = &"cellx_rainbow_road"
-display_name = "Rainbow Road"
+display_name = "Spectrum Rush"
 description = "Every colour at once, in bands racing along the cell. The showiest cell on the pier."
 slot = &"weapon_cell"
 rarity = 3

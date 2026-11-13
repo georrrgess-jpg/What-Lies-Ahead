@@ -11,7 +11,7 @@ amount = 6
 [resource]
 script = ExtResource("1")
 id = &"cellx_aurora"
-display_name = "Aurora"
+display_name = "Northern Lights"
 description = "Flows from green to teal to violet under rippling curtains of light."
 slot = &"weapon_cell"
 rarity = 2

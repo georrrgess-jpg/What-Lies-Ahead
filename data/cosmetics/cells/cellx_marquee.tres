@@ -11,7 +11,7 @@ target = &"prize_pier"
 [resource]
 script = ExtResource("1")
 id = &"cellx_marquee"
-display_name = "Marquee"
+display_name = "Bulb Chase"
 description = "A row of warm bulbs chasing along the cell like a pier sign. Sold once you clear Prize Pier."
 slot = &"weapon_cell"
 rarity = 1

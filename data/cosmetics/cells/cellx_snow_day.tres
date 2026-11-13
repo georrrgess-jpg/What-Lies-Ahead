@@ -11,7 +11,7 @@ target = &"summit_lodge"
 [resource]
 script = ExtResource("1")
 id = &"cellx_snow_day"
-display_name = "Snow Day"
+display_name = "Flurry"
 description = "Ice-blue glow with snow drifting down inside. Sold once you clear Summit Lodge."
 slot = &"weapon_cell"
 rarity = 1

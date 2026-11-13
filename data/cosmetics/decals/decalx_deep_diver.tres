@@ -11,7 +11,7 @@ target = &"tidal_tunnels"
 [resource]
 script = ExtResource("1")
 id = &"decalx_deep_diver"
-display_name = "Deep Diver"
+display_name = "Reef Peek"
 description = "A clownfish peeking through a brass porthole. Sold once you clear Tidal Tunnels."
 slot = &"weapon_decal"
 rarity = 1
