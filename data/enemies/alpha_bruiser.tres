@@ -6,16 +6,16 @@
 [sub_resource type="Resource" id="alpha"]
 script = ExtResource("alpha_script")
 color = Color(1, 0.42, 0.72, 1)
-slam_damage = 20.0
-slam_trigger = 4.8
-slam_radius = 6.2
-slam_cooldown = 7.0
+slam_damage = 18.0
+slam_trigger = 4.2
+slam_radius = 5.5
+slam_cooldown = 8.0
 volley_shots = 3
 volley_damage = 7.0
 volley_speed = 12.0
 volley_spread_degrees = 12.0
 volley_arc = 0.45
-volley_cooldown = 6.5
+volley_cooldown = 7.5
 volley_size = 0.36
 volley_max_range = 22.0
 
@@ -23,7 +23,7 @@ volley_max_range = 22.0
 script = ExtResource("1")
 id = &"alpha_bruiser"
 display_name = "Big Bruno"
-max_health = 2800.0
+max_health = 2100.0
 move_speed = 2.3
 speed_variance = 0.0
 turn_speed = 3.5

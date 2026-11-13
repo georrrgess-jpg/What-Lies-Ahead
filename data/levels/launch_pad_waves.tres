@@ -113,14 +113,14 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"dune_jet_mechanic": 14,
+"dune_jet_mechanic": 12,
 "dune_space_cadet": 12,
 "dune_hazmat_worker": 6
 }
 spawn_interval = 2.0
 burst = 2
 max_alive = 13
-speed_scale = 1.12
+speed_scale = 1.08
 late_types_after = 0.1
 banner = ""
 kind = &"finale"
