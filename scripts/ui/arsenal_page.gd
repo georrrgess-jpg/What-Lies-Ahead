@@ -369,6 +369,7 @@ func _build_stage() -> void:
 	_turntable.add_child(_pivot)
 	for part: Node3D in _forks + _collars:
 		part.get_parent().remove_child(part)
+		part.owner = null
 		_turntable.add_child(part)
 	_ring = MeshInstance3D.new()
 	var torus := TorusMesh.new()

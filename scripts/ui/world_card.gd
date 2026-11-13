@@ -71,7 +71,8 @@ func _ready() -> void:
 	add_child(_frame)
 	var v := VBoxContainer.new()
 	v.position = Vector2(26, 20)
-	v.size = Vector2(SIZE.x - 52, SIZE.y - 42)
+	# A locked card keeps its title clear of the padlock in the corner.
+	v.size = Vector2(SIZE.x - 52 - (64.0 if not _unlocked else 0.0), SIZE.y - 42)
 	v.add_theme_constant_override("separation", 0)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(v)

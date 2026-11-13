@@ -14,8 +14,8 @@ extends Node3D
 ## Trimmed for the menu (the menu runs no level, and the camera barely moves):
 ##   - gameplay only: the RunDirector, collision shapes, the navigation mesh;
 ##   - props behind the camera or smaller on screen than MIN_ANGLE are hidden,
-##     small far props stop casting shadows, lights that cannot reach the view
-##     are switched off, and the sun's shadows end at SHADOW_DISTANCE.
+##     small props cast no shadow, lights that cannot reach the view are
+##     switched off, and the sun's shadows end at SHADOW_DISTANCE.
 ## PackedScenes stay cached (CACHE of them; the one on screen survives a run,
 ## so coming back from a level shows it again without a load).
 
@@ -35,10 +35,11 @@ const SETTLE := 0.2
 const MIN_ANGLE := 0.0085
 ## How far the drifting camera strays from its anchor, metres.
 const STRAY := 6.0
-## Props below this radius stop casting shadows past SHADOW_NEAR metres.
-const SMALL_CASTER := 1.2
-const SHADOW_NEAR := 22.0
-const SHADOW_DISTANCE := 60.0
+## Props below this radius cast no shadow (the menu camera stays far from
+## them; in the sun's shadow pass they were a third of all draw calls).
+const SMALL_CASTER := 2.0
+## The sun's shadows end here: about the menu camera's distance to its target.
+const SHADOW_DISTANCE := 40.0
 ## Nodes the menu never needs, by class.
 const GAMEPLAY_ONLY := ["CollisionShape3D", "CollisionPolygon3D"]
 
@@ -310,7 +311,7 @@ class _View:
 		var tiny := radius / maxf(dist - MenuBackdrop.STRAY, 1.0) < MenuBackdrop.MIN_ANGLE
 		if behind or tiny:
 			gi.visible = false
-		elif radius < MenuBackdrop.SMALL_CASTER and dist > MenuBackdrop.SHADOW_NEAR:
+		elif radius < MenuBackdrop.SMALL_CASTER:
 			gi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 	func trim_light(light: Light3D, x: Transform3D) -> void:
