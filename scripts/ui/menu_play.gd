@@ -9,6 +9,8 @@ extends MenuPage
 signal world_changed(level: LevelData)
 
 const ENEMY_CHIPS := 7
+## Size of the level's key art on the details board.
+const ART_SIZE := Vector2(448, 252)
 
 var selected_level: LevelData
 ## Starter weapon for dev runs (the saved Loadout is used otherwise).
@@ -23,6 +25,7 @@ var _level_tabs: HBoxContainer
 var _stats: HBoxContainer
 var _enemies: HFlowContainer
 var _lock: Label
+var _art: TextureRect
 var _plates: Array[SlotPlate] = []
 var _difficulty: KitTabs
 var _difficulty_note: Label
@@ -107,12 +110,22 @@ func _build_info() -> Control:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	board.add_child(v)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", UiKit.GAP_L)
+	v.add_child(head)
+	var text := VBoxContainer.new()
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.add_theme_constant_override("separation", 6)
+	head.add_child(text)
+	head.add_child(_build_art())
 	_world_caption = UiKit.label("", UiKit.SIZE_LABEL, UiKit.CYAN, true)
-	v.add_child(_world_caption)
+	text.add_child(_world_caption)
 	_level_name = UiKit.sign_label("", 68)
-	v.add_child(_level_name)
-	_blurb = UiKit.body("", 600)
-	v.add_child(_blurb)
+	_level_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_level_name.add_theme_constant_override("line_spacing", -14)
+	text.add_child(_level_name)
+	_blurb = UiKit.body("", 420)
+	text.add_child(_blurb)
 	_level_tabs = HBoxContainer.new()
 	_level_tabs.add_theme_constant_override("separation", UiKit.GAP_S)
 	v.add_child(_level_tabs)
@@ -130,6 +143,23 @@ func _build_info() -> Control:
 	_lock = UiKit.sign_label("", 30, UiKit.AMBER)
 	v.add_child(_lock)
 	return board
+
+
+## The level's key art in a rounded frame (hidden for a level without one).
+func _build_art() -> Control:
+	_art = TextureRect.new()
+	_art.custom_minimum_size = ART_SIZE
+	_art.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var m := ShaderMaterial.new()
+	m.shader = load(KeyArt.CARD_SHADER)
+	m.set_shader_parameter("rect_size", ART_SIZE)
+	m.set_shader_parameter("radius", 18.0)
+	m.set_shader_parameter("shade_amount", 0.0)
+	_art.material = m
+	return _art
 
 
 ## Loadout, difficulty and DEPLOY.
@@ -256,6 +286,9 @@ func _refresh_details() -> void:
 	_world_caption.add_theme_color_override("font_color", world.secondary_color)
 	_level_name.text = level.display_name.to_upper() if level else "COMING SOON"
 	_blurb.text = level.blurb if level and level.blurb != "" else world.blurb
+	_art.texture = KeyArt.texture(level)
+	_art.visible = _art.texture != null
+	(_art.material as ShaderMaterial).set_shader_parameter("saturation", 1.0 if unlocked else 0.25)
 	_fill_level_tabs(world, level)
 	_fill_stats(world, level, unlocked)
 	_fill_enemies(level)

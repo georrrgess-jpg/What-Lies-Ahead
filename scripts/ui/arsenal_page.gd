@@ -20,7 +20,7 @@ const CAMERA_TO := Vector3(0.33, 0.22, 0.0)
 ## The work lamp's bulb (see LAMP in build_menu_booth.py).
 const LAMP_AT := Vector3(-0.42, 0.57, -0.3)
 ## The previewed weapon is scaled to fit this length and height on the stand.
-const FIT := Vector2(0.84, 0.35)
+const FIT := Vector2(0.92, 0.38)
 ## Width of the signboard.
 const BOARD_WIDTH := 640.0
 ## Half size of a cradle pad: along the weapon, across it.
@@ -408,8 +408,9 @@ func _add_stage_environment() -> void:
 	_viewport.add_child(we)
 
 
-## A low pink sun from behind, the work lamp (the only shadow caster) and a
-## cool fill from the camera side.
+## A low pink sun from behind, the work lamp (a spot, the only shadow caster,
+## and a soft glow that warms the booth around it) and a cool fill from the
+## camera side.
 func _add_stage_lights() -> void:
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-18, -150, 0)
@@ -425,10 +426,16 @@ func _add_stage_lights() -> void:
 	lamp.light_color = Color(1.0, 0.82, 0.55)
 	lamp.shadow_enabled = true
 	_viewport.add_child(lamp)
+	var glow := OmniLight3D.new()
+	glow.position = LAMP_AT + Vector3(0.0, -0.08, 0.1)
+	glow.omni_range = 2.4
+	glow.light_energy = 1.3
+	glow.light_color = Color(1.0, 0.8, 0.55)
+	_viewport.add_child(glow)
 	var fill := OmniLight3D.new()
-	fill.position = Vector3(-0.2, 0.8, 1.9)
-	fill.omni_range = 6.0
-	fill.light_energy = 0.6
+	fill.position = Vector3(-0.4, 0.9, 1.9)
+	fill.omni_range = 7.0
+	fill.light_energy = 1.1
 	fill.light_color = Color(0.6, 0.75, 1.0)
 	_viewport.add_child(fill)
 

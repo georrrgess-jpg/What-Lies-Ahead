@@ -47,8 +47,8 @@ def build_bench():
 
 def build_wall():
     teal, tdark = mat("BoothTeal", "#1f8f8a"), mat("BoothTealDark", "#135e5f")
-    peg, cream, metal = mat("Pegboard", "#2b2342"), mat("Cream"), mat("ToolSteel", "#b8b4c4", rough=0.35, metal=0.6)
-    hole = mat("PegHole", "#171226")
+    peg, cream, metal = mat("Pegboard", "#473a6e"), mat("Cream"), mat("ToolSteel", "#b8b4c4", rough=0.35, metal=0.6)
+    hole = mat("PegHole", "#231b3d")
     parts = [
         box("Pegboard", (1.36, 0.05, 0.68), (-0.98, 0.62, 0.42), bevel=0.01, m=peg),
         box("PostL", (0.11, 0.11, 0.95), (-1.72, 0.6, 0.4), bevel=0.02, m=teal),
