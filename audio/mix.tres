@@ -166,7 +166,19 @@ sound_category = Dictionary[StringName, StringName]({
 &"candy_taffy_whirl": &"enemy_telegraph",
 &"candy_taffy_snap": &"enemy_attack",
 &"candy_gummy_wobble": &"enemy_special",
-&"candy_siren": &"cue"
+&"candy_siren": &"cue",
+&"mall_": &"enemy_voice",
+&"mall_walker_whistle": &"enemy_telegraph",
+&"mall_walker_burst": &"enemy_telegraph",
+&"mall_soda_shake": &"enemy_telegraph",
+&"mall_soda_throw": &"enemy_telegraph",
+&"mall_manager_whistle": &"enemy_telegraph",
+&"mall_soda_splash": &"enemy_attack",
+&"mall_power_down": &"cue",
+&"mall_power_up": &"cue",
+&"midnight_mall_loop": &"music",
+&"midnight_mall_final": &"music",
+&"mall_ambience": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,

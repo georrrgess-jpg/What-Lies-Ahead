@@ -14,8 +14,14 @@ extends RefCounted
 ##                prop sounds the sirens)
 ##   whiteout     Summit Lodge: the storm closes in (the level's FrostWeather
 ##                prop brings the fog and wind on the final wave)
+##   power_cut    Midnight Mall: the mains trip (the level's environment script
+##                cuts the lights to the moon and red emergency lamps)
+##   monsoon      Lost Temple: a jungle storm (the level's JungleWeather prop
+##                brings rain, fog and lightning)
+##   eruption     Lava Lagoon: the volcano throws ember bombs, each marked by a
+##                glowing ring (the level's LavaEruption prop)
 
-const IDS: Array[StringName] = [&"jackpot", &"blackout", &"frenzy", &"low_gravity", &"whiteout", &"sugar_rush"]
+const IDS: Array[StringName] = [&"jackpot", &"blackout", &"frenzy", &"low_gravity", &"whiteout", &"sugar_rush", &"power_cut", &"monsoon", &"eruption"]
 
 const JACKPOT_TICKETS := 2.0
 const BLACKOUT_LIGHT := 0.32

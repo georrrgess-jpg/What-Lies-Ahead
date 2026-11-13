@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/mall_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/mall_power_walk.gd" id="4"]
+
+[sub_resource type="Resource" id="burst"]
+script = ExtResource("4")
+min_range = 5.0
+max_range = 18.0
+windup = 0.75
+burst_speed = 7.0
+burst_time = 1.7
+steer_degrees = 28.0
+recover_time = 1.0
+cooldown = 6.0
+damage = 8.0
+hit_radius = 1.2
+shove = 6.0
+
+[resource]
+script = ExtResource("1")
+id = &"mall_walker"
+display_name = "Mall Walker"
+max_health = 70.0
+move_speed = 2.7
+speed_variance = 0.1
+turn_speed = 6.0
+tickets = 18
+score = 220
+xp = 18
+damage = 12.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.5
+attack_recover = 0.75
+lunge_speed = 3.8
+mass = 1.0
+flank_degrees = 80.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Walker"
+body_scale = 0.98
+capsule_radius = 0.42
+capsule_height = 1.9
+head_height = 1.25
+shirt_colors = Array[Color]([Color(0.88, 0.13, 0.54, 1), Color(0.15, 0.72, 0.78, 1), Color(0.48, 0.3, 0.9, 1), Color(1, 0.55, 0.15, 1), Color(0.3, 0.5, 0.95, 1)])
+skin_colors = Array[Color]([Color(0.61, 0.79, 0.63, 1), Color(0.56, 0.76, 0.68, 1), Color(0.66, 0.8, 0.58, 1)])
+accessory_slots = PackedStringArray("Acc_Walker_Pack|Acc_Walker_Pack|", "Acc_Walker_Watch", "Acc_Walker_Visor||")
+move_animation = &"Walk"
+animation_reference_speed = 2.5
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("burst")])
+voice_sounds = Array[StringName]([&"mall_walker_huff_1", &"mall_walker_huff_2"])
+voice_interval = Vector2(2.5, 5.0)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"
