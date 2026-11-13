@@ -7,7 +7,7 @@ Dancer, Tiki Bartender and Kahuna Krakatoa voices, coconuts and the eruption.
                                         steel-guitar slide lead, log drums and shakers
     audio/music/lava_lagoon_final.ogg   its final-wave variant (war drums, conch
                                         calls, a driving tom pattern)
-    audio/music/lava_ambience.ogg       surf on the beach, the lava river's bubbling
+    audio/music/lava_ambience.ogg       16 s: surf on the beach, the lava river's bubbling
                                         rumble, torch crackle and night birds
     audio/sfx/lava_*.wav                enemy and effect sounds
 """
@@ -140,34 +140,34 @@ def lava_lagoon_loop(intense=False):
 
 
 def lava_ambience():
-    """24 s seamless bed: surf rolling on the beach, the lava river's slow
+    """16 s seamless bed: surf rolling on the beach, the lava river's slow
     bubbling rumble, torch crackle and a few night birds."""
-    d = 24.0
+    d = 16.0
     n = int(SR * (d + 1.0))
     t = np.arange(n) / SR
     surf_l = filt(rng.uniform(-1, 1, n), low=1400, high=120)
     surf_r = filt(rng.uniform(-1, 1, n), low=1400, high=120)
-    swell = (0.5 + 0.5 * np.sin(2 * np.pi * t / 6.0 - 1.0)) ** 3
-    swell_r = (0.5 + 0.5 * np.sin(2 * np.pi * t / 6.0 + 0.5)) ** 3
+    swell = (0.5 + 0.5 * np.sin(2 * np.pi * t / 8.0 - 1.0)) ** 3
+    swell_r = (0.5 + 0.5 * np.sin(2 * np.pi * t / 8.0 + 0.5)) ** 3
     left = surf_l * (0.25 + 0.75 * swell) * 0.8
     right = surf_r * (0.25 + 0.75 * swell_r) * 0.8
     rumble = filt(rng.uniform(-1, 1, n), low=110) * (0.8 + 0.2 * np.sin(2 * np.pi * t / 4.0))
     left += rumble * 0.6
     right += rumble * 0.6
-    for _ in range(70):
+    for _ in range(46):
         at = rng.uniform(0, d - 0.5)
         f = rng.uniform(70, 160)
         blub = sweep(f, f * 1.8, 0.18, "sine", 0.5) * env(0.18, 0.01, 0.15, power=1.5)
         place(left, blub, at, rng.uniform(0.05, 0.14))
         place(right, blub, at + 0.01, rng.uniform(0.05, 0.14))
     crackle = np.zeros(n)
-    for _ in range(200):
+    for _ in range(130):
         at = int(rng.uniform(0, n - 3000))
         ln = int(rng.uniform(80, 700))
         crackle[at:at + ln] += band(rng.uniform(-1, 1, ln), rng.uniform(1800, 5000), 1200) * np.exp(-np.arange(ln) / (ln * 0.25)) * rng.uniform(0.1, 0.35)
     left += crackle * 0.35
     right += crackle * 0.25
-    for at, f0 in ((3.0, 2400), (9.5, 2800), (15.2, 2200), (20.1, 2600)):
+    for at, f0 in ((3.0, 2400), (9.5, 2800), (13.2, 2200)):
         chirp = sum(sweep(f0, f0 * 1.3, 0.12, "sine") * env(0.12, 0.01, 0.1, power=1.5) * (1 if k % 2 else 0.7) for k in range(1))
         for k in range(3):
             place(left if k % 2 else right, chirp, at + k * 0.16, 0.05)
@@ -266,7 +266,7 @@ def lava_kahuna_grunt_2():
 
 def lava_eruption_rumble():
     """Mount Kahuna blows: a deep boom rolling into a long rumble."""
-    d = 3.2
+    d = 2.2
     boom = sweep(70, 28, 1.2, "sine", 0.5) * env(1.2, 0.005, 1.0, power=1.6)
     rumble = filt(noise(d), low=160) * env(d, 0.05, d, power=0.7, release=0.6)
     crack = filt(noise(0.3), high=800) * env(0.3, 0.001, power=2.0)
@@ -303,7 +303,7 @@ SOUNDS = [
 ]
 
 VARIANTS = [
-    (lava_dancer_whoop_1, (0.92, 1.1)), (lava_bartender_groan_1, (0.9, 1.08)), (lava_bomb_impact, (0.9, 1.1)),
+    (lava_bomb_impact, (0.9, 1.1)),
 ]
 
 MUSIC = {

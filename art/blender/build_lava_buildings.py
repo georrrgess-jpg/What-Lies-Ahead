@@ -251,8 +251,8 @@ def build_island():
         x = rng.uniform(-14, 14)
         p.append(rock(f"R{i}", rng.uniform(6, 10), (x, rng.uniform(-4, 4), 0), seed=90 + i, m=lmat("Basalt", rough=0.9),
                       scale=(1.3, 1.0, rng.uniform(0.9, 1.9)), jitter=0.25))
-    for i in range(5):
-        palm = blp.palm_parts(f"P{i}_", height=rng.uniform(7, 10), lean=rng.uniform(0.5, 1.6), seed=40 + i, fronds=8)
+    for i in range(3):
+        palm = blp.palm_parts(f"P{i}_", height=rng.uniform(7, 10), lean=rng.uniform(0.5, 1.6), seed=40 + i, fronds=7)
         p += place(palm, (rng.uniform(-9, 9), rng.uniform(-3, 3), 6.0), rot_z=rng.uniform(0, math.tau), scale=1.4)
     save("lava_island", [merge("Island", p)])
 

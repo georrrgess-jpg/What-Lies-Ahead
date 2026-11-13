@@ -3,7 +3,7 @@
     art/textures/lava_basalt.png          basalt flagstones with ember-lit joints (+ _normal), 512
     art/textures/lava_deck.png            weathered tiki-wood deck boards (+ _normal), 512
     art/textures/lava_sand.png            black volcanic sand with shell flecks, 512
-    art/textures/lava_rock.png            rough lava rock for the terrain and banks (+ _normal), 512
+    art/textures/lava_rock.png            rough lava rock for the terrain and banks, 512
 
 The sky is a shader (art/shaders/lava_sky.gdshader), so it needs no texture.
 
@@ -153,7 +153,6 @@ def make_rock(size=512, seed=97):
     albedo = hexc("#272230") * (0.75 + height[..., None] * 0.6)
     albedo += hexc("#3a1a1c") * smooth(0.2, 0.0, height)[..., None] * 0.5
     save_rgb("lava_rock.png", albedo)
-    save_rgb("lava_rock_normal.png", normal_from_height(blur(height, 1), 3.0))
 
 
 if __name__ == "__main__":
