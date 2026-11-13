@@ -97,6 +97,7 @@ var _late_scripts: Array = []
 var _mesh_cache := {}
 var _multi := {}         # model -> Array[Transform3D]
 var _light_count := 0
+var _editable: Array[Node] = []     # instanced models carrying material overrides
 
 
 func _initialize() -> void:
@@ -131,6 +132,7 @@ func _initialize() -> void:
 	_build_markers()
 	_flush_multimeshes()
 	_flush_batches()
+	_shadow_policy(level)
 
 	get_root().add_child(level)
 	await process_frame
@@ -149,6 +151,8 @@ func _initialize() -> void:
 	level.add_child(director)
 
 	_own(level)
+	for node in _editable:
+		level.set_editable_instance(node, true)
 	var packed := PackedScene.new()
 	var err := packed.pack(level)
 	if err == OK:
@@ -409,6 +413,7 @@ func _flush_batches() -> void:
 	keys.sort()
 	for key in keys:
 		var st: SurfaceTool = _batches[key]
+		st.index()
 		var mesh := st.commit()
 		var mi := MeshInstance3D.new()
 		mi.name = String(key).replace("|", "_")
@@ -420,6 +425,27 @@ func _flush_batches() -> void:
 		if mat_key.begins_with("neon") or mat_key == "panel_light" or mat_key.begins_with("interior"):
 			mi.add_to_group("mall_neon", true)
 		holder.add_child(mi)
+
+
+## Only the moonlight casts shadows, and it only reaches the court: the
+## ceilings, roof and outer walls (which keep it out of the colonnades) and
+## the court's own set pieces cast; everything else under a ceiling does not,
+## which keeps the shadow passes cheap.
+const SHADOW_CASTERS := ["ceiling_", "wall_dark_", "navy_", "Ribs", "Columns", "FountainModel", "Station", "Carousel",
+	"EscalatorEastModel", "EscalatorWestModel", "ElevatorCab", "Ride0", "Ride1", "Ride2", "Bench"]
+
+
+func _shadow_policy(node: Node, casts := false) -> void:
+	var here := casts
+	for prefix in SHADOW_CASTERS:
+		if String(node.name).begins_with(prefix):
+			here = true
+	if node is GeometryInstance3D:
+		var gi := node as GeometryInstance3D
+		if not here:
+			gi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for child in node.get_children():
+		_shadow_policy(child, here)
 
 
 # ---------------------------------------------------------------------------
@@ -696,13 +722,20 @@ func _beam(a: Vector3, b: Vector3, thick: float) -> Transform3D:
 func _build_escalators() -> void:
 	var esc := _node(geo, "Escalators")
 	_escalator(esc, "EscalatorEast", "mall_escalator", ESC_X, ESC_TOP_E + 10.0, -1.0)
-	_escalator(esc, "EscalatorWest", "mall_escalator_dead", -ESC_X, ESC_TOP_W - 10.0, 1.0)
+	var dead := _escalator(esc, "EscalatorWest", "mall_escalator", -ESC_X, ESC_TOP_W - 10.0, 1.0)
+	# The west escalator is out of order: violet cladding, neon off, a sign at its foot.
+	_recolor(dead, "MallTeal", _mat("dead_cladding", Color(0.36, 0.24, 0.72), 0.45))
+	_recolor(dead, "MallNeonTeal", _mat("dead_neon", Color(0.25, 0.2, 0.32), 0.5))
+	var foot := Vector3(-ESC_X - 1.25, 0, ESC_TOP_W - 10.0 - 1.3)
+	_bbox("pink", Vector3(0.06, 1.5, 0.06), foot + Vector3(0, 0.75, 0))
+	_bbox("cream", Vector3(0.9, 0.55, 0.05), foot + Vector3(0, 1.75, -0.04))
+	_label(signs, "OutOfOrder", "OUT OF\nORDER", foot + Vector3(0, 1.75, -0.08), PI, 0.0022, Color(0.85, 0.1, 0.2))
 
 
 ## An escalator whose foot is at z_foot, rising toward `dir` (-1 north, +1 south)
 ## 10 m to the upper floor: a solid wedge (walkway on top), kerbed sides.
-func _escalator(parent: Node3D, esc_name: String, model: String, x: float, z_foot: float, dir: float) -> void:
-	_prop(parent, model, esc_name + "Model", Vector3(x, 0, z_foot), 0.0 if dir < 0.0 else 180.0)
+func _escalator(parent: Node3D, esc_name: String, model: String, x: float, z_foot: float, dir: float) -> Node3D:
+	var node := _prop(parent, model, esc_name + "Model", Vector3(x, 0, z_foot), 0.0 if dir < 0.0 else 180.0)
 	var z_top := z_foot + dir * 10.0
 	var pts := PackedVector3Array()
 	for sx in [x - ESC_HALF, x + ESC_HALF]:
@@ -723,6 +756,7 @@ func _escalator(parent: Node3D, esc_name: String, model: String, x: float, z_foo
 			kerb.append(Vector3(sx, UP, z_top))
 			kerb.append(Vector3(sx, 0.0, z_top))
 		_convex(parent, "%sKerb%d" % [esc_name, int(side)], kerb)
+	return node
 
 
 # ---------------------------------------------------------------------------
@@ -1523,6 +1557,8 @@ func _label(parent: Node3D, label_name: String, text: String, pos: Vector3, yaw:
 
 
 func _recolor(node: Node, material_name: String, m: Material) -> void:
+	if not _editable.has(node):
+		_editable.append(node)
 	for mi in node.find_children("*", "MeshInstance3D", true, false):
 		var mesh := (mi as MeshInstance3D).mesh
 		for i in mesh.get_surface_count():

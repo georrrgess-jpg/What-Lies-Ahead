@@ -106,17 +106,17 @@ def build_fountain():
     ]
     # Craters on the moon.
     rng = random.Random(4)
-    for i in range(7):
+    for i in range(5):
         a, b = rng.uniform(0, math.tau), rng.uniform(-0.9, 0.9)
         n = Vector((math.cos(a) * math.cos(b), math.sin(a) * math.cos(b), math.sin(b)))
         p.append(sphere(f"Crater{i}", rng.uniform(0.16, 0.28), tuple(Vector((0, 0, 5.4)) + n * 1.13), scale=(1, 1, 0.4),
                         rot=n.to_track_quat("Z", "Y").to_euler(), m=mat("MallCrater", "#e8d6a0", rough=0.5, emit=0.5), segs=10, rings=5))
     # Jets arcing from the basin lip into the pool, and a central plume.
-    for i in range(8):
-        a = math.tau * (i + 0.5) / 8
+    for i in range(6):
+        a = math.tau * (i + 0.5) / 6
         c, s = math.cos(a), math.sin(a)
         pts = [(c * 3.35, s * 3.35, 0.7), (c * 2.9, s * 2.9, 1.5), (c * 2.4, s * 2.4, 1.15), (c * 2.2, s * 2.2, 0.5)]
-        p.append(tube(f"Jet{i}", pts, 0.05, m=w, segs=6, radius_end=0.08))
+        p.append(tube(f"Jet{i}", pts, 0.06, m=w, segs=6, radius_end=0.09))
     for i in range(4):
         a = math.tau * i / 4
         p.append(tube(f"Spout{i}", [(math.cos(a) * 0.3, math.sin(a) * 0.3, 6.45), (math.cos(a) * 1.3, math.sin(a) * 1.3, 6.6),
@@ -157,17 +157,18 @@ def _side_prism(name, x0, x1, top_off, m):
     return ob
 
 
-def build_escalator(out_of_order=False):
+def build_escalator():
     """Chrome-and-teal escalator with glass balustrades, black handrails, a neon
     strip under each rail and solid side cladding down to the floor. The steps
-    are visual; the level walks on an invisible ramp along them."""
+    are visual; the level walks on an invisible ramp along them. The level
+    recolours MallTeal and MallNeonTeal on the out-of-order one."""
     reset_scene()
     ch, dark, rub = chrome(), chrome_dark(), mmat("Rubber", 0.5)
-    clad = mmat("Teal", 0.35) if not out_of_order else mmat("Violet", 0.4)
+    clad = mmat("Teal", 0.35)
     step_m = mat("MallStep", "#3a3a4a", rough=0.4, metal=0.5)
     edge = mat("MallStepEdge", MALL["Yellow"], rough=0.4)
     gl = glass()
-    strip = neon("Teal", "#3ff0e0", 2.6) if not out_of_order else mat("MallNeonOff", "#4a3a5a", rough=0.4)
+    strip = neon("Teal", "#3ff0e0", 2.6)
     slope = math.atan2(ESC_RISE, ESC_RUN)
     length = math.hypot(ESC_RUN, ESC_RISE)
     p = []
@@ -200,22 +201,7 @@ def build_escalator(out_of_order=False):
         p.append(tube(f"Strip{s}", [(s * (ESC_GLASS_X + 0.1), -0.6, 0.5), (s * (ESC_GLASS_X + 0.1), ESC_RUN - 0.4, ESC_RISE + 0.5)],
                       0.025, m=strip, segs=6))
         p.append(box(f"NewelCap{s}", (0.3, 0.7, 0.55), (s * ESC_GLASS_X, -1.0, 0.28), bevel=0.12, m=ch))
-    if out_of_order:
-        red = mmat("Red", 0.5)
-        yel = mmat("Yellow", 0.5)
-        # A sign on a post at the foot of the right balustrade (the steps stay walkable).
-        x = ESC_GLASS_X
-        p += [
-            cyl("SignPost", 0.03, 1.5, (x, -1.25, 1.05), segs=6, bevel=0.0, m=red),
-            box("SignBoard", (0.9, 0.05, 0.55), (x, -1.3, 1.85), bevel=0.03, m=yel),
-            box("SignStripe", (0.92, 0.06, 0.08), (x, -1.3, 1.52), bevel=0.0, m=red),
-            text("SignText", "OUT OF\nORDER", 0.15, 0.02, (x, -1.34, 1.87), m=mmat("Charcoal", 0.6)),
-        ]
-    save("mall_escalator_dead" if out_of_order else "mall_escalator", [merge("Escalator", p)])
-
-
-def build_escalator_dead():
-    build_escalator(True)
+    save("mall_escalator", [merge("Escalator", p)])
 
 
 # ---------------------------------------------------------------------------
@@ -523,8 +509,6 @@ def build_directory():
             p.append(box(f"Block{side}{i}", (rng.uniform(0.15, 0.32), 0.02, rng.uniform(0.12, 0.28)),
                          (rng.uniform(-0.35, 0.35), y + side * 0.02, rng.uniform(0.7, 1.95)), bevel=0.0, m=c))
         p.append(star(f"Here{side}", 0.08, 0.02, (0.05, y + side * 0.035, 1.15), rot=(0, 0, 0), m=mat("MallStarGold", MALL["Yellow"], rough=0.3, emit=1.2)))
-        p.append(text(f"Title{side}", "DIRECTORY", 0.13, 0.02, (0, y + side * 0.03, 2.08), rot=(0, 0, 0 if side < 0 else math.pi),
-                      m=mmat("White", 0.4, emit=1.0)))
     save("mall_directory", [merge("Directory", p)])
 
 
@@ -805,12 +789,6 @@ def build_station():
             p.append(box(f"Brochure{i}{k}", (0.18, 0.04, 0.26), (math.cos(a + 0.78) * 2.75 + 0, math.sin(a + 0.78) * 2.75, 0.68),
                          rot=(math.radians(-12), 0, a + 0.78 + math.pi / 2 + (k - 1) * 0.0), bevel=0.0,
                          m=[pink, teal, mmat("Yellow", 0.5)][k]))
-    for i, word in enumerate(("GUEST", "SERVICES")):
-        a = math.pi * i
-        p.append(text(f"Band{i}", word, 0.28, 0.04, (math.sin(a) * 2.95, -math.cos(a) * 2.95, 3.33), rot=(0, 0, a), m=mmat("White", 0.4, emit=1.2)))
-    # Side signs at +-90 degrees.
-    for i in (1, -1):
-        p.append(text(f"BandSide{i}", "INFO", 0.3, 0.04, (i * 2.95, 0, 3.33), rot=(0, 0, i * math.pi / 2), m=mmat("White", 0.4, emit=1.2)))
     station = merge("Station", p)
 
     # Hologram moon (turned by the level), on the mast.
@@ -884,7 +862,7 @@ def build_portal_arch():
 
 
 BUILDERS = {
-    "fountain": build_fountain, "escalator": build_escalator, "escalator_dead": build_escalator_dead,
+    "fountain": build_fountain, "escalator": build_escalator,
     "carousel": build_carousel, "kiddie_rocket": build_kiddie_rocket, "kiddie_car": build_kiddie_car,
     "palm": build_palm, "bench": build_bench, "table_set": build_table_set, "bin": build_bin, "cart": build_cart,
     "security_gate": build_security_gate, "directory": build_directory, "exit_sign": build_exit_sign,

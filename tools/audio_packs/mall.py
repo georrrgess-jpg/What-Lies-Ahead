@@ -223,10 +223,10 @@ def mall_flinger_groan_2():
 
 def mall_soda_shake():
     """The lob tell: ice rattling in a big cup and a rising fizz."""
-    d = 0.9
+    d = 0.75
     out = silence(d)
     for _ in range(18):
-        at = rng.uniform(0.0, 0.7)
+        at = rng.uniform(0.0, 0.6)
         place(out, band(noise(0.03), rng.uniform(2500, 4500), 800) * env(0.03, 0.0005, power=2.0), at, rng.uniform(0.3, 0.6))
     fizz = filt(noise(d), high=5000) * env(d, 0.3, d * 1.2, power=0.6, release=0.1)
     return out + fizz * 0.35
@@ -262,17 +262,17 @@ def mall_manager_grunt_1():
 
 
 def mall_manager_grunt_2():
-    return groan(64, 1.0, glide=0.15, formants=((350, 100), (740, 150)), rasp=0.55, wobble=0.06)
+    return groan(64, 0.75, glide=0.15, formants=((350, 100), (740, 150)), rasp=0.55, wobble=0.06)
 
 
 def mall_manager_whistle():
     """The Manager's burst tell: the store PA's two-note chime, then a growl."""
-    d = 1.15
+    d = 1.0
     out = silence(d)
     for at, s in ((0.0, 7), (0.32, 3)):
-        ding = sum(tone(note(s) * r, 0.7, "sine") * env(0.7, 0.002, 0.6, power=1.8) * a for r, a in ((1.0, 1.0), (2.0, 0.3), (3.01, 0.12)))
+        ding = sum(tone(note(s) * r, 0.6, "sine") * env(0.6, 0.002, 0.5, power=1.8) * a for r, a in ((1.0, 1.0), (2.0, 0.3), (3.01, 0.12)))
         place(out, ding, at, 0.5)
-    place(out, groan(70, 0.5, glide=0.3, formants=((380, 110), (800, 160)), rasp=0.6), 0.65, 0.6)
+    place(out, groan(70, 0.4, glide=0.3, formants=((380, 110), (800, 160)), rasp=0.6), 0.58, 0.6)
     return out
 
 
@@ -282,11 +282,11 @@ def mall_manager_whistle():
 
 def mall_power_down():
     """The mains trip: a heavy breaker clunk, the hum dying away, a few pops."""
-    d = 1.4
+    d = 1.05
     out = silence(d)
     place(out, clunk(80, 0.35, 1.0), 0.0, 1.2)
     t = t_axis(d)
-    f = 120 * np.exp(-t * 2.2) + 25
+    f = 120 * np.exp(-t * 3.0) + 25
     hum = osc(2 * np.pi * np.cumsum(f) / SR, "saw") * env(d, 0.005, d, power=0.8)
     out += filt(hum, low=900) * 0.35
     for at in (0.15, 0.4, 0.55, 0.9):
@@ -296,7 +296,7 @@ def mall_power_down():
 
 def mall_power_up():
     """Power back: a clunk, the hum swelling and the lights ticking on."""
-    d = 1.2
+    d = 0.9
     out = silence(d)
     place(out, clunk(110, 0.3, 1.0), 0.0, 1.0)
     t = t_axis(d)
@@ -304,7 +304,7 @@ def mall_power_up():
     hum = osc(2 * np.pi * np.cumsum(f) / SR, "saw") * env(d, 0.4, d, power=0.8, release=0.4)
     out += filt(hum, low=900) * 0.3
     for k in range(6):
-        place(out, tone(2400 + 300 * k, 0.04, "sine") * env(0.04, 0.001, power=2.0), 0.25 + k * 0.1, 0.25)
+        place(out, tone(2400 + 300 * k, 0.04, "sine") * env(0.04, 0.001, power=2.0), 0.2 + k * 0.09, 0.25)
     return out
 
 
@@ -314,7 +314,7 @@ SOUNDS = [
     mall_manager_grunt_1, mall_manager_grunt_2, mall_manager_whistle, mall_power_down, mall_power_up,
 ]
 
-VARIANTS = [(mall_walker_huff_1, (0.92, 1.1))]
+VARIANTS = []
 
 LOOPS = {}
 

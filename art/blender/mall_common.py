@@ -14,8 +14,21 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from wla_common import *  # noqa: F401,F403
-from wla_common import bmesh, Vector  # noqa: F401
+import wla_common  # noqa: E402
+from wla_common import *  # noqa: F401,F403,E402
+from wla_common import bmesh, Vector  # noqa: F401,E402
+
+# Mall props keep single-segment bevels (a crisp chamfer that still catches
+# the light): half the polygons of the default rounded bevel, which keeps the
+# world's models small.
+_ROUND_BEVEL = wla_common.add_bevel
+
+
+def _chamfer(ob, width, segments=2, angle=35.0):
+    return _ROUND_BEVEL(ob, width, 1, angle)
+
+
+wla_common.add_bevel = _chamfer
 
 MALL = {
     "Navy": "#1a2050",
