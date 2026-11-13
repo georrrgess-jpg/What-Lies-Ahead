@@ -1163,6 +1163,19 @@ func _build_entrances() -> void:
 	_bbox("interior_pink", Vector3(12.0, CEIL - UP, 0.1), Vector3(0, UP + (CEIL - UP) * 0.5, Z1 - 0.1))
 	_bbox("panel_light", Vector3(6.0, 0.05, 3.0), Vector3(0, CEIL - 0.1, 27.2))
 	_label(signs, "CinemaSign", "STARPLEX 8", Vector3(0, UP + 3.35, HZ - 1.25), PI, 0.0075, VIOLET * 1.9)
+	# Lobby: the concession stand under a NOW SHOWING board, poster boxes.
+	_bbox("pink", Vector3(6.0, 1.05, 0.9), Vector3(0, UP + 0.525, 28.6))
+	_bbox("chrome", Vector3(6.2, 0.08, 1.0), Vector3(0, UP + 1.09, 28.6))
+	_bbox("neon_amber", Vector3(6.0, 0.06, 0.06), Vector3(0, UP + 0.8, 28.13))
+	_collider(e, "Concession", Vector3(6.2, 1.15, 1.0), Vector3(0, UP + 0.575, 28.6))
+	_bbox("glass", Vector3(0.9, 1.1, 0.7), Vector3(-2.2, UP + 1.68, 28.7))
+	_bbox("neon_amber", Vector3(0.8, 0.5, 0.6), Vector3(-2.2, UP + 1.4, 28.7))
+	_bbox("navy", Vector3(7.0, 1.3, 0.1), Vector3(0, UP + 3.6, Z1 - 0.2))
+	_label(signs, "NowShowing", "NOW SHOWING", Vector3(0, UP + 3.95, Z1 - 0.27), PI, 0.0045, AMBER * 1.6)
+	_label(signs, "Feature", "ATTACK OF THE 50 FT SHOPPER", Vector3(0, UP + 3.4, Z1 - 0.27), PI, 0.0026, CREAM * 1.4)
+	for x in [-4.6, 4.6]:
+		_bbox("chrome", Vector3(1.0, 1.5, 0.1), Vector3(x, UP + 1.9, Z1 - 0.2))
+		_bbox("neon_violet" if x < 0.0 else "neon_teal", Vector3(0.84, 1.3, 0.04), Vector3(x, UP + 1.9, Z1 - 0.27))
 	_omni(lights, "Cinema", Vector3(0, UP + 3.0, 27.0), VIOLET.lerp(WARM, 0.3), 1.4, 8.0).add_to_group("mall_mains", true)
 
 
@@ -1213,7 +1226,7 @@ func _build_hall_dressing() -> void:
 	var palms := [Vector3(-14.0, 0, -20.5), Vector3(-14.0, 0, 20.5), Vector3(14.0, 0, 21.0), Vector3(-14.6, 0, -8.0),
 		Vector3(-14.6, 0, 8.0), Vector3(6.0, 0, -21.0), Vector3(-6.5, 0, 21.0), Vector3(6.5, 0, 21.0),
 		Vector3(-14.0, UP, -21.0), Vector3(14.0, UP, 21.0), Vector3(-14.5, UP, 6.0), Vector3(14.5, UP, -6.0),
-		Vector3(-12.0, UP, 21.5), Vector3(-5.0, UP, -21.5)]
+		Vector3(-16.2, UP, 22.0), Vector3(-5.0, UP, -21.5)]
 	var k := 0
 	for p in palms:
 		_multi_add("mall_palm", p, k * 41.0)

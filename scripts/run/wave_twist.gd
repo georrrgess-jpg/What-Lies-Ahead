@@ -11,8 +11,10 @@ extends RefCounted
 ##                and the leapers and jetpacks go off more often
 ##   whiteout     Summit Lodge: the storm closes in (the level's FrostWeather
 ##                prop brings the fog and wind on the final wave)
+##   power_cut    Midnight Mall: the mains trip (the level's environment script
+##                cuts the lights to the moon and red emergency lamps)
 
-const IDS: Array[StringName] = [&"jackpot", &"blackout", &"frenzy", &"low_gravity", &"whiteout"]
+const IDS: Array[StringName] = [&"jackpot", &"blackout", &"frenzy", &"low_gravity", &"whiteout", &"power_cut"]
 
 const JACKPOT_TICKETS := 2.0
 const BLACKOUT_LIGHT := 0.32

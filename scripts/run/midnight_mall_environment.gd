@@ -19,7 +19,7 @@ const FOUNTAIN_STEP := 3.5
 ## What is left of the mains, the neon and the ambient light during the cut.
 const CUT_MAINS := 0.06
 const CUT_NEON := 0.1
-const CUT_AMBIENT := 0.5
+const CUT_AMBIENT := 0.28
 const CUT_SIGNS := Color(0.22, 0.2, 0.3)
 const EMERGENCY_PERIOD := 1.3
 const EMERGENCY_ENERGY := 1.8
