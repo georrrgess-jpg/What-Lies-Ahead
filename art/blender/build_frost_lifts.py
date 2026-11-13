@@ -149,7 +149,7 @@ def build_lift_chair():
 
 def build_gondola_station():
     """Gondola terminal: open bay to the plaza (x -4..4), cabins swing round the
-    wheel inside, cables leave through the open back."""
+    wheel inside, cables leave through a slot in the back wall."""
     reset_scene()
     s, dark = steel(), fmat("SteelDark", rough=0.4, metal=0.5)
     roof, snow = fmat("Roof", rough=0.7), snow_mat()
@@ -160,7 +160,14 @@ def build_gondola_station():
         box("Floor", (w, d, 0.3), (0, 0, 0.15), bevel=0.05, m=fmat("StoneDark")),
         box("SideA", (0.6, d, h), (-w / 2, 0, h / 2), bevel=0.06, m=stone),
         box("SideB", (0.6, d, h), (w / 2, 0, h / 2), bevel=0.06, m=stone),
-        box("BackLow", (w, 0.6, 3.6), (0, d / 2, 1.8), bevel=0.06, m=stone),
+        box("BackLow", (w, 0.6, 3.0), (0, d / 2, 1.5), bevel=0.06, m=stone),
+        # Upper back wall up to the roof, with a slot where the cables leave
+        # (x +-2.7, z 3.0..6.6: they drop toward the first tower as they go).
+        box("BackUpperA", (w / 2 - 2.7, 0.6, h - 3.0), (-(w / 2 + 2.7) / 2, d / 2, (h + 3.0) / 2), bevel=0.06, m=stone),
+        box("BackUpperB", (w / 2 - 2.7, 0.6, h - 3.0), ((w / 2 + 2.7) / 2, d / 2, (h + 3.0) / 2), bevel=0.06, m=stone),
+        box("BackHeader", (5.4, 0.6, h - 6.6), (0, d / 2, (h + 6.6) / 2), bevel=0.06, m=stone),
+        box("SlotFrame", (5.6, 0.7, 0.16), (0, d / 2, 3.0), bevel=0.03, m=dark),
+        box("SlotFrameTop", (5.6, 0.7, 0.16), (0, d / 2, 6.6), bevel=0.03, m=dark),
         box("PierA", (1.6, 0.8, h), (-5.0, -d / 2 + 0.4, h / 2), bevel=0.06, m=timber),
         box("PierB", (1.6, 0.8, h), (5.0, -d / 2 + 0.4, h / 2), bevel=0.06, m=timber),
         box("Header", (w + 0.4, 0.9, 1.4), (0, -d / 2 + 0.4, h - 0.3), bevel=0.08, m=fmat("Navy")),
@@ -170,6 +177,16 @@ def build_gondola_station():
         box("CeilingGlowB", (4.0, 0.5, 0.06), (0, 2.0, h - 1.04), bevel=0.0, m=fglow("FrostStationLight", "#e8f4ff", 2.0)),
         box("Turnstile", (2.8, 0.6, 1.0), (0, -2.8, 0.8), bevel=0.08, m=fmat("Red", rough=0.5)),
     ]
+    # Waiting area along the side walls: benches, a departures board and posters.
+    for i, sx in enumerate((-1, 1)):
+        x = sx * (w / 2 - 0.75)
+        parts.append(box(f"Bench{i}", (0.7, 3.2, 0.12), (x, 0.4, 0.75), bevel=0.04, m=timber))
+        for k, y in enumerate((-0.9, 1.7)):
+            parts.append(box(f"BenchLeg{i}{k}", (0.6, 0.12, 0.6), (x, y, 0.45), bevel=0.0, m=dark))
+        parts.append(box(f"Poster{i}", (0.06, 1.4, 1.9), (x + sx * 0.4, -2.2, 2.6), bevel=0.0, m=fmat("Navy")))
+        parts.append(box(f"PosterArt{i}", (0.04, 1.1, 1.1), (x + sx * 0.36, -2.2, 2.8), bevel=0.0, m=fglow("FrostGondolaPoster", "#7ad8ff", 0.8)))
+    parts.append(box("Board", (0.1, 2.6, 0.9), (-w / 2 + 0.4, 2.6, 3.4), bevel=0.03, m=dark))
+    parts.append(box("BoardGlow", (0.06, 2.3, 0.6), (-w / 2 + 0.48, 2.6, 3.4), bevel=0.0, m=fglow("FrostGondolaBoard", "#ffc46b", 1.6)))
     parts += bull_wheel("Wheel", 1.9, (0, 1.5, 5.6))
     parts.append(cyl("WheelMount", 0.3, 1.1, (0, 1.5, 6.2), segs=10, bevel=0.0, m=s))
     # Roof: broad gable with deep snow.

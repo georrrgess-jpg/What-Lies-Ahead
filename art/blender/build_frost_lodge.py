@@ -232,12 +232,12 @@ def build_shed():
         box("FrontB", (2.4, 0.3, h), (w / 2 - 1.2, -d / 2, h / 2), bevel=0.04, m=steel),
         box("FrontTop", (4.4, 0.3, 0.9), (0, -d / 2, h - 0.45), bevel=0.04, m=steel),
         box("DoorRoll", (4.6, 0.6, 0.6), (0, -d / 2 - 0.2, h - 0.75), bevel=0.2, segs=3, m=dark),
-        box("Interior", (w - 0.8, 0.1, h - 0.6), (0, d / 2 - 0.25, h / 2), bevel=0.0, m=fglow("FrostShedGlow", "#ffa860", 0.9)),
         box("Bench", (3.0, 0.8, 0.9), (-1.8, d / 2 - 0.8, 0.45), bevel=0.04, m=fmat("TimberDark")),
         box("SignBoard", (3.0, 0.1, 0.55), (0, -d / 2 - 0.2, h + 0.4), bevel=0.03, m=fmat("Navy")),
         text("SignText", "MAINTENANCE", 0.32, 0.03, (0, -d / 2 - 0.28, h + 0.4), m=fmat("Yellow")),
         bulb("WorkLamp", 0.2, (0, 0, h - 0.4), fglow("FrostLantern", "#ffc46b", 3.2)),
     ]
+    parts += _shed_interior(w, d, h)
     # Corrugation ribs.
     for i in range(14):
         x = -w / 2 + 0.4 + i * (w - 0.8) / 13
@@ -265,6 +265,42 @@ def build_shed():
         parts.append(cyl(f"Drum{i}", 0.32, 0.9, (x + 0.2, y - 0.9, 0.45), segs=12, bevel=0.03, m=fmat("Red", rough=0.5)))
         parts.append(sphere(f"DrumSnow{i}", 0.28, (x + 0.2, y - 0.9, 0.92), scale=(1, 1, 0.35), m=snow, segs=8, rings=4))
     save("frost_shed", [merge("Shed", parts)])
+
+
+def _shed_interior(w, d, h):
+    """Workshop inside the shed, seen through the raised door: warm plank
+    lining, a pegboard of tools over the bench, shelves of cans and parts, a
+    stack of tyres and a ceiling strip light. Kept to the walls, clear of the
+    doorway path."""
+    lining = mat("FrostShedLining", "#8a5a3e", rough=0.85, emit=0.35)
+    dark, steel = fmat("Charcoal"), fmat("SteelDark", rough=0.5, metal=0.3)
+    red, yellow, timber = fmat("Red", rough=0.5), fmat("Yellow"), fmat("TimberDark")
+    parts = [
+        box("LiningBack", (w - 0.8, 0.06, h - 0.3), (0, d / 2 - 0.2, (h - 0.3) / 2), bevel=0.0, m=lining),
+        box("LiningA", (0.06, d - 0.6, h - 0.3), (-w / 2 + 0.2, 0, (h - 0.3) / 2), bevel=0.0, m=lining),
+        box("LiningB", (0.06, d - 0.6, h - 0.3), (w / 2 - 0.2, 0, (h - 0.3) / 2), bevel=0.0, m=lining),
+        box("Ceiling", (w - 0.4, d - 0.4, 0.08), (0, 0, h - 0.1), bevel=0.0, m=dark),
+        box("StripLight", (2.4, 0.2, 0.06), (0, 0.6, h - 0.2), bevel=0.0, m=fglow("FrostShedStrip", "#ffe2b0", 2.4)),
+        box("Pegboard", (2.8, 0.05, 1.2), (-1.8, d / 2 - 0.26, 1.75), bevel=0.0, m=fmat("Navy")),
+    ]
+    for k in range(6):
+        parts.append(box(f"Tool{k}", (0.12, 0.04, 0.7 - (k % 3) * 0.15), (-3.0 + k * 0.48, d / 2 - 0.3, 1.8), bevel=0.0, m=steel))
+    # Shelving on the back wall, east of the bench.
+    for k in range(3):
+        z = 0.5 + k * 1.0
+        parts.append(box(f"Shelf{k}", (2.4, 0.6, 0.06), (2.3, d / 2 - 0.55, z), bevel=0.0, m=timber))
+        for j in range(3):
+            parts.append(box(f"Can{k}{j}", (0.38, 0.28, 0.5), (1.5 + j * 0.8, d / 2 - 0.55, z + 0.28), bevel=0.04,
+                             m=red if (j + k) % 2 else yellow))
+    for ex in (-1.2, 1.2):
+        parts.append(box(f"ShelfPost{ex}", (0.08, 0.6, 3.0), (2.3 + ex, d / 2 - 0.55, 1.5), bevel=0.0, m=steel))
+    # Tyres stacked by the west wall; snow shovels leaning on the east wall.
+    for k in range(3):
+        parts.append(torus(f"InTyre{k}", 0.42, 0.17, (-w / 2 + 0.8, -1.2, 0.2 + k * 0.32), m=dark, major_segs=16, minor_segs=6))
+    for k in range(2):
+        parts.append(box(f"Shovel{k}", (0.06, 0.06, 1.4), (w / 2 - 0.45, -1.4 + k * 0.5, 0.75), rot=(0.15, 0, 0), bevel=0.0, m=timber))
+        parts.append(box(f"ShovelBlade{k}", (0.08, 0.42, 0.36), (w / 2 - 0.45, -1.5 + k * 0.5, 0.2), bevel=0.02, m=yellow))
+    return parts
 
 
 BUILDERS = {"lodge": build_lodge, "shed": build_shed}
