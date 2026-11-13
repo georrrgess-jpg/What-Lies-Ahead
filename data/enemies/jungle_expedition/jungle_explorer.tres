@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/jungle_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/neon_leaper.gd" id="4"]
+
+[sub_resource type="Resource" id="leap"]
+script = ExtResource("4")
+min_range = 4.5
+max_range = 12.0
+climb_range = 16.0
+cooldown = 6.0
+telegraph = 0.65
+flight_time = 0.85
+apex = 2.4
+land_short = 1.8
+land_damage = 9.0
+land_radius = 2.0
+recover = 0.75
+crouch_clip = &"Crouch"
+flight_clip = &"Leap"
+launch_sound = &"jungle_explorer_hup"
+land_sound = &"jungle_leap_land"
+color = Color(0.45, 0.95, 0.35, 1)
+
+[resource]
+script = ExtResource("1")
+id = &"jungle_explorer"
+display_name = "Lost Explorer"
+max_health = 62.0
+move_speed = 4.3
+speed_variance = 0.1
+turn_speed = 7.0
+tickets = 16
+score = 190
+xp = 16
+damage = 12.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.45
+attack_recover = 0.7
+lunge_speed = 4.0
+mass = 0.85
+flank_degrees = 85.0
+enrage_radius = 8.0
+model_scene = ExtResource("2")
+outfit = &"Explorer"
+body_scale = 0.95
+capsule_radius = 0.42
+capsule_height = 1.95
+head_height = 1.25
+shirt_colors = Array[Color]([Color(0.78, 0.66, 0.42, 1), Color(0.62, 0.66, 0.4, 1), Color(0.86, 0.76, 0.56, 1), Color(0.55, 0.6, 0.5, 1)])
+skin_colors = Array[Color]([Color(0.62, 0.81, 0.35, 1), Color(0.52, 0.76, 0.42, 1), Color(0.7, 0.8, 0.36, 1)])
+accessory_slots = PackedStringArray("Acc_Explorer_Satchel||", "Acc_Explorer_Binoculars||", "Acc_Explorer_Lantern|Acc_Explorer_Map|")
+move_animation = &"Run"
+animation_reference_speed = 4.6
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("leap")])
+voice_sounds = Array[StringName]([&"jungle_explorer_yell_1", &"jungle_explorer_yell_2"])
+voice_interval = Vector2(2.5, 5.5)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

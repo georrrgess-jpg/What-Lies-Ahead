@@ -137,7 +137,17 @@ sound_category = Dictionary[StringName, StringName]({
 &"neon_ambience": &"ambience",
 &"aqua_ambience": &"ambience",
 &"dune_ambience": &"ambience",
-&"frost_ambience": &"ambience"
+&"frost_ambience": &"ambience",
+&"jungle_": &"enemy_voice",
+&"jungle_explorer_hup": &"enemy_telegraph",
+&"jungle_vine_creak": &"enemy_telegraph",
+&"jungle_leap_land": &"enemy_attack",
+&"jungle_vine_burst": &"enemy_attack",
+&"jungle_snare": &"player",
+&"jungle_thunder": &"ambience",
+&"lost_temple_": &"music",
+&"jungle_ambience": &"ambience",
+&"jungle_monsoon_ambience": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,

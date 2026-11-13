@@ -698,7 +698,8 @@ func _build_track() -> void:
 		var a := points[k]
 		var b := points[k + 1]
 		var dir := (b - a).normalized()
-		var basis := Basis(Vector3.UP, atan2(-dir.z, dir.x)).scaled(Vector3(a.distance_to(b) / 2.0, 1, 1))
+		var turn := Basis(Vector3.UP, atan2(-dir.z, dir.x))
+		var basis := Basis(turn.x * a.distance_to(b) / 2.0, turn.y, turn.z)
 		xforms.append(Transform3D(basis, (a + b) * 0.5))
 	_multimesh(dressing, "Track", "jungle_track", xforms)
 	var end := points[-1]
