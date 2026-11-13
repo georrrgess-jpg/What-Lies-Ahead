@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"banner_ticket_booth"
 display_name = "Ticket Booth"
-description = "Player banner."
+description = "Raspberry and pink checks like a ticket booth awning."
 slot = &"banner"
 rarity = 1
 price = 650

@@ -9,8 +9,14 @@ extends RefCounted
 ##   lightning  a jagged, flickering bolt with forks
 ##   comet      a glowing head racing to the target with a sparkling tail
 ## params.flakes = true swaps sparkle glitter for snowflakes.
+##
+## The coloured ribbons are drawn with normal (mix) blending: added light
+## turns every hue white against the bright skies, and the colour is the point
+## of these items.
 
 const MAX_SEGMENTS := 160
+
+static var _ribbon_material: StandardMaterial3D
 
 
 ## Draws a styled tracer. Returns false if the style is unknown (the caller
@@ -22,8 +28,9 @@ static func draw(parent: Node, from: Vector3, to: Vector3, width: float, item: C
 	match style:
 		"solid":
 			Fx.beam(parent, from, to, c0, width)
+			_spawn(parent, from, to, _straight(from, to, width * 0.55, c0), 0.14, 0.03)
 		"helix":
-			Fx.beam(parent, from, to, c0.lerp(Color.WHITE, 0.6), width * 0.35)
+			Fx.beam(parent, from, to, c0.lerp(Color.WHITE, 0.6), width * 0.25)
 			_spawn(parent, from, to, _helix(from, to, width, c0, c1), 0.2, 0.05)
 		"sparkle":
 			Fx.beam(parent, from, to, c0, width * 0.8)
@@ -45,10 +52,22 @@ static func _spawn(parent: Node, from: Vector3, to: Vector3, mesh: Mesh, life: f
 		return
 	var t := StyledTracer.new()
 	t.mesh = mesh
-	t.material_override = FxShapes.additive_material(Color.WHITE)
+	t.material_override = _material()
 	t.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(t)
 	t.launch(from, to, life, reveal, flicker)
+
+
+## Unshaded, vertex-coloured, alpha-blended (see the note at the top).
+static func _material() -> StandardMaterial3D:
+	if _ribbon_material == null:
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		m.vertex_color_use_as_albedo = true
+		_ribbon_material = m
+	return _ribbon_material
 
 
 ## A frame along the shot: x/y across it, z along it (from the muzzle).
@@ -86,7 +105,7 @@ static func _helix(from: Vector3, to: Vector3, width: float, c0: Color, c1: Colo
 	var frame := _frame(from, to)
 	var length := from.distance_to(to)
 	var n := clampi(int(length * 7.0), 12, MAX_SEGMENTS)
-	var radius := maxf(0.045, width)
+	var radius := maxf(0.06, width * 1.1)
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for strand in 2:
@@ -101,8 +120,25 @@ static func _helix(from: Vector3, to: Vector3, width: float, c0: Color, c1: Colo
 			pts.append(from + frame.z * (t * length) + (frame.x * cos(a) + frame.y * sin(a)) * r)
 			var c := c0 if strand == 0 else c1
 			cols.append(Color(c, 1.0 - t * 0.5))
-			widths.append(width * 0.28)
+			widths.append(width * 0.2)
 		_ribbon(st, pts, cols, widths, frame)
+	return st.commit()
+
+
+## A straight ribbon in one colour, thin at the muzzle and fading towards the target.
+static func _straight(from: Vector3, to: Vector3, width: float, c: Color) -> Mesh:
+	var length := from.distance_to(to)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var pts := PackedVector3Array()
+	var cols := PackedColorArray()
+	var widths := PackedFloat32Array()
+	for i in 7:
+		var t := i / 6.0
+		pts.append(from.lerp(to, t))
+		cols.append(Color(c, 0.95 - t * 0.45))
+		widths.append(width * (0.2 + 0.8 * minf(1.0, t * length / 3.0)))
+	_ribbon(st, pts, cols, widths, _frame(from, to))
 	return st.commit()
 
 

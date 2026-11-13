@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"banner_sunset_stripes"
 display_name = "Sunset Stripes"
-description = "Player banner."
+description = "Coral and gold stripes, like the sky at closing time."
 slot = &"banner"
 rarity = 0
 price = 250

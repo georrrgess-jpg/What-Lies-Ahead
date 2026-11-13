@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"title_midway_menace"
 display_name = "Midway Menace"
-description = "Player title."
+description = "The games on the midway fear you."
 slot = &"title"
 rarity = 0
 price = 250

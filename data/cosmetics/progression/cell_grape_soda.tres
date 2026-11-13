@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"cell_grape_soda"
 display_name = "Grape Soda Cell"
-description = "Energy cell for every weapon."
+description = "Fizzy purple energy that sparkles like soda."
 slot = &"weapon_cell"
 rarity = 0
 price = 250

@@ -6,12 +6,12 @@
 script = ExtResource("1")
 id = &"cell_cherry_bomb"
 display_name = "Cherry Bomb Cell"
-description = "Energy cell for every weapon."
+description = "A cherry-red core that flickers orange like a lit fuse."
 slot = &"weapon_cell"
 rarity = 2
 price = 1500
-colors = PackedColorArray(1.000, 0.188, 0.282, 1)
+colors = PackedColorArray(1.000, 0.08, 0.2, 1, 1.0, 0.55, 0.1, 1)
 params = {
-
+"animate": "pulse"
 }
 sort_order = 36

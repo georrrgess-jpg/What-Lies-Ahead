@@ -76,6 +76,9 @@ func _show_art(thumbs: CosmeticThumbs) -> void:
 		_picture.texture = CosmeticThumbs.cached(item, weapon)
 		if _picture.texture == null and thumbs:
 			thumbs.request(item, _on_thumbnail.bind(item), weapon)
+		if item.slot == &"weapon_sight" and WeaponSights.optic_name(item) != "":
+			_art = _reticle_inset()
+			_holder.add_child(_art)
 		return
 	match item.slot:
 		&"banner":
@@ -93,6 +96,17 @@ func _show_art(thumbs: CosmeticThumbs) -> void:
 func _on_thumbnail(texture: Texture2D, for_item: CosmeticItem) -> void:
 	if for_item == item:
 		set_image(texture)
+
+
+## An optic's thumbnail shows its housing; the reticle, which is what tells
+## sights apart, gets a view through the lens in the corner.
+func _reticle_inset() -> Control:
+	var lens := SightPreview.new(item)
+	lens.anchor_left = 0.5
+	lens.anchor_top = 0.48
+	lens.anchor_right = 0.98
+	lens.anchor_bottom = 0.98
+	return lens
 
 
 func _banner_art() -> Control:

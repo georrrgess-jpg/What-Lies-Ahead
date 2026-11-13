@@ -14,7 +14,6 @@ colors = PackedColorArray(0.4, 1.0, 0.7, 1, 0.88, 0.13, 0.54, 1)
 params = {
 "optic": "Holo",
 "reticle": "pixel",
-"reticle_degrees": 1.3,
-"unlock_text": "Buy for 900 Sparks"
+"reticle_degrees": 1.3
 }
 sort_order = 6080

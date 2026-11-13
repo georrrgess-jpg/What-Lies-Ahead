@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"finish_seafoam_chrome"
 display_name = "Seafoam Chrome"
-description = "Weapon finish for every weapon."
+description = "Mirror-shine seafoam green with cream panels."
 slot = &"weapon_finish"
 rarity = 0
 price = 250
