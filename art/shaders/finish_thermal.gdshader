@@ -32,7 +32,7 @@ void fragment() {
 	// Two hot spots that wander along the weapon, like hands and a hot barrel.
 	float spot = exp(-pow((lp.z + 0.25 + 0.2 * sin(TIME * 0.4)) * 6.0, 2.0)) * 0.35
 		+ exp(-pow((lp.z - 0.05 - 0.15 * sin(TIME * 0.31 + 2.0)) * 7.0, 2.0)) * 0.25;
-	float temp = (heat - 0.25) * 1.5 + spot - (is_trim ? 0.3 : 0.0);
+	float temp = (heat - 0.25) * 1.5 + spot - (is_trim ? 0.12 : 0.0);
 	float contour = smoothstep(0.06, 0.0, abs(fract(temp * 8.0) - 0.5) - 0.44);
 	float grain = (fh31(floor(lp * 400.0) + floor(TIME * 24.0)) - 0.5) * 0.05;
 	vec3 col = ironbow(temp + grain) * (1.0 - contour * 0.25);
