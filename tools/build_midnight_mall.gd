@@ -1210,12 +1210,13 @@ func _build_entrances() -> void:
 	# Ticket machines fill the lobby's front corners, flush with the door jambs:
 	# the doors lead straight to the stand, with no pocket behind the walls
 	# where a crowd from the cinema spawn could wedge.
+	# They reach back to the concession stand, so the aisle is a closed dead end.
 	for x in [-3.65, 3.65]:
-		var c := Vector3(x, UP, 26.0)
-		_bbox("navy", Vector3(4.1, 2.4, 3.2), c + Vector3(0, 1.2, 0))
-		_bbox("neon_teal" if x < 0.0 else "neon_pink", Vector3(4.12, 0.06, 3.22), c + Vector3(0, 2.4, 0))
-		_bbox("panel_light", Vector3(1.6, 0.8, 0.04), c + Vector3(-signf(x) * 0.3, 1.5, 1.62))
-		_collider(e, "TicketMachines%d" % int(x), Vector3(4.1, 2.4, 3.2), c + Vector3(0, 1.2, 0))
+		var c := Vector3(x, UP, 26.25)
+		_bbox("navy", Vector3(4.1, 2.4, 3.7), c + Vector3(0, 1.2, 0))
+		_bbox("neon_teal" if x < 0.0 else "neon_pink", Vector3(4.12, 0.06, 3.72), c + Vector3(0, 2.4, 0))
+		_bbox("panel_light", Vector3(1.6, 0.8, 0.04), c + Vector3(-signf(x) * 0.3, 1.5, 1.87))
+		_collider(e, "TicketMachines%d" % int(x), Vector3(4.1, 2.4, 3.7), c + Vector3(0, 1.2, 0))
 	for x in [-4.6, 4.6]:
 		_bbox("chrome", Vector3(1.0, 1.5, 0.1), Vector3(x, UP + 1.9, Z1 - 0.2))
 		_bbox("neon_violet" if x < 0.0 else "neon_teal", Vector3(0.84, 1.3, 0.04), Vector3(x, UP + 1.9, Z1 - 0.27))
@@ -1277,11 +1278,11 @@ func _build_hall_dressing() -> void:
 		_player_block(d, "Palm%dCap" % k, Vector3(2.0, 3.0, 2.0), p + Vector3(0, 2.4, 0))
 		k += 1
 	# Benches along the shop fronts, and upstairs back to back with the glass
-	# rail between two columns (a bench standing off the rail left a pocket
-	# behind the corner columns that trapped big zombies).
+	# rail, one end against a column (a bench standing off the rail, or a
+	# bench-to-column gap about a body wide, is a pocket that traps zombies).
 	var benches := [[Vector3(-15.8, 0, -3.0), 90.0], [Vector3(-15.8, 0, 3.5), 90.0], [Vector3(-12.0, 0, -21.6), 0.0],
-		[Vector3(3.5, 0, 21.8), 180.0], [Vector3(-VX - 0.45, UP, -10.0), -90.0], [Vector3(VX + 0.45, UP, 10.0), 90.0],
-		[Vector3(-2.6, UP, VZ + 0.45), 0.0], [Vector3(10.0, UP, 21.8), 180.0], [Vector3(15.8, UP, -3.0), -90.0]]
+		[Vector3(3.5, 0, 21.8), 180.0], [Vector3(-VX - 0.45, UP, -11.43), -90.0], [Vector3(VX + 0.45, UP, 11.43), 90.0],
+		[Vector3(-3.43, UP, VZ + 0.45), 0.0], [Vector3(10.0, UP, 21.8), 180.0], [Vector3(15.8, UP, -3.0), -90.0]]
 	for b in benches:
 		_solid_multi("mall_bench", b[0], b[1], Vector3(2.3, 0.85, 0.7))
 	# Retail carts (big cover pieces) in the colonnades.

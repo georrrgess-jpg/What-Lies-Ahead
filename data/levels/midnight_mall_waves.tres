@@ -118,14 +118,14 @@ bounty_tickets = 225
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 10,
+"tourist_shambler": 8,
 "mall_walker": 9,
 "mall_flinger": 3,
 "lifeguard_runner": 2
 }
-spawn_interval = 2.0
+spawn_interval = 2.3
 burst = 2
-max_alive = 12
+max_alive = 11
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
