@@ -395,6 +395,13 @@ gain and a bus, plus optional per-sound trims; `Sfx` applies it to every sound a
 limiter catches peaks. Music loops are mastered to one loudness, and each level
 cross-fades in time to a more driving final-wave loop.
 
+**Performance.** Effects and one-shot sounds are reused from pools, and the level-start
+warm-up draws every effect, projectile, muzzle-flash and status-effect material behind the
+loading fade, so nothing compiles mid-fight. `tools/perf_probe.gd` measures frame time,
+node and audio-player churn, draw calls and the warm-up (`--materials=1`); usage is at the
+top of the file. Builds stay lean: no shadow meshes (the import default), no LODs on
+first-person and menu models, lossy WebP world textures and Vorbis q3 music.
+
 **Checking assets.** `tools/preview_model.gd` prints a model's node tree, bounds and clips
 and renders a contact sheet; see the comment at the top of the file.
 
