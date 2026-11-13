@@ -168,6 +168,9 @@ func _build_tabs() -> Control:
 	_tabs = KitTabs.make(24, true)
 	_tabs.add_theme_constant_override("separation", UiKit.GAP_XS)
 	for cat in LockerCatalog.CATEGORIES:
+		# A category the game has no items for (yet) gets no tab.
+		if LockerCatalog.collection(cat["slot"]).y == 0:
+			continue
 		var tab := _tabs.add_tab(cat["slot"], String(cat["tab"]))
 		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tab.tooltip_text = String(cat["label"])
@@ -455,10 +458,10 @@ func _refresh_states() -> void:
 
 
 func _refresh_badges() -> void:
-	for cat in LockerCatalog.CATEGORIES:
-		_tabs.set_badge(cat["slot"], Cosmetics.new_count(cat["slot"]))
-		# Keep the count inside the tab's top right corner (the strip clips nothing above it).
-		var badge := _tabs.button(cat["slot"]).get_node_or_null("Badge") as Control
+	for slot in _tabs.ids():
+		_tabs.set_badge(slot, Cosmetics.new_count(slot))
+		# Keep the count inside the tab's top right corner.
+		var badge := _tabs.button(slot).get_node_or_null("Badge") as Control
 		if badge:
 			badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 			badge.position += Vector2(-6.0, 2.0)

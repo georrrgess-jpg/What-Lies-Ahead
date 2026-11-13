@@ -232,7 +232,7 @@ func _fill_mastery() -> void:
 func _show_next_level() -> void:
 	if _next_card == null:
 		return
-	var step := CareerCards.ROAD_CARD.x + 14.0
+	var step := CareerCards.ROAD_CARD.x + 20.0
 	_road_scroll.scroll_horizontal = int(maxf(0.0, _next_card.position.x - step * ROAD_LEAD))
 
 

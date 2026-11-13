@@ -101,8 +101,10 @@ static func road_detail(lvl: int, current: int) -> String:
 static func road_link(walked: bool) -> Control:
 	var link := ColorRect.new()
 	link.color = UiKit.CYAN if walked else Color("3a2d6b")
-	link.custom_minimum_size = Vector2(14, 6)
+	link.custom_minimum_size = Vector2(20, 8)
 	link.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	# Above the soft shadows the cards cast on either side.
+	link.z_index = 1
 	link.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return link
 
@@ -270,7 +272,7 @@ class MilestoneMedal extends Control:
 	func _draw() -> void:
 		var c := size * 0.5
 		var r := minf(size.x, size.y) * 0.5 - 3.0
-		draw_arc(c, r, 0.0, TAU, 32, Color("3a2d6b"), 4.0, true)
+		draw_arc(c, r, 0.0, TAU, 32, Color("4a3b86"), 4.0, true)
 		var color := UiKit.GREEN if done else UiKit.AMBER
 		if done or fraction > 0.0:
 			draw_arc(c, r, -PI * 0.5, -PI * 0.5 + TAU * (1.0 if done else fraction), 32, color, 4.0, true)

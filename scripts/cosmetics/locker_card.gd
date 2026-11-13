@@ -2,8 +2,8 @@ class_name LockerCard
 extends ItemCard
 ## One cosmetic on a kit item card (Locker and Shop grids): its thumbnail,
 ## banner, title plate or drawn icon, the rarity line, and the state the
-## player has with it: an EQUIPPED tag, a NEW badge, the price in Sparks, or
-## a padlock with the requirement. Cards are reused: show_item() turns a
+## player has with it: an EQUIPPED tag, a NEW badge, the price in Sparks (and
+## today's discount), or a padlock with the requirement. Cards are reused: show_item() turns a
 ## card into another item without rebuilding it.
 
 const CARD_SIZE := Vector2(176, 200)
@@ -12,6 +12,8 @@ var item: CosmeticItem
 ## The weapon weapon cosmetics are shown on and owned for.
 var weapon: WeaponData
 var state := LockerCatalog.State.LOCKED
+## On the Shop's shelves: owned items read OWNED and NEW follows the shop.
+var shop_mode := false
 ## Art that is not a thumbnail texture (banner, title plate, drawn icon).
 var _art: Control
 
@@ -39,9 +41,16 @@ func refresh_state() -> void:
 		return
 	var weapon_id: StringName = weapon.id if weapon else &""
 	state = LockerCatalog.state(item, weapon_id)
-	set_tag("EQUIPPED" if state == LockerCatalog.State.EQUIPPED else "")
-	set_new(Cosmetics.is_new(item))
-	var gated := not Cosmetics.can_unlock_purchase(item, LockerCatalog.context(item.slot, weapon_id))
+	var owned := state <= LockerCatalog.State.OWNED
+	var off := ShopCatalog.discount(item) if state == LockerCatalog.State.FOR_SALE else 0.0
+	if off > 0.0:
+		set_tag("-%d%%" % roundi(off * 100.0), UiKit.PINK)
+	elif shop_mode:
+		set_tag("OWNED" if owned else "", UiKit.GREEN)
+	else:
+		set_tag("EQUIPPED" if state == LockerCatalog.State.EQUIPPED else "")
+	set_new(ShopCatalog.is_new(item) if shop_mode else Cosmetics.is_new(item))
+	var gated := not (ShopCatalog.is_open(item) if shop_mode else Cosmetics.can_unlock_purchase(item, LockerCatalog.context(item.slot, weapon_id)))
 	if state == LockerCatalog.State.LOCKED or state == LockerCatalog.State.FOR_SALE and gated:
 		set_locked(LockerCatalog.unlock_short(item))
 	elif state == LockerCatalog.State.FOR_SALE:

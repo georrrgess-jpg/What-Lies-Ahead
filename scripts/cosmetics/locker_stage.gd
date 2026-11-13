@@ -137,7 +137,7 @@ func show_kill_effect(item: CosmeticItem) -> void:
 		if anim.has_animation(clip):
 			anim.play(clip)
 	_camera.fov = 40.0
-	_camera.look_at_from_position(Vector3(0, 1.45, 5.4), Vector3(0, 1.25, 0))
+	_camera.look_at_from_position(Vector3(0, 1.45, 4.5), Vector3(0, 1.2, 0))
 	_timer = KILL_LOOP - 1.0
 
 

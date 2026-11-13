@@ -4,8 +4,9 @@ extends KitPanel
 ## what it is and what it does, and exactly one action for where the player
 ## stands with it:
 ##   owned      EQUIP (pink), or an EQUIPPED plate once it is worn
-##   for sale   BUY with the price (gold); when the player cannot pay, how
-##              many Sparks are missing and how to earn them
+##   for sale   BUY with the price (gold) and today's discount; when the
+##              player cannot pay, how many Sparks are missing and how to
+##              earn them
 ##   locked     the requirement with a progress bar (and the price that
 ##              follows, for items that are also sold)
 ## The panel only asks: connect equip_requested, unequip_requested,
@@ -34,6 +35,7 @@ var _requirement_bar: ProgressBar
 var _requirement_progress: Label
 var _requirement_price: HBoxContainer
 var _shortfall: Label
+var _deal: Label
 var _equip: SignButton
 var _equipped: KitPanel
 var _buy: SignButton
@@ -53,11 +55,13 @@ func _init() -> void:
 	col.add_child(head)
 	_name = UiKit.sign_label("", UiKit.SIZE_HEADING)
 	_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_name.clip_text = true
 	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	head.add_child(_name)
 	_rarity = UiKit.chip("", UiKit.CYAN, 22)
 	head.add_child(_rarity)
 	_category = UiKit.label("", 22, UiKit.CYAN, true)
+	_category.clip_text = true
 	_category.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	col.add_child(_category)
 	col.add_child(UiKit.spacer(UiKit.GAP_XS))
@@ -79,6 +83,9 @@ func _build_story() -> Control:
 	_description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	col.add_child(_description)
 	col.add_child(UiKit.filler())
+	_deal = UiKit.body("", 240, UiKit.SIZE_SMALL, UiKit.PINK_LIGHT)
+	_deal.add_theme_font_override("font", UiKit.display_font())
+	col.add_child(_deal)
 	_owned_row = HBoxContainer.new()
 	_owned_row.add_theme_constant_override("separation", UiKit.GAP_S)
 	_owned_row.add_child(UiKit.icon(&"icon_check", 26.0, UiKit.GREEN))
@@ -116,7 +123,7 @@ func _build_actions() -> Control:
 	_buy_price.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_buy_price.offset_bottom = -8
 	_buy.add_child(_buy_price)
-	_locker = UiKit.sign_button("EQUIP IN LOCKER", SignButton.Kind.SECONDARY, 32)
+	_locker = UiKit.sign_button("SEE IN LOCKER", SignButton.Kind.SECONDARY, 32)
 	_locker.custom_minimum_size.y = 88
 	_locker.pressed.connect(func(): locker_requested.emit(item))
 	col.add_child(_locker)
@@ -196,6 +203,9 @@ func refresh() -> void:
 	_requirement.visible = not owned and not purchasable
 	if _requirement.visible:
 		_show_requirement(ctx, state == LockerCatalog.State.FOR_SALE)
+	var off := ShopCatalog.discount(item) if state == LockerCatalog.State.FOR_SALE else 0.0
+	_deal.visible = off > 0.0
+	_deal.text = "TODAY'S PICK: %d%% OFF, WAS %s" % [roundi(off * 100.0), Wallet.format(ShopCatalog.base_price(item))]
 	var missing := PurchaseFlow.shortfall(item) if purchasable else 0
 	_shortfall.visible = missing > 0
 	_shortfall.text = "%s more %s needed. %s" % [Wallet.format(missing), Wallet.CURRENCY, PurchaseFlow.EARN_HINT]

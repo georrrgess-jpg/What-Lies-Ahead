@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UiExtension" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ui_extension.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/shop_page.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+kind = 0
+id = &"shop"
+title = "Shop"
+script_ref = ExtResource("2")
+order = 55
+show_on_title = true
+accent = Color(1, 0.85, 0.29, 1)
