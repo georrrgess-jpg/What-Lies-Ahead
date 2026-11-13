@@ -184,7 +184,7 @@ func _update_camera() -> void:
 	var k := clampf(t / maxf(0.01, length), 0.0, 1.0)
 	if _track.is_valid():
 		camera.global_transform = _track.call(k)
-	_set_fov(lerpf(_fov.x, _fov.y, ease(k, -1.6)))
+	lens_fov(lerpf(_fov.x, _fov.y, ease(k, -1.6)))
 	_apply_whips()
 	var jolt := 0.0
 	for s in _shakes:
@@ -200,7 +200,7 @@ func _update_camera() -> void:
 
 ## Sets the vertical field of view of the 16:9 frame; on a narrower screen the
 ## camera keeps that frame's width instead (see FRAME_ASPECT).
-func _set_fov(vertical: float) -> void:
+func lens_fov(vertical: float) -> void:
 	var size := camera.get_viewport().get_visible_rect().size
 	if size.x / maxf(1.0, size.y) < FRAME_ASPECT - 0.01:
 		camera.keep_aspect = Camera3D.KEEP_WIDTH
