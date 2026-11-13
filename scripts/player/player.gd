@@ -614,7 +614,7 @@ func _update_dash(can_act: bool, wish: Vector3) -> void:
 	_dash_buffer = 0.0
 	Sfx.play(&"move_dash", -7.0, randf_range(0.95, 1.05))
 	head.dash_kick(global_basis.inverse() * _dash_dir)
-	MoveFx.puff(get_parent(), global_position, _dash_dir)
+	MoveFx.puff(get_parent(), global_position, -global_basis.z, _dash_dir)
 	dashed.emit(_dash_dir)
 
 
@@ -746,7 +746,7 @@ func _on_landed(impact: float) -> void:
 		# A long drop: the view rolls with the sideways momentum, dust rings out.
 		head.land_lean(clampf(local_velocity().x / walk_speed, -1.0, 1.0))
 		Sfx.play(&"move_land_heavy", -8.0, randf_range(0.95, 1.05))
-		MoveFx.ring(get_parent(), global_position)
+		MoveFx.ring(get_parent(), global_position, -global_basis.z)
 	landed.emit(impact)
 
 

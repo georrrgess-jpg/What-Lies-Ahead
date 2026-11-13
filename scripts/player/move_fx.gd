@@ -1,7 +1,8 @@
 class_name MoveFx
 extends RefCounted
-## Dust from the player's feet: a trail of flecks while sliding, a puff
-## behind a dash and a ring on a long landing. Chunky toy-like flecks drawn
+## Dust from the player's feet: a trail of flecks while sliding, a kick on a
+## dash and a burst on a long landing. All of it starts a little ahead of the
+## feet along the view, where a first-person camera can see the floor. Chunky toy-like flecks drawn
 ## by FxBurst, which pools its bursts, so a slide allocates nothing once warm.
 
 const COLORS: Array[Color] = [Color(0.93, 0.89, 0.82), Color(0.78, 0.74, 0.68), Color(1.0, 0.98, 0.95)]
@@ -20,15 +21,19 @@ static func trail(parent: Node, feet: Vector3, direction: Vector3) -> void:
 	_spawn(parent, ahead - side * 0.5, (-side + Vector3.UP * 0.9).normalized(), 3, 3.2, 0.4, 0.09, 30.0)
 
 
-## A low puff kicked back from the feet at the start of a dash.
-static func puff(parent: Node, feet: Vector3, direction: Vector3) -> void:
-	_spawn(parent, feet + Vector3.UP * 0.1, (-direction + Vector3.UP * 0.4).normalized(), 10, 3.4, 0.5, 0.08, 45.0)
+## Flecks kicked away from a dash along `direction`, in front of a player
+## looking along `facing`.
+static func puff(parent: Node, feet: Vector3, facing: Vector3, direction: Vector3) -> void:
+	_spawn(parent, feet + facing * 2.4 + Vector3.UP * 0.2, (-direction + Vector3.UP * 0.6).normalized(), 10, 3.6, 0.45, 0.08, 40.0)
 
 
-## A ring of dust round the feet after a long drop, wide enough to show at
-## the bottom of the view.
-static func ring(parent: Node, feet: Vector3) -> void:
-	_spawn(parent, feet + Vector3.UP * 0.05, Vector3.UP, 22, 6.5, 0.6, 0.1, 85.0)
+## Dust thrown up and out to both sides after a long drop, in front of a
+## player looking along `facing`.
+static func ring(parent: Node, feet: Vector3, facing: Vector3) -> void:
+	var side := facing.cross(Vector3.UP)
+	var ahead := feet + facing * 1.6 + Vector3.UP * 0.05
+	_spawn(parent, ahead + side * 0.6, (side + Vector3.UP).normalized(), 9, 4.2, 0.55, 0.1, 40.0)
+	_spawn(parent, ahead - side * 0.6, (-side + Vector3.UP).normalized(), 9, 4.2, 0.55, 0.1, 40.0)
 
 
 static func _spawn(parent: Node, at: Vector3, direction: Vector3, amount: int, speed: float, life: float,

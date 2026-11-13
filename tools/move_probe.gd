@@ -169,19 +169,22 @@ func _film(dir: String) -> void:
 	await _rest(OPEN)
 	await _shoot(dir, "slide", 40, [16, 20, 26, 36], func(i): return ["move_forward", "sprint"] + (["slide"] if i == 14 else []))
 	await _rest(OPEN + Vector3(-3, 0, 0))
-	await _shoot(dir, "dash", 24, [2, 5, 8, 18], func(i): return ["move_right"] + (["dash"] if i == 1 else []))
+	await _shoot(dir, "dash", 24, [2, 4, 7, 18], func(i): return ["move_right"] + (["dash"] if i == 1 else []))
 	await _place(PLANTER, 0.0)
 	await _shoot(dir, "mantle", 40, [13, 17, 21, 26], func(i): return ["move_forward"] + (["jump"] if i >= 10 and i < 13 else []))
 	# A long drop: off the planter's back edge is too short, so lift the player.
 	await _place(OPEN, 0.0)
 	player.global_position = OPEN + Vector3.UP * 4.0
-	await _shoot(dir, "drop", 40, [20, 24, 28, 34], func(_i): return ["move_left"])
+	await _shoot(dir, "drop", 44, [24, 31, 34, 40], func(_i): return ["move_left"])
 
 
 ## Runs `ticks` ticks with `step.call(i)` held, saving the frame after each tick in `at`.
 func _shoot(dir: String, name: String, ticks: int, at: Array, step: Callable) -> void:
 	for i in ticks:
+		var was_floor: bool = player.is_on_floor()
 		await _step(step.call(i))
+		if player.is_on_floor() != was_floor:
+			print("[move] %s: %s at tick %d" % [name, "landed" if was_floor == false else "left the floor", i])
 		if at.has(i):
 			await RenderingServer.frame_post_draw
 			var file := "%s/%s_%02d.png" % [dir, name, i]
