@@ -125,6 +125,8 @@ sound_category = Dictionary[StringName, StringName]({
 &"launch_pad_final": &"music",
 &"summit_lodge_loop": &"music",
 &"summit_lodge_final": &"music",
+&"showreel_trailer": &"music",
+&"cine_": &"music",
 &"pier_ambience": &"ambience",
 &"neon_ambience": &"ambience",
 &"aqua_ambience": &"ambience",
