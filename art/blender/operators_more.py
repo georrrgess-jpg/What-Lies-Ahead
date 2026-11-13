@@ -313,9 +313,9 @@ def op_halfpipe():
     k.add(phone_parts, bone="Head", tag="headgear", occlude=False)
     k.neck()
 
-    k.torso(hoodie_dark, lower_m=char, split_z=0.9)
-    k.shell("Hoodie", 0.86, 1.36, hoodie, grow=0.02, thickness=0.018, flare=0.014)
-    k.belt(0.88, 0.05, hoodie_dark, grow=0.006, name="Rib")
+    k.torso(hoodie_dark, lower_m=char, split_z=0.93)
+    k.shell("Hoodie", 0.92, 1.36, hoodie, grow=0.014, thickness=0.014, flare=0.008)
+    k.belt(0.935, 0.045, hoodie_dark, grow=0.005, name="Rib")
     front = k.on_torso("front")
     _detail(k, [decal(k.n("Pocket"), rrect(0, 0.99, 0.26, 0.11, 0.03), front, hoodie_dark, lift=0.005),
                 decal(k.n("Bolt"), [(0.01, 1.27), (-0.045, 1.17), (-0.005, 1.17), (-0.03, 1.09), (0.045, 1.2), (0.005, 1.2), (0.03, 1.27)], front, lime,
@@ -346,14 +346,14 @@ def op_halfpipe():
         k.arm_band(side, "ForeArm", 0.72, 0.93, hoodie_dark, grow=0.012, name="Cuff")
         k.hand(side, char, plate_m=lime)
         k.thigh(side, k.skin_m)
-        k.shorts_leg(side, char, length=0.82, hem_m=lime, flare=0.02)
+        k.shorts_leg(side, char, length=0.7, hem_m=lime, flare=0.016)
         k.shin(side, k.skin_m)
         k.leg_band(side, "Shin", -0.04, 0.16, char, grow=0.016, name="KneePad")
         k.leg_band(side, "Shin", 0.5, 0.92, sock, grow=0.006, name="Sock")
         k.leg_band(side, "Shin", 0.56, 0.6, pink, grow=0.008, name="SockStripe")
         k.shoe(side, char, sock, toe_m=sock, lace_m=lime, collar_m=char, shaft=0.07, shaft_m=char, stripe_m=pink, tongue_m=char)
     _both(limbs)
-    return k, "head_bob", dict(bend=24, out=0.28, lean=1.5, chin=4.0, sway=1.2)
+    return k, "head_bob", dict(bend=24, out=0.28, lean=1.5, chin=4.0, sway=1.2, aim=(0.09, -0.04, -0.015))
 
 
 def op_top_dog():
@@ -402,11 +402,11 @@ def op_top_dog():
         _detail(k, strip(k.n(f"ApronStrap{side}"), [(side * 0.085, 1.26, 0.012), (side * 0.11, 1.31, 0.012), (side * 0.12, 1.36, 0.01)], front, apron, lift=0.012))
     k.belt(0.945, 0.05, leather, grow=0.008, name="Holster")
     for side, m, name in ((1, mustard, "Mustard"), (-1, red, "Ketchup")):
-        p = k.torso_point(0.96, 270 + side * 52, 0.045)
+        p = k.torso_point(0.96, 270 + side * 118, 0.045)
         k.add([cyl(k.n(name), 0.034, 0.12, p, segs=14, bevel=0.012, m=m),
                cyl(k.n(name + "Cap"), 0.022, 0.035, p + Vector((0, 0, 0.075)), segs=10, bevel=0.006, m=white),
                cyl(k.n(name + "Nozzle"), 0.012, 0.04, p + Vector((0, 0, 0.11)), segs=8, bevel=0.0, m=m, radius_top=0.004),
-               box(k.n(name + "Loop"), (0.08, 0.08, 0.03), p + Vector((0, 0, -0.005)), rot=rad(0, 0, side * 52), bevel=0.01, m=leather)],
+               box(k.n(name + "Loop"), (0.08, 0.08, 0.03), p + Vector((0, 0, -0.005)), rot=rad(0, 0, side * 118), bevel=0.01, m=leather)],
               bone="Hips", tag="gear")
 
     def limbs(side, s):
@@ -482,7 +482,7 @@ def op_tide_keeper():
         k.arm_band(side, "UpperArm", 0.3, 0.37, stripe, grow=0.004, name="Stripe0")
         k.arm_band(side, "UpperArm", 0.55, 0.62, stripe, grow=0.004, name="Stripe1")
         k.fore_arm(side, navy)
-        k.arm_band(side, "ForeArm", 0.3, 0.37, stripe, grow=0.004, name="Stripe")
+        k.arm_band(side, "ForeArm", 0.44, 0.51, stripe, grow=0.004, name="Stripe")
         k.arm_band(side, "ForeArm", 0.66, 0.93, yellow, grow=0.016, name="Gauntlet", taper=(0.01, -0.004))
         k.hand(side, yellow, plate_m=yellow)
         k.thigh(side, wader)
@@ -554,10 +554,10 @@ def op_mech_jockey():
            box(k.n("PackGlow2"), (0.2, 0.01, 0.025), (0, by + 0.082, 1.13), bevel=0.004, m=glow),
            box(k.n("Hazard"), (0.3, 0.02, 0.03), (0, by + 0.07, 1.03), bevel=0.006, m=yellow)], bone="Chest", tag="gear")
     # Left shoulder armour.
-    sp = sx(1, SHOULDER) + Vector((0.03, 0.0, 0.07))
-    k.add([open_shell(k.n("Pauldron"), 0.125, sp, 75.0, gun, scale=(1.0, 1.1, 0.75), thickness=0.016, toward=(0.15, 0, -1)),
-           box(k.n("PauldronStripe"), (0.03, 0.2, 0.02), sp + Vector((0.05, 0.0, 0.085)), rot=rad(0, 30, 0), bevel=0.006, m=yellow),
-           box(k.n("PauldronStripe2"), (0.03, 0.2, 0.02), sp + Vector((0.09, 0.0, 0.055)), rot=rad(0, 42, 0), bevel=0.006, m=yellow)],
+    sp = sx(1, SHOULDER) + Vector((0.065, 0.0, 0.045))
+    k.add([open_shell(k.n("Pauldron"), 0.11, sp, 75.0, gun, scale=(0.9, 1.1, 0.7), thickness=0.016, toward=(0.15, 0, -1)),
+           blob(k.n("PauldronStud"), 0.02, sp + Vector((0.06, -0.065, 0.045)), yellow, segs=10, rings=6),
+           blob(k.n("PauldronStud2"), 0.02, sp + Vector((0.06, 0.065, 0.045)), yellow, segs=10, rings=6)],
           bone="UpperArm.L", tag="arm")
 
     def limbs(side, s):
@@ -574,7 +574,7 @@ def op_mech_jockey():
         k.leg_band(side, "Shin", -0.04, 0.16, gun, grow=0.014, name="KneePad")
         k.shoe(side, boot, strap_m, toe_m=gun_hi, style="boot", shaft=0.18, shaft_m=boot, lace_m=orange, collar_m=gun)
     _both(limbs)
-    return k, "go_signal", dict(bend=20, out=0.3, chin=-2.0)
+    return k, "go_signal", dict(bend=20, out=0.3, chin=-2.0, aim=BULKY_HOLD)
 
 
 def op_cosmic_sheriff():
@@ -602,15 +602,15 @@ def op_cosmic_sheriff():
     k.hair_cap(hair, _hairline(0.58, 0.18, -0.12, -0.42), grow=0.035)
     k.neck()
     f = _hat_frame(0.14, -6.0)
-    brim_rows = [(-0.012, 0.44, 0.4, 0, 0, 2.1), (-0.004, 0.45, 0.41, 0, 0, 2.1), (0.004, 0.45, 0.41, 0, 0, 2.1), (0.012, 0.44, 0.4, 0, 0, 2.1)]
+    brim_rows = [(-0.012, 0.39, 0.39, 0, 0, 2.1), (-0.004, 0.4, 0.4, 0, 0, 2.1), (0.004, 0.4, 0.4, 0, 0, 2.1), (0.012, 0.39, 0.39, 0, 0, 2.1)]
     hat = [loft(k.n("Brim"), brim_rows, hat_m, segs=36, sub=1, frame=f, caps=("flat", "flat"), sharp=70),
            loft(k.n("Crown"), [(0.0, 0.25, 0.236, 0, 0, 2.3), (0.1, 0.235, 0.225, 0, 0, 2.3), (0.2, 0.2, 0.205, 0, 0, 2.4), (0.25, 0.17, 0.19, 0, 0.0, 2.6)],
                 hat_m, segs=28, sub=3, frame=f, caps=("flat", "round"), cap_h=(None, 0.02)),
            loft(k.n("HatBand"), [(0.014, 0.256, 0.242, 0, 0, 2.3), (0.02, 0.259, 0.245, 0, 0, 2.3), (0.06, 0.253, 0.24, 0, 0, 2.3), (0.066, 0.25, 0.237, 0, 0, 2.3)],
                 turq, segs=28, sub=1, frame=f, caps=("flat", "flat"), sharp=70)]
     for side in (1, -1):    # the brim curls up at the sides
-        hat.append(tube(k.n(f"Curl{side}"), [f @ Vector((side * 0.3, -0.3, 0.02)), f @ Vector((side * 0.43, -0.1, 0.06)), f @ Vector((side * 0.445, 0.1, 0.06)),
-                                             f @ Vector((side * 0.3, 0.3, 0.02))], 0.022, m=hat_dark, segs=10))
+        hat.append(tube(k.n(f"Curl{side}"), [f @ Vector((side * 0.26, -0.29, 0.02)), f @ Vector((side * 0.38, -0.1, 0.06)), f @ Vector((side * 0.39, 0.1, 0.06)),
+                                             f @ Vector((side * 0.26, 0.29, 0.02))], 0.02, m=hat_dark, segs=10))
     pp = f @ Vector((0.0, -0.255, 0.04))
     hat += [blob(k.n("Planet"), 0.034, pp, planet, segs=12, rings=8),
             torus(k.n("PlanetRing"), 0.055, 0.008, pp, rot=rad(70, 20, 0), m=gold, major_segs=20, minor_segs=6),
@@ -654,14 +654,14 @@ def op_cosmic_sheriff():
         k.add([cyl(k.n("SpurPin" + s), 0.006, 0.05, (ANKLE.x * side, 0.13, 0.065), rot=rad(90, 0, 0), segs=6, bevel=0.0, m=silver),
                cyl(k.n("Spur" + s), 0.026, 0.008, (ANKLE.x * side, 0.16, 0.065), rot=rad(0, 90, 0), segs=10, bevel=0.002, m=gold)], bone="Foot." + s, tag="foot")
     _both(limbs)
-    return k, "quick_draw", dict(bend=22, out=0.29, lean=-1.0, chin=-2.0)
+    return k, "quick_draw", dict(bend=22, out=0.29, lean=-1.0, chin=-2.0, aim=BULKY_HOLD)
 
 
 def op_timber_jack():
     """Lumberjack: trapper hat with fur ear flaps, a big beard, buffalo-check
     flannel under a quilted puffer vest, rolled jeans, work boots and an axe
     across the back."""
-    k = Kit("TJ_", "#e8b08a", dict(shoulder=1.1, chest=1.1, waist=1.08, belly=0.3, arm=1.1, leg=1.04, depth=1.04))
+    k = Kit("TJ_", "#e8b08a", dict(shoulder=1.04, chest=1.0, waist=1.04, belly=0.2, arm=1.06, leg=1.04))
     check = mat("Flannel", "#d0262e", rough=0.8)
     check_dark = mat("FlannelDark", "#1c1418", rough=0.8)
     puffer = mat("Puffer", "#2f6a3a", rough=0.5)
@@ -683,8 +683,8 @@ def op_timber_jack():
     for side in (1, -1):
         k.add(strip(k.n(f"Stache{side}"), [(side * 0.004, mz, 0.018), (side * 0.045, mz - 0.006, 0.022), (side * 0.085, mz - 0.02, 0.016),
                                            (side * 0.1, mz - 0.04, 0.008)], face, beard, lift=0.016), bone="Head", tag="face")
-    k.add([blob(k.n("Beard"), 1.0, HEAD_C + Vector((0, -0.12, -0.135)), beard, scale=(0.19, 0.13, 0.12)),
-           blob(k.n("BeardTip"), 1.0, HEAD_C + Vector((0, -0.17, -0.2)), beard, scale=(0.12, 0.08, 0.075))], bone="Head", tag="face")
+    k.add([blob(k.n("Beard"), 1.0, HEAD_C + Vector((0, -0.165, -0.12)), beard, scale=(0.18, 0.09, 0.11)),
+           blob(k.n("BeardTip"), 1.0, HEAD_C + Vector((0, -0.2, -0.18)), beard, scale=(0.11, 0.065, 0.07))], bone="Head", tag="face")
     k.neck()
     hat_parts = k.hair_cap(check, _hairline(0.42, 0.34, 0.2, 0.0), grow=0.08, name="Trapper", tag="headgear")
     k.head_band("TrapperFur", 0.12, 0.2, fur, grow=0.11)
@@ -705,7 +705,7 @@ def op_timber_jack():
                 enumerate((-0.17, -0.06, 0.06, 0.17))]
             + [strip(k.n(f"CheckB{i}"), line_path((x, 0.98), (x, 1.34), 0.035, steps=9), back, check_dark, lift=0.003) for i, x in
                enumerate((-0.17, -0.06, 0.06, 0.17))])
-    k.shell("Vest", 0.97, 1.355, puffer, grow=0.024, thickness=0.024, gap=(14.0, 30.0))
+    k.shell("Vest", 0.97, 1.355, puffer, grow=0.012, thickness=0.016, gap=(18.0, 32.0))
     for i, z in enumerate((1.06, 1.16, 1.26)):
         k.belt(z, 0.016, puffer_dark, grow=-0.006, name=f"Quilt{i}")
     k.belt(0.965, 0.05, mat("Belt", "#5a3424", rough=0.55), name="Belt")
@@ -721,8 +721,8 @@ def op_timber_jack():
 
     def limbs(side, s):
         k.upper_arm(side, check)
-        k.arm_band(side, "UpperArm", 0.35, 0.43, check_dark, grow=0.003, name="Check0")
-        k.arm_band(side, "UpperArm", 0.68, 0.76, check_dark, grow=0.003, name="Check1")
+        k.arm_band(side, "UpperArm", 0.28, 0.36, check_dark, grow=0.003, name="Check0")
+        k.arm_band(side, "UpperArm", 0.5, 0.58, check_dark, grow=0.003, name="Check1")
         k.fore_arm(side, k.skin_m)
         k.arm_band(side, "ForeArm", -0.04, 0.16, check, grow=0.016, name="Rolled")
         k.arm_band(side, "ForeArm", 0.04, 0.09, check_dark, grow=0.02, name="RolledStripe")

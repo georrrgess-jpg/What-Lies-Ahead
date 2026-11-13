@@ -476,8 +476,8 @@ def pose_keys(style, idle0):
     if style == "bunny_hop":          # Pixel Pal: paws up at the chest, three little hops with a head tilt
         def paws(tilt, dz):
             return _merge(body(idle0, shift=(0, 0, dz), spine=(-2, 0, 0), chest=(-3, 0, 0), head=(-4, tilt, tilt * 0.6)),
-                          arm(1, 0.36, 0.62, -0.5, bend=100, twist=38, wrist=(0, 0, 28), curl=(46, 60), thumb=(14, 0)),
-                          arm(-1, 0.36, 0.62, -0.5, bend=100, twist=38, wrist=(0, 0, 28), curl=(46, 60), thumb=(14, 0)))
+                          arm(1, 0.36, 0.62, -0.5, bend=88, twist=38, wrist=(0, 0, 28), curl=(46, 60), thumb=(14, 0)),
+                          arm(-1, 0.36, 0.62, -0.5, bend=88, twist=38, wrist=(0, 0, 28), curl=(46, 60), thumb=(14, 0)))
         return [(0.0, idle0), (0.3, paws(0, -0.05)), (0.48, paws(12, 0.0)), (0.66, paws(0, -0.05)), (0.84, paws(-12, 0.0)),
                 (1.02, paws(0, -0.05)), (1.22, paws(10, 0.006)), (1.6, paws(10, 0.0)), (2.1, idle0)], 2.1
     if style == "robot":              # Wind-Up Wally: stiff clockwork arm swings, a run-down slump, then rewound
@@ -501,10 +501,9 @@ def pose_keys(style, idle0):
                                                                                                  thumb=(20, 0)))
         return [(0.0, idle0), (0.32, bars(0)), (0.5, bars(-30)), (0.66, bars(0)), (0.82, bars(-30)), (0.98, bars(0)), (1.32, sky), (1.8, sky),
                 (2.3, idle0)], 2.3
-    if style == "head_bob":           # Halfpipe: a hand on the headphones, nodding to the beat, a shaka
+    if style == "head_bob":           # Halfpipe: nodding to the beat with a shaka in each hand, one raised high
         def ear():
-            goal = hand_goal(-1, (-0.36, -0.03, 1.66), (0.15, -0.1, 0.98), (1.0, 0.0, 0.0), anchor=(-0.027, 0.0, -0.08), pole=(-0.8, 0.3, -0.5))
-            return _merge({"hand.R": goal}, fingers(-1, (20, 26), thumb=(10, 0)))
+            return arm(-1, 0.7, 0.45, 0.55, bend=58, twist=-40, wrist=(0, 0, -16), curl="fist", thumb=(-30, 46))
         shaka = arm(1, 0.5, 0.75, -0.4, bend=62, twist=40, wrist=(0, 0, 20), curl="fist", thumb=(-30, 46))
 
         def nod(dip):
@@ -553,7 +552,7 @@ def pose_keys(style, idle0):
         lift = _merge(body(idle0, shift=(0, 0.01, 0.0), hips=(-2, 0, 0), spine=(-4, 0, 0), chest=(-6, 0, 0), head=(-10, 0, 0)), grip(0.3, 0.35, 1.0, 34, -30))
         hit = _merge(body(idle0, shift=(0, -0.02, -0.08), hips=(12, 0, 0), spine=(10, 0, 0), chest=(8, 0, 0), head=(4, 0, 0)), grip(0.3, 1.0, -0.45, 12, 10))
         proud = _merge(body(idle0, spine=(-4, 0, 0), chest=(-8, 0, 0), head=(-10, 0, 0)),
-                       arm(1, 0.9, -0.3, -0.62, bend=104, twist=50, curl="fist", thumb=(20, 0)), arm(-1, 0.9, -0.3, -0.62, bend=104, twist=50, curl="fist",
+                       arm(1, 0.9, -0.3, -0.62, bend=92, twist=50, curl="fist", thumb=(20, 0)), arm(-1, 0.9, -0.3, -0.62, bend=92, twist=50, curl="fist",
                                                                                                      thumb=(20, 0)))
         return [(0.0, idle0), (0.4, lift), (0.62, hit), (0.95, lift), (1.17, hit), (1.6, proud), (2.1, proud), (2.6, idle0)], 2.6
     # "flex": Arcade Champion's double biceps, chin up
