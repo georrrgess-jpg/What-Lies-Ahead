@@ -17,7 +17,10 @@
         <Name>_Eye    empty on the optic axis where the eye sits by default.
 
 Optics: Reflex (open hoop), Holo (boxy hood), Tube (short tube), Prism
-(chunky 2x) and Scope (long scope). scripts/weapons/sights/weapon_sights.gd
+(chunky 2x), Scope (long scope), Periscope (tube with a periscope head), Gem
+(crystal crown), Gallery (bulb-ringed hoop), Eye (eyeball), Hex (hexagonal
+hood), Brass (vintage 1.4x), Burst (star bezel), Ranger (twin-window box),
+Frost (iced tube) and Porthole (bolted brass ring). scripts/weapons/sights/weapon_sights.gd
 fits them to weapons; data/cosmetics/sights/*.tres are the items using them.
 
     python art/blender/build_sights.py
@@ -39,6 +42,10 @@ def sight_mats():
         glow=mat("SightGlow", "#ff4a5e", rough=0.3, emit=2.4),
         glass=mat("SightGlassFront", "#14365c", rough=0.08, metal=0.6),
         lens=mat("SightLens", "#9fe8ff", rough=0.1),
+        white=mat("SightWhite", "#f4f1ea", rough=0.35),
+        vein=mat("SightVein", "#e8263a", rough=0.4),
+        brass=mat("SightBrass", "#d4a03a", rough=0.28, metal=0.85),
+        ice=mat("SightIce", "#bfefff", rough=0.15, metal=0.1),
     )
     for material in m.values():
         material.use_backface_culling = True
@@ -251,6 +258,250 @@ def scope(m):
     return optic("Scope", body, (0.0275, 0.0275), (0, -0.134, axis), (0, -0.32, axis), m)
 
 
+# --- update 4 optics --------------------------------------------------------
+
+def radial_spikes(prefix, count, axis, y, r0, lengths, width, depth, mats, phase=0.0):
+    """Flat triangular spikes round the window (a star bezel or crystal crown)."""
+    out = []
+    for i in range(count):
+        a = phase + math.tau * i / count
+        length = lengths[i % len(lengths)]
+        d = (math.cos(a), math.sin(a))
+        n = (-d[1], d[0])
+        pts = [(d[0] * r0 + n[0] * width, axis + d[1] * r0 + n[1] * width), (d[0] * (r0 + length), axis + d[1] * (r0 + length)),
+               (d[0] * r0 - n[0] * width, axis + d[1] * r0 - n[1] * width)]
+        out.append(prism(f"{prefix}{i}", pts, depth, (0, y, 0), m=mats[i % len(mats)], bevel=0.0012))
+    return out
+
+
+def periscope(m):
+    """A short tube with a periscope column rising from its front, head facing forward."""
+    axis = 0.05
+    profile = [(-0.03, 0.031), (-0.022, 0.031), (-0.018, 0.0285), (0.022, 0.0285), (0.026, 0.031), (0.03, 0.031)]
+    body = [
+        box("PeriBase", (0.042, 0.06, 0.016), (0, 0, 0.008), bevel=0.005, m=m["body"]),
+        box("PeriSaddle", (0.028, 0.03, 0.012), (0, 0, 0.019), bevel=0.004, m=m["body"]),
+        lathe("PeriTube", profile, axis, m["body"], 0.0255, 0.0255, segs=24, inner_wall=True),
+        torus("PeriRingA", 0.031, 0.0032, (0, -0.027, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=24, minor_segs=6),
+        box("PeriColumn", (0.02, 0.018, 0.05), (0, 0.016, axis + 0.05), bevel=0.006, m=m["accent"]),
+        box("PeriHead", (0.028, 0.038, 0.022), (0, 0.02, axis + 0.083), bevel=0.007, m=m["body"]),
+        box("PeriHeadGlass", (0.02, 0.004, 0.012), (0, 0.039, axis + 0.083), bevel=0.0015, m=m["glass"]),
+        box("PeriHeadBrow", (0.03, 0.01, 0.004), (0, 0.033, axis + 0.096), bevel=0.0015, m=m["accent"]),
+        sphere("PeriLamp", 0.0035, (0, 0.0005, axis + 0.083), m=m["glow"], segs=8, rings=5),
+    ]
+    for i, z in enumerate((axis + 0.035, axis + 0.055)):
+        body.append(torus(f"PeriBand{i}", 0.0125, 0.002, (0, 0.016, z), m=m["steel"], major_segs=16, minor_segs=5))
+    body += knob("PeriSide", (0.028, -0.004, axis), "x", m["steel"], m["accent"], radius=0.008, height=0.01)
+    body += clamp_bolts("PeriBolt", (-0.018, 0.018), 0.05, 0.009, m["steel"])
+    return optic("Periscope", body, (0.0265, 0.0265), (0, -0.012, axis), (0, -0.2, axis), m)
+
+
+def gem(m):
+    """A crown of crystals round a round window, with a big gem on top."""
+    axis = 0.046
+    y = -0.012
+    body = [
+        box("GemBase", (0.05, 0.08, 0.016), (0, 0.008, 0.008), bevel=0.005, m=m["body"]),
+        box("GemNeck", (0.03, 0.02, 0.012), (0, y, 0.018), bevel=0.004, m=m["body"]),
+        torus("GemBezel", 0.03, 0.0045, (0, y, axis), rot=rad(90, 0, 0), m=m["steel"], major_segs=32, minor_segs=6),
+        torus("GemBezelBack", 0.0295, 0.003, (0, y + 0.008, axis), rot=rad(90, 0, 0), m=m["body"], major_segs=32, minor_segs=6),
+        cyl("GemTop", 0.0105, 0.016, (0, y, axis + 0.05), segs=6, bevel=0.0015, m=m["accent"], radius_top=0.0045),
+        cyl("GemTopPoint", 0.0105, 0.012, (0, y, axis + 0.036), rot=rad(180, 0, 0), segs=6, bevel=0.0012, m=m["accent"], radius_top=0.001),
+        sphere("GemSpark", 0.003, (0, y - 0.006, axis + 0.05), m=m["glow"], segs=8, rings=5),
+    ]
+    body += radial_spikes("GemCrystal", 10, axis, y, 0.031, (0.013, 0.008), 0.0055, 0.01, (m["accent"], m["steel"]), phase=math.pi / 10)
+    body += clamp_bolts("GemBolt", (0.004, 0.03), 0.058, 0.008, m["steel"])
+    return optic("Gem", body, (0.0265, 0.0265), (0, y - 0.004, axis), (0, -0.21, axis), m)
+
+
+def gallery(m):
+    """Shooting-gallery hoop: a red-and-white ring studded with bulbs, a sign on top."""
+    axis = 0.046
+    y = -0.01
+    body = [
+        box("GalBase", (0.05, 0.08, 0.016), (0, 0.008, 0.008), bevel=0.005, m=m["body"]),
+        box("GalSign", (0.046, 0.007, 0.014), (0, y, axis + 0.047), bevel=0.003, m=m["white"]),
+        box("GalSignTrim", (0.05, 0.006, 0.003), (0, y, axis + 0.039), bevel=0.001, m=m["accent"]),
+    ]
+    for i in range(8):
+        a0 = math.tau * i / 8
+        body.append(torus(f"GalRing{i}", 0.032, 0.0048, (0, y, axis), rot=rad(90, 0, 0), m=m["accent"] if i % 2 else m["white"],
+                          major_segs=6, minor_segs=6, arc=math.tau / 8, start=a0))
+    for i in range(12):
+        a = math.tau * i / 12 + math.pi / 12
+        body.append(sphere(f"GalBulb{i}", 0.0033, (math.cos(a) * 0.032, y - 0.0045, axis + math.sin(a) * 0.032), m=m["glow"], segs=8, rings=5))
+    for k in range(3):
+        body.append(sphere(f"GalSignBulb{k}", 0.0026, (-0.014 + k * 0.014, y - 0.004, axis + 0.047), m=m["glow"], segs=8, rings=5))
+    for side in (-1, 1):
+        body.append(box(f"GalPost{side}", (0.008, 0.014, 0.03), (side * 0.024, y, 0.026), rot=(0, side * -0.35, 0), bevel=0.003, m=m["body"]))
+    body += clamp_bolts("GalBolt", (0.004, 0.032), 0.058, 0.008, m["steel"])
+    return optic("Gallery", body, (0.0265, 0.0265), (0, y - 0.002, axis), (0, -0.21, axis), m)
+
+
+def zombie_eye(m):
+    """An eyeball: a bulging white tube with green lids, red veins and a glowing iris."""
+    axis = 0.052
+    profile = [(-0.03, 0.028), (-0.024, 0.034), (-0.01, 0.038), (0.01, 0.038), (0.024, 0.034), (0.03, 0.029)]
+    body = [
+        box("EyeBase", (0.042, 0.06, 0.016), (0, 0, 0.008), bevel=0.005, m=m["body"]),
+        box("EyeSaddle", (0.03, 0.036, 0.012), (0, 0, 0.019), bevel=0.004, m=m["body"]),
+        lathe("EyeBall", profile, axis, m["white"], 0.0255, 0.0265, segs=28, inner_wall=True),
+        torus("EyeIris", 0.0285, 0.004, (0, 0.03, axis), rot=rad(90, 0, 0), m=m["glow"], major_segs=28, minor_segs=6),
+        torus("EyeLidTop", 0.039, 0.0075, (0, -0.004, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=20, minor_segs=8,
+              arc=math.radians(130), start=math.radians(25)),
+        torus("EyeLidLow", 0.038, 0.006, (0, -0.002, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=16, minor_segs=8,
+              arc=math.radians(90), start=math.radians(225)),
+    ]
+    for i in range(5):
+        a = math.radians(45 + i * 22.5)
+        base = (math.cos(a) * 0.045, -0.004, axis + math.sin(a) * 0.045)
+        body.append(cyl(f"EyeLash{i}", 0.0018, 0.008, base, rot=(0, math.radians(90) - a, 0), segs=6, bevel=0.0, m=m["body"], radius_top=0.0004))
+    for i, (a, side) in enumerate(((200, 1), (160, 1), (20, -1), (-20, -1))):
+        ang = math.radians(a)
+        pts = []
+        for k in range(5):
+            f = k / 4
+            r = 0.0383 - 0.002 * abs(f - 0.5)
+            yy = 0.02 - f * 0.032
+            wob = math.sin(f * 9 + i) * 0.12
+            pts.append((math.cos(ang + wob) * r, yy, axis + math.sin(ang + wob) * r))
+        body.append(tube(f"EyeVein{i}", pts, 0.0011, m=m["vein"], segs=5))
+    body += clamp_bolts("EyeBolt", (-0.018, 0.018), 0.05, 0.009, m["steel"])
+    return optic("Eye", body, (0.0265, 0.0265), (0, -0.018, axis), (0, -0.2, axis), m)
+
+
+def hex_hood(m):
+    """A hexagonal neon hood: six panels round the window, lit along the rear edge."""
+    axis = 0.047
+    y = -0.012
+    apothem = 0.03
+    side = 2 * apothem * math.tan(math.radians(30))
+    body = [box("HexBase", (0.056, 0.09, 0.02), (0, 0.008, 0.01), bevel=0.006, m=m["body"])]
+    for i in range(6):
+        a = math.radians(30 + 60 * i)
+        c = (math.cos(a) * (apothem + 0.004), axis + math.sin(a) * (apothem + 0.004))
+        tilt = math.radians(90) - a
+        body.append(box(f"HexPanel{i}", (side + 0.0062, 0.04, 0.008), (c[0], y, c[1]), rot=(0, tilt, 0), bevel=0.0025,
+                        m=m["accent"] if i % 2 else m["body"]))
+        cr = (math.cos(a) * (apothem + 0.0005), axis + math.sin(a) * (apothem + 0.0005))
+        body.append(box(f"HexNeon{i}", (side * 0.9, 0.003, 0.002), (cr[0], y - 0.02, cr[1]), rot=(0, tilt, 0), bevel=0.0006, m=m["glow"]))
+    for s_ in (-1, 1):
+        body.append(box(f"HexLeg{s_}", (0.008, 0.026, 0.012), (s_ * 0.016, y, 0.022), bevel=0.003, m=m["body"]))
+    body += clamp_bolts("HexBolt", (0.006, 0.034), 0.064, 0.01, m["steel"])
+    return optic("Hex", body, (0.022, 0.02), (0, y - 0.006, axis), (0, -0.21, axis), m)
+
+
+def brass_scope(m):
+    """Vintage 1.4x: a slim brass tube with knurled rings, flared eyepiece and bell."""
+    axis = 0.058
+    profile = [(-0.07, 0.035), (-0.052, 0.035), (-0.046, 0.0305), (0.04, 0.0305), (0.05, 0.0375), (0.074, 0.0375)]
+    body = [
+        box("BrassRail", (0.03, 0.09, 0.012), (0, 0.002, 0.006), bevel=0.004, m=m["body"]),
+        lathe("BrassTube", profile, axis, m["brass"], 0.0265, 0.0275, segs=28, inner_wall=True),
+        front_glass("BrassGlass", 0.028, 0.07, axis, m["glass"]),
+        torus("BrassEyeCup", 0.035, 0.004, (0, -0.069, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=28, minor_segs=6),
+        torus("BrassBell", 0.0375, 0.004, (0, 0.073, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=28, minor_segs=6),
+        box("BrassPlate", (0.004, 0.03, 0.01), (-0.0315, 0.0, axis), bevel=0.0015, m=m["steel"]),
+    ]
+    for i in range(5):
+        body.append(torus(f"BrassKnurl{i}", 0.0355, 0.0016, (0, -0.064 + i * 0.0035, axis), rot=rad(90, 0, 0), m=m["steel"], major_segs=24, minor_segs=4))
+    for i, yy in enumerate((-0.03, 0.026)):
+        body += [
+            box(f"BrassMount{i}", (0.022, 0.016, 0.028), (0, yy, 0.02), bevel=0.004, m=m["body"]),
+            torus(f"BrassRing{i}", 0.0335, 0.004, (0, yy, axis), rot=rad(90, 0, 0), m=m["brass"], major_segs=24, minor_segs=6),
+        ]
+    body += knob("BrassTop", (0, -0.002, axis + 0.03), "z", m["brass"], m["accent"], radius=0.01, height=0.012)
+    return optic("Brass", body, (0.026, 0.026), (0, -0.066, axis), (0, -0.24, axis), m)
+
+
+def starburst(m):
+    """A ring with a star of long and short spikes round it."""
+    axis = 0.046
+    y = -0.01
+    body = [
+        box("BurstBase", (0.05, 0.08, 0.016), (0, 0.008, 0.008), bevel=0.005, m=m["body"]),
+        box("BurstPost", (0.016, 0.02, 0.016), (0, y, 0.021), bevel=0.004, m=m["body"]),
+        torus("BurstRing", 0.0305, 0.004, (0, y, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=32, minor_segs=6),
+        torus("BurstGlowRing", 0.0285, 0.0016, (0, y - 0.004, axis), rot=rad(90, 0, 0), m=m["glow"], major_segs=32, minor_segs=5),
+    ]
+    body += radial_spikes("BurstSpike", 8, axis, y, 0.032, (0.02, 0.011), 0.006, 0.007, (m["accent"], m["steel"]), phase=math.pi / 8)
+    body += clamp_bolts("BurstBolt", (0.004, 0.032), 0.058, 0.008, m["steel"])
+    return optic("Burst", body, (0.0265, 0.0265), (0, y - 0.002, axis), (0, -0.21, axis), m)
+
+
+def rangefinder(m):
+    """A wide box with two windows: the sight on the axis, a second lens to its left."""
+    axis = 0.05
+    y = -0.004
+    depth = 0.05
+    body = [
+        box("RangeBase", (0.05, 0.08, 0.016), (0, 0.006, 0.008), bevel=0.005, m=m["body"]),
+        box("RangeTop", (0.104, depth, 0.011), (-0.021, y, axis + 0.0235), bevel=0.004, m=m["body"]),
+        box("RangeBottom", (0.104, depth, 0.011), (-0.021, y, axis - 0.0235), bevel=0.004, m=m["body"]),
+        box("RangeRight", (0.009, depth, 0.058), (0.0285, y, axis), bevel=0.003, m=m["body"]),
+        box("RangeMiddle", (0.009, depth, 0.058), (-0.0285, y, axis), bevel=0.003, m=m["accent"]),
+        box("RangeLeft", (0.04, depth, 0.036), (-0.052, y, axis), bevel=0.004, m=m["body"]),
+        front_glass("RangeSecond", 0.012, y + depth / 2 + 0.0005, axis, m["glass"]),
+        box("RangeDisplay", (0.03, 0.002, 0.005), (-0.05, y - depth / 2 - 0.0008, axis + 0.01), bevel=0.0006, m=m["glow"]),
+        box("RangeBand", (0.105, depth + 0.001, 0.004), (-0.021, y, axis + 0.0302), bevel=0.0012, m=m["accent"]),
+        box("RangeFoot", (0.03, 0.03, 0.012), (0, y, 0.02), bevel=0.004, m=m["body"]),
+    ]
+    # The second window's glass sits in the left module (offset along x).
+    body[6].location = (-0.052, 0, 0)
+    for i, x in enumerate((-0.062, -0.047)):
+        body += knob(f"RangeButton{i}", (x, y + 0.01, axis + 0.029), "z", m["steel"], m["accent"] if i else m["glow"], radius=0.0045, height=0.005)
+    body += clamp_bolts("RangeBolt", (-0.014, 0.026), 0.058, 0.009, m["steel"])
+    return optic("Ranger", body, (0.0225, 0.017), (0, y - 0.014, axis), (0, -0.21, axis), m)
+
+
+def frost(m):
+    """A frosted tube with ice fins round its middle and a snow cap."""
+    axis = 0.052
+    profile = [(-0.03, 0.0315), (-0.022, 0.0315), (-0.018, 0.029), (0.022, 0.029), (0.026, 0.0315), (0.03, 0.0315)]
+    body = [
+        box("FrostBase", (0.042, 0.06, 0.016), (0, 0, 0.008), bevel=0.005, m=m["body"]),
+        box("FrostSaddle", (0.028, 0.03, 0.012), (0, 0, 0.019), bevel=0.004, m=m["body"]),
+        lathe("FrostTube", profile, axis, m["ice"], 0.026, 0.026, segs=24, inner_wall=True),
+        sphere("FrostCap", 0.016, (0.002, 0.0, axis + 0.029), scale=(1.3, 1.9, 0.42), m=m["white"], segs=14, rings=8),
+        torus("FrostRingA", 0.0315, 0.003, (0, -0.027, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=24, minor_segs=6),
+        torus("FrostRingB", 0.0315, 0.003, (0, 0.027, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=24, minor_segs=6),
+    ]
+    for i in range(10):
+        a = math.tau * i / 10 + math.pi / 10
+        if math.sin(a) > 0.6:
+            continue
+        d = (math.cos(a), math.sin(a))
+        length = 0.013 if i % 2 else 0.009
+        tip = (d[0] * (0.029 + length), 0.0, axis + d[1] * (0.029 + length))
+        body.append(prism(f"FrostFin{i}", [(d[0] * 0.028 - d[1] * 0.006, axis + d[1] * 0.028 + d[0] * 0.006), (tip[0], tip[2]),
+                                           (d[0] * 0.028 + d[1] * 0.006, axis + d[1] * 0.028 - d[0] * 0.006)], 0.012, (0, 0, 0), m=m["ice"], bevel=0.0012))
+    for i, x in enumerate((-0.016, -0.004, 0.01)):
+        body.append(cyl(f"FrostIcicle{i}", 0.0028, 0.012 - i * 0.002, (x, 0.029, axis - 0.03 - 0.005), segs=6, bevel=0.0, m=m["ice"], radius_top=0.0003))
+        body[-1].rotation_euler = rad(180, 0, 0)
+    body += clamp_bolts("FrostBolt", (-0.018, 0.018), 0.05, 0.009, m["steel"])
+    return optic("Frost", body, (0.0265, 0.0265), (0, -0.012, axis), (0, -0.2, axis), m)
+
+
+def porthole(m):
+    """A bolted brass porthole on a stand, hinged on its right."""
+    axis = 0.046
+    y = -0.008
+    body = [
+        box("PortBase", (0.05, 0.08, 0.016), (0, 0.008, 0.008), bevel=0.005, m=m["body"]),
+        box("PortStand", (0.022, 0.018, 0.014), (0, y + 0.004, 0.019), bevel=0.004, m=m["body"]),
+        torus("PortRing", 0.032, 0.0068, (0, y, axis), rot=rad(90, 0, 0), m=m["brass"], major_segs=36, minor_segs=8),
+        torus("PortLip", 0.027, 0.0024, (0, y - 0.005, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=32, minor_segs=5),
+        box("PortHinge", (0.008, 0.012, 0.016), (0.041, y, axis), bevel=0.003, m=m["brass"]),
+        cyl("PortHingePin", 0.0025, 0.022, (0.045, y, axis), segs=8, bevel=0.0006, m=m["steel"]),
+        box("PortLatch", (0.01, 0.008, 0.006), (-0.041, y - 0.002, axis), bevel=0.002, m=m["steel"]),
+    ]
+    for i in range(8):
+        a = math.tau * i / 8 + math.pi / 8
+        body.append(sphere(f"PortBolt{i}", 0.0034, (math.cos(a) * 0.032, y - 0.0068, axis + math.sin(a) * 0.032), m=m["steel"], segs=8, rings=5))
+    body += clamp_bolts("PortBolt", (0.004, 0.032), 0.058, 0.008, m["steel"])
+    return optic("Porthole", body, (0.0255, 0.0255), (0, y - 0.003, axis), (0, -0.21, axis), m)
+
+
 def check_clear_axis(objects):
     """The middle of every window must be free of housing: no vertex inside 60% of the lens."""
     dg = bpy.context.evaluated_depsgraph_get()
@@ -275,7 +526,8 @@ def build_sights():
     reset_scene()
     m = sight_mats()
     exports = []
-    for build in (reflex, holo, tube_dot, prism_scope, scope):
+    for build in (reflex, holo, tube_dot, prism_scope, scope, periscope, gem, gallery, zombie_eye, hex_hood, brass_scope, starburst,
+                  rangefinder, frost, porthole):
         exports += build(m)
     bpy.context.view_layer.update()
     check_clear_axis(exports)

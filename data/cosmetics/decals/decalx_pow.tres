@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_pow"
+display_name = "POW!"
+description = "Comic-book burst, halftone dots and all. Say it loud."
+slot = &"weapon_decal"
+rarity = 0
+price = 250
+colors = PackedColorArray(1, 0.851, 0.2314, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "Pow",
+"art": "res://art/textures/decals/decal_pow.png"
+}
+sort_order = 4023

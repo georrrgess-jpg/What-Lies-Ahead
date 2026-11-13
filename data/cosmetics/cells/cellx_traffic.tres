@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_traffic"
+display_name = "Traffic Light"
+description = "Snaps from green to amber to red and back. Never stops for anyone."
+slot = &"weapon_cell"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.2392, 1, 0.3529, 1, 1, 0.7608, 0.1216, 1, 1, 0.1647, 0.2275, 1)
+params = {
+"animate": "steps"
+}
+sort_order = 3022

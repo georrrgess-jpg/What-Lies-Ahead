@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_periscope"
+display_name = "Periscope"
+description = "A tall periscope head on a short tube; aimed, a thin cross with a horizon line and range ticks."
+slot = &"weapon_sight"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.2471, 1, 0.4784, 1, 1, 0.7608, 0.1216, 1)
+params = {
+"optic": "Periscope",
+"reticle": "periscope"
+}
+sort_order = 6110

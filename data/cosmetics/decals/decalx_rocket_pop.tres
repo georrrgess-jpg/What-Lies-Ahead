@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_rocket_pop"
+display_name = "Rocket Pop"
+description = "A red, white and blue ice pop with a happy face and one bite gone."
+slot = &"weapon_decal"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.9098, 0.149, 0.2275, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "RocketPop",
+"art": "res://art/textures/decals/decal_rocketpop.png"
+}
+sort_order = 4024

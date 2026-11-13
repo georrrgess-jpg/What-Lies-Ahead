@@ -11,6 +11,8 @@
                           the weapons' own emblems, centred on its origin and
                           normalised to 1 unit across; the game scales it to
                           the weapon's Decal node (scripts/player/weapon_cosmetics.gd).
+                          Printed stickers (decal_art.py) also carry UVs: their
+                          face shows art/textures/decals/decal_<name>.png.
 
 Charm materials keep their own colours. Materials whose names start with
 "FxGlass" are swapped for a glass shader in game.
@@ -21,6 +23,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wla_common import *  # noqa: F401,F403
+from decal_art import ART_STICKERS, write_art
 
 
 # ---------------------------------------------------------------------------
@@ -53,6 +56,17 @@ def charm_mats():
         gem_blue=mat("CharmGemBlue", "#3fc4ff", rough=0.15, emit=0.6),
         tree=mat("CharmTree", "#2f9f5a", rough=0.6),
         purple=mat("CharmPurple", "#8a4fe0", rough=0.4),
+        teal=mat("CharmTeal", "#12b5a4", rough=0.35),
+        brown=mat("CharmBrown", "#6b3a22", rough=0.5),
+        cocoa=mat("CharmCocoa", "#8a4a2a", rough=0.25),
+        silver=mat("CharmSilver", "#dfe4ee", rough=0.2, metal=0.8),
+        navy=mat("CharmNavy", "#2a2a6a", rough=0.35),
+        jelly=mat("CharmJelly", "#ff7ad9", rough=0.2, emit=1.4),
+        jelly_core=mat("CharmJellyCore", "#ffd0f2", rough=0.2, emit=2.2),
+        beam=mat("FxGlassBeam", "#9dffb8", rough=0.05),
+        cyan_neon=mat("CharmCyanNeon", "#3ff4ff", rough=0.3, emit=2.2),
+        bulb=mat("CharmBulb", "#ffe27a", rough=0.3, emit=2.6),
+        alien=mat("CharmAlien", "#7dff6a", rough=0.4, emit=0.4),
     )
 
 
@@ -317,6 +331,331 @@ def charm_crown(m):
     return parts
 
 
+# --- update 4 charms -------------------------------------------------------
+# A charm function returns its parts, or (parts, spin) where spin =
+# (spin_parts, matrix): parts built round a local Z axis, and the matrix that
+# puts that axis and centre on the charm. The spin parts become
+# "Charm_<name>Spin", which the game turns about its own up axis
+# (WeaponCharm.add_spinner).
+
+def charm_ferris_wheel(m):
+    p = "Ferris"
+    hub = (0, -0.0042, -0.045)
+    parts = hanger(p, m)
+    parts += [
+        box(p + "Mast", (0.003, 0.003, 0.026), (0, 0.002, -0.032), bevel=0.001, m=m["white"]),
+        cyl(p + "Axle", 0.0016, 0.007, (0, -0.0008, hub[2]), rot=rad(90, 0, 0), segs=10, bevel=0.0004, m=m["silver"]),
+        box(p + "Base", (0.036, 0.012, 0.006), (0, 0.001, -0.071), bevel=0.002, m=m["purple"]),
+        box(p + "BaseTrim", (0.037, 0.0125, 0.0016), (0, 0.001, -0.0685), bevel=0.0006, m=m["yellow"]),
+    ]
+    for side in (-1, 1):
+        parts.append(tube(f"{p}Leg{side}", [(0, 0.0025, hub[2]), (side * 0.014, 0.0025, -0.069)], 0.0014, m=m["white"], segs=8))
+        parts.append(tube(f"{p}Brace{side}", [(side * 0.0045, 0.0025, -0.056), (side * 0.0105, 0.0025, -0.06)], 0.0009, m=m["white"], segs=6))
+    spin = [
+        torus(p + "Rim", 0.0155, 0.0012, (0, 0, 0), m=m["neon"], major_segs=32, minor_segs=6),
+        torus(p + "Inner", 0.0105, 0.0008, (0, 0, 0), m=m["white"], major_segs=28, minor_segs=5),
+        cyl(p + "Hub", 0.0032, 0.0062, (0, 0, 0), segs=12, bevel=0.0008, m=m["gold"]),
+        prism(p + "HubStar", star_outline(0.0026, 0.0012, 5, 90), 0.0012, (0, 0, 0.0034), rot=rad(90, 0, 0), m=m["pink"]),
+    ]
+    colours = (m["yellow"], m["cyan"], m["pink"], m["orange"])
+    for i in range(8):
+        a = math.tau * i / 8
+        c, s_ = math.cos(a), math.sin(a)
+        spin.append(box(f"{p}Spoke{i}", (0.0148, 0.0011, 0.0011), (c * 0.0078, s_ * 0.0078, 0), rot=(0, 0, a), bevel=0.0, m=m["white"]))
+        spin.append(cyl(f"{p}Car{i}", 0.0027, 0.0048, (c * 0.0168, s_ * 0.0168, 0), segs=10, bevel=0.0008, m=colours[i % 4]))
+        b = a + math.tau / 16
+        spin.append(sphere(f"{p}Bulb{i}", 0.0011, (math.cos(b) * 0.0155, math.sin(b) * 0.0155, 0.0013), m=m["bulb"], segs=6, rings=4))
+    matrix = Matrix.Translation(hub) @ Matrix.Rotation(math.radians(90), 4, "X")
+    return parts, (spin, matrix)
+
+
+def charm_ufo(m):
+    p = "Ufo"
+    zs = -0.039
+    parts = hanger(p, m)
+    beam = cyl(p + "Beam", 0.004, 0.024, (0, 0, zs - 0.017), segs=16, bevel=0.0, m=m["beam"], radius_top=0.0125)
+    beam.rotation_euler = rad(180, 0, 0)
+    parts += [
+        sphere(p + "Antenna", 0.0022, (0, 0, -0.0225), m=m["cyan_neon"], segs=8, rings=5),
+        cyl(p + "Stalk", 0.0007, 0.005, (0, 0, -0.026), segs=6, bevel=0.0, m=m["silver"]),
+        sphere(p + "Dome", 0.0095, (0, 0, zs + 0.002), scale=(1, 1, 0.85), m=m["glass"], segs=18, rings=10),
+        sphere(p + "AlienHead", 0.0045, (0, -0.001, zs + 0.004), scale=(1, 0.9, 1.15), m=m["alien"], segs=12, rings=8),
+        beam,
+        sphere(p + "Belly", 0.0085, (0, 0, zs - 0.004), scale=(1, 1, 0.45), m=m["navy"], segs=16, rings=8),
+        sphere(p + "BellyLight", 0.004, (0, 0, zs - 0.006), scale=(1, 1, 0.5), m=m["cyan_neon"], segs=12, rings=6),
+    ]
+    for side in (-1, 1):
+        parts.append(sphere(f"{p}AlienEye{side}", 0.0016, (side * 0.0019, -0.0045, zs + 0.0048), scale=(0.8, 0.5, 1.2), m=m["black"], segs=8, rings=5))
+    spin = [
+        sphere(p + "Saucer", 0.022, (0, 0, 0), scale=(1, 1, 0.24), m=m["silver"], segs=28, rings=10),
+        torus(p + "SaucerRim", 0.0205, 0.0022, (0, 0, -0.0005), m=m["purple"], major_segs=32, minor_segs=6),
+    ]
+    for i in range(10):
+        a = math.tau * i / 10
+        spin.append(sphere(f"{p}Light{i}", 0.0019, (math.cos(a) * 0.0205, math.sin(a) * 0.0205, 0.0015),
+                           m=m["cyan_neon"] if i % 2 else m["jelly"], segs=8, rings=5))
+    return parts, (spin, Matrix.Translation((0, 0, zs)))
+
+
+def charm_gumball(m):
+    p = "Gumball"
+    r = 0.0135
+    c = (0, 0, -0.026 - r)
+    parts = hanger(p, m)
+    parts += [
+        cyl(p + "Cap", 0.0065, 0.004, (0, 0, c[2] + r + 0.001), segs=14, bevel=0.0012, m=m["red"]),
+        sphere(p + "CapKnob", 0.0028, (0, 0, c[2] + r + 0.004), m=m["red"], segs=10, rings=6),
+        sphere(p + "Globe", r, c, m=m["glass"], segs=20, rings=12),
+        cyl(p + "Body", 0.0105, 0.016, (0, 0, c[2] - r - 0.006), segs=16, bevel=0.002, m=m["red"], radius_top=0.0085),
+        cyl(p + "Collar", 0.0095, 0.003, (0, 0, c[2] - r + 0.0015), segs=16, bevel=0.0008, m=m["silver"]),
+        box(p + "Chute", (0.006, 0.003, 0.004), (0, -0.0095, c[2] - r - 0.009), bevel=0.0008, m=m["silver"]),
+        cyl(p + "Coin", 0.0032, 0.002, (0, -0.0095, c[2] - r - 0.002), rot=rad(90, 0, 0), segs=12, bevel=0.0005, m=m["silver"]),
+        box(p + "Slot", (0.0007, 0.0006, 0.0028), (0, -0.0107, c[2] - r - 0.002), bevel=0.0, m=m["black"]),
+    ]
+    balls = [m["yellow"], m["cyan"], m["pink"], m["green"], m["orange"], m["purple"], m["white"], m["blue"]]
+    k = 0
+    for layer, (zz, rr, n) in enumerate(((-0.0075, 0.0058, 5), (-0.0015, 0.0068, 6), (0.0045, 0.0045, 4))):
+        for i in range(n):
+            a = math.tau * i / n + layer * 0.5
+            parts.append(sphere(f"{p}Ball{k}", 0.0036, (math.cos(a) * rr, math.sin(a) * rr, c[2] + zz), m=balls[k % len(balls)], segs=8, rings=6))
+            k += 1
+    return parts
+
+
+def charm_popcorn(m):
+    p = "Popcorn"
+    top = -0.03
+    h = 0.03
+    parts = hanger(p, m)
+    for i in range(12):
+        a = math.tau * i / 12
+        ob = prism(f"{p}Stripe{i}", [(-0.0042, 0.0), (0.0042, 0.0), (0.0033, -h), (-0.0033, -h)], 0.0018,
+                   (0, 0, 0), m=m["red"] if i % 2 == 0 else m["white"])
+        ob.matrix_world = (Matrix.Translation((math.sin(a) * 0.0155, -math.cos(a) * 0.0155, top)) @ Matrix.Rotation(a, 4, "Z")
+                           @ Matrix.Rotation(math.radians(-4), 4, "X"))
+        parts.append(ob)
+    parts += [
+        cyl(p + "Inside", 0.0145, h, (0, 0, top - h / 2), segs=24, bevel=0.0, m=m["cream"]),
+        torus(p + "Lip", 0.0158, 0.0013, (0, 0, top), m=m["red"], major_segs=28, minor_segs=5),
+        box(p + "Label", (0.014, 0.002, 0.009), (0, -0.0168, top - 0.016), bevel=0.0012, m=m["yellow"]),
+        prism(p + "LabelStar", star_outline(0.0035, 0.0016, 5, 90), 0.0012, (0, -0.0182, top - 0.016), m=m["red"]),
+    ]
+    puffs = [(0, 0, 0.004), (0.007, 0.004, 0.002), (-0.007, 0.003, 0.002), (0.004, -0.007, 0.003), (-0.005, -0.006, 0.003),
+             (0.01, -0.004, 0.0), (-0.01, -0.002, 0.0), (0.002, 0.009, 0.001), (-0.002, -0.0105, 0.0), (0.0, 0.003, 0.009)]
+    for i, (x, y, z) in enumerate(puffs):
+        for j in range(3):
+            a = j * 2.1 + i
+            parts.append(sphere(f"{p}Puff{i}_{j}", 0.0029, (x + math.cos(a) * 0.0018, y + math.sin(a) * 0.0018, top + 0.002 + z + (j % 2) * 0.0015),
+                                m=m["cream"] if (i + j) % 3 else m["yellow"], segs=7, rings=5))
+    return parts
+
+
+def charm_cassette(m):
+    p = "Tape"
+    w, h = 0.046, 0.029
+    c = (0, 0, -0.02 - h / 2 - 0.002)
+    parts = hanger(p, m)
+    parts += [
+        box(p + "Shell", (w, 0.0065, h), c, bevel=0.0025, m=m["black"]),
+        box(p + "Label", (w - 0.008, 0.007, h * 0.52), (0, 0, c[2] + h * 0.14), bevel=0.0012, m=m["neon"]),
+        box(p + "LabelStripe", (w - 0.0078, 0.0072, 0.0026), (0, 0, c[2] + h * 0.3), bevel=0.0006, m=m["cyan_neon"]),
+        box(p + "Window", (0.017, 0.0074, 0.0072), (0, 0, c[2] + h * 0.1), bevel=0.0012, m=m["glass"]),
+        prism(p + "Foot", [(-0.015, 0.0), (0.015, 0.0), (0.012, -0.0065), (-0.012, -0.0065)], 0.0071, (0, 0, c[2] - h / 2 + 0.0063),
+              m=m["navy"], bevel=0.0008),
+    ]
+    for side in (-1, 1):
+        x = side * 0.0105
+        parts += [
+            torus(f"{p}Reel{side}", 0.0042, 0.0011, (x, -0.0036, c[2] + h * 0.1), rot=rad(90, 0, 0), m=m["white"], major_segs=14, minor_segs=4),
+            torus(f"{p}ReelB{side}", 0.0042, 0.0011, (x, 0.0036, c[2] + h * 0.1), rot=rad(90, 0, 0), m=m["white"], major_segs=14, minor_segs=4),
+            cyl(f"{p}Screw{side}", 0.0012, 0.0074, (side * 0.019, 0, c[2] - h * 0.36), rot=rad(90, 0, 0), segs=8, bevel=0.0003, m=m["silver"]),
+            cyl(f"{p}Hole{side}", 0.0016, 0.0072, (side * 0.006, 0, c[2] - h * 0.38), rot=rad(90, 0, 0), segs=8, bevel=0.0003, m=m["silver"]),
+        ]
+        for k in range(3):
+            a = math.tau * k / 3
+            parts.append(box(f"{p}Tooth{side}{k}", (0.0012, 0.0076, 0.0026), (x + math.cos(a) * 0.0022, 0, c[2] + h * 0.1 + math.sin(a) * 0.0022),
+                             rot=(0, -a, 0), bevel=0.0, m=m["white"]))
+    return parts
+
+
+def charm_lucky_cat(m):
+    p = "Cat"
+    zb = -0.056
+    zh = -0.035
+    parts = hanger(p, m)
+    parts += [
+        sphere(p + "Body", 0.0135, (0, 0.001, zb), scale=(1.0, 0.85, 1.05), m=m["white"], segs=16, rings=10),
+        sphere(p + "Head", 0.0125, (0, 0, zh), scale=(1.1, 0.9, 0.9), m=m["white"], segs=16, rings=10),
+        torus(p + "Collar", 0.0085, 0.0016, (0, 0, zh - 0.0105), m=m["red"], major_segs=18, minor_segs=5),
+        sphere(p + "Bell", 0.0028, (0, -0.0085, zh - 0.0135), m=m["gold"], segs=10, rings=6),
+        cyl(p + "Coin", 0.0075, 0.002, (0.0035, -0.0118, zb - 0.002), rot=rad(90, 0, 0), segs=16, bevel=0.0006, m=m["gold"]),
+        box(p + "CoinMark", (0.0035, 0.0006, 0.0055), (0.0035, -0.0131, zb - 0.002), bevel=0.0002, m=m["gold_dark"]),
+        sphere(p + "Nose", 0.0013, (0, -0.0113, zh - 0.0012), m=m["pink"], segs=6, rings=4),
+        sphere(p + "Paw", 0.0042, (-0.0125, -0.003, zh + 0.006), m=m["white"], segs=10, rings=6),
+        box(p + "Arm", (0.0055, 0.0055, 0.014), (-0.0128, -0.0015, zh - 0.002), rot=rad(0, 12, 0), bevel=0.0025, m=m["white"]),
+        sphere(p + "PawPad", 0.0018, (-0.0125, -0.0068, zh + 0.006), scale=(1, 0.4, 1), m=m["pink"], segs=6, rings=4),
+        sphere(p + "Foot", 0.004, (0.009, -0.009, zb - 0.0115), scale=(1, 1, 0.6), m=m["white"], segs=8, rings=5),
+    ]
+    for side in (-1, 1):
+        parts += [
+            cyl(f"{p}Ear{side}", 0.0045, 0.008, (side * 0.0075, 0.0, zh + 0.0105), rot=rad(0, side * -18, 0), segs=4, bevel=0.0008,
+                m=m["white"], radius_top=0.0006),
+            cyl(f"{p}EarIn{side}", 0.0028, 0.006, (side * 0.0075, -0.0022, zh + 0.0098), rot=rad(0, side * -18, 0), segs=4, bevel=0.0,
+                m=m["pink"], radius_top=0.0005),
+            torus(f"{p}Eye{side}", 0.0022, 0.0006, (side * 0.0052, -0.0108, zh + 0.0025), rot=rad(90, 0, 0), m=m["black"], major_segs=10,
+                  minor_segs=4, arc=math.pi * 0.8, start=math.pi * 0.1),
+            box(f"{p}Whisker{side}", (0.007, 0.0006, 0.0006), (side * 0.0115, -0.0098, zh - 0.002), rot=(0, side * 0.15, 0), bevel=0.0, m=m["black"]),
+            sphere(f"{p}Cheek{side}", 0.0018, (side * 0.0075, -0.0098, zh - 0.0025), scale=(1, 0.4, 0.7), m=m["pink"], segs=6, rings=4),
+        ]
+    return parts
+
+
+def charm_arcade_stick(m):
+    p = "Stick"
+    parts = hanger(p, m)
+    ball_z = -0.0255
+    parts += [
+        sphere(p + "Ball", 0.0062, (0, 0, ball_z), m=m["red"], segs=16, rings=10),
+        sphere(p + "BallShine", 0.0016, (-0.002, -0.0045, ball_z + 0.0025), m=m["white"], segs=6, rings=4),
+        cyl(p + "Shaft", 0.0016, 0.018, (0, 0, ball_z - 0.013), segs=10, bevel=0.0004, m=m["silver"]),
+        cyl(p + "Boot", 0.0052, 0.004, (0, 0, ball_z - 0.022), segs=14, bevel=0.0012, m=m["black"], radius_top=0.003),
+        box(p + "Case", (0.04, 0.026, 0.012), (0.006, 0.0, -0.058), bevel=0.0035, m=m["purple"]),
+        box(p + "Panel", (0.036, 0.022, 0.0016), (0.006, 0.0, -0.0516), bevel=0.0006, m=m["navy"]),
+        box(p + "Stripe", (0.0405, 0.0018, 0.0028), (0.006, -0.0128, -0.058), bevel=0.0005, m=m["neon"]),
+    ]
+    for i, (x, y, mm) in enumerate(((0.012, -0.004, m["cyan_neon"]), (0.02, 0.002, m["bulb"]), (0.012, 0.007, m["neon"]))):
+        parts.append(cyl(f"{p}Button{i}", 0.0032, 0.003, (x, y, -0.0505), segs=12, bevel=0.0008, m=mm))
+    return parts
+
+
+def charm_jellyfish(m):
+    p = "Jelly"
+    zc = -0.034
+    parts = hanger(p, m)
+    parts += [
+        sphere(p + "Bell", 0.0145, (0, 0, zc), scale=(1, 1, 0.78), m=m["jelly"], segs=20, rings=10),
+        sphere(p + "Core", 0.0075, (0, 0, zc - 0.002), scale=(1, 1, 0.7), m=m["jelly_core"], segs=14, rings=8),
+        torus(p + "Skirt", 0.0125, 0.0022, (0, 0, zc - 0.0075), m=m["jelly"], major_segs=24, minor_segs=6),
+        torus(p + "Smile", 0.0022, 0.0006, (0, -0.0132, zc - 0.002), rot=rad(90, 0, 0), m=m["black"], major_segs=10, minor_segs=4,
+              arc=math.pi * 0.8, start=math.pi * 1.1),
+    ]
+    for side in (-1, 1):
+        parts.append(sphere(f"{p}Eye{side}", 0.0018, (side * 0.0045, -0.0128, zc + 0.001), m=m["black"], segs=8, rings=5))
+        parts.append(sphere(f"{p}Shine{side}", 0.0006, (side * 0.0041, -0.0142, zc + 0.0018), m=m["white"], segs=6, rings=4))
+    for i in range(7):
+        a = math.tau * i / 7 + 0.3
+        r0 = 0.0085 if i % 2 else 0.0055
+        x0, y0 = math.cos(a) * r0, math.sin(a) * r0
+        length = 0.026 if i % 2 else 0.032
+        pts = []
+        for k in range(7):
+            f = k / 6
+            wob = math.sin(f * 7.0 + i) * 0.0022 * f
+            pts.append((x0 * (1 - 0.3 * f) + wob * math.cos(a + 1.5), y0 * (1 - 0.3 * f) + wob * math.sin(a + 1.5), zc - 0.008 - f * length))
+        parts.append(tube(f"{p}Tentacle{i}", pts, 0.0012, m=m["jelly_core"] if i % 2 else m["jelly"], segs=6, radius_end=0.0006))
+    return parts
+
+
+def charm_mini_sub(m):
+    p = "Sub"
+    zc = -0.045
+    parts = hanger(p, m)
+    parts += [
+        sphere(p + "Hull", 0.0105, (0, 0, zc), scale=(2.0, 1.0, 1.0), m=m["yellow"], segs=20, rings=12),
+        box(p + "Tower", (0.012, 0.009, 0.01), (-0.002, 0, zc + 0.0115), bevel=0.003, m=m["yellow"]),
+        cyl(p + "Scope", 0.0012, 0.012, (0.001, 0, zc + 0.021), segs=8, bevel=0.0003, m=m["silver"]),
+        box(p + "ScopeHead", (0.0045, 0.0026, 0.0026), (-0.0002, 0, -0.0247), bevel=0.0008, m=m["silver"]),
+        cyl(p + "Prop", 0.0028, 0.003, (0.022, 0, zc), rot=rad(0, 90, 0), segs=10, bevel=0.0006, m=m["orange"]),
+        prism(p + "TailFin", [(0.0, 0.0), (0.006, 0.0055), (0.0075, 0.0055), (0.0055, -0.0055), (0.004, -0.0055)], 0.0018,
+              (0.0145, 0, zc), m=m["orange"], bevel=0.0005),
+    ]
+    for i in range(3):
+        x = -0.011 + i * 0.0085
+        parts.append(torus(f"{p}Port{i}", 0.0027, 0.0009, (x, -0.0098, zc + 0.0005), rot=rad(90, 0, 0), m=m["silver"], major_segs=12, minor_segs=4))
+        parts.append(cyl(f"{p}Glass{i}", 0.0023, 0.0018, (x, -0.0094, zc + 0.0005), rot=rad(90, 0, 0), segs=12, bevel=0.0004, m=m["cyan"]))
+    for k in range(3):
+        a = math.tau * k / 3
+        parts.append(box(f"{p}Blade{k}", (0.001, 0.0065, 0.0026), (0.0242, math.cos(a) * 0.0035, zc + math.sin(a) * 0.0035), rot=(a, 0, 0),
+                         bevel=0.0003, m=m["orange"]))
+    return parts
+
+
+def charm_astronaut(m):
+    p = "Astro"
+    zc = -0.039
+    r = 0.0155
+    parts = hanger(p, m)
+    parts += [
+        sphere(p + "Helmet", r, (0, 0, zc), m=m["white"], segs=22, rings=14),
+        sphere(p + "Visor", r * 0.8, (0, -0.0055, zc - 0.0005), scale=(1.0, 0.75, 0.82), m=m["gold"], segs=20, rings=12),
+        sphere(p + "VisorShine", 0.0022, (-0.0048, -0.0158, zc + 0.0038), scale=(1, 0.4, 1.4), m=m["white"], segs=8, rings=5),
+        cyl(p + "Neck", 0.0118, 0.0055, (0, 0, zc - r + 0.001), segs=20, bevel=0.0015, m=m["silver"]),
+        torus(p + "NeckRing", 0.0118, 0.0014, (0, 0, zc - r - 0.0014), m=m["blue"], major_segs=22, minor_segs=5),
+        cyl(p + "Antenna", 0.0007, 0.008, (0.0075, 0.002, zc + 0.0145), rot=rad(0, 18, 0), segs=6, bevel=0.0, m=m["silver"]),
+        sphere(p + "AntennaTip", 0.0016, (0.0089, 0.002, zc + 0.0185), m=m["red"], segs=8, rings=5),
+        box(p + "Patch", (0.006, 0.002, 0.0045), (-0.011, -0.0075, zc - 0.0095), rot=(0, 0, 0.5), bevel=0.0008, m=m["red"]),
+    ]
+    for side in (-1, 1):
+        parts.append(cyl(f"{p}Ear{side}", 0.0042, 0.004, (side * (r + 0.0005), 0, zc), rot=rad(0, 90, 0), segs=12, bevel=0.001, m=m["silver"]))
+        parts.append(cyl(f"{p}EarLight{side}", 0.0022, 0.001, (side * (r + 0.0027), 0, zc), rot=rad(0, 90, 0), segs=10, bevel=0.0, m=m["cyan_neon"]))
+    return parts
+
+
+def charm_penguin(m):
+    p = "Penguin"
+    zb = -0.051
+    parts = hanger(p, m)
+    parts += [
+        sphere(p + "Body", 0.0135, (0, 0, zb), scale=(1.0, 0.9, 1.3), m=m["navy"], segs=18, rings=10),
+        sphere(p + "Belly", 0.0105, (0, -0.0042, zb - 0.002), scale=(0.95, 0.75, 1.2), m=m["white"], segs=16, rings=10),
+        cyl(p + "Beanie", 0.0105, 0.0085, (0, 0, zb + 0.0145), segs=18, bevel=0.003, m=m["red"], radius_top=0.0065),
+        torus(p + "BeanieBand", 0.0103, 0.0022, (0, 0, zb + 0.0108), m=m["white"], major_segs=20, minor_segs=6),
+        sphere(p + "Pompom", 0.0042, (0, 0, zb + 0.0205), m=m["white"], segs=10, rings=6),
+        cyl(p + "Beak", 0.0028, 0.006, (0, -0.0128, zb + 0.004), rot=rad(90, 0, 0), segs=8, bevel=0.0, m=m["orange"], radius_top=0.0004),
+        box(p + "Scarf", (0.021, 0.019, 0.004), (0, 0, zb + 0.0005), bevel=0.0018, m=m["teal"]),
+        box(p + "ScarfTail", (0.005, 0.0025, 0.012), (0.0062, -0.0108, zb - 0.0055), rot=(0, 0.15, 0), bevel=0.001, m=m["teal"]),
+    ]
+    for side in (-1, 1):
+        parts += [
+            sphere(f"{p}Eye{side}", 0.0019, (side * 0.0045, -0.0108, zb + 0.0078), m=m["black"], segs=8, rings=5),
+            sphere(f"{p}Shine{side}", 0.0006, (side * 0.004, -0.0124, zb + 0.0086), m=m["white"], segs=6, rings=4),
+            sphere(f"{p}Cheek{side}", 0.0018, (side * 0.0075, -0.0098, zb + 0.0038), scale=(1, 0.4, 0.7), m=m["pink"], segs=6, rings=4),
+            sphere(f"{p}Flipper{side}", 0.0055, (side * 0.0135, 0.0, zb - 0.003), scale=(0.35, 0.7, 1.2), rot=rad(0, side * 20, 0), m=m["navy"],
+                   segs=10, rings=6),
+            sphere(f"{p}Foot{side}", 0.0035, (side * 0.005, -0.006, zb - 0.0175), scale=(1, 1.4, 0.45), m=m["orange"], segs=8, rings=5),
+        ]
+    return parts
+
+
+def charm_cocoa(m):
+    p = "Cocoa"
+    top = -0.027
+    h = 0.024
+    r = 0.0125
+    parts = hanger(p, m)
+    parts += [
+        cyl(p + "Mug", r, h, (0, 0, top - h / 2), segs=22, bevel=0.002, m=m["red"]),
+        cyl(p + "Drink", r * 0.86, 0.002, (0, 0, top + 0.0002), segs=22, bevel=0.0, m=m["cocoa"]),
+        torus(p + "Handle", 0.0062, 0.0019, (r + 0.003, 0, top - h / 2), rot=rad(90, 0, 0), m=m["red"], major_segs=16, minor_segs=6,
+              arc=math.pi * 1.25, start=-math.pi * 0.625),
+        torus(p + "Stripe", r + 0.0002, 0.0012, (0, 0, top - h * 0.62), m=m["white"], major_segs=24, minor_segs=4),
+    ]
+    for i in range(5):
+        a = math.tau * i / 5 + 0.4
+        parts.append(box(f"{p}Mallow{i}", (0.0046, 0.0046, 0.0042), (math.cos(a) * 0.006, math.sin(a) * 0.006, top + 0.0025 + (i % 2) * 0.0012),
+                         rot=(0.3 * i, 0.5, a), bevel=0.0014, m=m["white"] if i % 2 else m["pink"]))
+    for i in range(6):
+        a = math.tau * i / 6
+        parts.append(prism(f"{p}Flake{i}", star_outline(0.0018, 0.0008, 6, 90), 0.0006,
+                           (math.cos(a) * (r + 0.0003), math.sin(a) * (r + 0.0003), top - h * 0.3), rot=(0, 0, a + math.pi / 2), m=m["white"]))
+    # A candy cane standing in the drink, hooked over the rim.
+    cane = [(-0.006, 0.003, top - 0.001)]
+    cane += [(-0.0095 + math.cos(math.radians(t)) * 0.0035, 0.003, top + 0.009 + math.sin(math.radians(t)) * 0.0035) for t in range(0, 181, 30)]
+    cane.append((-0.013, 0.003, top + 0.005))
+    parts.append(tube(p + "Cane", cane, 0.0011, m=m["white"], segs=6))
+    return parts
+
+
 CHARMS = {
     "Duck": charm_duck,
     "Dice": charm_dice,
@@ -330,6 +669,18 @@ CHARMS = {
     "SnowGlobe": charm_snow_globe,
     "NeonHeart": charm_neon_heart,
     "Crown": charm_crown,
+    "FerrisWheel": charm_ferris_wheel,
+    "Ufo": charm_ufo,
+    "Gumball": charm_gumball,
+    "Popcorn": charm_popcorn,
+    "Cassette": charm_cassette,
+    "LuckyCat": charm_lucky_cat,
+    "ArcadeStick": charm_arcade_stick,
+    "Jellyfish": charm_jellyfish,
+    "MiniSub": charm_mini_sub,
+    "Astronaut": charm_astronaut,
+    "Penguin": charm_penguin,
+    "Cocoa": charm_cocoa,
 }
 
 
@@ -337,16 +688,27 @@ def build_charms():
     reset_scene()
     m = charm_mats()
     exports = []
+    spinners = []
     for i, (name, make) in enumerate(CHARMS.items()):
         parts = make(m)
+        spin = None
+        if isinstance(parts, tuple):
+            parts, spin = parts
         node = merge("Charm_" + name, parts, pivot=(0, 0, 0))
         # Spread them out in the .blend so they can be inspected side by side.
         node.location = (i * 0.07, 0, 0)
         exports.append(node)
+        if spin:
+            wheel = merge("Charm_" + name + "Spin", spin[0], pivot=(0, 0, 0))
+            wheel.matrix_world = Matrix.Translation((i * 0.07, 0, 0)) @ spin[1]
+            spinners.append((wheel, spin[1]))
     bpy.context.view_layer.update()
     # The game places each charm itself, so export them at the origin.
     for node in exports:
         node.location = (0, 0, 0)
+    for wheel, matrix in spinners:
+        wheel.matrix_world = matrix
+        exports.append(wheel)
     save("cosmetic_charms", exports)
 
 
@@ -471,12 +833,39 @@ def emblem_shapes():
     return s
 
 
+ART_EDGE = 0.08
+ART_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "textures", "decals"))
+
+
+def print_uvs(ob, outline):
+    """UVs for a printed sticker: its picture square (-1..1 in sticker space)
+    across the face, undoing sticker()'s turn and scale."""
+    grown = offset_outline(outline, ART_EDGE)
+    xs = [q[0] for q in grown]
+    zs = [q[1] for q in grown]
+    span = max(max(xs) - min(xs), max(zs) - min(zs))
+    cx, cz = (max(xs) + min(xs)) / 2, (max(zs) + min(zs)) / 2
+    me = ob.data
+    layer = me.uv_layers.new(name="UVMap")
+    for loop in me.loops:
+        co = me.vertices[loop.vertex_index].co
+        x = cx - co.y * span
+        z = cz + co.z * span
+        layer.data[loop.index].uv = ((x + 1.0) * 0.5, (z + 1.0) * 0.5)
+
+
 def build_decals():
     reset_scene()
     exports = []
     for name, (fills, details) in emblem_shapes().items():
         parts = sticker(name, fills, details)
         exports.append(merge("Emblem_" + name, parts, pivot=(0, 0, 0)))
+    # Printed stickers: a die-cut outline with a picture (decal_art.py) on its face.
+    write_art(ART_DIR)
+    for name, (outline, _draw) in ART_STICKERS.items():
+        node = merge("Emblem_" + name, sticker(name, [outline], (), edge=ART_EDGE), pivot=(0, 0, 0))
+        print_uvs(node, outline)
+        exports.append(node)
     save("cosmetic_decals", exports)
 
 

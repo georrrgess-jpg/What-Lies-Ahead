@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_popcorn_pal"
+display_name = "Popcorn Pal"
+description = "A grinning striped popcorn bucket, blushing under its heap."
+slot = &"weapon_decal"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.9098, 0.149, 0.2275, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "PopcornPal",
+"art": "res://art/textures/decals/decal_popcornpal.png"
+}
+sort_order = 4022

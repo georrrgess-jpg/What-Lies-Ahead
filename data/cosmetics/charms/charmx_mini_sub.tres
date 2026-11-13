@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"charmx_mini_sub"
+display_name = "Mini Sub"
+description = "A yellow submarine with portholes and a periscope, straight from the tunnels."
+slot = &"weapon_charm"
+rarity = 1
+price = 650
+params = {
+"charm": "MiniSub"
+}
+sort_order = 5123

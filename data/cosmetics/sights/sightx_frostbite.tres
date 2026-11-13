@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"summit_lodge"
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_frostbite"
+display_name = "Frostbite"
+description = "A frosted tube with icy fins and a snowflake reticle. Sold once you clear Summit Lodge."
+slot = &"weapon_sight"
+rarity = 1
+requirement = SubResource("req")
+price = 650
+colors = PackedColorArray(0.6588, 0.9412, 1, 1, 0.3098, 0.7059, 1, 1)
+params = {
+"optic": "Frost",
+"reticle": "snowflake"
+}
+sort_order = 6160

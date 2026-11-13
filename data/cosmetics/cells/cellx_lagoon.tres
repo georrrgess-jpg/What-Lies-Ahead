@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+amount = 4
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_lagoon"
+display_name = "Lagoon Light"
+description = "Teal water light with caustic ripples dancing across it."
+slot = &"weapon_cell"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.0706, 0.7843, 0.7216, 1, 0.8471, 1, 0.9725, 1)
+params = {
+"fx": "caustics"
+}
+sort_order = 3127

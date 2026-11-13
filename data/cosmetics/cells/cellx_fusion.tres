@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_fusion"
+display_name = "Fusion Core"
+description = "White-hot plasma churning over an electric blue core."
+slot = &"weapon_cell"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.1843, 0.5451, 1, 1, 0.749, 0.9569, 1, 1)
+params = {
+"fx": "plasma"
+}
+sort_order = 3224

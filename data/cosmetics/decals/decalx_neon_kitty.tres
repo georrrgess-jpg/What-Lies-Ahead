@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_neon_kitty"
+display_name = "Neon Kitty"
+description = "A pink neon cat face with cyan whiskers, glowing on a dark sign. Open 24/7."
+slot = &"weapon_decal"
+rarity = 1
+price = 650
+colors = PackedColorArray(1, 0.3529, 0.7451, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "NeonKitty",
+"art": "res://art/textures/decals/decal_neonkitty.png"
+}
+sort_order = 4126

@@ -4,7 +4,7 @@ extends RefCounted
 ## An item either keeps the weapon's own iron sights (no params.optic) or
 ## clamps an optic from art/models/sights.glb to the weapon's top:
 ##
-##   params.optic            "Reflex", "Holo", "Tube", "Prism" or "Scope"
+##   params.optic            a key of OPTICS ("Reflex", "Holo", "Tube", "Prism", "Scope"...)
 ##   params.reticle          a pattern from PATTERNS
 ##   params.zoom             magnification on top of the weapon's own aimed zoom
 ##   params.reticle_degrees  angle of one reticle unit (default 1.2)
@@ -22,7 +22,8 @@ const LENS_SHADER := "res://art/shaders/sight_lens.gdshader"
 const RIG := "SightRig"
 const PATTERNS := {
 	"dot": 0, "ring": 1, "chevron": 2, "circle_dot": 3, "star": 4, "heart": 5, "pixel": 6,
-	"horseshoe": 7, "scope": 8,
+	"horseshoe": 7, "scope": 8, "periscope": 9, "diamond": 10, "marquee": 11, "slit": 12, "hex": 13,
+	"post": 14, "burst": 15, "ranger": 16, "snowflake": 17, "quarters": 18,
 }
 ## Per optic: `round` window, `fill` (the window's half-height as a share of
 ## the aimed view's half-height: sets how close the eye sits), `edge_shadow`
@@ -35,6 +36,16 @@ const OPTICS := {
 	"Tube": {"round": true, "fill": 0.28, "edge_shadow": 0.35, "vignette": 0.3},
 	"Prism": {"round": true, "fill": 0.5, "edge_shadow": 0.5, "vignette": 0.42},
 	"Scope": {"round": true, "fill": 0.84, "edge_shadow": 0.4, "glass": 0.015, "glow": 0.3, "vignette": 0.6, "scope_view": true},
+	"Periscope": {"round": true, "fill": 0.28, "edge_shadow": 0.35, "vignette": 0.3},
+	"Gem": {"round": true, "fill": 0.25, "edge_shadow": 0.15, "vignette": 0.26},
+	"Gallery": {"round": true, "fill": 0.25, "vignette": 0.26},
+	"Eye": {"round": true, "fill": 0.28, "edge_shadow": 0.3, "vignette": 0.3},
+	"Hex": {"round": false, "fill": 0.24, "vignette": 0.26},
+	"Brass": {"round": true, "fill": 0.48, "edge_shadow": 0.5, "vignette": 0.42},
+	"Burst": {"round": true, "fill": 0.24, "vignette": 0.26},
+	"Ranger": {"round": false, "fill": 0.36, "edge_shadow": 0.25, "vignette": 0.34},
+	"Frost": {"round": true, "fill": 0.28, "edge_shadow": 0.35, "vignette": 0.3},
+	"Porthole": {"round": true, "fill": 0.26, "edge_shadow": 0.2, "vignette": 0.28},
 }
 ## Choices of the "Sight reticle colour" setting ("auto" keeps each sight's own).
 const COLORS := {

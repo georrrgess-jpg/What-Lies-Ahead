@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_champion"
+display_name = "Champion"
+description = "A gold rosette with a star and a CHAMP ribbon, printed on holographic foil that shimmers as it turns."
+slot = &"weapon_decal"
+rarity = 3
+price = 5600
+colors = PackedColorArray(1, 0.7608, 0.2392, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "Champion",
+"art": "res://art/textures/decals/decal_champion.png",
+"foil": true
+}
+sort_order = 4321

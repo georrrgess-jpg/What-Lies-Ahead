@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"launch_pad"
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_mission_patch"
+display_name = "Mission Patch"
+description = "An embroidered Launch Pad patch: a rocket climbing past a ringed planet. Sold once you clear Launch Pad."
+slot = &"weapon_decal"
+rarity = 1
+requirement = SubResource("req")
+price = 650
+colors = PackedColorArray(0.0941, 0.1176, 0.3373, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "MissionPatch",
+"art": "res://art/textures/decals/decal_missionpatch.png"
+}
+sort_order = 4124

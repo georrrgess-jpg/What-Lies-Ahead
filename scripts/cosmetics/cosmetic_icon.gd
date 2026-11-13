@@ -4,14 +4,27 @@ extends Control
 ## effects, tracers and sights (Locker and Shop cards). Animated cells and
 ## rainbow tracers cycle their colours; everything else draws once.
 
+const CELL_ICON_SHADER := "res://art/shaders/cell_icon.gdshader"
+
 var item: CosmeticItem
 var _time := 0.0
+## A cell with a moving pattern (params.fx) draws its body with a shader.
+var _cell_body: ColorRect
 
 
 func _init(it: CosmeticItem = null) -> void:
 	item = it
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process(item != null and (item.params.has("animate") or String(item.params.get("style", "")) == "rainbow"))
+	if item and item.slot == &"weapon_cell" and item.params.has("fx"):
+		_cell_body = ColorRect.new()
+		_cell_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var m := ShaderMaterial.new()
+		m.shader = WeaponCosmetics.shader(CELL_ICON_SHADER)
+		m.set_shader_parameter("fx", int(WeaponCosmetics.CELL_FX.get(String(item.params["fx"]), 0)))
+		m.set_shader_parameter("color_b", WeaponCosmetics.cell_glow_color(item.color(1, Color.WHITE)))
+		_cell_body.material = m
+		add_child(_cell_body)
 
 
 func _process(delta: float) -> void:
@@ -31,9 +44,8 @@ func _draw() -> void:
 
 func _draw_cell() -> void:
 	var c := item.color(0, Color(0.3, 0.95, 1.0))
-	match String(item.params.get("animate", "")):
-		"rainbow": c = Color.from_hsv(fmod(_time * 0.18, 1.0), 0.75, 1.0)
-		"pulse": c = item.color(0).lerp(item.color(1, Color.WHITE), 0.5 + 0.5 * sin(_time * 3.2))
+	if item.params.has("animate"):
+		c = CellGlow.color_at(String(item.params["animate"]), item.colors, _time)
 	c = WeaponCosmetics.cell_glow_color(c)
 	var mid := size * 0.5
 	for i in 6:
@@ -47,6 +59,13 @@ func _draw_cell() -> void:
 	sb.border_color = Color(UiKit.INK, 0.9)
 	sb.set_border_width_all(4)
 	draw_style_box(sb, body)
+	if _cell_body:
+		# The shader draws the glass, its highlight and bands, and the pattern.
+		_cell_body.position = body.position + Vector2(4, 4)
+		_cell_body.size = body.size - Vector2(8, 8)
+		(_cell_body.material as ShaderMaterial).set_shader_parameter("color_a", c)
+		(_cell_body.material as ShaderMaterial).set_shader_parameter("aspect", _cell_body.size.y / maxf(_cell_body.size.x, 1.0))
+		return
 	draw_rect(Rect2(body.position + Vector2(w * 0.28, h * 0.14), Vector2(w * 0.14, h * 0.6)), Color(1, 1, 1, 0.75))
 	for k in 2:
 		var y := body.position.y + h * (0.33 + k * 0.33)
