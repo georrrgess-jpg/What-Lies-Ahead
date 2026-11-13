@@ -67,7 +67,7 @@ TRAILER, or as an attract mode), and renders to a video.
 | 32-34 | kill_arc | Prize Pier | Chain lightning jumps through five; CHAIN LIGHTNING | |
 | 34-36 | kill_rail | Neon Skyline | Rail Lancer charges and pierces a line of four, slow motion; PIERCE | |
 | 36-38 | kill_lobber | Neon Skyline | A gumball arcs in and blows a ring of five apart; BOOM! | |
-| 38-40 | kill_alpha | Neon Skyline | An alpha Riot Bruiser (1.45x) soaks cannon hits, falls to a rail shot in slow motion with a firework kill effect; ALPHA DOWN! | |
+| 38-40 | kill_alpha | Neon Skyline | Captain Lockdown, the Neon Skyline alpha, soaks cannon hits, falls to a rail shot in slow motion with a firework kill effect; ALPHA DOWN! | |
 | **The arsenal** | | | | |
 | 40-44 | arsenal | Studio | Wipe; all 8 weapons on the turntable, one per beat, each in an animated/showcase finish with its name | tom run |
 | 44-46 | skins | Studio | Ion Carbine close-up, a charm swinging; the finish flips every 8th note through wireframe, marble, the mastery camos (gold, diamond, prismatic) and more; "N COSMETICS" (real count) | |

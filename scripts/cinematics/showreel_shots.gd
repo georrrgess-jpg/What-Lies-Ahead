@@ -412,8 +412,8 @@ func _kill_lobber(st: CineStage) -> void:
 
 
 func _kill_alpha(st: CineStage) -> void:
-	var z := st.walker(&"riot_bruiser", Vector3(-6, 0, 2), 90.0, 0.8)
-	z.scale = Vector3.ONE * 1.45
+	# The Neon Skyline finale's named alpha (its data already makes it big).
+	var z := st.walker(&"alpha_riot", Vector3(-6, 0, 2), 90.0, 0.8)
 	st.move(z, Vector3.ZERO, 1.0)
 	var muzzle := Vector3(7, 1.5, 3.4)
 	st.fov(40.0, 36.0)
@@ -423,10 +423,10 @@ func _kill_alpha(st: CineStage) -> void:
 		return Transform3D(Basis.looking_at(at + Vector3(0, 2.4, 0) - from), from))
 	for i in 5:
 		st.at(0.12 + i * 0.16, func():
-			var to := st.chest(z) + Vector3(0, 0.6, 0) * z.scale.y
+			var to := st.chest(z) + Vector3(0, 0.6, 0) * z.data.body_scale
 			st.shoot(&"comet_cannon", muzzle, to)
 			st.hit(z, &"comet_cannon", 1.0, to, to - muzzle))
-	st.at(0.25, st.overlay.name_card.bind("ALPHA " + _enemy_name(&"riot_bruiser"), "Boss wave", UiKit.RED, 0.9, true))
+	st.at(0.25, st.overlay.name_card.bind(_enemy_name(&"alpha_riot").to_upper(), "Neon Skyline finale", UiKit.RED, 0.9, true))
 	st.slowmo(0.95, 2.0, 0.4)
 	st.at(0.95, func():
 		st.shoot(&"rail_lancer", muzzle, st.chest(z) + Vector3(0, 0.5, 0))
