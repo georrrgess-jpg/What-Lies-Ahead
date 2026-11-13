@@ -373,7 +373,7 @@ func _world_temple(st: CineStage) -> void:
 
 ## Candy Works: low across the factory floor to the colossal gumball machine.
 func _world_candy(st: CineStage) -> void:
-	_landmark(st, 2, Vector3(-7.5, 1.4, 17.0), Vector3(0, 9.0, -28), Vector3(-6.0, 4.0, 7.0), Vector3(0, 11.0, -28),
+	_landmark(st, 2, Vector3(-10.0, 1.6, 18.0), Vector3(0, 9.0, -28), Vector3(-9.0, 3.6, 9.0), Vector3(0, 11.0, -28),
 		Vector2(50.0, 45.0), [[Vector3(-3.0, 0, -4.0), 10.0], [Vector3(-7.0, 0, -2.0), 30.0], [Vector3(3.0, 0, -6.0), -10.0]])
 
 
@@ -400,13 +400,13 @@ func _world_lava(st: CineStage) -> void:
 ## Sky Harbor: across the hub isle to the airship Cumulus at its mooring.
 func _world_sky(st: CineStage) -> void:
 	st.lighting(1.0, 1.0, 1.1)
-	_landmark(st, 4, Vector3(-6.0, 1.8, 9.0), Vector3(-53, 12, -1.5), Vector3(-11.0, 3.6, 6.5), Vector3(-53, 14, -1.5),
-		Vector2(50.0, 46.0), [[Vector3(-15.0, 0, 0.5), 75.0], [Vector3(-13.0, 0, 3.5), 95.0], [Vector3(-16.5, 0, -3.0), 85.0]])
+	_landmark(st, 4, Vector3(-19.0, 1.8, 8.0), Vector3(-53, 12, -1.5), Vector3(-23.5, 3.6, 5.5), Vector3(-53, 14, -1.5),
+		Vector2(50.0, 46.0), [[Vector3(-31.0, 0, 1.0), 75.0], [Vector3(-33.0, 0, -2.5), 85.0], [Vector3(-29.0, 0, -4.0), 95.0]])
 
 
 ## Where each new world's alpha walks on (on its own set): [position, yaw].
-const ALPHA_SPOTS := [[Vector3(-6.0, 0, -3.0), 10.0], [Vector3(-4.0, 0, -6.5), 0.0], [Vector3(6.0, 0, -4.0), -10.0],
-	[Vector3(-5.0, 0, 6.0), 0.0], [Vector3(-27.0, 0, -1.5), 90.0]]
+const ALPHA_SPOTS := [[Vector3(-2.5, 0, -3.5), 0.0], [Vector3(-4.0, 0, -6.5), 0.0], [Vector3(-6.0, 0, -5.0), 10.0],
+	[Vector3(-5.0, 0, 6.0), 0.0], [Vector3(-30.0, 0, 2.5), 60.0]]
 
 
 ## A new world's alpha boss walks at a low lens on the hit, its name beside it.
@@ -423,8 +423,8 @@ func _alpha(st: CineStage, index: int) -> void:
 	# Far enough back that the whole head and shoulders stay inside the bars.
 	st.track(func(k: float) -> Transform3D:
 		var at := z.global_position if is_instance_valid(z) else (spot[0] as Vector3)
-		var from := at + fwd * lerpf(7.2, 6.4, k) + side * lerpf(1.9, 1.5, k) + Vector3.UP * 0.75
-		return Transform3D(Basis.looking_at(at + Vector3.UP * tall * 0.62 - from), from))
+		var from := at + fwd * lerpf(8.6, 7.8, k) + side * lerpf(1.9, 1.5, k) + Vector3.UP * 1.0
+		return Transform3D(Basis.looking_at(at + Vector3.UP * tall * 0.55 - from), from))
 	st.light(spot[0] + fwd * 2.5 + Vector3.UP * 3.0, UiKit.PINK if w[4] == &"night" else Color("ffd9a8"), 2.5, 9.0)
 	st.shake(0.0, 0.06, 0.5)
 	st.at(0.05, st.overlay.title_card.bind(_enemy_name(w[3]), "Alpha", Vector2(0.3, 0.74), 0.4, UiKit.RED, 56))
@@ -624,7 +624,7 @@ func _boot_camp(st: CineStage) -> void:
 	st.move(op, Vector3(0, 0, -Operators.RUN_SPEED))
 	st.fov(46.0, 42.0)
 	st.dolly(Vector3(2.6, 1.3, 4.5), Vector3(0, 2.4, -30), Vector3(3.4, 4.6, -3.0), Vector3(0, 1.4, -38), -1.15)
-	st.at(0.1, st.overlay.title_card.bind("Boot Camp", "Learn the ropes", Vector2(0.5, 0.24), 1.3, UiKit.CYAN, 72))
+	st.at(0.1, st.overlay.title_card.bind("Boot Camp", "Learn the ropes", Vector2(0.5, 0.78), 1.3, UiKit.CYAN, 72))
 
 
 ## First person down the Boot Camp lane: up onto the crates (mantle), over
