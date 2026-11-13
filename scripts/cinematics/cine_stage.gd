@@ -392,13 +392,16 @@ func focus_on(target: Callable, radius := 0.22, amount := 0.01) -> void:
 			overlay.focus(p, radius, amount))
 
 
-## An anamorphic flare pinned to world point `world` (a low sun, a lamp).
-func flare_at(world: Vector3, color: Color, strength := 0.6) -> void:
+## An anamorphic flare pinned to world point `where()` (a Callable returning
+## a world point: a low sun, a lamp, a pair of eyes), rising to `strength`
+## over `rise` seconds from `from_t`, fading over `fall` seconds after `until`.
+func flare_at(where: Callable, color: Color, strength := 0.6, from_t := 0.0, rise := 0.0, until := INF, fall := 0.3) -> void:
 	if overlay == null:
 		return
-	after_camera(func(_t: float):
-		var p := on_screen(world)
-		overlay.flare(p, color, strength if p.x >= -0.2 and p.x <= 1.2 else 0.0))
+	after_camera(func(now: float):
+		var p := on_screen(where.call())
+		var k := clampf((now - from_t) / maxf(rise, 0.001), 0.0, 1.0) * clampf(1.0 - (now - until) / fall, 0.0, 1.0)
+		overlay.flare(p, color, strength * k if p.x >= -0.2 and p.x <= 1.2 else 0.0))
 
 
 ## A light that only lives for this shot.
