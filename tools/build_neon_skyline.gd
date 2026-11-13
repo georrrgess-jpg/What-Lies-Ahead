@@ -272,8 +272,8 @@ const NEON_REFLECTIONS := [
 	[Vector4(-14.5, 7.2, 9.5, 0.9), Vector4(0.75, 0.4, 1.0, 0.8)],      # water tower band
 	[Vector4(-15.3, 3.4, -8.0, 0.5), Vector4(1.0, 0.75, 0.35, 0.7)],    # roof door lamp
 	[Vector4(-2.0, 4.2, -20.0, 0.8), Vector4(0.3, 0.95, 1.0, 0.7)],     # sky-bridge ribs
-	[Vector4(-18.6, 6.5, 14.4, 0.7), Vector4(1.0, 0.25, 0.6, 0.9)],     # blade sign
-	[Vector4(12.9, 5.0, 14.6, 0.6), Vector4(0.4, 1.0, 0.55, 0.7)],      # south-east sign
+	[Vector4(-19.0, 7.6, 15.0, 0.7), Vector4(1.0, 0.25, 0.6, 0.9)],     # blade sign
+	[Vector4(12.9, 6.1, 15.0, 0.6), Vector4(0.4, 1.0, 0.55, 0.7)],      # south-east sign
 ]
 
 
@@ -808,9 +808,12 @@ func _build_signage() -> void:
 	_screen(dressing, "TerraceScreen", BILLBOARD + Vector3(-0.35, L1 + 6.6, 0), -90.0, Vector2(9.6, 4.8), 0, 4, 3.0, 0.0)
 	# Rooftop sign along the back of the portal roof, facing south.
 	_prop(signs, "neon_rooftop_sign", "RooftopSign", Vector3(-1.0, N_Y, N_Z0 + 0.6), 0.0, Vector3(16, 6, 1)).scale = Vector3.ONE * 1.3
+	# Its letters start at knee height on a plinth: solid, like the scaffold behind.
+	_collider(signs, "RooftopSignBody", Vector3(12.6, 7.0, 0.9), Vector3(-1.0, N_Y + 3.5, N_Z0 + 0.72))
 	# Blade signs on the corners.
-	_prop(dressing, "neon_blade_sign", "BladeSignSouthWest", Vector3(-18.6, 0, 14.4), 45.0, Vector3(1, 8, 2))
-	_prop(dressing, "neon_blade_sign_b", "BladeSignSouthEast", Vector3(12.9, 0, 14.6), -45.0, Vector3(1, 6, 2))
+	# They stand on the parapet's coping, out of the player's way.
+	_prop(dressing, "neon_blade_sign", "BladeSignSouthWest", Vector3(A_X0, PARAPET_H + 0.1, A_Z1), 45.0, Vector3(1, 8, 2))
+	_prop(dressing, "neon_blade_sign_b", "BladeSignSouthEast", Vector3(12.9, PARAPET_H + 0.1, A_Z1), -45.0, Vector3(1, 6, 2))
 
 
 ## An advert screen quad using the atlas shader. Faces +Z before `yaw`.
@@ -948,6 +951,8 @@ func _build_backdrop() -> void:
 	_flush_clutter(city)
 	_towers(city)
 	_holograms(city)
+	_sky_traffic(city)
+	_searchlights(city)
 
 
 func _street(parent: Node3D, street_name: String, pos: Vector3, yaw: float, size: Vector2) -> void:
@@ -1173,6 +1178,71 @@ func _beacon_mesh() -> Mesh:
 	sphere.material = _mat("beacon_red", Color(1.0, 0.1, 0.15), 0.4, Color(1.0, 0.1, 0.15), 4.0)
 	_beacon_cache = sphere
 	return sphere
+
+
+## Lanes of hover traffic crossing the sky between the towers: streaks of
+## light on two crossed cards per lane (so a lane shows from below and from
+## the side).
+func _sky_traffic(parent: Node3D) -> void:
+	# [centre, yaw, length, lanes]
+	var lanes := [
+		[Vector3(0.0, 11.0, 28.0), 0.0, 230.0, 3.0],       # over the south street, behind the start
+		[Vector3(33.0, 15.0, -10.0), 90.0, 230.0, 2.0],    # over the east street, past the billboard
+		[Vector3(-4.0, 21.0, -60.0), 0.0, 230.0, 3.0],     # far north, behind the koi
+	]
+	for k in lanes.size():
+		var length: float = lanes[k][2]
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for across in [Vector3(0, 0, 2.2), Vector3(0, 1.1, 0)]:
+			var half := Vector3(length * 0.5, 0, 0)
+			var quad := [[-half - across, Vector2(0, 0)], [half - across, Vector2(1, 0)], [half + across, Vector2(1, 1)], [-half + across, Vector2(0, 1)]]
+			for i in [0, 1, 2, 0, 2, 3]:
+				st.set_uv(quad[i][1])
+				st.add_vertex(quad[i][0])
+		var mesh := st.commit()
+		var m := ShaderMaterial.new()
+		m.shader = load(SHADERS + "neon_skylane.gdshader")
+		m.set_shader_parameter("length_metres", length)
+		m.set_shader_parameter("lanes", lanes[k][3])
+		m.set_shader_parameter("time_offset", 7.0 * k)
+		mesh.surface_set_material(0, m)
+		var mi := MeshInstance3D.new()
+		mi.name = "SkyLane%d" % k
+		mi.mesh = mesh
+		mi.position = lanes[k][0]
+		mi.rotation.y = deg_to_rad(lanes[k][1])
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		parent.add_child(mi)
+
+
+## Searchlights sweeping the clouds from roofs to the north and south.
+func _searchlights(parent: Node3D) -> void:
+	var motion: Script = load("res://scripts/props/ambient_motion.gd")
+	# [base, yaw of the card (it faces the play roof), colour, sweep period]
+	var beams := [
+		[Vector3(-14.0, -3.0, -58.0), 0.0, Color(0.45, 0.8, 1.0), 9.0],
+		[Vector3(10.0, -3.0, -62.0), 0.0, Color(1.0, 0.45, 0.85), 12.5],
+		[Vector3(24.0, 52.0, 92.0), 180.0, Color(0.6, 0.5, 1.0), 11.0],
+	]
+	for k in beams.size():
+		var pivot := Node3D.new()
+		pivot.name = "Searchlight%d" % k
+		pivot.position = beams[k][0]
+		pivot.rotation.y = deg_to_rad(beams[k][1])
+		pivot.set_script(motion)
+		pivot.set("rock_degrees", 16.0)
+		pivot.set("bob_seconds", beams[k][3])
+		parent.add_child(pivot)
+		var quad := QuadMesh.new()
+		quad.size = Vector2(7.0, 90.0)
+		quad.material = _glow_material("searchlight_%d" % k, beams[k][2], 0.32, 2)
+		var beam := MeshInstance3D.new()
+		beam.name = "Beam"
+		beam.mesh = quad
+		beam.position.y = 45.0
+		beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		pivot.add_child(beam)
 
 
 ## Giant floating holographic adverts over the city.

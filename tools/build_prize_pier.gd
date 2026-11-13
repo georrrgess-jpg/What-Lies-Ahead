@@ -428,11 +428,13 @@ func _build_entrances() -> void:
 
 	# 1. Arcade: open-front stall on the left-front. Zombies emerge from inside.
 	_prop(entrances, "arcade", "Arcade", Vector3(-29.0, 0, 11.0), 90.0, Vector3(14, 6, 8))
-	_collider(entrances, "ArcadeBack", Vector3(0.4, 6, 14), Vector3(-33.0, 3, 11.0))
-	_collider(entrances, "ArcadeSideA", Vector3(8, 6, 0.4), Vector3(-29.0, 3, 4.0))
-	_collider(entrances, "ArcadeSideB", Vector3(8, 6, 0.4), Vector3(-29.0, 3, 18.0))
-	_collider(entrances, "ArcadeFrontA", Vector3(0.6, 6, 1.6), Vector3(X0, 3, 4.8))
-	_collider(entrances, "ArcadeFrontB", Vector3(0.6, 6, 1.6), Vector3(X0, 3, 17.2))
+	# The back collider takes in the row of cabinets; the side walls and the
+	# two front columns match the model (nothing solid beside the columns).
+	_collider(entrances, "ArcadeBack", Vector3(2.05, 6, 14), Vector3(-32.175, 3, 11.0))
+	_collider(entrances, "ArcadeSideA", Vector3(8, 6, 0.4), Vector3(-29.0, 3, 4.2))
+	_collider(entrances, "ArcadeSideB", Vector3(8, 6, 0.4), Vector3(-29.0, 3, 17.8))
+	_collider(entrances, "ArcadeFrontA", Vector3(1.15, 6, 1.1), Vector3(-25.425, 3, 4.5))
+	_collider(entrances, "ArcadeFrontB", Vector3(1.15, 6, 1.1), Vector3(-25.425, 3, 17.5))
 
 	# 2. Ferris wheel gate on the left-back, leading in from the ride platform.
 	_prop(entrances, "gate_ride", "RideGate", Vector3(X0, 0, -13.0), 90.0, Vector3(8, 5, 1))
@@ -516,6 +518,7 @@ func _build_arena_props() -> void:
 	_prop(props, "popcorn_cart", "PopcornCart", Vector3(-20.5, 0, -21.2), 90.0, Vector3(1.7, 2.0, 1.0))
 	_collider(props, "PopcornCartCollision", Vector3(1.1, 2.0, 1.8), Vector3(-20.5, 1.0, -21.2))
 	_prop(dressing, "surfboards", "Surfboards", Vector3(13.45, 0, -2.6), -90.0, Vector3(0.6, 2.4, 1.6))
+	_collider(props, "SurfboardsCollision", Vector3(0.6, 2.4, 1.7), Vector3(13.4, 1.2, -2.6))
 	_prop(dressing, "life_ring", "LifeRing", Vector3(13.8, 0.75, 3.0), -90.0, Vector3(0.2, 0.8, 0.8))
 	_prop(dressing, "life_ring", "LifeRing2", Vector3(13.8, 0.75, -30.0), -90.0, Vector3(0.2, 0.8, 0.8))
 

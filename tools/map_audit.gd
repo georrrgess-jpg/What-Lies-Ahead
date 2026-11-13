@@ -155,7 +155,13 @@ func _draw_collision(node: Node) -> void:
 		var layer: int = node.get_parent().collision_layer
 		if layer & 17:
 			var mi := MeshInstance3D.new()
-			mi.mesh = node.shape.get_debug_mesh()
+			# Outlines only: the debug mesh also carries filled faces.
+			var debug: ArrayMesh = node.shape.get_debug_mesh()
+			var lines := ArrayMesh.new()
+			for i in debug.get_surface_count():
+				if debug.surface_get_primitive_type(i) == Mesh.PRIMITIVE_LINES:
+					lines.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, debug.surface_get_arrays(i))
+			mi.mesh = lines
 			var m := StandardMaterial3D.new()
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			m.albedo_color = Color(1, 0.1, 0.1) if layer & 1 else Color(1, 0.95, 0.1)

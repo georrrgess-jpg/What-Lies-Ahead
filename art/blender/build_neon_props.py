@@ -223,10 +223,11 @@ def build_water_tower():
         parts.append(box(f"Foot{i}", (0.6, 0.6, 0.15), (x * 0.92, y * 0.92, 0.075), bevel=0.02, m=c["concrete_dark"]))
     for k in range(4):
         a, b = legs[k], legs[(k + 1) % 4]
-        for z0, z1 in ((0.4, 2.2), (2.2, 4.0)):
-            parts.append(tube(f"Brace{k}_{z0}", [(a[0] * 0.92, a[1] * 0.92, z0), (b[0] * 0.92, b[1] * 0.92, z1)], 0.05, m=c["steel"], segs=5, cap=False))
-            parts.append(tube(f"BraceB{k}_{z0}", [(b[0] * 0.92, b[1] * 0.92, z0), (a[0] * 0.92, a[1] * 0.92, z1)], 0.05, m=c["steel"], segs=5, cap=False))
-        parts.append(tube(f"Ring{k}", [(a[0] * 0.92, a[1] * 0.92, 2.2), (b[0] * 0.92, b[1] * 0.92, 2.2)], 0.06, m=c["steel"], segs=5, cap=False))
+        # Cross braces only above head height: the player walks under the tank.
+        z0, z1 = 2.35, 4.1
+        parts.append(tube(f"Brace{k}", [(a[0] * 0.92, a[1] * 0.92, z0), (b[0] * 0.92, b[1] * 0.92, z1)], 0.05, m=c["steel"], segs=5, cap=False))
+        parts.append(tube(f"BraceB{k}", [(b[0] * 0.92, b[1] * 0.92, z0), (a[0] * 0.92, a[1] * 0.92, z1)], 0.05, m=c["steel"], segs=5, cap=False))
+        parts.append(tube(f"Ring{k}", [(a[0] * 0.92, a[1] * 0.92, 2.35), (b[0] * 0.92, b[1] * 0.92, 2.35)], 0.06, m=c["steel"], segs=5, cap=False))
     parts += [
         cyl("Deck", 2.75, 0.15, (0, 0, 4.4), segs=28, bevel=0.03, m=c["steel_dark"]),
         torus("Railing", 2.7, 0.04, (0, 0, 5.4), m=c["steel"], major_segs=36, minor_segs=5),
@@ -467,9 +468,14 @@ def build_rooftop_sign():
         parts.append(tube(f"Diag{i}", [(x, 0.45, 0.2), (x + 2.4 if i < 6 else x, 0.45, 3.0)], 0.04, m=c["steel"], segs=5, cap=False))
     for z in (0.3, 2.4, 5.6):
         parts.append(box(f"Rail{z}", (14.8, 0.12, 0.12), (0, 0.45, z), bevel=0.0, m=c["steel_dark"]))
-    # Bulb chase along the bottom.
-    for i in range(16):
-        parts.append(neon_bulb(f"Chase{i:02d}", 0.09, (-7.0 + i * 14.0 / 15, -0.25, 0.25), "#ffcf5a", 3.0))
+    # Plinth under the letters (the level makes it and the letters solid),
+    # with a bulb chase along its front.
+    parts += [
+        box("Plinth", (9.5, 0.62, 0.5), (0, -0.02, 0.25), bevel=0.04, m=c["concrete_dark"]),
+        box("PlinthCap", (9.6, 0.7, 0.06), (0, -0.02, 0.52), bevel=0.02, m=c["steel_dark"]),
+    ]
+    for i in range(12):
+        parts.append(neon_bulb(f"Chase{i:02d}", 0.09, (-4.4 + i * 8.8 / 11, -0.36, 0.3), "#ffcf5a", 3.0))
     save("neon_rooftop_sign", [merge("RooftopSign", parts)])
 
 
