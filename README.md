@@ -167,15 +167,20 @@ beam, projectile and splash, pierce, chain, chill/shock and heat), implemented o
   eleven one-time milestones.
 - **Weapon mastery**: 10 ranks per weapon in Bronze, Silver, Gold, Diamond and Prismatic
   tiers, earned by using that weapon. Ranks unlock mastery camos and badges and pay Sparks.
-- **Shop**: 69 items on a price ladder (Common 250, Rare 650, Epic 1,500, Legendary 3,000
-  Sparks), with one or two showpieces per section at 1,250 / 2,800 / 5,600: the best
+- **Shop**: 194 items on a price ladder (Common 250, Rare 650, Epic 1,500, Legendary 3,000
+  Sparks), with one to three showpieces per section at 1,250 / 2,800 / 5,600: the best
   animated weapon finishes, energy cells, gloves, charms, kill effects, tracers, decals,
   banners, titles and optics. A common or rare is affordable after a run, a legendary
   after about four. Four items a day are featured at 25% off. Every item has a 3D preview
   and a confirm step.
-- **Locker**: 200 cosmetics in eleven categories: operators (nine characters that also
-  set your first-person arms), weapon finishes (including animated shader skins), sights,
-  energy cells, decals, charms, gloves, kill effects, tracers, banners and titles. Weapon
+- **Locker**: 398 cosmetics in eleven categories: 18 operators (characters that also set
+  your first-person arms), 82 weapon finishes (30 of them animated shaders: marquee
+  bulbs, data rain, lightning, aurora, warp speed, liquid mercury, stained glass…),
+  20 sights, 40 energy cells (with moving patterns: bubbles, lava, slosh, warp…), 32
+  decals, 24 charms (a Ferris wheel and a UFO that spin), 24 gloves (with real shapes:
+  gauntlets, tape, mitts, wraps, fins, studs, crystals, claws), 18 kill effects (disco
+  ball, slot-machine 7s, black hole, snow globe…), 18 tracers, 52 banners (26 animated
+  scenes) and 70 titles. Weapon
   items are equipped per weapon. Everything shows in a live preview; double-click to equip.
   Earned items (level track, world sets for each first clear, mastery camos, milestones)
   are never sold.
@@ -345,7 +350,7 @@ They were written for Blender 5.3 and run here through the `bpy` Python module
 | `zombie_kit.py`, `zombie_anim.py` | Shared zombie body and face kit; all zombie motion (IK gaits with planted feet, attacks, five deaths including a headshot pop, stagger, emerge). Every zombie builder calls `zombie_anim.bake()`, which also writes `art/models/<model>_clips.tres` (each clip's ground speed and event times) |
 | `build_neon_*.py`, `build_aqua_*.py`, `build_dune_*.py`, `build_frost_*.py` | Each world's props, dressing, station, scenery and zombies |
 | `build_world_portals.py` | The themed exit portals of Tidal Tunnels, Launch Pad 9 and Summit Lodge |
-| `operator_kit.py`, `operator_anim.py`, `build_operators.py` | The nine operators (shared body kit, clips such as Run, AimIdle, Fire, Victory and Wave, a `WeaponSocket` hand) |
+| `operator_kit.py`, `operator_anim.py`, `build_operators.py`, `operators_more.py` | The eighteen operators (shared body kit, clips such as Run, AimIdle, Fire, Victory and Wave, a `WeaponSocket` hand) |
 | `weapon_kit.py` | Shared weapon parts and the sight contract (`SightMount`, `SightPoint`, `IronSight*`, `CharmPoint`) used by both weapon builders |
 | `build_sights.py` | The optics (red dot, holo, prism, scope and the shop sights) |
 | `build_cosmetics.py` | Charms and sticker decals |

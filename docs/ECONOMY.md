@@ -67,9 +67,11 @@ Lava Lamp (banners), Prize Hoarder (title). Every price is on one of the two lad
 it is owned once bought. A `requirement` on a priced item only gates the purchase (sights
 that open at a mastery rank).
 
-For sale (69 items, 115,250 Sparks, sights included): the 12 animated finishes that are not
-a clear, level or mastery reward and 4 plain ones, 4 sights, 9 energy cells, 7 gloves,
-4 charms, 3 kill effects, 5 tracers, 4 decals, 11 banners and 6 titles. Earned, never sold: the
+For sale (194 items, 277,350 Sparks, sights included, after the content update that
+doubled the cosmetics): the original 69 (115,250 Sparks) plus 27 new weapon finishes,
+5 operators, 9 gloves, and the new cells, charms, decals, sights, kill effects, tracers,
+banners and titles that are not earned. New earned items use the item's own
+`requirement` (lifetime kills, weapon mastery rank, best score, world clears). Earned, never sold: the
 level track, the five world sets (36 items, on the first clear of each level, and World
 Tourist for all five), mastery camos, cells and decals, milestone rewards, and quiet
 goals for lifetime kills (15 items, 50 to 10,000 kills) and best score on Prize Pier
@@ -253,7 +255,7 @@ headshots, combo multiplier 1.35, the first two waves flawless, half the tickets
 | Runs as a main to mastery rank 10 | 19 | 14 |
 | Goals on the Career page | 52 | 14 (3 contracts + 11 milestones) |
 | Currency | none | Sparks: 55,700 earned by the cap |
-| Items for sale | 0 | 69, 115,250 Sparks (47,150 before the price rise) |
+| Items for sale | 0 | 194, 277,350 Sparks (69 and 47,150 before the price rise and the new cosmetics) |
 | Clears to buy everything | - | 109 (163 runs; 38 clears before the price rise) |
 | Runs of saving from a new profile to afford | - | a common or a rare 1, an epic 2, a legendary 4, a 5,600 showpiece 5 |
 | Sparks per run | - | 988 in the first 15 runs, 637 after the cap |
