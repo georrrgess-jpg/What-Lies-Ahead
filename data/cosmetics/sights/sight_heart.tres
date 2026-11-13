@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sight_heart"
+display_name = "Sweetheart"
+description = "Every zombie deserves a little love before it pops."
+slot = &"weapon_sight"
+rarity = 1
+price = 400
+colors = PackedColorArray(1.0, 0.4, 0.8, 1, 1.0, 0.25, 0.62, 1)
+params = {
+"optic": "Reflex",
+"reticle": "heart",
+"reticle_degrees": 1.0,
+"unlock_text": "Buy for 400 Sparks"
+}
+sort_order = 6070

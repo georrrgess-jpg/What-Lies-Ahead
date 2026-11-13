@@ -816,12 +816,7 @@ func _weapon_model(w: WeaponData) -> Node3D:
 	if w == null or w.viewmodel == null:
 		return null
 	var model: Node3D = w.viewmodel.instantiate()
-	for part_name in ["ArmL", "ArmR"]:
-		var part := model.find_child(part_name, true, false) as Node3D
-		if part:
-			part.visible = false
-	for holo in model.find_children("*Holo", "Node3D", true, false):
-		(holo as Node3D).visible = false
+	WeaponCosmetics.prepare_preview(model)
 	WeaponCosmetics.apply(model, w, Cosmetics.weapon_loadout(w.id))
 	return model
 

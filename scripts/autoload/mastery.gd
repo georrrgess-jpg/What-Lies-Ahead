@@ -1,6 +1,7 @@
 extends Node
 ## Per-weapon lifetime mastery: XP, rank, kill counter and cosmetic rewards.
 ## Unlocks are derived from rank, never stored, so they cannot be granted twice.
+## Every rank also pays Sparks (Wallet listens to `rank_up`).
 ##
 ## Every weapon shares one curve (data/progression/mastery_curve.tres): ten
 ## ranks grouped into tiers (Bronze, Silver, Gold, Diamond, Prismatic). New
@@ -113,7 +114,8 @@ func _rank_items(weapon_id: StringName, include_shared: bool) -> Array[CosmeticI
 	var out: Array[CosmeticItem] = []
 	for it in GameData.cosmetics():
 		var req := it.requirement
-		if req == null or req.kind != Requirement.Kind.WEAPON_RANK:
+		# Items for sale are not rank rewards (their rank only opens them in the shop).
+		if req == null or req.kind != Requirement.Kind.WEAPON_RANK or it.price > 0:
 			continue
 		if req.target == weapon_id or include_shared and req.target == &"" and it.fits_weapon(weapon_id):
 			out.append(it)

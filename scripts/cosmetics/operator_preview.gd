@@ -25,7 +25,7 @@ var _viewport: SubViewport
 var _camera: Camera3D
 var _pivot: Node3D
 var _model: Node3D
-var _yaw := 20.0
+var _yaw := 18.0
 var _dragging := false
 var _drag_idle := 0.0
 
@@ -52,15 +52,15 @@ func _build_stage() -> void:
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0, 0, 0, 0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.78, 0.7, 0.95)
-	env.ambient_light_energy = 0.75
+	env.ambient_light_color = Color(0.8, 0.74, 0.98)
+	env.ambient_light_energy = 0.8
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var we := WorldEnvironment.new()
 	we.environment = env
 	_viewport.add_child(we)
 	var key := DirectionalLight3D.new()
-	key.rotation_degrees = Vector3(-32, 28, 0)
-	key.light_energy = 1.25
+	key.rotation_degrees = Vector3(-34, 32, 0)
+	key.light_energy = 1.3
 	key.light_color = Color(1.0, 0.92, 0.84)
 	_viewport.add_child(key)
 	var rim := DirectionalLight3D.new()
@@ -73,6 +73,12 @@ func _build_stage() -> void:
 	rim2.light_energy = 0.8
 	rim2.light_color = Color(1.0, 0.45, 0.8)
 	_viewport.add_child(rim2)
+	# A low warm fill keeps chins, hat brims and visors from going dark.
+	var fill := DirectionalLight3D.new()
+	fill.rotation_degrees = Vector3(18, -24, 0)
+	fill.light_energy = 0.3
+	fill.light_color = Color(1.0, 0.8, 0.7)
+	_viewport.add_child(fill)
 	_camera = Camera3D.new()
 	_camera.fov = 30.0
 	_viewport.add_child(_camera)
@@ -86,11 +92,11 @@ func _build_stage() -> void:
 
 func _frame_camera() -> void:
 	if framing == Framing.PORTRAIT:
-		_camera.position = Vector3(0, 1.62, 2.05)
-		_camera.look_at(Vector3(0, 1.56, 0))
+		_camera.position = Vector3(0, 1.7, 2.2)
+		_camera.look_at(Vector3(0, 1.63, 0))
 	else:
-		_camera.position = Vector3(0, 1.15, 5.6)
-		_camera.look_at(Vector3(0, 1.0, 0))
+		_camera.position = Vector3(0, 1.2, 5.5)
+		_camera.look_at(Vector3(0, 1.04, 0))
 
 
 func _floor_shadow() -> MeshInstance3D:
@@ -167,6 +173,12 @@ func _spawn(flourish: bool) -> void:
 		_model.queue_free()
 	_model = Operators.instantiate(item)
 	_pivot.add_child(_model)
+	if framing == Framing.PORTRAIT:
+		# Portraits hold a still, flattering frame of the idle (no drifting out of shot).
+		var anim := Operators.animation_player(_model)
+		if anim:
+			anim.seek(0.4, true)
+			anim.speed_scale = 0.6
 	if flourish:
 		Operators.play_pose(_model)
 
@@ -188,6 +200,8 @@ func _process(delta: float) -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed and event.double_click and _model:
+			Operators.play(_model, "Wave")
 		_dragging = event.pressed
 		_drag_idle = 0.0
 	elif event is InputEventMouseMotion and _dragging:

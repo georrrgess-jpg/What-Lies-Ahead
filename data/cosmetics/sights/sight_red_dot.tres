@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sight_red_dot"
+display_name = "Red Dot"
+description = "A glowing dot that floats on whatever you are about to pop."
+slot = &"weapon_sight"
+rarity = 0
+colors = PackedColorArray(1.0, 0.2, 0.26, 1, 0.07, 0.71, 0.64, 1)
+params = {
+"optic": "Reflex",
+"reticle": "dot"
+}
+sort_order = 6010

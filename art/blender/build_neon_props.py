@@ -91,13 +91,32 @@ def build_freight_elevator():
     reset_scene()
     c = _common()
     shaft = nmat("ElevatorPaint", "#3b3f6a", rough=0.6, metal=0.2)
-    light = neon_glow("CarLight", "#fff1c2", 2.6)
+    light = neon_glow("CarLight", "#fff1c2", 2.2)
+    car = nmat("CarWall", "#c9a06a", rough=0.55, emit=0.55)
+    car_dark = nmat("CarPanel", "#7a5a48", rough=0.5, emit=0.25)
     parts = [
-        box("Shaft", (5.0, 5.0, 4.0), (0, 0, 2.0), bevel=0.05, m=shaft),
+        # The shaft is built as walls round the open car (3.2 m wide, 2.4 m deep).
+        box("ShaftBack", (5.0, 2.55, 4.0), (0, 1.225, 2.0), bevel=0.05, m=shaft),
+        box("ShaftL", (0.9, 2.5, 4.0), (-2.05, -1.25, 2.0), bevel=0.05, m=shaft),
+        box("ShaftR", (0.9, 2.5, 4.0), (2.05, -1.25, 2.0), bevel=0.05, m=shaft),
+        box("ShaftTop", (3.3, 2.5, 0.94), (0, -1.25, 3.53), bevel=0.0, m=shaft),
+        box("CarBack", (3.2, 0.1, 3.06), (0, -0.1, 1.53), bevel=0.0, m=car),
+        box("CarSideL", (0.08, 2.4, 3.06), (-1.56, -1.3, 1.53), bevel=0.0, m=car),
+        box("CarSideR", (0.08, 2.4, 3.06), (1.56, -1.3, 1.53), bevel=0.0, m=car),
+        box("CarFloor", (3.2, 2.4, 0.06), (0, -1.3, 0.03), bevel=0.0, m=c["steel"]),
+        box("CarCeiling", (3.2, 2.4, 0.08), (0, -1.3, 3.02), bevel=0.0, m=car_dark),
+        box("CarLamp", (1.9, 1.2, 0.05), (0, -1.3, 2.96), bevel=0.0, m=light),
+        box("CarKick", (3.0, 0.06, 0.5), (0, -0.17, 0.3), bevel=0.0, m=car_dark),
+        box("CarHandrail", (3.0, 0.07, 0.08), (0, -0.2, 1.05), bevel=0.02, m=c["steel_light"]),
+        box("CarPanelSeamL", (0.05, 0.03, 2.4), (-0.55, -0.16, 1.75), bevel=0.0, m=car_dark),
+        box("CarPanelSeamR", (0.05, 0.03, 2.4), (0.55, -0.16, 1.75), bevel=0.0, m=car_dark),
+        box("CarNotice", (0.5, 0.03, 0.34), (0, -0.16, 1.9), bevel=0.01, m=c["amber"]),
+        # Safety barrier across the gap between the half-open doors.
+        box("BarrierTop", (1.5, 0.08, 0.1), (0, -2.56, 1.05), bevel=0.02, m=c["hazard"]),
+        box("BarrierLow", (1.5, 0.08, 0.1), (0, -2.56, 0.55), bevel=0.02, m=c["hazard"]),
         box("MachineRoom", (3.6, 3.4, 1.2), (0, 0.6, 4.6), bevel=0.05, m=c["concrete"]),
         box("RoofSlab", (5.2, 5.2, 0.18), (0, 0, 4.05), bevel=0.04, m=c["concrete_light"]),
-        # Door opening with the lit car inside and half-open doors.
-        box("Opening", (3.2, 0.1, 3.0), (0, -2.5, 1.55), bevel=0.0, m=light),
+        # Half-open doors.
         box("DoorL", (0.9, 0.12, 3.0), (-1.15, -2.58, 1.55), bevel=0.02, m=c["steel"]),
         box("DoorR", (0.9, 0.12, 3.0), (1.15, -2.58, 1.55), bevel=0.02, m=c["steel"]),
         box("Header", (3.8, 0.3, 0.5), (0, -2.6, 3.3), bevel=0.04, m=c["steel_dark"]),
@@ -131,12 +150,21 @@ def build_hatch():
     c = _common()
     parts = [
         box("Curb", (1.6, 1.6, 0.12), (0, 0, 0.06), bevel=0.02, m=c["steel_dark"]),
-        box("Glow", (1.2, 1.2, 0.04), (0, 0, 0.1), bevel=0.0, m=neon_glow("HatchGlow", "#9fffd0", 2.4)),
+        box("Shaft", (1.24, 1.24, 0.04), (0, 0, 0.09), bevel=0.0, m=nmat("HatchShaft", "#12313a", rough=0.6, emit=0.5)),
+        box("ShaftGlow", (0.8, 0.5, 0.02), (0, -0.2, 0.115), bevel=0.0, m=neon_glow("HatchGlow", "#3fe0b0", 1.3)),
         box("Lid", (1.5, 0.06, 1.5), (0, 0.78, 0.8), rot=(math.radians(-12), 0, 0), bevel=0.02, m=c["steel"]),
         box("LidRibA", (1.4, 0.08, 0.06), (0, 0.76, 0.6), rot=(math.radians(-12), 0, 0), bevel=0.0, m=c["steel_light"]),
         box("LidRibB", (1.4, 0.08, 0.06), (0, 0.76, 1.1), rot=(math.radians(-12), 0, 0), bevel=0.0, m=c["steel_light"]),
         cyl("RungTop", 0.025, 1.1, (0, 0.45, 0.1), rot=(0, math.radians(90), 0), segs=6, bevel=0.0, m=c["steel_light"]),
     ]
+    glow_rim = neon_glow("HatchRim", "#3fe0b0", 2.0)
+    for i, (sx, sy, x, y) in enumerate(((1.24, 0.04, 0, -0.62), (1.24, 0.04, 0, 0.62), (0.04, 1.24, -0.62, 0), (0.04, 1.24, 0.62, 0))):
+        parts.append(box(f"Rim{i}", (sx, sy, 0.03), (x, y, 0.118), bevel=0.0, m=glow_rim))
+    # Ladder up out of the shaft: side rails standing proud of the curb, rungs fading into the light.
+    for i, x in enumerate((-0.24, 0.24)):
+        parts.append(cyl(f"LadderRail{i}", 0.03, 0.95, (x, 0.42, 0.5), rot=(math.radians(-10), 0, 0), segs=6, bevel=0.0, m=c["steel_light"]))
+    for i in range(3):
+        parts.append(box(f"Rung{i}", (0.5, 0.05, 0.02), (0, 0.3 - i * 0.2, 0.125), bevel=0.0, m=c["steel_dark"]))
     parts += hazard_stripes("Stripe", 1.6, 0.13, (0, -0.84, 0.06), c["hazard"], c["ink"], 8, depth=0.04)
     save("neon_hatch", [merge("Hatch", parts)])
 
@@ -195,10 +223,11 @@ def build_water_tower():
         parts.append(box(f"Foot{i}", (0.6, 0.6, 0.15), (x * 0.92, y * 0.92, 0.075), bevel=0.02, m=c["concrete_dark"]))
     for k in range(4):
         a, b = legs[k], legs[(k + 1) % 4]
-        for z0, z1 in ((0.4, 2.2), (2.2, 4.0)):
-            parts.append(tube(f"Brace{k}_{z0}", [(a[0] * 0.92, a[1] * 0.92, z0), (b[0] * 0.92, b[1] * 0.92, z1)], 0.05, m=c["steel"], segs=5, cap=False))
-            parts.append(tube(f"BraceB{k}_{z0}", [(b[0] * 0.92, b[1] * 0.92, z0), (a[0] * 0.92, a[1] * 0.92, z1)], 0.05, m=c["steel"], segs=5, cap=False))
-        parts.append(tube(f"Ring{k}", [(a[0] * 0.92, a[1] * 0.92, 2.2), (b[0] * 0.92, b[1] * 0.92, 2.2)], 0.06, m=c["steel"], segs=5, cap=False))
+        # Cross braces only above head height: the player walks under the tank.
+        z0, z1 = 2.35, 4.1
+        parts.append(tube(f"Brace{k}", [(a[0] * 0.92, a[1] * 0.92, z0), (b[0] * 0.92, b[1] * 0.92, z1)], 0.05, m=c["steel"], segs=5, cap=False))
+        parts.append(tube(f"BraceB{k}", [(b[0] * 0.92, b[1] * 0.92, z0), (a[0] * 0.92, a[1] * 0.92, z1)], 0.05, m=c["steel"], segs=5, cap=False))
+        parts.append(tube(f"Ring{k}", [(a[0] * 0.92, a[1] * 0.92, 2.35), (b[0] * 0.92, b[1] * 0.92, 2.35)], 0.06, m=c["steel"], segs=5, cap=False))
     parts += [
         cyl("Deck", 2.75, 0.15, (0, 0, 4.4), segs=28, bevel=0.03, m=c["steel_dark"]),
         torus("Railing", 2.7, 0.04, (0, 0, 5.4), m=c["steel"], major_segs=36, minor_segs=5),
@@ -401,6 +430,21 @@ def build_billboard():
         ]
     parts.append(tube("Brace", [(-4.0, 0.4, 0.6), (4.0, 0.4, 3.6)], 0.06, m=c["steel"], segs=6))
     parts.append(tube("BraceB", [(4.0, 0.4, 0.6), (-4.0, 0.4, 3.6)], 0.06, m=c["steel"], segs=6))
+    # Back of the hoarding: a steel grid, a service ladder and a junction box.
+    for i, z in enumerate((cz - 1.9, cz, cz + 1.9)):
+        parts.append(box(f"BackRail{i}", (w - 0.2, 0.1, 0.14), (0, 0.45, z), bevel=0.02, m=frame_m))
+    for i in range(6):
+        parts.append(box(f"BackStud{i}", (0.12, 0.08, h - 0.2), (-w / 2 + 0.5 + i * (w - 1.0) / 5, 0.44, cz), bevel=0.02, m=c["steel"]))
+    for i, x in enumerate((-2.25, -1.8)):
+        parts.append(box(f"BackLadder{i}", (0.05, 0.05, h + 0.6), (x, 0.56, cz - 0.3), bevel=0.0, m=c["steel_light"]))
+    for i in range(12):
+        parts.append(box(f"BackRung{i}", (0.45, 0.04, 0.04), (-2.025, 0.56, cz - h / 2 + 0.1 + i * 0.45), bevel=0.0, m=c["steel_light"]))
+    parts += [
+        box("BackBox", (1.1, 0.3, 1.5), (2.6, 0.55, cz - 0.9), bevel=0.04, m=frame_m),
+        box("BackBoxLed", (0.5, 0.04, 0.1), (2.6, 0.71, cz - 0.4), bevel=0.0, m=c["cyan"]),
+        box("BackBoxLedB", (0.16, 0.04, 0.16), (2.9, 0.71, cz - 1.3), bevel=0.0, m=c["red"]),
+        tube("BackCable", [(2.6, 0.5, cz - 1.65), (2.6, 0.5, cz - h / 2 - 0.2), (3.6, 0.45, cz - h / 2 - 0.6)], 0.05, m=c["ink"], segs=6),
+    ]
     # Brand cap on top.
     parts.append(box("Cap", (2.6, 0.3, 0.7), (3.4, 0.0, cz + h / 2 + 0.45), bevel=0.05, m=c["ink"]))
     parts.append(sign_text("CapText", "ZAP!", 0.5, 0.04, (3.4, -0.18, cz + h / 2 + 0.45), m=c["red"]))
@@ -424,9 +468,14 @@ def build_rooftop_sign():
         parts.append(tube(f"Diag{i}", [(x, 0.45, 0.2), (x + 2.4 if i < 6 else x, 0.45, 3.0)], 0.04, m=c["steel"], segs=5, cap=False))
     for z in (0.3, 2.4, 5.6):
         parts.append(box(f"Rail{z}", (14.8, 0.12, 0.12), (0, 0.45, z), bevel=0.0, m=c["steel_dark"]))
-    # Bulb chase along the bottom.
-    for i in range(16):
-        parts.append(neon_bulb(f"Chase{i:02d}", 0.09, (-7.0 + i * 14.0 / 15, -0.25, 0.25), "#ffcf5a", 3.0))
+    # Plinth under the letters (the level makes it and the letters solid),
+    # with a bulb chase along its front.
+    parts += [
+        box("Plinth", (9.5, 0.62, 0.5), (0, -0.02, 0.25), bevel=0.04, m=c["concrete_dark"]),
+        box("PlinthCap", (9.6, 0.7, 0.06), (0, -0.02, 0.52), bevel=0.02, m=c["steel_dark"]),
+    ]
+    for i in range(12):
+        parts.append(neon_bulb(f"Chase{i:02d}", 0.09, (-4.4 + i * 8.8 / 11, -0.36, 0.3), "#ffcf5a", 3.0))
     save("neon_rooftop_sign", [merge("RooftopSign", parts)])
 
 
@@ -595,6 +644,8 @@ def build_portal_arch():
         box("SignStem", (0.2, 0.2, 0.4), (0, 0, top - 0.48), bevel=0.03, m=steel),
         box("Back", (3.4, 0.12, spring + arch_r - 0.3), (0, 0.32, (spring + arch_r - 0.3) / 2), bevel=0.0, m=c["ink"]),
     ]
+    from build_props import portal_back
+    parts += portal_back(spring + arch_r - 0.3, trim, c["magenta"], steel, c["cyan"])
     save("neon_portal_arch", [merge("PortalArch", parts)])
 
 
