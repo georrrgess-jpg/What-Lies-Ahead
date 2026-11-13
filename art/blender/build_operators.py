@@ -647,7 +647,7 @@ def op_glitch():
             ("Thigh.L", sx(1, HIP.lerp(KNEE, 0.5)) + Vector((0.095, 0.0, 0.0)), 0.04, holo), ("Shin.R", sx(-1, KNEE.lerp(HIP, -0.4)) + Vector((-0.08, 0.02, 0.0)), 0.034, holo2)]
     for i, (bone, p, size, m) in enumerate(bits):
         k.add(box(k.n(f"Bit{i}"), (size, size, size), p, rot=rad(0, 0, 20 * i), bevel=0.004, m=m), bone=bone, tag="bits")
-    return k, "glitch", dict(bend=14, out=0.27, look=0.7, aim=BULKY_HOLD)
+    return k, "glitch", dict(bend=14, out=0.27, look=0.7)
 
 
 def op_arcade_champion():
