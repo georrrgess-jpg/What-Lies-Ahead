@@ -8,10 +8,16 @@ extends RefCounted
 const DIR := "res://art/keyart/"
 const CARD_SHADER := "res://art/shaders/ui_keyart_card.gdshader"
 
+## Stills by level id, kept for the session: the menu is rebuilt after every
+## run and would otherwise read all ten from disk again on the main thread.
+static var _cache := {}
+
 
 ## The still for `level`, or null if none has been rendered.
 static func texture(level: LevelData) -> Texture2D:
 	if level == null:
 		return null
-	var path := DIR + String(level.id) + ".jpg"
-	return load(path) if ResourceLoader.exists(path) else null
+	if not _cache.has(level.id):
+		var path := DIR + String(level.id) + ".jpg"
+		_cache[level.id] = load(path) if ResourceLoader.exists(path) else null
+	return _cache[level.id]

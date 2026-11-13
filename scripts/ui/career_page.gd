@@ -28,6 +28,8 @@ var _mastery: GridContainer
 var _mastery_detail: Label
 var _thumbs: CosmeticThumbs
 var _next_card: Control
+## Hash of what the cards were last built from.
+var _state := 0
 
 
 func uses_shell_header() -> bool:
@@ -60,6 +62,14 @@ func _ready() -> void:
 func refresh() -> void:
 	if _road == null:
 		return
+	# Rebuilding every card takes a few frames' worth of time: only when the
+	# profile (or the day, which rotates contracts) changed since last time.
+	var state := hash([Profile.data, Time.get_date_string_from_system()])
+	if state == _state:
+		UiFx.stagger_in(_mastery.get_children())
+		_show_next_level.call_deferred()
+		return
+	_state = state
 	_fill_header()
 	_clear(_level_slot)
 	_level_slot.add_child(CareerCards.level_block())
