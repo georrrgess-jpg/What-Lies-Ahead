@@ -9,7 +9,7 @@ display_name = "Cathedral Glass"
 description = "Leaded panes of ruby, sapphire, emerald, amber and amethyst. A beam of light slowly passes along them."
 slot = &"weapon_finish"
 rarity = 2
-price = 2800
+price = 1500
 colors = PackedColorArray(0.702, 0.051, 0.1216, 1, 0.1804, 0.1804, 0.2, 1)
 params = {
 "shader": "res://art/shaders/finish_stained_glass.gdshader"

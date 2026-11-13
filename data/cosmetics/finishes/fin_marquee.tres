@@ -9,7 +9,7 @@ display_name = "Marquee Lights"
 description = "Red lacquer studded with carnival bulbs in gold sockets. They chase down the weapon in threes, then the whole board flashes."
 slot = &"weapon_finish"
 rarity = 3
-price = 5600
+price = 3000
 colors = PackedColorArray(0.6196, 0.0392, 0.0902, 1, 1, 0.7412, 0.251, 1)
 params = {
 "shader": "res://art/shaders/finish_marquee.gdshader",

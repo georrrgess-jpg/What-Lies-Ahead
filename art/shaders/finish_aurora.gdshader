@@ -35,9 +35,9 @@ void fragment() {
 	vec3 r = reflect(-VIEW, NORMAL);
 	float fres = ffres(NORMAL, VIEW, 3.0);
 	vec2 uv = fplane(lp, ln);
-	vec2 a = curtain(uv, -0.09, 0.0);
-	vec2 b = curtain(uv, 0.0, 4.0);
-	vec3 light = curtain_a * a.x * 1.6 + fringe * a.y * 0.7 + curtain_b * b.x * 0.9 + fringe * b.y * 0.3;
+	vec2 a = curtain(uv, -0.04, 0.0);
+	vec2 b = curtain(uv, 0.05, 4.0);
+	vec3 light = curtain_a * a.x * 2.2 + fringe * a.y * 0.6 + curtain_b * b.x * 0.8 + fringe * b.y * 0.25;
 	vec3 q = lp * 120.0;
 	vec3 c = floor(q);
 	float h = fh31(c);
@@ -46,7 +46,7 @@ void fragment() {
 	if (is_trim) {
 		// The same sky seen through frosted silver glass, rime sparkling.
 		float frost = fnoise3(lp * 160.0);
-		float rime = step(0.9, fh31(floor(lp * 260.0)));
+		float rime = step(0.975, fh31(floor(lp * 260.0)));
 		ALBEDO = mix(sky, trim_color, 0.3) * (0.8 + 0.2 * frost);
 		METALLIC = 0.4;
 		ROUGHNESS = 0.35;
