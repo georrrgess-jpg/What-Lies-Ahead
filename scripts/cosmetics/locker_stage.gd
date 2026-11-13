@@ -164,7 +164,7 @@ func show_tracer(item: CosmeticItem, weapon: WeaponData) -> void:
 		if muzzle:
 			_muzzle = _model.transform * WeaponCosmetics.to_model(_model, muzzle).origin
 	_camera.fov = 48.0
-	_camera.look_at_from_position(Vector3(0.3, 1.9, 6.6), Vector3(0.3, 1.05, -0.3))
+	_camera.look_at_from_position(Vector3(0.3, 1.55, 4.7), Vector3(0.3, 1.05, -0.3))
 
 
 func _process(delta: float) -> void:

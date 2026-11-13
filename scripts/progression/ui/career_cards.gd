@@ -194,7 +194,12 @@ static func mastery_card(w: WeaponData) -> CareerTile:
 	name.max_lines_visible = 2
 	name.add_theme_constant_override("line_spacing", -8)
 	names.add_child(name)
-	names.add_child(UiKit.label(Mastery.rank_label(rank).capitalize() if unlocked else "Locked", UiKit.SIZE_SMALL, tier_color if rank > 0 else UiKit.MUTED, true))
+	var standing := "Locked"
+	if unlocked:
+		standing = "Mastered" if rank >= Mastery.max_rank() else Mastery.rank_label(rank).capitalize()
+	var rank_label := UiKit.label(standing, UiKit.SIZE_SMALL, tier_color if rank > 0 else UiKit.MUTED, true)
+	rank_label.clip_text = true
+	names.add_child(rank_label)
 	tile.body.add_child(UiKit.filler())
 	var next := _next_reward(w.id, rank)
 	var foot := "Fully mastered"

@@ -58,6 +58,9 @@ func refresh_state() -> void:
 		set_price(price, Wallet.can_afford(price))
 	else:
 		set_status("")
+	# A locked title is all lettering: keep it readable under the lock tint.
+	if item.slot == &"title" and _holder.modulate != Color.WHITE:
+		_holder.modulate = Color(0.62, 0.6, 0.74)
 
 
 func _show_art(thumbs: CosmeticThumbs) -> void:
@@ -105,7 +108,11 @@ func _banner_art() -> Control:
 func _title_art() -> Control:
 	var plate := CenterContainer.new()
 	var text := item.display_name.to_upper()
-	var label := UiKit.sign_label(text, 30 if text.length() < 12 else 25, CosmeticItem.rarity_color(item.rarity).lerp(Color.WHITE, 0.35))
+	var longest := 0
+	for word in text.split(" "):
+		longest = maxi(longest, word.length())
+	var font_size := 30 if longest <= 8 and text.length() < 12 else (25 if longest <= 10 else 21)
+	var label := UiKit.sign_label(text, font_size, CosmeticItem.rarity_color(item.rarity).lerp(Color.WHITE, 0.35))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	label.add_theme_constant_override("line_spacing", -8)
