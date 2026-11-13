@@ -95,8 +95,8 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"lifeguard_runner": 22,
-"tourist_shambler": 12
+"lifeguard_runner": 15,
+"tourist_shambler": 16
 }
 spawn_interval = 1.9
 burst = 2

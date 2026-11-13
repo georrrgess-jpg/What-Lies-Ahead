@@ -48,9 +48,9 @@ const TABLE := {
 		"wave_heal": 0.0, "tickets": 1.0, "reward": 1.0,
 	},
 	&"hard": {
-		"health": 1.2, "boss_health": 1.15, "damage": 1.25, "speed": 1.06,
-		"max_alive": 1.2, "interval": 0.85, "specials": 0.85,
-		"pace_min": 0.85, "pace_max": 1.5, "relief": 0.0,
+		"health": 1.2, "boss_health": 1.15, "damage": 1.15, "speed": 1.05,
+		"max_alive": 1.15, "interval": 0.9, "specials": 0.85,
+		"pace_min": 0.85, "pace_max": 1.4, "relief": 0.0,
 		"wave_heal": 0.0, "tickets": 1.0, "reward": 1.3,
 	},
 }
