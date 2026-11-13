@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WorldData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/world_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="2"]
+[ext_resource type="Resource" path="res://data/levels/candy_works.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("4")
+kind = 2
+target = &"lost_temple"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"sugar_rush_factory"
+display_name = "Sugar Rush Factory"
+blurb = "A cathedral-sized candy factory, mid-shift, every machine running. The chocolate river still flows, and the night shift never clocked out."
+levels = Array[ExtResource("2")]([ExtResource("3")])
+sort_order = 80
+tagline = "Mid-shift. Every machine is running. So are the workers."
+requirement = SubResource("unlock")
+accent_color = Color(1, 0.5, 0.75, 1)
+secondary_color = Color(0.5, 0.92, 0.78, 1)
+backdrop_color = Color(0.32, 0.13, 0.22, 1)

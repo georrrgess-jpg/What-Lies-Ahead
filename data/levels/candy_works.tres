@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/candy_works_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"candy_works"
+display_name = "Candy Works"
+blurb = "Hold the factory floor around the Sweet Shop, then follow the floor arrows over the chocolate river to the portal."
+scene_path = "res://scenes/levels/candy_works.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"candy_works_loop"
+music_final = &"candy_works_final"
+ambience = &"candy_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(1, 0.5, 0.75, 1)
+menu_camera_from = Vector3(-9, 3.4, 16)
+menu_camera_to = Vector3(1, 7, -28)
+heal_item_name = "Fudge bar"
+loading_tips = PackedStringArray("Taffy Pullers whirl their taffy before they lash: a pink line marks where. Step off it or you get yanked in.", "A headshot while a Taffy Puller is whirling snaps the taffy and cancels the yank.", "Gummy Bears shrink and speed up as they lose health. Finish them with headshots before they get zippy.", "The bridges are the only way over the chocolate river: hold one and the north doors come to you.", "The packing mezzanine is high ground. Its ramp faces the station; the stairs come down by the packing line.", "Sugar Rush: when the sirens go, every zombie on the floor moves faster. Save your overshield for it.")

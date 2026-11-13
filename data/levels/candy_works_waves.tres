@@ -1,0 +1,156 @@
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
+
+[sub_resource type="Resource" id="wave_1"]
+script = ExtResource("2")
+spawns = {
+"candy_gummy": 10,
+"tourist_shambler": 5
+}
+spawn_interval = 1.8
+burst = 1
+max_alive = 9
+speed_scale = 1.0
+late_types_after = 0.3
+banner = ""
+kind = &"standard"
+title = "FIRST SHIFT"
+hint = "Gummies shrink and speed up as you chip them: go for the head."
+
+[sub_resource type="Resource" id="wave_2"]
+script = ExtResource("2")
+spawns = {
+"lifeguard_runner": 8,
+"dune_space_cadet": 5,
+"candy_gummy": 6
+}
+spawn_interval = 1.05
+burst = 1
+max_alive = 11
+speed_scale = 1.05
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "CONVEYOR RUSH"
+hint = "Fast movers on every belt: keep the bridges in front of you."
+surge_at = 0.55
+surge_count = 4
+
+[sub_resource type="Resource" id="wave_3"]
+script = ExtResource("2")
+spawns = {
+"candy_taffy_puller": 6,
+"neon_punk": 4,
+"candy_gummy": 8
+}
+spawn_interval = 1.3
+burst = 1
+max_alive = 11
+speed_scale = 1.0
+late_types_after = 0.1
+banner = ""
+kind = &"ranged"
+title = "TAFFY TIME"
+hint = "Pink line on the floor? Step off it before the taffy lashes."
+surge_at = 0.5
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_4"]
+script = ExtResource("2")
+spawns = {
+"candy_gummy": 10,
+"candy_taffy_puller": 4,
+"lifeguard_runner": 6,
+"tourist_shambler": 4
+}
+spawn_interval = 3.4
+burst = 5
+max_alive = 13
+speed_scale = 1.06
+late_types_after = 0.0
+banner = ""
+kind = &"ambush"
+title = "SHIFT CHANGE"
+hint = "Every door opens at once: find a wall and hold it."
+
+[sub_resource type="Resource" id="wave_5"]
+script = ExtResource("2")
+spawns = {
+"candy_gummy": 10,
+"candy_taffy_puller": 4,
+"boardwalk_bruiser": 1,
+"lifeguard_runner": 4
+}
+spawn_interval = 1.27
+burst = 1
+max_alive = 13
+speed_scale = 1.06
+late_types_after = 0.2
+banner = ""
+kind = &"bounty"
+title = "THE GOLDEN GUMMY"
+hint = "Pop the golden gummy before it gets away."
+bounty = &"candy_gummy"
+bounty_tickets = 225
+
+[sub_resource type="Resource" id="wave_6"]
+script = ExtResource("2")
+spawns = {
+"riot_bruiser": 2,
+"candy_gummy": 11,
+"candy_taffy_puller": 5,
+"hover_courier": 5
+}
+spawn_interval = 1.4
+burst = 1
+max_alive = 13
+speed_scale = 1.0
+late_types_after = 0.12
+banner = ""
+kind = &"siege"
+title = "SUGAR RUSH"
+hint = "Sirens! Everything on the floor is faster: back up and keep distance."
+twist = &"sugar_rush"
+surge_at = 0.55
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_7"]
+script = ExtResource("2")
+spawns = {
+"candy_taffy_puller": 6,
+"candy_gummy": 12,
+"lifeguard_runner": 3,
+"frost_yeti": 1
+}
+spawn_interval = 2.0
+burst = 2
+max_alive = 14
+speed_scale = 1.1
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "THE CONFECTIONER"
+hint = "Step off his taffy line, out of the slam, and wide of the gumballs."
+boss = &"alpha_confectioner"
+boss_at = 0.45
+rest_before = 24.0
+
+[resource]
+script = ExtResource("1")
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
+prep_seconds = 12.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 450
+break_refill_fraction = 0.3
+ammo_topup_price = 210
+heal_price = 330
+heal_amount = 60.0
+heals_per_break = 1
+wave_bonus_base = 20
+wave_bonus_per_wave = 5
+overshield_price = 660
+overshield_amount = 25.0
+damage_boost_price = 650
