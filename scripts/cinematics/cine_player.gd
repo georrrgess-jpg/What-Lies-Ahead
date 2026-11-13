@@ -78,6 +78,18 @@ func _ready() -> void:
 	var first := maxi(0, _shot_at(start_at))
 	_clock = shots[first].start if not shots.is_empty() else 0.0
 	_prepare_from(first)
+	if render_mode:
+		# A video has no wall-clock: load the first set now so frame one is the shot.
+		_wait_for(shots[first].set_id)
+		_begin()
+
+
+func _begin() -> void:
+	_running = true
+	overlay.fade(0.0, 0.0)
+	_music.play(_clock)
+	if render_mode:
+		print("[showreel] start frame %d at %.2f s" % [Engine.get_process_frames(), _clock])
 
 
 ## The scene underneath leaves the tree (it keeps its state) and its sounds pause.
@@ -163,9 +175,7 @@ func _process(delta: float) -> void:
 		var first := _shot_at(_clock)
 		_collect_jobs()
 		if first >= 0 and _sets.has(shots[first].set_id):
-			_running = true
-			overlay.fade(0.0, 0.0)
-			_music.play(_clock)
+			_begin()
 		return
 	_clock += delta / maxf(Engine.time_scale, 0.0001)
 	if _clock >= stop_at:

@@ -4,6 +4,7 @@ extends Node3D
 ## and the operator line-up. A glossy floor with neon rings, a turntable
 ## plinth, a giant marquee ring behind it, warm key and pink/cyan rims.
 ## Built from primitives (about a dozen draw calls), so it is ready at once.
+## The floor and plinth have collision so staged zombies stand on them.
 
 const FLOOR := Color("120c2e")
 const NAVY := Color("0b0820")
@@ -16,6 +17,26 @@ func _ready() -> void:
 	_plinth()
 	_ring()
 	_lights()
+	_collision()
+
+
+## The floor and the plinth top are solid, so actors stand on them.
+func _collision() -> void:
+	var body := StaticBody3D.new()
+	add_child(body)
+	var ground := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(28, 1, 28)
+	ground.shape = box
+	ground.position = Vector3(0, -0.5, 0)
+	body.add_child(ground)
+	var top := CollisionShape3D.new()
+	var cyl := CylinderShape3D.new()
+	cyl.radius = 1.1
+	cyl.height = 0.42
+	top.shape = cyl
+	top.position = Vector3(0, 0.21, 0)
+	body.add_child(top)
 
 
 func _environment() -> void:

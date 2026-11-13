@@ -40,6 +40,10 @@ extends Node
 ##   --shot-move=1         movement probe: jump height, slide speed, rail wall
 ##   --shot-ads=1          hold aim-down-sights (0.5 = half-way through raising the sight)
 ##   --shot-sight=<id>     fit this sight (data/cosmetics/sights) to the weapon for the shot
+##   --shot-scene=showreel --shot-time=s   the showreel (scripts/cinematics/) over the menu, captured
+##                         s seconds in (it starts at the shot containing s)
+##   --shot-times=a,b,...  with --shot-scene=intro or showreel: one capture per time (seconds), saved
+##                         as <shot>_<time>.png
 ##   --shot-threat=1       a zombie behind-right of the player starts its windup (threat warning check)
 
 var path := ""
@@ -101,8 +105,24 @@ func _run() -> void:
 		# Startup intro at a given time (--shot-frames at 60 fps).
 		await _wait(10)
 		var intro := IntroOverlay.new()
-		get_tree().current_scene.add_child(intro)
+		var menu := get_tree().current_scene
+		# As on a real start: the home page and top bar wait for the intro.
+		menu._pages["title"].visible = false
+		menu._top_bar.modulate.a = 0.0
+		menu.add_child(intro)
+		if args.has("times"):
+			await _capture_times(func(): return intro._time)
+			return
 		await _capture(int(_arg("frames", "120")))
+		return
+	if scene_kind == "showreel":
+		await _wait(10)
+		var times := _arg("times", _arg("time", "1")).split(",")
+		var reel := Showreel.play(get_tree().current_scene)
+		reel.start_at = float(times[0])
+		if not args.has("times"):
+			args["times"] = times[0]
+		await _capture_times(func(): return reel.clock())
 		return
 	# Anything that is not an in-level scene is treated as a menu page id.
 	if not scene_kind in ["level", "results", "defeat", "pause", "kiosk"]:
@@ -451,6 +471,19 @@ func _stage_zombies(director: RunDirector, player: Player) -> void:
 		elif anim and anim.current_animation != "":
 			anim.seek(anim.current_animation_length * float(entry[2]), true)
 			anim.pause()
+
+
+## Saves <path>_<t>.png when `clock` (a callable returning seconds) passes
+## each of --shot-times, then quits.
+func _capture_times(clock: Callable) -> void:
+	for t in _arg("times", "").split(","):
+		while float(clock.call()) < float(t):
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		var file := "%s_%s.png" % [path.get_basename(), t]
+		get_viewport().get_texture().get_image().save_png(file)
+		print("[shot] saved ", file)
+	get_tree().quit()
 
 
 func _capture(frames: int) -> void:

@@ -10,6 +10,7 @@ extends SceneTree
 ##   --showreel-sheet=dir  save one frame from the middle of every shot as
 ##                         dir/<nn>_<shot>.png (contact sheet frames)
 ##   --showreel-report=1   print set load times and the worst frame times
+##   --showreel-list=1     print "SHOT <index> <id> <start> <length>" for every shot and quit
 ##
 ## Script mode compiles this file before the autoloads exist, so it only uses
 ## untyped references to game classes.
@@ -31,6 +32,15 @@ func _initialize() -> void:
 		return
 	_sheet = String(opts.get("showreel-sheet", ""))
 	_player = (load("res://scripts/cinematics/showreel.gd") as GDScript).call("make")
+	if String(opts.get("showreel-list", "0")) == "1":
+		var t := 0.0
+		for i in _player.shots.size():
+			var shot = _player.shots[i]
+			print("SHOT %d %s %.2f %.2f" % [i, shot.id, t, shot.length])
+			t += shot.length
+		_player.free()
+		quit()
+		return
 	_player.render_mode = true
 	_player.start_at = float(opts.get("showreel-from", "0"))
 	_player.stop_at = float(opts.get("showreel-to", "-1"))
