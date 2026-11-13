@@ -17,6 +17,9 @@ extends CharacterBody3D
 ##     vaulted), and a ledge reached in the air is pulled up onto;
 ##   - sprint + crouch slides under a lowered capsule: a boost on the entry
 ##     speed that tires when slides are chained, pulled along by slopes;
+##   - dash (V or the mouse's back button, on the ground): a short burst along
+##     the input, or forward with none, then back to running speed, on a
+##     cooldown; jumping out of it carries no more than a slide-jump does;
 ##   - firing or aiming ends a sprint at once, and the weapon takes a beat to
 ##     come up out of its sprint pose before it fires.
 ##
@@ -35,6 +38,8 @@ signal died
 signal jumped
 signal landed(impact_speed: float)
 signal slide_started
+## A dash started along `direction` (flat, unit length, world space).
+signal dashed(direction: Vector3)
 ## A mantle (`vault` false) or vault started / finished.
 signal traversal_started(vault: bool)
 signal traversal_finished(vault: bool)
@@ -60,6 +65,12 @@ const LEDGE_INPUT := 0.3
 ## Lowest ledge a jump on the ground mantles onto (lower ones are just jumped).
 const GROUND_MANTLE_MIN := 0.7
 const TRAVERSE_COOLDOWN := 0.25
+## A dash pressed this long before it is allowed (cooldown, landing) still happens.
+const DASH_BUFFER := 0.15
+## Falls landing at this speed (m/s, about a 2.2 m drop) kick up dust and thud.
+const HARD_LANDING := 12.0
+## Seconds between puffs of dust while sliding.
+const SLIDE_DUST_EVERY := 0.07
 ## Steps per metre (one footfall every half cycle of gait_phase).
 const STRIDE_WALK := 1.75
 const STRIDE_SPRINT := 2.2
@@ -83,9 +94,9 @@ const CROWD_MARGIN := 0.001
 @export var overspeed_bleed := 10.0
 @export_group("Air")
 ## Acceleration toward the input, up to running speed (m/s per second).
-@export var air_acceleration := 12.0
+@export var air_acceleration := 15.0
 ## How fast the input can swing the velocity round (degrees per second).
-@export var air_turn_rate := 170.0
+@export var air_turn_rate := 210.0
 ## Drag with no input, and on speed above a sprint (m/s per second).
 @export var air_drag := 0.8
 @export var air_overspeed_drag := 1.6
@@ -97,7 +108,7 @@ const CROWD_MARGIN := 0.001
 @export var jump_cut := 0.65
 @export_group("Slide")
 ## Boost added to the entry speed, and the slide's top speed.
-@export var slide_boost := 2.5
+@export var slide_boost := 3.0
 @export var slide_max_speed := 11.0
 ## Entry needs this share of sprint speed (or a slide pressed as you land).
 @export var slide_entry := 0.85
@@ -111,6 +122,12 @@ const CROWD_MARGIN := 0.001
 @export var slide_recovery := 1.6
 ## Share of the slide's speed a slide-jump carries.
 @export var slide_jump_keep := 0.92
+@export_group("Dash")
+## Burst speed (scaled by the weapon's move speed, like running), its length
+## (the last 40% eases back to running speed) and the wait from one dash to the next.
+@export var dash_speed := 13.5
+@export var dash_time := 0.16
+@export var dash_cooldown := 1.2
 
 @onready var head: PlayerCamera = $Head
 @onready var camera: Camera3D = $Head/Camera3D
@@ -165,6 +182,12 @@ var _sprint_block := 0.0
 var _traverse: PlayerTraversal
 var _traverse_vault := false
 var _traverse_cool := 0.0
+var _dash_buffer := 0.0
+## Time left in the dash under way (0 when not dashing) and until the next one.
+var _dash_left := 0.0
+var _dash_cool := 0.0
+var _dash_dir := Vector3.FORWARD
+var _dust_timer := 0.0
 var _tick_prev := Vector3.ZERO
 var _tick_curr := Vector3.ZERO
 var _stepped := 0.0
@@ -174,6 +197,7 @@ var _step_side := false
 func _ready() -> void:
 	add_to_group("player")
 	Loadout.ensure_input_actions()
+	ensure_dash_action()
 	health = max_health
 	# Own copy of the capsule: its height changes while sliding.
 	_capsule.shape = _capsule.shape.duplicate()
@@ -288,7 +312,10 @@ func _physics_process(delta: float) -> void:
 		_after_move()
 		return
 	_update_slide(can_act, on_floor)
-	if sliding:
+	_update_dash(can_act, wish)
+	if _dash_left > 0.0:
+		_dash_move(delta, on_floor)
+	elif sliding:
 		_slide_move(delta, can_act, on_floor, wish)
 	else:
 		_run_move(delta, on_floor, wish)
@@ -311,6 +338,8 @@ func _tick_timers(delta: float, can_act: bool, on_floor: bool) -> void:
 	_jump_buffer = maxf(0.0, _jump_buffer - delta)
 	_slide_buffer = maxf(0.0, _slide_buffer - delta)
 	_traverse_cool = maxf(0.0, _traverse_cool - delta)
+	_dash_buffer = maxf(0.0, _dash_buffer - delta)
+	_dash_cool = maxf(0.0, _dash_cool - delta)
 	_since_landed += delta
 	if not sliding:
 		_since_slide += delta
@@ -318,6 +347,8 @@ func _tick_timers(delta: float, can_act: bool, on_floor: bool) -> void:
 		_jump_buffer = JUMP_BUFFER
 	if can_act and Input.is_action_just_pressed("slide"):
 		_slide_buffer = SLIDE_BUFFER
+	if can_act and Input.is_action_just_pressed(&"dash"):
+		_dash_buffer = DASH_BUFFER
 	# Firing ends a sprint at once and keeps it off while the trigger is busy.
 	if can_act and Input.is_action_pressed("fire"):
 		_sprint_block = SPRINT_BLOCK
@@ -370,8 +401,9 @@ func _try_traversal(input: Vector2, wish: Vector3, on_floor: bool) -> bool:
 	if _traverse_cool > 0.0 or input.y > -LEDGE_INPUT:
 		return false
 	var dir := Vector3(wish.x, 0.0, wish.z).normalized()
-	# The run-up: brushing the obstacle a tick early must not turn a sprint into a crawl.
-	var toward := maxf(velocity.dot(dir), sprint_amount * sprint_speed * weapons.move_scale())
+	# The run-up: brushing the obstacle a tick early must not turn a sprint
+	# into a crawl; a dash carries over no faster than a slide.
+	var toward := minf(maxf(velocity.dot(dir), sprint_amount * sprint_speed * weapons.move_scale()), slide_max_speed)
 	var grounded := on_floor or _coyote > 0.0
 	var kind := PlayerTraversal.Kind.NONE
 	if grounded and _jump_buffer > 0.0:
@@ -381,11 +413,9 @@ func _try_traversal(input: Vector2, wish: Vector3, on_floor: bool) -> bool:
 		if kind == PlayerTraversal.Kind.MANTLE and _traverse.planned_height() < GROUND_MANTLE_MIN:
 			kind = PlayerTraversal.Kind.NONE
 	elif not grounded and not _crouched:
-		kind = _traverse.plan(dir, _floor_y, true, toward)
-		# Not while the jump is still going to clear the ledge by itself.
-		var apex := global_position.y + pow(maxf(velocity.y, 0.0), 2.0) / (2.0 * gravity)
-		if kind != PlayerTraversal.Kind.NONE and apex > global_position.y + _traverse.planned_height() + 0.15:
-			kind = PlayerTraversal.Kind.NONE
+		# Not a ledge the jump is still going to clear by itself.
+		var apex_rise := pow(maxf(velocity.y, 0.0), 2.0) / (2.0 * gravity)
+		kind = _traverse.plan(dir, _floor_y, true, toward, apex_rise - 0.15)
 	if kind == PlayerTraversal.Kind.NONE:
 		return false
 	_begin_traversal(kind == PlayerTraversal.Kind.VAULT, toward)
@@ -395,6 +425,7 @@ func _try_traversal(input: Vector2, wish: Vector3, on_floor: bool) -> bool:
 func _begin_traversal(vault: bool, run_up: float) -> void:
 	if sliding:
 		_end_slide()
+	_dash_left = 0.0
 	_traverse_vault = vault
 	_jump_buffer = 0.0
 	_coyote = 0.0
@@ -442,8 +473,10 @@ func _start_slide() -> void:
 	_slide_time = 0.0
 	_slide_buffer = 0.0
 	_set_crouched(true)
+	_dust_timer = 0.0
 	Sfx.play(&"slide", -6.0, randf_range(0.95, 1.05))
 	add_shake(0.12)
+	head.slide_kick()
 	slide_started.emit()
 
 
@@ -468,9 +501,18 @@ func _slide_move(delta: float, can_act: bool, on_floor: bool, wish: Vector3) -> 
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
 	_slide_dir = dir
+	_slide_dust(delta, on_floor)
 	var tired := _slide_time > slide_duration / grip and pull < friction
 	if speed < slide_exit_speed or tired or _slide_time > 3.0 or not can_act or _coyote <= 0.0:
 		_end_slide()
+
+
+## A trail of dust from the feet while the slide is on the ground.
+func _slide_dust(delta: float, on_floor: bool) -> void:
+	_dust_timer -= delta
+	if on_floor and _dust_timer <= 0.0:
+		_dust_timer = SLIDE_DUST_EVERY
+		MoveFx.trail(get_parent(), global_position, _slide_dir)
 
 
 func _end_slide() -> void:
@@ -495,6 +537,66 @@ func _set_crouched(on: bool) -> void:
 	var shape := _capsule.shape as CapsuleShape3D
 	shape.height = SLIDE_CAPSULE if on else STAND_CAPSULE
 	_capsule.position.y = shape.height * 0.5
+
+
+# --- dash -----------------------------------------------------------------------------
+
+## Adds the "dash" InputMap action (V, the mouse's back button) when the
+## project does not define it.
+static func ensure_dash_action() -> void:
+	if InputMap.has_action(&"dash"):
+		return
+	InputMap.add_action(&"dash")
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_V
+	InputMap.action_add_event(&"dash", key)
+	var thumb := InputEventMouseButton.new()
+	thumb.button_index = MOUSE_BUTTON_XBUTTON1
+	InputMap.action_add_event(&"dash", thumb)
+
+
+func is_dashing() -> bool:
+	return _dash_left > 0.0
+
+
+## A dash press starts one on the ground (or just off a ledge) once the
+## cooldown is over; a slide under way gives way to it.
+func _update_dash(can_act: bool, wish: Vector3) -> void:
+	if _dash_left > 0.0 or not can_act or _dash_buffer <= 0.0 or _dash_cool > 0.0 or _coyote <= 0.0:
+		return
+	if sliding:
+		_end_slide()
+	var flat := Vector3(wish.x, 0.0, wish.z)
+	_dash_dir = flat.normalized() if flat.length_squared() > 0.01 else -global_basis.z
+	_dash_left = dash_time
+	_dash_cool = dash_cooldown
+	_dash_buffer = 0.0
+	Sfx.play(&"move_dash", -7.0, randf_range(0.95, 1.05))
+	head.dash_kick(global_basis.inverse() * _dash_dir)
+	MoveFx.puff(get_parent(), global_position, _dash_dir)
+	dashed.emit(_dash_dir)
+
+
+## Full speed for most of the dash, easing back to running speed at the end;
+## running off a ledge ends it once the coyote time is up.
+func _dash_move(delta: float, on_floor: bool) -> void:
+	_dash_left = maxf(0.0, _dash_left - delta)
+	var exit := sprint_speed * weapons.move_scale()
+	var k := smoothstep(0.6, 1.0, 1.0 - _dash_left / dash_time)
+	var speed := lerpf(dash_speed * weapons.move_scale(), exit, k)
+	velocity.x = _dash_dir.x * speed
+	velocity.z = _dash_dir.z * speed
+	if not on_floor and _coyote <= 0.0:
+		_end_dash()
+
+
+## Stops a dash early (a jump, a ledge): what carries on is no faster than the
+## best slide-jump, so a dash never opens a gap a slide-jump cannot cross.
+func _end_dash() -> void:
+	_dash_left = 0.0
+	var flat := Vector2(velocity.x, velocity.z).limit_length(slide_max_speed * slide_jump_keep)
+	velocity.x = flat.x
+	velocity.z = flat.y
 
 
 # --- running and the air ----------------------------------------------------------
@@ -571,6 +673,8 @@ func _jump() -> void:
 		velocity.x *= slide_jump_keep
 		velocity.z *= slide_jump_keep
 		_end_slide()
+	if _dash_left > 0.0:
+		_end_dash()
 	velocity.y = jump_velocity
 	# A jump buffered before landing (key already up) is a full jump.
 	_jump_rising = Input.is_action_pressed("jump")
@@ -597,6 +701,11 @@ func _on_landed(impact: float) -> void:
 	if impact < 2.0:
 		return
 	Sfx.play(&"land", lerpf(-16.0, -6.0, clampf(impact / 12.0, 0.0, 1.0)), randf_range(0.92, 1.05))
+	if impact >= HARD_LANDING:
+		# A long drop: the view rolls with the sideways momentum, dust rings out.
+		head.land_lean(clampf(local_velocity().x / walk_speed, -1.0, 1.0))
+		Sfx.play(&"move_land_heavy", -8.0, randf_range(0.95, 1.05))
+		MoveFx.ring(get_parent(), global_position)
 	landed.emit(impact)
 
 
@@ -633,7 +742,7 @@ func _process(delta: float) -> void:
 ## time a foot lands. The head and weapon bob read the same phase.
 func _update_gait(delta: float) -> void:
 	var speed := horizontal_speed()
-	var grounded := alive and is_on_floor() and not sliding and not _traverse.is_active()
+	var grounded := alive and is_on_floor() and not sliding and _dash_left <= 0.0 and not _traverse.is_active()
 	var target := clampf(speed / walk_speed, 0.0, 1.0) if grounded else 0.0
 	gait_amount = move_toward(gait_amount, target, delta * 6.0)
 	if not grounded or speed < 0.3:

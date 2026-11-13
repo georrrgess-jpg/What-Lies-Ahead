@@ -8,7 +8,8 @@ extends Node3D
 ##   - camera life: a soft bob on the shared step rhythm (Player.gait_phase,
 ##     the same one that plays the footsteps and bobs the weapon), a slight
 ##     roll into strafes, a spring-driven landing dip and nod scaled by the
-##     impact, eased steps up curbs, a nod while mantling, and a field of view
+##     impact, eased steps up curbs, a nod while mantling, a dip as a slide
+##     drops in, a lean into dashes and long landings, and a field of view
 ##     that widens a little with speed (sprints, slides) on top of the FOV
 ##     setting but never while aiming.
 ## Motion scales with Settings.camera_motion(); shake with Settings.shake_scale().
@@ -30,6 +31,15 @@ const LAND_NOD := 1.5
 ## Initial spring velocity per unit of wanted peak (for _bump's frequency and damping).
 const BUMP_GAIN := 33.0
 const JUMP_NOD := 0.8
+## Slide entry: nod (degrees) and dip (m).
+const SLIDE_NOD := 1.6
+const SLIDE_DIP := 0.035
+## Dash: lean into a sideways dash, nod into a forward one (degrees), and dip (m).
+const DASH_LEAN := 4.0
+const DASH_NOD := 1.2
+const DASH_DIP := 0.02
+## Long landings: roll with the sideways momentum (degrees).
+const LAND_LEAN := 3.0
 ## How fast an eased step-up catches up (1/s).
 const STEP_EASE := 16.0
 
@@ -47,7 +57,8 @@ var _crouch := 0.0
 var _roll := 0.0
 var _step_offset := 0.0
 var _stand_height := 1.62
-## x: nod (radians, + looks up), y: height (m). Landing dips, jump nods.
+## x: nod (radians, + looks up), y: height (m), z: roll (radians). Landing
+## dips, jump nods, slide and dash kicks.
 var _bump := MotionSpring.new(15.0, 0.72)
 ## x: pitch (radians), z: roll (radians) while mantling or vaulting.
 var _traverse_pose := MotionSpring.new(12.0, 0.8)
@@ -81,7 +92,7 @@ func _process(delta: float) -> void:
 		sin(_shake_time * 1.3) * 0.03 * shake,
 		sin(_shake_time * 1.7 + 1.0) * 0.03 * shake,
 		sin(_shake_time * 2.1 + 2.0) * 0.045 * shake + _hit_roll * Settings.shake_scale()
-			+ (_roll + _crouch * 0.05 + traverse.z) * motion)
+			+ (_roll + _crouch * 0.05 + traverse.z + bump.z) * motion)
 	if not player.alive:
 		_slump(delta)
 	_update_fov(delta, motion)
@@ -112,8 +123,8 @@ func _traverse_target() -> Vector3:
 		return Vector3.ZERO
 	var k := sin(PI * player.traversal_progress())
 	if player.traversal_is_vault():
-		return Vector3(deg_to_rad(-1.5) * k, 0.0, deg_to_rad(3.0) * k)
-	return Vector3(deg_to_rad(-4.0) * k, 0.0, deg_to_rad(-1.0) * k)
+		return Vector3(deg_to_rad(-2.5) * k, 0.0, deg_to_rad(4.5) * k)
+	return Vector3(deg_to_rad(-6.0) * k, 0.0, deg_to_rad(-1.5) * k)
 
 
 ## Slump to the deck and roll over on defeat.
@@ -165,6 +176,22 @@ func settle() -> void:
 
 func jump_kick() -> void:
 	_bump.kick(Vector3(deg_to_rad(JUMP_NOD), 0.0, 0.0) * BUMP_GAIN)
+
+
+## The slide drops in: a nod and a dip on top of the lowered eye.
+func slide_kick() -> void:
+	_bump.kick(Vector3(-deg_to_rad(SLIDE_NOD), -SLIDE_DIP, 0.0) * BUMP_GAIN)
+
+
+## A dash along `local` (the body's space: x right, z back, unit length):
+## lean into it sideways, nod into it forward.
+func dash_kick(local: Vector3) -> void:
+	_bump.kick(Vector3(deg_to_rad(DASH_NOD) * local.z, -DASH_DIP, -deg_to_rad(DASH_LEAN) * local.x) * BUMP_GAIN)
+
+
+## A long landing rolls the view with the sideways momentum (`side` -1 left .. 1 right).
+func land_lean(side: float) -> void:
+	_bump.kick(Vector3(0.0, 0.0, -deg_to_rad(LAND_LEAN) * (side if absf(side) > 0.2 else 0.5)) * BUMP_GAIN)
 
 
 ## Kicks the view up by `degrees` and sideways by `yaw_degrees` (recovers on its own).

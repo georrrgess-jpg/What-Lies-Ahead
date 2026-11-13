@@ -1,5 +1,7 @@
 """Player movement sounds: the mantle (hands slap onto a ledge, a pull-up and
-the feet settling on top) and the vault (a palm slap and a quick whoosh over).
+the feet settling on top), the vault (a palm slap and a quick whoosh over),
+the dash (a shoe scuff and a short rush of air) and the heavy landing after a
+long drop (a deep thud and grit settling).
 Footsteps, jump, land and slide are in the core set (tools/gen_audio.py).
 
     python tools/gen_audio.py movement
@@ -61,5 +63,26 @@ def move_vault():
     return out
 
 
-SOUNDS = [move_mantle, move_mantle_land, move_vault]
-VARIANTS = [(move_mantle, (0.94, 1.06)), (move_vault, (0.93, 1.07))]
+def move_dash():
+    d = 0.32
+    out = silence(d)
+    scuff = band(noise(0.07), 2200, 1400) * env(0.07, 0.001, 0.05, power=2.0) * 1.4
+    place(out, scuff, 0.0, 0.8)
+    place(out, sweep(160, 70, 0.08, "sine", 0.5) * env(0.08, 0.001, 0.05, power=2.0), 0.0, 0.6)
+    place(out, _whoosh(0.28, 1400, 500), 0.01, 1.0)
+    place(out, _rustle(0.16, 3000), 0.02, 0.3)
+    return out
+
+
+def move_land_heavy():
+    d = 0.5
+    out = silence(d)
+    place(out, sweep(110, 38, 0.32, "sine", 0.5) * env(0.32, 0.002, 0.22, power=2.0), 0.0, 1.0)
+    place(out, band(noise(0.12), 700, 380) * env(0.12, 0.001, 0.08, power=2.0) * 1.6, 0.0, 0.8)
+    grit = band(noise(0.4), 3200, 1800) * env(0.4, 0.03, 0.4, power=1.6)
+    place(out, grit, 0.05, 0.25)
+    return out
+
+
+SOUNDS = [move_mantle, move_mantle_land, move_vault, move_dash, move_land_heavy]
+VARIANTS = [(move_mantle, (0.94, 1.06)), (move_vault, (0.93, 1.07)), (move_dash, (0.92, 1.08))]

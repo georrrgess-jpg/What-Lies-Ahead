@@ -41,14 +41,17 @@ const VAULT_MAX_DEPTH := 0.8
 const VAULT_MAX_DROP := 1.5
 ## Share of the run-up speed a vault keeps, and its slowest crossing speed.
 const VAULT_KEEP := 0.85
-const VAULT_MIN_SPEED := 4.6
+const VAULT_MIN_SPEED := 5.0
 ## From this run-up speed a vault wins over a mantle where both fit.
 const VAULT_PREFER_SPEED := 6.0
 ## Share of the run-up speed a mantle keeps, and its slowest exit.
-const MANTLE_KEEP := 0.7
-const MANTLE_MIN_EXIT := 2.2
+const MANTLE_KEEP := 0.75
+const MANTLE_MIN_EXIT := 3.0
 ## Speed over the top once the capsule clears the ledge.
-const MANTLE_OVER_SPEED := 4.6
+const MANTLE_OVER_SPEED := 5.4
+## Pull-up time: a base plus this much per metre of rise (mantle, vault).
+const MANTLE_RISE_TIME := Vector2(0.13, 0.07)
+const VAULT_RISE_TIME := Vector2(0.06, 0.06)
 const FLOOR_NORMAL := 0.7
 const TOP_NORMAL := 0.85
 const MASK_WORLD := 1
@@ -119,10 +122,13 @@ func step_up(motion: Vector3) -> float:
 	# capsule against the edge before a sweep of this tick's travel sees it.
 	if not _sweep(xf, dir * (travel + STEP_LOOKAHEAD)):
 		return -1.0
-	if _hit.get_normal().y > STEP_FLAT or _is_enemy(_hit.get_collider()):
+	# A step touches the capsule's round bottom, no higher than the step
+	# itself: a contact above that is a wall (and needs no ray to say so).
+	var contact := _hit.get_position()
+	if contact.y > xf.origin.y + STEP_HEIGHT + 0.02 or _hit.get_normal().y > STEP_FLAT or _is_enemy(_hit.get_collider()):
 		return -1.0
 	# A step has a flat top just past its edge, no higher than STEP_HEIGHT.
-	var past := _hit.get_position() + dir * 0.04
+	var past := contact + dir * 0.04
 	var top := _cast(Vector3(past.x, xf.origin.y + STEP_HEIGHT + 0.05, past.z), Vector3(past.x, xf.origin.y + 0.01, past.z))
 	if top.is_empty() or (top["normal"] as Vector3).y < STEP_FLAT or top["position"].y > xf.origin.y + STEP_HEIGHT + 0.01:
 		return -1.0
@@ -143,8 +149,10 @@ func step_up(motion: Vector3) -> float:
 
 ## Looks for a ledge along `dir` (flat, unit length). `floor_y` is the height
 ## of the floor the player last stood on, `speed` the run-up speed toward the
-## ledge. Returns the kind of move found; begin() starts it.
-func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float) -> Kind:
+## ledge. A ledge lower than `min_height` above the feet is ignored (in the
+## air: one the jump clears by itself) before the costlier checks run.
+## Returns the kind of move found; begin() starts it.
+func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float, min_height := -INF) -> Kind:
 	_plan_kind = Kind.NONE
 	var xf := _body.global_transform
 	var feet := xf.origin
@@ -155,7 +163,7 @@ func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float) -> Kind:
 		return Kind.NONE
 	var face := maxf((_hit.get_position() - feet).dot(dir), _radius)
 	var ledge := _find_top(feet, dir, face, floor_y, airborne)
-	if is_nan(ledge):
+	if is_nan(ledge) or ledge - feet.y < min_height:
 		return Kind.NONE
 	var rise := ledge + CLEARANCE - feet.y
 	if _sweep(xf, Vector3.UP * rise):
@@ -163,8 +171,10 @@ func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float) -> Kind:
 	var raised := xf.translated(Vector3.UP * rise)
 	var can_mantle := _check_mantle(raised, feet, dir, face, ledge)
 	var mantle_forward := _plan_forward
-	var can_vault := ledge - feet.y <= VAULT_MAX_HEIGHT and _check_vault(raised, feet, dir, face, ledge)
-	if can_vault and (speed >= VAULT_PREFER_SPEED or not can_mantle):
+	# The vault only matters at a run, or where no mantle fits.
+	var wants_vault := speed >= VAULT_PREFER_SPEED or not can_mantle
+	var can_vault := wants_vault and ledge - feet.y <= VAULT_MAX_HEIGHT and _check_vault(raised, feet, dir, face, ledge)
+	if can_vault:
 		_plan_kind = Kind.VAULT
 	elif can_mantle:
 		_plan_kind = Kind.MANTLE
@@ -265,12 +275,12 @@ func begin(run_up: float) -> void:
 	var toward := maxf(0.0, run_up)
 	if kind == Kind.VAULT:
 		_speed = maxf(toward * VAULT_KEEP, VAULT_MIN_SPEED)
-		_rise_time = 0.07 + 0.07 * _rise
+		_rise_time = VAULT_RISE_TIME.x + VAULT_RISE_TIME.y * _rise
 		_exit_speed = _speed
 		_duration = maxf(_rise_time, _forward / _speed)
 	else:
 		_speed = MANTLE_OVER_SPEED
-		_rise_time = 0.15 + 0.08 * _rise
+		_rise_time = MANTLE_RISE_TIME.x + MANTLE_RISE_TIME.y * _rise
 		_exit_speed = maxf(toward * MANTLE_KEEP, MANTLE_MIN_EXIT)
 		_duration = _rise_time * 0.85 + (_forward - _gap) / _speed
 
