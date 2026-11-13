@@ -126,7 +126,7 @@ func _ring() -> void:
 func _lights() -> void:
 	var key := DirectionalLight3D.new()
 	key.light_color = Color("ffe2c4")
-	key.light_energy = 1.25
+	key.light_energy = 1.6
 	key.shadow_enabled = true
 	key.rotation_degrees = Vector3(-38, 28, 0)
 	add_child(key)

@@ -145,25 +145,25 @@ func _open_pier(st: CineStage) -> void:
 
 
 func _open_eyes(st: CineStage) -> void:
-	var z := st.zombie(&"tourist_shambler", Vector3(2, 0, 6), 90.0, "Idle", 0.6)
-	var face := st.head(z) + Vector3(0.12, -0.04, 0)
-	st.fov(30.0, 24.0)
-	st.dolly(face + Vector3(2.4, 0.15, 0.6), face, face + Vector3(1.5, 0.05, 0.35), face, -1.4)
-	var glow := st.light(face + Vector3(0.45, 0.0, 0.0), Wallet.COLOR_GLOW, 0.0, 2.5)
-	st.light(face + Vector3(-0.9, 0.6, -0.8), UiKit.PINK, 2.0, 4.0)
+	var z := st.zombie(&"tourist_shambler", Vector3(6, 0, 12), 90.0, "Idle", 0.6)
+	var face := st.head(z) + Vector3(0.1, -0.05, 0)
+	st.fov(32.0, 27.0)
+	st.dolly(face + Vector3(3.4, 0.1, 0.9), face + Vector3(0, -0.12, 0), face + Vector3(2.4, 0.05, 0.6), face + Vector3(0, -0.05, 0), -1.4)
+	var glow := st.light(face + Vector3(0.55, 0.0, 0.0), Wallet.COLOR_GLOW, 0.0, 1.6)
+	st.light(face + Vector3(-0.9, 0.6, -0.8), UiKit.PINK, 1.6, 4.0)
 	st.at(1.5, func():
-		WeaponFx.flash(st.actors, face + Vector3(0.18, 0.02, 0), Wallet.COLOR_GLOW, 0.4, 0.5)
-		st.actors.create_tween().tween_property(glow, "light_energy", 3.5, 0.25))
+		WeaponFx.flash(st.actors, face + Vector3(0.2, 0.02, 0), Wallet.COLOR_GLOW, 0.12, 0.35)
+		st.actors.create_tween().tween_property(glow, "light_energy", 1.2, 0.25))
 	st.at(1.6, st.play.bind(z, "Roar", 0.8, 0.0, 0.2))
 
 
 func _open_spark(st: CineStage) -> void:
-	var z := st.walker(&"tourist_shambler", Vector3(2, 0, 4), 70.0, 0.6)
-	st.walker(&"lifeguard_runner", Vector3(-3, 0, 1.5), 75.0, 0.5)
-	st.walker(&"tourist_shambler", Vector3(-6, 0, 6.5), 80.0, 0.45)
-	var eye := Vector3(9.5, 0.45, 6.6)
+	var z := st.walker(&"tourist_shambler", Vector3(5, 0, 12.5), 80.0, 0.6)
+	st.walker(&"lifeguard_runner", Vector3(-1, 0, 10.5), 85.0, 0.5)
+	st.walker(&"tourist_shambler", Vector3(-4, 0, 15), 95.0, 0.45)
+	var eye := Vector3(12.5, 0.45, 14.2)
 	st.fov(40.0, 34.0)
-	st.dolly(eye, Vector3(1, 1.7, 4.5), eye + Vector3(-0.8, 0.1, 0), Vector3(2, 1.8, 4.6))
+	st.dolly(eye, Vector3(4, 1.7, 12.5), eye + Vector3(-0.8, 0.1, 0), Vector3(5, 1.8, 12.8))
 	var field := SparkField.new()
 	st.actors.add_child(field)
 	field.global_position = eye + Vector3(-0.5, 0.0, 0.0)
@@ -178,8 +178,8 @@ func _title(st: CineStage) -> void:
 	st.shake(0.0, 0.12, 0.5)
 	st.at(1.75, st.overlay.clear_text.bind(0.2))
 	st.fov(55.0, 50.0)
-	st.dolly(Vector3(11, 0.8, 12), Vector3(0, 1.6, 0), Vector3(14, 6.0, 15), Vector3(-2, 1.0, -2), -1.8)
-	var spots := [Vector3(-2, 0, 2), Vector3(1, 0, -2), Vector3(-5, 0, -1), Vector3(3, 0, 3.5), Vector3(-7, 0, 4), Vector3(-1, 0, -6), Vector3(-9, 0, -4), Vector3(4, 0, -4.5)]
+	st.dolly(Vector3(12.5, 0.8, 13.5), Vector3(-2, 1.6, 11), Vector3(15, 6.0, 15.5), Vector3(-4, 1.0, 9), -1.8)
+	var spots := [Vector3(-2, 0, 12), Vector3(1, 0, 9.5), Vector3(-5, 0, 10), Vector3(3, 0, 14), Vector3(-7, 0, 14), Vector3(-3, 0, 16.5), Vector3(-10, 0, 11), Vector3(5, 0, 10)]
 	var kinds := [&"tourist_shambler", &"lifeguard_runner", &"tourist_shambler", &"boardwalk_bruiser", &"tourist_shambler", &"lifeguard_runner", &"tourist_shambler", &"tourist_shambler"]
 	for i in spots.size():
 		st.walker(kinds[i], spots[i], 50.0 + 10.0 * (i % 3), 0.7)
@@ -239,9 +239,9 @@ func _cast_yeti(st: CineStage) -> void:
 
 
 func _cast_bruiser(st: CineStage) -> void:
-	var z := st.walker(&"boardwalk_bruiser", Vector3(0, 0, -3), 75.0, 1.0)
-	st.walker(&"tourist_shambler", Vector3(-3, 0, -5.5), 70.0, 0.8)
-	st.walker(&"lifeguard_runner", Vector3(-2, 0, -0.5), 80.0, 0.9)
+	var z := st.walker(&"boardwalk_bruiser", Vector3(-12, 0, -13), 75.0, 1.0)
+	st.walker(&"tourist_shambler", Vector3(-15, 0, -15.5), 70.0, 0.8)
+	st.walker(&"lifeguard_runner", Vector3(-14, 0, -10.5), 80.0, 0.9)
 	st.fov(36.0, 40.0)
 	st.track(func(k: float) -> Transform3D:
 		var at := z.global_position if is_instance_valid(z) else Vector3.ZERO
@@ -258,12 +258,12 @@ func _cast_horde(st: CineStage) -> void:
 		for col in 3:
 			if i >= CAST.size():
 				break
-			var x := -2.0 - row * 2.2
-			var z := (col - 1) * 2.0 + (row % 2) * 0.8
+			var x := -9.0 - row * 2.2
+			var z := -13.0 + (col - 1) * 2.0 + (row % 2) * 0.8
 			st.walker(CAST[i], Vector3(x, 0, z), 90.0, 0.9)
 			i += 1
 	st.fov(40.0, 46.0)
-	st.dolly(Vector3(5.5, 0.9, 0.5), Vector3(-6, 1.6, 0.4), Vector3(7.5, 1.3, 1.0), Vector3(-6, 1.7, 0.4))
+	st.dolly(Vector3(-1.5, 0.9, -12.5), Vector3(-13, 1.6, -12.6), Vector3(0.5, 1.3, -12.0), Vector3(-13, 1.7, -12.6))
 	st.at(0.1, st.overlay.slam.bind("%d KINDS OF TROUBLE" % GameData.enemies().size(), 96, Color.WHITE, Vector2(0.5, 0.2), 1.6, -2.0))
 
 
@@ -271,9 +271,9 @@ func _cast_horde(st: CineStage) -> void:
 
 func _kill_headshot(st: CineStage) -> void:
 	st.overlay.flash(Color.WHITE, 0.4, 1.0)
-	var z := st.zombie(&"tourist_shambler", Vector3(0, 0, 2), 90.0, "Walk", 0.6)
+	var z := st.zombie(&"tourist_shambler", Vector3(-6, 0, 14), 20.0, "Walk", 0.6)
 	var head := st.head(z)
-	st.fov(32.0, 28.0)
+	st.fov(36.0, 32.0)
 	st.dolly(head + Vector3(0.6, -0.15, 3.4), head + Vector3(-0.2, -0.1, 0), head + Vector3(0.3, -0.05, 3.0), head + Vector3(-0.3, 0.0, 0))
 	st.slowmo(0.3, 1.9, 0.3)
 	st.at(0.3, func():
@@ -284,7 +284,7 @@ func _kill_headshot(st: CineStage) -> void:
 
 
 func _kill_sweep(st: CineStage) -> void:
-	var eye := Vector3(9, 1.6, 2)
+	var eye := Vector3(2, 1.6, -13)
 	var targets: Array[Zombie] = []
 	for i in 5:
 		var a := deg_to_rad(-40.0 + i * 20.0)
@@ -310,14 +310,14 @@ func _kill_cryo(st: CineStage) -> void:
 	var cryo := GameData.weapon(&"cryo_beam")
 	var zs: Array[Zombie] = []
 	for i in 3:
-		zs.append(st.zombie(&"tourist_shambler" if i != 1 else &"boardwalk_bruiser", Vector3(-1.5 - i * 1.6, 0, 1.2 * i - 1.0), 100.0, "Walk", 0.7))
-	var muzzle := Vector3(6.5, 1.3, 3.5)
+		zs.append(st.zombie(&"tourist_shambler" if i != 1 else &"boardwalk_bruiser", Vector3(-4.5 - i * 1.6, 0, 13.0 + 1.2 * i), 100.0, "Walk", 0.7))
+	var muzzle := Vector3(3.5, 1.3, 16.5)
 	var beam := BeamVisual.new()
 	beam.color = cryo.tracer_color
 	beam.width = 0.1
 	st.actors.add_child(beam)
 	st.fov(44.0, 40.0)
-	st.dolly(Vector3(3.5, 1.4, 7.5), Vector3(-3, 1.2, 0), Vector3(2.8, 1.2, 6.6), Vector3(-3.2, 1.1, 0))
+	st.dolly(Vector3(0.5, 1.4, 20.5), Vector3(-6, 1.2, 14), Vector3(-0.2, 1.3, 19.6), Vector3(-6.2, 1.1, 14))
 	st.every_frame(func(t: float):
 		var k := clampi(int((t - 0.15) / 0.3), 0, 2)
 		beam.aim(muzzle, st.chest(zs[k]) if is_instance_valid(zs[k]) else muzzle, t > 0.1 and t < 1.15))
@@ -335,13 +335,12 @@ func _kill_cryo(st: CineStage) -> void:
 func _kill_arc(st: CineStage) -> void:
 	var arc := GameData.weapon(&"arc_coil")
 	var zs: Array[Zombie] = []
-	var spots := [Vector3(-1, 0, 2), Vector3(-3.2, 0, 0.4), Vector3(-2.4, 0, -2.6), Vector3(-5.2, 0, -1.4), Vector3(-6, 0, 2.2)]
+	var spots := [Vector3(-6, 0, -11), Vector3(-8.2, 0, -12.6), Vector3(-7.4, 0, -15.6), Vector3(-10.2, 0, -14.4), Vector3(-11, 0, -10.8)]
 	for p in spots:
 		zs.append(st.zombie(&"tourist_shambler" if zs.size() % 2 == 0 else &"lifeguard_runner", p, 95.0, "Walk", 0.6))
-	var muzzle := Vector3(5.5, 1.35, 3.0)
+	var muzzle := Vector3(0.5, 1.35, -10.0)
 	st.fov(50.0, 46.0)
-	st.dolly(Vector3(5.0, 3.2, 8.5), Vector3(-3, 0.8, 0), Vector3(4.2, 2.6, 7.6), Vector3(-3.3, 0.9, 0))
-	st.light(Vector3(-3, 2.5, 0), arc.tracer_color, 0.0, 9.0).set_meta(&"arc", true)
+	st.dolly(Vector3(-2.5, 2.4, -7.5), Vector3(-8.5, 0.9, -13), Vector3(-3.0, 2.0, -8.2), Vector3(-8.6, 0.9, -13))
 	st.at(0.3, func():
 		Sfx.play(arc.fire_sound, -3.0)
 		LightningBolt.spawn(st.actors, muzzle, st.chest(zs[0]), arc.tracer_color, 0.09, 0.3, 0.3))
@@ -453,7 +452,7 @@ func _arsenal(st: CineStage) -> void:
 	st.overlay.wipe(0.4)
 	var pivots: Array[Node3D] = []
 	for i in WEAPONS.size():
-		var p := _turntable(st, st.weapon(WEAPONS[i], ARSENAL_FINISHES[i]))
+		var p := _turntable(st, st.weapon(WEAPONS[i], ARSENAL_FINISHES[i]), 1.3, 1.55)
 		p.visible = i == 0
 		pivots.append(p)
 	st.fov(36.0, 34.0)
@@ -495,7 +494,7 @@ func _sights(st: CineStage) -> void:
 		m.visible = i == 0
 		models.append(m)
 	st.fov(32.0, 26.0)
-	st.dolly(Vector3(0.55, 1.75, 1.6), Vector3(0, 1.4, -0.4), Vector3(0.35, 1.68, 1.25), Vector3(0, 1.42, -0.4))
+	st.dolly(Vector3(1.5, 1.6, 0.9), Vector3(0, 1.38, -0.15), Vector3(1.15, 1.55, 0.6), Vector3(0, 1.4, -0.15))
 	st.every_frame(func(t: float):
 		var k := clampi(int(t / 0.67), 0, models.size() - 1)
 		for i in models.size():
@@ -521,12 +520,12 @@ func _operators(st: CineStage) -> void:
 
 
 func _op_action(st: CineStage) -> void:
-	var op := st.operator(&"op_glitch", Vector3(10, 0, 4), -90.0, "Run")
+	var op := st.operator(&"op_glitch", Vector3(8, 0, 16), -90.0, "Run")
 	var gun := st.weapon(&"ion_carbine", &"fin_synthwave")
 	Operators.hold_weapon(op, gun)
 	st.move(op, Vector3(-Operators.RUN_SPEED, 0, 0), 0.0, 1.5)
-	var target := st.walker(&"tourist_shambler", Vector3(-5, 0, 3.4), 90.0, 0.8)
-	st.walker(&"lifeguard_runner", Vector3(-7, 0, 5.6), 90.0, 0.7)
+	var target := st.walker(&"tourist_shambler", Vector3(-8, 0, 15.4), 90.0, 0.8)
+	st.walker(&"lifeguard_runner", Vector3(-10, 0, 17.6), 90.0, 0.7)
 	st.at(1.5, Operators.play.bind(op, "AimIdle", "", 0.2))
 	st.fov(46.0, 42.0)
 	st.track(func(k: float) -> Transform3D:
@@ -545,25 +544,25 @@ func _op_action(st: CineStage) -> void:
 func _op_victory(st: CineStage) -> void:
 	var line := [[&"op_arcade_champion", "Victory"], [&"op_surf_rescue", "Wave"], [&"op_astro_cadet", "Pose"]]
 	for i in line.size():
-		var op := st.operator(line[i][0], Vector3(2 + i * 1.3, 0, 3 + absf(i - 1) * 0.5), 70.0, "Idle")
+		var op := st.operator(line[i][0], Vector3(-6 + i * 1.3, 0, 13 + absf(i - 1) * 0.5), 70.0, "Idle")
 		st.at(0.1 + i * 0.12, Operators.play.bind(op, line[i][1]))
 	st.fov(40.0, 44.0)
-	st.dolly(Vector3(6.4, 0.55, 6.4), Vector3(3.3, 1.5, 3.2), Vector3(6.8, 0.75, 7.0), Vector3(3.3, 1.4, 3.2))
+	st.dolly(Vector3(-1.6, 0.55, 16.4), Vector3(-4.7, 1.5, 13.2), Vector3(-1.2, 0.75, 17.0), Vector3(-4.7, 1.4, 13.2))
 	for i in 3:
-		st.at(0.4 + i * 0.35, func(): Fx.confetti(st.actors, Vector3(2.0 + i * 1.3, 2.6, 3.0)))
+		st.at(0.4 + i * 0.35, func(): Fx.confetti(st.actors, Vector3(-6.0 + i * 1.3, 2.6, 13.0)))
 
 
 # --- Sparks and progression ------------------------------------------------------
 
 func _sparks(st: CineStage) -> void:
-	var eye := Vector3(8.5, 1.55, 7.0)
-	var look := Vector3(0, 1.0, 2)
+	var eye := Vector3(12.5, 1.55, 12.0)
+	var look := Vector3(0, 1.4, 0)
 	st.fov(54.0, 50.0)
 	st.dolly(eye, look, eye + Vector3(-0.6, 0.1, -0.4), look)
 	var field := SparkField.new()
 	st.actors.add_child(field)
 	field.global_position = eye + (look - eye).normalized() * 0.8 + Vector3(0, -0.25, 0)
-	var spots := [Vector3(0, 0, 2), Vector3(-2, 0, 4.5), Vector3(-1.5, 0, -0.5), Vector3(-4, 0, 2.5), Vector3(1.5, 0, 5)]
+	var spots := [Vector3(6.5, 0, 6), Vector3(4.5, 0, 8.4), Vector3(8.2, 0, 4.2), Vector3(9, 0, 7.6), Vector3(6, 0, 10)]
 	for i in spots.size():
 		var z := st.zombie(&"tourist_shambler" if i % 2 else &"lifeguard_runner", spots[i], 60.0, "Walk", 0.7)
 		st.at(0.15 + i * 0.12, func():
@@ -602,12 +601,12 @@ func _finale(st: CineStage) -> void:
 	var ops := [&"op_boardwalk_ranger", &"op_glitch", &"op_frost_guard"]
 	var guns := [&"scatter_blaster", &"ion_carbine", &"rail_lancer"]
 	for i in ops.size():
-		var op := st.operator(ops[i], Vector3(3 + i * 1.2, 0, 2 + absf(i - 1) * 0.7), -100.0, "AimIdle")
+		var op := st.operator(ops[i], Vector3(-2 + i * 1.2, 0, 15 + absf(i - 1) * 0.7), -100.0, "AimIdle")
 		Operators.hold_weapon(op, st.weapon(guns[i], ARSENAL_FINISHES[i * 2]))
 	for i in 10:
-		st.walker(CAST[i % CAST.size()], Vector3(-6 - (i % 4) * 2.0, 0, -2 + (i / 4) * 2.5 + (i % 2)), 90.0, 0.5)
+		st.walker(CAST[i % CAST.size()], Vector3(-11 - (i % 4) * 2.0, 0, 12 + (i / 4) * 2.5 + (i % 2)), 90.0, 0.5)
 	st.fov(46.0, 52.0)
-	st.dolly(Vector3(9, 1.0, 5.5), Vector3(-2, 1.6, 2), Vector3(17, 6.5, 12), Vector3(-6, 2.0, -2), -1.5)
+	st.dolly(Vector3(6, 1.2, 12.5), Vector3(-6, 1.6, 15), Vector3(14, 6.5, 10), Vector3(-9, 2.0, 13), -1.5)
 	st.at(0.0, func(): st.overlay.logo(Vector2(0.5, 0.33), 150))
 	var counts := PackedStringArray([
 		"%d WORLDS" % GameData.worlds().size(), "%d WEAPONS" % GameData.weapons().size(),

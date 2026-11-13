@@ -199,6 +199,7 @@ func current_shot() -> CineShot:
 func _cut(i: int) -> void:
 	_index = i
 	Engine.time_scale = 1.0
+	overlay.clear_text()
 	if _actors:
 		_actors.queue_free()
 	var shot := shots[i]
