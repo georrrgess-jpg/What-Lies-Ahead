@@ -10,9 +10,9 @@
 script = ExtResource("4")
 min_range = 7.0
 max_range = 28.0
-cooldown = 5.5
+cooldown = 7.0
 windup = 1.05
-damage = 10.0
+damage = 8.0
 projectile_speed = 15.0
 arc = 0.85
 size = 0.6
@@ -24,18 +24,18 @@ color = Color(0.55, 0.85, 1, 1)
 slam_damage = 20.0
 slam_cooldown = 9.0
 volley_shots = 3
-volley_damage = 7.0
+volley_damage = 6.0
 volley_speed = 13.0
 volley_spread_degrees = 15.0
 volley_arc = 0.5
-volley_cooldown = 8.5
+volley_cooldown = 9.5
 volley_size = 0.45
 
 [resource]
 script = ExtResource("1")
 id = &"alpha_yeti"
 display_name = "Old Frostbite"
-max_health = 2500.0
+max_health = 2200.0
 move_speed = 1.95
 speed_variance = 0.0
 turn_speed = 3.5

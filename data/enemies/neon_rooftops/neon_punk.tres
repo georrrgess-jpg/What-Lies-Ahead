@@ -8,10 +8,10 @@
 script = ExtResource("2")
 min_range = 6.5
 max_range = 14.0
-cooldown = 6.0
+cooldown = 7.0
 windup = 0.9
 shots = 3
-damage = 4.0
+damage = 3.5
 projectile_speed = 14.0
 fan_degrees = 9.0
 

@@ -56,7 +56,7 @@ surge_count = 4
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"neon_punk": 11,
+"neon_punk": 9,
 "hover_courier": 8,
 "lifeguard_runner": 4
 }
@@ -113,10 +113,10 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"hover_courier": 16,
 "tourist_shambler": 8,
+"hover_courier": 11,
 "neon_punk": 5,
-"lifeguard_runner": 5
+"lifeguard_runner": 4
 }
 spawn_interval = 2.1
 burst = 2
