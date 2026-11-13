@@ -458,48 +458,44 @@ it is not used by the game.
 ## Verification and known limits
 
 What was run for this update, on a headless Linux container (4 vCPU, **no GPU**; rendering
-used Mesa llvmpipe, a software rasteriser):
+used Mesa llvmpipe, a software rasteriser). The work was split across fourteen parallel
+lanes (operators, weapons, aiming, zombies, two map lanes, economy, three UI lanes,
+rounds, trailer, onboarding, performance), each verified on its own, then merged and
+checked together:
 
 - Project import with Godot 4.7.1: no script errors.
-- **Bot clears with every weapon on every level** (final regression on the finished
-  update, one run each; health left at the end, out of 100):
-
-  | Weapon | Prize Pier | Neon Skyline | Tidal Tunnels | Launch Pad 9 | Summit Lodge |
-  | --- | --- | --- | --- | --- | --- |
-  | Pulse Pistol | 100 | 61 | 48 | 56 | 95 |
-  | Ion Carbine | 100 | 73 | 70 | 79 | 81 |
-  | Scatter Blaster | 18 | 48 | 28 | 66 | lost on wave 7 |
-  | Comet Hand Cannon | 100 | 57 | 77 | 71 | 78 |
-  | Arc Coil | 100 | 64 | 27 | 71 | 16 |
-  | Bumper Lobber | 88 | 54 | 58 | 36 | 46 |
-  | Frostbite Cryo Beam | 100 | 41 | 82 | 89 | 14 |
-  | Rail Lancer | 100 | 5 | 70 | 54 | 22 |
-
-  39 of 40 cleared, with no crashes or hangs. Before that, the balance pass ran about
-  360 bot runs on the combined game; single runs swing by about ±30 health. The bot buys
-  an overshield whenever it can, never aims down sights and never dodges, so the later
-  worlds' projectiles and rushes hit it harder than they would a player.
-- **Measured improvements** (probes and analysis scripts): zombie foot slip on walks
-  1.7–2.4 → 0.27–0.41 m/s; head hits that count in crouch/tuck poses 32–58% → 88–100%;
-  fire rates now exactly as specified (were 8–17% slow); mouse look identical at every
-  window size (was 2x apart between 960x540 and 1080p); slide-hopping no longer beats
-  sprinting (31.0 → 22.7 m in 3 s vs 22.1 m sprinting); 0 player-wall crossings in 492
-  mantle/vault/slide-hop attempts; Tidal Tunnels luminance 0.16–0.22 → 0.24–0.39; the
-  music re-voiced and the hit marker about 10 dB louder relative to gunfire.
-- **Flows**: defeat → Retry (fresh run state), clear → results → main menu, and the pause
-  menu on a virtual display (resume recaptures the mouse; restart and main menu are clean).
-- **Saves**: a save interrupted between writing and replacing is recovered from its
-  `.tmp` copy; unreadable, partial and missing files start cleanly; version 1 saves migrate.
-- **Visual checks** from staged screenshots: every level at player height and from its menu
-  camera, the HUD mid-wave, the intro, title, Play, Arsenal, Locker and results screens,
-  and (by the agents who built them) every weapon's hip, aim and reload poses, every
-  enemy, kill effect, tracer and operator.
-- **Reviews**: two independent code reviews after the content update, then a scored
-  quality review (zombies, movement, weapon balance, levels/UI/audio/pacing) that drove
-  the latest update. Their findings were fixed (see the git history).
-- **Export smoke test**: the exported Linux build played Summit Lodge from wave 6 to the
-  portal with the bot, showed the results and returned to the menu, and rendered Tidal
-  Tunnels on a virtual display.
+- **Bot clears on Standard after the final merge** (health left out of 100): Prize Pier
+  with the Pulse Pistol 51 and the Scatter Blaster 47; Neon Skyline 57, Tidal Tunnels 42,
+  Launch Pad 9 68 and Summit Lodge 15 with the Ion Carbine; every alpha boss and bounty
+  taken. During the rounds work the difficulty grid cleared Casual 10/10, Standard 9/10
+  and Hard 3/10 bot runs (Hard is meant to be hard; the bot never dodges).
+- **Aiming**: `tools/ads_audit.gd` rendered all 73 weapon × sight combinations; every one
+  passes (aim point within 0.2 px of the screen centre, nothing covering it).
+- **Models**: intersection audits in Blender (BVH overlap between parts that must not
+  touch, over sampled animation frames) for weapons, operators and zombies; charms
+  stress-tested against every weapon; weapon models rebuilt from the merged scripts came
+  out structurally identical to the committed ones.
+- **Maps**: `tools/map_audit.gd` flood-fill on all five levels (falls out of the world,
+  stuck spots, snags, navmesh) with the findings fixed; key art re-captured.
+- **Boot Camp**: the bot completes it twice (pays 200 Sparks once, then nothing), skips
+  it from the pause menu at three different steps back to the menu, and the first-run
+  flow appears on a fresh save only.
+- **Economy**: `tools/economy_model.py` and `tools/economy_probe.gd` (Sparks per run,
+  level pacing, shop prices, save migration with back pay).
+- **Performance**: `tools/perf_probe.gd` before/after: audio players created per second
+  10–54 → about 0, node creation roughly halved while firing, a flat node count over a
+  10-minute soak (589 kills, 0 orphans), and no material compiling for the first time
+  after the loading fade (was 4).
+- **Flows**: defeat → Continue from the checkpoint and Retry, clear → results → next world,
+  the pause menu, the trailer and intro handing back to the menu, Shop, Locker and Career
+  flows (`scripts/dev/meta_pages_probe.gd`).
+- **Reviews**: two independent code reviews of the merged update; their findings
+  (settings persistence, continued-run XP, results exit, shop price changes, toggle aim,
+  bounty despawn, tutorial end state and reward, trailer sounds) were fixed.
+- **Export smoke test**: the exported Linux build played Launch Pad 9 from wave 6 through
+  the alpha to the portal with the bot, showed the results and returned to the menu, and
+  rendered the title screen on a virtual display. Zipped sizes: Linux 69 MiB, Windows
+  78 MiB (were 88 and 98).
 
 Not verified, or limited:
 
@@ -518,6 +514,12 @@ Not verified, or limited:
   on 20 or 60 health, and occasionally lose), and the later worlds are meant to be harder.
   Mouse feel, pacing and fairness still need a human pass.
 - **Windows build** was exported but never run.
+- **Draw calls** are about 1,250–1,800 per frame in the busiest views; merging more level
+  props into MultiMeshes would be the next performance step on real hardware.
+- **Operators** hold weapons in their right hand; on weapons with a high fore-end the
+  support hand can float slightly (no runtime IK yet).
+- **Trailer** frames were rendered with the software rasteriser at 1280x720, so the video
+  is softer than the game on a real graphics card.
 - Blender was driven through its Python module, so models were not touched up by hand.
 
 Simplifications:
