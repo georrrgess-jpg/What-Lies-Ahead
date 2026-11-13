@@ -46,7 +46,7 @@ void fragment() {
 	vec2 p = world_pos.xz;
 	vec3 col = base_color;
 	vec2 c = chips(p * chip_scale);
-	float chip = 1.0 - smoothstep(0.16, 0.2, c.x);
+	float chip = (1.0 - smoothstep(0.16, 0.2, c.x)) * 0.8;
 	vec3 chip_col = c.y < 0.45 ? chip_a : (c.y < 0.75 ? chip_b : chip_c);
 	col = mix(col, chip_col, chip * step(0.35, fract(c.y * 7.0)));
 	// Faint large-scale cloudiness so big floors do not look flat.

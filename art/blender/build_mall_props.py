@@ -20,7 +20,7 @@ from mall_common import *  # noqa: F401,F403
 import build_world_portals as wp  # noqa: E402
 
 
-def ring_wall(name, r_in, r_out, z0, z1, m, segs=48):
+def ring_wall(name, r_in, r_out, z0, z1, m, segs=32):
     """A round wall (annulus extruded from z0 to z1), bevelled."""
     bm = bmesh.new()
     rings = []
@@ -79,16 +79,16 @@ def build_fountain():
     moon = mat("MallMoonGlobe", MALL["Moon"], rough=0.3, emit=0.9)
     ring_m = neon("Pink", MALL["Pink"], 2.6)
     p = [
-        ring_wall("BasinWall", 3.45, 3.9, 0.0, 0.62, pink, segs=56),
-        torus("BasinLip", 3.68, 0.2, (0, 0, 0.64), m=cream, major_segs=56, minor_segs=10),
-        ring_wall("BasinStep", 3.9, 4.15, 0.0, 0.22, terr, segs=56),
+        ring_wall("BasinWall", 3.45, 3.9, 0.0, 0.62, pink, segs=36),
+        torus("BasinLip", 3.68, 0.2, (0, 0, 0.64), m=cream, major_segs=36, minor_segs=10),
+        ring_wall("BasinStep", 3.9, 4.15, 0.0, 0.22, terr, segs=36),
         cyl("PoolFloor", 3.5, 0.1, (0, 0, 0.05), segs=40, bevel=0.0, m=navy),
-        cyl("PoolWater", 3.5, 0.04, (0, 0, 0.44), segs=48, bevel=0.0, m=w),
+        cyl("PoolWater", 3.5, 0.04, (0, 0, 0.44), segs=32, bevel=0.0, m=w),
         # Middle tier.
         cyl("Pedestal1", 0.75, 1.3, (0, 0, 0.75), segs=24, bevel=0.06, m=teal),
         torus("Pedestal1Band", 0.78, 0.06, (0, 0, 1.2), m=ch, major_segs=32, minor_segs=6),
         bowl("Bowl1", 2.15, 0.8, 1.35, 0.55, cream),
-        torus("Bowl1Lip", 2.12, 0.09, (0, 0, 1.92), m=ch, major_segs=48, minor_segs=8),
+        torus("Bowl1Lip", 2.12, 0.09, (0, 0, 1.92), m=ch, major_segs=32, minor_segs=8),
         cyl("Bowl1Water", 2.02, 0.03, (0, 0, 1.86), segs=40, bevel=0.0, m=w),
         sheet("Bowl1Sheet", 2.2, 1.9, 1.45, w),
         # Top tier.
@@ -98,18 +98,18 @@ def build_fountain():
         cyl("Bowl2Water", 1.1, 0.03, (0, 0, 3.2), segs=32, bevel=0.0, m=w),
         sheet("Bowl2Sheet", 1.24, 3.24, 1.3, w),
         # The moon on its stalk, ringed like a planet, a crescent star on top.
-        cyl("Stalk", 0.16, 1.0, (0, 0, 3.6), segs=12, bevel=0.03, m=ch),
-        sphere("Moon", 0.85, (0, 0, 4.6), m=moon, segs=28, rings=16),
-        torus("MoonRing", 1.35, 0.07, (0, 0, 4.6), rot=rad(22, -14, 0), m=ring_m, major_segs=48, minor_segs=8),
-        torus("MoonRingB", 1.55, 0.035, (0, 0, 4.6), rot=rad(22, -14, 0), m=ch, major_segs=48, minor_segs=6),
-        star("MoonStar", 0.32, 0.08, (0, 0, 5.7), rot=rad(0, 0, 0), m=mat("MallStarGold", MALL["Yellow"], rough=0.3, emit=1.2)),
+        cyl("Stalk", 0.18, 1.4, (0, 0, 3.8), segs=12, bevel=0.03, m=ch),
+        sphere("Moon", 1.2, (0, 0, 5.4), m=moon, segs=28, rings=16),
+        torus("MoonRing", 1.85, 0.09, (0, 0, 5.4), rot=rad(22, -14, 0), m=ring_m, major_segs=40, minor_segs=8),
+        torus("MoonRingB", 2.1, 0.045, (0, 0, 5.4), rot=rad(22, -14, 0), m=ch, major_segs=40, minor_segs=6),
+        star("MoonStar", 0.42, 0.1, (0, 0, 7.0), rot=rad(0, 0, 0), m=mat("MallStarGold", MALL["Yellow"], rough=0.3, emit=1.2)),
     ]
     # Craters on the moon.
     rng = random.Random(4)
     for i in range(7):
         a, b = rng.uniform(0, math.tau), rng.uniform(-0.9, 0.9)
         n = Vector((math.cos(a) * math.cos(b), math.sin(a) * math.cos(b), math.sin(b)))
-        p.append(sphere(f"Crater{i}", rng.uniform(0.12, 0.2), tuple(Vector((0, 0, 4.6)) + n * 0.8), scale=(1, 1, 0.4),
+        p.append(sphere(f"Crater{i}", rng.uniform(0.16, 0.28), tuple(Vector((0, 0, 5.4)) + n * 1.13), scale=(1, 1, 0.4),
                         rot=n.to_track_quat("Z", "Y").to_euler(), m=mat("MallCrater", "#e8d6a0", rough=0.5, emit=0.5), segs=10, rings=5))
     # Jets arcing from the basin lip into the pool, and a central plume.
     for i in range(8):
@@ -119,8 +119,9 @@ def build_fountain():
         p.append(tube(f"Jet{i}", pts, 0.05, m=w, segs=6, radius_end=0.08))
     for i in range(4):
         a = math.tau * i / 4
-        p.append(tube(f"Spout{i}", [(math.cos(a) * 0.3, math.sin(a) * 0.3, 5.0), (math.cos(a) * 0.9, math.sin(a) * 0.9, 5.25),
-                                    (math.cos(a) * 1.1, math.sin(a) * 1.1, 3.4)], 0.035, m=w, segs=6, radius_end=0.06))
+        p.append(tube(f"Spout{i}", [(math.cos(a) * 0.3, math.sin(a) * 0.3, 6.45), (math.cos(a) * 1.3, math.sin(a) * 1.3, 6.6),
+                                    (math.cos(a) * 1.5, math.sin(a) * 1.5, 4.4), (math.cos(a) * 1.15, math.sin(a) * 1.15, 3.3)], 0.035, m=w,
+                                    segs=6, radius_end=0.06))
     fountain = merge("Fountain", p)
     lights_m = mat("MallFountainLight", "#ff6fd0", rough=0.3, emit=3.0)
     lp = []
@@ -230,24 +231,24 @@ def build_carousel():
     bulb_m = glow("MallBulbWarm", "#ffd27a", 3.0)
     base = merge("Base", [
         cyl("Plinth", 3.1, 0.32, (0, 0, 0.16), segs=40, bevel=0.06, m=navy),
-        torus("PlinthLip", 3.05, 0.07, (0, 0, 0.32), m=gold, major_segs=48, minor_segs=6),
+        torus("PlinthLip", 3.05, 0.07, (0, 0, 0.32), m=gold, major_segs=32, minor_segs=6),
         cyl("Core", 0.55, 3.6, (0, 0, 2.0), segs=20, bevel=0.04, m=cream),
     ])
     p = [cyl("Deck", 2.85, 0.12, (0, 0, 0.4), segs=40, bevel=0.03, m=mat("MallDeck", "#d9c6ff", rough=0.5))]
     # Canopy: a shallow cone of alternating panels, a scalloped valance and bulbs.
-    p.append(cyl("Canopy", 3.1, 0.95, (0, 0, 4.2), segs=48, bevel=0.05, m=pink, radius_top=0.15))
+    p.append(cyl("Canopy", 3.1, 0.95, (0, 0, 4.2), segs=32, bevel=0.05, m=pink, radius_top=0.15))
     for i in range(12):
         a0 = math.tau * i / 12
         c, s = math.cos(a0), math.sin(a0)
         p.append(tube(f"Rib{i}", [(c * 3.12, s * 3.12, 3.74), (c * 0.2, s * 0.2, 4.68)], 0.07, m=cream, segs=6))
         p.append(sphere(f"Scallop{i}", 0.42, (math.cos(a0 + 0.26) * 3.05, math.sin(a0 + 0.26) * 3.05, 3.45), scale=(1, 0.25, 0.6),
                         rot=(0, 0, a0 + 0.26 + math.pi / 2), m=teal if i % 2 else vio, segs=10, rings=5))
-    p.append(cyl("CanopyRim", 3.15, 0.25, (0, 0, 3.62), segs=48, bevel=0.04, m=teal))
+    p.append(cyl("CanopyRim", 3.15, 0.25, (0, 0, 3.62), segs=32, bevel=0.04, m=teal))
     p.append(star("TopStar", 0.45, 0.1, (0, 0, 5.05), m=mat("MallStarGold", MALL["Yellow"], rough=0.3, emit=1.2)))
     p.append(cyl("TopSpike", 0.06, 0.5, (0, 0, 4.7), segs=8, bevel=0.0, m=gold))
-    for i in range(24):
-        a = math.tau * i / 24
-        p.append(bulb(f"Bulb{i:02d}", 0.06, (math.cos(a) * 3.2, math.sin(a) * 3.2, 3.62), bulb_m))
+    for i in range(16):
+        a = math.tau * i / 16
+        p.append(bulb(f"Bulb{i:02d}", 0.07, (math.cos(a) * 3.2, math.sin(a) * 3.2, 3.62), bulb_m))
     # Riders: rockets and planets on poles.
     rng = random.Random(9)
     for i in range(6):
@@ -739,9 +740,9 @@ def build_cinema_doors():
         box("Marquee", (8.2, 1.4, 0.5), (0, -0.7, 3.35), bevel=0.08, m=vio),
         box("MarqueeFace", (8.0, 0.04, 0.32), (0, -1.42, 3.35), bevel=0.0, m=mat("MallMarquee", "#fff2dc", rough=0.3, emit=1.0)),
     ]
-    for i in range(26):
-        p.append(bulb(f"Chase{i:02d}", 0.05, (-4.0 + i * 0.32, -1.46, 3.6), bulb_m))
-        p.append(bulb(f"ChaseLow{i:02d}", 0.05, (-4.0 + i * 0.32, -1.46, 3.1), bulb_m))
+    for i in range(18):
+        p.append(bulb(f"Chase{i:02d}", 0.06, (-3.95 + i * 0.465, -1.46, 3.6), bulb_m))
+        p.append(bulb(f"ChaseLow{i:02d}", 0.06, (-3.95 + i * 0.465, -1.46, 3.1), bulb_m))
     for i, sx in enumerate((-3.2, -2.3, 2.3, 3.2)):
         p.append(box(f"PosterFrame{i}", (0.8, 0.1, 1.2), (sx, -0.25, 1.5), bevel=0.03, m=ch))
         p.append(box(f"Poster{i}", (0.66, 0.02, 1.04), (sx, -0.31, 1.5), bevel=0.0, m=posters[i]))
@@ -773,23 +774,23 @@ def build_station():
     bulb_m = glow("MallBulbWarm", "#ffd27a", 3.0)
     screen = mat("MallTvScreen0", "#3ff0e0", rough=0.2, emit=1.6)
     p = [
-        cyl("Plinth", 2.9, 0.18, (0, 0, 0.09), segs=48, bevel=0.05, m=navy),
-        ring_wall("Counter", 1.95, 2.35, 0.18, 1.1, teal, segs=48),
-        torus("CounterTop", 2.15, 0.24, (0, 0, 1.12), m=cream, major_segs=48, minor_segs=8),
-        torus("CounterNeon", 2.37, 0.035, (0, 0, 0.75), m=neon_p, major_segs=48, minor_segs=6),
-        torus("KickNeon", 2.37, 0.03, (0, 0, 0.3), m=neon_t, major_segs=48, minor_segs=6),
+        cyl("Plinth", 2.9, 0.18, (0, 0, 0.09), segs=32, bevel=0.05, m=navy),
+        ring_wall("Counter", 1.95, 2.35, 0.18, 1.1, teal, segs=32),
+        torus("CounterTop", 2.15, 0.24, (0, 0, 1.12), m=cream, major_segs=32, minor_segs=8),
+        torus("CounterNeon", 2.37, 0.035, (0, 0, 0.75), m=neon_p, major_segs=32, minor_segs=6),
+        torus("KickNeon", 2.37, 0.03, (0, 0, 0.3), m=neon_t, major_segs=32, minor_segs=6),
         cyl("Column", 0.45, 3.2, (0, 0, 1.6), segs=24, bevel=0.04, m=ch),
         cyl("InnerDesk", 0.95, 0.9, (0, 0, 0.6), segs=32, bevel=0.05, m=vio),
         # Saucer canopy.
-        cyl("SaucerLow", 2.6, 0.35, (0, 0, 3.35), segs=48, bevel=0.1, m=cream, radius_top=3.1),
-        cyl("SaucerUp", 3.1, 0.45, (0, 0, 3.75), segs=48, bevel=0.1, m=pink, radius_top=1.6),
-        torus("SaucerRim", 3.1, 0.09, (0, 0, 3.53), m=neon_t, major_segs=56, minor_segs=6),
+        cyl("SaucerLow", 2.6, 0.35, (0, 0, 3.35), segs=32, bevel=0.1, m=cream, radius_top=3.1),
+        cyl("SaucerUp", 3.1, 0.45, (0, 0, 3.75), segs=32, bevel=0.1, m=pink, radius_top=1.6),
+        torus("SaucerRim", 3.1, 0.09, (0, 0, 3.53), m=neon_t, major_segs=36, minor_segs=6),
         cyl("SaucerDome", 1.6, 0.6, (0, 0, 4.25), segs=36, bevel=0.15, m=teal, radius_top=0.7),
         cyl("Mast", 0.08, 0.9, (0, 0, 4.9), segs=8, bevel=0.0, m=ch),
     ]
-    for i in range(28):
-        a = math.tau * i / 28
-        p.append(bulb(f"Bulb{i:02d}", 0.07, (math.cos(a) * 2.75, math.sin(a) * 2.75, 3.15), bulb_m))
+    for i in range(18):
+        a = math.tau * i / 18
+        p.append(bulb(f"Bulb{i:02d}", 0.08, (math.cos(a) * 2.75, math.sin(a) * 2.75, 3.15), bulb_m))
     # Monitors on swing arms, brochure racks and a sign band round the column.
     for i in range(4):
         a = math.tau * i / 4 + math.pi / 4

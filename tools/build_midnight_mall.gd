@@ -52,6 +52,7 @@ const DRUM := 12.0        # dome springing
 const DOME_H := 9.0
 const OPEN_H := 3.4       # shop opening height above its floor
 const RAIL_H := 1.1
+const KERB_H := 1.4       # escalator balustrade collision above the walkway
 const STATION := Vector3(0.0, 0.0, 2.5)
 const FOUNTAIN := Vector3(0.0, 0.0, -9.0)
 const CAROUSEL := Vector3(0.0, 0.0, 12.5)
@@ -166,8 +167,8 @@ func _build_environment() -> void:
 	sky.sky_material = sky_mat
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.48, 0.5, 0.86)
-	env.ambient_light_energy = 0.62
+	env.ambient_light_color = Color(0.42, 0.44, 0.84)
+	env.ambient_light_energy = 0.46
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_white = 2.3
 	env.tonemap_exposure = 1.05
@@ -253,16 +254,16 @@ func _shader_mat(key: String, shader: String, params := {}) -> ShaderMaterial:
 func _m(key: String) -> Material:
 	match key:
 		"terrazzo":
-			return _shader_mat("terrazzo", "mall_terrazzo.gdshader")
+			return _shader_mat("terrazzo", "mall_terrazzo.gdshader", {"base_color": Color(0.78, 0.72, 0.74), "chip_scale": 14.0})
 		"terrazzo_up":
-			return _shader_mat("terrazzo_up", "mall_terrazzo.gdshader", {"base_color": Color(0.8, 0.78, 0.86), "tile_size": 2.4,
-				"chip_a": Color(0.6, 0.5, 0.95)})
+			return _shader_mat("terrazzo_up", "mall_terrazzo.gdshader", {"base_color": Color(0.68, 0.66, 0.78), "tile_size": 2.4,
+				"chip_a": Color(0.6, 0.5, 0.95), "chip_scale": 14.0})
 		"shutter":
 			return _shader_mat("shutter", "mall_shutter.gdshader")
 		"ceiling":
-			return _mat("ceiling", Color(0.82, 0.8, 0.9), 0.8)
+			return _mat("ceiling", Color(0.5, 0.48, 0.66), 0.8)
 		"wall":
-			return _mat("wall", Color(0.88, 0.84, 0.86), 0.7)
+			return _mat("wall", Color(0.74, 0.7, 0.78), 0.7)
 		"wall_dark":
 			return _mat("wall_dark", Color(0.16, 0.17, 0.32), 0.7)
 		"navy":
@@ -697,18 +698,15 @@ func _escalator(parent: Node3D, esc_name: String, model: String, x: float, z_foo
 		var x0: float = x + side * ESC_WALK
 		var x1: float = x + side * (ESC_HALF + 0.05)
 		var kerb := PackedVector3Array()
+		# Taller than a mantle (1.25 m) above the walkway, so nobody climbs out.
 		for sx in [x0, x1]:
 			kerb.append(Vector3(sx, 0.0, z_foot - dir * 1.3))
-			kerb.append(Vector3(sx, 1.15, z_foot - dir * 1.3))
-			kerb.append(Vector3(sx, 1.15, z_foot))
-			kerb.append(Vector3(sx, UP + 1.15, z_top))
+			kerb.append(Vector3(sx, KERB_H, z_foot - dir * 1.3))
+			kerb.append(Vector3(sx, KERB_H, z_foot))
+			kerb.append(Vector3(sx, UP + KERB_H, z_top))
 			kerb.append(Vector3(sx, UP, z_top))
 			kerb.append(Vector3(sx, 0.0, z_top))
 		_convex(parent, "%sKerb%d" % [esc_name, int(side)], kerb)
-		# Keep the player off the balustrade tops.
-		var mid := Vector3((x0 + x1) * 0.5, UP * 0.5 + 2.4, z_foot + dir * 5.0)
-		var blk := _player_block(parent, "%sCap%d" % [esc_name, int(side)], Vector3(absf(x1 - x0), 2.0, 11.3), mid)
-		blk.rotation.x = atan2(UP, 10.0) * dir
 
 
 # ---------------------------------------------------------------------------
@@ -767,7 +765,7 @@ func _build_fountain() -> void:
 	model.add_to_group("mall_fountain", true)
 	_post(f, "Basin", 4.15, 0.65, FOUNTAIN)
 	_post(f, "Pedestal", 0.85, 3.4, FOUNTAIN)
-	var blk := _player_block(f, "NoClimb", Vector3(8.0, 6.0, 8.0), FOUNTAIN + Vector3(0, 3.65, 0))
+	var blk := _player_block(f, "NoClimb", Vector3(8.4, 11.4, 8.4), FOUNTAIN + Vector3(0, 6.35, 0))
 	blk.name = "FountainNoClimb"
 	var light := _omni(lights, "FountainGlow", FOUNTAIN + Vector3(0, 2.0, 0), Color(1.0, 0.45, 0.85), 2.2, 10.0)
 	light.add_to_group("mall_fountain_light", true)
@@ -799,7 +797,7 @@ func _build_kiddie_zone() -> void:
 	var carousel := _prop(z, "mall_carousel", "Carousel", CAROUSEL, 0.0)
 	_late(carousel.get_node("Spin"), "res://scripts/props/ambient_motion.gd", {"spin_degrees_per_second": 14.0})
 	_post(z, "CarouselCollision", 3.15, 4.0, CAROUSEL)
-	_player_block(z, "CarouselCap", Vector3(6.4, 6.0, 6.4), CAROUSEL + Vector3(0, 7.0, 0))
+	_player_block(z, "CarouselCap", Vector3(6.4, 8.0, 6.4), CAROUSEL + Vector3(0, 8.0, 0))
 	var mat_mesh := MeshInstance3D.new()
 	mat_mesh.name = "PlayMat"
 	var disc := CylinderMesh.new()
@@ -896,7 +894,7 @@ func _build_shopfronts() -> void:
 			var h := (UP - SLAB) if floor_y == 0.0 else (CEIL - UP)
 			var f := _slot_frame(line, at, at, floor_y)
 			var c: Vector3 = f[0] + f[2] * depth * 0.5 + Vector3(0, h * 0.5, 0)
-			var size := Vector3(0.3, h, depth) if line == "W" or line == "E" else Vector3(depth, h, 0.3)
+			var size := Vector3(depth, h, 0.3) if line == "W" or line == "E" else Vector3(0.3, h, depth)
 			_bbox("wall", size, c)
 			_collider(fronts, "Party%d" % k, size, c)
 			k += 1
@@ -932,10 +930,12 @@ func _shopfront(parent: Node3D, index: int, s: Array) -> void:
 		var pixel := minf(0.0075, (width - 2.0) / (title.length() * 80.0))
 		_label(signs, "Sign%d" % index, title, o + Vector3(0, sign_y, 0) - inward * 0.32, yaw, pixel, colour * 1.6)
 	if kind == "open":
+		# Solid above the opening, so nothing climbs over the doorway.
+		_collider(parent, "Fascia%d" % index, Vector3(width - 1.2, fascia_h, 0.5), fascia_c).rotation.y = yaw
 		return
 	# The opening: shutter, half shutter or glass.
 	var opening := Vector3(width - 1.2, OPEN_H, 0.12)
-	var block := _collider(parent, "Front%d" % index, Vector3(width - 1.2, OPEN_H, 0.3), o + Vector3(0, OPEN_H * 0.5, 0))
+	var block := _collider(parent, "Front%d" % index, Vector3(width - 1.2, storey, 0.3), o + Vector3(0, storey * 0.5, 0))
 	block.rotation.y = yaw
 	match kind:
 		"shutter":
@@ -1077,6 +1077,17 @@ func _build_department_store() -> void:
 	for x in [-3.6, 3.6]:
 		_prop(dressing, "mall_mannequins", "DeptMannequins%d" % int(x), Vector3(x, 0, -28.6), 0.0)
 		_collider(d, "DeptPlinth%d" % int(x), Vector3(2.2, 1.0, 1.0), Vector3(x, 0.5, -28.6))
+	# Clothing racks by the entrance.
+	var garments := ["pink", "teal", "violet", "cream", "navy"]
+	for x in [-4.2, 4.2]:
+		var c := Vector3(x, 0, -25.9)
+		_bbox("chrome", Vector3(2.4, 0.06, 0.06), c + Vector3(0, 1.55, 0))
+		for e in [-1.15, 1.15]:
+			_bbox("chrome", Vector3(0.06, 1.55, 0.06), c + Vector3(e, 0.78, 0))
+			_bbox("chrome", Vector3(0.1, 0.04, 0.6), c + Vector3(e, 0.02, 0))
+		for i in 8:
+			_bbox(garments[(i + int(x)) % garments.size()], Vector3(0.22, 0.8, 0.5), c + Vector3(-0.95 + i * 0.27, 1.1, 0))
+		_collider(d, "Rack%d" % int(x), Vector3(2.5, 1.6, 0.6), c + Vector3(0, 0.8, 0))
 	_omni(lights, "DeptStore", Vector3(0, 3.2, -27.0), WARM, 1.6, 10.0).add_to_group("mall_mains", true)
 
 
@@ -1100,6 +1111,12 @@ func _build_entrances() -> void:
 		_bbox("chrome", Vector3(0.1, 3.4, 0.14), Vector3(x, 1.7, Z1 - 0.4))
 	_bbox("chrome", Vector3(7.4, 0.12, 0.16), Vector3(0, 3.42, Z1 - 0.4))
 	_bbox("navy", Vector3(4.0, 0.03, 2.4), Vector3(0, 0.015, Z1 - 2.0))
+	# Lit welcome posters on the vestibule walls.
+	for x in [-3.8, 3.8]:
+		_bbox("chrome", Vector3(0.1, 1.9, 1.4), Vector3(x, 1.6, 26.6))
+		_bbox("panel_light", Vector3(0.04, 1.7, 1.2), Vector3(x - signf(x) * 0.06, 1.6, 26.6))
+		_label(signs, "Poster%d" % int(x), "OPEN\nLATE\n10-9", Vector3(x - signf(x) * 0.1, 1.65, 26.6), -signf(x) * PI * 0.5, 0.0032,
+			PINK * 1.2 if x < 0.0 else VIOLET * 1.2)
 	_label(signs, "Closed", "CLOSED\nSEE YOU TOMORROW!", Vector3(0, 2.3, Z1 - 0.48), PI, 0.0028, CREAM * 1.4)
 	# The night outside: a car park with lamp posts and a sliver of the sky.
 	_build_outside()
@@ -1199,7 +1216,7 @@ func _build_hall_dressing() -> void:
 		_collider(d, "Cart%dCollision" % k, Vector3(2.3, 1.15, 1.1), (c[0] as Vector3) + Vector3(0, 0.575, 0)).rotation.y = deg_to_rad(c[1])
 		_player_block(d, "Cart%dCap" % k, Vector3(2.4, 1.6, 1.4), (c[0] as Vector3) + Vector3(0, 1.95, 0), deg_to_rad(c[1]))
 		k += 1
-	for p in [[Vector3(-11.8, 0, 17.0), 45.0], [Vector3(11.8, UP, -17.0), -135.0], [Vector3(11.6, 0, -18.6), -45.0]]:
+	for p in [[Vector3(-11.8, 0, 17.0), 45.0], [Vector3(14.6, UP, 9.0), -90.0], [Vector3(11.6, 0, -18.6), -45.0]]:
 		_prop(d, "mall_directory", "Directory%d" % int(p[0].x), p[0], p[1])
 		_collider(d, "Directory%dCollision" % int(p[0].x), Vector3(1.3, 2.4, 0.4), (p[0] as Vector3) + Vector3(0, 1.2, 0)).rotation.y = deg_to_rad(p[1])
 	for p in [Vector3(-11.2, 0, -10.8), Vector3(11.2, 0, 19.0), Vector3(-11.0, UP, -16.5), Vector3(11.0, UP, 16.5), Vector3(-16.6, UP, 0.0)]:
@@ -1314,7 +1331,7 @@ func _build_exit() -> void:
 				p + Vector3(0, lift, 0))
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			holder.add_child(mi)
-			_late(mi, "res://scripts/props/exit_light.gd", {"order": order})
+			_late(mi, "res://scripts/props/mall_exit_arrow.gd", {"order": order})
 			order += 1
 
 

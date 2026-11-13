@@ -6,7 +6,7 @@ metadata/clips = {
 "Walk": {"length": 0.625, "speed": 2.533},
 "Run": {"length": 0.4167, "speed": 5.467},
 "Walk_Flinger": {"length": 0.7083, "speed": 2.093},
-"PowerWalk": {"length": 0.4375, "speed": 5.714},
+"PowerWalk": {"length": 0.4167, "speed": 5},
 "Windup": {"length": 0.6667},
 "Lob": {"length": 1.167},
 "Attack": {"length": 1.083, "strike": 0.5958},

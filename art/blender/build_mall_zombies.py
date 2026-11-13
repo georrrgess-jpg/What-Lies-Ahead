@@ -112,7 +112,7 @@ def walker_accessories(m):
             box(p + "VisorBrim", (0.42, 0.24, 0.03), (0, HEAD_Y - 0.36, 1.84), rot=rad(-12, 0, 0), bevel=0.02, m=m["visor"]),
         ]),
     }
-    acc.update(faces("Walker", m, 0.58, ("Grin", "Snarl", "Gape"), tongue=m["red"]))
+    acc.update(faces("Walker", m, 0.58, ("Grin", "Snarl"), tongue=m["red"]))
     return acc
 
 
@@ -164,7 +164,7 @@ def flinger_accessories(m):
             for i in range(2)
         ]),
     }
-    acc.update(faces("Flinger", m, 0.6, ("Gape", "Grin", "Sleepy"), tongue=m["red"]))
+    acc.update(faces("Flinger", m, 0.6, ("Gape", "Sleepy"), tongue=m["red"]))
     return acc
 
 
@@ -219,7 +219,7 @@ def manager_accessories(m):
             cap_crown(p + "Comb", 0.66, m["dark"], rim=1.86, top=2.02, off=0.02),
         ]),
     }
-    acc.update(faces("Manager", m, 0.66, ("Snarl", "Clench", "Gape"), tongue=m["red"]))
+    acc.update(faces("Manager", m, 0.66, ("Snarl",), tongue=m["red"]))
     return acc
 
 
@@ -264,7 +264,7 @@ def mall_clips(rig):
     """mall_zombies.glb: Walker (power walk), Flinger (shamble walk, lob),
     Manager (style "Heavy": stomp, slam), PowerWalk and Windup for bursts."""
     return [za.idle(rig), za.gait(rig, "Walk", power_walk_gait(0.62, 0.95)), za.gait(rig, "Run", za.flail_sprint()),
-            za.gait(rig, "Walk_Flinger", za.march()), za.gait(rig, "PowerWalk", power_walk_gait(0.44, 1.5, lean=10, swing=58)),
+            za.gait(rig, "Walk_Flinger", za.march()), za.gait(rig, "PowerWalk", power_walk_gait(0.42, 1.25, lean=10, swing=58)),
             windup(rig), lob(rig), za.attack(rig), za.attack_heavy(rig), za.roar(rig),
             za.idle(rig, "Idle_Heavy", heavy=True), za.gait(rig, "Walk_Heavy", za.stomp()), *za._common(rig, heavy=True)]
 
