@@ -13,6 +13,7 @@ price = 400
 colors = PackedColorArray(0.45, 1.0, 0.4, 1, 1.0, 0.94, 0.83, 1)
 params = {
 "optic": "Tube",
-"reticle": "circle_dot"
+"reticle": "circle_dot",
+"unlock_text": "Buy for 400 Sparks"
 }
 sort_order = 6050

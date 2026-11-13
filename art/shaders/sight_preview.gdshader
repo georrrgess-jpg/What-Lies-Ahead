@@ -15,10 +15,11 @@ uniform float lens_round = 0.0;
 uniform float extent = 2.6;
 // Dark rim inside the window (tubes and scopes).
 uniform float edge_shadow = 0.0;
-// Control size divided by its shorter side.
-uniform vec2 aspect = vec2(1.0, 1.0);
 
 void fragment() {
+	// The control's size divided by its shorter side, from the size of a pixel in UV.
+	vec2 texel = abs(vec2(dFdx(UV.x), dFdy(UV.y)));
+	vec2 aspect = max(texel.x, texel.y) / max(texel, vec2(1e-7));
 	vec2 q = (UV * 2.0 - 1.0) * aspect;
 	q.y = -q.y;
 	// The window with its frame: signed distance to the outer edge, in units of the short side.

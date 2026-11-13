@@ -33,7 +33,7 @@ from wla_common import _finish
 
 def sight_mats():
     m = dict(
-        body=mat("SightBody", "#322a54", rough=0.42, metal=0.3),
+        body=mat("SightBody", "#3a3162", rough=0.42, metal=0.3),
         accent=mat("SightAccent", "#12b5a4", rough=0.36),
         steel=mat("SightSteel", "#8a86a3", rough=0.3, metal=0.75),
         glow=mat("SightGlow", "#ff4a5e", rough=0.3, emit=2.4),
@@ -147,12 +147,14 @@ def reflex(m):
     body = [
         box("ReflexBase", (0.052, 0.086, 0.016), (0, 0.008, 0.008), bevel=0.005, m=m["body"]),
         box("ReflexSill", (0.082, 0.024, 0.012), (0, y, 0.013), bevel=0.005, m=m["body"]),
-        tube("ReflexHoop", hoop, 0.0068, m=m["body"], segs=10),
+        tube("ReflexHoop", hoop, 0.0058, m=m["accent"], segs=10),
+        box("ReflexFootL", (0.016, 0.02, 0.012), (-0.034, y, 0.02), bevel=0.004, m=m["body"]),
+        box("ReflexFootR", (0.016, 0.02, 0.012), (0.034, y, 0.02), bevel=0.004, m=m["body"]),
         box("ReflexBand", (0.055, 0.03, 0.006), (0, 0.026, 0.009), bevel=0.002, m=m["accent"]),
         box("ReflexEmitter", (0.026, 0.012, 0.006), (0, -0.029, 0.0175), bevel=0.002, m=m["body"]),
         sphere("ReflexEmitterGlow", 0.003, (0, -0.0225, 0.0185), m=m["glow"], segs=8, rings=5),
-        sphere("ReflexCrownL", 0.005, (-0.02, y, 0.0645), m=m["accent"], segs=8, rings=5),
-        sphere("ReflexCrownR", 0.005, (0.02, y, 0.0645), m=m["accent"], segs=8, rings=5),
+        sphere("ReflexCrownL", 0.0048, (-0.02, y, 0.0645), m=m["steel"], segs=8, rings=5),
+        sphere("ReflexCrownR", 0.0048, (0.02, y, 0.0645), m=m["steel"], segs=8, rings=5),
     ]
     for side in (-1, 1):
         body.append(tube(f"ReflexBrace{side}", [(side * 0.034, y, 0.046), (side * 0.03, 0.042, 0.014)], 0.0042, m=m["steel"], segs=8))
@@ -177,6 +179,7 @@ def holo(m):
         body += [
             box(f"HoloWall{side}", (0.011, 0.052, 0.056), (side * 0.0345, y, 0.047), bevel=0.004, m=m["body"]),
             box(f"HoloPlate{side}", (0.004, 0.034, 0.026), (side * 0.041, y, 0.047), bevel=0.0015, m=m["accent"]),
+            box(f"HoloTrim{side}", (0.0045, 0.005, 0.04), (side * 0.0345, y - 0.0255, 0.047), bevel=0.0015, m=m["accent"]),
             cyl(f"HoloScrew{side}", 0.004, 0.004, (side * 0.0435, y, 0.047), rot=rad(0, 90, 0), segs=8, bevel=0.001, m=m["steel"]),
         ]
     body += clamp_bolts("HoloBolt", (0.004, 0.03), 0.068, 0.009, m["steel"])

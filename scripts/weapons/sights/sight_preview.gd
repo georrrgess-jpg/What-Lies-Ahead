@@ -31,7 +31,6 @@ func _init(it: CosmeticItem = null) -> void:
 	_glass.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_glass.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_glass)
-	resized.connect(_refresh)
 	item = it
 
 
@@ -41,8 +40,6 @@ func _refresh() -> void:
 	queue_redraw()
 	if not optic:
 		return
-	var shortest := maxf(1.0, minf(size.x, size.y))
-	_material.set_shader_parameter("aspect", size / shortest)
 	_material.set_shader_parameter("pattern", WeaponSights.pattern_index(item))
 	_material.set_shader_parameter("reticle_color", WeaponSights.reticle_color(item))
 	_material.set_shader_parameter("accent_color", item.color(1, Color(0.07, 0.71, 0.64)))

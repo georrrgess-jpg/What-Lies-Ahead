@@ -27,7 +27,7 @@ extends Node
 ##   --shot-fx=confetti|pop|burst|tracer|muzzle   spawn one effect 3 m in front of the camera
 ##   --shot-stutter=1      kill three zombies one at a time and print every frame's duration
 ##   --shot-move=1         movement probe: jump height, slide speed, rail wall
-##   --shot-ads=1          hold aim-down-sights
+##   --shot-ads=1          hold aim-down-sights (0.5 = half-way through raising the sight)
 ##   --shot-sight=<id>     fit this sight (data/cosmetics/sights) to the weapon for the shot
 ##   --shot-threat=1       a zombie behind-right of the player starts its windup (threat warning check)
 
@@ -132,8 +132,7 @@ func _run() -> void:
 
 	if _arg("hud", "1") == "0":
 		director.hud.visible = false
-	if _arg("ads", "0") == "1":
-		player.ads = 1.0
+	player.ads = clampf(float(_arg("ads", "0")), 0.0, 1.0)
 	if _arg("reload", "0") == "1":
 		player.weapons._ammo[player.weapons.current.id]["mag"] = 1
 		player.weapons.start_reload()
