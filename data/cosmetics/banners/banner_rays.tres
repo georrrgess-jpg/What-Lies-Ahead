@@ -12,7 +12,7 @@ amount = 45000
 [resource]
 script = ExtResource("1")
 id = &"banner_rays"
-display_name = "Jackpot"
+display_name = "Golden Rays"
 description = "Golden rays of a winner."
 slot = &"banner"
 rarity = 3
