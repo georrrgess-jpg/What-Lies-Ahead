@@ -61,8 +61,8 @@ func _ready() -> void:
 	_view.visible = false
 	add_child(_view)
 	_shade = _rect(Color(0.02, 0.0, 0.08, 0.0))
-	_spark = UiKit.icon(SPARK_TEX, 160.0, Wallet.COLOR)
-	_spark.pivot_offset = Vector2(80, 80)
+	_spark = UiKit.icon(SPARK_TEX, 240.0, Wallet.COLOR)
+	_spark.pivot_offset = Vector2(120, 120)
 	_spark.scale = Vector2.ZERO
 	add_child(_spark)
 	_word = UiKit.arcade_label("", 150, Color.WHITE)
@@ -102,10 +102,10 @@ func _rect(color: Color) -> ColorRect:
 
 
 func _build_title() -> void:
-	_logo = UiKit.marquee("WHAT LIES AHEAD", 118)
+	_logo = UiKit.marquee("WHAT LIES AHEAD", 150)
 	_logo.modulate.a = 0.0
 	add_child(_logo)
-	_tagline = UiKit.arcade_label("AN ARCADE ZOMBIE SURVIVAL", 40, UiKit.CYAN)
+	_tagline = UiKit.arcade_label("AN ARCADE ZOMBIE SURVIVAL", 48, UiKit.CYAN)
 	_tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_tagline.modulate.a = 0.0
 	add_child(_tagline)
@@ -119,10 +119,10 @@ func _build_title() -> void:
 		"%d ZOMBIES" % GameData.enemies().size(), "%d OPERATORS" % GameData.cosmetics().filter(func(c): return c.slot == &"avatar").size(),
 		"%d COSMETICS" % GameData.cosmetics().size()]
 	for i in counts.size():
-		var c := UiKit.chip(counts[i], colors[i], 30)
+		var c := UiKit.chip(counts[i], colors[i], 36)
 		c.modulate.a = 0.0
 		_chips.add_child(c)
-	_prompt = UiKit.arcade_label("PRESS ANY KEY", 44, UiKit.CREAM)
+	_prompt = UiKit.arcade_label("PRESS ANY KEY", 56, UiKit.CREAM)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.modulate.a = 0.0
 	add_child(_prompt)
@@ -130,7 +130,7 @@ func _build_title() -> void:
 
 func _layout() -> void:
 	var s := size
-	_spark.position = s * 0.5 - Vector2(80, 80)
+	_spark.position = s * 0.5 - Vector2(120, 120)
 	_word.size = Vector2(s.x, 180)
 	_word.position = Vector2(0, s.y * 0.66)
 	_word.pivot_offset = _word.size * 0.5
@@ -228,7 +228,7 @@ func _end_montage() -> void:
 func _v_zombie(st: CineStage) -> void:
 	var z := st.zombie(&"tourist_shambler", Vector3(0, 0.42, 0), 0.0, "Roar", 0.9)
 	st.fov(30.0, 24.0)
-	st.dolly(Vector3(0.3, 1.9, 2.4), st.head(z) + Vector3(0, -0.15, 0), Vector3(0.15, 1.95, 1.7), st.head(z) + Vector3(0, -0.1, 0))
+	st.dolly(Vector3(0.4, 1.85, 3.4), st.head(z) + Vector3(0, -0.3, 0), Vector3(0.2, 1.9, 2.7), st.head(z) + Vector3(0, -0.25, 0))
 
 
 func _v_weapon(st: CineStage) -> void:
@@ -267,7 +267,7 @@ func _v_operators(st: CineStage) -> void:
 
 func _show_title(instant: bool) -> void:
 	_bg.color.a = 0.0
-	_shade.color = Color(0.02, 0.0, 0.08, 0.55)
+	_shade.color = Color(0.02, 0.0, 0.08, 0.4)
 	_spark.visible = false
 	var d := 0.0 if instant else 1.0
 	if instant:
