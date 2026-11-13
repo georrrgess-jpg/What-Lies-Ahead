@@ -507,12 +507,25 @@ func _select(w: WeaponData) -> void:
 	_equip_row.visible = unlocked and slot < 0
 	_refresh_cards()
 	_refresh_loadout()
+	_link_focus()
 	_build_preview_model()
 	_seat_on_stand()
 	if _screen_material:
 		_screen_material.set_shader_parameter("thumb", _thumb_textures[w.id])
 	if changed and is_visible_in_tree():
 		UiFx.pop_in(_name, 0.0, 0.9)
+
+
+## Up from any card in the tray reaches the signboard's action, and down
+## from it returns to the selected card.
+func _link_focus() -> void:
+	var action: Control = _swap if _swap.visible else (_equip[0] if _equip_row.visible else null)
+	var card: Control = _cards[_weapon.id]
+	for id in _cards:
+		var c: Control = _cards[id]
+		c.focus_neighbor_top = c.get_path_to(action) if action and c.is_inside_tree() else NodePath()
+	for b: Control in [_swap, _equip[0], _equip[1]]:
+		b.focus_neighbor_bottom = b.get_path_to(card) if b.is_inside_tree() else NodePath()
 
 
 ## The name in the biggest size that fits the board.
@@ -532,6 +545,9 @@ func _equip_slot(slot: int) -> void:
 		UiSound.equip()
 		_select(_weapon)
 		UiFx.pulse(_plates[slot], 1.06)
+		# The EQUIP buttons just gave way to SWAP SLOTS: keep the focus on the board.
+		if _swap.is_visible_in_tree():
+			_swap.grab_focus()
 	else:
 		UiFx.deny(_board)
 
