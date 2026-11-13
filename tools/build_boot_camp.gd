@@ -196,6 +196,12 @@ func _build_decks() -> void:
 	for x in range(14, 45, 8):
 		for z in range(-22, -66, -8):
 			spots.append(Vector3(x, 0, z))
+	_pylons(dressing, "Pylons", spots)
+
+
+## Pier pylons (scenery, one MultiMesh) under decks whose tops are at the
+## given spots.
+func _pylons(parent: Node3D, pylons_name: String, spots: Array[Vector3]) -> void:
 	var pylon := CylinderMesh.new()
 	pylon.top_radius = 0.42
 	pylon.bottom_radius = 0.5
@@ -209,9 +215,9 @@ func _build_decks() -> void:
 	for i in spots.size():
 		mm.set_instance_transform(i, Transform3D(Basis(), spots[i] + Vector3(0, -DECK_THICK - 3.5, 0)))
 	var pylons := MultiMeshInstance3D.new()
-	pylons.name = "Pylons"
+	pylons.name = pylons_name
 	pylons.multimesh = mm
-	dressing.add_child(pylons)
+	parent.add_child(pylons)
 
 
 func _build_rails() -> void:
@@ -479,14 +485,34 @@ func _build_backdrop() -> void:
 	platform.mesh = _box_mesh(Vector3(12, DECK_THICK, 28), _deck_material())
 	platform.position = Vector3(-40.0, -DECK_THICK * 0.5, -60.0)
 	backdrop.add_child(platform)
-	_prop(backdrop, "coaster", "Coaster", Vector3(10.0, -4.0, -135.0), -6.0, Vector3(60, 14, 10))
+	# The coaster stands on a pier of its own, not in the open sea.
+	var coaster_at := Vector3(10.0, -1.5, -135.0)
+	var coaster_turn := Basis(Vector3.UP, deg_to_rad(-6.0))
+	var coaster_pier := MeshInstance3D.new()
+	coaster_pier.name = "CoasterPier"
+	coaster_pier.mesh = _box_mesh(Vector3(74, DECK_THICK, 9), _deck_material())
+	coaster_pier.transform = Transform3D(coaster_turn, coaster_at + Vector3(0, -DECK_THICK * 0.5, 0))
+	backdrop.add_child(coaster_pier)
+	_prop(backdrop, "coaster", "Coaster", coaster_at + Vector3(0, 0.3, 0), -6.0, Vector3(60, 14, 10))
 	_prop(backdrop, "lighthouse", "Lighthouse", Vector3(80.0, -4.0, -95.0), 0.0, Vector3(6, 20, 6))
 	_prop(backdrop, "arcade", "ArcadeHall", Vector3(-16.0, 0, -20.0), 90.0, Vector3(14, 6, 8))
+	# The hall's floor reaches the lane deck, so it is part of the pier.
 	var hall_floor := MeshInstance3D.new()
 	hall_floor.name = "ArcadeFloor"
-	hall_floor.mesh = _box_mesh(Vector3(10, DECK_THICK, 16), _deck_material())
-	hall_floor.position = Vector3(-15.0, -DECK_THICK * 0.5, -20.0)
+	hall_floor.mesh = _box_mesh(Vector3(11, DECK_THICK, 16), _deck_material())
+	hall_floor.position = Vector3(-14.5, -DECK_THICK * 0.5, -20.0)
 	backdrop.add_child(hall_floor)
+	var spots: Array[Vector3] = []
+	for z in [-26.0, -20.0, -14.0]:
+		for x in [-18.5, -12.5]:
+			spots.append(Vector3(x, 0, z))
+	for z in [-72.0, -66.0, -60.0, -54.0, -48.0]:
+		for x in [-44.5, -35.5]:
+			spots.append(Vector3(x, 0, z))
+	for x in range(-35, 36, 7):
+		for z in [-3.2, 3.2]:
+			spots.append(coaster_at + coaster_turn * Vector3(x, 0, z))
+	_pylons(backdrop, "BackdropPylons", spots)
 	for k in 5:
 		_prop(backdrop, "buoy", "Buoy%d" % k, Vector3(22.0 + k * 9.0, -4.2, 6.0 - k * 3.0), k * 40.0, Vector3(1, 2, 1))
 	_prop(backdrop, "sailboat", "Sailboat", Vector3(70.0, -4.2, -20.0), 120.0, Vector3(4, 8, 10))

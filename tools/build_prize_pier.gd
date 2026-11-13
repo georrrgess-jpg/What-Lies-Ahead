@@ -61,6 +61,11 @@ const LAMPS := [
 	[Vector3(2.0, 0, Z1), Vector3(X1, 0, Z1), Vector3(7.0, 0, Z1), 90.0, false],
 ]
 const RAIL_MODULE := 3.0
+## Front of the maintenance shed at the bottom of the service ramp.
+const SHED_Z := Z0 - 17.0
+## The roller coaster stands on its own pier out behind the main deck.
+const COASTER_POS := Vector3(-22.0, -1.5, -64.0)
+const COASTER_YAW := 8.0
 
 var level: Node3D
 var geo: Node3D          # collidable geometry (navmesh source)
@@ -246,6 +251,12 @@ func _build_decks() -> void:
 	var normal := Vector3(0, cos(angle), -sin(angle))
 	ramp.position = top_mid - normal * (DECK_THICK * 0.5)
 	_deck(decks, "RampLanding", -13.0, -7.0, Z0 - ramp_len - 5.0, Z0 - ramp_len, -drop)
+	# The maintenance shed behind the service door stands on a deck of its own.
+	var shed := MeshInstance3D.new()
+	shed.name = "ShedDeck"
+	shed.mesh = _box_mesh(Vector3(8.4, DECK_THICK, 6.0), _deck_material())
+	shed.position = Vector3(-10.0, -drop - DECK_THICK * 0.5, SHED_Z - 3.0)
+	dressing.add_child(shed)
 
 	_build_pylons(angle)
 
@@ -272,6 +283,14 @@ func _build_pylons(ramp_angle: float) -> void:
 		for z in [-28.5, -33.0]:                               # service ramp
 			spots.append(Vector3(x, (Z0 - z) * -tan(ramp_angle) - DECK_THICK / cos(ramp_angle), z))
 		spots.append(Vector3(x, -2.6 - DECK_THICK, Z0 - 15.0))  # ramp landing
+	for x in [-13.3, -6.7]:
+		for z in [SHED_Z - 1.5, SHED_Z - 4.5]:                 # maintenance shed
+			spots.append(Vector3(x, -2.6 - DECK_THICK, z))
+	var coaster := Transform3D(Basis(Vector3.UP, deg_to_rad(COASTER_YAW)), COASTER_POS)
+	for x in range(-35, 36, 7):
+		for z in [-3.2, 3.2]:                                    # coaster pier
+			var c: Vector3 = coaster * Vector3(x, 0, z)
+			spots.append(Vector3(c.x, COASTER_POS.y - DECK_THICK, c.z))
 	var wheel := Transform3D(Basis(Vector3.UP, deg_to_rad(WHEEL_YAW)).scaled(Vector3.ONE * WHEEL_SCALE), WHEEL_POS)
 	for x in [-10.5, 0.0, 10.5]:
 		for z in [-3.4, 3.4]:
@@ -356,13 +375,92 @@ func _build_rails() -> void:
 	var ramp_walls := Node3D.new()
 	ramp_walls.name = "RampWalls"
 	geo.add_child(ramp_walls)
-	var teal := _mat("teal", Color(0.09, 0.56, 0.58), 0.55)
 	for side in [-13.0, -7.0]:
-		var wall := _box(ramp_walls, "RampWall%s" % ("L" if side < -10.0 else "R"), Vector3(0.3, 1.3, 12.4), Vector3(side, -0.65, Z0 - 6.0), teal)
+		var suffix := "L" if side < -10.0 else "R"
+		var wall := _collider(ramp_walls, "RampWall" + suffix, Vector3(0.3, 1.3, 12.4), Vector3(side, -0.65, Z0 - 6.0))
 		wall.rotation.x = -atan2(2.6, 12.0)
 		_player_wall(wall, Vector3(0.3, 3.4, 12.4))
-		var landing := _box(ramp_walls, "LandingWall%s" % ("L" if side < -10.0 else "R"), Vector3(0.3, 1.3, 5.0), Vector3(side, -2.6 + 0.65, Z0 - 14.5), teal)
+		var landing := _collider(ramp_walls, "LandingWall" + suffix, Vector3(0.3, 1.3, 5.0), Vector3(side, -2.6 + 0.65, Z0 - 14.5))
 		_player_wall(landing, Vector3(0.3, 3.4, 5.0))
+		# What you see: a capped parapet that follows the slope and the landing,
+		# its ends square, meeting the deck rail at the top and the shed below.
+		_parapet(dressing, "RampParapet" + suffix, side, Vector2(Z0, 0.0), Vector2(Z0 - 12.0, -2.6))
+		_parapet(dressing, "LandingParapet" + suffix, side, Vector2(Z0 - 12.0, -2.6), Vector2(SHED_Z, -2.6))
+
+
+## A low wall along x = `x` from `a` to `b` (each Vector2(z, floor height)):
+## teal wall 1.0 m over the floor with vertical ends, a pink cap and posts
+## with ball tops every 3 m, matching the rail modules (scenery only).
+func _parapet(parent: Node3D, parapet_name: String, x: float, a: Vector2, b: Vector2) -> void:
+	var holder := Node3D.new()
+	holder.name = parapet_name
+	parent.add_child(holder)
+	var wall := MeshInstance3D.new()
+	wall.name = "Wall"
+	wall.mesh = _slab_mesh(x, 0.26, a + Vector2(0, -0.12), b + Vector2(0, -0.12), 1.12, _mat("teal", Color(0.09, 0.56, 0.58), 0.55))
+	holder.add_child(wall)
+	var cap := MeshInstance3D.new()
+	cap.name = "Cap"
+	cap.mesh = _slab_mesh(x, 0.38, a + Vector2(0, 1.0), b + Vector2(0, 1.0), 0.12, _mat("rail_pink", Color(0.95, 0.3, 0.62), 0.5))
+	holder.add_child(cap)
+	var posts := maxi(1, int(round(absf(b.x - a.x) / RAIL_MODULE)))
+	var post_mesh := _box_mesh(Vector3(0.34, 1.3, 0.34), _mat("teal_dark", Color(0.05, 0.42, 0.4), 0.55))
+	var ball := SphereMesh.new()
+	ball.radius = 0.11
+	ball.height = 0.22
+	ball.radial_segments = 10
+	ball.rings = 6
+	ball.material = _mat("rail_pink", Color(0.95, 0.3, 0.62), 0.5)
+	for k in posts + 1:
+		var p := a.lerp(b, float(k) / posts)
+		var post := MeshInstance3D.new()
+		post.name = "Post%d" % k
+		post.mesh = post_mesh
+		post.position = Vector3(x, p.y + 0.6, p.x)
+		holder.add_child(post)
+		var top := MeshInstance3D.new()
+		top.name = "Ball%d" % k
+		top.mesh = ball
+		top.position = Vector3(x, p.y + 1.36, p.x)
+		holder.add_child(top)
+
+
+## A slab `width` wide centred on x = `x`, running from `a` to `b` (each
+## Vector2(z, bottom height)), `height` tall, with vertical ends.
+func _slab_mesh(x: float, width: float, a: Vector2, b: Vector2, height: float, material: Material) -> ArrayMesh:
+	var corners: Array[Vector3] = []
+	for side in [-0.5, 0.5]:
+		for end in [a, b]:
+			corners.append(Vector3(x + side * width, end.y, end.x))
+			corners.append(Vector3(x + side * width, end.y + height, end.x))
+	# corners: [L a bottom, L a top, L b bottom, L b top, R a bottom, R a top, R b bottom, R b top]
+	var faces := [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [1, 5, 7, 3], [0, 2, 6, 4]]
+	var centre := Vector3.ZERO
+	for c in corners:
+		centre += c
+	centre /= corners.size()
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for f in faces:
+		var q: Array[Vector3] = [corners[f[0]], corners[f[1]], corners[f[2]], corners[f[3]]]
+		var n := (q[1] - q[0]).cross(q[2] - q[0]).normalized()
+		if n.dot((q[0] + q[2]) * 0.5 - centre) < 0.0:
+			n = -n
+		for tri in [[0, 1, 2], [0, 2, 3]]:
+			var v0: Vector3 = q[tri[0]]
+			var v1: Vector3 = q[tri[1]]
+			var v2: Vector3 = q[tri[2]]
+			# Godot's front faces wind clockwise seen from outside.
+			if (v1 - v0).cross(v2 - v0).dot(n) > 0.0:
+				var swap := v1
+				v1 = v2
+				v2 = swap
+			for v in [v0, v1, v2]:
+				st.set_normal(n)
+				st.add_vertex(v)
+	var mesh := st.commit()
+	mesh.surface_set_material(0, material)
+	return mesh
 
 
 ## A rail run: repeated rail modules plus one collision box.
@@ -435,6 +533,9 @@ func _build_entrances() -> void:
 	_collider(entrances, "ArcadeSideB", Vector3(8, 6, 0.4), Vector3(-29.0, 3, 17.8))
 	_collider(entrances, "ArcadeFrontA", Vector3(1.15, 6, 1.1), Vector3(-25.425, 3, 4.5))
 	_collider(entrances, "ArcadeFrontB", Vector3(1.15, 6, 1.1), Vector3(-25.425, 3, 17.5))
+	# Cabinets and claw machines along both side walls.
+	_collider(entrances, "ArcadeMachinesA", Vector3(5.1, 2.6, 1.2), Vector3(-28.75, 1.3, 5.0))
+	_collider(entrances, "ArcadeMachinesB", Vector3(5.1, 2.6, 1.2), Vector3(-28.75, 1.3, 17.0))
 
 	# 2. Ferris wheel gate on the left-back, leading in from the ride platform.
 	_prop(entrances, "gate_ride", "RideGate", Vector3(X0, 0, -13.0), 90.0, Vector3(8, 5, 1))
@@ -442,11 +543,11 @@ func _build_entrances() -> void:
 	_collider(entrances, "RideGatePostB", Vector3(1.0, 5, 1.0), Vector3(X0, 2.5, -9.4))
 	_rail(entrances, "RideGateFenceA", Vector3(X0, 0, -19.0), Vector3(X0, 0, -17.0))
 	_rail(entrances, "RideGateFenceB", Vector3(X0, 0, -9.0), Vector3(X0, 0, -7.0))
-	_collider(entrances, "RidePlatformBack", Vector3(0.4, 3, 12), Vector3(-33.0, 1.5, -13.0))
+	_rail(entrances, "RailRideEnd", Vector3(-33.0, 0, -19.0), Vector3(-33.0, 0, -7.0))
 
 	# 3. Service ramp at the back: closed by a service door at the bottom.
-	_prop(entrances, "service_door", "ServiceDoor", Vector3(-10.0, -2.6, Z0 - 17.0), 0.0, Vector3(6.4, 3.4, 0.5))
-	_collider(entrances, "ServiceDoorWall", Vector3(6.6, 4, 0.5), Vector3(-10.0, -0.6, Z0 - 17.2))
+	_prop(entrances, "service_door", "ServiceDoor", Vector3(-10.0, -2.6, SHED_Z), 0.0, Vector3(6.4, 3.4, 0.5))
+	_collider(entrances, "ServiceDoorWall", Vector3(6.6, 4, 0.5), Vector3(-10.0, -0.6, SHED_Z - 0.2))
 
 	# 4. Pier entrance at the front, behind the start position.
 	_prop(entrances, "gate_entrance", "PierEntrance", Vector3(-3.0, 0, Z1), 180.0, Vector3(8, 5, 1))
@@ -562,6 +663,8 @@ func _build_exit() -> void:
 	var strip := BoxMesh.new()
 	strip.size = Vector3(1.3, 0.04, 0.24)
 	var light_script: Script = load("res://scripts/props/exit_light.gd")
+	var housing_mesh := _box_mesh(Vector3(1.5, 0.024, 0.42), _mat("light_housing", Color(0.7, 0.72, 0.78), 0.35))
+	(housing_mesh.material as StandardMaterial3D).metallic = 0.6
 	# From the kiosk plaza to the spur mouth, then down the spur to the portal.
 	var route: Array[Vector3] = [Vector3(8.6, 0, -13.5), Vector3(9.6, 0, -17.0), Vector3(10.5, 0, -20.5)]
 	var z := -24.0
@@ -579,6 +682,14 @@ func _build_exit() -> void:
 		mi.set_script(light_script)
 		mi.set("order", i)
 		lights.add_child(mi)
+		# Flush metal housing, so an unlit strip reads as a deck light.
+		var housing := MeshInstance3D.new()
+		housing.name = "Housing%02d" % i
+		housing.mesh = housing_mesh
+		housing.position = route[i] + Vector3(0, 0.012, 0)
+		housing.rotation.y = mi.rotation.y
+		housing.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		lights.add_child(housing)
 
 
 # ---------------------------------------------------------------------------
@@ -601,7 +712,14 @@ func _build_backdrop() -> void:
 	walk.position = Vector3(-29.0, -DECK_THICK * 0.5, -23.0)
 	backdrop.add_child(walk)
 
-	_prop(backdrop, "coaster", "Coaster", Vector3(-22.0, -4.0, -64.0), 8.0, Vector3(60, 14, 10))
+	var coaster_deck := MeshInstance3D.new()
+	coaster_deck.name = "CoasterPier"
+	coaster_deck.mesh = _box_mesh(Vector3(74.0, DECK_THICK, 9.0), _deck_material())
+	coaster_deck.position = COASTER_POS + Vector3(0, -DECK_THICK * 0.5, 0)
+	coaster_deck.rotation.y = deg_to_rad(COASTER_YAW)
+	backdrop.add_child(coaster_deck)
+	# The supports reach 0.3 m below the model's origin.
+	_prop(backdrop, "coaster", "Coaster", COASTER_POS + Vector3(0, 0.3, 0), COASTER_YAW, Vector3(60, 14, 10))
 
 	_build_shore(backdrop)
 	var shops := ["beach_shop_a", "beach_shop_b", "beach_shop_c", "beach_shop_d"]
@@ -964,7 +1082,7 @@ func _build_deck_paint() -> void:
 	var spots := [
 		[Vector3(-14.0, 0.014, 4.0), 0.9, Color(1.0, 0.85, 0.25)], [Vector3(-12.0, 0.014, -16.0), 0.8, Color(0.3, 0.9, 0.95)],
 		[Vector3(9.0, 0.014, 4.0), 0.75, Color(1.0, 0.45, 0.75)], [Vector3(4.0, 0.014, -16.5), 0.85, Color(1.0, 0.85, 0.25)],
-		[Vector3(-19.0, 0.014, 12.0), 0.7, Color(1.0, 0.45, 0.75)], [Vector3(11.0, 0.014, -36.0), 0.7, Color(0.3, 0.9, 0.95)],
+		[Vector3(-19.0, 0.014, 12.0), 0.7, Color(1.0, 0.45, 0.75)], [Vector3(11.0, 0.014, -37.2), 0.7, Color(0.3, 0.9, 0.95)],
 	]
 	var n := 0
 	for spot in spots:
