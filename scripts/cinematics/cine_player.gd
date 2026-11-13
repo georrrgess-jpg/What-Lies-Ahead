@@ -221,6 +221,9 @@ func _cut(i: int) -> void:
 	_actors = Node3D.new()
 	_actors.name = "Shot_" + shot.id
 	add_child(_actors)
+	overlay.reset_lens()
+	camera.near = 0.05
+	CineStage.restore_lighting(_sets[shot.set_id])
 	_stage = CineStage.new(_actors, camera, overlay, _sets[shot.set_id], shot.length)
 	shot.build.call(_stage)
 	_stage.update(_clock - shot.start, 0.0)

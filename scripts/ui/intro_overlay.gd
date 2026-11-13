@@ -1,12 +1,13 @@
 class_name IntroOverlay
 extends Control
 ## The startup sequence, played once per session over the main menu
-## (scored by audio/sfx/cine_startup.wav, tools/audio_packs/showreel.py):
-##   0.0  boot sting: a Spark ignites in the dark with a ring of light
-##   1.4  a rapid montage of four real-time vignettes on the showreel's studio
-##        set (a zombie, a skinned weapon, a confetti kill, the operators),
-##        one cut per beat with a kinetic word over each
-##   4.6  the logo slams in as a marquee sign with chasing bulbs, the montage
+## (scored by audio/sfx/cine_startup.wav, tools/audio_packs/showreel.py: a
+## warm, low score that builds from silence, no bright stings):
+##   0.0  a Spark glows up in the dark with a soft ring of light
+##   1.4  a montage of four real-time vignettes on the showreel's studio set
+##        (a zombie, a weapon in an animated finish with a spinning charm, a
+##        kill effect, three operators), one cut per beat, no words
+##   4.6  the logo rises in as a marquee sign with chasing bulbs, the montage
 ##        dissolves to the live menu backdrop, the tagline lands
 ##   5.4  the feature counts pop in (real numbers from GameData)
 ##   7.2  "PRESS ANY KEY" over the live backdrop; any key opens the menu
@@ -22,7 +23,14 @@ const LOGO_AT := 4.6
 const CUT := 0.8
 const ZOMBIE_SCENE := "res://scenes/enemies/zombie.tscn"
 const SPARK_TEX := &"icon_spark"
-const WORDS := ["SURVIVE", "GEAR UP", "POP 'EM", "SUIT UP"]
+## The montage's featured items (by id).
+const ZOMBIE := &"tourist_shambler"
+const WEAPON := &"ion_carbine"
+const FINISH := &"fin_marquee"
+const CHARM := &"charmx_ferris_wheel"
+const KILL_EFFECT := &"kfx_disco"
+const TRACER := &"tracer_neon"
+const OPERATORS: Array[StringName] = [&"op_pixel_pal", &"op_windup", &"op_cosmic_sheriff"]
 
 var _time := 0.0
 var _closing := false
@@ -38,7 +46,6 @@ var _actors: Node3D
 var _stage: CineStage
 var _shot := -1
 var _shots: Array[CineShot] = []
-var _word: Label
 var _logo: MarqueeSign
 var _tagline: Label
 var _chips: HBoxContainer
@@ -63,11 +70,9 @@ func _ready() -> void:
 	_shade = _rect(Color(0.02, 0.0, 0.08, 0.0))
 	_spark = UiKit.icon(SPARK_TEX, 240.0, Wallet.COLOR)
 	_spark.pivot_offset = Vector2(120, 120)
-	_spark.scale = Vector2.ZERO
+	_spark.scale = Vector2.ONE * 0.6
+	_spark.modulate.a = 0.0
 	add_child(_spark)
-	_word = UiKit.arcade_label("", 150, Color.WHITE)
-	_word.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(_word)
 	_build_title()
 	_fx = Control.new()
 	_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -80,16 +85,16 @@ func _ready() -> void:
 	_score = AudioStreamPlayer.new()
 	_score.stream = Sfx.stream(&"cine_startup")
 	_score.bus = &"Music"
-	_score.volume_db = Sfx.mix_db(&"cine_startup") - 2.0
+	_score.volume_db = Sfx.mix_db(&"cine_startup") - 6.0
 	add_child(_score)
 	_score.play()
 	_start_loads()
-	var tw := create_tween()
-	tw.tween_property(_spark, "scale", Vector2.ONE, 0.35).set_delay(0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var tw := create_tween().set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_spark, "modulate:a", 1.0, 0.7).set_delay(0.2)
+	tw.parallel().tween_property(_spark, "scale", Vector2.ONE, 1.0).set_delay(0.2).set_ease(Tween.EASE_OUT)
 	tw.tween_callback(func(): _ring = 0.001)
-	tw.tween_interval(0.6)
-	tw.tween_property(_spark, "scale", Vector2.ONE * 6.0, 0.18).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(_spark, "modulate:a", 0.0, 0.18)
+	tw.tween_property(_spark, "modulate:a", 0.0, 0.3)
+	tw.parallel().tween_property(_spark, "scale", Vector2.ONE * 1.4, 0.3)
 
 
 func _rect(color: Color) -> ColorRect:
@@ -131,9 +136,6 @@ func _build_title() -> void:
 func _layout() -> void:
 	var s := size
 	_spark.position = s * 0.5 - Vector2(120, 120)
-	_word.size = Vector2(s.x, 180)
-	_word.position = Vector2(0, s.y * 0.66)
-	_word.pivot_offset = _word.size * 0.5
 	_logo.reset_size()
 	_logo.position = Vector2(s.x * 0.5 - _logo.size.x * 0.5, s.y * 0.2)
 	_logo.pivot_offset = _logo.size * 0.5
@@ -164,9 +166,9 @@ func _resume_menu_music() -> void:
 # --- montage -------------------------------------------------------------------
 
 func _start_loads() -> void:
-	_preload = [ZOMBIE_SCENE, Operators.model_path(Cosmetics.item(&"op_glitch")),
-		Operators.model_path(Cosmetics.item(&"op_astro_cadet")), Operators.model_path(Cosmetics.item(&"op_arcade_champion")),
-		GameData.weapon(&"ion_carbine").viewmodel.resource_path]
+	_preload = [ZOMBIE_SCENE, GameData.weapon(WEAPON).viewmodel.resource_path]
+	for id in OPERATORS:
+		_preload.append(Operators.model_path(Cosmetics.item(id)))
 	for path in _preload:
 		if ResourceLoader.exists(path):
 			ResourceLoader.load_threaded_request(path)
@@ -203,22 +205,12 @@ func _cut_to(i: int) -> void:
 	_stage = CineStage.new(_actors, _camera, null, null, CUT)
 	_shots[i].build.call(_stage)
 	_stage.update(0.0, 0.0)
-	_flash = 0.8
-	_word.text = WORDS[i]
-	_word.scale = Vector2.ONE * 1.8
-	_word.modulate.a = 1.0
-	_word.rotation_degrees = -4.0 if i % 2 == 0 else 3.0
-	var tw := create_tween()
-	tw.tween_property(_word, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_interval(0.45)
-	tw.tween_property(_word, "modulate:a", 0.0, 0.15)
 
 
 func _end_montage() -> void:
 	Engine.time_scale = 1.0
 	Sfx.cut_positional()
 	_stage = null
-	_word.modulate.a = 0.0
 	if _viewport:
 		_view.visible = false
 		_viewport.queue_free()
@@ -227,13 +219,13 @@ func _end_montage() -> void:
 
 
 func _v_zombie(st: CineStage) -> void:
-	var z := st.zombie(&"tourist_shambler", Vector3(0, 0.42, 0), 0.0, "Roar", 0.9)
+	var z := st.zombie(ZOMBIE, Vector3(0, 0.42, 0), 0.0, "Roar", 0.6)
 	st.fov(30.0, 24.0)
 	st.dolly(Vector3(0.4, 1.85, 3.4), st.head(z) + Vector3(0, -0.3, 0), Vector3(0.2, 1.9, 2.7), st.head(z) + Vector3(0, -0.25, 0))
 
 
 func _v_weapon(st: CineStage) -> void:
-	var model := st.weapon(&"ion_carbine", &"fin_galaxy", &"charm_duck")
+	var model := st.weapon(WEAPON, FINISH, CHARM)
 	var pivot := Node3D.new()
 	st.actors.add_child(pivot)
 	pivot.position = Vector3(0, 1.25, 0)
@@ -241,7 +233,9 @@ func _v_weapon(st: CineStage) -> void:
 	var box := WeaponCosmetics.visible_bounds(model)
 	model.position = -box.get_center()
 	pivot.scale = Vector3.ONE * 1.5 / maxf(0.01, maxf(box.size.x, maxf(box.size.y, box.size.z)))
-	st.every_frame(func(t: float): pivot.rotation.y = deg_to_rad(-60.0 + t * 110.0))
+	st.every_frame(func(t: float):
+		pivot.rotation.y = deg_to_rad(-60.0 + t * 70.0)
+		pivot.rotation.z = sin(t * 4.0) * 0.08)
 	st.fov(30.0, 27.0)
 	st.dolly(Vector3(0, 1.45, 2.6), Vector3(0, 1.25, 0), Vector3(0, 1.4, 2.2), Vector3(0, 1.25, 0))
 
@@ -252,14 +246,13 @@ func _v_kill(st: CineStage) -> void:
 	st.dolly(Vector3(1.0, 1.6, 3.4), Vector3(0, 1.3, 0), Vector3(0.7, 1.5, 3.0), Vector3(0, 1.2, 0))
 	st.slowmo(0.1, 0.8, 0.4)
 	st.at(0.12, func():
-		st.shoot(&"pulse_pistol", Vector3(3.5, 1.6, 1.0), st.head(z), 1.0, false)
-		st.kill(z, &"pulse_pistol", true, Vector3(-1, 0, -0.3), 3.0, &"kfx_firework"))
+		st.shoot(&"pulse_pistol", Vector3(3.5, 1.6, 1.0), st.head(z), 1.0, false, TRACER)
+		st.kill(z, &"pulse_pistol", true, Vector3(-1, 0, -0.3), 3.0, KILL_EFFECT))
 
 
 func _v_operators(st: CineStage) -> void:
-	var line := [&"op_glitch", &"op_arcade_champion", &"op_astro_cadet"]
-	for i in line.size():
-		st.operator(line[i], Vector3((i - 1) * 1.15, 0.0 if i != 1 else 0.42, -absf(i - 1) * 0.4), -(i - 1) * 8.0, "Pose")
+	for i in OPERATORS.size():
+		st.operator(OPERATORS[i], Vector3((i - 1) * 1.15, 0.0 if i != 1 else 0.42, -absf(i - 1) * 0.4), -(i - 1) * 8.0, "Pose")
 	st.fov(38.0, 34.0)
 	st.dolly(Vector3(-1.2, 1.3, 3.8), Vector3(0, 1.2, 0), Vector3(1.0, 1.25, 3.4), Vector3(0, 1.25, 0))
 
@@ -278,17 +271,17 @@ func _show_title(instant: bool) -> void:
 		for c in _chips.get_children():
 			c.modulate.a = 1.0
 		return
-	_logo.scale = Vector2.ONE * 2.2
+	_logo.scale = Vector2.ONE * 1.12
 	var tw := create_tween().set_parallel(true)
-	tw.tween_property(_logo, "scale", Vector2.ONE, 0.22 * d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_logo, "modulate:a", 1.0, 0.08 * d)
-	tw.tween_callback(_logo.flash).set_delay(0.2)
+	tw.tween_property(_logo, "scale", Vector2.ONE, 0.9 * d).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_logo, "modulate:a", 1.0, 0.5 * d).set_trans(Tween.TRANS_SINE)
+	tw.tween_callback(_logo.flash).set_delay(0.5)
 	tw.tween_property(_tagline, "modulate:a", 1.0, 0.3).set_delay(0.45)
 	for i in _chips.get_child_count():
 		var c := _chips.get_child(i)
 		c.scale = Vector2.ONE
-		tw.tween_property(c, "modulate:a", 1.0, 0.12).set_delay(0.8 + i * 0.25)
-	_flash = 1.0
+		tw.tween_property(c, "modulate:a", 1.0, 0.12).set_delay(1.0 + i * 0.25)
+	_flash = 0.35
 
 
 ## Takes every key, click and button before the menu underneath sees it.
