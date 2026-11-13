@@ -31,12 +31,25 @@ const MAX_DISTANCE := 70.0
 ## AudioServer::_mix_step). Enemy voices, attacks and telegraphs stay 3D,
 ## where direction matters.
 const FLAT_CATEGORIES: Array[StringName] = [&"impact", &"confirm", &"kill_effect", &"weapon"]
+## Pool sizes: at most this many one-shots of each kind play at once (beyond
+## that the oldest is cut). Well above what a fight needs with MAX_VOICES per sound.
+const MAX_PLAYERS_FLAT := 40
+const MAX_PLAYERS_3D := 24
 
 var _cache := {}
 var _variants := {}
 var _voices := {}
 var _mix := {}
 var _music: LoopDeck
+## One-shot players are pooled: a finished or cut player goes back to an idle
+## list instead of being freed, so shooting into a crowd creates no nodes.
+var _idle_flat: Array = []
+var _idle_3d: Array = []
+var _count_flat := 0
+var _count_3d := 0
+## Playing one-shots, oldest first, and the sound each one plays.
+var _busy: Array = []
+var _sound_of := {}
 var _ambience: LoopDeck
 
 
@@ -44,6 +57,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_music = LoopDeck.new(self, &"Music", CROSSFADE)
 	_ambience = LoopDeck.new(self, &"Ambience", CROSSFADE)
+	if get_tree().has_signal(&"scene_changed"):
+		get_tree().connect(&"scene_changed", _on_scene_changed)
 
 
 func stream(sound: StringName) -> AudioStream:
@@ -102,12 +117,62 @@ func _pick(sound: StringName) -> AudioStream:
 ## cut so the newest (usually the most important) is always heard.
 func _claim_voice(sound: StringName, player: Node) -> void:
 	var list: Array = _voices.get(sound, [])
-	list = list.filter(func(p): return is_instance_valid(p))
+	if list.is_empty():
+		_voices[sound] = list
 	while list.size() >= MAX_VOICES:
-		var oldest: Node = list.pop_front()
-		oldest.queue_free()
+		_release(list[0])
 	list.append(player)
-	_voices[sound] = list
+	_sound_of[player] = sound
+	_busy.append(player)
+
+
+## A free one-shot player: an idle one from the pool, a new one while the pool
+## is below its size, else the oldest playing one-shot of that kind is cut.
+func _take_player(positional: bool) -> Node:
+	var idle: Array = _idle_3d if positional else _idle_flat
+	if not idle.is_empty():
+		return idle.pop_back()
+	if (_count_3d if positional else _count_flat) < (MAX_PLAYERS_3D if positional else MAX_PLAYERS_FLAT):
+		var p: Node = AudioStreamPlayer3D.new() if positional else AudioStreamPlayer.new()
+		p.finished.connect(_release.bind(p))
+		if positional:
+			# World sounds pause with the game, as they did as children of the level.
+			p.process_mode = Node.PROCESS_MODE_PAUSABLE
+		add_child(p)
+		if positional:
+			_count_3d += 1
+		else:
+			_count_flat += 1
+		return p
+	for i in _busy.size():
+		if (_busy[i] is AudioStreamPlayer3D) == positional:
+			var oldest: Node = _busy[i]
+			_release(oldest)
+			return (_idle_3d if positional else _idle_flat).pop_back()
+	return null
+
+
+## Stops a one-shot player and puts it back in the pool.
+func _release(p: Node) -> void:
+	if not _sound_of.has(p):
+		return
+	var list: Array = _voices.get(_sound_of[p], [])
+	list.erase(p)
+	_sound_of.erase(p)
+	_busy.erase(p)
+	p.stop()
+	p.stream = null
+	if p is AudioStreamPlayer3D:
+		_idle_3d.append(p)
+	else:
+		_idle_flat.append(p)
+
+
+## Cuts every positional one-shot (they belong to the scene that just left).
+func _on_scene_changed() -> void:
+	for p in _busy.duplicate():
+		if p is AudioStreamPlayer3D:
+			_release(p)
 
 
 ## Non-positional one-shot (UI, the player's own weapon, announcer cues).
@@ -116,28 +181,21 @@ func play(sound: StringName, volume_db := 0.0, pitch := 1.0) -> void:
 	if s == null:
 		return
 	var mix := _mix_of(sound)
-	var p := AudioStreamPlayer.new()
-	p.stream = s
-	p.bus = mix[1]
-	p.volume_db = volume_db + mix[0]
-	p.pitch_scale = pitch
-	p.finished.connect(p.queue_free)
-	_claim_voice(sound, p)
-	add_child(p)
-	p.play()
+	_start_flat(s, sound, volume_db + mix[0], mix[1], pitch)
 
 
 ## Positional one-shot in the current scene.
 func play_at(sound: StringName, position: Vector3, volume_db := 0.0, pitch := 1.0, unit_size := 9.0) -> void:
 	var s := _pick(sound)
-	var scene := get_tree().current_scene
-	if s == null or scene == null:
+	if s == null or get_tree().current_scene == null:
 		return
 	var mix := _mix_of(sound)
 	if mix[2]:
 		_play_flat_at(s, sound, position, volume_db + mix[0], mix[1], pitch, unit_size)
 		return
-	var p := AudioStreamPlayer3D.new()
+	var p := _take_player(true) as AudioStreamPlayer3D
+	if p == null:
+		return
 	p.stream = s
 	p.bus = mix[1]
 	p.volume_db = volume_db + mix[0]
@@ -146,9 +204,7 @@ func play_at(sound: StringName, position: Vector3, volume_db := 0.0, pitch := 1.
 	p.unit_size = unit_size
 	p.max_distance = MAX_DISTANCE
 	p.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
-	p.finished.connect(p.queue_free)
 	_claim_voice(sound, p)
-	scene.add_child(p)
 	p.global_position = position
 	p.play()
 
@@ -161,14 +217,18 @@ func _play_flat_at(s: AudioStream, sound: StringName, position: Vector3, volume_
 	if distance > MAX_DISTANCE:
 		return
 	var falloff := minf(NEAR_HEADROOM_DB, linear_to_db(unit_size / maxf(distance, 0.01)))
-	var p := AudioStreamPlayer.new()
+	_start_flat(s, sound, volume_db + falloff, bus, pitch)
+
+
+func _start_flat(s: AudioStream, sound: StringName, volume_db: float, bus: StringName, pitch: float) -> void:
+	var p := _take_player(false) as AudioStreamPlayer
+	if p == null:
+		return
 	p.stream = s
 	p.bus = bus
-	p.volume_db = volume_db + falloff
+	p.volume_db = volume_db
 	p.pitch_scale = pitch
-	p.finished.connect(p.queue_free)
 	_claim_voice(sound, p)
-	add_child(p)
 	p.play()
 
 

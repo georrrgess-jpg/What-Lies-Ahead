@@ -57,6 +57,15 @@ func run(camera: Camera3D, enemies: Array, weapons: Array) -> void:
 		z.set_physics_process(false)
 		z.flash_now()
 		i += 1
+	# One more, frozen (the hit-tint overlay above and the frost overlay are both overlays).
+	if not enemies.is_empty():
+		var frozen: Zombie = scene.instantiate()
+		frozen.setup(enemies[0], null, 1.0)
+		frozen.warmup_only = true
+		frozen.position = at + Vector3.DOWN * 1.0
+		parent.add_child(frozen)
+		frozen.set_physics_process(false)
+		_frost_look(frozen)
 	# Each weapon's viewmodel wearing the player's cosmetics (finish shaders,
 	# arms, charm, sticker) with its hologram reload material, plus the halo,
 	# beacon and holo shaders.
@@ -72,12 +81,54 @@ func run(camera: Camera3D, enemies: Array, weapons: Array) -> void:
 			var sm := ShaderMaterial.new()
 			sm.shader = load(WeaponView.HOLO_SHADER)
 			(holo as MeshInstance3D).material_override = sm
+	# Projectiles in flight (ball, band and trail materials).
+	for w in weapons:
+		if w.projectile_speed > 0.0:
+			WeaponProjectile.warm_up(parent, at + Vector3.DOWN * 0.3, w)
+	_hidden_view_materials(camera, parent, at)
+	# A muzzle-flash light: an omni light adds a lighting pass to everything it
+	# touches, which is a different shader variant on this renderer.
+	var light := OmniLight3D.new()
+	light.omni_range = 6.0
+	parent.add_child(light)
+	light.global_position = at + fwd * -1.0
 	for shader_path in ["res://art/shaders/bulb_halo.gdshader", "res://art/shaders/beacon.gdshader", "res://art/shaders/portal_swirl.gdshader"]:
 		var q := MeshInstance3D.new()
 		q.mesh = QuadMesh.new()
 		var sm := ShaderMaterial.new()
 		sm.shader = load(shader_path)
 		q.material_override = sm
+		parent.add_child(q)
+		q.global_position = at
+
+
+## The frozen and chilled look on a zombie: the frost overlay on its skinned
+## meshes and the ice crystal shell (see StatusEffects).
+func _frost_look(z: Zombie) -> void:
+	var overlay := ShaderMaterial.new()
+	overlay.shader = load(StatusEffects.FROST_SHADER)
+	overlay.set_shader_parameter("amount", 1.0)
+	for mi in z.model_root.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_overlay = overlay
+	var crystals := MeshInstance3D.new()
+	crystals.mesh = StatusEffects._crystal_shell()
+	crystals.material_override = StatusEffects._crystal_mat()
+	z.add_child(crystals)
+
+
+## Materials on the first-person view that start hidden (muzzle flash quads,
+## lens glints) are drawn once on a small quad, since a hidden node is never
+## drawn and so never compiled.
+func _hidden_view_materials(camera: Camera3D, parent: Node3D, at: Vector3) -> void:
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.2, 0.2)
+	for g in camera.find_children("*", "GeometryInstance3D", true, false):
+		var mi := g as MeshInstance3D
+		if mi == null or mi.is_visible_in_tree() or mi.mesh == null:
+			continue
+		var q := MeshInstance3D.new()
+		q.mesh = quad
+		q.material_override = mi.material_override if mi.material_override else mi.mesh.surface_get_material(0)
 		parent.add_child(q)
 		q.global_position = at
 

@@ -144,7 +144,7 @@ def write_wav(name, x, peak=0.85):
     return path
 
 
-def write_ogg(name, stereo, peak=0.8, quality=5):
+def write_ogg(name, stereo, peak=0.8, quality=3):
     """stereo: array shaped (n, 2). Encoded with ffmpeg/libvorbis. peak=None
     writes the samples as they are (already mastered)."""
     if peak is not None:
