@@ -123,7 +123,7 @@ def op_pixel_pal():
     def limbs(side, s):
         k.upper_arm(side, pink)
         k.fore_arm(side, pink)
-        k.arm_band(side, "ForeArm", 0.7, 0.93, cyan, grow=0.012, name="Cuff")
+        k.arm_band(side, "ForeArm", 0.7, 0.93, cyan, grow=0.008, name="Cuff")
         k.hand(side, cream, plate_m=pink_dark)
         k.thigh(side, pink)
         k.shin(side, pink)
@@ -199,7 +199,7 @@ def op_windup():
         k.fore_arm(side, silver)
         for i in range(3):
             k.arm_band(side, "ForeArm", 0.12 + i * 0.18, 0.21 + i * 0.18, tin_dark, grow=0.012, name=f"Coil{i}")
-        k.arm_band(side, "ForeArm", 0.72, 0.93, red, grow=0.012, name="Cuff")
+        k.arm_band(side, "ForeArm", 0.72, 0.93, red, grow=0.008, name="Cuff")
         k.hand(side, red, plate_m=brass)
         k.thigh(side, silver)
         for i in range(3):
@@ -266,7 +266,7 @@ def op_stunt_ace():
         k.arm_band(side, "UpperArm", 0.4, 0.46, blue, grow=0.004, name="StripeB")
         k.fore_arm(side, white)
         k.arm_band(side, "ForeArm", -0.04, 0.16, dark, grow=0.014, name="ElbowPad")
-        k.arm_band(side, "ForeArm", 0.68, 0.93, white, grow=0.014, name="Gauntlet", taper=(0.012, -0.002))
+        k.arm_band(side, "ForeArm", 0.7, 0.93, white, grow=0.008, name="Gauntlet", taper=(0.006, -0.002))
         k.hand(side, red, plate_m=gold)
         k.thigh(side, white)
         k.leg_band(side, "Thigh", 0.3, 0.37, red, grow=0.004, name="StripeR")
@@ -342,8 +342,8 @@ def op_halfpipe():
 
     def limbs(side, s):
         k.upper_arm(side, hoodie, r0=0.088, r1=0.074)
-        k.fore_arm(side, hoodie, r0=0.07, r1=0.056)
-        k.arm_band(side, "ForeArm", 0.72, 0.93, hoodie_dark, grow=0.012, name="Cuff")
+        k.fore_arm(side, hoodie)
+        k.arm_band(side, "ForeArm", 0.72, 0.93, hoodie_dark, grow=0.008, name="Cuff")
         k.hand(side, char, plate_m=lime)
         k.thigh(side, k.skin_m)
         k.shorts_leg(side, char, length=0.7, hem_m=lime, flare=0.016)
@@ -353,7 +353,7 @@ def op_halfpipe():
         k.leg_band(side, "Shin", 0.56, 0.6, pink, grow=0.008, name="SockStripe")
         k.shoe(side, char, sock, toe_m=sock, lace_m=lime, collar_m=char, shaft=0.07, shaft_m=char, stripe_m=pink, tongue_m=char)
     _both(limbs)
-    return k, "head_bob", dict(bend=24, out=0.28, lean=1.5, chin=4.0, sway=1.2, aim=(0.09, -0.04, -0.015))
+    return k, "head_bob", dict(bend=24, out=0.28, lean=1.5, chin=4.0, sway=1.2, aim=BULKY_HOLD)
 
 
 def op_top_dog():
@@ -483,7 +483,7 @@ def op_tide_keeper():
         k.arm_band(side, "UpperArm", 0.55, 0.62, stripe, grow=0.004, name="Stripe1")
         k.fore_arm(side, navy)
         k.arm_band(side, "ForeArm", 0.44, 0.51, stripe, grow=0.004, name="Stripe")
-        k.arm_band(side, "ForeArm", 0.66, 0.93, yellow, grow=0.016, name="Gauntlet", taper=(0.01, -0.004))
+        k.arm_band(side, "ForeArm", 0.7, 0.93, yellow, grow=0.007, name="Gauntlet")
         k.hand(side, yellow, plate_m=yellow)
         k.thigh(side, wader)
         k.shin(side, wader)
@@ -564,8 +564,8 @@ def op_mech_jockey():
         k.upper_arm(side, orange)
         k.fore_arm(side, orange)
         k.arm_band(side, "ForeArm", -0.04, 0.14, gun, grow=0.012, name="ElbowPad")
-        k.arm_band(side, "ForeArm", 0.7, 0.93, gun, grow=0.012, name="Cuff")
-        k.arm_band(side, "ForeArm", 0.76, 0.8, glow, grow=0.016, name="CuffGlow")
+        k.arm_band(side, "ForeArm", 0.7, 0.93, gun, grow=0.008, name="Cuff")
+        k.arm_band(side, "ForeArm", 0.76, 0.8, glow, grow=0.011, name="CuffGlow")
         k.hand(side, gun, plate_m=orange_dark)
         k.thigh(side, orange)
         k.add(box(k.n("Cargo" + s), (0.03, 0.11, 0.12), sx(side, HIP.lerp(KNEE, 0.45) + Vector((0.11, 0.0, 0))), rot=rad(0, side * -3, 0), bevel=0.014,
@@ -642,7 +642,7 @@ def op_cosmic_sheriff():
     def limbs(side, s):
         k.upper_arm(side, shirt)
         k.fore_arm(side, shirt)
-        k.arm_band(side, "ForeArm", 0.66, 0.93, chaps, grow=0.016, name="Gauntlet", taper=(0.016, -0.003))
+        k.arm_band(side, "ForeArm", 0.7, 0.93, chaps, grow=0.008, name="Gauntlet", taper=(0.006, -0.002))
         k.hand(side, chaps, plate_m=silver)
         k.thigh(side, jeans)
         k.leg_band(side, "Thigh", 0.04, 0.98, chaps, grow=0.012, name="Chaps")
@@ -726,7 +726,7 @@ def op_timber_jack():
         k.fore_arm(side, k.skin_m)
         k.arm_band(side, "ForeArm", -0.04, 0.16, check, grow=0.016, name="Rolled")
         k.arm_band(side, "ForeArm", 0.04, 0.09, check_dark, grow=0.02, name="RolledStripe")
-        k.arm_band(side, "ForeArm", 0.7, 0.93, glove, grow=0.014, name="GloveCuff", taper=(0.008, -0.002))
+        k.arm_band(side, "ForeArm", 0.7, 0.93, glove, grow=0.007, name="GloveCuff")
         k.hand(side, glove, plate_m=boot)
         k.thigh(side, jeans)
         k.shin(side, jeans)

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"op_stunt_ace"
+display_name = "Stunt Ace"
+description = "Rides the Wall of Death twice nightly in starred white leather. Zombies are just slower traffic."
+slot = &"avatar"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.9098, 0.149, 0.2275, 1, 1, 0.7608, 0.2392, 1, 0.9686, 0.9569, 0.949, 1, 0.9686, 0.9569, 0.949, 1, 0.1843, 0.3098, 0.8118, 1, 0.9098, 0.149, 0.2275, 1)
+params = {
+"model": "res://art/models/operator_stunt_ace.glb",
+"pattern": "stars",
+"pattern_on": ["Sleeve"]
+}
+sort_order = 1220

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+target = &"cryo_beam"
+amount = 8
+
+[resource]
+script = ExtResource("1")
+id = &"op_timber_jack"
+display_name = "Timber Jack"
+description = "Splits the logs for the Summit Lodge fire before breakfast. The beard keeps the snow off."
+slot = &"avatar"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.8784, 0.6902, 0.4, 1, 0.6039, 0.3843, 0.1961, 1, 0.8157, 0.149, 0.1804, 1, 0.8157, 0.149, 0.1804, 1, 0.1098, 0.07843, 0.09412, 1)
+params = {
+"model": "res://art/models/operator_timber_jack.glb",
+"pattern": "checker",
+"pattern_on": ["Sleeve"],
+"scale": 0.6
+}
+sort_order = 1122
