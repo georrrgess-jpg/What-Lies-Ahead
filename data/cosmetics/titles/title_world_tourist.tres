@@ -33,11 +33,11 @@ all_of = Array[ExtResource("2")]([SubResource("req_0"), SubResource("req_1"), Su
 script = ExtResource("1")
 id = &"title_world_tourist"
 display_name = "World Tourist"
-description = "Cleared every level in every world."
+description = "Cleared every level of the first five worlds: pier, rooftops, aquarium, spaceport and resort."
 slot = &"title"
 rarity = 2
 requirement = SubResource("req")
 params = {
-"unlock_text": "Clear every level in every world"
+"unlock_text": "Clear the first five worlds"
 }
 sort_order = 10217
