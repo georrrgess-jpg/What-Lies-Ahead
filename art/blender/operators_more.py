@@ -377,19 +377,19 @@ def op_top_dog():
     k.hair_cap(hair, _hairline(0.55, 0.22, -0.12, -0.42), grow=0.035)
     k.neck()
     # Paper garrison cap: a long boat shape riding on top, with a red band and a frank pin.
-    f = _hat_frame(0.205, -4.0, roll=-6.0)
-    cap = [loft(k.n("Cap"), [(0.0, 0.17, 0.245, 0, 0, 2.6), (0.04, 0.15, 0.25, 0, 0, 2.8), (0.085, 0.05, 0.245, 0, 0, 3.2), (0.1, 0.012, 0.22, 0, 0, 3.2)],
+    f = _hat_frame(0.175, -4.0, roll=-6.0)
+    cap = [loft(k.n("Cap"), [(0.0, 0.2, 0.25, 0, 0, 2.6), (0.05, 0.19, 0.255, 0, 0, 2.8), (0.12, 0.07, 0.25, 0, 0, 3.2), (0.15, 0.014, 0.225, 0, 0, 3.2)],
                 m=white, segs=28, sub=2, frame=f, caps=("flat", "flat"), sharp=60),
-           loft(k.n("CapBand"), [(0.008, 0.172, 0.249, 0, 0, 2.6), (0.032, 0.158, 0.253, 0, 0, 2.8)], m=red, segs=28, sub=1, frame=f, caps=("flat", "flat"),
+           loft(k.n("CapBand"), [(0.01, 0.203, 0.254, 0, 0, 2.6), (0.045, 0.194, 0.259, 0, 0, 2.8)], m=red, segs=28, sub=1, frame=f, caps=("flat", "flat"),
                 sharp=70)]
-    pin = f @ Vector((0.15, -0.08, 0.035))
+    pin = f @ Vector((0.17, -0.08, 0.06))
     cap += [limb(k.n("Frank"), pin + Vector((0.0, -0.04, 0.0)), pin + Vector((0.0, 0.04, 0.004)), 0.014, 0.014, frank, segs=10),
             blob(k.n("Bun"), 1.0, pin + Vector((0.006, 0, -0.008)), bun, scale=(0.016, 0.045, 0.014))]
     k.add(cap, bone="Head", tag="headgear")
 
-    k.torso(white, lower_m=pants, split_z=0.93)
+    k.torso(red, lower_m=pants, split_z=0.93)
     for i, z in enumerate((1.02, 1.1, 1.18, 1.26)):
-        k.belt(z, 0.034, red, grow=0.002, name=f"Stripe{i}")
+        k.belt(z, 0.034, white, grow=0.002, name=f"Stripe{i}")
     front = k.on_torso("front")
     _detail(k, [decal(k.n("Apron"), rrect(0, 1.02, 0.3, 0.3, 0.04), front, apron, lift=0.01),
                 decal(k.n("ApronBib"), rrect(0, 1.2, 0.18, 0.13, 0.03), front, apron, lift=0.01),
@@ -411,8 +411,8 @@ def op_top_dog():
 
     def limbs(side, s):
         k.upper_arm(side, k.skin_m)
-        k.sleeve(side, white, length=0.5, hem_m=red)
-        k.arm_band(side, "UpperArm", 0.18, 0.26, red, grow=0.013, name="SleeveStripe")
+        k.sleeve(side, red, length=0.5, hem_m=white)
+        k.arm_band(side, "UpperArm", 0.18, 0.26, white, grow=0.013, name="SleeveStripe")
         k.fore_arm(side, k.skin_m)
         k.hand(side, white)
         k.thigh(side, pants)
@@ -554,8 +554,8 @@ def op_mech_jockey():
            box(k.n("PackGlow2"), (0.2, 0.01, 0.025), (0, by + 0.082, 1.13), bevel=0.004, m=glow),
            box(k.n("Hazard"), (0.3, 0.02, 0.03), (0, by + 0.07, 1.03), bevel=0.006, m=yellow)], bone="Chest", tag="gear")
     # Left shoulder armour.
-    sp = sx(1, SHOULDER) + Vector((0.065, 0.0, 0.045))
-    k.add([open_shell(k.n("Pauldron"), 0.11, sp, 75.0, gun, scale=(0.9, 1.1, 0.7), thickness=0.016, toward=(0.15, 0, -1)),
+    sp = sx(1, SHOULDER) + Vector((0.04, 0.0, 0.0))
+    k.add([open_shell(k.n("Pauldron"), 0.118, sp, 58.0, gun, scale=(0.95, 1.1, 0.8), thickness=0.016, toward=(0.15, 0, -1)),
            blob(k.n("PauldronStud"), 0.02, sp + Vector((0.06, -0.065, 0.045)), yellow, segs=10, rings=6),
            blob(k.n("PauldronStud2"), 0.02, sp + Vector((0.06, 0.065, 0.045)), yellow, segs=10, rings=6)],
           bone="UpperArm.L", tag="arm")
@@ -591,7 +591,8 @@ def op_cosmic_sheriff():
     gold = mat("Gold", "#ffc23d", rough=0.25, metal=0.85)
     silver = mat("Silver", "#d6dbe6", rough=0.25, metal=0.85)
     jeans = mat("Jeans", "#3a4f8a", rough=0.65)
-    chaps = mat("Chaps", "#c98a4a", rough=0.6)
+    chaps = mat("Chaps", "#7a4424", rough=0.55)
+    glove_m = mat("RidingGlove", "#c98a4a", rough=0.6)
     boot = mat("Boot", "#5a3424", rough=0.5)
     glow = mat("RayGlow", "#7cff4a", rough=0.3, emit=2.6)
     planet = mat("Planet", "#ff7ad9", rough=0.4)
@@ -643,9 +644,9 @@ def op_cosmic_sheriff():
         k.upper_arm(side, shirt)
         k.fore_arm(side, shirt)
         k.arm_band(side, "ForeArm", 0.7, 0.93, chaps, grow=0.008, name="Gauntlet", taper=(0.006, -0.002))
-        k.hand(side, chaps, plate_m=silver)
+        k.hand(side, glove_m, plate_m=silver)
         k.thigh(side, jeans)
-        k.leg_band(side, "Thigh", 0.04, 0.98, chaps, grow=0.012, name="Chaps")
+        k.leg_band(side, "Thigh", 0.12, 0.98, chaps, grow=0.012, name="Chaps")
         for i in range(5):
             k.add(box(k.n(f"Fringe{i}{s}"), (0.012, 0.03, 0.045), sx(side, HIP.lerp(KNEE, 0.2 + i * 0.16) + Vector((0.112, 0.0, 0))), bevel=0.005, m=chaps),
                   bone="Thigh." + s, tag="leg")
@@ -683,8 +684,10 @@ def op_timber_jack():
     for side in (1, -1):
         k.add(strip(k.n(f"Stache{side}"), [(side * 0.004, mz, 0.018), (side * 0.045, mz - 0.006, 0.022), (side * 0.085, mz - 0.02, 0.016),
                                            (side * 0.1, mz - 0.04, 0.008)], face, beard, lift=0.016), bone="Head", tag="face")
-    k.add([blob(k.n("Beard"), 1.0, HEAD_C + Vector((0, -0.165, -0.12)), beard, scale=(0.18, 0.09, 0.11)),
-           blob(k.n("BeardTip"), 1.0, HEAD_C + Vector((0, -0.2, -0.18)), beard, scale=(0.11, 0.065, 0.07))], bone="Head", tag="face")
+    k.add([blob(k.n("Beard"), 1.0, HEAD_C + Vector((0, -0.165, -0.145)), beard, scale=(0.19, 0.085, 0.095)),
+           blob(k.n("BeardTip"), 1.0, HEAD_C + Vector((0, -0.2, -0.19)), beard, scale=(0.11, 0.055, 0.06))]
+          + [blob(k.n(f"Burn{s}"), 1.0, HEAD_C + Vector((s * 0.16, -0.085, -0.07)), beard, scale=(0.055, 0.085, 0.11)) for s in (1, -1)],
+          bone="Head", tag="face")
     k.neck()
     hat_parts = k.hair_cap(check, _hairline(0.42, 0.34, 0.2, 0.0), grow=0.08, name="Trapper", tag="headgear")
     k.head_band("TrapperFur", 0.12, 0.2, fur, grow=0.11)
@@ -695,7 +698,7 @@ def op_timber_jack():
           + [strip(k.n(f"HatCheckY{i}"), line_path((x, hy - 0.24), (x, hy + 0.24), 0.035, steps=8), top, check_dark, lift=0.004) for i, x in
              enumerate((-0.12, 0.0, 0.12))], bone="Head", tag="headgear")
     for side in (1, -1):
-        k.add(blob(k.n(f"Flap{side}"), 1.0, HEAD_C + Vector((side * 0.255, 0.02, -0.04)), fur, scale=(0.05, 0.11, 0.13)), bone="Head", tag="headgear")
+        k.add(blob(k.n(f"Flap{side}"), 1.0, HEAD_C + Vector((side * 0.258, 0.03, -0.02)), check, scale=(0.045, 0.1, 0.12)), bone="Head", tag="headgear")
 
     k.torso(check, lower_m=jeans, split_z=0.95)
     for i, z in enumerate((1.02, 1.12, 1.22, 1.31)):

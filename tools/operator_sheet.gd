@@ -126,7 +126,7 @@ func _lineup(ops: PackedStringArray) -> void:
 	cam.fov = 30.0
 	vp.add_child(cam)
 	var span := spacing * ops.size() * 0.55
-	cam.look_at_from_position(Vector3(0, 1.4, maxf(3.2, span / tan(deg_to_rad(15.0)) * 0.6)), Vector3(0, 0.95, 0))
+	cam.look_at_from_position(Vector3(0, 1.3, maxf(4.6, span / tan(deg_to_rad(15.0)) * 0.42)), Vector3(0, 1.05, 0))
 	await _save(vp)
 
 
