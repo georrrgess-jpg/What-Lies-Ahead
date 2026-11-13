@@ -5,7 +5,9 @@ render_mode cull_back;
 // are laid out on every vertical face in world space, so boxes of any size
 // tile cleanly. Each window rolls lit or dark and a colour (mostly warm,
 // some cyan and magenta); a few flicker. Far away the grid fades to its
-// average so it never shimmers.
+// average so it never shimmers. Up close each window gets a frame, a
+// mullion, a sill and a half-drawn blind, the wall gets floor bands, and
+// flat roofs get panel seams, so near facades do not read as flat stickers.
 uniform vec3 wall_color : source_color = vec3(0.07, 0.07, 0.14);
 uniform vec3 roof_color : source_color = vec3(0.06, 0.06, 0.1);
 uniform vec3 warm : source_color = vec3(1.0, 0.72, 0.4);
@@ -34,7 +36,14 @@ float hash12(vec2 p) {
 void fragment() {
 	vec3 n = world_normal;
 	if (n.y > 0.7 || n.y < -0.7) {
-		ALBEDO = roof_color;
+		// Roofing felt in 4 m panels, each a slightly different tone.
+		vec2 rg = world_pos.xz * 0.25;
+		vec2 rf = fract(rg);
+		vec2 rw = fwidth(rg);
+		float seam = max(1.0 - smoothstep(0.0, 0.02 + rw.x, min(rf.x, 1.0 - rf.x)), 1.0 - smoothstep(0.0, 0.02 + rw.y, min(rf.y, 1.0 - rf.y)));
+		float near_roof = 1.0 - smoothstep(0.08, 0.3, max(rw.x, rw.y));
+		float tone_r = 0.8 + 0.5 * hash12(floor(rg) + seed);
+		ALBEDO = roof_color * mix(1.0, tone_r, near_roof) * (1.0 + seam * near_roof * 0.9);
 		ROUGHNESS = 0.8;
 	} else {
 		// Horizontal coordinate along the face, vertical = height.
@@ -60,11 +69,31 @@ void fragment() {
 		float far = smoothstep(0.25, 0.6, max(fw.x, fw.y));
 		vec3 lit_col = tone * lit * flick;
 		vec3 avg = mix(warm, cool, 0.2) * lit_ratio * 0.45 * window.x * window.y;
-		vec3 em = mix(lit_col * win, avg, far);
+		// Close-up detail, faded out before it could shimmer.
+		float near = 1.0 - smoothstep(0.02, 0.07, max(fw.x, fw.y));
+		vec2 wf = (f - margin) / window;            // 0-1 across the window
+		vec2 edge = min(wf, vec2(1.0) - wf) * window * cell;   // metres to the window's edge
+		float frame = (1.0 - smoothstep(0.05, 0.07, min(edge.x, edge.y))) * win;
+		float split = 1.0 + floor(window.x * cell.x / 0.9);    // panes across
+		float pane = abs(fract(wf.x * split) - 0.5) * window.x * cell.x / split;
+		float mullion = (smoothstep(0.045, 0.03, (window.x * cell.x / split) * 0.5 - pane) * step(1.5, split)) * win;
+		float blind_h = 0.15 + 0.55 * hash12(id * 3.1 + face);
+		float blind = step(1.0 - blind_h, wf.y) * win;
+		float slat = 0.75 + 0.25 * step(0.5, fract(wf.y * window.y * cell.y / 0.09));
+		// Light falls off toward the top of the room; blinds glow dimmer and slatted.
+		float room = mix(1.0, (0.55 + 0.6 * wf.y) * mix(1.0, 0.55 * slat, blind), near);
+		float bars = clamp(frame + mullion, 0.0, 1.0) * near;
+		vec3 em = mix(lit_col * win * room * (1.0 - bars), avg, far);
 		vec3 dark_glass = vec3(0.03, 0.04, 0.09);
-		ALBEDO = mix(wall_color, dark_glass, win * (1.0 - far));
+		// Wall: a floor band under each row of windows and a sill line.
+		float band = (1.0 - smoothstep(0.03, 0.05, abs(f.y - margin.y * 0.5) * cell.y)) * near;
+		float sill = step(margin.x - 0.04 / cell.x, f.x) * step(f.x, 1.0 - margin.x + 0.04 / cell.x)
+			* (1.0 - smoothstep(0.0, 0.07, abs((f.y - margin.y) * cell.y + 0.04))) * near;
+		vec3 wall = wall_color * (1.0 + 0.35 * band) + vec3(0.1, 0.1, 0.16) * sill;
+		vec3 frame_col = wall_color * 1.9 + vec3(0.02);
+		ALBEDO = mix(mix(wall, dark_glass, win * (1.0 - far)), frame_col, bars);
 		EMISSION = em * glow;
-		ROUGHNESS = mix(0.85, 0.2, win);
+		ROUGHNESS = mix(0.85, 0.2, win * (1.0 - bars));
 		SPECULAR = 0.4;
 	}
 }

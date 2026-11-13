@@ -136,9 +136,10 @@ def build():
         k += place([sphere(f"Lamp{i}", 0.17, (0, -3.6, 3.35), m=lamp, segs=8, rings=6)], rot_z=a)
     # Prizes: one ring on the counter, one on the shelf.
     makers = [plush_octopus, plush_star, plush_shark, plush_bear]
-    for ring, (radius, z, count, offset) in enumerate(((3.72, 1.56, 20, 0), (2.92, 2.54, 14, 2))):
+    # The counter ring sits midway between the roof posts, clear of all eight.
+    for ring, (radius, z, count, offset, phase) in enumerate(((3.72, 1.56, 16, 0, 0.5), (2.92, 2.54, 14, 2, 0.0))):
         for i in range(count):
-            a = math.tau * i / count
+            a = math.tau * (i + phase) / count
             parts = makers[(i + offset) % 4](f"Prize{ring}_{i:02d}_")
             k += place(parts, (math.sin(a) * radius, -math.cos(a) * radius, z), rot_z=a, scale=1.15)
     # Star signs on the roof: front and back.
