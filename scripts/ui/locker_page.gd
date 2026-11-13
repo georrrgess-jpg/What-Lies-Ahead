@@ -285,6 +285,7 @@ func select_item(id: StringName) -> void:
 	_open(it.slot, it)
 	if is_visible_in_tree():
 		_focus_selected()
+	_reveal_selected()
 
 
 func _ctx() -> StringName:
@@ -443,6 +444,14 @@ func _after_change(flourish: bool) -> void:
 ## The cards on show pop in one after another.
 func _deal_cards() -> void:
 	UiFx.stagger_in(_cards.filter(func(card: LockerCard) -> bool: return card.visible))
+
+
+## Scrolls the tray to the selected card once the grid has been laid out.
+func _reveal_selected() -> void:
+	await get_tree().process_frame
+	var card := _card_of(_selected)
+	if card:
+		_scroll.ensure_control_visible(card)
 
 
 func _focus_selected() -> void:

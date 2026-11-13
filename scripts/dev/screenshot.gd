@@ -9,7 +9,7 @@ extends Node
 ##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|kit|<any menu page id: play, settings, locker, arsenal, career, ...>
 ##                         (kit = the UI kit gallery, scripts/ui/kit/kit_gallery.gd)
 ##   --shot-locker=<slot>  with --shot-scene=locker: open that tab (avatar, weapon_finish, gloves...)
-##   --shot-item=<id>      with --shot-scene=locker: select that cosmetic (opens its tab)
+##   --shot-item=<id>      with --shot-scene=locker or shop: select that cosmetic (opens its tab)
 ##   --shot-filter=owned|sale   with --shot-scene=locker: the tray's filter
 ##   --shot-sparks=n       menu scenes: set the Sparks balance first
 ##   --shot-tour=all|buy   with --shot-scene=locker: several stills in one run, saved as <shot>_<name>.png:
@@ -82,6 +82,8 @@ func _run() -> void:
 		_stage_wallet()
 		if scene_kind == "locker":
 			_stage_locker(menu.page("locker"))
+		if scene_kind == "shop" and _arg("item", "") != "":
+			menu.page("shop").select_item(StringName(_arg("item", "")))
 		if _arg("run", "") != "":
 			await (load(_arg("run", "")) as GDScript).new().run(self, menu)
 			get_tree().quit()

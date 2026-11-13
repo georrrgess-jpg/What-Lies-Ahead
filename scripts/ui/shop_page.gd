@@ -2,9 +2,10 @@ class_name ShopPage
 extends MenuPage
 ## The Shop: the prize counter where Sparks become cosmetics.
 ##   - Today's picks under the awning: the featured items at a discount, with
-##     the time left until they change in the header.
-##   - A shelf per section of ShopCatalog (tabs with a count of what is new),
-##     items as cards with their price, OWNED, or what still locks them.
+##     the time left until they change.
+##   - A shelf per section of ShopCatalog (tabs in the header row, with a count
+##     of what is new), items as cards with their price, OWNED, or what still
+##     locks them.
 ##   - The selected item live in the display case, and its signboard with one
 ##     action: BUY (with a confirm), how many Sparks are missing and how to
 ##     earn them, or EQUIP IN LOCKER for what is already owned.
@@ -15,17 +16,16 @@ const BOUGHT_TEXT := "SOLD!  IT IS IN YOUR LOCKER"
 const SIDE_WIDTH := 744.0
 const CARD_GAP := 12
 const GRID_MARGIN := 14
-const FEATURED_CARD := Vector2(200, 184)
-const SHELF_CARD := Vector2(176, 180)
+const FEATURED_CARD := Vector2(200, 190)
+const SHELF_CARD := Vector2(176, 196)
 const PREVIEW_DELAY := 0.09
 
 var _slot: StringName
 var _selected: CosmeticItem
 var _built := false
 var _trigger_held := 0
-var _header: HBoxContainer
-var _countdown: Label
-var _progress: Label
+var _header: Control
+var _sign: KitChip
 var _featured_row: HBoxContainer
 var _featured_cards: Array[LockerCard] = []
 var _tabs: KitTabs
@@ -62,7 +62,7 @@ func _ready() -> void:
 	clock.autostart = true
 	clock.timeout.connect(_refresh_countdown)
 	add_child(clock)
-	_build_header()
+	_header = _build_tabs()
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", UiKit.GAP_L)
@@ -72,7 +72,6 @@ func _ready() -> void:
 	counter.add_theme_constant_override("separation", UiKit.GAP_S)
 	row.add_child(counter)
 	counter.add_child(_build_featured())
-	counter.add_child(_build_tabs())
 	counter.add_child(_build_shelf())
 	row.add_child(_build_side())
 	visibility_changed.connect(_on_visibility_changed)
@@ -132,21 +131,6 @@ func _trigger_step(event: InputEventJoypadMotion) -> int:
 
 # --- layout ---------------------------------------------------------------------
 
-## Right of the marquee: when the picks change, and how much of the shop is owned.
-func _build_header() -> void:
-	_header = HBoxContainer.new()
-	_header.alignment = BoxContainer.ALIGNMENT_END
-	_header.add_theme_constant_override("separation", UiKit.GAP_L)
-	var clock := UiKit.neon_panel(UiKit.PINK)
-	clock.set_padding(22, 10)
-	clock.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_countdown = UiKit.label("", UiKit.SIZE_LABEL, UiKit.CREAM, true)
-	clock.add_child(_countdown)
-	_header.add_child(clock)
-	_progress = UiKit.label("", UiKit.SIZE_LABEL, UiKit.CREAM, true)
-	_header.add_child(_progress)
-
-
 ## Today's picks on a signboard under the counter's awning.
 func _build_featured() -> Control:
 	var board := UiKit.signboard()
@@ -156,11 +140,11 @@ func _build_featured() -> Control:
 	board.add_child(col)
 	var awning := Awning.new()
 	col.add_child(awning)
-	var sign := UiKit.chip("TODAY'S PICKS  ·  %d%% OFF" % roundi(Wallet.rules.featured_discount * 100.0), UiKit.INK, 24)
-	sign.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	sign.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	sign.grow_vertical = Control.GROW_DIRECTION_BOTH
-	awning.add_child(sign)
+	_sign = UiKit.chip("", UiKit.INK, 24)
+	_sign.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_sign.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_sign.grow_vertical = Control.GROW_DIRECTION_BOTH
+	awning.add_child(_sign)
 	_featured_row = HBoxContainer.new()
 	_featured_row.add_theme_constant_override("separation", CARD_GAP)
 	var pad := MarginContainer.new()
@@ -171,6 +155,7 @@ func _build_featured() -> Control:
 	return board
 
 
+## The sections, right of the marquee.
 func _build_tabs() -> Control:
 	var strip := UiKit.card_panel(6)
 	_tabs = KitTabs.make(22, true)
@@ -325,6 +310,10 @@ func select_item(id: StringName) -> void:
 		return
 	show_section(it.slot)
 	_select(it, false)
+	await get_tree().process_frame
+	var card := _card_of(it)
+	if card and _grid.is_ancestor_of(card):
+		_scroll.ensure_control_visible(card)
 
 
 func _on_card_chosen(card: LockerCard) -> void:
@@ -422,16 +411,16 @@ func _refresh_badges() -> void:
 
 func _refresh_caption() -> void:
 	var have := ShopCatalog.progress(_slot)
-	_caption.text = String(LockerCatalog.category(_slot)["label"]).to_upper()
-	_caption_note.text = "%d of %d owned" % [have.x, have.y]
 	var all := ShopCatalog.progress()
-	_progress.text = "OWNED  %d / %d" % [all.x, all.y]
+	_caption.text = String(LockerCatalog.category(_slot)["label"]).to_upper()
+	_caption_note.text = "%d of %d owned here  ·  %d of %d in the whole shop" % [have.x, have.y, all.x, all.y]
 
 
-## "NEW PICKS IN 5 H 12 MIN".
+## "TODAY'S PICKS  ·  25% OFF  ·  NEW IN 5 H 12 MIN" on the awning.
 func _refresh_countdown() -> void:
 	var minutes := ceili(ShopCatalog.seconds_to_rotation() / 60.0)
-	_countdown.text = "NEW PICKS IN %d H %02d MIN" % [minutes / 60, minutes % 60] if minutes >= 60 else "NEW PICKS IN %d MIN" % minutes
+	var left := "%d H %02d MIN" % [minutes / 60, minutes % 60] if minutes >= 60 else "%d MIN" % minutes
+	_sign.set_text("TODAY'S PICKS  ·  %d%% OFF  ·  NEW IN %s" % [roundi(Wallet.rules.featured_discount * 100.0), left])
 
 
 func _on_tab_changed(slot: StringName) -> void:
