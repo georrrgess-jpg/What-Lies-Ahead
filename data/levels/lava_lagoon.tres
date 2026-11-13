@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/lava_lagoon_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"lava_lagoon"
+display_name = "Lava Lagoon"
+blurb = "Hold the tiki plaza between the lava river and the beach, then follow the torches to the portal."
+scene_path = "res://scenes/levels/lava_lagoon.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"lava_lagoon_loop"
+music_final = &"lava_lagoon_final"
+ambience = &"lava_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(1, 0.45, 0.18, 1)
+menu_camera_from = Vector3(22, 7, 20)
+menu_camera_to = Vector3(-6, 6, -20)
+heal_item_name = "Coconut cooler"
+loading_tips = PackedStringArray("Fire Dancers spin up their poi before they dash in a straight line. Sidestep!", "Tiki Bartenders wind up a coconut over their heads. A headshot spills the throw.", "The lava river is walled off: cross it only by the three stone bridges.", "The terrace by the Kahuna head is high ground with long sight lines down the plaza.", "When Mount Kahuna erupts, glowing rings mark where the ember bombs will land. Step out of them.", "Kahuna Krakatoa's slam throws a ring of lava: back out of the ring or jump it.")

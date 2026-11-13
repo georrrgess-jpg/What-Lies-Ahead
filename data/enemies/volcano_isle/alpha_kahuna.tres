@@ -1,0 +1,77 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/lava_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/lava_coconut_lob.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+
+[sub_resource type="Resource" id="bomb"]
+script = ExtResource("4")
+min_range = 7.0
+max_range = 28.0
+cooldown = 7.0
+windup = 1.1
+damage = 9.0
+projectile_speed = 15.0
+arc = 0.85
+size = 0.55
+lead = 0.55
+color = Color(1, 0.42, 0.12, 1)
+held_color = Color(0.35, 0.12, 0.06, 1)
+held_glow = 3.0
+windup_sound = &"lava_kahuna_roar"
+throw_sound = &"lava_coconut_throw"
+
+[sub_resource type="Resource" id="alpha"]
+script = ExtResource("alpha_script")
+color = Color(1, 0.45, 0.12, 1)
+slam_damage = 20.0
+slam_cooldown = 9.0
+volley_shots = 5
+volley_damage = 6.0
+volley_speed = 12.5
+volley_spread_degrees = 12.0
+volley_arc = 0.45
+volley_cooldown = 10.0
+volley_size = 0.4
+
+[resource]
+script = ExtResource("1")
+id = &"alpha_kahuna"
+display_name = "Kahuna Krakatoa"
+max_health = 2300.0
+move_speed = 1.95
+speed_variance = 0.0
+turn_speed = 3.5
+tickets = 200
+score = 2600
+xp = 160
+damage = 24.0
+attack_range = 2.5
+attack_reach = 3.3
+attack_windup = 1.0
+attack_recover = 1.15
+lunge_speed = 3.2
+mass = 7.5
+flank_degrees = 10.0
+enrage_radius = 0.0
+model_scene = ExtResource("2")
+outfit = &"Kahuna"
+body_scale = 1.45
+capsule_radius = 0.64
+capsule_height = 1.95
+head_height = 1.3
+shirt_colors = Array[Color]([Color(0.9, 0.2, 0.35, 1)])
+skin_colors = Array[Color]([Color(0.55, 0.76, 0.42, 1)])
+accessory_slots = PackedStringArray("Acc_Kahuna_Crest", "")
+move_animation = &"Walk"
+clip_style = &"Heavy"
+heavy = true
+animation_reference_speed = 2.0
+avoidance_radius = 1.0
+behaviours = Array[ExtResource("3")]([SubResource("bomb"), SubResource("alpha")])
+voice_sounds = Array[StringName]([&"lava_kahuna_grunt_1", &"lava_kahuna_grunt_2"])
+voice_interval = Vector2(3.5, 6.5)
+voice_pitch = 0.74
+attack_sound = &"bruiser_slam"

@@ -51,7 +51,7 @@ const SPRING_B := Vector3(17.5, 0.0, 11.5)
 const SPRING_RADII := Vector2(3.4, 2.5)
 const BAR := Vector3(-13.0, 0.0, 4.0)
 const PORTAL := Vector3(0.0, 0.0, 21.2)
-const VOLCANO := Vector3(30.0, -12.0, -360.0)
+const VOLCANO := Vector3(40.0, -14.0, -300.0)
 const SUN_DIRECTION := Vector3(-0.8, 0.3, 0.45)       # toward the afterglow (WSW, low)
 
 var level: Node3D
@@ -195,7 +195,7 @@ func _terrain_height(x: float, z: float) -> float:
 	var n := _noise.get_noise_2d(x, z)
 	# North: the volcano's lower flank rising behind the terrace.
 	var north := maxf(-40.0 - z, 0.0)
-	var h := TERRACE_Y + north * 0.32 + north * north * 0.0012
+	var h := TERRACE_Y + north * 0.1 + north * north * 0.0002
 	# East and west: rocky headlands.
 	var side := maxf(absf(x) - 40.0, 0.0)
 	h += side * 0.35 * (1.0 - smoothstep(20.0, 60.0, z))
@@ -340,7 +340,7 @@ func _build_river() -> void:
 	var sheet := MeshInstance3D.new()
 	sheet.name = "LavaFall"
 	var fall_plane := PlaneMesh.new()
-	fall_plane.size = Vector2(6.0, 15.0)
+	fall_plane.size = Vector2(15.0, 6.0)
 	sheet.mesh = fall_plane
 	sheet.material_override = fall
 	sheet.position = Vector3(41.0, 5.0, -11.8)
@@ -877,13 +877,12 @@ func _build_boundary() -> void:
 	var cliffs := [
 		[Vector3(-33.0, 0.0, -4.0), 90.0, 1.0], [Vector3(-33.0, 0.0, 26.0), 80.0, 0.9], [Vector3(34.0, 0.0, 9.0), -90.0, 1.0],
 		[Vector3(33.0, 0.0, 24.0), -100.0, 0.8], [Vector3(-36.0, TERRACE_Y, -26.0), 90.0, 1.2], [Vector3(36.0, TERRACE_Y, -22.0), -90.0, 1.2],
-		[Vector3(1.5, TERRACE_Y, -33.5), 0.0, 1.1], [Vector3(-28.0, TERRACE_Y, -40.0), 20.0, 1.3], [Vector3(32.0, TERRACE_Y, -40.0), -15.0, 1.3],
 		[Vector3(-31.0, 0.0, 10.0), 95.0, 0.6],
 	]
 	var i := 0
 	for c in cliffs:
 		var cliff := _prop(dressing, "lava_cliff", "Cliff%d" % i, c[0], c[1], Vector3(16, 10, 6))
-		cliff.scale = Vector3.ONE * c[2]
+		cliff.scale = Vector3(c[2], c[2] * 0.6, c[2])
 		i += 1
 	# Player-only walls.
 	var walls := _player_walls()
@@ -1038,6 +1037,7 @@ func _embers(ember_name: String, extents: Vector3, amount: int, lifetime: float)
 	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	m.albedo_color = Color(1.0, 0.55, 0.2, 1.0)
 	m.vertex_color_use_as_albedo = true
+	m.disable_fog = true
 	quad.material = m
 	p.mesh = quad
 	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
@@ -1076,7 +1076,8 @@ func _build_backdrop() -> void:
 		var m := ShaderMaterial.new()
 		m.shader = load(SHADERS + "lava_smoke.gdshader")
 		m.set_shader_parameter("seed", k * 3.1)
-		m.set_shader_parameter("opacity", 0.92 - k * 0.12)
+		m.set_shader_parameter("opacity", 1.0 - k * 0.1)
+		m.set_shader_parameter("smoke_color", Color(0.11, 0.06, 0.14))
 		var plume := MeshInstance3D.new()
 		plume.name = "Plume%d" % k
 		plume.mesh = quad
@@ -1087,7 +1088,7 @@ func _build_backdrop() -> void:
 		plume.add_to_group("lava_plume")
 		back.add_child(plume)
 	var sparks := _embers("CraterSparks", Vector3(60.0, 10.0, 60.0), 50, 4.0)
-	(sparks.mesh as QuadMesh).size = Vector2(3.0, 3.0)
+	(sparks.mesh as QuadMesh).size = Vector2(1.6, 1.6)
 	sparks.initial_velocity_min = 18.0
 	sparks.initial_velocity_max = 34.0
 	sparks.gravity = Vector3(0, -9.0, 0)
@@ -1184,11 +1185,11 @@ func _build_exit() -> void:
 	level.add_child(lights)
 	var a := STATION + Vector3(0.6, 0, 6.8)
 	var b := PORTAL + Vector3(0, 0, -2.6)
-	var steps := 6
+	var steps := 4
 	for k in steps:
 		var t := float(k) / (steps - 1)
 		for s in [-1.0, 1.0]:
-			var pos := a.lerp(b, t) + Vector3(s * 1.7, 0, 0)
+			var pos := a.lerp(b, t) + Vector3(s * 2.3, 0, 0)
 			var torch := _prop(lights, "lava_exit_torch", "ExitTorch%02d%s" % [k, "L" if s < 0 else "R"], pos, k * 23.0, Vector3(0.2, 1.3, 0.2))
 			_late(torch, "res://scripts/props/lava_exit_torch.gd", {"order": k})
 

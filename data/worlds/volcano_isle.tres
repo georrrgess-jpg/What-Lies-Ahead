@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WorldData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/world_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="2"]
+[ext_resource type="Resource" path="res://data/levels/lava_lagoon.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("4")
+kind = 2
+target = &"candy_works"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"volcano_isle"
+display_name = "Volcano Isle"
+blurb = "A tiki resort on the flank of an erupting volcano, at dusk. The lava river is hot, the springs are hotter, and the luau never ended."
+levels = Array[ExtResource("2")]([ExtResource("3")])
+sort_order = 90
+tagline = "Last luau before the eruption."
+requirement = SubResource("unlock")
+accent_color = Color(1, 0.45, 0.18, 1)
+secondary_color = Color(0.18, 0.88, 0.8, 1)
+backdrop_color = Color(0.13, 0.06, 0.16, 1)

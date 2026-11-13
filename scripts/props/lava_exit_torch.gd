@@ -31,7 +31,7 @@ func set_lit(value: bool) -> void:
 	var color := Color(0.25, 0.95, 1.0) if value else Color(1.0, 0.55, 0.22)
 	_material.albedo_color = color
 	_material.emission = color
-	_material.emission_energy_multiplier = 1.6 if value else 1.1
+	_material.emission_energy_multiplier = 1.6 if value else 0.5
 
 
 func _process(delta: float) -> void:

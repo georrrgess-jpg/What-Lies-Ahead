@@ -107,7 +107,7 @@ def build_exit_torch():
     'LavaExitGlow' surface (driven by scripts/props/lava_exit_torch.gd)."""
     reset_scene()
     p = torch_parts("E_", 1.3, lglow("LavaExitGlow", "#ff9a3a", 2.0))
-    p.append(sphere("E_Flame", 0.14, (0, 0, 1.42), scale=(1, 1, 1.6), m=mat("LavaExitGlow")))
+    p.append(sphere("E_Flame", 0.09, (0, 0, 1.38), scale=(1, 1, 1.5), m=mat("LavaExitGlow")))
     save("lava_exit_torch", [merge("ExitTorch", p)])
 
 

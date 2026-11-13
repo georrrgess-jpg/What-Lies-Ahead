@@ -223,21 +223,22 @@ def build_kahuna_head():
 
 
 def build_cliff():
-    """A block of hexagonal basalt columns ~16 m long, 6 m deep, 6-11 m tall
-    (Giant's-causeway style), long side along X, front -Y."""
+    """A rugged basalt outcrop ~16 m long, 6 m deep, up to ~9 m tall: heaped
+    faceted boulders with a few short hexagonal columns at its foot. Long side
+    along X, front -Y."""
     reset_scene()
     rng = random.Random(21)
     mats = [lmat("Basalt", rough=0.85), lmat("BasaltLight", rough=0.85), lmat("BasaltDark", rough=0.9)]
     p = []
-    k = 0
-    for row in range(3):
-        for col in range(14):
-            x = -7.6 + col * 1.17 + (0.58 if row % 2 else 0.0)
-            y = -1.8 + row * 1.0
-            h = rng.uniform(6.0, 11.0) - (2.4 - row * 1.2) * rng.uniform(0.3, 1.0)
-            p.append(cyl(f"Col{k}", 0.68, h, (x, y, h / 2 - 0.5), segs=6, bevel=0.06, m=mats[rng.randrange(3)]))
-            k += 1
-    p.append(box("Core", (16.5, 2.4, 6.0), (0, 1.2, 3.0), bevel=0.0, m=mats[2]))
+    for i in range(9):
+        x = -6.5 + i * 1.6 + rng.uniform(-0.5, 0.5)
+        r = rng.uniform(2.6, 3.8) * (1.0 - abs(x) / 16.0)
+        p.append(rock(f"Mass{i}", r, (x, rng.uniform(0.2, 1.2), r * 0.9), seed=40 + i, m=mats[i % 3],
+                      scale=(1.2, 1.0, rng.uniform(1.2, 1.9)), jitter=0.3))
+    for i in range(7):
+        x = rng.uniform(-6.5, 6.5)
+        h = rng.uniform(0.8, 2.4)
+        p.append(cyl(f"Col{i}", 0.6, h, (x, -2.0 + rng.uniform(-0.3, 0.3), h / 2 - 0.2), segs=6, bevel=0.06, m=mats[rng.randrange(3)]))
     save("lava_cliff", [merge("Cliff", p)])
 
 
