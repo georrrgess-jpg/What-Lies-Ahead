@@ -1083,8 +1083,8 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.agent_max_climb = 0.25
 	mesh.agent_max_slope = 40.0
 	mesh.region_min_size = 14.0
-	# Walkable surfaces up to the mezzanine (keeps roofs and machine tops out).
-	mesh.filter_baking_aabb = AABB(Vector3(-HALL_X - 9.0, -1.0, HALL_Z0 - 1.0), Vector3(HALL_X * 2.0 + 18.0, MEZZ_Y + 0.8, HALL_Z1 - HALL_Z0 + 10.0))
+	# Walkable surfaces up to the mezzanine deck (y = MEZZ_Y), keeping roofs and machine tops out.
+	mesh.filter_baking_aabb = AABB(Vector3(-HALL_X - 9.0, -1.0, HALL_Z0 - 1.0), Vector3(HALL_X * 2.0 + 18.0, MEZZ_Y + 1.8, HALL_Z1 - HALL_Z0 + 10.0))
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, region)
 	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
