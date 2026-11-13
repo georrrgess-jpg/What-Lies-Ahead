@@ -9,7 +9,7 @@ extends SubViewport
 const SIZE := 192
 ## Oldest thumbnails are dropped beyond this many (each is about 150 KB).
 const MAX_CACHED := 160
-const BAKED_SLOTS := [&"avatar", &"weapon_finish", &"weapon_charm", &"weapon_decal", &"gloves"]
+const BAKED_SLOTS := [&"avatar", &"weapon_finish", &"weapon_charm", &"weapon_decal", &"gloves", &"weapon_sight"]
 
 static var _cache := {}
 
@@ -24,9 +24,10 @@ static func can_bake(item: CosmeticItem) -> bool:
 	return item != null and item.slot in BAKED_SLOTS
 
 
-## Cache key: weapon skins are shown on the weapon they are browsed for.
+## Cache key: weapon skins (and iron sights) are shown on the weapon they are browsed for.
 static func key(item: CosmeticItem, weapon: WeaponData) -> String:
-	if item.slot == &"weapon_finish" and weapon:
+	var on_weapon := item.slot == &"weapon_finish" or item.slot == &"weapon_sight" and WeaponSights.optic_name(item) == ""
+	if on_weapon and weapon:
 		return "%s@%s" % [item.id, weapon.id]
 	return String(item.id)
 
@@ -139,6 +140,14 @@ func _build(item: CosmeticItem, weapon: WeaponData) -> Node3D:
 			return _weapon({"finish": item}, false, weapon)
 		&"gloves":
 			return _weapon({"arms": item}, true)
+		&"weapon_sight":
+			# An optic on its own, from the eye's side so its reticle shows;
+			# iron sights on the weapon they belong to.
+			var optic := WeaponSights.build_optic(item)
+			if optic == null:
+				return _weapon({}, false, weapon)
+			optic.rotation_degrees = Vector3(6, 28, 0)
+			return optic
 		&"weapon_decal" when not item.params.has("emblem"):
 			# A tint of a weapon's own emblem: show it on that weapon.
 			return _weapon({"decal": item}, false, GameData.weapon(item.weapon_id))

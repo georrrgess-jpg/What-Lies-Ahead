@@ -50,7 +50,9 @@ func _draw() -> void:
 
 
 func _draw_charge(c: Vector2, k: float, data: WeaponData) -> void:
-	var ink := Color(UiKit.INK, 0.6)
+	# The idle ring steps aside for an optic's own reticle; a charge still shows.
+	var idle := 1.0 - player.ads if k <= 0.0 and player.view.sight_has_reticle() else 1.0
+	var ink := Color(UiKit.INK, 0.6 * idle)
 	draw_arc(c, RING_RADIUS, 0.0, TAU, 64, ink, 8.0, true)
 	if k <= 0.0:
 		return

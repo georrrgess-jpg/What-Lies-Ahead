@@ -8,6 +8,9 @@ extends Control
 ##   dot      centre dot only
 ##   chevron  a small inverted V with a dot (precision)
 ## The style comes from the weapon unless Settings "reticle_style" overrides it.
+## Aiming down sights fades the hip reticle out as the sight comes up. Iron
+## sights keep a small centre dot; an optic draws its own reticle on the point
+## of aim (art/shaders/sight_lens.gdshader), so the dot goes too.
 ## Hit markers: an X that pops in and fades; white for a hit, pink for a kill,
 ## gold for a headshot (longer arms on a kill).
 
@@ -36,6 +39,7 @@ var hit_time := 0.0
 var hit_kill := false
 var hit_head := false
 var _shown_gap := 8.0
+var _player: Player
 
 
 func _ready() -> void:
@@ -61,11 +65,19 @@ func _color() -> Color:
 	return COLORS.get(String(Settings.value("reticle_color")), Color.WHITE)
 
 
+## True while the held weapon's sight draws its own reticle.
+func _sight_has_reticle() -> bool:
+	if _player == null or not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group("player") as Player
+	return _player != null and _player.view != null and _player.view.sight_has_reticle()
+
+
 func _draw() -> void:
 	var c := size * 0.5
 	var col := _color()
 	var outline := Color(0.08, 0.02, 0.14, 0.85)
-	var fade := 1.0 - aim
+	# The hip reticle is gone before the sight is fully up.
+	var fade := 1.0 - smoothstep(0.0, 0.75, aim)
 	var gap := _shown_gap
 	col.a = 0.97
 
@@ -96,10 +108,13 @@ func _draw() -> void:
 					draw_line(c + dir * (gap - 1.5), c + dir * (gap + length + 1.5), Color(outline, outline.a * fade), 6.5)
 				for dir in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
 					draw_line(c + dir * gap, c + dir * (gap + length), Color(col, col.a * fade), 3.0)
-	# Centre dot is always there (smaller when aimed: the sight does the work).
-	var dot := lerpf(2.0, 1.5, aim)
-	draw_circle(c, dot + 1.6, outline)
-	draw_circle(c, dot, col)
+	# Centre dot: smaller when aimed (the sight does the work), and gone when
+	# the sight has a reticle of its own.
+	var dot_alpha := 1.0 - smoothstep(0.35, 0.85, aim) if _sight_has_reticle() else 1.0
+	if dot_alpha > 0.01:
+		var dot := lerpf(2.0, 1.5, aim)
+		draw_circle(c, dot + 1.6, Color(outline, outline.a * dot_alpha))
+		draw_circle(c, dot, Color(col, col.a * dot_alpha))
 
 	if hit_time > 0.0:
 		_draw_hit_marker(c, outline)
