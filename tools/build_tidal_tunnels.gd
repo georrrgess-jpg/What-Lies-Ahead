@@ -979,6 +979,7 @@ func _build_lobby() -> void:
 		var end_rail := _prop(dressing, "aqua_glass_rail", "MezzRailEnd%s" % side_name, Vector3(top_x - s * 0.1, MEZZ_Y, MEZZ_Z + 0.12), -90.0, Vector3(3, 1.1, 0.1))
 		end_rail.scale.x = end_len / 3.0
 		_collider(lobby, "MezzRailEndCol%s" % side_name, Vector3(0.2, 1.2, end_len), Vector3(top_x - s * 0.1, MEZZ_Y + 0.6, MEZZ_Z + 0.12 + end_len * 0.5))
+		_player_block(lobby, "MezzRailEndCap%s" % side_name, Vector3(0.2, 2.0, end_len + 0.2), Vector3(top_x - s * 0.1, MEZZ_Y + 2.2, MEZZ_Z + 0.12 + end_len * 0.5))
 		# Solid block under the mezzanine beside the shop (between shop and ramps).
 		_box(lobby, "UnderMezz%s" % ("W" if s < 0 else "E"), Vector3(1.5, MEZZ_Y - 0.35, Z1 - MEZZ_Z), Vector3(s * (MEZZ_X - 0.75), (MEZZ_Y - 0.35) * 0.5, (MEZZ_Z + Z1) * 0.5), slab_m)
 	# Mezzanine balustrade along the front edge.
