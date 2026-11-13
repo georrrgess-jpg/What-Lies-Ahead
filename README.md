@@ -174,7 +174,7 @@ beam, projectile and splash, pierce, chain, chill/shock and heat), implemented o
   after about four. Four items a day are featured at 25% off. Every item has a 3D preview
   and a confirm step.
 - **Locker**: 398 cosmetics in eleven categories: 18 operators (characters that also set
-  your first-person arms), 82 weapon finishes (dozens of animated shaders, 15 of them new: marquee
+  your first-person arms), 82 weapon finishes (including 15 new animated shaders: marquee
   bulbs, data rain, lightning, aurora, warp speed, liquid mercury, stained glass…),
   20 sights, 40 energy cells (with moving patterns: bubbles, lava, slosh, warp…), 32
   decals, 24 charms (a Ferris wheel and a UFO that spin), 24 gloves (with real shapes:
