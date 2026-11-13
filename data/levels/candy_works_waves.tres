@@ -1,0 +1,152 @@
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
+
+[sub_resource type="Resource" id="wave_1"]
+script = ExtResource("2")
+spawns = {
+"frost_frozen_tourist": 8,
+"tourist_shambler": 5
+}
+spawn_interval = 1.9
+burst = 1
+max_alive = 7
+speed_scale = 1.0
+late_types_after = 0.4
+banner = ""
+kind = &"standard"
+title = "THE GUESTS ARE FROZEN"
+hint = "Shatter the ice shell: headshots cut through."
+
+[sub_resource type="Resource" id="wave_2"]
+script = ExtResource("2")
+spawns = {
+"frost_ski_racer": 13,
+"lifeguard_runner": 4,
+"frost_frozen_tourist": 3
+}
+spawn_interval = 1.1
+burst = 1
+max_alive = 10
+speed_scale = 1.0
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "SKI PATROL"
+hint = "Racers tuck before they rush: step off the line."
+
+[sub_resource type="Resource" id="wave_3"]
+script = ExtResource("2")
+spawns = {
+"frost_yeti": 2,
+"frost_frozen_tourist": 11,
+"frost_ski_racer": 7
+}
+spawn_interval = 1.36
+burst = 1
+max_alive = 11
+speed_scale = 1.0
+late_types_after = 0.12
+banner = ""
+kind = &"siege"
+title = "THE YETI WAKES"
+hint = "A headshot mid-throw breaks the Yeti's snowball."
+surge_at = 0.55
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_4"]
+script = ExtResource("2")
+spawns = {
+"frost_frozen_tourist": 11,
+"frost_ski_racer": 10,
+"tourist_shambler": 4
+}
+spawn_interval = 3.4
+burst = 5
+max_alive = 12
+speed_scale = 1.04
+late_types_after = 0.0
+banner = ""
+kind = &"ambush"
+title = "AVALANCHE"
+hint = "Down every slope at once: do not get boxed in."
+
+[sub_resource type="Resource" id="wave_5"]
+script = ExtResource("2")
+spawns = {
+"frost_frozen_tourist": 10,
+"frost_ski_racer": 10,
+"frost_yeti": 1,
+"lifeguard_runner": 4
+}
+spawn_interval = 1.27
+burst = 1
+max_alive = 12
+speed_scale = 1.06
+late_types_after = 0.2
+banner = ""
+kind = &"bounty"
+title = "THE GOLDEN RACER"
+hint = "Pop the golden racer before it gets away."
+bounty = &"frost_ski_racer"
+bounty_tickets = 225
+
+[sub_resource type="Resource" id="wave_6"]
+script = ExtResource("2")
+spawns = {
+"frost_yeti": 3,
+"frost_ski_racer": 11,
+"frost_frozen_tourist": 11
+}
+spawn_interval = 1.36
+burst = 1
+max_alive = 13
+speed_scale = 1.1
+late_types_after = 0.1
+banner = ""
+kind = &"ranged"
+title = "COLD FRONT"
+hint = "Snowballs from every side: keep cover between you and the Yetis."
+surge_at = 0.5
+surge_count = 6
+
+[sub_resource type="Resource" id="wave_7"]
+script = ExtResource("2")
+spawns = {
+"frost_frozen_tourist": 12,
+"frost_ski_racer": 11,
+"lifeguard_runner": 3,
+"frost_yeti": 1
+}
+spawn_interval = 2.0
+burst = 2
+max_alive = 13
+speed_scale = 1.1
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "OLD FROSTBITE"
+hint = "Whiteout! Strafe wide of his snowballs and stay out of the slam."
+twist = &"whiteout"
+boss = &"alpha_yeti"
+boss_at = 0.45
+rest_before = 24.0
+
+[resource]
+script = ExtResource("1")
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
+prep_seconds = 12.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 450
+break_refill_fraction = 0.3
+ammo_topup_price = 190
+heal_price = 300
+heal_amount = 60.0
+heals_per_break = 1
+wave_bonus_base = 20
+wave_bonus_per_wave = 5
+overshield_price = 600
+overshield_amount = 25.0
+damage_boost_price = 600
