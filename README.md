@@ -50,7 +50,8 @@ The Windows build is unsigned, so SmartScreen may ask for confirmation.
 | Sprint (forward) | Shift |
 | Jump | Space (grace period after leaving a ledge, buffered presses; release early for a short hop) |
 | Mantle / vault | Jump while pushing at a ledge 0.45–1.25 m high to climb onto it; at a run, thin obstacles up to 1.1 m are vaulted |
-| Slide | C or Ctrl while sprinting (or as you land); follows slopes, tires when chained; jump out to keep its speed |
+| Slide | C or Ctrl while sprinting (or as you land); a speed boost that follows slopes and tires when chained; jump out to keep its speed |
+| Dash | V or the mouse's back button, on the ground: a quick burst toward the keys you hold (forward with none), every 1.2 s |
 | Fire | Left mouse button |
 | Aim down sights | Right mouse button (hold, or toggle in Settings) |
 | Reload | R |
@@ -62,8 +63,8 @@ The Windows build is unsigned, so SmartScreen may ask for confirmation.
 | Pause | Esc or P |
 
 All of these are Godot InputMap actions (*Project → Project Settings → Input Map*); the
-station swap and purchase actions are added at start-up (`scripts/weapons/loadout.gd`,
-`RunDirector.ensure_station_actions()`) if the project does not define them. Curbs up to
+station swap and purchase actions and the dash are added at start-up (`scripts/weapons/loadout.gd`,
+`RunDirector.ensure_station_actions()`, `Player.ensure_dash_action()`) if the project does not define them. Curbs up to
 0.3 m are stepped over without jumping. **Settings** (main menu or pause menu) has look
 sensitivity (1.00 = 34 cm per 360° at 800 DPI, the same at any window size), aim
 sensitivity, hold or toggle aim, invert look Y, field of view (vertical), reticle style and
