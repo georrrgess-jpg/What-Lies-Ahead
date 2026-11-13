@@ -525,6 +525,13 @@ checked together:
 - **Reviews**: two independent code reviews of the merged update; their findings
   (settings persistence, continued-run XP, results exit, shop price changes, toggle aim,
   bounty despawn, tutorial end state and reward, trailer sounds) were fixed.
+- **Worlds 6-10** (latest update): each map was walked with rendered views from every
+  structure and edge and checked with the flood-fill probe (no falls out of the world, no
+  stuck spots, navmesh fits zombies); about 300 bot runs tuned the curve after Summit
+  Lodge. Final check on Standard: Midnight Mall 2/2 (28, 39 hp), Lost Temple 2/2 (74, 66),
+  Candy Works 1/2, Lava Lagoon 2/2 after easing its alpha (32, 48), Sky Harbor 1/2 (51),
+  Prize Pier 66 hp. To stay under GitHub's 100 MiB file limit, models ship without
+  automatic LODs (same draw calls; up to 0.63M triangles in the busiest view).
 - **Export smoke test**: the exported Linux build played Launch Pad 9 from wave 6 through
   the alpha to the portal with the bot, showed the results and returned to the menu, and
   rendered the title screen on a virtual display. Zipped sizes: Linux 69 MiB, Windows
