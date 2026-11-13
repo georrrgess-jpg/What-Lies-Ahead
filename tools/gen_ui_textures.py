@@ -295,15 +295,16 @@ def card(name, fill, border, border_w, glow=None):
 
 
 def focus_ring():
-    """Cyan focus outline with glow, drawn outside the control. Margin 30, pad 14."""
+    """Keyboard-focus outline, drawn outside the control: warm white with an
+    amber glow, so it never reads as the cyan of a selected card. Margin 30, pad 14."""
     w = h = 96
     pad = 14
     a = blank(w, h)
     outer = rrect(w, h, (pad - 5, pad - 5, w - pad + 5, h - pad + 5), 20)
     inner = rrect(w, h, (pad - 1, pad - 1, w - pad + 1, h - pad + 1), 16)
     ring = np.clip(outer - inner, 0, 1)
-    over(a, hexc("#35f0ff", 0.6), blur(ring, 4))
-    over(a, hexc("#c8fbff"), ring)
+    over(a, hexc("#ffb23e", 0.75), blur(ring, 4))
+    over(a, hexc("#fff6d8"), ring)
     save(a, "focus_ring", w, h)
 
 

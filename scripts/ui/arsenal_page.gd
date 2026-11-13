@@ -19,6 +19,10 @@ const CAMERA_FROM := Vector3(0.33, 0.5, 2.6)
 const CAMERA_TO := Vector3(0.33, 0.22, 0.0)
 ## The work lamp's bulb (see LAMP in build_menu_booth.py).
 const LAMP_AT := Vector3(-0.42, 0.57, -0.3)
+## The previewed weapon is scaled to fit this length and height on the stand.
+const FIT := Vector2(0.84, 0.35)
+## Width of the signboard.
+const BOARD_WIDTH := 640.0
 ## Half size of a cradle pad: along the weapon, across it.
 const PAD := Vector2(0.035, 0.055)
 ## Stats on the signboard, three per column: [label, getter].
@@ -171,7 +175,7 @@ func _on_drag_input(event: InputEvent) -> void:
 
 func _build_board() -> Control:
 	_board = UiKit.signboard()
-	_board.custom_minimum_size.x = 640
+	_board.custom_minimum_size.x = BOARD_WIDTH
 	_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", UiKit.GAP_S)
@@ -181,7 +185,9 @@ func _build_board() -> Control:
 	v.add_child(_name)
 	_chip = UiKit.chip("", UiKit.CYAN, 26)
 	v.add_child(_chip)
-	_role = UiKit.label("", UiKit.SIZE_LABEL, UiKit.CREAM)
+	_role = UiKit.body("", BOARD_WIDTH - 90.0, UiKit.SIZE_BODY)
+	_role.max_lines_visible = 2
+	_role.add_theme_constant_override("line_spacing", -6)
 	_role.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_role.mouse_filter = Control.MOUSE_FILTER_STOP
 	v.add_child(_role)
@@ -197,15 +203,15 @@ func _build_board() -> Control:
 	_lock_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(_lock_note)
 	_swap = UiKit.sign_button("SWAP SLOTS", SignButton.Kind.PRIMARY, 44)
-	_swap.custom_minimum_size.y = 84
+	_swap.custom_minimum_size.y = 78
 	_swap.pressed.connect(_swap_slots)
 	v.add_child(_swap)
 	_equip_row = HBoxContainer.new()
 	_equip_row.add_theme_constant_override("separation", UiKit.GAP_M)
 	v.add_child(_equip_row)
 	for slot in 2:
-		var b := UiKit.sign_button("EQUIP %s" % String(Loadout.SLOT_NAMES[slot]).to_upper(), SignButton.Kind.PRIMARY if slot == 0 else SignButton.Kind.SECONDARY, 28)
-		b.custom_minimum_size.y = 84
+		var b := UiKit.sign_button("EQUIP %s" % String(Loadout.SLOT_NAMES[slot]).to_upper(), SignButton.Kind.PRIMARY if slot == 0 else SignButton.Kind.SECONDARY, 25)
+		b.custom_minimum_size.y = 78
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.pressed.connect(_equip_slot.bind(slot))
 		_equip_row.add_child(b)
@@ -420,9 +426,9 @@ func _add_stage_lights() -> void:
 	lamp.shadow_enabled = true
 	_viewport.add_child(lamp)
 	var fill := OmniLight3D.new()
-	fill.position = Vector3(0.9, 0.9, 1.6)
-	fill.omni_range = 5.0
-	fill.light_energy = 0.35
+	fill.position = Vector3(-0.2, 0.8, 1.9)
+	fill.omni_range = 6.0
+	fill.light_energy = 0.6
 	fill.light_color = Color(0.6, 0.75, 1.0)
 	_viewport.add_child(fill)
 
@@ -512,7 +518,7 @@ func _select(w: WeaponData) -> void:
 ## The name in the biggest size that fits the board.
 func _fit_name(text: String) -> void:
 	var font_size := 56
-	var room := _board.custom_minimum_size.x - 90.0
+	var room := BOARD_WIDTH - 90.0
 	while font_size > 34 and UiKit.display_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > room:
 		font_size -= 2
 	_name.text = text
@@ -681,6 +687,7 @@ func _seat_on_stand() -> void:
 		for part: Node3D in _forks + _collars:
 			part.visible = false
 		return
+	_fit_to_stand()
 	if not _seats.has(_weapon.id):
 		_pivot.position = Vector3.ZERO
 		_seats[_weapon.id] = _measure_seat()
@@ -694,6 +701,13 @@ func _seat_on_stand() -> void:
 		_forks[i].position = along * seat["stations"][i] + Vector3(0.0, height, 0.0)
 		_forks[i].rotation = Vector3(0.0, atan2(-along.z, along.x), 0.0)
 		_collars[i].position = along * seat["stations"][i] + Vector3(0.0, TURNTABLE_TOP, 0.0)
+
+
+## Sizes the preview for the stand: every weapon fits the same length and
+## height, so a pistol stays smaller than a rifle instead of filling the booth.
+func _fit_to_stand() -> void:
+	var extent := _bounds(_model).size
+	_pivot.scale = Vector3.ONE * minf(FIT.x / maxf(0.01, extent.z), FIT.y / maxf(0.01, extent.y))
 
 
 ## Where the weapon rests: {lift, along, stations[2], pads[2]} in turntable
