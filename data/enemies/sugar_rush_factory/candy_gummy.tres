@@ -8,7 +8,7 @@
 [sub_resource type="Resource" id="gummy"]
 script = ExtResource("4")
 min_scale = 0.66
-max_speed = 1.6
+max_speed = 1.7
 wobble = 0.16
 wobble_decay = 5.0
 wobble_rate = 26.0
@@ -24,7 +24,7 @@ turn_speed = 6.0
 tickets = 18
 score = 200
 xp = 17
-damage = 14.0
+damage = 16.0
 attack_range = 1.7
 attack_reach = 2.3
 attack_windup = 0.7
