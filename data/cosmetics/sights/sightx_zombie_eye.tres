@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_zombie_eye"
+display_name = "Zombie Eye"
+description = "A bloodshot eyeball with green lids for a housing, and a slit pupil for a reticle."
+slot = &"weapon_sight"
+rarity = 2
+price = 2800
+colors = PackedColorArray(0.7765, 1, 0.2275, 1, 0.4784, 0.8392, 0.3608, 1)
+params = {
+"optic": "Eye",
+"reticle": "slit"
+}
+sort_order = 6190

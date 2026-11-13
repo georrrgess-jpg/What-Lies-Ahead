@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_lucky_sevens"
+display_name = "Lucky Sevens"
+description = "Three red sevens lined up under a JACKPOT sign."
+slot = &"weapon_decal"
+rarity = 2
+price = 1500
+colors = PackedColorArray(1, 0.7608, 0.2392, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "LuckySevens",
+"art": "res://art/textures/decals/decal_luckysevens.png"
+}
+sort_order = 4221

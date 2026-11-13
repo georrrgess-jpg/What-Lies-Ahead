@@ -176,6 +176,12 @@ func _build(item: CosmeticItem, weapon: WeaponData) -> Node3D:
 					if special:
 						mi.set_surface_override_material(i, special)
 				mi.rotation_degrees.y = 20.0
+				# A turning part (a wheel, a saucer) sits beside the charm in the library.
+				var spin_mesh := WeaponCosmetics.prop_mesh(lib, node_name + "Spin")
+				if spin_mesh:
+					var spin := WeaponCharm.charm_mesh(spin_mesh)
+					spin.transform = WeaponCosmetics.prop_transform(lib, node_name + "Spin")
+					mi.add_child(spin)
 			return root
 	return null
 

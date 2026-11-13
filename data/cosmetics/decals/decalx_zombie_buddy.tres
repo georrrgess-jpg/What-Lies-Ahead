@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_zombie_buddy"
+display_name = "Zombie Buddy"
+description = "A goofy green zombie with mismatched eyes, a stitched scar and a single tooth."
+slot = &"weapon_decal"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.4784, 0.8392, 0.3608, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "ZombieBuddy",
+"art": "res://art/textures/decals/decal_zombiebuddy.png"
+}
+sort_order = 4021

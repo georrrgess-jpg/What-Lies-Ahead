@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_tesla"
+display_name = "Tesla Coil"
+description = "Violet energy crackling with arcs of lightning; the glow stutters with every strike."
+slot = &"weapon_cell"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.6039, 0.3569, 1, 1, 0.8784, 0.9569, 1, 1)
+params = {
+"fx": "arcs",
+"animate": "flicker"
+}
+sort_order = 3225

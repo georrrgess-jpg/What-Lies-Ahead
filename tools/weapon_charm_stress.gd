@@ -67,11 +67,10 @@ func _shake(w, charm, worst: Dictionary) -> void:
 		return
 	swing.set_process(false)
 	var mesh_node: MeshInstance3D = swing.get_child(0)
-	var points := PackedVector3Array()
-	for s in mesh_node.mesh.get_surface_count():
-		var verts: PackedVector3Array = mesh_node.mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
-		for i in range(0, verts.size(), 9):
-			points.append(verts[i])
+	var points := _sample(mesh_node.mesh)
+	# A turning part (WeaponCharm.add_spinner) is measured where it is each frame.
+	var spinner: MeshInstance3D = mesh_node.get_child(0) if mesh_node.get_child_count() > 0 else null
+	var spin_points := _sample(spinner.mesh) if spinner else PackedVector3Array()
 	var arms := []
 	for side in ["L", "R"]:
 		arms.append([model.find_child("Arm" + side, true, false), model.find_child("Elbow" + side, true, false)])
@@ -86,7 +85,7 @@ func _shake(w, charm, worst: Dictionary) -> void:
 			base_pos += Vector3(-0.07, -0.06, 0.03)
 			base_rot += Vector3(-14.0, 26.0, 16.0)
 		elif f >= 160 and f < 200:
-			base_pos = Vector3(0, 0, -w.ads_depth / 0.2) - view._sight_local
+			base_pos = -view._eye_local
 			base_rot = Vector3.ZERO
 		if f == 200:
 			view.play_reload(w, 1.5)
@@ -101,7 +100,10 @@ func _shake(w, charm, worst: Dictionary) -> void:
 		var to_model := model.global_transform.affine_inverse()
 		var ring: Vector3 = to_model * swing.global_position
 		var xf: Transform3D = to_model * mesh_node.global_transform
-		for p in points:
+		var all := points.duplicate()
+		for p in spin_points:
+			all.append(spinner.transform * p)
+		for p in all:
 			var q := xf * p - ring
 			var side := -(q.dot(out) + STANDOFF)
 			if side > worst.side:
@@ -115,7 +117,7 @@ func _shake(w, charm, worst: Dictionary) -> void:
 			var a: Vector3 = to_model * pair[0].global_position
 			var b: Vector3 = a + (to_model * pair[1].global_position - a) * 2.0
 			var ab := b - a
-			for p in points:
+			for p in all:
 				var v := xf * p
 				var k := clampf((v - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
 				var dist := v.distance_to(a + ab * k)
@@ -123,3 +125,12 @@ func _shake(w, charm, worst: Dictionary) -> void:
 					worst.arm = dist
 					worst.arm_charm = String(charm.id)
 	rig.free()
+
+
+func _sample(mesh: Mesh) -> PackedVector3Array:
+	var points := PackedVector3Array()
+	for s in mesh.get_surface_count():
+		var verts: PackedVector3Array = mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
+		for i in range(0, verts.size(), 9):
+			points.append(verts[i])
+	return points

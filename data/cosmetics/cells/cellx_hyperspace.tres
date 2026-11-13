@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"launch_pad"
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_hyperspace"
+display_name = "Hyperspace"
+description = "Deep violet with stars streaking past at light speed. Sold once you clear Launch Pad."
+slot = &"weapon_cell"
+rarity = 2
+requirement = SubResource("req")
+price = 1500
+colors = PackedColorArray(0.3529, 0.1725, 1, 1, 1, 1, 1, 1)
+params = {
+"fx": "warp"
+}
+sort_order = 3223

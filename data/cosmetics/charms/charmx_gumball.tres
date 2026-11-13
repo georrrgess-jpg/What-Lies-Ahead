@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"charmx_gumball"
+display_name = "Gumball Machine"
+description = "A tiny red gumball machine, globe full of candy. Coin not included."
+slot = &"weapon_charm"
+rarity = 0
+price = 250
+params = {
+"charm": "Gumball"
+}
+sort_order = 5021

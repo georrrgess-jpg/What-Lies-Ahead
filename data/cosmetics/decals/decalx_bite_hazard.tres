@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 4500
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_bite_hazard"
+display_name = "Bite Hazard"
+description = "A yellow warning sign with a wide-open mouth full of teeth. You have been warned."
+slot = &"weapon_decal"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.8235, 0.1569, 1, 0.1098, 0.0941, 0.1882, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "BiteHazard",
+"art": "res://art/textures/decals/decal_bitehazard.png"
+}
+sort_order = 4222

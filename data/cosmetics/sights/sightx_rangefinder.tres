@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+amount = 5
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_rangefinder"
+display_name = "Rangefinder"
+description = "A twin-window rangefinder at 1.25x, with stadia ticks for judging the distance."
+slot = &"weapon_sight"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.5412, 0.1647, 1, 0.1294, 0.8314, 1, 1)
+params = {
+"ads_time": 1.08,
+"optic": "Ranger",
+"reticle": "ranger",
+"zoom": 1.25
+}
+sort_order = 6180

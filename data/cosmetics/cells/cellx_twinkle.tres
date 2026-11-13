@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_twinkle"
+display_name = "Twinkle"
+description = "Bubblegum glow with tiny stars that pop in and out."
+slot = &"weapon_cell"
+rarity = 0
+price = 250
+colors = PackedColorArray(1, 0.3608, 0.7843, 1, 1, 0.9529, 0.6588, 1)
+params = {
+"fx": "sparkle"
+}
+sort_order = 3023

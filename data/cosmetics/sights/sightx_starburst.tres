@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_starburst"
+display_name = "Supernova"
+description = "A star-shaped bezel round the glass, and eight rays that point at the target."
+slot = &"weapon_sight"
+rarity = 1
+price = 650
+colors = PackedColorArray(1, 0.851, 0.2314, 1, 1, 0.3098, 0.6902, 1)
+params = {
+"optic": "Burst",
+"reticle": "burst",
+"reticle_degrees": 1.1
+}
+sort_order = 6120

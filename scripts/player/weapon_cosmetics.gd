@@ -21,12 +21,16 @@ extends RefCounted
 ## Cells: colors[0]; params.animate = "rainbow" or "pulse" animates it (CellGlow).
 ##   The models' own glow is driven past white, which bleaches a hue (red reads
 ##   pink, orange and lime read yellow), so a cell glows at CELL_GLOW of it, in
-##   a more saturated colour (tint_cell).
+##   a more saturated colour (tint_cell). params.fx (see CELL_FX) draws a
+##   moving pattern over the glow in colors[1] (cell_fx_material).
 ## Decals: colors [fill, edge, ink]; params.emblem names a sticker in
 ##   art/models/cosmetic_decals.glb ("Heart" -> node "Emblem_Heart"); without
-##   one, the weapon's own emblem is tinted. params.shader styles the fill.
+##   one, the weapon's own emblem is tinted. params.shader styles the fill;
+##   params.art (a texture) prints a picture on it instead.
 ## Charms: params.charm names a node in art/models/cosmetic_charms.glb
 ##   ("Duck" -> "Charm_Duck"), hung from CharmPoint with swing (WeaponCharm).
+##   A node "Charm_<name>Spin" beside it is a part that turns about its own
+##   up axis at params.spin degrees a second (a wheel, a saucer).
 ## Sights: an optic clamped to the weapon's top, or its own iron sights
 ##   (WeaponSights; scripts/weapons/sights/).
 ## Arms: a gloves item or an operator. colors [glove, plate, cuff, sleeve,
@@ -39,6 +43,14 @@ const GLOVE_SHADER := "res://art/shaders/skin_glove.gdshader"
 const ARM_MATERIALS := ["Glove", "GlovePlate", "Cuff", "Sleeve"]
 ## A cell cosmetic's glow energy, as a share of the model's own (see Cells).
 const CELL_GLOW := 0.55
+const CELL_FX_SHADER := "res://art/shaders/cell_fx.gdshader"
+## Moving patterns a cell can draw over its glow (art/shaders/cell_fx.gdshaderinc).
+const CELL_FX := {
+	"bubbles": 1, "lava": 2, "stripes": 3, "rainbow": 4, "siren": 5, "scan": 6, "sparkle": 7,
+	"caustics": 8, "slosh": 9, "warp": 10, "plasma": 11, "snow": 12, "chase": 13, "pixels": 14,
+	"arcs": 15, "curtains": 16,
+}
+const DECAL_ART_SHADER := "res://art/shaders/decal_art.gdshader"
 const PATTERNS := {
 	"solid": 0, "stripes": 1, "camo": 2, "checker": 3, "dots": 4, "knit": 5, "tiger": 6,
 	"neon": 7, "scales": 8, "flames": 9, "stars": 10, "pixels": 11,
@@ -47,6 +59,8 @@ const PATTERNS := {
 static var _shaders := {}
 static var _materials := {}
 static var _prop_meshes := {}
+static var _prop_transforms := {}
+static var _surface_boxes := {}
 
 
 static func apply(model: Node3D, _weapon: WeaponData, loadout: Dictionary) -> void:
@@ -142,6 +156,8 @@ static func _walk(node: Node, finish: CosmeticItem, cell: CosmeticItem, arms: Co
 				c.emission_enabled = true
 				c.emission_energy_multiplier = base.emission_energy_multiplier * CELL_GLOW
 				tint_cell(c, cell.color(0))
+				if cell.params.has("fx"):
+					c.next_pass = cell_fx_material(cell, surface_box(mi.mesh, i))
 				replacement = c
 			elif arms and mat_name in ARM_MATERIALS:
 				replacement = arm_material(arms, mat_name, base)
@@ -162,6 +178,32 @@ static func tint_cell(m: StandardMaterial3D, c: Color) -> void:
 ## (Glacier, Silver) stay pale.
 static func cell_glow_color(c: Color) -> Color:
 	return Color.from_hsv(c.h, 1.0 - pow(1.0 - c.s, 1.8), c.v, c.a)
+
+
+## The pattern pass a cell with params.fx draws over its glow, fitted to the
+## cell surface's bounds `box` (mesh space).
+static func cell_fx_material(cell: CosmeticItem, box: AABB) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = shader(CELL_FX_SHADER)
+	m.set_shader_parameter("fx", int(CELL_FX.get(String(cell.params["fx"]), 0)))
+	m.set_shader_parameter("color_a", cell_glow_color(cell.color(0)))
+	m.set_shader_parameter("color_b", cell_glow_color(cell.color(1, Color.WHITE)))
+	m.set_shader_parameter("box_pos", box.position)
+	m.set_shader_parameter("box_size", box.size)
+	m.set_shader_parameter("grow", maxf(box.size[box.get_shortest_axis_index()], 0.002) * 0.02)
+	return m
+
+
+## Bounds of one surface of a mesh (cached).
+static func surface_box(mesh: Mesh, surface: int) -> AABB:
+	var key := "%d|%d" % [mesh.get_instance_id(), surface]
+	if not _surface_boxes.has(key):
+		var verts: PackedVector3Array = mesh.surface_get_arrays(surface)[Mesh.ARRAY_VERTEX]
+		var box := AABB(verts[0], Vector3.ZERO) if not verts.is_empty() else mesh.get_aabb()
+		for v in verts:
+			box = box.expand(v)
+		_surface_boxes[key] = box
+	return _surface_boxes[key]
 
 
 ## The material an arm look (gloves item or operator) puts on one of the
@@ -267,7 +309,9 @@ static func sticker_material(decal: CosmeticItem, base: StandardMaterial3D) -> M
 	if _materials.has(key):
 		return _materials[key]
 	var out: Material
-	if part == "DecalFill" and decal.params.has("shader"):
+	if part == "DecalFill" and decal.params.has("art"):
+		out = decal_art_material(decal)
+	elif part == "DecalFill" and decal.params.has("shader"):
 		var sm := ShaderMaterial.new()
 		sm.shader = shader(String(decal.params["shader"]))
 		sm.set_shader_parameter("shell_color", decal.color(0))
@@ -290,6 +334,24 @@ static func sticker_material(decal: CosmeticItem, base: StandardMaterial3D) -> M
 	return out
 
 
+## The printed face of a sticker with params.art: the picture, lit, with a
+## little glow so it reads in dark levels; params.foil adds a holographic sheen.
+static func decal_art_material(decal: CosmeticItem) -> Material:
+	var tex := load(String(decal.params["art"])) as Texture2D
+	if decal.params.get("foil", false):
+		var sm := ShaderMaterial.new()
+		sm.shader = shader(DECAL_ART_SHADER)
+		sm.set_shader_parameter("art", tex)
+		return sm
+	var s := StandardMaterial3D.new()
+	s.albedo_texture = tex
+	s.roughness = 0.4
+	s.emission_enabled = true
+	s.emission_texture = tex
+	s.emission_energy_multiplier = 0.22
+	return s
+
+
 # --- charms -------------------------------------------------------------------
 
 static func _apply_charm(model: Node3D, charm: CosmeticItem) -> void:
@@ -304,7 +366,9 @@ static func _apply_charm(model: Node3D, charm: CosmeticItem) -> void:
 	var swing := WeaponCharm.new()
 	swing.name = "WeaponCharm"
 	var anchor := model.find_child("CharmPoint", true, false) as Node3D
+	var spin_name := "Charm_" + String(charm.params.get("charm", "")) + "Spin"
 	swing.setup(mesh, model, anchor)
+	swing.add_spinner(prop_mesh(CHARMS_SCENE, spin_name), prop_transform(CHARMS_SCENE, spin_name), float(charm.params.get("spin", 0.0)))
 	if anchor:
 		anchor.add_child(swing)
 	else:
@@ -340,15 +404,25 @@ static func prop_mesh(scene_path: String, node_name: String) -> Mesh:
 	if _prop_meshes.has(key):
 		return _prop_meshes[key]
 	var mesh: Mesh = null
+	var xf := Transform3D.IDENTITY
 	var scene := load(scene_path) as PackedScene
 	if scene:
 		var root := scene.instantiate()
 		var node := root.find_child(node_name, true, false) as MeshInstance3D
 		if node:
 			mesh = node.mesh
+			xf = node.transform
 		root.free()
 	_prop_meshes[key] = mesh
+	_prop_transforms[key] = xf
 	return mesh
+
+
+## How a prop library node sits relative to the library's origin (a charm's
+## spinning part, relative to the charm's ring).
+static func prop_transform(scene_path: String, node_name: String) -> Transform3D:
+	prop_mesh(scene_path, node_name)
+	return _prop_transforms.get(scene_path + "#" + node_name, Transform3D.IDENTITY)
 
 
 # --- animated cells -------------------------------------------------------------

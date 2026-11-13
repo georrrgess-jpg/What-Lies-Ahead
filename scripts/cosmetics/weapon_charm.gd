@@ -43,27 +43,17 @@ var _reach := 0.045           # from the ring to the middle of the trinket
 var _radius := 0.02           # half thickness of the trinket
 var _least_out := 0.0         # least outward lean that keeps the trinket off the weapon's side
 var _arms: Array[Node3D] = [] # hand, elbow, hand, elbow
+var _spinner: Node3D          # a part that turns (a wheel, a saucer), or null
+var _spin_rate := 0.0         # radians a second about the spinner's own up axis
 
 
 ## mesh: a charm from art/models/cosmetic_charms.glb (origin at its ring).
 ## model: the weapon model it hangs on; `anchor` is the model's CharmPoint
 ## (null when the model has none and the charm is placed by hand).
 func setup(mesh: Mesh, model: Node3D = null, anchor: Node3D = null) -> void:
-	_mesh = MeshInstance3D.new()
-	_mesh.mesh = mesh
-	_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	for i in mesh.get_surface_count():
-		var base := mesh.surface_get_material(i) as BaseMaterial3D
-		var special := Operators.special_material(base) if base else null
-		if special:
-			_mesh.set_surface_override_material(i, special)
+	_mesh = charm_mesh(mesh)
 	add_child(_mesh)
-	var box := mesh.get_aabb()
-	# The trinket hangs below a short chain: its middle and half thickness.
-	_reach = clampf(-(box.position.y - 0.02) * 0.5, 0.03, 0.07)
-	_radius = clampf(maxf(box.size.x, box.size.z) * 0.5, 0.012, 0.03)
-	# The widest part may start right below the chain: that is where it would touch first.
-	_least_out = clampf((_radius + SKIN - STANDOFF) / minf(_reach, 0.02 + _radius), 0.0, 0.9)
+	_fit(mesh.get_aabb())
 	_model = model
 	if model == null:
 		return
@@ -79,6 +69,40 @@ func setup(mesh: Mesh, model: Node3D = null, anchor: Node3D = null) -> void:
 			_arms.append(elbow)
 
 
+## Adds the charm's turning part (`mesh` placed at `xf` from the ring),
+## turning `degrees_per_second` about its own up axis. A null mesh adds nothing.
+func add_spinner(mesh: Mesh, xf: Transform3D, degrees_per_second: float) -> void:
+	if mesh == null:
+		return
+	_spinner = charm_mesh(mesh)
+	_spinner.transform = xf
+	_spin_rate = deg_to_rad(degrees_per_second)
+	_mesh.add_child(_spinner)
+	_fit(_mesh.mesh.get_aabb().merge(xf * mesh.get_aabb()))
+
+
+## A charm part with its special materials (glass, holo, gold) applied.
+static func charm_mesh(mesh: Mesh) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for i in mesh.get_surface_count():
+		var base := mesh.surface_get_material(i) as BaseMaterial3D
+		var special := Operators.special_material(base) if base else null
+		if special:
+			mi.set_surface_override_material(i, special)
+	return mi
+
+
+## Sizes the swing limits for a trinket with bounds `box` (ring at the origin).
+func _fit(box: AABB) -> void:
+	# The trinket hangs below a short chain: its middle and half thickness.
+	_reach = clampf(-(box.position.y - 0.02) * 0.5, 0.03, 0.07)
+	_radius = clampf(maxf(box.size.x, box.size.z) * 0.5, 0.012, 0.03)
+	# The widest part may start right below the chain: that is where it would touch first.
+	_least_out = clampf((_radius + SKIN - STANDOFF) / minf(_reach, 0.02 + _radius), 0.0, 0.9)
+
+
 func _ready() -> void:
 	# Hang correctly on the very first frame (thumbnails render only one).
 	_constrain()
@@ -89,6 +113,8 @@ func _process(delta: float) -> void:
 	if delta <= 0.0 or not is_inside_tree():
 		return
 	delta = minf(delta, 1.0 / 30.0)
+	if _spinner:
+		_spinner.rotate_object_local(Vector3.UP, _spin_rate * delta)
 	var pos := global_position
 	var vel := (pos - _prev_pos) / delta
 	var accel := (vel - _prev_vel) / delta

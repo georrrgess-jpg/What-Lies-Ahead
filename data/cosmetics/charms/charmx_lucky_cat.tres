@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"charmx_lucky_cat"
+display_name = "Lucky Cat"
+description = "Waves one paw and hugs a gold coin. Good fortune, one swing at a time."
+slot = &"weapon_charm"
+rarity = 1
+price = 650
+params = {
+"charm": "LuckyCat"
+}
+sort_order = 5122
