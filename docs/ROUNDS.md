@@ -44,8 +44,13 @@ station purchase is a decision about what is coming.
 | `bounty` | a standard wave plus a bounty target | as standard; the target arrives behind the player |
 | `finale` | the world's alpha and its horde | as standard; see below |
 
-A wave is announced with a banner ("WAVE 3 — RUNNER RUSH"), a sting for its
-kind (`rounds_wave_<kind>`), and one line of advice (`WaveData.hint`).
+A wave is announced with the HUD banner (kicker "WAVE 3", title "RUNNER
+RUSH", its one line of advice from `WaveData.hint` as the subtitle; the
+director sends `"WAVE 3 — RUNNER RUSH: <hint>"` with `wave_started`), a sting
+for its kind (`rounds_wave_<kind>`), and the round chip in the wave header.
+During a break the chip reads the tier and the next round ("STANDARD · NEXT:
+RUNNER RUSH", a `round` notice). Alpha entrances and falls use the
+`banner_boss` style, clears `banner_cleared`, the portal `banner_portal`.
 
 Other pieces a wave can carry, all set in its data:
 
@@ -74,8 +79,10 @@ Each world's last wave is led by a named, oversized version of its signature
 enemy (`data/enemies/**/alpha_*.tres`: the base enemy's model at 1.4-1.5x,
 one outfit colour, a fixed set of accessories, an additive glow, and a
 pulsing ring under its feet). The first 45% of the horde is the opening act;
-then the alpha arrives ("BIG BRUNO HAS ARRIVED", health bar at the top of the
-screen with a notch at each phase).
+then the alpha arrives ("BIG BRUNO — HAS ARRIVED" boss banner, and its health
+bar with a notch at each phase in the HUD's top slot: `RoundsBossBar`,
+`data/ui/hud_boss_bar.tres`). Surge and bounty markers and the close-out
+pings are a full-screen overlay (`rounds_hud.gd`, `data/ui/hud_rounds.tres`).
 
 | World | Alpha | Built on | Its patterns |
 |---|---|---|---|
@@ -125,9 +132,13 @@ the HUD) and nothing is gory: alphas pop into confetti like everyone else.
    entrance. Once nothing is left to spawn and 3 or fewer stand, they sprint
    (+35%) straight at the player, the HUD pings them, and one that is still
    more than 36 m of route away is brought to the nearest entrance while the
-   player is looking elsewhere. Zombies still report a stall (5 s without
-   progress, or lost for 75 s) and are relocated as before; the rules above
-   make that rare.
+   player is looking elsewhere.
+8. **Stalls**: a zombie that makes no progress for 5 s first steps back onto
+   the nearest navmesh point and re-plans (a leap or a shove can leave it
+   just off the mesh); only if that fails too does the director move it to
+   an entrance (and remove it after two moves). Leap landings no longer
+   replay the climb-in clip. Over the final 30-run grid this left one
+   relocation (a ski racer that fell off Summit Lodge's edge).
 
 ## Pacing director
 
@@ -150,13 +161,13 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 | | Casual | Standard | Hard |
 |---|---|---|---|
 | Enemy health | 80% | 100% | 120% |
-| Alpha health | 70% | 100% | 130% |
-| Enemy damage | 60% | 100% | 130% |
-| Enemy speed | 95% | 100% | 106% |
-| Crowd cap | 80% | 100% | 125% |
-| Spawn interval | 120% | 100% | 85% |
-| Special-attack cooldowns | 145% | 100% | 75% |
-| Pace bounds (min-max) | 0.55-1.0 | 0.7-1.35 | 0.85-1.5 |
+| Alpha health | 70% | 100% | 115% |
+| Enemy damage | 60% | 100% | 115% |
+| Enemy speed | 95% | 100% | 105% |
+| Crowd cap | 80% | 100% | 115% |
+| Spawn interval | 120% | 100% | 90% |
+| Special-attack cooldowns | 145% | 100% | 85% |
+| Pace bounds (min-max) | 0.55-1.0 | 0.7-1.35 | 0.85-1.4 |
 | Spawn pause for a player in trouble | 6 s per wave | 3.5 s | none |
 | Health back at every wave clear | +20 | - | - |
 | Ticket income | +25% (paid at the wave clear) | - | - |
@@ -231,3 +242,23 @@ cleared wave), `bosses_defeated`, `bounties_claimed`. Existing keys and the
 The bot logs every wave (`WAVE`), surge, alpha and bounty event, each wave's
 grade with the damage taken per enemy type (`GRADE`), and in `RESULT` the
 health left, grades, average pace and seconds of spawn pause.
+
+## Validation (final grid)
+
+One bot run per level, weapon (Pulse Pistol, Ion Carbine) and tier, played
+one at a time on the merged build. Health left at the portal ("lost" = the
+run ended in defeat; every loss but two was in the finale). The bot aims well,
+never aims down sights and never dodges projectiles; it backs out of a slam
+ring. Single runs swing by about ±30.
+
+| Level | Casual P / C | Standard P / C | Hard P / C |
+|---|---|---|---|
+| Prize Pier | 100 / 100 | 46 / 81 | 32 / lost (alpha at 3%) |
+| Neon Skyline | 100 / 97 | 58 / 99 | lost / lost |
+| Tidal Tunnels | 100 / 96 | 92 / lost (alpha at 1%) | lost (wave 4) / 8 |
+| Launch Pad 9 | 90 / 92 | 40 / 88 | lost / 1 |
+| Summit Lodge | 100 / 100 | 98 / 39 | lost / lost (wave 5) |
+
+Casual 10/10 (90-100 health), Standard 9/10, Hard 3/10. A level takes the
+bot 4-5.5 minutes of play (a human, slower to clear and using the breaks,
+lands at about 6-9).
