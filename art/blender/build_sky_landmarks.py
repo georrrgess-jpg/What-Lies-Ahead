@@ -57,7 +57,7 @@ def build_airship():
         p.append(torus(f"Band{k}", r, 0.18, (0, y, 0), rot=rad(90, 0, 0), m=m, major_segs=28, minor_segs=5))
     p.append(sphere("NoseCap", 0.9, (0, -half + 0.2, 0), m=gold, segs=12, rings=6))
     for s in (-1, 1):
-        t = text(f"Name{s}", "CUMULUS", 3.0, 0.2, (s * (AIRSHIP_R + 0.45), -2.0, 0.2), rot=(math.pi / 2, 0, s * math.pi / 2), m=navy)
+        t = text(f"Name{s}", "CUMULUS", 3.0, 0.2, (s * (AIRSHIP_R + 0.1), -2.0, -1.2), rot=(0, 0, s * math.pi / 2), m=navy)
         p.append(t)
     # Tail fins: four, red with navy edges.
     for k in range(4):

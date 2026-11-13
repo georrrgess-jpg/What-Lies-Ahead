@@ -252,7 +252,7 @@ func _build_hub() -> void:
 	_isle_rock("HubRock", Vector3(0, -DECK_T, -0.5), Vector3(19.5, 24.0, 17.5))
 	_isle_rock("LookoutRock", Vector3(0, -DECK_T, 18.0), Vector3(6.0, 8.0, 4.5))
 	_rails_round(hub, "Hub", _hub_outline())
-	_rails_round(hub, "Lookout", PackedVector2Array([Vector2(5, 14), Vector2(5, 21), Vector2(-5, 21), Vector2(-5, 14)]), false)
+	_rails_round(hub, "Lookout", PackedVector2Array([Vector2(5, 14), Vector2(5, 21), Vector2(-5, 21), Vector2(-5, 14)]), true, false)
 
 
 func _build_dock() -> void:
@@ -446,13 +446,13 @@ func _isle_rock(rock_name: String, top: Vector3, size: Vector3) -> void:
 
 
 ## Railings (and player-only walls) along every edge of an outline, broken at
-## the openings. With `walls` false only the railings are built, and the
-## closing edge (last point back to the first) is left open: the side that
-## joins a pad to its island.
-func _rails_round(parent: Node3D, prefix: String, outline: PackedVector2Array, walls := true) -> void:
+## the openings. With `closed` false the closing edge (last point back to the
+## first) is left open: the side that joins a pad to its island. With `walls`
+## false only the railings are built (pads beyond an entrance gate).
+func _rails_round(parent: Node3D, prefix: String, outline: PackedVector2Array, walls := true, closed := true) -> void:
 	var holder := _player_walls()
 	var n := outline.size()
-	for i in (n if walls else n - 1):
+	for i in (n if closed else n - 1):
 		var a := outline[i]
 		var b := outline[(i + 1) % n]
 		for span in _edge_spans(a, b):
@@ -595,11 +595,13 @@ func _build_hub_props() -> void:
 func _lamp(parent: Node3D, lamp_name: String, pos: Vector3) -> void:
 	_prop(dressing, "sky_lamp", lamp_name, pos, fposmod(pos.x * 31.0, 360.0), Vector3(0.3, 4, 0.3))
 	_post(parent, lamp_name + "Post", 0.16, 3.6, pos)
+	_player_block(parent, lamp_name + "Cap", Vector3(0.9, 2.0, 0.9), pos + Vector3(0, 4.6, 0))
 
 
 func _pinwheel(parent: Node3D, pin_name: String, pos: Vector3, yaw: float) -> void:
 	_prop(dressing, "sky_pinwheel", pin_name, pos, yaw, Vector3(0.2, 3.2, 0.2))
 	_post(parent, pin_name + "Post", 0.12, 3.2, pos)
+	_player_block(parent, pin_name + "Cap", Vector3(0.9, 2.0, 0.9), pos + Vector3(0, 4.2, 0))
 	var wheel := _prop(dressing, "sky_pinwheel_wheel", pin_name + "Wheel", pos, yaw, Vector3(1.6, 1.6, 0.1))
 	wheel.position += Vector3(0, 3.2, 0) + Basis(Vector3.UP, deg_to_rad(yaw)) * Vector3(0, 0, 0.3)
 	_late(wheel, "res://scripts/props/sky_spinner.gd", {"axis": Vector3.BACK, "degrees_per_second": 140.0 + fposmod(pos.x * 17.0, 60.0)})
@@ -696,7 +698,7 @@ func _build_entrances() -> void:
 	var basket := Vector3(-20.2, 0.0, 6.8)
 	_balloon(e, "TetheredBalloon", basket, Color(0.12, 0.71, 0.69), Color(1.0, 0.95, 0.88), false)
 	_collider(e, "BasketCollision", Vector3(1.6, 1.1, 1.6), basket + Vector3(0, 0.55, 0))
-	_rails_round(e, "BalloonPad", PackedVector2Array([Vector2(-15.5, 3.5), Vector2(-21.5, 3.5), Vector2(-21.5, 9.5), Vector2(-15.5, 9.5)]), false)
+	_rails_round(e, "BalloonPad", PackedVector2Array([Vector2(-15.5, 3.5), Vector2(-21.5, 3.5), Vector2(-21.5, 9.5), Vector2(-15.5, 9.5)]), false, false)
 	# 3. Cargo lift (south): the cage sits level with the hub deck.
 	_deck(e, "CargoPad", PackedVector2Array([Vector2(5.4, 13.5), Vector2(9.6, 13.5), Vector2(9.6, 19.0), Vector2(5.4, 19.0)]), 0.0, deck)
 	var lift := Vector3(7.5, -0.13, 17.0)
@@ -704,13 +706,13 @@ func _build_entrances() -> void:
 	_collider(e, "LiftBack", Vector3(3.6, 2.6, 0.3), lift + Vector3(0, 1.3, 1.65))
 	_collider(e, "LiftGantry", Vector3(4.6, 5.4, 0.4), lift + Vector3(0, 2.7, 2.0))
 	_isle_rock("CargoRock", Vector3(7.5, -DECK_T, 16.5), Vector3(3.0, 5.0, 3.5))
-	_rails_round(e, "CargoPad", PackedVector2Array([Vector2(5.4, 14.0), Vector2(5.4, 19.0), Vector2(9.6, 19.0), Vector2(9.6, 14.0)]), false)
+	_rails_round(e, "CargoPad", PackedVector2Array([Vector2(5.4, 14.0), Vector2(5.4, 19.0), Vector2(9.6, 19.0), Vector2(9.6, 14.0)]), false, false)
 	# 4. Backstage wagon (east of the big top).
 	var bx := BIGTOP.x + BIGTOP_APOTHEM
 	_deck(e, "BackstagePad", PackedVector2Array([Vector2(bx - 0.5, -3.0), Vector2(bx + 7.0, -3.0), Vector2(bx + 7.0, 5.0), Vector2(bx - 0.5, 5.0)]), 0.0, deck)
 	_isle_rock("BackstageRock", Vector3(bx + 3.5, -DECK_T, 1.0), Vector3(5.0, 7.0, 5.0))
 	_solid_prop(e, "sky_wagon", "Wagon", Vector3(bx + 4.8, 0, -0.6), 90.0, Vector3(4.6, 3.0, 2.2))
-	_rails_round(e, "BackstagePad", PackedVector2Array([Vector2(bx, -3.0), Vector2(bx + 7.0, -3.0), Vector2(bx + 7.0, 5.0), Vector2(bx, 5.0)]), false)
+	_rails_round(e, "BackstagePad", PackedVector2Array([Vector2(bx, -3.0), Vector2(bx + 7.0, -3.0), Vector2(bx + 7.0, 5.0), Vector2(bx, 5.0)]), false, false)
 	# 5. The airship gangway (west, at the boarding-deck level).
 	var g0 := Vector3(-51.2, UPPER_Y, -2.0)
 	var g1 := Vector3(-42.0, UPPER_Y, -2.0)
