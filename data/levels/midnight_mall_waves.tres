@@ -7,7 +7,7 @@
 script = ExtResource("2")
 spawns = {
 "mall_walker": 7,
-"tourist_shambler": 6,
+"tourist_shambler": 5,
 "mall_flinger": 1
 }
 spawn_interval = 1.8
@@ -42,12 +42,12 @@ script = ExtResource("2")
 spawns = {
 "boardwalk_bruiser": 1,
 "mall_flinger": 4,
-"mall_walker": 10,
+"mall_walker": 9,
 "tourist_shambler": 3
 }
 spawn_interval = 1.35
 burst = 1
-max_alive = 11
+max_alive = 10
 speed_scale = 1.0
 late_types_after = 0.12
 banner = ""

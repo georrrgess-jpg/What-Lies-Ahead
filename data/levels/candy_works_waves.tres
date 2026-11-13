@@ -128,7 +128,7 @@ spawns = {
 }
 spawn_interval = 2.0
 burst = 2
-max_alive = 15
+max_alive = 13
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
