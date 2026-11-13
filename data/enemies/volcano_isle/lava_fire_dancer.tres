@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/lava_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/lava_fire_rush.gd" id="4"]
+
+[sub_resource type="Resource" id="rush"]
+script = ExtResource("4")
+min_range = 6.0
+max_range = 20.0
+tuck_time = 0.95
+lock_fraction = 0.45
+rush_speed = 12.0
+rush_time = 1.4
+skid_time = 0.8
+cooldown = 5.5
+damage = 12.0
+hit_radius = 1.35
+shove = 6.5
+tuck_sound = &"lava_dancer_spin"
+rush_sound = &"lava_dancer_dash"
+
+[resource]
+script = ExtResource("1")
+id = &"lava_fire_dancer"
+display_name = "Fire Dancer"
+max_health = 62.0
+move_speed = 3.6
+speed_variance = 0.1
+turn_speed = 7.0
+tickets = 18
+score = 220
+xp = 18
+damage = 12.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.45
+attack_recover = 0.7
+lunge_speed = 4.0
+mass = 0.9
+flank_degrees = 80.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Dancer"
+body_scale = 0.97
+capsule_radius = 0.4
+capsule_height = 1.9
+head_height = 1.25
+shirt_colors = Array[Color]([Color(1, 0.31, 0.6, 1), Color(0.13, 0.78, 0.72, 1), Color(1, 0.62, 0.15, 1), Color(0.55, 0.3, 0.9, 1)])
+skin_colors = Array[Color]([Color(0.61, 0.81, 0.42, 1), Color(0.55, 0.78, 0.5, 1), Color(0.66, 0.8, 0.45, 1)])
+accessory_slots = PackedStringArray("Acc_Dancer_Poi", "Acc_Dancer_Flower|", "Acc_Dancer_Paint||")
+move_animation = &"Run"
+animation_reference_speed = 4.2
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("rush")])
+voice_sounds = Array[StringName]([&"lava_dancer_whoop_1", &"lava_dancer_whoop_2"])
+voice_interval = Vector2(2.5, 5.0)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

@@ -1,0 +1,157 @@
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
+
+[sub_resource type="Resource" id="wave_1"]
+script = ExtResource("2")
+spawns = {
+"lava_tiki_bartender": 3,
+"tourist_shambler": 9,
+"lava_fire_dancer": 4
+}
+spawn_interval = 1.8
+burst = 1
+max_alive = 8
+speed_scale = 1.0
+late_types_after = 0.35
+banner = ""
+kind = &"standard"
+title = "ALOHA"
+hint = "Bartenders lob coconuts: a headshot spills the throw."
+
+[sub_resource type="Resource" id="wave_2"]
+script = ExtResource("2")
+spawns = {
+"lava_fire_dancer": 14,
+"lifeguard_runner": 5,
+"tourist_shambler": 3
+}
+spawn_interval = 1.05
+burst = 1
+max_alive = 11
+speed_scale = 1.0
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "FIRE DANCE"
+hint = "Dancers spin up before they dash: step off the line."
+surge_at = 0.5
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_3"]
+script = ExtResource("2")
+spawns = {
+"lava_tiki_bartender": 7,
+"tourist_shambler": 10,
+"lava_fire_dancer": 5
+}
+spawn_interval = 1.3
+burst = 1
+max_alive = 12
+speed_scale = 1.0
+late_types_after = 0.15
+banner = ""
+kind = &"ranged"
+title = "LAST CALL"
+hint = "Coconuts from every side: keep cover between you and the bar staff."
+surge_at = 0.55
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_4"]
+script = ExtResource("2")
+spawns = {
+"lava_fire_dancer": 10,
+"tourist_shambler": 9,
+"lava_tiki_bartender": 4,
+"boardwalk_bruiser": 1
+}
+spawn_interval = 1.25
+burst = 1
+max_alive = 12
+speed_scale = 1.05
+late_types_after = 0.2
+banner = ""
+kind = &"bounty"
+title = "THE GOLDEN DANCER"
+hint = "Pop the golden dancer before it gets away."
+bounty = &"lava_fire_dancer"
+bounty_tickets = 225
+
+[sub_resource type="Resource" id="wave_5"]
+script = ExtResource("2")
+spawns = {
+"lava_fire_dancer": 10,
+"tourist_shambler": 11,
+"lava_tiki_bartender": 4,
+"frost_ski_racer": 3
+}
+spawn_interval = 3.3
+burst = 5
+max_alive = 13
+speed_scale = 1.06
+late_types_after = 0.0
+banner = ""
+kind = &"ambush"
+title = "LAVA FLOW"
+hint = "Over every bridge at once: do not get boxed in."
+
+[sub_resource type="Resource" id="wave_6"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 11,
+"lava_fire_dancer": 9,
+"lava_tiki_bartender": 4,
+"boardwalk_bruiser": 1
+}
+spawn_interval = 1.3
+burst = 1
+max_alive = 13
+speed_scale = 1.08
+late_types_after = 0.15
+banner = ""
+kind = &"standard"
+title = "ERUPTION"
+hint = "Mount Kahuna blows! Step out of the glowing rings."
+surge_at = 0.5
+surge_count = 6
+twist = &"eruption"
+
+[sub_resource type="Resource" id="wave_7"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 13,
+"lava_fire_dancer": 7,
+"lava_tiki_bartender": 3,
+"lifeguard_runner": 2
+}
+spawn_interval = 1.95
+burst = 2
+max_alive = 13
+speed_scale = 1.1
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "KAHUNA KRAKATOA"
+hint = "Strafe between his lava bombs and back out of the ring of fire."
+boss = &"alpha_kahuna"
+boss_at = 0.45
+rest_before = 24.0
+
+[resource]
+script = ExtResource("1")
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
+prep_seconds = 12.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 460
+break_refill_fraction = 0.3
+ammo_topup_price = 200
+heal_price = 320
+heal_amount = 60.0
+heals_per_break = 1
+wave_bonus_base = 20
+wave_bonus_per_wave = 5
+overshield_price = 640
+overshield_amount = 25.0
+damage_boost_price = 640
