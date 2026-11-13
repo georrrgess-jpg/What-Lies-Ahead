@@ -47,7 +47,7 @@ spawns = {
 }
 spawn_interval = 1.2
 burst = 1
-max_alive = 12
+max_alive = 13
 speed_scale = 1.0
 late_types_after = 0.1
 banner = ""
@@ -67,7 +67,7 @@ spawns = {
 }
 spawn_interval = 3.4
 burst = 5
-max_alive = 14
+max_alive = 15
 speed_scale = 1.06
 late_types_after = 0.0
 banner = ""
@@ -83,7 +83,7 @@ spawns = {
 "boardwalk_bruiser": 1,
 "lifeguard_runner": 4
 }
-spawn_interval = 1.2
+spawn_interval = 1.1
 burst = 1
 max_alive = 14
 speed_scale = 1.06
@@ -103,7 +103,7 @@ spawns = {
 "candy_taffy_puller": 5,
 "hover_courier": 5
 }
-spawn_interval = 1.4
+spawn_interval = 1.25
 burst = 1
 max_alive = 14
 speed_scale = 1.0
@@ -126,7 +126,7 @@ spawns = {
 }
 spawn_interval = 2.0
 burst = 2
-max_alive = 14
+max_alive = 15
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
@@ -146,7 +146,7 @@ checkpoint_wave = 4
 checkpoint_tickets = 450
 break_refill_fraction = 0.3
 ammo_topup_price = 210
-heal_price = 330
+heal_price = 345
 heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 20

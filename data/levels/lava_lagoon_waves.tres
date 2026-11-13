@@ -120,14 +120,14 @@ twist = &"eruption"
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 13,
+"tourist_shambler": 11,
 "lava_fire_dancer": 7,
 "lava_tiki_bartender": 3,
 "lifeguard_runner": 2
 }
 spawn_interval = 1.95
 burst = 2
-max_alive = 13
+max_alive = 12
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""

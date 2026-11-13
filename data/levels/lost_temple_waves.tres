@@ -82,7 +82,7 @@ spawns = {
 }
 spawn_interval = 1.15
 burst = 1
-max_alive = 13
+max_alive = 14
 speed_scale = 1.06
 late_types_after = 0.2
 banner = ""
@@ -116,8 +116,8 @@ surge_count = 6
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 12,
-"jungle_explorer": 11,
+"tourist_shambler": 10,
+"jungle_explorer": 12,
 "lifeguard_runner": 3,
 "jungle_overgrown": 1
 }

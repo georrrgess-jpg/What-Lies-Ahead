@@ -43,9 +43,9 @@ surge_count = 5
 script = ExtResource("2")
 spawns = {
 "sky_balloon_vendor": 8,
-"tourist_shambler": 10,
+"tourist_shambler": 8,
 "lava_tiki_bartender": 2,
-"sky_diver": 5
+"sky_diver": 6
 }
 spawn_interval = 1.25
 burst = 1
