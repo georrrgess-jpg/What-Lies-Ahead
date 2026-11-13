@@ -9,7 +9,7 @@ display_name = "Neon Camo"
 description = "Camouflage for a city that never turns its lights off."
 slot = &"weapon_finish"
 rarity = 2
-price = 900
+price = 1500
 colors = PackedColorArray(0.102, 0.06275, 0.2, 1, 1, 0.2471, 0.6431, 1)
 params = {
 "shader": "res://art/shaders/skin_digicamo.gdshader",

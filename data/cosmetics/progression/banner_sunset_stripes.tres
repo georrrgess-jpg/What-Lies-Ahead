@@ -6,10 +6,10 @@
 script = ExtResource("1")
 id = &"banner_sunset_stripes"
 display_name = "Sunset Stripes"
-description = "Player banner."
+description = "Coral and gold stripes, like the sky at closing time."
 slot = &"banner"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(1.000, 0.478, 0.349, 1, 1.000, 0.761, 0.290, 1, 1.000, 0.953, 0.863, 1)
 params = {
 "pattern": "stripes"

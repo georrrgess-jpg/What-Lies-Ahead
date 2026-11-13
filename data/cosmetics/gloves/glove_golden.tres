@@ -9,7 +9,7 @@ display_name = "Golden Touch"
 description = "Everything you shoot turns to confetti. Everything you hold turns to gold."
 slot = &"gloves"
 rarity = 3
-price = 1800
+price = 5600
 colors = PackedColorArray(1, 0.7608, 0.2392, 1, 1, 0.851, 0.4157, 1, 0.4196, 0.2078, 0.7216, 1, 0.1647, 0.102, 0.2902, 1, 0.8196, 0.5412, 0.1098, 1)
 params = {
 "shader": "res://art/shaders/skin_gold.gdshader",

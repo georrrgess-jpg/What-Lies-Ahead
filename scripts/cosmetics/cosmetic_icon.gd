@@ -34,6 +34,7 @@ func _draw_cell() -> void:
 	match String(item.params.get("animate", "")):
 		"rainbow": c = Color.from_hsv(fmod(_time * 0.18, 1.0), 0.75, 1.0)
 		"pulse": c = item.color(0).lerp(item.color(1, Color.WHITE), 0.5 + 0.5 * sin(_time * 3.2))
+	c = WeaponCosmetics.cell_glow_color(c)
 	var mid := size * 0.5
 	for i in 6:
 		draw_circle(mid, size.y * (0.42 - i * 0.04), Color(c, 0.06 + i * 0.02))

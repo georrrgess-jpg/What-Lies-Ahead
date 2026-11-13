@@ -9,11 +9,10 @@ display_name = "Bullseye"
 description = "A stubby tube sight with a carnival target ring."
 slot = &"weapon_sight"
 rarity = 1
-price = 400
+price = 650
 colors = PackedColorArray(0.45, 1.0, 0.4, 1, 1.0, 0.94, 0.83, 1)
 params = {
 "optic": "Tube",
-"reticle": "circle_dot",
-"unlock_text": "Buy for 400 Sparks"
+"reticle": "circle_dot"
 }
 sort_order = 6050

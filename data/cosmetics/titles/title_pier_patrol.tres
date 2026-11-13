@@ -9,5 +9,5 @@ display_name = "Pier Patrol"
 description = "Officially on the beat."
 slot = &"title"
 rarity = 0
-price = 150
+price = 250
 sort_order = 10001

@@ -916,6 +916,55 @@ class Kit:
             self.leg_band(side, "Thigh", length - 0.08, length + 0.01, hem_m, grow=grow + flare + 0.003, name="Hem")
         return parts
 
+    # Flip-flop: a two-layer foam sole (strap colour under a light footbed),
+    # a bare foot with toes and a thong strap. Rows are (t from the heel, half width, half height,
+    # centre height); the foot rests on the footbed at FOOTBED.
+    FOOTBED = 0.03
+    FLIP_SOLE = [(-0.004, 0.05), (0.04, 0.06), (0.125, 0.055), (0.2, 0.066), (0.265, 0.075), (0.31, 0.068), (0.33, 0.05)]
+    BARE_FOOT = [(0.03, 0.045, 0.032, 0.06), (0.1, 0.05, 0.042, 0.07), (0.19, 0.056, 0.031, 0.059), (0.265, 0.06, 0.02, 0.048),
+                 (0.292, 0.056, 0.016, 0.044)]
+    # Toes, big toe first: (offset across, lateral +), t, radius, length scale.
+    TOES = [(-0.031, 0.302, 0.0165, 1.35), (-0.007, 0.301, 0.0118, 1.3), (0.012, 0.294, 0.011, 1.25), (0.029, 0.284, 0.0102, 1.2),
+            (0.044, 0.271, 0.0094, 1.15)]
+
+    def _flip_flop(self, side, x, m, sole_m, along):
+        s = "L" if side > 0 else "R"
+        bed = self.FOOTBED
+        parts = [along([(t, rx, bed * 0.36, bed * 0.36) for t, rx in self.FLIP_SOLE], m, "Sole", n=3.0, cap_h=(0.014, 0.014)),
+                 along([(t, rx - 0.004, bed * 0.17, bed * 0.83) for t, rx in self.FLIP_SOLE], sole_m, "Footbed", n=3.0, cap_h=(0.012, 0.012)),
+                 along([(t, rx, rz, cz) for t, rx, rz, cz in self.BARE_FOOT], self.skin_m, "FootSkin", n=2.4, cap_h=(0.03, 0.012))]
+        for i, (across, t, r, length) in enumerate(self.TOES):
+            parts.append(sphere(self.n(f"Toe{i}{s}"), r, (x + side * across, 0.1 - t, bed - 0.002 + r * 0.85), scale=(1.0, length, 0.85),
+                                m=self.skin_m, segs=10, rings=7))
+        # The thong: a post between the big toe and the next, then a strap
+        # each way over the instep down to the sole at the arch, hugging the foot.
+        post_t, post_x = 0.297, -0.019
+        top = self._over_foot(side, x, post_t - 0.012, 90.0 + side * 16.0, 0.0085)
+        parts.append(limb(self.n("ThongPost" + s), Vector((x + side * post_x, 0.1 - post_t, bed - 0.004)), top, 0.0055, 0.0065, m, segs=8))
+        for k, end in enumerate((90.0 + side * 128.0, 90.0 - side * 128.0)):
+            a0 = 90.0 + side * 16.0
+            pts = []
+            for i in range(9):
+                u = i / 8.0
+                t = post_t - 0.012 + (0.168 - post_t + 0.012) * (u * u * (3 - 2 * u))
+                pts.append(self._over_foot(side, x, t, a0 + (end - a0) * u, 0.0085))
+            pts[-1].z = max(pts[-1].z, bed + 0.004)
+            for i in range(len(pts) - 1):
+                parts.append(limb(self.n(f"Thong{k}{i}{s}"), pts[i], pts[i + 1], 0.0075, 0.0075, m, segs=8, squash=0.75))
+        return parts
+
+    def _over_foot(self, side, x, t, angle_deg, lift):
+        """A point `lift` (m) outside the bare foot's skin at section t, at
+        angle_deg round its cross-section (0 = +X, 90 = top)."""
+        rows = self.BARE_FOOT
+        t = min(max(t, rows[0][0]), rows[-1][0])
+        i = max(j for j in range(len(rows) - 1) if rows[j][0] <= t)
+        a, b = rows[i], rows[i + 1]
+        f = (t - a[0]) / (b[0] - a[0])
+        rx, rz, cz = (a[k] + (b[k] - a[k]) * f for k in (1, 2, 3))
+        ex, ez = _superellipse(math.radians(angle_deg), rx + lift, rz + lift, 2.4)
+        return Vector((x + ex, 0.1 - t, cz + ez))
+
     def shoe(self, side, m, sole_m, toe_m=None, style="sneaker", lace_m=None, collar_m=None, shaft=0.0, shaft_m=None, heel_m=None,
              stripe_m=None, tongue_m=None):
         """Footwear on the Foot bone. style: sneaker, boot, shoe or sandal. `shaft`
@@ -931,13 +980,7 @@ class Kit:
                         light_caps=True)
         parts = []
         if style == "sandal":
-            parts.append(along([(0.02, 0.06, 0.016, 0.016), (0.11, 0.066, 0.016, 0.016), (0.22, 0.073, 0.016, 0.016), (0.305, 0.064, 0.015, 0.015)],
-                               sole_m, "Sole", n=3.2, cap_h=(0.02, 0.02)))
-            parts.append(along([(0.035, 0.05, 0.038, 0.066), (0.1, 0.056, 0.042, 0.066), (0.19, 0.062, 0.03, 0.058), (0.27, 0.06, 0.023, 0.052),
-                                (0.305, 0.052, 0.019, 0.048)], self.skin_m, "FootSkin", n=2.4, cap_h=(0.03, 0.03)))
-            for i, t in enumerate((0.17, 0.24)):
-                parts.append(band(self.n(f"SandalStrap{i}{s}"), heel + Vector((0, 0, 0.047)), toe + Vector((0, 0, 0.047)), (t - 0.022) / 0.325,
-                                  (t + 0.022) / 0.325, 0.067, 0.067, m, squash=0.62, n=2.6, segs=12))
+            parts += self._flip_flop(side, x, m, sole_m, along)
         else:
             tall = 0.012 if style == "boot" else 0.0
             parts.append(along([(0.008, 0.058, 0.02, 0.02), (0.1, 0.069, 0.02, 0.02), (0.22, 0.078, 0.02, 0.02), (0.318, 0.066, 0.019, 0.019)],

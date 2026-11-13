@@ -9,7 +9,7 @@ display_name = "Neon Wireframe"
 description = "A blueprint that came to life. Glows in the dark."
 slot = &"weapon_finish"
 rarity = 2
-price = 900
+price = 1500
 colors = PackedColorArray(0.02353, 0.01569, 0.05882, 1, 0.03922, 0.02353, 0.08627, 1)
 params = {
 "shader": "res://art/shaders/skin_wireframe.gdshader"

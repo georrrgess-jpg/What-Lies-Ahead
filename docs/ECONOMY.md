@@ -55,20 +55,28 @@ breakdown and the contracts.
 
 ## Spending Sparks
 
-Price ladder by rarity: **Common 150, Rare 400, Epic 900, Legendary 1,800**
-(`EconomyRules.prices`). An item is in the shop when its `CosmeticItem.price` is above 0;
+Price ladder by rarity: **Common 250, Rare 650, Epic 1,500, Legendary 3,000**
+(`EconomyRules.prices`). The two best items of each shop section (one for sights and titles) are
+**showpieces** at about three times their old price: **Rare 1,250, Epic 2,800,
+Legendary 5,600** (`EconomyRules.premium_prices`): Holo Foil and Lava Flow (finishes),
+8-Bit (sight), Prism Core and Heartbeat (cells), Golden Touch and Holo Hands (gloves),
+Golden Ticket and Plush Zombie (charms), Coin Shower and Starburst (kill effects), Golden
+Comet and Rainbow Road (tracers), Holo Diamond and Holo Heart (decals), Signal Lost and
+Lava Lamp (banners), Prize Hoarder (title). Every price is on one of the two ladders
+(the probe checks it). An item is in the shop when its `CosmeticItem.price` is above 0;
 it is owned once bought. A `requirement` on a priced item only gates the purchase (sights
 that open at a mastery rank).
 
-For sale (65 items, 45,050 Sparks, plus the sights): the 12 animated finishes that are not
-a clear, level or mastery reward and 4 plain ones, 9 energy cells, 7 gloves, 4 charms,
-3 kill effects, 5 tracers, 4 decals, 11 banners and 6 titles. Earned, never sold: the
+For sale (69 items, 115,250 Sparks, sights included): the 12 animated finishes that are not
+a clear, level or mastery reward and 4 plain ones, 4 sights, 9 energy cells, 7 gloves,
+4 charms, 3 kill effects, 5 tracers, 4 decals, 11 banners and 6 titles. Earned, never sold: the
 level track, the five world sets (36 items, on the first clear of each level, and World
 Tourist for all five), mastery camos, cells and decals, milestone rewards, and quiet
 goals for lifetime kills (15 items, 50 to 10,000 kills) and best score on Prize Pier
 (5 items).
 
-**Featured.** Four items a day are 25% off (`featured_count`, `featured_discount`), one of
+**Featured.** Four items a day are 25% off (`featured_count`, `featured_discount`;
+rounded to 5 Sparks: 190, 490, 1,125, 2,250, and 940, 2,100, 4,200 for showpieces), one of
 each rarity where possible. The selection depends only on the day and on what the
 player did not own when the day's selection was first asked for; it is stored for the
 day, so buying a featured item does not pull another one into the discount. It changes
@@ -245,34 +253,36 @@ headshots, combo multiplier 1.35, the first two waves flawless, half the tickets
 | Runs as a main to mastery rank 10 | 19 | 14 |
 | Goals on the Career page | 52 | 14 (3 contracts + 11 milestones) |
 | Currency | none | Sparks: 55,700 earned by the cap |
-| Items for sale | 0 | 65, 45,050 Sparks (plus sights) |
-| Clears to buy everything | - | 38 (57 runs) |
+| Items for sale | 0 | 69, 115,250 Sparks (47,150 before the price rise) |
+| Clears to buy everything | - | 109 (163 runs; 38 clears before the price rise) |
+| Runs of saving from a new profile to afford | - | a common or a rare 1, an epic 2, a legendary 4, a 5,600 showpiece 5 |
+| Sparks per run | - | 988 in the first 15 runs, 637 after the cap |
 | Sparks per session of three runs | - | 2,835 in the first five sessions, 1,862 after the cap |
 
 Where the Sparks come from, up to the cap: zombies 22%, level clears 17%, waves 17%,
 level-ups 12%, contracts 8%, mastery ranks 8%, headshots 5%, tickets 5%, milestones 3%,
 combos 3%, first clears 1%.
 
-The first twelve runs (after):
+The first twelve runs (after; "The run buys" is what that run's Sparks alone would buy):
 
-| Run | Level | Result | XP | Player level | Sparks | The run buys | Unlocks |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Prize Pier | clear | 8,546 | 4 (+3) | 1,218 | 1 epic | Comet Hand Cannon, Arc Coil, the Prize Pier set, 5 more |
-| 2 | Neon Skyline | clear | 7,917 | 6 (+2) | 1,274 | 1 epic | Bumper Lobber, the Neon set, 4 more |
-| 3 | Tidal Tunnels | defeat, wave 5 | 1,543 | 7 (+1) | 360 | 2 commons | Racing Stripes, Pier Rat |
-| 4 | Tidal Tunnels | clear | 9,861 | 9 (+2) | 1,412 | 1 epic | Frostbite Cryo Beam, the Tidal set |
-| 5 | Launch Pad 9 | clear | 9,314 | 11 (+2) | 1,418 | 1 epic | the Launch Pad set, Chrome Cherry |
-| 6 | Summit Lodge | defeat, wave 5 | 2,290 | 11 | 363 | 2 commons | two mastery ranks |
-| 7 | Summit Lodge | clear | 12,696 | 13 (+2) | 1,673 | 1 epic | Rail Lancer, the Summit set, World Tourist |
-| 8 | Prize Pier | clear | 7,696 | 14 (+1) | 1,083 | 1 epic | Spotless, Lemonade Cell |
-| 9 | Neon Skyline | defeat, wave 5 | 4,443 | 15 (+1) | 729 | 1 rare | Sweeper, Lime Laser, Midway Maestro |
-| 10 | Neon Skyline | clear | 6,217 | 16 (+1) | 989 | 1 epic | Funnel Cake Fiend |
-| 11 | Tidal Tunnels | clear | 6,511 | 17 (+1) | 1,032 | 1 epic | Pawprint |
-| 12 | Launch Pad 9 | defeat, wave 5 | 1,503 | 17 | 240 | 1 common | a mastery rank |
+| Run | Level | Result | XP | Player level | Sparks | Saved (if unspent) | The run buys | Unlocks |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Prize Pier | clear | 7628 | 4 (+3) | 1143 | 1143 | 1 rare | Life Ring, Gold Star, Surf Rescue, Boardwalk Boss +7 more |
+| 2 | Neon Skyline | clear | 7433 | 6 (+2) | 1253 | 2396 | 1 rare | Neon Grid, Crimson Core, Neon Heart, Circuit Pulse +10 more |
+| 3 | Tidal Tunnels | defeat w5 | 2076 | 7 (+1) | 429 | 2825 | 1 common | Racing Stripes, Pier Rat, Ion r3, Scatter r2 |
+| 4 | Tidal Tunnels | clear | 12034 | 9 (+2) | 1673 | 4498 | 1 epic | High Tide, Starry Starfish, Seashell, Tidal Glass +10 more |
+| 5 | Launch Pad 9 | clear | 7870 | 11 (+2) | 1324 | 5822 | 2 rares | Deep Space, Pocket Rocket, Ringed Planet, Galaxy +8 more |
+| 6 | Summit Lodge | defeat w5 | 4832 | 12 (+1) | 722 | 6544 | 1 rare | Bullseye Cell, Ticket Taker, Rail Lancer, Bumper r2 |
+| 7 | Summit Lodge | clear | 10876 | 13 (+1) | 1455 | 7999 | 2 rares | Aurora, Glacier, Snow Globe, Snowflake +9 more |
+| 8 | Prize Pier | clear | 8578 | 14 (+1) | 1158 | 9157 | 1 rare | Spotless, Sweeper, Lime Laser, Lemonade Cell +1 more |
+| 9 | Neon Skyline | defeat w5 | 3330 | 15 (+1) | 629 | 9786 | 2 commons | Midway Maestro |
+| 10 | Neon Skyline | clear | 5933 | 16 (+1) | 988 | 10774 | 1 rare | Funnel Cake Fiend, Pulse r4, Ion r4 |
+| 11 | Tidal Tunnels | clear | 6684 | 17 (+1) | 1083 | 11857 | 1 rare | Pawprint, Ion r5, Scatter r4 |
+| 12 | Launch Pad 9 | defeat w5 | 2515 | 17 | 409 | 12266 | 1 common | Midnight Run, Scatter r5, Comet r4 |
 
 Measured against the game: a bot clear of Prize Pier from a new profile (near-perfect
 aim, 82 headshots, every wave flawless, which a person will not match) paid 1,625 Sparks
-and 9,862 XP and ended on level 5; the model's typical player gets 1,218 Sparks, 8,546 XP
+and 9,862 XP and ended on level 5; the model's typical player gets 1,143 Sparks, 7,628 XP
 and level 4 from the same run. A bot defeat on wave 7 of Tidal Tunnels paid 584 Sparks.
 
 ## Tuning

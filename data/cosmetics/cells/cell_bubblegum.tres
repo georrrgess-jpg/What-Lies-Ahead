@@ -9,6 +9,6 @@ display_name = "Bubblegum Glow"
 description = "Pink power, best served with a pop."
 slot = &"weapon_cell"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(1, 0.3098, 0.6902, 1)
 sort_order = 3002

@@ -9,7 +9,7 @@ display_name = "Have a Nice Day"
 description = "A cheerful face for a grim job."
 slot = &"weapon_decal"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(1, 0.851, 0.2314, 1, 0.1098, 0.09412, 0.1882, 1, 0.1098, 0.09412, 0.1882, 1)
 params = {
 "emblem": "Smiley"

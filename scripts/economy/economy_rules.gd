@@ -46,7 +46,10 @@ extends Resource
 @export_group("Shop")
 ## Price ladder by CosmeticItem.Rarity (COMMON, RARE, EPIC, LEGENDARY, MASTERY).
 ## Items carry their own `price`; the ladder is what new items should use.
-@export var prices: PackedInt32Array = PackedInt32Array([150, 400, 900, 1800, 0])
+@export var prices: PackedInt32Array = PackedInt32Array([250, 650, 1500, 3000, 0])
+## The showpiece price by rarity: the two or three best items of each shop
+## section cost this instead of the ladder price (0 = no showpiece tier).
+@export var premium_prices: PackedInt32Array = PackedInt32Array([0, 1250, 2800, 5600, 0])
 ## Items in the daily featured selection, and their discount (0-1).
 @export var featured_count := 4
 @export var featured_discount := 0.25
@@ -83,3 +86,8 @@ func ticket_sparks(tickets: int) -> int:
 ## The ladder price for a rarity.
 func price_for(rarity: CosmeticItem.Rarity) -> int:
 	return prices[int(rarity)] if int(rarity) < prices.size() else 0
+
+
+## The showpiece price for a rarity (0 if the rarity has none).
+func premium_for(rarity: CosmeticItem.Rarity) -> int:
+	return premium_prices[int(rarity)] if int(rarity) < premium_prices.size() else 0

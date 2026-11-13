@@ -87,12 +87,21 @@ func _rules() -> void:
 			empty.append(lvl)
 	_check("rules: every level from 2 to %d gives a weapon or a cosmetic" % progression.MAX_LEVEL, empty.is_empty(), str(empty))
 	var off_ladder := []
+	var premium := {}
 	var total := 0
 	for it in Shop.items():
 		total += it.price
-		if it.price != rules.price_for(it.rarity) and it.slot != &"weapon_sight":
+		if it.price != rules.price_for(it.rarity) and it.price != rules.premium_for(it.rarity):
 			off_ladder.append(String(it.id))
-	_check("rules: %d items for sale (%d Sparks), priced on the rarity ladder" % [Shop.items().size(), total], off_ladder.is_empty(), str(off_ladder))
+		elif it.price == rules.premium_for(it.rarity):
+			premium[it.slot] = int(premium.get(it.slot, 0)) + 1
+	_check("rules: %d items for sale (%d Sparks), priced on the rarity or showpiece ladder" % [Shop.items().size(), total], off_ladder.is_empty(), str(off_ladder))
+	var lonely := []
+	for section in Shop.sections():
+		var n := int(premium.get(section["slot"], 0))
+		if section["slot"] != &"avatar" and (n < 1 or n > 3):
+			lonely.append("%s %d" % [section["slot"], n])
+	_check("rules: every shop section has one to three showpieces", lonely.is_empty(), str(lonely))
 	var sections := []
 	for section in Shop.sections():
 		sections.append("%s %d" % [section["title"], section["items"].size()])

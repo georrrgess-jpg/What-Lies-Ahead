@@ -9,7 +9,7 @@ display_name = "Frostbite"
 description = "Crystal ice that never melts, even in a firefight."
 slot = &"weapon_finish"
 rarity = 2
-price = 900
+price = 1500
 colors = PackedColorArray(0.7686, 0.9255, 1, 1, 0.2471, 0.498, 0.8784, 1)
 params = {
 "shader": "res://art/shaders/skin_frost.gdshader"

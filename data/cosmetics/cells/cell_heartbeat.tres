@@ -6,10 +6,10 @@
 script = ExtResource("1")
 id = &"cell_heartbeat"
 display_name = "Heartbeat"
-description = "Pulses red and pink in time with your nerves."
+description = "Pulses between cherry red and candy pink like a racing heart."
 slot = &"weapon_cell"
 rarity = 2
-price = 900
+price = 2800
 colors = PackedColorArray(1, 0.1843, 0.4353, 1, 1, 0.8157, 0.8784, 1)
 params = {
 "animate": "pulse"

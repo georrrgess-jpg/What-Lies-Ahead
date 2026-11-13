@@ -9,12 +9,11 @@ display_name = "Lucky Star"
 description = "Wish upon it, then pull the trigger."
 slot = &"weapon_sight"
 rarity = 1
-price = 400
+price = 650
 colors = PackedColorArray(1.0, 0.86, 0.25, 1, 1.0, 0.76, 0.24, 1)
 params = {
 "optic": "Holo",
 "reticle": "star",
-"reticle_degrees": 1.0,
-"unlock_text": "Buy for 400 Sparks"
+"reticle_degrees": 1.0
 }
 sort_order = 6060

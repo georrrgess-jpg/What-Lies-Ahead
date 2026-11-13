@@ -6,10 +6,10 @@
 script = ExtResource("1")
 id = &"banner_prize_wall"
 display_name = "Prize Wall"
-description = "Player banner."
+description = "Pink chevrons stacked on purple like a prize wall."
 slot = &"banner"
 rarity = 2
-price = 900
+price = 1500
 colors = PackedColorArray(0.416, 0.204, 0.722, 1, 1.000, 0.247, 0.643, 1, 1.000, 0.761, 0.290, 1)
 params = {
 "pattern": "chevrons"

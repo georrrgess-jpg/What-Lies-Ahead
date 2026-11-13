@@ -19,6 +19,9 @@ extends RefCounted
 ## shader_params, and is applied to both the Shell and Trim surfaces (Trim gets
 ## `is_trim = true`).
 ## Cells: colors[0]; params.animate = "rainbow" or "pulse" animates it (CellGlow).
+##   The models' own glow is driven past white, which bleaches a hue (red reads
+##   pink, orange and lime read yellow), so a cell glows at CELL_GLOW of it, in
+##   a more saturated colour (tint_cell).
 ## Decals: colors [fill, edge, ink]; params.emblem names a sticker in
 ##   art/models/cosmetic_decals.glb ("Heart" -> node "Emblem_Heart"); without
 ##   one, the weapon's own emblem is tinted. params.shader styles the fill.
@@ -34,6 +37,8 @@ const CHARMS_SCENE := "res://art/models/cosmetic_charms.glb"
 const DECALS_SCENE := "res://art/models/cosmetic_decals.glb"
 const GLOVE_SHADER := "res://art/shaders/skin_glove.gdshader"
 const ARM_MATERIALS := ["Glove", "GlovePlate", "Cuff", "Sleeve"]
+## A cell cosmetic's glow energy, as a share of the model's own (see Cells).
+const CELL_GLOW := 0.55
 const PATTERNS := {
 	"solid": 0, "stripes": 1, "camo": 2, "checker": 3, "dots": 4, "knit": 5, "tiger": 6,
 	"neon": 7, "scales": 8, "flames": 9, "stars": 10, "pixels": 11,
@@ -134,15 +139,29 @@ static func _walk(node: Node, finish: CosmeticItem, cell: CosmeticItem, arms: Co
 				replacement = finish_material(finish, base, mat_name == "Trim")
 			elif mat_name == "Cell" and cell:
 				var c: StandardMaterial3D = base.duplicate()
-				c.albedo_color = cell.color(0)
 				c.emission_enabled = true
-				c.emission = cell.color(0)
+				c.emission_energy_multiplier = base.emission_energy_multiplier * CELL_GLOW
+				tint_cell(c, cell.color(0))
 				replacement = c
 			elif arms and mat_name in ARM_MATERIALS:
 				replacement = arm_material(arms, mat_name, base)
 			mi.set_surface_override_material(i, replacement)
 	for child in node.get_children():
 		_walk(child, finish, cell, arms)
+
+
+## Colours a "Cell" material for the item colour `c` (CellGlow calls this every frame).
+static func tint_cell(m: StandardMaterial3D, c: Color) -> void:
+	var glow := cell_glow_color(c)
+	m.albedo_color = glow
+	m.emission = glow
+
+
+## The colour a cell glows in for an item colour `c`: more saturated, so the
+## overdriven glow still shows the item's hue after tone mapping. Pale cells
+## (Glacier, Silver) stay pale.
+static func cell_glow_color(c: Color) -> Color:
+	return Color.from_hsv(c.h, 1.0 - pow(1.0 - c.s, 1.8), c.v, c.a)
 
 
 ## The material an arm look (gloves item or operator) puts on one of the

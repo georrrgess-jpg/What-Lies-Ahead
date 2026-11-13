@@ -32,8 +32,7 @@ func _process(delta: float) -> void:
 			continue
 		var m := mi.get_surface_override_material(entry[1]) as StandardMaterial3D
 		if m:
-			m.albedo_color = c
-			m.emission = c
+			WeaponCosmetics.tint_cell(m, c)
 
 
 func _color() -> Color:

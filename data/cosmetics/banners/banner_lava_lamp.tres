@@ -9,7 +9,7 @@ display_name = "Lava Lamp"
 description = "Groovy blobs, slowly rising and falling."
 slot = &"banner"
 rarity = 2
-price = 900
+price = 2800
 colors = PackedColorArray(0.1647, 0.03922, 0.2275, 1, 1, 0.4157, 0.1647, 1, 1, 0.2471, 0.6431, 1)
 params = {
 "style": 12

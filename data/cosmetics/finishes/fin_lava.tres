@@ -9,7 +9,7 @@ display_name = "Lava Flow"
 description = "Cracked basalt with molten rivers glowing underneath."
 slot = &"weapon_finish"
 rarity = 3
-price = 1800
+price = 5600
 colors = PackedColorArray(0.1098, 0.05098, 0.03922, 1, 0.1647, 0.07059, 0.04706, 1)
 params = {
 "shader": "res://art/shaders/skin_lava.gdshader"

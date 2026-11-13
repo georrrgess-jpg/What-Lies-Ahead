@@ -9,7 +9,7 @@ display_name = "Arctic White"
 description = "Clean, bright and cold to the touch."
 slot = &"weapon_finish"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(0.9569, 0.9725, 1, 1, 0.3098, 0.5608, 0.8471, 1)
 params = {
 "metallic": 0.0,

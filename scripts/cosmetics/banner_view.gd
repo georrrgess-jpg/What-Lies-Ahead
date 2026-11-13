@@ -1,9 +1,12 @@
 class_name BannerView
 extends ColorRect
 ## An animated banner (the "banner" cosmetic): a rounded rectangle drawn by
-## art/shaders/skin_banner.gdshader with the item's style and colours.
+## art/shaders/skin_banner.gdshader with the item's style and colours, or, for
+## banners described by params.pattern (the level and challenge rewards), by
+## art/shaders/mastery_banner.gdshader, as the reward road shows them.
 
 const SHADER := "res://art/shaders/skin_banner.gdshader"
+const PATTERN_SHADER := "res://art/shaders/mastery_banner.gdshader"
 const FALLBACK := [Color("ff7a59"), Color("ff3f9f"), Color("3d1f73")]
 
 var radius := 18.0
@@ -14,9 +17,7 @@ func _init(banner: CosmeticItem = null, corner_radius := 18.0) -> void:
 	item = banner
 	radius = corner_radius
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var m := ShaderMaterial.new()
-	m.shader = load(SHADER)
-	material = m
+	material = ShaderMaterial.new()
 	resized.connect(_sync_size)
 	set_banner(banner)
 
@@ -25,11 +26,20 @@ func _init(banner: CosmeticItem = null, corner_radius := 18.0) -> void:
 func set_banner(banner: CosmeticItem) -> void:
 	item = banner if banner else Cosmetics.default_item(&"banner")
 	var m := material as ShaderMaterial
-	m.set_shader_parameter("style", int(item.params.get("style", 0)) if item else 0)
-	for i in 3:
-		var c: Color = item.color(i, FALLBACK[i]) if item else FALLBACK[i]
-		m.set_shader_parameter(["color_a", "color_b", "color_c"][i], c)
-	m.set_shader_parameter("radius", radius)
+	if item and item.params.has("pattern") and not item.params.has("style"):
+		m.shader = load(PATTERN_SHADER)
+		m.set_shader_parameter("base_color", item.color(0, FALLBACK[2]))
+		m.set_shader_parameter("pattern_color", item.color(1, FALLBACK[1]))
+		m.set_shader_parameter("accent_color", item.color(2, FALLBACK[0]))
+		m.set_shader_parameter("pattern", maxi(0, RewardArt.PATTERNS.find(String(item.params["pattern"]))))
+		m.set_shader_parameter("corner", radius)
+	else:
+		m.shader = load(SHADER)
+		m.set_shader_parameter("style", int(item.params.get("style", 0)) if item else 0)
+		for i in 3:
+			var c: Color = item.color(i, FALLBACK[i]) if item else FALLBACK[i]
+			m.set_shader_parameter(["color_a", "color_b", "color_c"][i], c)
+		m.set_shader_parameter("radius", radius)
 	_sync_size()
 
 

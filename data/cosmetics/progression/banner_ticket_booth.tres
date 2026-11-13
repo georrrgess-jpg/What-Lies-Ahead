@@ -6,10 +6,10 @@
 script = ExtResource("1")
 id = &"banner_ticket_booth"
 display_name = "Ticket Booth"
-description = "Player banner."
+description = "Raspberry and pink checks like a ticket booth awning."
 slot = &"banner"
 rarity = 1
-price = 400
+price = 650
 colors = PackedColorArray(0.722, 0.122, 0.447, 1, 1.000, 0.486, 0.776, 1, 1.000, 0.761, 0.290, 1)
 params = {
 "pattern": "checker"
