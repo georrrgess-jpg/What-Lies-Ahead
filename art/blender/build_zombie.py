@@ -729,8 +729,8 @@ def lifeguard_neon_accessories(m):
     return {
         "Acc_Lifeguard_TopHair": hair_top(p, BUILDS["lean"]["head"], m["dark"], "mop", 23),
         "Acc_Lifeguard_Headphones": bind("Head", [
-            tube(p + "Band", [(-w * 0.52, HEAD_Y, 1.6), (-w * 0.42, HEAD_Y, 1.86), (0, HEAD_Y, 1.95), (w * 0.42, HEAD_Y, 1.86), (w * 0.52, HEAD_Y, 1.6)],
-                 0.022, m=m["dark"], segs=6),
+            tube(p + "Band", [(-w * 0.53 - 0.04, HEAD_Y + 0.01, 1.62), (-w * 0.5, HEAD_Y + 0.01, 1.85), (0, HEAD_Y + 0.01, 1.915),
+                              (w * 0.5, HEAD_Y + 0.01, 1.85), (w * 0.53 + 0.04, HEAD_Y + 0.01, 1.62)], 0.022, m=m["dark"], segs=6),
             cyl(p + "CupL", 0.1, 0.1, (w * 0.53 + 0.035, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["dark"]),
             cyl(p + "CupR", 0.1, 0.1, (-w * 0.53 - 0.035, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["dark"]),
             cyl(p + "GlowL", 0.065, 0.02, (w * 0.53 + 0.085, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.0, m=m["glow_cyan"]),
@@ -995,8 +995,8 @@ def lifeguard_dune_accessories(m):
         "Acc_Lifeguard_TopHair": hair_top(p, BUILDS["lean"]["head"], m["dark"], "flat", 43),
         "Acc_Lifeguard_Wands": wand(1) + wand(-1),
         "Acc_Lifeguard_Headset": bind("Head", [
-            tube(p + "Band", [(-w * 0.52, HEAD_Y, 1.6), (-w * 0.4, HEAD_Y, 1.88), (0, HEAD_Y, 1.95), (w * 0.4, HEAD_Y, 1.88), (w * 0.52, HEAD_Y, 1.6)],
-                 0.02, m=m["dark"], segs=6),
+            tube(p + "Band", [(-w * 0.53 - 0.04, HEAD_Y + 0.01, 1.62), (-w * 0.5, HEAD_Y + 0.01, 1.85), (0, HEAD_Y + 0.01, 1.915),
+                              (w * 0.5, HEAD_Y + 0.01, 1.85), (w * 0.53 + 0.04, HEAD_Y + 0.01, 1.62)], 0.02, m=m["dark"], segs=6),
             cyl(p + "CupL", 0.1, 0.1, (w * 0.53 + 0.035, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["orange"]),
             cyl(p + "CupR", 0.1, 0.1, (-w * 0.53 - 0.035, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["orange"]),
             tube(p + "Mic", [(w * 0.53, HEAD_Y - 0.04, 1.54), (w * 0.4, HEAD_Y - 0.2, 1.44), (w * 0.2, face_y(w, 1.42) - 0.06, 1.39)], 0.012,

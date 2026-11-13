@@ -139,7 +139,9 @@ def mechanic(m):
     coverall, vest, white, dark, rust = m["shirt"], m["hivis"], m["white"], m["dark"], m["rust"]
     parts = head(p, m, w, ears=False)
     parts += hair(p, w, dark, "fringe", 14)
-    parts += bind("Head", [band(p + "EarBand", (0, HEAD_Y, 1.96), (0, HEAD_Y, 1.905), w * 0.5 + 0.075, 0.29, dark, n=2.6, thick=0.02, segs=22)])
+    # The ear defenders' band arches over the head, clear of a cap.
+    parts += bind("Head", [tube(p + "EarBand", [(-w * 0.5 - 0.07, HEAD_Y, 1.9), (-w * 0.5 - 0.02, HEAD_Y, 2.0), (0, HEAD_Y, 2.045),
+                                                (w * 0.5 + 0.02, HEAD_Y, 2.0), (w * 0.5 + 0.07, HEAD_Y, 1.9)], 0.024, m=dark, segs=6)])
     for side in (-1, 1):
         parts += bind("Head", [
             cyl(f"{p}EarCup{side}", 0.14, 0.12, (side * (w * 0.5 + 0.05), HEAD_Y, 1.6), rot=(0, math.pi / 2, 0), segs=16, bevel=0.04, m=rust),

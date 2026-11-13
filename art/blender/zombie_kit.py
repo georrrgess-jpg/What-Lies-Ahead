@@ -626,8 +626,10 @@ def hair_top(p, w, m, style="mop", seed=2):
     parts = []
     rng = random.Random(seed + 100)
     if style == "flat":
-        parts.append(sk.shell(p + "CropCrown", m, 1.86, 1.69, off=0.016, gap=110, segs=26, steps=3, lip=0.014))
-        parts.append(sphere(p + "CropTop", w * 0.47, (0, HEAD_Y + 0.02, 1.8), scale=(1.0, 0.86, 0.36), m=m, segs=16, rings=7))
+        # Sides and back down to the fringe (the forehead stays bare), and a
+        # cap of hair over the crown from the hairline up.
+        parts.append(sk.shell(p + "CropCrown", m, 1.845, 1.69, off=0.016, gap=126, segs=26, steps=3, lip=0.014))
+        parts.append(cap_crown(p + "CropTop", w, m, rim=1.835, top=1.92, off=0.016, lip=0.014))
     if style in ("mop", "tufts"):
         # Fat tapered curls leaning every which way from the crown.
         for i in range(6 if style == "mop" else 3):
