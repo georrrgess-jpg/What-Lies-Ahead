@@ -39,12 +39,26 @@ static func install(game: Node) -> void:
 ## True when the player has never been through (or skipped) the first-run flow
 ## and the profile has no progress of its own.
 static func wants_first_run() -> bool:
+	if wants_welcome_back():
+		return true
 	if bool(_sec().get("first_run", false)):
 		return false
 	if is_returning_profile():
 		_sec()["first_run"] = true
 		return false
 	return true
+
+
+## A save carried over to the Sparks economy (LegacyGrant) that has not seen
+## the one-time "Welcome back" card yet.
+static func wants_welcome_back() -> bool:
+	return Profile.section("economy").has("legacy") and not seen(&"welcome_back")
+
+
+## Sparks the carried-over save was paid (0 if none).
+static func legacy_sparks() -> int:
+	var legacy = Profile.section("economy").get("legacy", {})
+	return int(legacy.get("sparks", 0)) if legacy is Dictionary else 0
 
 
 ## A profile that has played: any XP, Sparks, runs or level progress.
@@ -58,6 +72,15 @@ static func is_returning_profile() -> bool:
 
 ## Starts the first-run flow on top of the main menu (`menu` is the MainMenu).
 static func begin_first_run(menu: Node) -> void:
+	if wants_welcome_back():
+		mark_seen(&"welcome_back")
+		_sec()["first_run"] = true
+		Profile.save_profile()
+		var card := WelcomeBackCard.new()
+		card.name = "WelcomeBackCard"
+		card.sparks = legacy_sparks()
+		menu.add_child(card)
+		return
 	_sec()["first_run"] = true
 	Profile.save_profile()
 	var flow := FirstRunFlow.new()

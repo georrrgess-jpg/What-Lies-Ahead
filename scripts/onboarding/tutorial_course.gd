@@ -302,6 +302,21 @@ func _cleanup_step(id: String) -> void:
 			run.set_station_open(false)
 
 
+## Jumps straight to step `i` as if the ones before were done (screenshots,
+## tests): no rewards, the arena gate opened if the step is past it.
+func stage(i: int) -> void:
+	_cleanup_step(current_id())
+	_clear_zombies()
+	for k in i:
+		completed[String(step(k)["id"])] = true
+		if step(k)["id"] == "zombies":
+			_open_gate()
+	for b in balloons:
+		if i > 0 and is_instance_valid(b):
+			b.queue_free()
+	enter_step(i)
+
+
 ## Steps of the first two sections can be done again; nothing pays twice.
 func redo_step() -> void:
 	if index <= 0 or section_of(index) == 2 or section_of(index - 1) != section_of(index):

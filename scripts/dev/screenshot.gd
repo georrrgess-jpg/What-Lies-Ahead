@@ -41,6 +41,8 @@ extends Node
 ##   --shot-ads=1          hold aim-down-sights (0.5 = half-way through raising the sight)
 ##   --shot-sight=<id>     fit this sight (data/cosmetics/sights) to the weapon for the shot
 ##   --shot-threat=1       a zombie behind-right of the player starts its windup (threat warning check)
+##   --shot-scene=tutorial|first_run|coach|hint   onboarding stills (--shot-step, --shot-card,
+##                         --shot-page: see scripts/onboarding/tutorial_shots.gd)
 
 var path := ""
 var args := {}
@@ -103,6 +105,9 @@ func _run() -> void:
 		var intro := IntroOverlay.new()
 		get_tree().current_scene.add_child(intro)
 		await _capture(int(_arg("frames", "120")))
+		return
+	if scene_kind in ["tutorial", "first_run", "welcome_back", "coach", "hint"]:
+		await TutorialShots.run(self, scene_kind)
 		return
 	# Anything that is not an in-level scene is treated as a menu page id.
 	if not scene_kind in ["level", "results", "defeat", "pause", "kiosk"]:

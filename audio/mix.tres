@@ -114,6 +114,7 @@ sound_category = Dictionary[StringName, StringName]({
 &"cos_": &"ui",
 &"prog_": &"ui",
 &"eco_": &"ui",
+&"onb_": &"cue",
 &"menu_theme": &"music",
 &"boardwalk_loop": &"music",
 &"boardwalk_final": &"music",
