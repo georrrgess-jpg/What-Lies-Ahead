@@ -1,76 +1,293 @@
 class_name IntroOverlay
 extends Control
-## The startup sequence, played once per session over the main menu:
-##   0.0  black; a boot blip and a pulse line races across the screen
-##   0.5  a synthwave sun rises behind a scrolling neon grid
-##   1.2  the title drops in letter by letter (a tick per letter), glitching
-##   2.6  "PRESS ANY KEY" pulses; any key/click (or 7 s) opens the menu
-##        through a portal iris that reveals the live 3D backdrop.
-## Any input before the title lands skips straight to the end of the build.
+## The startup sequence, played once per session over the main menu
+## (scored by audio/sfx/cine_startup.wav, tools/audio_packs/showreel.py):
+##   0.0  boot sting: a Spark ignites in the dark with a ring of light
+##   1.4  a rapid montage of four real-time vignettes on the showreel's studio
+##        set (a zombie, a skinned weapon, a confetti kill, the operators),
+##        one cut per beat with a kinetic word over each
+##   4.6  the logo slams in as a marquee sign with chasing bulbs, the montage
+##        dissolves to the live menu backdrop, the tagline lands
+##   5.4  the feature counts pop in (real numbers from GameData)
+##   7.2  "PRESS ANY KEY" over the live backdrop; any key opens the menu
+## The first key/click before 7.2 skips to that end state; the next closes.
+## The montage's models load on threads behind the boot sting, so the first
+## frame never waits on a load.
 
 signal finished
 
+const HOLD_AT := 7.2
+const MONTAGE_AT := 1.4
+const LOGO_AT := 4.6
+const CUT := 0.8
+const ZOMBIE_SCENE := "res://scenes/enemies/zombie.tscn"
+const SPARK_TEX := &"icon_spark"
+const WORDS := ["SURVIVE", "GEAR UP", "POP 'EM", "SUIT UP"]
+
 var _time := 0.0
-var _logo: NeonLogo
-var _prompt: Label
-var _iris: ColorRect
-var _iris_mat: ShaderMaterial
 var _closing := false
-var _ready_for_input := false
-var _glitch := 0.0
+var _at_end := false
+var _bg: ColorRect
+var _shade: ColorRect
+var _spark: TextureRect
+var _ring := 0.0
+var _view: SubViewportContainer
+var _viewport: SubViewport
+var _camera: Camera3D
+var _actors: Node3D
+var _stage: CineStage
+var _shot := -1
+var _shots: Array[CineShot] = []
+var _word: Label
+var _logo: MarqueeSign
+var _tagline: Label
+var _chips: HBoxContainer
+var _prompt: Label
 var _flash := 0.0
-var _logo_home := Vector2.ZERO
+var _fx: Control
+var _score: AudioStreamPlayer
+var _paused: Array[AudioStreamPlayer] = []
+var _preload: PackedStringArray = []
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# The black (and everything drawn in _draw) sits inside this iris rect.
-	_iris = ColorRect.new()
-	_iris.color = Color(0.03, 0.01, 0.08)
-	_iris.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_iris.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_iris_mat = ShaderMaterial.new()
-	_iris_mat.shader = load("res://art/shaders/ui_iris.gdshader")
-	_iris.material = _iris_mat
-	add_child(_iris)
-	_iris.show_behind_parent = true
-	_logo = NeonLogo.new()
-	_logo.size_px = 168
+	_bg = _rect(Color(0.02, 0.01, 0.06))
+	_view = SubViewportContainer.new()
+	_view.stretch = true
+	_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_view.visible = false
+	add_child(_view)
+	_shade = _rect(Color(0.02, 0.0, 0.08, 0.0))
+	_spark = UiKit.icon(SPARK_TEX, 240.0, Wallet.COLOR)
+	_spark.pivot_offset = Vector2(120, 120)
+	_spark.scale = Vector2.ZERO
+	add_child(_spark)
+	_word = UiKit.arcade_label("", 150, Color.WHITE)
+	_word.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_word)
+	_build_title()
+	_fx = Control.new()
+	_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fx.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_fx.draw.connect(_draw_fx)
+	add_child(_fx)
+	resized.connect(_layout)
+	_layout.call_deferred()
+	_hush_menu_music()
+	_score = AudioStreamPlayer.new()
+	_score.stream = Sfx.stream(&"cine_startup")
+	_score.bus = &"Music"
+	_score.volume_db = Sfx.mix_db(&"cine_startup") - 2.0
+	add_child(_score)
+	_score.play()
+	_start_loads()
+	var tw := create_tween()
+	tw.tween_property(_spark, "scale", Vector2.ONE, 0.35).set_delay(0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func(): _ring = 0.001)
+	tw.tween_interval(0.6)
+	tw.tween_property(_spark, "scale", Vector2.ONE * 6.0, 0.18).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(_spark, "modulate:a", 0.0, 0.18)
+
+
+func _rect(color: Color) -> ColorRect:
+	var r := ColorRect.new()
+	r.color = color
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(r)
+	return r
+
+
+func _build_title() -> void:
+	_logo = UiKit.marquee("WHAT LIES AHEAD", 150)
+	_logo.modulate.a = 0.0
 	add_child(_logo)
-	_logo.letter_landed.connect(_on_letter)
-	_prompt = UiKit.arcade_label("PRESS ANY KEY", 38, UiKit.CYAN)
+	_tagline = UiKit.arcade_label("AN ARCADE ZOMBIE SURVIVAL", 48, UiKit.CYAN)
+	_tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_tagline.modulate.a = 0.0
+	add_child(_tagline)
+	_chips = HBoxContainer.new()
+	_chips.add_theme_constant_override("separation", UiKit.GAP_M)
+	_chips.alignment = BoxContainer.ALIGNMENT_CENTER
+	add_child(_chips)
+	var colors := [UiKit.CYAN, UiKit.PINK, UiKit.AMBER, UiKit.CYAN, UiKit.PINK]
+	var counts := [
+		"%d WORLDS" % GameData.worlds().size(), "%d WEAPONS" % GameData.weapons().size(),
+		"%d ZOMBIES" % GameData.enemies().size(), "%d OPERATORS" % GameData.cosmetics().filter(func(c): return c.slot == &"avatar").size(),
+		"%d COSMETICS" % GameData.cosmetics().size()]
+	for i in counts.size():
+		var c := UiKit.chip(counts[i], colors[i], 36)
+		c.modulate.a = 0.0
+		_chips.add_child(c)
+	_prompt = UiKit.arcade_label("PRESS ANY KEY", 56, UiKit.CREAM)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.modulate.a = 0.0
 	add_child(_prompt)
-	resized.connect(_layout)
-	_layout.call_deferred()
-	_logo.appear(1.2, 0.075)
-	Sfx.play(&"intro_boot", -4.0)
-	var tw := create_tween()
-	tw.tween_interval(0.45)
-	tw.tween_callback(func(): Sfx.play(&"intro_swell", -3.0))
-	tw.tween_interval(2.0)
-	tw.tween_callback(func():
-		_ready_for_input = true
-		Sfx.play(&"title_hit", -2.0)
-		_flash = 1.0)
-	tw.tween_interval(4.5)
-	tw.tween_callback(close)
 
 
 func _layout() -> void:
 	var s := size
-	_logo_home = Vector2(s.x * 0.5 - _logo.custom_minimum_size.x * 0.5, s.y * 0.2)
-	_logo.position = _logo_home
-	_prompt.size = Vector2(s.x, 50)
-	_prompt.position = Vector2(0, s.y * 0.82)
-	_iris_mat.set_shader_parameter("aspect", Vector2(s.x / maxf(1.0, s.y), 1.0))
+	_spark.position = s * 0.5 - Vector2(120, 120)
+	_word.size = Vector2(s.x, 180)
+	_word.position = Vector2(0, s.y * 0.66)
+	_word.pivot_offset = _word.size * 0.5
+	_logo.reset_size()
+	_logo.position = Vector2(s.x * 0.5 - _logo.size.x * 0.5, s.y * 0.2)
+	_logo.pivot_offset = _logo.size * 0.5
+	_tagline.size = Vector2(s.x, 56)
+	_tagline.position = Vector2(0, _logo.position.y + _logo.size.y + 22.0)
+	_chips.reset_size()
+	_chips.position = Vector2(s.x * 0.5 - _chips.size.x * 0.5, s.y * 0.6)
+	_prompt.size = Vector2(s.x, 60)
+	_prompt.position = Vector2(0, s.y * 0.8)
 
 
-func _on_letter(_i: int) -> void:
-	Sfx.play(&"title_tick", -10.0, randf_range(0.95, 1.1))
-	_glitch = 0.18
+## Pauses the menu theme (and ambience) for the length of the score.
+func _hush_menu_music() -> void:
+	for c in Sfx.get_children():
+		var p := c as AudioStreamPlayer
+		if p and p.playing and not p.stream_paused:
+			p.stream_paused = true
+			_paused.append(p)
+
+
+func _resume_menu_music() -> void:
+	for p in _paused:
+		if is_instance_valid(p):
+			p.stream_paused = false
+	_paused.clear()
+
+
+# --- montage -------------------------------------------------------------------
+
+func _start_loads() -> void:
+	_preload = [ZOMBIE_SCENE, Operators.model_path(Cosmetics.item(&"op_glitch")),
+		Operators.model_path(Cosmetics.item(&"op_astro_cadet")), Operators.model_path(Cosmetics.item(&"op_arcade_champion")),
+		GameData.weapon(&"ion_carbine").viewmodel.resource_path]
+	for path in _preload:
+		if ResourceLoader.exists(path):
+			ResourceLoader.load_threaded_request(path)
+	_shots = [
+		CineShot.make("zombie", "studio", CUT, _v_zombie),
+		CineShot.make("weapon", "studio", CUT, _v_weapon),
+		CineShot.make("kill", "studio", CUT, _v_kill),
+		CineShot.make("operators", "studio", CUT, _v_operators),
+	]
+
+
+func _ensure_montage() -> void:
+	if _viewport:
+		return
+	for path in _preload:
+		if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			ResourceLoader.load_threaded_get(path)
+	_viewport = SubViewport.new()
+	_viewport.own_world_3d = true
+	_viewport.audio_listener_enable_3d = false
+	_view.add_child(_viewport)
+	_viewport.add_child(CineStudio.new())
+	_camera = Camera3D.new()
+	_viewport.add_child(_camera)
+	_camera.make_current()
+
+
+func _cut_to(i: int) -> void:
+	_shot = i
+	if _actors:
+		_actors.queue_free()
+	_actors = Node3D.new()
+	_viewport.add_child(_actors)
+	_stage = CineStage.new(_actors, _camera, null, null, CUT)
+	_shots[i].build.call(_stage)
+	_stage.update(0.0, 0.0)
+	_flash = 0.8
+	_word.text = WORDS[i]
+	_word.scale = Vector2.ONE * 1.8
+	_word.modulate.a = 1.0
+	_word.rotation_degrees = -4.0 if i % 2 == 0 else 3.0
+	var tw := create_tween()
+	tw.tween_property(_word, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(0.45)
+	tw.tween_property(_word, "modulate:a", 0.0, 0.15)
+
+
+func _end_montage() -> void:
+	Engine.time_scale = 1.0
+	_stage = null
+	_word.modulate.a = 0.0
+	if _viewport:
+		_view.visible = false
+		_viewport.queue_free()
+		_viewport = null
+		_actors = null
+
+
+func _v_zombie(st: CineStage) -> void:
+	var z := st.zombie(&"tourist_shambler", Vector3(0, 0.42, 0), 0.0, "Roar", 0.9)
+	st.fov(30.0, 24.0)
+	st.dolly(Vector3(0.4, 1.85, 3.4), st.head(z) + Vector3(0, -0.3, 0), Vector3(0.2, 1.9, 2.7), st.head(z) + Vector3(0, -0.25, 0))
+
+
+func _v_weapon(st: CineStage) -> void:
+	var model := st.weapon(&"ion_carbine", &"fin_galaxy", &"charm_duck")
+	var pivot := Node3D.new()
+	st.actors.add_child(pivot)
+	pivot.position = Vector3(0, 1.25, 0)
+	pivot.add_child(model)
+	var box := WeaponCosmetics.visible_bounds(model)
+	model.position = -box.get_center()
+	pivot.scale = Vector3.ONE * 1.5 / maxf(0.01, maxf(box.size.x, maxf(box.size.y, box.size.z)))
+	st.every_frame(func(t: float): pivot.rotation.y = deg_to_rad(-60.0 + t * 110.0))
+	st.fov(30.0, 27.0)
+	st.dolly(Vector3(0, 1.45, 2.6), Vector3(0, 1.25, 0), Vector3(0, 1.4, 2.2), Vector3(0, 1.25, 0))
+
+
+func _v_kill(st: CineStage) -> void:
+	var z := st.zombie(&"lifeguard_runner", Vector3(0, 0.42, 0), 20.0, "Walk", 0.7)
+	st.fov(36.0, 32.0)
+	st.dolly(Vector3(1.0, 1.6, 3.4), Vector3(0, 1.3, 0), Vector3(0.7, 1.5, 3.0), Vector3(0, 1.2, 0))
+	st.slowmo(0.1, 0.8, 0.4)
+	st.at(0.12, func():
+		st.shoot(&"pulse_pistol", Vector3(3.5, 1.6, 1.0), st.head(z), 1.0, false)
+		st.kill(z, &"pulse_pistol", true, Vector3(-1, 0, -0.3), 3.0, &"kfx_firework"))
+
+
+func _v_operators(st: CineStage) -> void:
+	var line := [&"op_glitch", &"op_arcade_champion", &"op_astro_cadet"]
+	for i in line.size():
+		st.operator(line[i], Vector3((i - 1) * 1.15, 0.0 if i != 1 else 0.42, -absf(i - 1) * 0.4), -(i - 1) * 8.0, "Pose")
+	st.fov(38.0, 34.0)
+	st.dolly(Vector3(-1.2, 1.3, 3.8), Vector3(0, 1.2, 0), Vector3(1.0, 1.25, 3.4), Vector3(0, 1.25, 0))
+
+
+# --- title -------------------------------------------------------------------------
+
+func _show_title(instant: bool) -> void:
+	_bg.color.a = 0.0
+	_shade.color = Color(0.02, 0.0, 0.08, 0.4)
+	_spark.visible = false
+	var d := 0.0 if instant else 1.0
+	if instant:
+		_logo.modulate.a = 1.0
+		_logo.scale = Vector2.ONE
+		_tagline.modulate.a = 1.0
+		for c in _chips.get_children():
+			c.modulate.a = 1.0
+		return
+	_logo.scale = Vector2.ONE * 2.2
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_logo, "scale", Vector2.ONE, 0.22 * d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_logo, "modulate:a", 1.0, 0.08 * d)
+	tw.tween_callback(_logo.flash).set_delay(0.2)
+	tw.tween_property(_tagline, "modulate:a", 1.0, 0.3).set_delay(0.45)
+	for i in _chips.get_child_count():
+		var c := _chips.get_child(i)
+		c.scale = Vector2.ONE
+		tw.tween_property(c, "modulate:a", 1.0, 0.12).set_delay(0.8 + i * 0.25)
+	_flash = 1.0
 
 
 ## Takes every key, click and button before the menu underneath sees it.
@@ -80,109 +297,78 @@ func _input(event: InputEvent) -> void:
 
 func _handle(event: InputEvent) -> void:
 	var pressed := (event is InputEventKey or event is InputEventMouseButton or event is InputEventJoypadButton) and event.is_pressed()
-	if not pressed or _closing:
-		return
 	get_viewport().set_input_as_handled()
-	if not _ready_for_input:
-		# Skip the build-up: show the finished title immediately.
-		_logo.show_now()
-		_time = maxf(_time, 2.6)
-		_ready_for_input = true
-		_flash = 0.6
+	if not pressed or _closing or event.is_echo():
+		return
+	if not _at_end:
+		_skip_to_end()
 		return
 	close()
+
+
+## Jumps to the held title: logo, tagline, counts and the prompt.
+func _skip_to_end() -> void:
+	_time = maxf(_time, HOLD_AT)
+	_end_montage()
+	_show_title(true)
+	_reach_hold()
+
+
+func _reach_hold() -> void:
+	_at_end = true
+	_score.stop()
+	_resume_menu_music()
 
 
 func close() -> void:
 	if _closing:
 		return
 	_closing = true
+	_end_montage()
+	_score.stop()
+	_resume_menu_music()
 	Sfx.play(&"ui_whoosh", -3.0)
-	var tw := create_tween().set_parallel(true)
-	tw.tween_property(_logo, "modulate:a", 0.0, 0.35)
-	tw.tween_property(_prompt, "modulate:a", 0.0, 0.2)
-	tw.tween_method(func(r: float): _iris_mat.set_shader_parameter("radius", r), 0.0, 1.3, 0.9).set_delay(0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tw.chain().tween_callback(func():
+	var tw := create_tween()
+	tw.tween_property(self, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func():
 		finished.emit()
 		queue_free())
 
 
 func _process(delta: float) -> void:
-	_time += delta
-	_glitch = maxf(0.0, _glitch - delta)
-	_flash = maxf(0.0, _flash - delta * 2.5)
-	if _ready_for_input and not _closing:
+	var real := delta / maxf(Engine.time_scale, 0.0001)
+	_time += real
+	_flash = maxf(0.0, _flash - real * 3.0)
+	if _ring > 0.0:
+		_ring += real * 1.6
+	if not _at_end and not _closing:
+		_run_timeline()
+	if _at_end and not _closing:
 		_prompt.modulate.a = 0.55 + 0.45 * sin(_time * 4.0)
-	# Glitch jitter on the title while letters land.
-	_logo.position = _logo_home + Vector2((randf() - 0.5) * 14.0 * _glitch, 0.0)
-	queue_redraw()
+	_fx.queue_redraw()
 
 
-func _draw() -> void:
-	if _closing and _iris_mat.get_shader_parameter("radius") > 1.2:
-		return
+func _run_timeline() -> void:
+	if _time >= MONTAGE_AT and _time < LOGO_AT:
+		_ensure_montage()
+		_view.visible = true
+		var i := clampi(int((_time - MONTAGE_AT) / CUT), 0, _shots.size() - 1)
+		if i != _shot:
+			_cut_to(i)
+		_stage.update(_time - MONTAGE_AT - i * CUT, get_process_delta_time())
+	elif _time >= LOGO_AT and _logo.modulate.a == 0.0:
+		_end_montage()
+		_show_title(false)
+	if _time >= HOLD_AT:
+		_reach_hold()
+
+
+func _draw_fx() -> void:
 	var s := size
-	var horizon := s.y * 0.62
-	var t := _time
-	var fade_in := clampf((t - 0.35) / 0.8, 0.0, 1.0)
-	if _closing:
-		fade_in *= 1.0 - clampf(float(_iris_mat.get_shader_parameter("radius")) / 1.2, 0.0, 1.0)
-
-	# Sky gradient bands.
-	for i in 24:
-		var k := float(i) / 24.0
-		var c := Color("0b0623").lerp(Color("5a1b6e"), k * k).lerp(Color("ff5aa0"), maxf(0.0, k - 0.7) * 1.6)
-		draw_rect(Rect2(0, horizon * k, s.x, horizon / 24.0 + 1.0), Color(c, fade_in))
-
-	# Synthwave sun with cut stripes, rising.
-	var rise := ease(clampf((t - 0.5) / 1.4, 0.0, 1.0), -2.0)
-	var sun_c := Vector2(s.x * 0.5, horizon - s.y * 0.05 - rise * s.y * 0.1)
-	var sun_r := s.y * 0.2
-	draw_circle(sun_c, sun_r * 1.5, Color(1.0, 0.35, 0.6, 0.12 * fade_in))
-	draw_circle(sun_c, sun_r * 1.2, Color(1.0, 0.45, 0.55, 0.15 * fade_in))
-	var bands := 22
-	for i in bands:
-		var y0 := sun_c.y - sun_r + 2.0 * sun_r * float(i) / bands
-		var dy := y0 - sun_c.y
-		var half := sqrt(maxf(0.0, sun_r * sun_r - dy * dy))
-		var k := float(i) / bands
-		var gap := k > 0.5 and int(i) % 3 == 0
-		if gap or y0 > horizon:
-			continue
-		var c := Color("ffe14a").lerp(Color("ff3fa4"), k)
-		draw_rect(Rect2(sun_c.x - half, y0, half * 2.0, 2.0 * sun_r / bands + 1.0), Color(c, fade_in))
-
-	# Ground and perspective grid scrolling toward the viewer.
-	draw_rect(Rect2(0, horizon, s.x, s.y - horizon), Color(Color("12052a"), fade_in))
-	var grid_a := fade_in * 0.85
-	var cyan := Color(UiKit.CYAN, grid_a)
-	var pink := Color(UiKit.PINK, grid_a)
-	for i in range(-16, 17):
-		var x_far := s.x * 0.5 + i * s.x * 0.035
-		var x_near := s.x * 0.5 + i * s.x * 0.32
-		draw_line(Vector2(x_far, horizon), Vector2(x_near, s.y), Color(pink, grid_a * 0.7), 2.0, true)
-	var scroll := fmod(t * 0.6, 1.0)
-	for i in 14:
-		var z := (float(i) + scroll) / 14.0
-		var y := horizon + (s.y - horizon) * pow(z, 2.2)
-		draw_line(Vector2(0, y), Vector2(s.x, y), Color(cyan, grid_a * z), 1.5 + z * 2.0, true)
-	draw_line(Vector2(0, horizon), Vector2(s.x, horizon), Color(Color("ff9ad0"), fade_in), 3.0, true)
-
-	# The opening pulse line racing across the screen.
-	var pulse := clampf(t / 0.5, 0.0, 1.0)
-	if t < 1.2:
-		var a := 1.0 - clampf((t - 0.5) / 0.7, 0.0, 1.0)
-		var pts := PackedVector2Array()
-		for i in 60:
-			var x := s.x * float(i) / 59.0
-			if x > s.x * pulse:
-				break
-			var beat := exp(-pow((float(i) - 30.0) / 2.5, 2.0)) * 80.0 * sin(float(i) * 1.7)
-			pts.append(Vector2(x, horizon + beat))
-		if pts.size() > 1:
-			draw_polyline(pts, Color(UiKit.CYAN, a), 4.0, true)
-			draw_polyline(pts, Color(1, 1, 1, a), 1.5, true)
-
-	# Title-hit flash.
+	if _ring > 0.0 and _ring < 1.2:
+		var c := s * 0.5
+		var r := _ring * s.y * 0.6
+		_fx.draw_arc(c, r, 0.0, TAU, 96, Color(Wallet.COLOR_GLOW, 1.0 - _ring / 1.2), 10.0 * (1.2 - _ring), true)
+		_fx.draw_arc(c, r * 0.7, 0.0, TAU, 96, Color(Wallet.COLOR, 0.6 * (1.0 - _ring / 1.2)), 4.0, true)
 	if _flash > 0.0:
-		draw_rect(Rect2(Vector2.ZERO, s), Color(1.0, 0.85, 0.95, _flash * 0.35 * Settings.flash_scale()))
+		_fx.draw_rect(Rect2(Vector2.ZERO, s), Color(1.0, 0.92, 0.97, _flash * 0.4 * Settings.flash_scale()))
