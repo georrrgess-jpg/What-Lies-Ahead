@@ -62,17 +62,18 @@ def build_bin():
 
 
 def build_signpost():
-    """Wayfinding totem; the level adds the text with Label3D on the panel face (z 1.7-2.5)."""
+    """Wayfinding totem; the level adds the text with Label3D on the panel face (z 2.2-3.0).
+    The panel starts above head height (1.8 m), so walking past never clips it."""
     reset_scene()
     navy, steel, teal = amat("Navy", rough=0.5), amat("SteelDark", rough=0.4, metal=0.5), amat("Teal", rough=0.5)
     cyan = aglow("SignEdge", "Cyan", 2.2)
     parts = [
         box("Base", (0.7, 0.4, 0.12), (0, 0, 0.06), bevel=0.04, m=steel),
-        box("Post", (0.14, 0.14, 1.6), (0, 0, 0.9), bevel=0.03, m=steel),
-        box("Panel", (1.3, 0.12, 0.95), (0, 0, 2.1), bevel=0.05, m=navy),
-        box("Header", (1.32, 0.13, 0.16), (0, 0, 2.62), bevel=0.04, m=teal),
-        box("GlowF", (1.2, 0.02, 0.03), (0, -0.065, 1.65), bevel=0.0, m=cyan),
-        box("GlowB", (1.2, 0.02, 0.03), (0, 0.065, 1.65), bevel=0.0, m=cyan),
+        box("Post", (0.14, 0.14, 2.1), (0, 0, 1.15), bevel=0.03, m=steel),
+        box("Panel", (1.3, 0.12, 0.95), (0, 0, 2.6), bevel=0.05, m=navy),
+        box("Header", (1.32, 0.13, 0.16), (0, 0, 3.12), bevel=0.04, m=teal),
+        box("GlowF", (1.2, 0.02, 0.03), (0, -0.065, 2.15), bevel=0.0, m=cyan),
+        box("GlowB", (1.2, 0.02, 0.03), (0, 0.065, 2.15), bevel=0.0, m=cyan),
     ]
     save("aqua_signpost", [merge("Signpost", parts)])
 

@@ -33,6 +33,7 @@ const X1 := 26.6
 const Z0 := -31.4
 const Z1 := 26.6
 const DECK_Y := 2.0
+const RAMP_RAIL_H := 1.1     # ramp handrails: top above the ramp surface
 const MOUNT_C := Vector3(0, 0, -9)
 const MOUNT_SIZE := Vector2(20, 14)
 const STATION_POS := Vector3(0, 0, 9)
@@ -265,6 +266,8 @@ func _build_launch_mount() -> void:
 	# Kept inside the deck edge: tall zombies (the Bruiser) walk under the overhang.
 	_collider(pad, "GantryBody", Vector3(4.9, 36.0, 5.4), c + Vector3(-7.55, DECK_Y + 18.0, 0))
 
+	_build_countdown(pad, c + Vector3(-7.75, DECK_Y + 7.6, 2.86))
+
 	# Ramps: the model's high end sits over its origin, descending toward +Z.
 	_ramp(pad, "RampSouth", Vector3(7.0, 0, c.z + MOUNT_SIZE.y * 0.5), 0.0)
 	_ramp(pad, "RampNorth", Vector3(-2.5, 0, c.z - MOUNT_SIZE.y * 0.5), 180.0)
@@ -288,6 +291,47 @@ func _build_launch_mount() -> void:
 		i += 1
 
 
+## The countdown clock: a dark board with amber digits (counts down while the
+## run is on, then flashes once the exit portal opens; see dune_countdown.gd).
+func _build_countdown(parent: Node3D, centre: Vector3) -> void:
+	var holder := Node3D.new()
+	holder.name = "CountdownClock"
+	holder.position = centre
+	parent.add_child(holder)
+	var board := MeshInstance3D.new()
+	board.name = "Board"
+	board.mesh = _box_mesh(Vector3(5.4, 2.3, 0.16), _mat("clock_board", Color(0.07, 0.08, 0.13), 0.5))
+	holder.add_child(board)
+	var frame := MeshInstance3D.new()
+	frame.name = "Frame"
+	frame.mesh = _box_mesh(Vector3(5.7, 2.6, 0.1), _mat("clock_frame", Color(0.93, 0.89, 0.8), 0.6))
+	frame.position.z = -0.06
+	holder.add_child(frame)
+	var caption := Label3D.new()
+	caption.name = "Caption"
+	caption.text = "LAUNCH WINDOW"
+	caption.font = load("res://art/fonts/LilitaOne-Regular.ttf")
+	caption.font_size = 96
+	caption.pixel_size = 0.0042
+	caption.modulate = Color(0.95, 0.92, 0.86)
+	caption.outline_size = 0
+	caption.shaded = false
+	caption.position = Vector3(0, 0.78, 0.09)
+	holder.add_child(caption)
+	var digits := Label3D.new()
+	digits.name = "Digits"
+	digits.text = "T-09:00"
+	digits.font = load("res://art/fonts/LilitaOne-Regular.ttf")
+	digits.font_size = 128
+	digits.pixel_size = 0.0105
+	digits.modulate = Color(1.0, 0.66, 0.2)
+	digits.outline_size = 0
+	digits.shaded = false
+	digits.position = Vector3(0, -0.22, 0.09)
+	digits.set_script(load("res://scripts/props/dune_countdown.gd"))
+	holder.add_child(digits)
+
+
 func _ramp(parent: Node3D, ramp_name: String, top: Vector3, yaw: float) -> void:
 	_prop(parent, "dune_ramp", ramp_name, top, yaw)
 	# Solid wedge collision: flat underside, sloped top from the deck to the ground.
@@ -307,15 +351,21 @@ func _ramp(parent: Node3D, ramp_name: String, top: Vector3, yaw: float) -> void:
 	convex.points = pts
 	shape.shape = convex
 	body.add_child(shape)
-	# Side walls under the handrails: the ramp is only entered from its ends
+	# Side walls up to the handrails: the ramp is only entered from its ends
 	# (otherwise the navmesh would let zombies step onto its raised edges).
+	# They slope with the rail, so nothing invisible stands above it.
 	for x in [-2.1, 2.1]:
 		var side := CollisionShape3D.new()
 		side.name = "Side%d" % int(x)
-		var box := BoxShape3D.new()
-		box.size = Vector3(0.2, DECK_Y + 1.1, 8.0)
-		side.shape = box
-		side.position = Vector3(x, (DECK_Y + 1.1) * 0.5, 4.0)
+		var wedge := ConvexPolygonShape3D.new()
+		var side_pts := PackedVector3Array()
+		for sx in [x - 0.1, x + 0.1]:
+			side_pts.append(Vector3(sx, 0.0, 0.0))
+			side_pts.append(Vector3(sx, DECK_Y + RAMP_RAIL_H, 0.0))
+			side_pts.append(Vector3(sx, RAMP_RAIL_H, 8.0))
+			side_pts.append(Vector3(sx, 0.0, 8.0))
+		wedge.points = side_pts
+		side.shape = wedge
 		body.add_child(side)
 		# Round bollards cap the wall ends (foot and head), so corner-cutting
 		# zombies slide past instead of snagging.
@@ -529,7 +579,7 @@ func _build_cargo_lift() -> void:
 	_prop(lift, "dune_cargo_lift", "Lift", Vector3(0, -0.28, 0), 0.0)
 	for x in [-3.24, 3.24]:
 		for z in [-3.24, 3.24]:
-			_collider(lift, "Post%d%d" % [int(x), int(z)], Vector3(0.6, 8.5, 0.6), Vector3(x, 4.25, z))
+			_post(lift, "Post%d%d" % [int(x), int(z)], 0.32, 8.5, Vector3(x, 0, z))
 	_collider(lift, "BackWall", Vector3(7.6, 7.5, 0.6), Vector3(0, 3.75, -4.0))
 
 
@@ -543,10 +593,10 @@ func _build_gate() -> void:
 	_collider(gate, "Booth", Vector3(3.4, 3.6, 3.4), Vector3(-6.6, 1.8, 0))
 	for x in [-5.0, 5.0]:
 		for z in [-2.5, 2.5]:
-			_collider(gate, "Column%d%d" % [int(x), int(z)], Vector3(0.5, 4.8, 0.5), Vector3(x, 2.4, z))
+			_post(gate, "Column%d%d" % [int(x), int(z)], 0.27, 4.8, Vector3(x, 0, z))
 	for x in [-4.2, 4.2]:
 		_collider(gate, "Jersey%d" % int(x), Vector3(0.7, 0.9, 5.0), Vector3(x, 0.45, -5.85))
-	_collider(gate, "BoomPost", Vector3(0.7, 1.4, 0.7), Vector3(4.4, 0.7, -1.2))
+	_post(gate, "BoomPost", 0.36, 1.4, Vector3(4.4, 0, -1.2))
 
 
 # ---------------------------------------------------------------------------
@@ -615,7 +665,7 @@ func _build_cover() -> void:
 		var to_centre: Vector3 = MOUNT_C - spot
 		var yaw := rad_to_deg(atan2(to_centre.x, to_centre.z))
 		_prop(cover, "dune_light_mast", "Mast%d" % i, spot, yaw)
-		_collider(cover, "Mast%dCollision" % i, Vector3(0.7, 8.0, 0.7), spot + Vector3(0, 4.0, 0))
+		_post(cover, "Mast%dCollision" % i, 0.38, 8.0, spot)
 		i += 1
 	# White-and-teal ground equipment and wayfinding: the spacecraft livery
 	# against the sand and rust (cool accents for colour contrast).
@@ -634,10 +684,10 @@ func _build_cover() -> void:
 		col.rotation.y = yaw
 		i += 1
 	_prop(dressing, "dune_windsock", "Windsock", Vector3(24.6, 0, 20.0), 70.0)
-	_collider(cover, "WindsockPole", Vector3(0.4, 4.0, 0.4), Vector3(24.6, 2.0, 20.0))
+	_post(cover, "WindsockPole", 0.2, 4.0, Vector3(24.6, 0, 20.0))
 	_prop(dressing, "dune_sign", "PadSign", Vector3(15.5, 0, 25.4), 180.0)
 	for x in [-2.5, 2.5]:
-		_collider(cover, "PadSignLeg%d" % int(x), Vector3(0.4, 4.0, 0.4), Vector3(15.5 - x, 2.0, 25.2))
+		_post(cover, "PadSignLeg%d" % int(x), 0.2, 4.0, Vector3(15.5 - x, 0, 25.2))
 
 
 ## Lamp posts along the walls, cones at the ramp feet, warning signs by the mount.
@@ -651,7 +701,7 @@ func _build_details() -> void:
 	var i := 0
 	for spot in lamps:
 		_prop(details, "dune_lamp", "Lamp%02d" % i, spot, i * 37.0)
-		_collider(details, "Lamp%02dCollision" % i, Vector3(0.45, 4.0, 0.45), spot + Vector3(0, 2.0, 0))
+		_post(details, "Lamp%02dCollision" % i, 0.24, 4.0, spot)
 		i += 1
 	var cones := [Vector3(4.3, 0, 6.9), Vector3(9.7, 0, 6.9), Vector3(-5.1, 0, -24.9), Vector3(0.1, 0, -24.9),
 		Vector3(-15.0, 0, -4.2), Vector3(-14.3, 0, -5.4), Vector3(13.2, 0, 13.4)]
@@ -677,6 +727,8 @@ func _build_station_and_portal() -> void:
 	portal.name = "Portal"
 	geo.add_child(portal)
 	portal.position = PORTAL_POS
+	# Behind the arch: the closed gate and the machinery at its back.
+	_collider(geo, "PortalRear", Vector3(6.3, 3.2, 1.85), PORTAL_POS + Vector3(0, 1.6, -1.5))
 
 	var lights := Node3D.new()
 	lights.name = "ExitLights"
@@ -779,6 +831,16 @@ func _build_markings() -> void:
 	_stencil(paint, "BLAST ZONE", Vector3(-hx - 1.6, y + 0.004, c.z), 90.0, 1.4, Color(0.98, 0.76, 0.16))
 	_stencil(paint, "BLAST ZONE", Vector3(hx + 1.6, y + 0.004, c.z), -90.0, 1.4, Color(0.98, 0.76, 0.16))
 	_stencil(paint, "KEEP CLEAR", Vector3(-12.0, y + 0.004, 21.5), 0.0, 1.1, Color(0.95, 0.92, 0.86))
+	# Sector names stencilled on the blast walls (inner faces).
+	var cream := Color(0.95, 0.92, 0.86)
+	var amber := Color(0.98, 0.76, 0.16)
+	for spec in [
+		["SOUTH APRON  S1", Vector3(1.0, 2.35, Z1 - 0.54), 180.0, cream], ["NO OPEN FLAME", Vector3(21.0, 2.35, Z1 - 0.54), 180.0, amber],
+		["WEST LANE  W1", Vector3(X0 + 0.54, 2.35, 14.0), 90.0, cream], ["HANGAR A", Vector3(X0 + 0.54, 2.35, 1.6), 90.0, amber],
+		["BACK YARD  N1", Vector3(23.1, 2.35, -31.46), 0.0, cream],
+		["EAST LANE  E1", Vector3(X1 - 0.54, 2.35, -10.0), -90.0, cream], ["CARGO LIFT", Vector3(X1 - 0.54, 2.35, 10.0), -90.0, amber],
+	]:
+		_wall_stencil(paint, spec[0], spec[1], spec[2], 0.6, spec[3])
 
 
 func _decal(parent: Node3D, pos: Vector3, size: Vector3, material: Material) -> void:
@@ -804,6 +866,24 @@ func _stencil(parent: Node3D, text: String, pos: Vector3, yaw: float, height: fl
 	label.double_sided = false
 	label.position = pos
 	label.rotation = Vector3(deg_to_rad(-90.0), deg_to_rad(yaw), 0.0)
+	label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(label)
+
+
+## Painted lettering on a wall, facing `yaw` degrees (0 = toward +Z).
+func _wall_stencil(parent: Node3D, text: String, pos: Vector3, yaw: float, height: float, color: Color) -> void:
+	var label := Label3D.new()
+	label.name = "WallStencil%02d" % parent.get_child_count()
+	label.text = text
+	label.font = load("res://art/fonts/LilitaOne-Regular.ttf")
+	label.font_size = 128
+	label.pixel_size = height / 128.0
+	label.modulate = Color(color, 0.82)
+	label.outline_size = 0
+	label.shaded = true
+	label.double_sided = false
+	label.position = pos
+	label.rotation.y = deg_to_rad(yaw)
 	label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(label)
 
@@ -1167,7 +1247,11 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.cell_size = 0.25
 	mesh.cell_height = 0.25
 	mesh.agent_height = 1.75
-	mesh.agent_radius = 0.5
+	# Paths keep 0.75 m off walls and props: the largest zombies (a Bruiser or a
+	# Yeti is 0.78 m in radius) could not get close enough to a waypoint tucked
+	# 0.5 m (or, after contour simplification, less) from a corner to tick it
+	# off, and stood pushing at the corner until the stall failsafe moved them.
+	mesh.agent_radius = 0.75
 	mesh.agent_max_climb = 0.25
 	mesh.agent_max_slope = 40.0
 	mesh.region_min_size = 8.0
@@ -1276,6 +1360,24 @@ func _box(parent: Node3D, box_name: String, size: Vector3, pos: Vector3, materia
 	var box := BoxShape3D.new()
 	box.size = size
 	shape.shape = box
+	body.add_child(shape)
+	return body
+
+
+## Invisible upright cylinder collider for posts, poles and trunks: a zombie
+## pressing on a round post slides off it, where the flat face of a box post
+## can hold one that walks straight into it.
+func _post(parent: Node3D, post_name: String, radius: float, height: float, base: Vector3) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = post_name
+	body.position = base + Vector3(0, height * 0.5, 0)
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var cyl := CylinderShape3D.new()
+	cyl.radius = radius
+	cyl.height = height
+	shape.shape = cyl
 	body.add_child(shape)
 	return body
 

@@ -10,6 +10,10 @@ uniform float fall_speed = 1.3;
 uniform vec2 wind = vec2(0.6, 0.2);
 uniform float flake_size = 0.045;
 uniform vec4 flake_color : source_color = vec4(0.92, 0.95, 1.0, 0.85);
+// Roofed volumes (world-space boxes) no flake is drawn in.
+uniform vec3 shelter_min[8];
+uniform vec3 shelter_max[8];
+uniform int shelter_count = 0;
 
 varying float fade;
 
@@ -26,6 +30,11 @@ void vertex() {
 	vec3 world = base + mod(p - base, box_size);
 	vec4 view_pos = VIEW_MATRIX * vec4(world, 1.0);
 	float size = flake_size * (0.6 + 0.8 * r);
+	for (int i = 0; i < 8; i++) {
+		if (i < shelter_count && all(greaterThan(world, shelter_min[i])) && all(lessThan(world, shelter_max[i]))) {
+			size = 0.0;
+		}
+	}
 	view_pos.xy += VERTEX.xy * size;
 	float depth = -view_pos.z;
 	fade = smoothstep(0.4, 2.0, depth) * (1.0 - smoothstep(box_size.x * 0.32, box_size.x * 0.5, depth));
