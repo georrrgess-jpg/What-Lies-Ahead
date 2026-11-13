@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/tutorial/boot_camp_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"boot_camp"
+display_name = "Boot Camp"
+blurb = "The training midway behind Prize Pier: learn to move, shoot and survive."
+scene_path = "res://scenes/levels/boot_camp.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 0
+music = &"boardwalk_loop"
+music_final = &"boardwalk_final"
+ambience = &"pier_ambience"
+music_volume_db = -11.0
+ambience_volume_db = -10.0
+accent_color = Color(0.208, 0.941, 1, 1)
+heal_item_name = "Boardwalk snack"
+loading_tips = PackedStringArray("Boot Camp has no fail state: mess up as much as you like.", "Hold Enter at the start of a section to skip it. Esc pauses, and the pause menu skips the whole camp.")

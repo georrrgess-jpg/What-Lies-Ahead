@@ -6,6 +6,8 @@ extends Node
 ##   --autoplay=defeat    start a run and let the zombies win
 ##   --autoplay=pause     exercise the pause menu: resume, restart, main menu
 ##   --autoplay=route     crowd test: do zombies use both lanes around the kiosk?
+##   --autoplay=tutorial  play Boot Camp end to end from the menu (options in
+##                        scripts/onboarding/tutorial_bot.gd: --tutorial-runs, --tutorial-skip)
 ##   --weapon=<id>        starter weapon for the bot (default: pulse_pistol)
 ##   --level=<id>         level to play (default: the first one); locks are ignored
 ##   --ring=<m>           radius of the bot's patrol ring around the loadout station
@@ -28,7 +30,7 @@ extends Node
 ## The bot plays through the real input pipeline (InputEventAction), so the
 ## same code paths run as for a human player.
 
-enum Mode { NONE, CLEAR, DEFEAT, SHOT, PAUSE, ROUTE }
+enum Mode { NONE, CLEAR, DEFEAT, SHOT, PAUSE, ROUTE, TUTORIAL }
 
 var mode := Mode.NONE
 var weapon := &"pulse_pistol"
@@ -74,6 +76,7 @@ var _min_health := 100.0
 var _frame_times: Array[float] = []
 var _stuck_time := 0.0
 var _last_pos := Vector3.ZERO
+var _tutorial: TutorialBot
 
 
 func _ready() -> void:
@@ -87,6 +90,9 @@ func _ready() -> void:
 			mode = Mode.PAUSE
 		elif arg == "--autoplay=route":
 			mode = Mode.ROUTE
+		elif arg == "--autoplay=tutorial":
+			mode = Mode.TUTORIAL
+			_tutorial = TutorialBot.new(self)
 		elif arg.begins_with("--level="):
 			level_id = StringName(arg.trim_prefix("--level="))
 		elif arg.begins_with("--ring="):
@@ -145,6 +151,9 @@ func _physics_process(delta: float) -> void:
 		_quit(2)
 		return
 
+	if mode == Mode.TUTORIAL:
+		_tutorial.tick(delta)
+		return
 	var scene := get_tree().current_scene
 	if scene == null:
 		return

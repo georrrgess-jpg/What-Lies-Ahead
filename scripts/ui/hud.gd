@@ -105,6 +105,12 @@ func add_widget(widget: Control) -> void:
 	_root.add_child(widget)
 
 
+## Hides the wave counter (the tutorial shows its own objective card there).
+func hide_wave_counter() -> void:
+	_wave.visible = false
+	_wave_sub.visible = false
+
+
 ## Level start: hold black for a few frames (while FxWarmup compiles shaders
 ## underneath), then fade the world in.
 func fade_in() -> void:

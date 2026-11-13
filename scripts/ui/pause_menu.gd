@@ -55,6 +55,13 @@ func open(director: RunDirector) -> void:
 	var restart := UiKit.soft_button("RESTART RUN", 34)
 	restart.pressed.connect(_ask.bind("RESTART THE RUN?", "This run starts over from the first wave.", "RESTART", _leave.bind(true)))
 	_main.add_child(restart)
+	if director.has_method("skip_tutorial"):
+		var skip := UiKit.soft_button("SKIP TUTORIAL", 34)
+		skip.name = "SkipTutorial"
+		skip.pressed.connect(_ask.bind("SKIP BOOT CAMP?", "You go to the main menu. Replay it any time from the title screen.", "SKIP", func():
+			get_tree().paused = false
+			director.skip_tutorial()))
+		_main.add_child(skip)
 	var menu := UiKit.soft_button("MAIN MENU", 34)
 	menu.pressed.connect(_ask.bind("LEAVE THE RUN?", "You go back to the main menu.", "LEAVE", _leave.bind(false)))
 	_main.add_child(menu)
