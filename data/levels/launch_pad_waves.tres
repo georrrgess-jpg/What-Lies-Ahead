@@ -114,8 +114,8 @@ surge_count = 5
 script = ExtResource("2")
 spawns = {
 "dune_jet_mechanic": 12,
-"dune_space_cadet": 12,
-"dune_hazmat_worker": 6
+"dune_space_cadet": 10,
+"dune_hazmat_worker": 5
 }
 spawn_interval = 2.0
 burst = 2

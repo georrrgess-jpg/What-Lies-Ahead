@@ -115,8 +115,8 @@ surge_count = 6
 script = ExtResource("2")
 spawns = {
 "frost_frozen_tourist": 11,
-"frost_ski_racer": 12,
-"lifeguard_runner": 4,
+"frost_ski_racer": 11,
+"lifeguard_runner": 3,
 "frost_yeti": 2
 }
 spawn_interval = 2.0

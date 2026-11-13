@@ -114,9 +114,9 @@ surge_count = 5
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 8,
-"hover_courier": 13,
+"hover_courier": 11,
 "neon_punk": 5,
-"lifeguard_runner": 5
+"lifeguard_runner": 4
 }
 spawn_interval = 2.1
 burst = 2
