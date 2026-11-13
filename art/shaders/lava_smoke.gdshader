@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabled;
+render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabled, fog_disabled;
 
 // The volcano's plume on a tall card (UV.y = 1 at the crater): billowing puffs
 // rise, widen and drift, dark violet above, lit ember-orange from below.

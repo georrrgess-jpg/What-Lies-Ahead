@@ -528,6 +528,7 @@ func _build_bar() -> void:
 	for i in 4:
 		_prop(dressing, "lava_parasol", "BarParasol%d" % i, BAR + Vector3(-4.0 + i * 2.7, 0, 5.8 + (i % 2) * 1.2), i * 40.0, Vector3(3, 2.7, 3))
 		_post(bar, "BarParasol%dPole" % i, 0.1, 2.6, BAR + Vector3(-4.0 + i * 2.7, 0, 5.8 + (i % 2) * 1.2))
+		_player_block(bar, "BarParasol%dCap" % i, Vector3(2.6, 2.0, 2.6), BAR + Vector3(-4.0 + i * 2.7, 3.4, 5.8 + (i % 2) * 1.2))
 
 
 # ---------------------------------------------------------------------------
@@ -600,6 +601,7 @@ func _build_springs() -> void:
 		_prop(dressing, "lava_lounger", "SpringLounger%d" % i, p, 100.0, Vector3(0.8, 0.6, 2.0))
 	_prop(dressing, "lava_parasol", "SpringParasol", Vector3(21.6, 0, 6.2), 30.0, Vector3(3, 2.7, 3))
 	_post(springs, "SpringParasolPole", 0.1, 2.6, Vector3(21.6, 0, 6.2))
+	_player_block(springs, "SpringParasolCap", Vector3(2.6, 2.0, 2.6), Vector3(21.6, 3.4, 6.2))
 
 
 ## A ring of basalt rocks round a pool (one MultiMesh, no collision of its own).
