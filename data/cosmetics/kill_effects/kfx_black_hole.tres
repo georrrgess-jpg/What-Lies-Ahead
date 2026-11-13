@@ -9,7 +9,7 @@ display_name = "Event Horizon"
 description = "A tiny black hole swallows a spiral of sparkles, then collapses in a blinding wink."
 slot = &"kill_effect"
 rarity = 3
-price = 5600
+price = 7000
 params = {
 "effect": "black_hole"
 }

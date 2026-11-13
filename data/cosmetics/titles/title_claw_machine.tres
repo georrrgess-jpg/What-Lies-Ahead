@@ -9,5 +9,5 @@ display_name = "Claw Machine Whisperer"
 description = "The claw always holds on for them."
 slot = &"title"
 rarity = 1
-price = 650
+price = 750
 sort_order = 10141

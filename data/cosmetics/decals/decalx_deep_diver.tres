@@ -16,7 +16,7 @@ description = "A clownfish peeking through a brass porthole. Sold once you clear
 slot = &"weapon_decal"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 colors = PackedColorArray(0.1176, 0.4314, 0.7529, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
 params = {
 "emblem": "DeepDiver",

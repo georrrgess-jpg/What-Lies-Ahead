@@ -9,7 +9,7 @@ display_name = "8-Bit"
 description = "Straight off the arcade cabinet: a crosshair you can count the pixels of."
 slot = &"weapon_sight"
 rarity = 2
-price = 2800
+price = 2500
 colors = PackedColorArray(0.4, 1.0, 0.7, 1, 0.88, 0.13, 0.54, 1)
 params = {
 "optic": "Holo",

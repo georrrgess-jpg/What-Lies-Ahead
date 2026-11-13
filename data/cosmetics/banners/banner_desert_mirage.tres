@@ -9,7 +9,7 @@ display_name = "Desert Mirage"
 description = "Mesas and cacti shimmering in the heat at sunset."
 slot = &"banner"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(1, 0.6, 0.3, 1, 0.6, 0.25, 0.3, 1, 0.25, 0.55, 0.3, 1)
 params = {
 "style": 37

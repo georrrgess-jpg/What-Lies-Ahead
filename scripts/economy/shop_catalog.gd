@@ -150,14 +150,15 @@ static func base_price(it: CosmeticItem) -> int:
 	return it.price if it else 0
 
 
-## What `it` costs right now (discounted prices are rounded to 5 Sparks).
+## What `it` costs right now (a discounted price is rounded like a full one:
+## EconomyRules.discounted).
 static func price(it: CosmeticItem) -> int:
 	if it == null:
 		return 0
 	var off := discount(it)
 	if off <= 0.0:
 		return it.price
-	return maxi(5, int(round(it.price * (1.0 - off) / 5.0)) * 5)
+	return Wallet.rules.discounted(it.price, off)
 
 
 static func _shuffle_key(day_number: int, it: CosmeticItem) -> int:

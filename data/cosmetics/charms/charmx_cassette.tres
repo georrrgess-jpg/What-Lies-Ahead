@@ -16,7 +16,7 @@ description = "A cassette with a hot-pink label. Side A: bangers. Side B: more b
 slot = &"weapon_charm"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 params = {
 "charm": "Cassette"
 }

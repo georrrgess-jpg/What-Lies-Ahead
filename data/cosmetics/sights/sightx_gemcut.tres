@@ -9,7 +9,7 @@ display_name = "Gemcut"
 description = "A faceted crystal hood that throws light like a diamond, around a diamond reticle."
 slot = &"weapon_sight"
 rarity = 3
-price = 5600
+price = 3000
 colors = PackedColorArray(0.4784, 0.9569, 1, 1, 0.7059, 0.3608, 1, 1)
 params = {
 "optic": "Gem",

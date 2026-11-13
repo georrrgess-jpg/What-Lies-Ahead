@@ -18,6 +18,8 @@ extends SceneTree
 
 const FIXTURES := "res://tools/fixtures/economy"
 const SCRATCH := "user://economy_probe.json"
+## The dearest shop items that must each have their own price.
+const TOP_DISTINCT := 15
 
 var _failed := 0
 var Shop
@@ -86,26 +88,46 @@ func _rules() -> void:
 		if progression.level_weapons(lvl).is_empty() and progression.level_rewards(lvl).is_empty():
 			empty.append(lvl)
 	_check("rules: every level from 2 to %d gives a weapon or a cosmetic" % progression.MAX_LEVEL, empty.is_empty(), str(empty))
-	var off_ladder := []
-	var premium := {}
-	var total := 0
-	for it in Shop.items():
-		total += it.price
-		if it.price != rules.price_for(it.rarity) and it.price != rules.premium_for(it.rarity):
-			off_ladder.append(String(it.id))
-		elif it.price == rules.premium_for(it.rarity):
-			premium[it.slot] = int(premium.get(it.slot, 0)) + 1
-	_check("rules: %d items for sale (%d Sparks), priced on the rarity or showpiece ladder" % [Shop.items().size(), total], off_ladder.is_empty(), str(off_ladder))
-	var lonely := []
-	for section in Shop.sections():
-		var n := int(premium.get(section["slot"], 0))
-		if section["slot"] != &"avatar" and (n < 1 or n > 3):
-			lonely.append("%s %d" % [section["slot"], n])
-	_check("rules: every shop section has one to three showpieces", lonely.is_empty(), str(lonely))
+	_check_prices(rules)
 	var sections := []
 	for section in Shop.sections():
 		sections.append("%s %d" % [section["title"], section["items"].size()])
 	print("[probe]       shop sections: ", ", ".join(sections))
+
+
+## The price rule: every price on the 250 step and at least its rarity's ladder
+## price, rarities that do not overlap, a featured price that is exactly the
+## advertised discount and a round number, and the best items each on their own price.
+func _check_prices(rules) -> void:
+	var off_rule := []
+	var uneven := []
+	var total := 0
+	var lo := {}
+	var hi := {}
+	for it in Shop.items():
+		total += it.price
+		if not rules.is_clean_price(it.price) or it.price < rules.price_for(it.rarity):
+			off_rule.append("%s %d" % [it.id, it.price])
+		var cut: int = rules.discounted(it.price, rules.featured_discount)
+		if cut != roundi(it.price * (1.0 - rules.featured_discount)) or cut % (50 if cut < 1000 else 100) != 0:
+			uneven.append("%s %d" % [it.id, cut])
+		var r := int(it.rarity)
+		lo[r] = mini(int(lo.get(r, it.price)), it.price)
+		hi[r] = maxi(int(hi.get(r, 0)), it.price)
+	_check("rules: %d items for sale (%d Sparks), every price a multiple of %d and at least its rarity's ladder price" % [Shop.items().size(), total, rules.price_step], off_rule.is_empty(), str(off_rule))
+	_check("rules: a featured price is exactly %d%% off and a round number" % roundi(rules.featured_discount * 100.0), uneven.is_empty(), str(uneven))
+	var overlap := []
+	for r in range(1, 4):
+		if lo.has(r) and hi.has(r - 1) and lo[r] <= hi[r - 1]:
+			overlap.append("rarity %d from %d, rarity %d up to %d" % [r, lo[r], r - 1, hi[r - 1]])
+	_check("rules: every item costs more than any item of a lower rarity", overlap.is_empty(), str(overlap))
+	var by_price: Array = Shop.items()
+	by_price.sort_custom(func(a, b): return a.price > b.price)
+	var top := {}
+	for it in by_price.slice(0, TOP_DISTINCT):
+		top[it.price] = true
+	_check("rules: the %d dearest items each have their own price (top: %s, %d)" % [TOP_DISTINCT, by_price[0].display_name, by_price[0].price], top.size() == TOP_DISTINCT, str(top.keys()))
+	_check("rules: the dearest item is an operator", by_price[0].slot == &"avatar")
 
 
 # --- earning -----------------------------------------------------------------------
@@ -170,7 +192,7 @@ func _featured() -> void:
 			seen[id] = true
 	_check("featured: the selection rotates every day (14 of 14 days differ, %d different items in two weeks)" % seen.size(), changes == 14 and seen.size() >= 20)
 	var it = Shop.featured()[0]
-	var cut: int = int(round(it.price * (1.0 - wallet.rules.featured_discount) / 5.0)) * 5
+	var cut: int = roundi(it.price * (1.0 - wallet.rules.featured_discount))
 	_check("featured: %s costs %d instead of %d" % [it.display_name, cut, it.price], Shop.price(it) == cut and cosmetics.price_of(it) == cut and Shop.discount(it) > 0.0 and Shop.base_price(it) == it.price)
 	var other = null
 	for candidate in Shop.items():

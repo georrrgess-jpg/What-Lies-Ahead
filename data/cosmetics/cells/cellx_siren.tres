@@ -9,7 +9,7 @@ display_name = "Siren"
 description = "Red and blue halves that swap with a double flash, like a light bar."
 slot = &"weapon_cell"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(1, 0.1216, 0.2275, 1, 0.1843, 0.4196, 1, 1)
 params = {
 "fx": "siren"

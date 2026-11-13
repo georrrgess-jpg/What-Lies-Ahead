@@ -9,6 +9,6 @@ display_name = "Ultraviolet"
 description = "Deep violet energy from just past the rainbow."
 slot = &"weapon_cell"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.6039, 0.3569, 1, 1)
 sort_order = 3103

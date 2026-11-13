@@ -9,7 +9,7 @@ display_name = "Heartbeat"
 description = "Pulses between cherry red and candy pink like a racing heart."
 slot = &"weapon_cell"
 rarity = 2
-price = 2800
+price = 2500
 colors = PackedColorArray(1, 0.1843, 0.4353, 1, 1, 0.8157, 0.8784, 1)
 params = {
 "animate": "pulse"

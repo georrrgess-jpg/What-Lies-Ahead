@@ -9,7 +9,7 @@ display_name = "Holo Hands"
 description = "Projected straight from the arcade. Try not to look through them."
 slot = &"gloves"
 rarity = 3
-price = 5600
+price = 5000
 colors = PackedColorArray(0.2078, 0.9412, 1, 1, 1, 0.2471, 0.6431, 1, 0.07843, 0.06275, 0.1647, 1, 0.2078, 0.9412, 1, 1, 1, 0.2471, 0.6431, 1)
 params = {
 "shader": "res://art/shaders/skin_hologram.gdshader",

@@ -9,7 +9,7 @@ display_name = "Lucky Cat"
 description = "Waves one paw and hugs a gold coin. Good fortune, one swing at a time."
 slot = &"weapon_charm"
 rarity = 1
-price = 650
+price = 750
 params = {
 "charm": "LuckyCat"
 }

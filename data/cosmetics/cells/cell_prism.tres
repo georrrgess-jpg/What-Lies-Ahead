@@ -9,7 +9,7 @@ display_name = "Prism Core"
 description = "Cycles through every colour of the spectrum."
 slot = &"weapon_cell"
 rarity = 3
-price = 5600
+price = 3000
 colors = PackedColorArray(1, 1, 1, 1)
 params = {
 "animate": "rainbow"

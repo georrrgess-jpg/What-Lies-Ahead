@@ -9,7 +9,7 @@ display_name = "Zombie Eye"
 description = "A bloodshot eyeball with green lids for a housing, and a slit pupil for a reticle."
 slot = &"weapon_sight"
 rarity = 2
-price = 2800
+price = 2500
 colors = PackedColorArray(0.7765, 1, 0.2275, 1, 0.4784, 0.8392, 0.3608, 1)
 params = {
 "optic": "Eye",

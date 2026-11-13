@@ -9,7 +9,7 @@ display_name = "Street Tape"
 description = "Fingerless grips with bare finger tips, taped fingers and a taped wrist. Made for the back alleys of Neon Skyline."
 slot = &"gloves"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.1098, 0.102, 0.1333, 1, 0.949, 0.9333, 0.902, 1, 0.7137, 1, 0.2275, 1, 0.1686, 0.1569, 0.2118, 1)
 params = {
 "kit": ["Fingerless", "Tape"],

@@ -9,7 +9,7 @@ display_name = "Pixel Pal"
 description = "Won an 8-bit bunny suit from the claw machine and never took it off. Pure enthusiasm, ears included."
 slot = &"avatar"
 rarity = 3
-price = 5600
+price = 9500
 colors = PackedColorArray(1, 0.9451, 0.8627, 1, 0.8784, 0.2549, 0.5608, 1, 0.3098, 0.8902, 1, 1, 1, 0.4353, 0.7098, 1, 1, 1, 1, 1, 0.3098, 0.8902, 1, 1)
 params = {
 "model": "res://art/models/operator_pixel_pal.glb",

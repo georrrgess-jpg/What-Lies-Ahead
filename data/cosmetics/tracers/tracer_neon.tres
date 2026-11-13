@@ -9,7 +9,7 @@ display_name = "Neon Tube"
 description = "A fat hot-pink neon-sign tube with a white-hot core that flickers on."
 slot = &"tracer"
 rarity = 2
-price = 2800
+price = 2500
 colors = PackedColorArray(1, 0.22, 0.72, 1, 1, 1, 1, 1)
 params = {
 "style": "neon"

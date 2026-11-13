@@ -9,7 +9,7 @@ display_name = "Wind-Up Wally"
 description = "A tin toy from the prize shelf that wound itself up and walked off. Needs a turn of the key every wave."
 slot = &"avatar"
 rarity = 3
-price = 5600
+price = 10000
 colors = PackedColorArray(0.9098, 0.149, 0.2275, 1, 1, 0.7608, 0.2392, 1, 0.9098, 0.149, 0.2275, 1, 0.1843, 0.7216, 0.6902, 1, 0.1098, 0.498, 0.5255, 1)
 params = {
 "model": "res://art/models/operator_windup.glb",

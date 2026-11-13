@@ -9,7 +9,7 @@ display_name = "Title Bout"
 description = "Hand wraps from the title fight: a padded knuckle roll, tape crossed over the hand and a thick wrist wrap."
 slot = &"gloves"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.9098, 0.149, 0.2275, 1, 0.9686, 0.9569, 0.949, 1, 1, 0.851, 0.2314, 1, 0.1098, 0.09412, 0.1882, 1)
 params = {
 "kit": "Wraps"

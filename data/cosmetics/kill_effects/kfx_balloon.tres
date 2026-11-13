@@ -9,7 +9,7 @@ display_name = "Balloon Buddy"
 description = "A twisted balloon poodle squeaks out, wobbles, then pops into rubber scraps and confetti."
 slot = &"kill_effect"
 rarity = 1
-price = 650
+price = 750
 params = {
 "effect": "balloon"
 }

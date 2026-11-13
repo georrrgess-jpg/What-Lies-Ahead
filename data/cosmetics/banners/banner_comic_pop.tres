@@ -9,7 +9,7 @@ display_name = "Comic Pop"
 description = "Halftone dots and a big comic POW burst."
 slot = &"banner"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.25, 0.75, 1, 1, 1, 0.9, 0.2, 1, 1, 0.2, 0.3, 1)
 params = {
 "style": 25

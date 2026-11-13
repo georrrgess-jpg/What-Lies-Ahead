@@ -16,7 +16,7 @@ description = "A Prize Pier badge: the Ferris wheel against a sunset over the se
 slot = &"weapon_decal"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 colors = PackedColorArray(1, 0.5176, 0.2745, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
 params = {
 "emblem": "PierPass",

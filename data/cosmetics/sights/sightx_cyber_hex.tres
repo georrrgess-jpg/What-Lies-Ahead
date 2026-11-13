@@ -16,7 +16,7 @@ description = "A hexagonal neon hood with a broken hexagon reticle. Sold once yo
 slot = &"weapon_sight"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 colors = PackedColorArray(0.1294, 0.9412, 1, 1, 1, 0.1843, 0.8157, 1)
 params = {
 "optic": "Hex",

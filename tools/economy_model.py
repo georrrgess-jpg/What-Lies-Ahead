@@ -379,13 +379,15 @@ def afford(d, sparks):
 
 
 def afford_goals(d, shop):
-    """(name, price): the ladder price of each rarity, then the showpiece prices in use."""
+    """(name, price): the ladder price of each rarity, then the showpieces above the
+    legendary ladder (the cheapest, the middle one and the dearest item of the shop)."""
     eco = d['eco'] or {}
     ladder = eco.get('prices') or []
-    premium = [p for p in (eco.get('premium_prices') or []) if p]
     goals = [(n, p) for n, p in zip(['common', 'rare', 'epic', 'legendary'], ladder) if p]
-    prices = {c['price'] for c in shop}
-    goals += [('showpiece', p) for p in sorted(set(premium) & prices)]
+    top = sorted({c['price'] for c in shop if ladder and c['price'] > max(ladder)})
+    if top:
+        dearest = [c['name'] for c in shop if c['price'] == top[-1]]
+        goals += [('showpiece', top[0]), ('showpiece', top[len(top) // 2]), (dearest[0], top[-1])]
     return goals
 
 

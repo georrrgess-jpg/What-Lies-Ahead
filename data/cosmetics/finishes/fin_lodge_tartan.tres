@@ -9,7 +9,7 @@ display_name = "Lodge Tartan"
 description = "Green and navy tartan with red and gold overchecks, and a red sett on the trim."
 slot = &"weapon_finish"
 rarity = 1
-price = 650
+price = 750
 colors = PackedColorArray(0.1216, 0.3529, 0.2, 1, 0.4784, 0.0941, 0.1255, 1)
 params = {
 "shader": "res://art/shaders/finish_textile.gdshader",

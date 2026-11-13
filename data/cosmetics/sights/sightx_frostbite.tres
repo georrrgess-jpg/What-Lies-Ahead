@@ -16,7 +16,7 @@ description = "A frosted tube with icy fins and a snowflake reticle. Sold once y
 slot = &"weapon_sight"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 colors = PackedColorArray(0.6588, 0.9412, 1, 1, 0.3098, 0.7059, 1, 1)
 params = {
 "optic": "Frost",

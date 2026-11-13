@@ -16,7 +16,7 @@ description = "A bolted brass porthole with a quartered ring. Sold once you clea
 slot = &"weapon_sight"
 rarity = 1
 requirement = SubResource("req")
-price = 650
+price = 750
 colors = PackedColorArray(0.3529, 1, 0.8471, 1, 0.8314, 0.6275, 0.2275, 1)
 params = {
 "optic": "Porthole",

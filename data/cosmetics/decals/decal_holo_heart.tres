@@ -9,7 +9,7 @@ display_name = "Holo Heart"
 description = "The shiniest sticker in the whole prize booth."
 slot = &"weapon_decal"
 rarity = 3
-price = 5600
+price = 3000
 colors = PackedColorArray(1, 0.8392, 0.9373, 1, 1, 1, 1, 1, 0.1098, 0.09412, 0.1882, 1)
 params = {
 "emblem": "Heart",
