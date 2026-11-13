@@ -96,12 +96,12 @@ surge_count = 5
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 16,
-"lifeguard_runner": 11
+"lifeguard_runner": 9
 }
 spawn_interval = 1.9
 burst = 2
-max_alive = 12
-speed_scale = 1.08
+max_alive = 10
+speed_scale = 1.04
 late_types_after = 0.1
 banner = ""
 kind = &"finale"
