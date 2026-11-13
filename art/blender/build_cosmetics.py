@@ -519,11 +519,11 @@ def charm_arcade_stick(m):
         sphere(p + "BallShine", 0.0016, (-0.002, -0.0045, ball_z + 0.0025), m=m["white"], segs=6, rings=4),
         cyl(p + "Shaft", 0.0016, 0.018, (0, 0, ball_z - 0.013), segs=10, bevel=0.0004, m=m["silver"]),
         cyl(p + "Boot", 0.0052, 0.004, (0, 0, ball_z - 0.022), segs=14, bevel=0.0012, m=m["black"], radius_top=0.003),
-        box(p + "Case", (0.04, 0.026, 0.012), (0.006, 0.0, -0.058), bevel=0.0035, m=m["purple"]),
-        box(p + "Panel", (0.036, 0.022, 0.0016), (0.006, 0.0, -0.0516), bevel=0.0006, m=m["navy"]),
-        box(p + "Stripe", (0.0405, 0.0018, 0.0028), (0.006, -0.0128, -0.058), bevel=0.0005, m=m["neon"]),
+        box(p + "Case", (0.04, 0.026, 0.012), (0.0, 0.0, -0.058), bevel=0.0035, m=m["purple"]),
+        box(p + "Panel", (0.036, 0.022, 0.0016), (0.0, 0.0, -0.0516), bevel=0.0006, m=m["navy"]),
+        box(p + "Stripe", (0.0405, 0.0018, 0.0028), (0.0, -0.0128, -0.058), bevel=0.0005, m=m["neon"]),
     ]
-    for i, (x, y, mm) in enumerate(((0.012, -0.004, m["cyan_neon"]), (0.02, 0.002, m["bulb"]), (0.012, 0.007, m["neon"]))):
+    for i, (x, y, mm) in enumerate(((0.01, -0.005, m["cyan_neon"]), (0.0145, 0.004, m["bulb"]), (-0.012, 0.005, m["neon"]))):
         parts.append(cyl(f"{p}Button{i}", 0.0032, 0.003, (x, y, -0.0505), segs=12, bevel=0.0008, m=mm))
     return parts
 
@@ -653,6 +653,9 @@ def charm_cocoa(m):
     cane += [(-0.0095 + math.cos(math.radians(t)) * 0.0035, 0.003, top + 0.009 + math.sin(math.radians(t)) * 0.0035) for t in range(0, 181, 30)]
     cane.append((-0.013, 0.003, top + 0.005))
     parts.append(tube(p + "Cane", cane, 0.0011, m=m["white"], segs=6))
+    # Centre mug and handle under the ring, so it hangs clear of the weapon's side.
+    for ob in parts[4:]:
+        ob.location.x -= 0.0055
     return parts
 
 

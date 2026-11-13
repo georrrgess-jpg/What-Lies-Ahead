@@ -51,7 +51,7 @@ func _run() -> void:
 	grid.add_theme_constant_override("v_separation", 0)
 	root.add_child(grid)
 	for it in items:
-		grid.add_child(_tile(weapon, slot, it))
+		_tile(grid, weapon, slot, it)
 	var wait := int(float(opts.get("time", "0.6")) * 60.0) + 4
 	for i in wait:
 		await process_frame
@@ -64,8 +64,9 @@ func _run() -> void:
 	quit()
 
 
-func _tile(weapon, slot: StringName, item) -> Control:
+func _tile(grid: Control, weapon, slot: StringName, item) -> void:
 	var box := VBoxContainer.new()
+	grid.add_child(box)
 	box.add_theme_constant_override("separation", 0)
 	var svc := SubViewportContainer.new()
 	svc.custom_minimum_size = Vector2(TILE.x, TILE.y - 16)
@@ -110,8 +111,12 @@ func _tile(weapon, slot: StringName, item) -> Control:
 	var dir := Vector3(-1.0, 0.35, 0.45).normalized()
 	if slot == &"weapon_sight":
 		dir = Vector3(-0.35, 0.3, 1.0).normalized()
+	elif slot == &"weapon_charm":
+		dir = Vector3(-0.55, 0.15, 1.0).normalized()
+	elif slot == &"weapon_decal":
+		dir = Vector3(-1.0, 0.12, 0.3).normalized()
+	cam.near = 0.005
 	cam.look_at_from_position(centre + dir * radius / tan(deg_to_rad(15.0)) * 1.05, centre)
-	return box
 
 
 ## The bounds of the attachment itself.
@@ -132,9 +137,6 @@ func _focus(model: Node3D, slot: StringName, whole: AABB) -> AABB:
 		if not take:
 			continue
 		var b: AABB = cos.to_model(model, mi) * mi.mesh.get_aabb()
-		if slot == &"weapon_charm":
-			b = mi.global_transform * mi.mesh.get_aabb()
-			b.position -= model.global_position
 		out = b if first else out.merge(b)
 		first = false
 	if first:

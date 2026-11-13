@@ -64,15 +64,6 @@ func _shake(w, charm, worst: Dictionary) -> void:
 	var anchor: Node3D = model.find_child("CharmPoint", true, false)
 	if swing == null or anchor == null:
 		rig.free()
-
-
-func _sample(mesh: Mesh) -> PackedVector3Array:
-	var points := PackedVector3Array()
-	for s in mesh.get_surface_count():
-		var verts: PackedVector3Array = mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
-		for i in range(0, verts.size(), 9):
-			points.append(verts[i])
-	return points
 		return
 	swing.set_process(false)
 	var mesh_node: MeshInstance3D = swing.get_child(0)
@@ -94,7 +85,7 @@ func _sample(mesh: Mesh) -> PackedVector3Array:
 			base_pos += Vector3(-0.07, -0.06, 0.03)
 			base_rot += Vector3(-14.0, 26.0, 16.0)
 		elif f >= 160 and f < 200:
-			base_pos = Vector3(0, 0, -w.ads_depth / 0.2) - view._sight_local
+			base_pos = -view._eye_local
 			base_rot = Vector3.ZERO
 		if f == 200:
 			view.play_reload(w, 1.5)
