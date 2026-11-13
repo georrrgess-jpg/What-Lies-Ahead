@@ -14,18 +14,21 @@ extends MultiMeshInstance3D
 ## still showing.
 ##
 ## Marks go only on static scenery: a StaticBody3D on physics layer 1 that is
-## not moving, not a stand-in collider for a prop (names ending in
-## "Collision" or "Guard"), not stair or escalator ramps (their collision runs
-## above the visible steps) and not water, lava or glass. A body in the
-## "no_impact_marks" group is skipped too. A mark is shrunk or dropped where
-## it would hang over an edge, so it never floats in the air.
+## not moving and not under a scripted node (stations, rides), and whose name
+## does not mark it as a collider that is not the visible surface (SKIP_NAMES:
+## stand-in boxes around props, glass fronts, stair ramps above the visible
+## steps, water, lava). A body in the "no_impact_marks" group is skipped too.
+## A mark is shrunk or dropped where it would hang over an edge, so it never
+## floats in the air.
 
 enum Style { BOLT, PELLET, RAIL, BLAST, FROST, ARC, SCUFF }
 
 const SHADER := "res://art/shaders/impact_mark.gdshader"
 const NO_MARKS_GROUP := &"no_impact_marks"
-## Body names with any of these words never take marks (see the class notes).
-const SKIP_WORDS: Array[String] = ["Collision", "Guard", "Stair", "Wedge", "Escalator", "Water", "Lava", "Glass", "Window", "Skylight"]
+## Body names that never take marks: stand-in boxes around props ("...Collision",
+## "...Col", "...Guard", gates), glass shop fronts and doors, stair and
+## escalator ramps, water, lava and glass.
+const SKIP_NAMES := "Collision|Collider|Col$|Col[A-Z0-9]|Guard|Stair|Wedge|Escalator|Water|Lava|Glass|Window|Skylight|^Front\\d|Door|Gate\\d"
 const MASK_WORLD := 1
 ## Marks kept at once on the High and Low graphics presets.
 const CAP_HIGH := 128
@@ -34,10 +37,12 @@ const CAP_LOW := 48
 const LIFE_HIGH := 24.0
 const LIFE_LOW := 10.0
 const FADE := 2.5
-## Height above the surface (the shader also pulls the depth towards the eye).
-const LIFT := 0.004
-## Half sizes in metres per style (a bolt's comes from its tracer width).
-const HALF := [0.0, 0.045, 0.1, 0.0, 0.24, 0.22, 0.13]
+## Height above the collision surface: clears painted markings and floor
+## decals laid a little proud of it (the shader also nudges the depth).
+const LIFT := 0.025
+## Half sizes in metres per style (a bolt's comes from its tracer width, a
+## blast's from its splash radius).
+const HALF := [0.0, 0.045, 0.1, 0.0, 0.3, 0.3, 0.13]
 ## Edge probes, as fractions of the mark's half extents: four for small
 ## marks, eight for big ones.
 const PROBES: Array[Vector2] = [Vector2(0.8, 0), Vector2(-0.8, 0), Vector2(0, 0.8), Vector2(0, -0.8),
@@ -48,6 +53,7 @@ const SHRINK := [1.0, 0.62, 0.38]
 static var _material: ShaderMaterial
 static var _quad: QuadMesh
 static var _current: ImpactMarks
+static var _skip_names: RegEx
 
 var _now := 0.0
 var _next := 0
@@ -69,24 +75,30 @@ var _markable := {}
 ## collider), `dir` the shot's direction.
 static func shot(level: Node, hit: Dictionary, dir: Vector3, w: WeaponData) -> void:
 	var marks := _in(level)
-	if marks:
-		marks._place(hit["position"], hit["normal"], hit["collider"], dir, _style_of(w), w.tracer_color, _bolt_half(w))
+	if marks == null:
+		return
+	var style := _style_of(w)
+	var half: float = _bolt_half(w) if style == Style.BOLT else HALF[style]
+	marks._place(hit["position"], hit["normal"], hit["collider"], dir, style, w.tracer_color, half)
 
 
-## A splash weapon went off at `at`. `hit` is the surface it struck (empty
-## for a blast in the air or on a zombie: the floor below is used if close).
+## A splash weapon went off at `at`. `hit` is the surface it struck, if any
+## (empty for a blast in the air or on a zombie). Whatever it struck, the
+## ground close below gets a scorch too, smaller the higher the blast.
 static func blast(level: Node, at: Vector3, w: WeaponData, hit: Dictionary) -> void:
 	var marks := _in(level)
 	if marks == null:
 		return
 	var radius := clampf(w.splash_radius * 0.34, 0.5, 1.6)
-	if hit.is_empty():
-		hit = marks._ray(at + Vector3.UP * 0.2, at + Vector3.DOWN * 1.6)
-		if hit.is_empty():
+	if not hit.is_empty():
+		marks._place(hit["position"], hit["normal"], hit["collider"], Vector3.ZERO, Style.BLAST, w.tracer_color, radius)
+		if (hit["normal"] as Vector3).y > 0.7:
 			return
-		# Higher up, a smaller scorch.
-		radius *= clampf(1.15 - at.distance_to(hit["position"]) / 1.6, 0.35, 1.0)
-	marks._place(hit["position"], hit["normal"], hit["collider"], Vector3.ZERO, Style.BLAST, w.tracer_color, radius)
+	var ground := marks._ray(at + Vector3.UP * 0.2, at + Vector3.DOWN * 1.6)
+	if ground.is_empty():
+		return
+	radius *= clampf(1.15 - at.distance_to(ground["position"]) / 1.6, 0.35, 1.0)
+	marks._place(ground["position"], ground["normal"], ground["collider"], Vector3.ZERO, Style.BLAST, w.tracer_color, radius)
 
 
 ## A lobbed ball bounced off the world.
@@ -269,11 +281,11 @@ func _takes_marks(collider: Object) -> bool:
 		return false
 	var id := collider.get_instance_id()
 	if not _markable.has(id):
-		_markable[id] = _is_scenery(collider)
+		_markable[id] = _is_scenery(collider, get_parent())
 	return _markable[id]
 
 
-static func _is_scenery(collider: Object) -> bool:
+static func _is_scenery(collider: Object, level: Node) -> bool:
 	var body := collider as StaticBody3D
 	if body == null or body is AnimatableBody3D or body.collision_layer & MASK_WORLD == 0:
 		return false
@@ -281,8 +293,14 @@ static func _is_scenery(collider: Object) -> bool:
 		return false
 	if body.is_in_group(NO_MARKS_GROUP):
 		return false
-	var body_name := String(body.name)
-	for word in SKIP_WORDS:
-		if body_name.containsn(word):
+	if _skip_names == null:
+		_skip_names = RegEx.create_from_string(SKIP_NAMES)
+	if _skip_names.search(String(body.name)):
+		return false
+	# Under a scripted node (a station, a ride, anything that might move).
+	var up := body.get_parent()
+	while up != null and up != level:
+		if up.get_script() != null:
 			return false
+		up = up.get_parent()
 	return true

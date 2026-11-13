@@ -24,7 +24,7 @@ void vertex() {
 	v_dist = length(view);
 	// Pulled a hair towards the eye: the same pixels on screen, a nearer depth,
 	// so the mark never fights the surface it lies on at any distance.
-	VERTEX = view * 0.9985;
+	VERTEX = view * 0.9995;
 	NORMAL = normalize((MODELVIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
 }
 
@@ -39,14 +39,14 @@ float noise(vec2 p) {
 	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
 }
 
-// Distance from p to the jagged branch k of an arc burn (radial, wandering).
-float branch(vec2 p, float r, float k, float seed, float start, float reach, float wander) {
-	float a = seed * 6.2832 + k * 2.39996 + (noise(vec2(r * 4.0, k * 7.3 + seed * 13.0)) - 0.5) * wander * r;
-	vec2 dir = vec2(cos(a), sin(a));
-	float along = dot(p, dir);
-	float side = abs(p.x * dir.y - p.y * dir.x);
-	float inside = step(start, along) * (1.0 - smoothstep(reach * 0.8, reach, along));
-	float thick = mix(0.06, 0.012, clamp((along - start) / max(reach - start, 0.01), 0.0, 1.0));
+// Coverage of branch k of an arc burn: a jagged line wandering outwards
+// from radius `start` to `reach`, thinning as it goes.
+float branch(float r, float ang, float k, float seed, float start, float reach, float wander) {
+	float a = seed * 6.2832 + k * 2.39996 + (noise(vec2(r * 5.0, k * 7.3 + seed * 13.0)) - 0.5) * wander;
+	float side = abs(mod(ang - a + 3.14159, 6.28318) - 3.14159) * r;
+	float t = clamp((r - start) / max(reach - start, 0.01), 0.0, 1.0);
+	float inside = step(start, r) * (1.0 - smoothstep(0.8, 1.0, t));
+	float thick = mix(0.07, 0.015, t);
 	return inside * (1.0 - smoothstep(thick * 0.45, thick, side));
 }
 
@@ -84,8 +84,8 @@ void fragment() {
 		float d = abs(p.y) / max(w, 0.02);
 		float body = 1.0 - smoothstep(0.3, 1.0, d);
 		float core = (1.0 - smoothstep(0.0, 0.3, d)) * smoothstep(0.0, 0.4, w);
-		soot = mix(max(core * 0.92, body * 0.62), body * 0.4, scuff);
-		stain = body * (1.0 - core) * mix(0.25, 0.3, scuff);
+		soot = mix(max(core * 0.95, body * 0.78), body * 0.45, scuff);
+		stain = body * (1.0 - core) * mix(0.12, 0.22, scuff);
 		heat = exp(-age * mix(2.2, 4.0, scuff));
 		glow = heat * exp(-d * d * 5.0) * w * mix(2.2, 0.8, scuff);
 	} else if (style == 3) {
@@ -104,29 +104,30 @@ void fragment() {
 		// melts back to the middle instead of fading.
 		float a = atan(p.y, p.x) + seed * 6.2832;
 		float melt = smoothstep(life, life + fade_time, age);
-		float edge = (0.42 + 0.42 * pow(abs(cos(a * 3.0)), 6.0) + 0.16 * noise(dir * 5.0 + seed * 4.0)) * (1.0 - melt);
+		float edge = (0.62 + 0.2 * pow(abs(cos(a * 3.0)), 8.0) + 0.3 * (noise(dir * 3.0 + seed * 4.0) - 0.5) + 0.12 * (noise(dir * 9.0 + seed * 2.0) - 0.5)) * (1.0 - melt);
 		float rime = 1.0 - smoothstep(edge - 0.14, edge, r);
 		float feather = pow(abs(cos(a * 9.0 + r * 4.0)), 18.0) * (1.0 - smoothstep(edge * 0.7, edge * 1.15, r)) * 0.6;
 		float body = max(rime * (0.6 + 0.4 * noise(p * 11.0 + seed * 19.0)), feather);
-		cover_a = body * 0.62;
-		cover = mix(vec3(0.72, 0.9, 1.0), vec3(1.0), noise(p * 7.0 + seed) * 0.6) * 0.75 * cover_a;
+		cover_a = body * 0.6;
+		cover = mix(vec3(0.62, 0.86, 1.0), vec3(1.0), noise(p * 7.0 + seed) * 0.5) * 0.95 * cover_a;
 		float sparkle = smoothstep(0.93, 0.98, noise(p * 26.0 + seed * 31.0)) * rime;
 		glow = sparkle * (0.5 + 1.2 * heat) + heat * rime * 0.6;
 		fade = 1.0;
 	} else {
 		// An arc burn: jagged branches crawling out from a burnt spot.
 		float lines = 0.0;
-		for (int k = 0; k < 5; k++) {
-			lines = max(lines, branch(p, r, float(k), seed, 0.0, 0.6 + 0.35 * hash(vec2(float(k), seed)), 2.4));
+		float ang = atan(p.y, p.x);
+		for (int k = 0; k < 6; k++) {
+			lines = max(lines, branch(r, ang, float(k), seed, 0.0, 0.55 + 0.4 * hash(vec2(float(k), seed)), 2.2));
 		}
-		for (int k = 5; k < 11; k++) {
+		for (int k = 6; k < 11; k++) {
 			float s = 0.2 + 0.35 * hash(vec2(seed, float(k)));
-			lines = max(lines, branch(p, r, float(k), seed + 0.37, s, s + 0.25 + 0.2 * hash(vec2(float(k), seed * 3.0)), 4.0) * 0.8);
+			lines = max(lines, branch(r, ang, float(k), seed + 0.37, s, s + 0.25 + 0.2 * hash(vec2(float(k), seed * 3.0)), 3.0) * 0.8);
 		}
 		float spot = 1.0 - smoothstep(0.08, 0.17, r);
 		float halo = (1.0 - smoothstep(0.0, 0.75, r)) * 0.25;
 		soot = max(max(lines, spot) * 0.86, halo * (0.6 + 0.4 * noise(p * 6.0 + seed)));
-		stain = lines * 0.22;
+		stain = lines * 0.07;
 		glow = heat * max(lines, spot) * 2.0;
 	}
 

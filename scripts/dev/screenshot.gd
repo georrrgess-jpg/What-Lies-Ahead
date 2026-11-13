@@ -36,6 +36,7 @@ extends Node
 ##   --shot-marks=0        clear the impact marks just before the capture (a "before" still)
 ##   --shot-hurt=1         hit the player from the left (damage feedback check)
 ##   --shot-cam=x,y,z>tx,ty,tz   free camera from x,y,z looking at tx,ty,tz (hides the viewmodel)
+##   --shot-cam=eye        free camera at the player's eye (no viewmodel; zoom with --shot-fov)
 ##   --shot-anim=Clip:t    pose every staged zombie at time t (seconds) of Clip
 ##   --shot-near=1         stage one zombie of each kind close to the player instead of four
 ##   --shot-fx=confetti|pop|burst|tracer|muzzle   spawn one effect 3 m in front of the camera
@@ -240,7 +241,10 @@ func _run() -> void:
 		var cam := Camera3D.new()
 		cam.fov = float(_arg("fov", "50"))
 		director.get_parent().add_child(cam)
-		cam.look_at_from_position(_vec(parts[0]), _vec(parts[1]))
+		if parts[0] == "eye":
+			cam.global_transform = player.aim_transform()
+		else:
+			cam.look_at_from_position(_vec(parts[0]), _vec(parts[1]))
 		cam.make_current()
 		player.view.visible = false
 	if _arg("move", "0") == "1":
