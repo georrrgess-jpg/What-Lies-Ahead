@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/sky_harbor_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"sky_harbor"
+display_name = "Sky Harbor"
+blurb = "Hold the hub island round Cloud Nine Supply, between the airship dock and the big top, then follow the lanterns to the portal."
+scene_path = "res://scenes/levels/sky_harbor.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"sky_harbor_loop"
+music_final = &"sky_harbor_final"
+ambience = &"sky_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(1, 0.71, 0.54, 1)
+menu_camera_from = Vector3(16, 9, 24)
+menu_camera_to = Vector3(-30, 9, -6)
+heal_item_name = "Cotton-candy cloud"
+loading_tips = PackedStringArray("Sky Divers crouch before they jump: a ring marks where they will land. Step out of it.", "Balloon Vendors pluck a balloon and wind up a throw. A headshot pops the throw.", "The boarding deck on the dock isle is high ground with a long view down the west bridge.", "The big top has four doorways and bleachers inside: a good place to break line of sight.", "When the gale blows, the wind leans on you. The railings will hold, but your aim has to.", "Captain Cumulus dives from on high: watch for the big ring and get out of it.")

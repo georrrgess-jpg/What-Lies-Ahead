@@ -178,7 +178,20 @@ sound_category = Dictionary[StringName, StringName]({
 &"mall_power_up": &"cue",
 &"midnight_mall_loop": &"music",
 &"midnight_mall_final": &"music",
-&"mall_ambience": &"ambience"
+&"mall_ambience": &"ambience",
+&"sky_": &"enemy_voice",
+&"sky_dive_whistle": &"enemy_telegraph",
+&"sky_dive_launch": &"enemy_telegraph",
+&"sky_chute_pop": &"enemy_telegraph",
+&"sky_dive_land": &"enemy_attack",
+&"sky_vendor_call": &"enemy_telegraph",
+&"sky_balloon_throw": &"enemy_telegraph",
+&"sky_captain_roar": &"enemy_telegraph",
+&"sky_gale_horn": &"cue",
+&"sky_gale_gust": &"cue",
+&"sky_harbor_loop": &"music",
+&"sky_harbor_final": &"music",
+&"sky_ambience": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,

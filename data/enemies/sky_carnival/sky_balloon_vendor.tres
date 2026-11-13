@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/sky_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/sky_balloon_lob.gd" id="4"]
+
+[sub_resource type="Resource" id="lob"]
+script = ExtResource("4")
+escape_count = 3
+min_range = 6.0
+max_range = 22.0
+cooldown = 6.5
+windup = 0.95
+damage = 6.0
+projectile_speed = 13.0
+arc = 0.85
+size = 0.3
+lead = 0.35
+windup_sound = &"sky_vendor_call"
+throw_sound = &"sky_balloon_throw"
+
+[resource]
+script = ExtResource("1")
+id = &"sky_balloon_vendor"
+display_name = "Balloon Vendor"
+max_health = 120.0
+move_speed = 1.6
+speed_variance = 0.1
+turn_speed = 5.0
+tickets = 22
+score = 260
+xp = 22
+damage = 14.0
+attack_range = 1.7
+attack_reach = 2.3
+attack_windup = 0.75
+attack_recover = 0.85
+lunge_speed = 2.8
+mass = 1.5
+flank_degrees = 40.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Vendor"
+body_scale = 1.0
+capsule_radius = 0.48
+capsule_height = 1.9
+head_height = 1.25
+shirt_colors = Array[Color]([Color(0.91, 0.22, 0.31, 1), Color(0.12, 0.71, 0.69, 1), Color(0.71, 0.6, 0.91, 1), Color(1, 0.62, 0.3, 1)])
+skin_colors = Array[Color]([Color(0.65, 0.83, 0.42, 1), Color(0.58, 0.8, 0.5, 1), Color(0.7, 0.82, 0.45, 1)])
+accessory_slots = PackedStringArray("Acc_Vendor_Balloons", "Acc_Vendor_Boater|Acc_Vendor_Boater|")
+move_animation = &"Walk"
+animation_reference_speed = 1.8
+avoidance_radius = 0.55
+behaviours = Array[ExtResource("3")]([SubResource("lob")])
+voice_sounds = Array[StringName]([&"sky_vendor_groan_1", &"sky_vendor_groan_2"])
+voice_interval = Vector2(3.0, 6.5)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

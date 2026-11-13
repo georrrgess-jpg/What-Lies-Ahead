@@ -20,8 +20,10 @@ extends RefCounted
 ##                brings rain, fog and lightning)
 ##   eruption     Lava Lagoon: the volcano throws ember bombs, each marked by a
 ##                glowing ring (the level's LavaEruption prop)
+##   gale         Sky Harbor: the wind rises and leans on the player (the
+##                level's SkyGale prop, scripts/props/sky_gale.gd)
 
-const IDS: Array[StringName] = [&"jackpot", &"blackout", &"frenzy", &"low_gravity", &"whiteout", &"sugar_rush", &"power_cut", &"monsoon", &"eruption"]
+const IDS: Array[StringName] = [&"jackpot", &"blackout", &"frenzy", &"low_gravity", &"whiteout", &"sugar_rush", &"power_cut", &"monsoon", &"eruption", &"gale"]
 
 const JACKPOT_TICKETS := 2.0
 const BLACKOUT_LIGHT := 0.32
