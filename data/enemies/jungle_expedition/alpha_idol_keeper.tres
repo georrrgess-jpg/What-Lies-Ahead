@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/jungle_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/jungle_vine_lash.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+
+[sub_resource type="Resource" id="lash"]
+script = ExtResource("4")
+min_range = 5.0
+max_range = 18.0
+cooldown = 8.5
+windup = 1.2
+lock_fraction = 0.4
+overshoot = 3.0
+width = 2.4
+damage = 12.0
+bramble_seconds = 3.0
+bramble_slow = 0.62
+
+[sub_resource type="Resource" id="alpha"]
+script = ExtResource("alpha_script")
+color = Color(0.3, 1, 0.66, 1)
+slam_damage = 20.0
+slam_cooldown = 9.0
+volley_shots = 5
+volley_min_range = 8.0
+volley_damage = 7.0
+volley_speed = 12.0
+volley_spread_degrees = 13.0
+volley_arc = 0.35
+volley_cooldown = 10.0
+volley_size = 0.42
+
+[resource]
+script = ExtResource("1")
+id = &"alpha_idol_keeper"
+display_name = "The Idol Keeper"
+max_health = 2400.0
+move_speed = 1.95
+speed_variance = 0.0
+turn_speed = 3.5
+tickets = 200
+score = 2600
+xp = 150
+damage = 24.0
+attack_range = 2.5
+attack_reach = 3.3
+attack_windup = 1.0
+attack_recover = 1.15
+lunge_speed = 3.2
+mass = 7.5
+flank_degrees = 10.0
+enrage_radius = 0.0
+model_scene = ExtResource("2")
+outfit = &"Overgrown"
+body_scale = 1.5
+capsule_radius = 0.64
+capsule_height = 1.95
+head_height = 1.3
+shirt_colors = Array[Color]([Color(0.2, 0.42, 0.26, 1)])
+skin_colors = Array[Color]([Color(0.55, 0.74, 0.4, 1)])
+accessory_slots = PackedStringArray("Acc_Overgrown_IdolMask", "Acc_Overgrown_Headdress", "Acc_Overgrown_Shrooms", "")
+move_animation = &"Walk"
+clip_style = &"Heavy"
+heavy = true
+animation_reference_speed = 2.0
+avoidance_radius = 1.0
+behaviours = Array[ExtResource("3")]([SubResource("lash"), SubResource("alpha")])
+voice_sounds = Array[StringName]([&"jungle_overgrown_groan_1", &"jungle_overgrown_groan_2"])
+voice_interval = Vector2(3.5, 6.5)
+voice_pitch = 0.72
+attack_sound = &"bruiser_slam"
