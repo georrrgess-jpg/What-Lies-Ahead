@@ -106,6 +106,7 @@ func _initialize() -> void:
 	_build_lights()
 	_build_exit()
 	_build_markers()
+	_build_sugar_rush()
 
 	get_root().add_child(level)
 	await process_frame
@@ -456,7 +457,7 @@ func _build_pilasters_and_windows() -> void:
 				[Vector3(0, 0, 0.05), Vector3(0.1, 6.0, 0.12)], [Vector3(0, 0.6, 0.05), Vector3(3.4, 0.1, 0.12)]]:
 			var off: Vector3 = piece[0]
 			var size: Vector3 = piece[1]
-			frame_parts.append(Transform3D(t.basis.scaled(size), t.origin + t.basis * off))
+			frame_parts.append(Transform3D(t.basis * Basis.from_scale(size), t.origin + t.basis * off))
 	_multimesh(dressing, "WindowFrames", _box_mesh(Vector3.ONE, frame), frame_parts, false)
 
 
@@ -576,7 +577,7 @@ func _build_roof() -> void:
 			var a := Vector3(x0, ROOF_LOW - (1.65 if up else 0.15), zs)
 			var b := Vector3(x0 + 2.0, ROOF_LOW - (0.15 if up else 1.65), zs)
 			var d := b - a
-			var basis := Basis(Vector3.BACK, atan2(d.y, d.x)).scaled(Vector3(d.length(), 0.16, 0.16))
+			var basis := Basis(Vector3.BACK, atan2(d.y, d.x)) * Basis.from_scale(Vector3(d.length(), 0.16, 0.16))
 			truss_xf.append(Transform3D(basis, (a + b) * 0.5))
 	_multimesh(roof, "Trusses", _box_mesh(Vector3.ONE, _mat("truss", Color(0.45, 0.82, 0.72), 0.45)), truss_xf, true)
 	_multimesh(roof, "Mullions", _box_mesh(Vector3.ONE, _mat("truss", Color(0.45, 0.82, 0.72), 0.45)), mullion_xf, false)
@@ -740,7 +741,6 @@ func _build_mezzanine() -> void:
 	_fence_run(m, "RailW1", Vector3(x0, y, MEZZ.position.y + 3.8), Vector3(x0, y, MEZZ.end.y - 3.9))
 	# Packing dressing on the deck (cover up top).
 	_solid_prop(m, "candy_boxes", "DeckBoxesA", Vector3(24.5, y, -1.0), 15.0, Vector3(1.5, 1.6, 1.2))
-	_solid_prop(m, "candy_crates", "DeckCrates", Vector3(23.0, y, 9.5), 90.0, Vector3(2.0, 1.6, 1.2))
 	_solid_prop(m, "candy_conveyor", "DeckBelt", Vector3(27.5, y, -1.6), 90.0, Vector3(4.0, 1.1, 1.3))
 	_solid_prop(m, "candy_boxes", "DeckBoxesB", Vector3(29.6, y, 11.0), -10.0, Vector3(1.5, 1.6, 1.2))
 	_solid_prop(m, "candy_sacks", "DeckSacks", Vector3(21.6, y, 4.2), 80.0, Vector3(1.6, 1.1, 1.2))
@@ -776,7 +776,7 @@ func _conveyor_line(parent: Node3D, line_name: String, a: Vector3, b: Vector3, s
 	var step := length / count
 	var xf: Array[Transform3D] = []
 	for i in count:
-		xf.append(Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(step / 4.0, 1, 1)), a + dir * step * (i + 0.5)))
+		xf.append(Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(Vector3(step / 4.0, 1, 1)), a + dir * step * (i + 0.5)))
 	_multimesh(parent, line_name + "Modules", _model_mesh("candy_conveyor"), xf, true)
 	var body := _collider(parent, line_name + "Collision", Vector3(length, 1.15, 1.3), (a + b) * 0.5 + Vector3(0, 0.575, 0))
 	body.rotation.y = yaw
@@ -1023,6 +1023,39 @@ func _build_markers() -> void:
 		m.rotation.y = atan2(-inward.x, -inward.z)
 		m.add_to_group("enemy_spawn", true)
 		spawns.add_child(m)
+
+
+# ---------------------------------------------------------------------------
+# The Sugar Rush twist: siren beacons on the walls and the controller
+# ---------------------------------------------------------------------------
+
+func _build_sugar_rush() -> void:
+	var sirens := Node3D.new()
+	sirens.name = "Sirens"
+	level.add_child(sirens)
+	var beacon := CylinderMesh.new()
+	beacon.top_radius = 0.22
+	beacon.bottom_radius = 0.3
+	beacon.height = 0.5
+	beacon.radial_segments = 12
+	beacon.material = _mat("siren", Color(1.0, 0.3, 0.6), 0.3, Color(1.0, 0.3, 0.6), 2.2)
+	var spots := [Vector3(-HALL_X + 0.6, 9.0, -4.0), Vector3(HALL_X - 0.6, 9.0, -20.0), Vector3(HALL_X - 0.6, 9.0, 12.0),
+		Vector3(-HALL_X + 0.6, 9.0, 22.0), Vector3(-12.0, 9.0, HALL_Z1 - 0.6), Vector3(12.0, 9.0, HALL_Z0 + 0.6)]
+	var i := 0
+	for p: Vector3 in spots:
+		var mi := MeshInstance3D.new()
+		mi.name = "Beacon%d" % i
+		mi.mesh = beacon
+		mi.position = p
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		sirens.add_child(mi)
+		var l := _omni(sirens, "Siren%d" % i, p + (Vector3(0, 0, 0) - Vector3(p.x, 0, p.z)).normalized() * 1.2, Color(1.0, 0.3, 0.62), 0.0, 22.0)
+		l.add_to_group("candy_siren", true)
+		i += 1
+	var rush := Node.new()
+	rush.name = "SugarRush"
+	level.add_child(rush)
+	_late(rush, "res://scripts/props/candy_sugar_rush.gd", {})
 
 
 # ---------------------------------------------------------------------------

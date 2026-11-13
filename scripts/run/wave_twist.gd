@@ -9,16 +9,21 @@ extends RefCounted
 ##   frenzy       Tidal Tunnels: feeding time, the whole horde is enraged
 ##   low_gravity  Launch Pad 9: the gravity plating fails; long floaty jumps,
 ##                and the leapers and jetpacks go off more often
+##   sugar_rush   Candy Works: a syrup line bursts; every zombie moves faster
+##                and uses its specials more often (the level's CandySugarRush
+##                prop sounds the sirens)
 ##   whiteout     Summit Lodge: the storm closes in (the level's FrostWeather
 ##                prop brings the fog and wind on the final wave)
 
-const IDS: Array[StringName] = [&"jackpot", &"blackout", &"frenzy", &"low_gravity", &"whiteout"]
+const IDS: Array[StringName] = [&"jackpot", &"blackout", &"frenzy", &"low_gravity", &"whiteout", &"sugar_rush"]
 
 const JACKPOT_TICKETS := 2.0
 const BLACKOUT_LIGHT := 0.32
 const BLACKOUT_SECONDS := 1.6
 const LOW_GRAVITY := 0.45
 const LOW_GRAVITY_SPECIALS := 0.6
+const SUGAR_RUSH_SPEED := 1.22
+const SUGAR_RUSH_SPECIALS := 0.75
 
 var id: StringName
 var _director: RunDirector
@@ -65,6 +70,12 @@ func on_spawn(z: Zombie) -> void:
 			for b in z.behaviours:
 				if &"cooldown" in b:
 					b.set(&"cooldown", float(b.get(&"cooldown")) * LOW_GRAVITY_SPECIALS)
+		&"sugar_rush":
+			z.speed *= SUGAR_RUSH_SPEED
+			z.special_scale *= SUGAR_RUSH_SPECIALS
+			for b in z.behaviours:
+				if &"cooldown" in b:
+					b.set(&"cooldown", float(b.get(&"cooldown")) * SUGAR_RUSH_SPECIALS)
 
 
 ## Fades the level's sky, ambient light and sun down (or back up).

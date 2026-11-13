@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/candy_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/candy_taffy_yank.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+
+[sub_resource type="Resource" id="yank"]
+script = ExtResource("4")
+min_range = 6.0
+max_range = 17.0
+cooldown = 12.0
+windup = 1.45
+lock_fraction = 0.5
+corridor = 1.0
+damage = 8.0
+pull_speed = 8.0
+pull_lift = 2.4
+line_color = Color(1, 0.55, 0.3, 1)
+
+[sub_resource type="Resource" id="alpha"]
+script = ExtResource("alpha_script")
+color = Color(1, 0.45, 0.75, 1)
+slam_damage = 20.0
+slam_cooldown = 9.0
+volley_shots = 5
+volley_damage = 6.0
+volley_speed = 13.0
+volley_spread_degrees = 13.0
+volley_arc = 0.35
+volley_cooldown = 10.0
+volley_size = 0.42
+volley_clip = &"Throw"
+
+[resource]
+script = ExtResource("1")
+id = &"alpha_confectioner"
+display_name = "The Confectioner"
+max_health = 2300.0
+move_speed = 2.0
+speed_variance = 0.0
+turn_speed = 3.5
+tickets = 200
+score = 2600
+xp = 160
+damage = 24.0
+attack_range = 2.5
+attack_reach = 3.3
+attack_windup = 1.0
+attack_recover = 1.15
+lunge_speed = 3.2
+mass = 7.5
+flank_degrees = 10.0
+enrage_radius = 0.0
+model_scene = ExtResource("2")
+outfit = &"Chef"
+body_scale = 1.5
+capsule_radius = 0.64
+capsule_height = 1.95
+head_height = 1.3
+shirt_colors = Array[Color]([Color(1, 0.97, 0.93, 1)])
+skin_colors = Array[Color]([Color(0.6, 0.82, 0.54, 1)])
+accessory_slots = PackedStringArray("Acc_Chef_Toque", "Acc_Chef_Stache", "Acc_Chef_Piping")
+move_animation = &"Walk"
+clip_style = &"Heavy"
+heavy = true
+animation_reference_speed = 1.6
+avoidance_radius = 1.0
+behaviours = Array[ExtResource("3")]([SubResource("yank"), SubResource("alpha")])
+voice_sounds = Array[StringName]([&"candy_chef_laugh_1", &"candy_chef_laugh_2"])
+voice_interval = Vector2(3.5, 6.5)
+voice_pitch = 0.8
+attack_sound = &"bruiser_slam"

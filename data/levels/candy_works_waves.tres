@@ -6,60 +6,63 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"frost_frozen_tourist": 8,
+"candy_gummy": 9,
 "tourist_shambler": 5
 }
-spawn_interval = 1.9
+spawn_interval = 1.8
 burst = 1
-max_alive = 7
+max_alive = 8
 speed_scale = 1.0
-late_types_after = 0.4
+late_types_after = 0.3
 banner = ""
 kind = &"standard"
-title = "THE GUESTS ARE FROZEN"
-hint = "Shatter the ice shell: headshots cut through."
+title = "FIRST SHIFT"
+hint = "Gummies shrink and speed up as you chip them: go for the head."
 
 [sub_resource type="Resource" id="wave_2"]
 script = ExtResource("2")
 spawns = {
-"frost_ski_racer": 13,
-"lifeguard_runner": 4,
-"frost_frozen_tourist": 3
+"lifeguard_runner": 8,
+"dune_space_cadet": 5,
+"candy_gummy": 6
 }
-spawn_interval = 1.1
+spawn_interval = 1.05
 burst = 1
 max_alive = 10
 speed_scale = 1.0
 late_types_after = 0.0
 banner = ""
 kind = &"rush"
-title = "SKI PATROL"
-hint = "Racers tuck before they rush: step off the line."
+title = "CONVEYOR RUSH"
+hint = "Fast movers on every belt: keep the bridges in front of you."
+surge_at = 0.55
+surge_count = 4
 
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"frost_yeti": 2,
-"frost_frozen_tourist": 11,
-"frost_ski_racer": 7
+"candy_taffy_puller": 6,
+"neon_punk": 4,
+"candy_gummy": 8
 }
-spawn_interval = 1.36
+spawn_interval = 1.3
 burst = 1
 max_alive = 11
 speed_scale = 1.0
-late_types_after = 0.12
+late_types_after = 0.1
 banner = ""
-kind = &"siege"
-title = "THE YETI WAKES"
-hint = "A headshot mid-throw breaks the Yeti's snowball."
-surge_at = 0.55
+kind = &"ranged"
+title = "TAFFY TIME"
+hint = "Pink line on the floor? Step off it before the taffy lashes."
+surge_at = 0.5
 surge_count = 5
 
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"frost_frozen_tourist": 11,
-"frost_ski_racer": 10,
+"candy_gummy": 10,
+"candy_taffy_puller": 4,
+"lifeguard_runner": 6,
 "tourist_shambler": 4
 }
 spawn_interval = 3.4
@@ -69,15 +72,15 @@ speed_scale = 1.04
 late_types_after = 0.0
 banner = ""
 kind = &"ambush"
-title = "AVALANCHE"
-hint = "Down every slope at once: do not get boxed in."
+title = "SHIFT CHANGE"
+hint = "Every door opens at once: find a wall and hold it."
 
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"frost_frozen_tourist": 10,
-"frost_ski_racer": 10,
-"frost_yeti": 1,
+"candy_gummy": 10,
+"candy_taffy_puller": 4,
+"boardwalk_bruiser": 1,
 "lifeguard_runner": 4
 }
 spawn_interval = 1.27
@@ -87,35 +90,37 @@ speed_scale = 1.06
 late_types_after = 0.2
 banner = ""
 kind = &"bounty"
-title = "THE GOLDEN RACER"
-hint = "Pop the golden racer before it gets away."
-bounty = &"frost_ski_racer"
+title = "THE GOLDEN GUMMY"
+hint = "Pop the golden gummy before it gets away."
+bounty = &"candy_gummy"
 bounty_tickets = 225
 
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"frost_yeti": 3,
-"frost_ski_racer": 11,
-"frost_frozen_tourist": 11
+"riot_bruiser": 2,
+"candy_gummy": 11,
+"candy_taffy_puller": 5,
+"hover_courier": 5
 }
-spawn_interval = 1.36
+spawn_interval = 1.4
 burst = 1
-max_alive = 13
-speed_scale = 1.1
-late_types_after = 0.1
+max_alive = 12
+speed_scale = 1.0
+late_types_after = 0.12
 banner = ""
-kind = &"ranged"
-title = "COLD FRONT"
-hint = "Snowballs from every side: keep cover between you and the Yetis."
-surge_at = 0.5
-surge_count = 6
+kind = &"siege"
+title = "SUGAR RUSH"
+hint = "Sirens! Everything on the floor is faster: back up and keep distance."
+twist = &"sugar_rush"
+surge_at = 0.55
+surge_count = 5
 
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"frost_frozen_tourist": 12,
-"frost_ski_racer": 11,
+"candy_taffy_puller": 8,
+"candy_gummy": 12,
 "lifeguard_runner": 3,
 "frost_yeti": 1
 }
@@ -126,10 +131,9 @@ speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
 kind = &"finale"
-title = "OLD FROSTBITE"
-hint = "Whiteout! Strafe wide of his snowballs and stay out of the slam."
-twist = &"whiteout"
-boss = &"alpha_yeti"
+title = "THE CONFECTIONER"
+hint = "Step off his taffy line, out of the slam, and wide of the gumballs."
+boss = &"alpha_confectioner"
 boss_at = 0.45
 rest_before = 24.0
 
@@ -141,12 +145,12 @@ break_seconds = 18.0
 checkpoint_wave = 4
 checkpoint_tickets = 450
 break_refill_fraction = 0.3
-ammo_topup_price = 190
-heal_price = 300
+ammo_topup_price = 210
+heal_price = 330
 heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 20
 wave_bonus_per_wave = 5
-overshield_price = 600
+overshield_price = 660
 overshield_amount = 25.0
-damage_boost_price = 600
+damage_boost_price = 650
