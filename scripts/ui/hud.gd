@@ -461,10 +461,10 @@ func _process(delta: float) -> void:
 
 func _feed_reticle() -> void:
 	# Reticle gap = the real spread cone projected onto the screen.
-	var spread_deg := player.weapons.current_spread()
+	var spread_deg := player.weapons.shown_spread()
 	var half_h := get_viewport().get_visible_rect().size.y * 0.5
 	_reticle.spread_px = tan(deg_to_rad(spread_deg)) / tan(deg_to_rad(player.camera.fov * 0.5)) * half_h
-	_reticle.aim = player.ads
+	_reticle.aim = player.aim_blend
 	if player.weapons.current:
 		var pick := String(Settings.value("reticle_style"))
 		_reticle.style = player.weapons.current.reticle_style if pick == "auto" else pick

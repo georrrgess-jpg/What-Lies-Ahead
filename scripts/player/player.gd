@@ -22,9 +22,12 @@ extends CharacterBody3D
 ##
 ## Aiming down sights: hold the aim button, or tap it with the "toggle" aim
 ## setting (sprinting, sliding, mantling or switching weapon lets go). The
-## sight comes up over the weapon's ads_time; reloading and switching lower it
-## and it comes back up by itself afterwards. The zoom is the weapon's own
-## times that of the sight fitted to it.
+## sight comes up over the weapon's ads_time (and goes down in ADS_OUT_SCALE
+## of it); reloading and switching lower it and it comes back up by itself
+## afterwards. The zoom is the weapon's own times that of the sight fitted to
+## it. `ads` is the aim the game plays by (spread, speed), stepped with
+## physics; `aim_blend` is the same aim as drawn (zoom, viewmodel, reticles),
+## eased and advanced every rendered frame so it is smooth at any refresh rate.
 
 signal health_changed(current: float, maximum: float)
 signal damaged(amount: float, source_position: Vector3)
@@ -55,6 +58,8 @@ const SPRINT_OUT_SCALE := 0.7
 const SPRINT_OUT_RANGE := Vector2(0.1, 0.17)
 ## The weapon fires once it is this far out of the sprint pose.
 const SPRINT_READY := 0.15
+## Lowering the sight takes this share of the time to raise it.
+const ADS_OUT_SCALE := 0.75
 ## Forward input needed to grab a ledge.
 const LEDGE_INPUT := 0.3
 ## Lowest ledge a jump on the ground mantles onto (lower ones are just jumped).
@@ -130,8 +135,11 @@ var shield := 0.0
 var max_shield := 0.0
 var sprinting := false
 var sliding := false
-## 0 = hip, 1 = fully aimed down sights. Eased by the weapon's ads_time.
+## 0 = hip, 1 = fully aimed down sights: the aim the game plays by, linear
+## over the weapon's ads_time and stepped with physics.
 var ads := 0.0
+## The aim as shown (0-1): eased, and advanced every rendered frame.
+var aim_blend := 0.0
 ## 0-1: how far the weapon is into its lowered sprint pose.
 var sprint_amount := 0.0
 ## Grip of the ground under the player: 1 normally, lower on ice. Surfaces
@@ -148,6 +156,13 @@ var _pitch := 0.0
 ## The player wants to aim (button held, or toggled on).
 var _aim_held := false
 var _aim_latched := false
+## The sight is wanted up (aim held, not reloading or switching).
+var _sight_up := false
+## The shown aim's current move: from, to, seconds in and its length.
+var _blend_from := 0.0
+var _blend_to := 0.0
+var _blend_time := 0.0
+var _blend_length := 0.0
 var _heartbeat_timer := 0.0
 var _coyote := 0.0
 var _jump_buffer := 0.0
@@ -211,7 +226,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _aim_look_scale() -> float:
 	var half := deg_to_rad(head.base_fov) * 0.5
 	var zoom := tan(half * ads_fov_scale()) / tan(half)
-	return lerpf(1.0, zoom * float(Settings.value("ads_sensitivity")), ease(ads, -1.6))
+	return lerpf(1.0, zoom * float(Settings.value("ads_sensitivity")), aim_blend)
 
 
 ## 1 / 2 pick the primary / secondary slot; the mouse wheel flips between them.
@@ -339,14 +354,40 @@ func _update_aim(delta: float, can_act: bool) -> void:
 		elif Input.is_action_just_pressed("aim"):
 			_aim_latched = not _aim_latched
 		_aim_held = _aim_latched
-	var sight_up := _aim_held and not weapons.is_reloading() and not weapons.is_switching()
-	ads = move_toward(ads, 1.0 if sight_up else 0.0, delta / _aim_time())
+	_sight_up = _aim_held and not weapons.is_reloading() and not weapons.is_switching()
+	ads = move_toward(ads, 1.0 if _sight_up else 0.0, delta / _aim_time(_sight_up))
 
 
-## Seconds to raise or lower the sight: the weapon's, scaled by its sight.
-func _aim_time() -> float:
+## Seconds to raise (or lower) the sight all the way: the weapon's, scaled by its sight.
+func _aim_time(raising: bool) -> float:
 	var ads_time := weapons.current.ads_time if weapons.current else 0.18
-	return maxf(0.05, ads_time * view.sight_ads_time_scale())
+	return maxf(0.05, ads_time * view.sight_ads_time_scale() * (1.0 if raising else ADS_OUT_SCALE))
+
+
+## The shown aim, per rendered frame. Each raise or lower starts from where
+## the sight is and takes the share of the full time still to go, on
+## _aim_curve, so the zoom and the viewmodel (both driven by it) arrive
+## together. Without physics (stills, audits) it shows `ads` as set.
+func _update_aim_blend(delta: float) -> void:
+	if not is_physics_processing():
+		aim_blend = ads
+		_blend_to = -1.0
+		return
+	var target := 1.0 if _sight_up else 0.0
+	if target != _blend_to:
+		_blend_from = aim_blend
+		_blend_to = target
+		_blend_time = 0.0
+		_blend_length = absf(target - aim_blend) * _aim_time(_sight_up)
+	_blend_time += delta
+	aim_blend = lerpf(_blend_from, _blend_to, _aim_curve(clampf(_blend_time / maxf(_blend_length, 1e-4), 0.0, 1.0)))
+
+
+## 0-1 over a raise or lower: gathers speed over the first quarter, then a long
+## soft arrival; no jump in speed at either end.
+static func _aim_curve(t: float) -> float:
+	var r := 1.0 - t
+	return 1.0 - r * r * r * r * (1.0 + 4.0 * t)
 
 
 func _update_sprint(delta: float, can_act: bool, input: Vector2) -> void:
@@ -625,6 +666,7 @@ func view_origin() -> Vector3:
 # --- per frame ---------------------------------------------------------------------
 
 func _process(delta: float) -> void:
+	_update_aim_blend(delta)
 	_update_gait(delta)
 	_heartbeat_tick(delta)
 

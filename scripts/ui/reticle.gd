@@ -39,6 +39,7 @@ var hit_time := 0.0
 var hit_kill := false
 var hit_head := false
 var _shown_gap := 8.0
+var _gap_lead := 8.0
 var _player: Player
 
 
@@ -56,8 +57,12 @@ func show_hit(killed: bool, headshot: bool) -> void:
 func _process(delta: float) -> void:
 	if hit_time > 0.0:
 		hit_time = maxf(0.0, hit_time - delta)
-	# Ease the gap so bloom reads as motion, not flicker.
-	_shown_gap = lerpf(_shown_gap, maxf(spread_px, 6.0), 1.0 - exp(-22.0 * delta))
+	# Ease the gap so bloom reads as motion, not flicker: two easings in a row,
+	# so even a sudden change (a shot, a rested precision weapon closing up)
+	# starts and ends gently at any frame rate.
+	var k := 1.0 - exp(-40.0 * delta)
+	_gap_lead = lerpf(_gap_lead, maxf(spread_px, 6.0), k)
+	_shown_gap = lerpf(_shown_gap, _gap_lead, k)
 	queue_redraw()
 
 
