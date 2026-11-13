@@ -17,7 +17,7 @@ corridor = 1.0
 damage = 8.0
 pull_speed = 8.0
 pull_lift = 2.4
-line_color = Color(1, 0.55, 0.3, 1)
+line_color = Color(1, 0.45, 0.1, 1)
 
 [sub_resource type="Resource" id="alpha"]
 script = ExtResource("alpha_script")

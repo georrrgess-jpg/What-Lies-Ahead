@@ -20,7 +20,7 @@ extends EnemyBehaviour
 ## Speed (m/s) the yank gives the player toward the puller, plus a little lift.
 @export var pull_speed := 9.0
 @export var pull_lift := 2.2
-@export var line_color := Color(1.0, 0.42, 0.72)
+@export var line_color := Color(1.0, 0.18, 0.58)
 @export var whirl_sound: StringName = &"candy_taffy_whirl"
 @export var lash_sound: StringName = &"candy_taffy_snap"
 
@@ -143,7 +143,6 @@ func _make_marker(z: Zombie) -> void:
 	_marker_mat = StandardMaterial3D.new()
 	_marker_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_marker_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_marker_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	_marker_mat.albedo_color = Color(line_color, 0.0)
 	_marker = MeshInstance3D.new()
 	_marker.mesh = _unit_box
@@ -163,7 +162,7 @@ func _place_marker(z: Zombie, k: float) -> void:
 	var b := Basis.looking_at(_dir, Vector3.UP)
 	_marker.global_transform = Transform3D(Basis(b.x * width, b.y * 0.04, b.z * (_length - 0.6)), mid)
 	var pulse := 0.5 + 0.5 * sin(k * 30.0) if locked else 0.0
-	_marker_mat.albedo_color = Color(line_color, lerpf(0.12, 0.5, k) + 0.25 * pulse)
+	_marker_mat.albedo_color = Color(line_color, lerpf(0.3, 0.65, k) + 0.25 * pulse)
 
 
 func _clear_marker() -> void:
