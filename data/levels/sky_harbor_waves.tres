@@ -12,7 +12,7 @@ spawns = {
 }
 spawn_interval = 1.6
 burst = 1
-max_alive = 9
+max_alive = 10
 speed_scale = 1.0
 late_types_after = 0.35
 banner = ""
@@ -42,10 +42,10 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"sky_balloon_vendor": 7,
-"tourist_shambler": 10,
+"sky_balloon_vendor": 8,
+"tourist_shambler": 8,
 "lava_tiki_bartender": 2,
-"sky_diver": 5
+"sky_diver": 6
 }
 spawn_interval = 1.25
 burst = 1
@@ -62,14 +62,14 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"sky_diver": 12,
+"sky_diver": 13,
 "tourist_shambler": 10,
 "sky_balloon_vendor": 5,
 "boardwalk_bruiser": 1
 }
-spawn_interval = 1.2
+spawn_interval = 1.1
 burst = 1
-max_alive = 13
+max_alive = 14
 speed_scale = 1.05
 late_types_after = 0.2
 banner = ""
@@ -85,12 +85,12 @@ spawns = {
 "boardwalk_bruiser": 2,
 "frost_yeti": 1,
 "tourist_shambler": 11,
-"sky_diver": 8,
+"sky_diver": 9,
 "sky_balloon_vendor": 5
 }
-spawn_interval = 1.35
+spawn_interval = 1.25
 burst = 1
-max_alive = 14
+max_alive = 15
 speed_scale = 1.06
 late_types_after = 0.25
 banner = ""
@@ -102,11 +102,11 @@ hint = "The heavies cross one bridge at a time: hold the far end."
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 12,
-"sky_diver": 11,
+"sky_diver": 9,
 "sky_balloon_vendor": 6,
 "lava_fire_dancer": 4
 }
-spawn_interval = 1.15
+spawn_interval = 1.05
 burst = 1
 max_alive = 14
 speed_scale = 1.08
@@ -123,13 +123,13 @@ twist = &"gale"
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 14,
-"sky_diver": 8,
+"sky_diver": 11,
 "sky_balloon_vendor": 4,
 "lava_fire_dancer": 3
 }
 spawn_interval = 1.9
 burst = 2
-max_alive = 14
+max_alive = 15
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
@@ -149,11 +149,11 @@ checkpoint_wave = 4
 checkpoint_tickets = 470
 break_refill_fraction = 0.3
 ammo_topup_price = 210
-heal_price = 330
+heal_price = 350
 heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 20
 wave_bonus_per_wave = 5
-overshield_price = 660
+overshield_price = 690
 overshield_amount = 25.0
 damage_boost_price = 660

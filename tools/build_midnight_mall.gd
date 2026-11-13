@@ -1207,13 +1207,16 @@ func _build_entrances() -> void:
 	_bbox("navy", Vector3(7.0, 1.3, 0.1), Vector3(0, UP + 3.6, Z1 - 0.2))
 	_label(signs, "NowShowing", "NOW SHOWING", Vector3(0, UP + 3.95, Z1 - 0.27), PI, 0.0045, AMBER * 1.6)
 	_label(signs, "Feature", "ATTACK OF THE 50 FT SHOPPER", Vector3(0, UP + 3.4, Z1 - 0.27), PI, 0.0026, CREAM * 1.4)
-	# Ticket machines fill the lobby's front corners: the doors lead straight to the stand.
-	for x in [-3.85, 3.85]:
-		var c := Vector3(x, UP, 26.0)
-		_bbox("navy", Vector3(3.7, 2.4, 3.2), c + Vector3(0, 1.2, 0))
-		_bbox("neon_teal" if x < 0.0 else "neon_pink", Vector3(3.72, 0.06, 3.22), c + Vector3(0, 2.4, 0))
-		_bbox("panel_light", Vector3(1.6, 0.8, 0.04), c + Vector3(-signf(x) * 0.3, 1.5, 1.62))
-		_collider(e, "TicketMachines%d" % int(x), Vector3(3.7, 2.4, 3.2), c + Vector3(0, 1.2, 0))
+	# Ticket machines fill the lobby's front corners, flush with the door jambs:
+	# the doors lead straight to the stand, with no pocket behind the walls
+	# where a crowd from the cinema spawn could wedge.
+	# They reach back to the concession stand, so the aisle is a closed dead end.
+	for x in [-3.65, 3.65]:
+		var c := Vector3(x, UP, 26.25)
+		_bbox("navy", Vector3(4.1, 2.4, 3.7), c + Vector3(0, 1.2, 0))
+		_bbox("neon_teal" if x < 0.0 else "neon_pink", Vector3(4.12, 0.06, 3.72), c + Vector3(0, 2.4, 0))
+		_bbox("panel_light", Vector3(1.6, 0.8, 0.04), c + Vector3(-signf(x) * 0.3, 1.5, 1.87))
+		_collider(e, "TicketMachines%d" % int(x), Vector3(4.1, 2.4, 3.7), c + Vector3(0, 1.2, 0))
 	for x in [-4.6, 4.6]:
 		_bbox("chrome", Vector3(1.0, 1.5, 0.1), Vector3(x, UP + 1.9, Z1 - 0.2))
 		_bbox("neon_violet" if x < 0.0 else "neon_teal", Vector3(0.84, 1.3, 0.04), Vector3(x, UP + 1.9, Z1 - 0.27))
@@ -1274,10 +1277,12 @@ func _build_hall_dressing() -> void:
 		_post(d, "Palm%d" % k, 1.0, 0.85, p)
 		_player_block(d, "Palm%dCap" % k, Vector3(2.0, 3.0, 2.0), p + Vector3(0, 2.4, 0))
 		k += 1
-	# Benches back to back with the columns and along the balconies.
+	# Benches along the shop fronts, and upstairs back to back with the glass
+	# rail, one end against a column (a bench standing off the rail, or a
+	# bench-to-column gap about a body wide, is a pocket that traps zombies).
 	var benches := [[Vector3(-15.8, 0, -3.0), 90.0], [Vector3(-15.8, 0, 3.5), 90.0], [Vector3(-12.0, 0, -21.6), 0.0],
-		[Vector3(3.5, 0, 21.8), 180.0], [Vector3(-12.0, UP, -12.0), 90.0], [Vector3(12.0, UP, 12.0), -90.0],
-		[Vector3(-12.2, UP, 12.5), 90.0], [Vector3(10.0, UP, 21.8), 180.0], [Vector3(15.8, UP, -3.0), -90.0]]
+		[Vector3(3.5, 0, 21.8), 180.0], [Vector3(-VX - 0.45, UP, -11.43), -90.0], [Vector3(VX + 0.45, UP, 11.43), 90.0],
+		[Vector3(-3.43, UP, VZ + 0.45), 0.0], [Vector3(10.0, UP, 21.8), 180.0], [Vector3(15.8, UP, -3.0), -90.0]]
 	for b in benches:
 		_solid_multi("mall_bench", b[0], b[1], Vector3(2.3, 0.85, 0.7))
 	# Retail carts (big cover pieces) in the colonnades.
@@ -1442,7 +1447,8 @@ func _build_markers() -> void:
 		"SpawnStaffCorridor": [Vector3(-21.6, 0.1, 0.0), -90.0],
 		"SpawnDepartmentStore": [Vector3(0.0, 0.1, -27.4), 180.0],
 		"SpawnKitchen": [Vector3(21.4, 0.1, 0.0), 90.0],
-		"SpawnCinema": [Vector3(0.0, UP + 0.1, 27.4), 0.0],
+		# Mid-aisle between the ticket machines: the spawn spread stays clear of the concession stand.
+		"SpawnCinema": [Vector3(0.0, UP + 0.1, 26.2), 0.0],
 	}
 	for point_name in points:
 		var m := Marker3D.new()
