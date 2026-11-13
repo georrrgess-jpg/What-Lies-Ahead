@@ -85,7 +85,7 @@ func _ready() -> void:
 	_score = AudioStreamPlayer.new()
 	_score.stream = Sfx.stream(&"cine_startup")
 	_score.bus = &"Music"
-	_score.volume_db = Sfx.mix_db(&"cine_startup") - 2.0
+	_score.volume_db = Sfx.mix_db(&"cine_startup") - 6.0
 	add_child(_score)
 	_score.play()
 	_start_loads()

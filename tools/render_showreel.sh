@@ -83,7 +83,7 @@ done
 concat=""
 for ((i = 0; i < n; i++)); do concat+="[v$i][a$i]"; done
 filter+="${concat}concat=n=$n:v=1:a=1[vc][a];[vc]scale=1280:720:flags=lanczos[v]"
-# About 2.2 Mbit/s of video keeps the 70 s reel under ~25 MB.
+# About 2.2 Mbit/s of video keeps the 72 s reel under ~25 MB.
 ffmpeg -nostdin -v error -y "${inputs[@]}" -filter_complex "$filter" -map "[v]" -map "[a]" \
 	-c:v libx264 -preset slow -crf 24 -maxrate 2200k -bufsize 4400k -pix_fmt yuv420p -movflags +faststart \
 	-c:a aac -b:a 160k "$OUT"
@@ -96,5 +96,6 @@ while read -r _ index id start length; do
 	awk "BEGIN{exit !($at < $total)}" || break
 	ffmpeg -nostdin -v error -y -ss "$at" -i "$OUT" -frames:v 1 -vf scale=480:270 "$WORK/sheet_$(printf %02d "$index").png"
 done < "$WORK/shots.txt"
-ffmpeg -nostdin -v error -y -pattern_type glob -i "$WORK/sheet_*.png" -vf "tile=4x7:padding=4" -frames:v 1 -q:v 3 "$SHEET"
+rows=$(( ($(ls "$WORK"/sheet_*.png | wc -l) + 3) / 4 ))
+ffmpeg -nostdin -v error -y -pattern_type glob -i "$WORK/sheet_*.png" -vf "tile=4x$rows:padding=4" -frames:v 1 -q:v 3 "$SHEET"
 ls -l "$OUT" "$SHEET"

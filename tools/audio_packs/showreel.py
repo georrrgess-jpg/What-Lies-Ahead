@@ -205,7 +205,7 @@ def showreel_trailer():
     # The cold open sits well under the rest and grows into the title; the
     # bed dips for a breath in the last quarter second before the boom.
     t = t_axis(TITLE)
-    level = np.interp(t, (0.0, 6.0, TITLE - 0.3, TITLE), (0.4, 0.45, 0.8, 0.2))
+    level = np.interp(t, (0.0, 6.0, TITLE - 0.3, TITLE), (0.5, 0.55, 0.85, 0.2))
     left[: len(t)] *= level
     right[: len(t)] *= level
 
