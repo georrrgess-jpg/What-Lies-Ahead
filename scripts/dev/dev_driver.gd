@@ -36,6 +36,9 @@ extends Node
 
 enum Mode { NONE, CLEAR, DEFEAT, SHOT, PAUSE, ROUTE }
 
+## Frames drawn before a --snap still is saved (shaders compile, the camera settles).
+const SNAP_FRAMES := 6
+
 var mode := Mode.NONE
 var weapon := &"pulse_pistol"
 var swap_each_break := false
@@ -141,6 +144,9 @@ func _ready() -> void:
 			if kv.size() == 2:
 				shot_args[kv[0]] = kv[1]
 	print("[dev] mode=%s weapon=%s swap=%s god=%s" % [Mode.keys()[mode], weapon, swap_each_break, god])
+	if snap_prefix != "":
+		# The software renderer draws about a frame a second: only draw the stills.
+		RenderingServer.render_loop_enabled = false
 	if mode == Mode.SHOT:
 		var shot = load("res://scripts/dev/screenshot.gd").new()
 		shot.name = "Screenshot"
@@ -239,6 +245,8 @@ func _physics_process(delta: float) -> void:
 		_snap_hold -= 1
 		return
 	if _slam_watch and is_instance_valid(_director.boss):
+		if _director.boss.global_position.distance_to(_player.global_position) < 9.0 and _director.boss.state == Zombie.State.CHASE:
+			_snap("boss", 2, _director.boss)
 		for b in _director.boss.behaviours:
 			if b is AlphaBossBehaviour and b._slam_left > 0.0:
 				_slam_watch = false
@@ -288,9 +296,7 @@ func _watch_rounds() -> void:
 		_snap("surge", 60, point))
 	_director.boss_changed.connect(func(boss: Zombie):
 		print("[dev] BOSS %s" % ("%s arrived with %d health" % [boss.data.display_name, int(boss.health)] if boss else "down"))
-		_slam_watch = boss != null
-		if boss:
-			_snap("boss", 260, boss))
+		_slam_watch = boss != null)
 	_director.bounty_changed.connect(func(target: Zombie):
 		print("[dev] BOUNTY %s" % ("on the run" if target else ("claimed" if _director._bounties_claimed > 0 else "gone")))
 		if target:
@@ -329,15 +335,18 @@ func _snap(event: String, frames: int, subject: Node3D = null) -> void:
 	_snaps[event] = true
 	for i in frames:
 		await get_tree().process_frame
-	if is_instance_valid(subject):
-		_look_at(subject.global_position + Vector3.UP * 1.6)
-		_snap_hold = 4
-		for i in 3:
-			await get_tree().process_frame
+	# Drawing is off between stills (see _ready): turn it on for this one.
+	RenderingServer.render_loop_enabled = true
+	_snap_hold = SNAP_FRAMES + 2
+	for i in SNAP_FRAMES:
+		if is_instance_valid(subject):
+			_look_at(subject.global_position + Vector3.UP * 1.6)
+		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var path := "%s_%s.png" % [snap_prefix, event]
 	var err := get_viewport().get_texture().get_image().save_png(path)
 	print("[dev] SNAP %s error=%d" % [path, err])
+	RenderingServer.render_loop_enabled = false
 	if snap_until != "" and event.begins_with(snap_until):
 		_quit(0)
 

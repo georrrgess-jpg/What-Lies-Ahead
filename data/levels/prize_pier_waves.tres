@@ -39,12 +39,12 @@ surge_count = 4
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"lifeguard_runner": 18,
+"lifeguard_runner": 19,
 "tourist_shambler": 8
 }
-spawn_interval = 1.02
+spawn_interval = 0.89
 burst = 1
-max_alive = 9
+max_alive = 10
 speed_scale = 1.0
 late_types_after = 0.0
 banner = ""
@@ -67,6 +67,8 @@ banner = ""
 kind = &"bounty"
 title = "THE GOLDEN LIFEGUARD"
 hint = "Pop the golden runner before it gets away."
+surge_at = 0.5
+surge_count = 5
 bounty = &"lifeguard_runner"
 bounty_tickets = 150
 
@@ -93,12 +95,12 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"lifeguard_runner": 20,
-"tourist_shambler": 14
+"lifeguard_runner": 22,
+"tourist_shambler": 12
 }
-spawn_interval = 2.0
+spawn_interval = 1.9
 burst = 2
-max_alive = 11
+max_alive = 12
 speed_scale = 1.08
 late_types_after = 0.1
 banner = ""

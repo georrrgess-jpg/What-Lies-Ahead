@@ -35,6 +35,8 @@ const HURRY_SPEED := 1.35
 ## body gets a second, full-size shape that only shots collide with.
 const MOVE_RADIUS_MAX := 0.8
 const MOVE_HEIGHT_MAX := 2.4
+## Strength of an alpha's hit flash, as a share of a regular zombie's.
+const BOSS_FLASH := 0.3
 ## Behaviour fields that hold damage dealt to the player (scaled by the difficulty).
 const BEHAVIOUR_DAMAGE_FIELDS: Array[StringName] = [&"damage", &"land_damage", &"landing_damage", &"burst_damage", &"damage_per_second"]
 
@@ -89,6 +91,7 @@ var hurry := false
 var flee_points: PackedVector3Array
 
 var _rank_overlay: Material
+var _boss_flash: StandardMaterial3D
 var _body_shape: CollisionShape3D
 
 var _state_time := 0.0
@@ -1221,6 +1224,13 @@ func _flash(duration: float) -> void:
 	var k := lerpf(0.35, 1.0, Settings.flash_scale())
 	_flash_material.albedo_color = Color(0.6, 0.38, 0.5) * k
 	_flash_left = duration
+	# An alpha soaks hundreds of hits: a full flash on each would wash it out.
+	if rank == RANK_BOSS:
+		if _boss_flash == null:
+			_boss_flash = _flash_material.duplicate()
+		_boss_flash.albedo_color = _flash_material.albedo_color * BOSS_FLASH
+		_set_overlay(_boss_flash)
+		return
 	_set_overlay(_flash_material)
 
 

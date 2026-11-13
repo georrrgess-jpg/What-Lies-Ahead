@@ -55,13 +55,13 @@ hint = "Back off when they crackle."
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"deep_diver": 9,
+"deep_diver": 8,
 "mascot_inker": 6,
 "jelly_head": 8
 }
-spawn_interval = 3.74
+spawn_interval = 4.25
 burst = 5
-max_alive = 12
+max_alive = 11
 speed_scale = 1.0
 late_types_after = 0.0
 banner = ""
@@ -113,9 +113,10 @@ twist = &"frenzy"
 script = ExtResource("2")
 spawns = {
 "jelly_head": 14,
-"deep_diver": 9,
-"mascot_inker": 5,
-"lifeguard_runner": 4
+"deep_diver": 10,
+"tourist_shambler": 4,
+"lifeguard_runner": 4,
+"mascot_inker": 2
 }
 spawn_interval = 2.1
 burst = 2

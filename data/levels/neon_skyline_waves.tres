@@ -75,11 +75,11 @@ bounty_tickets = 175
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"hover_courier": 11,
-"neon_punk": 9,
-"tourist_shambler": 6
+"hover_courier": 12,
+"neon_punk": 7,
+"tourist_shambler": 7
 }
-spawn_interval = 3.57
+spawn_interval = 3.74
 burst = 5
 max_alive = 12
 speed_scale = 1.03
@@ -94,8 +94,9 @@ twist = &"blackout"
 script = ExtResource("2")
 spawns = {
 "riot_bruiser": 3,
-"neon_punk": 11,
-"hover_courier": 8
+"hover_courier": 10,
+"neon_punk": 7,
+"tourist_shambler": 3
 }
 spawn_interval = 1.44
 burst = 1
@@ -113,7 +114,8 @@ surge_count = 5
 script = ExtResource("2")
 spawns = {
 "hover_courier": 16,
-"neon_punk": 11,
+"tourist_shambler": 8,
+"neon_punk": 5,
 "lifeguard_runner": 5
 }
 spawn_interval = 2.1

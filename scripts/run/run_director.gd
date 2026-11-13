@@ -59,6 +59,10 @@ const STATION_ACTIONS := {
 }
 ## Entrances a wave works at a time, by kind (0 = all of them).
 const FRONTS := {&"standard": 2, &"rush": 2, &"siege": 1, &"ambush": 0, &"ranged": 0, &"bounty": 2, &"finale": 2}
+## The most zombies the director keeps alive at once, whatever the wave, the
+## difficulty and the pacing ask for (a performance ceiling; packs called by
+## a surge or an alpha may briefly exceed it).
+const CROWD_LIMIT := 18
 ## Seconds between the surge warning and the surge.
 const SURGE_WARNING := 3.5
 ## Enemies this wide a flanker (EnemyData.flank_degrees) take the entrance
@@ -476,7 +480,7 @@ func _tick_wave(delta: float) -> void:
 	_tick_set_pieces(delta, wave)
 
 	_spawn_timer -= delta
-	var cap := pacing.live_cap(_wave_cap)
+	var cap := mini(pacing.live_cap(_wave_cap), CROWD_LIMIT)
 	if is_instance_valid(boss):
 		# The alpha is the fight now: its escorts are a smaller crowd.
 		cap = maxi(3, int(round(cap * BOSS_ESCORT_CAP)))
@@ -524,6 +528,11 @@ func _spawn(enemy_id: StringName, wave: WaveData, point: Node3D, spread := 1.0) 
 		_twist.on_spawn(z)
 	var offset := Vector3(randf_range(-spread, spread), 0.0, randf_range(-spread, spread))
 	z.position = point.global_position + offset
+	if spread > 1.0:
+		# A wide pack stands on walkable ground; at an entrance off the
+		# navmesh (a ramp below the deck) it keeps the usual tight cluster.
+		var ground := NavigationServer3D.map_get_closest_point(player.get_world_3d().navigation_map, z.position)
+		z.position = ground if ground.distance_to(z.position) < 1.0 else point.global_position + offset / spread
 	z.rotation.y = point.global_rotation.y
 	z.died.connect(_on_zombie_died)
 	z.stalled.connect(_on_zombie_stalled)

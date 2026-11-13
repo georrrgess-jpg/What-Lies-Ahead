@@ -11,6 +11,7 @@ extends Control
 
 const MARGIN := 48.0
 const CHIP_Y := 164.0
+const BAR_TOP := 26.0
 const BAR_WIDTH := 620.0
 const BAR_HEIGHT := 22.0
 const SURGE_COLOR := Color(1.0, 0.3, 0.42)
@@ -29,6 +30,8 @@ var _bounty: Waypoint
 var _surge_anchor: Node3D
 var _time := 0.0
 var _shown_health := 1.0
+var _bounty_seconds := -1
+var _pinging := false
 
 
 func _ready() -> void:
@@ -64,8 +67,16 @@ func _process(delta: float) -> void:
 		_boss_bar.value = _shown_health
 	_surge.visible = _director.surge_point() != null
 	if is_instance_valid(_director.bounty):
-		_bounty.label = "BOUNTY  %ds" % int(ceil(_director.bounty_seconds_left()))
-	queue_redraw()
+		var seconds := int(ceil(_director.bounty_seconds_left()))
+		if seconds != _bounty_seconds:
+			_bounty_seconds = seconds
+			_bounty.label = "BOUNTY  %ds" % seconds
+	if _director.is_closing_out():
+		_pinging = true
+		queue_redraw()
+	elif _pinging:
+		_pinging = false
+		queue_redraw()
 
 
 # --- chip ----------------------------------------------------------------------
@@ -107,7 +118,11 @@ func _build_boss_bar() -> void:
 	add_child(box)
 	box.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	box.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	box.offset_top = 26.0
+	box.position = Vector2.ZERO
+	box.offset_left = 0.0
+	box.offset_right = 0.0
+	box.offset_top = BAR_TOP
+	box.offset_bottom = BAR_TOP
 	_boss_name = UiKit.arcade_label("", 40, UiKit.PINK_LIGHT)
 	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_boss_name)

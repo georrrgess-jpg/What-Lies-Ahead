@@ -193,7 +193,7 @@ func _tick_volley(z: Zombie, delta: float) -> void:
 static func _make_ring(tint: Color, alpha: float) -> MeshInstance3D:
 	if _torus == null:
 		_torus = TorusMesh.new()
-		_torus.inner_radius = 0.93
+		_torus.inner_radius = 0.87
 		_torus.outer_radius = 1.0
 		_torus.rings = 40
 		_torus.ring_segments = 6
