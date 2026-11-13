@@ -518,7 +518,8 @@ func _build_arena_props() -> void:
 	_prop(props, "popcorn_cart", "PopcornCart", Vector3(-20.5, 0, -21.2), 90.0, Vector3(1.7, 2.0, 1.0))
 	_collider(props, "PopcornCartCollision", Vector3(1.1, 2.0, 1.8), Vector3(-20.5, 1.0, -21.2))
 	_prop(dressing, "surfboards", "Surfboards", Vector3(13.45, 0, -2.6), -90.0, Vector3(0.6, 2.4, 1.6))
-	_collider(props, "SurfboardsCollision", Vector3(0.6, 2.4, 1.7), Vector3(13.4, 1.2, -2.6))
+	# Solid, but not a step up over the rail: a player-only box closes the top.
+	_no_perch(_collider(props, "SurfboardsCollision", Vector3(0.6, 2.4, 1.7), Vector3(13.4, 1.2, -2.6)), Vector3(0.6, 2.4, 1.7))
 	_prop(dressing, "life_ring", "LifeRing", Vector3(13.8, 0.75, 3.0), -90.0, Vector3(0.2, 0.8, 0.8))
 	_prop(dressing, "life_ring", "LifeRing2", Vector3(13.8, 0.75, -30.0), -90.0, Vector3(0.2, 0.8, 0.8))
 
@@ -1183,6 +1184,23 @@ func _player_wall(body: StaticBody3D, size: Vector3) -> void:
 	box.size = size
 	shape.shape = box
 	shape.position.y = size.y * 0.5 - 0.65
+	wall.add_child(shape)
+
+
+## Player-only box over a collider of `size`, so the player can neither
+## mantle onto it nor land on it; shots and zombies ignore it.
+func _no_perch(body: StaticBody3D, size: Vector3) -> void:
+	var wall := StaticBody3D.new()
+	wall.name = "PlayerWall"
+	wall.collision_layer = 16
+	wall.collision_mask = 0
+	body.add_child(wall)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = Vector3(size.x, 3.0, size.z)
+	shape.shape = box
+	shape.position.y = size.y * 0.5 + 1.5
 	wall.add_child(shape)
 
 
