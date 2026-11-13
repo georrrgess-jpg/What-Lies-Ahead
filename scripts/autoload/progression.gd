@@ -1,14 +1,19 @@
 extends Node
-## Player account level (1-50) and everything that pays into it.
+## Player account level (1-40) and everything that pays into it.
 ##
 ## Account XP lives in Profile.section("progression")["xp"]. Runs pay out
 ## through a RunTracker (scripts/progression/run_tracker.gd) created on
 ## Events.run_started: a share of the score and a bonus at every wave clear,
 ## then the level-clear and first-clear bonuses when the run is settled
-## (Events.run_finished, abandoned runs included). Challenges
-## (data/progression/challenges/) pay XP when completed. Tuning lives in
-## data/progression/rules.tres; the level reward track is every CosmeticItem
-## with a PLAYER_LEVEL requirement plus the Pier Pass stamps in the rules.
+## (Events.run_finished, abandoned runs included). Contracts
+## (data/progression/contracts/, three active at a time) and milestones
+## (data/progression/challenges/) pay XP and Sparks when completed. Tuning
+## lives in data/progression/rules.tres.
+##
+## The reward track: every level pays Sparks (Wallet.rules.level_sparks) and
+## gives one thing: a weapon (WeaponData.unlock) or a cosmetic (a CosmeticItem
+## that is not for sale and has a PLAYER_LEVEL requirement). Every fifth level
+## is a milestone with a showpiece and a bigger payout.
 
 signal xp_changed(xp: int)
 signal level_up(new_level: int)
@@ -16,13 +21,16 @@ signal level_up(new_level: int)
 signal xp_banked(amount: int, caption: String)
 ## Score XP earned in the current run that is not banked yet.
 signal pending_changed(amount: int)
+## A milestone (data/progression/challenges/) was completed.
 signal challenge_completed(challenge: Challenge, weapon_id: StringName)
+## A contract was completed; `entry` is its ContractBoard entry.
+signal contract_completed(entry: Dictionary)
 ## Cosmetics unlocked by a level-up, a challenge or another account goal.
 signal rewards_unlocked(items: Array[CosmeticItem])
 ## The current run was settled; `summary` is RunTracker.summary().
 signal run_settled(summary: Dictionary)
 
-const MAX_LEVEL := 50
+const MAX_LEVEL := 40
 const RULES_PATH := "res://data/progression/rules.tres"
 ## Settled runs kept in the profile's "runs" log.
 const RUN_LOG_SIZE := 12
@@ -111,22 +119,53 @@ func clear_xp(level_id: StringName) -> int:
 
 # --- reward track -------------------------------------------------------------------
 
-## Cosmetics unlocked exactly at `lvl`.
+## Cosmetics unlocked exactly at `lvl` (items for sale are not rewards).
 func level_rewards(lvl: int) -> Array[CosmeticItem]:
 	var out: Array[CosmeticItem] = []
 	for it in GameData.cosmetics():
-		if it.requirement and it.requirement.kind == Requirement.Kind.PLAYER_LEVEL and it.requirement.amount == lvl:
+		if it.price == 0 and it.requirement and it.requirement.kind == Requirement.Kind.PLAYER_LEVEL and it.requirement.amount == lvl:
 			out.append(it)
 	return out
 
 
-## The Pier Pass stamp for `lvl`: [name, description], or [] if it has none.
+## Weapons unlocked exactly at `lvl`.
+func level_weapons(lvl: int) -> Array[WeaponData]:
+	var out: Array[WeaponData] = []
+	for w in GameData.weapons():
+		if w.unlock and w.unlock.kind == Requirement.Kind.PLAYER_LEVEL and w.unlock.amount == lvl:
+			out.append(w)
+	return out
+
+
+## Sparks paid for reaching `lvl`.
+func level_sparks(lvl: int) -> int:
+	return Wallet.rules.level_sparks(lvl)
+
+
+## Every fifth level: a showpiece reward and a bigger Sparks payout.
+func is_milestone_level(lvl: int) -> bool:
+	return Wallet.rules.is_milestone(lvl)
+
+
+## [name, description] for a level whose reward is not a cosmetic: the weapon
+## it unlocks, or a stamp from the rules. [] if it has neither.
 func stamp(lvl: int) -> PackedStringArray:
+	var weapons := level_weapons(lvl)
+	if not weapons.is_empty():
+		return PackedStringArray([weapons[0].display_name, "New weapon: %s" % weapons[0].category])
 	return rules.stamp(lvl)
 
 
-## One line naming what `lvl` gives, e.g. "Title: Pier Rat".
+## What a level's non-cosmetic reward is called ("New weapon", "Pier Pass stamp").
+func stamp_kind(lvl: int) -> String:
+	return "New weapon" if not level_weapons(lvl).is_empty() else "Pier Pass stamp"
+
+
+## One line naming what `lvl` gives, e.g. "Weapon: Arc Coil" or "Title: Pier Rat".
 func reward_text(lvl: int) -> String:
+	var weapons := level_weapons(lvl)
+	if not weapons.is_empty():
+		return "New weapon: %s" % weapons[0].display_name
 	var items := level_rewards(lvl)
 	if not items.is_empty():
 		return "%s: %s" % [items[0].slot_label(), items[0].display_name]

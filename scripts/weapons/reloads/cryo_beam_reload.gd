@@ -25,8 +25,10 @@ func play(v: WeaponView, d: float) -> void:
 	v.burst(0.36, d, "EjectPoint", "steam")
 	v.hide_part(0.52, d, "Cell")
 	# The free hand drops away to fetch a fresh tank and returns to the foregrip.
-	v.track("ArmL", d, [[0.22, Vector3(-0.03, -0.24, 0.14), Vector3(25, 0, 0)], [0.72, Vector3(-0.03, -0.24, 0.14), Vector3(25, 0, 0)],
-		[0.9, Vector3.ZERO, Vector3.ZERO]])
+	# (It slides down off the foregrip, which leans 8 degrees, before it swings away.)
+	v.track("ArmL", d, [[0.12, Vector3(0, -0.16, -0.0225), Vector3.ZERO], [0.26, Vector3(-0.03, -0.28, 0.12), Vector3(25, 0, 0)],
+		[0.72, Vector3(-0.03, -0.28, 0.12), Vector3(25, 0, 0)], [0.83, Vector3(0, -0.16, -0.0225), Vector3.ZERO],
+		[0.93, Vector3.ZERO, Vector3.ZERO]])
 	# A hologram tank slides in from the side and freezes solid.
 	v.track("CellHolo", d, [[0.54, Vector3(-0.12, 0, 0), Vector3(0, 0, -90), 1.0, "hold"], [0.7, Vector3(-0.1, 0, 0), Vector3(0, 0, -40)],
 		[0.76, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_CUBIC, Tween.EASE_OUT)

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"c_pop"
+display_name = "Pop Quiz"
+description = "Pop %s zombies"
+scope = 0
+stat = &"kills"
+mode = 0
+goal = 100
+param = 0
+xp = 300
+sparks = 40
+mastery_xp = 0
+sort_order = 10

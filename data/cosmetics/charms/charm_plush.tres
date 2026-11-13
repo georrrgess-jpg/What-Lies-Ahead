@@ -1,12 +1,6 @@
-[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
-
-[sub_resource type="Resource" id="req"]
-script = ExtResource("2")
-kind = 4
-amount = 2000
 
 [resource]
 script = ExtResource("1")
@@ -15,7 +9,7 @@ display_name = "Plush Zombie"
 description = "The only zombie you will ever want to hug."
 slot = &"weapon_charm"
 rarity = 2
-requirement = SubResource("req")
+price = 900
 params = {
 "charm": "Plush"
 }

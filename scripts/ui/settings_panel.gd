@@ -5,12 +5,36 @@ extends VBoxContainer
 ##
 ## `header` (the title with BACK at the top right, like every other page) is
 ## made up front so a host can pin it above the scrolling list; if the host
-## does not place it, the panel puts it at its own top.
+## does not place it, the panel puts it at its own top. A host that draws its
+## own header (the menu shell) sets show_header false. The list ends with a
+## controls reference unless show_controls is false (the menu's Settings page
+## shows controls_reference() in its own panel).
 
 signal closed
 
+## Width of an option's name column.
+const NAME_WIDTH := 330.0
+## The keys shown in the controls reference: [what it does, input actions].
+const CONTROLS := [
+	["Move", ["move_forward", "move_left", "move_back", "move_right"]],
+	["Sprint", ["sprint"]],
+	["Jump", ["jump"]],
+	["Slide (while sprinting)", ["slide"]],
+	["Fire", ["fire"]],
+	["Aim down sights", ["aim"]],
+	["Reload", ["reload"]],
+	["Primary / secondary weapon", ["weapon_1", "weapon_2"]],
+	["Use the station, portals", ["interact"]],
+	["Start the next wave early", ["start_wave"]],
+	["Pause", ["pause"]],
+]
+
 ## Title row with the BACK button.
 var header: Control
+## False when the host draws the title and BACK itself.
+var show_header := true
+## False when the host shows controls_reference() somewhere else.
+var show_controls := true
 
 var _rows := {}
 
@@ -22,11 +46,10 @@ func _init() -> void:
 func _build_header() -> Control:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 18)
-	var title := UiKit.label("SETTINGS", 64, UiKit.AMBER, true)
+	var title := UiKit.sign_label("SETTINGS", 64, UiKit.AMBER)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
-	var back := UiKit.soft_button("BACK", 30)
-	back.custom_minimum_size = Vector2(170, 56)
+	var back := UiKit.back_button()
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	back.pressed.connect(close)
 	head.add_child(back)
@@ -36,7 +59,7 @@ func _build_header() -> Control:
 func _ready() -> void:
 	add_theme_constant_override("separation", 10)
 	custom_minimum_size = Vector2(880, 0)
-	if header.get_parent() == null:
+	if show_header and header.get_parent() == null:
 		add_child(header)
 
 	_section("CONTROLS")
@@ -70,6 +93,9 @@ func _ready() -> void:
 		Settings.reset_to_defaults()
 		_refresh())
 	buttons.add_child(reset)
+	if show_controls:
+		add_child(UiKit.spacer(6))
+		add_child(controls_reference())
 	# Keyboard and gamepad focus starts on the first option.
 	var sliders := find_children("*", "HSlider", true, false)
 	if not sliders.is_empty():
@@ -107,15 +133,15 @@ func _fov_text(v: float) -> String:
 
 
 func _section(text: String) -> void:
-	add_child(UiKit.spacer(4))
-	add_child(UiKit.label(text, 26, UiKit.CYAN, true))
+	add_child(UiKit.spacer(6))
+	add_child(UiKit.section(text))
 
 
 func _row(text: String) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 20)
-	var l := UiKit.label(text, 28)
-	l.custom_minimum_size = Vector2(320, 0)
+	var l := UiKit.label(text, 26, UiKit.CREAM)
+	l.custom_minimum_size = Vector2(NAME_WIDTH, 0)
 	row.add_child(l)
 	add_child(row)
 	return row
@@ -132,8 +158,8 @@ func _slider(key: String, text: String, min_v: float, max_v: float, step: float,
 	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	slider.custom_minimum_size = Vector2(360, 36)
 	row.add_child(slider)
-	var value := UiKit.label(format.call(slider.value), 28, UiKit.CREAM)
-	value.custom_minimum_size = Vector2(100, 0)
+	var value := UiKit.label(format.call(slider.value), 26, Color.WHITE, true)
+	value.custom_minimum_size = Vector2(150, 0)
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(value)
 	slider.value_changed.connect(func(v: float):
@@ -147,24 +173,51 @@ func _choice(key: String, text: String, options: Array) -> void:
 	var group := ButtonGroup.new()
 	var buttons := []
 	for option in options:
-		var b := UiKit.soft_button(option[1], 26)
-		b.toggle_mode = true
-		b.button_group = group
+		var b := UiKit.toggle_button(option[1], group, 24)
 		b.button_pressed = Settings.value(key) == option[0]
-		_style_toggle(b)
 		b.pressed.connect(func(): Settings.set_value(key, option[0]))
 		row.add_child(b)
 		buttons.append({"button": b, "value": option[0]})
 	_rows[key] = {"buttons": buttons}
 
 
-func _style_toggle(b: Button) -> void:
-	var on := UiKit.box(UiKit.PINK, UiKit.PINK_DARK, 18, 0, 10)
-	on.border_width_bottom = 6
-	on.content_margin_left = 24
-	on.content_margin_right = 24
-	b.add_theme_stylebox_override("pressed", on)
-	b.add_theme_stylebox_override("hover_pressed", on)
+## The controls reference: every action with the keys bound to it, read from
+## the input map so it always shows the real bindings.
+static func controls_reference() -> Control:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiKit.GAP_S)
+	col.add_child(UiKit.section("CONTROLS"))
+	for entry in CONTROLS:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", UiKit.GAP_S)
+		var l := UiKit.label(entry[0], 24, UiKit.CREAM)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(l)
+		for action in entry[1]:
+			var key := _key_name(action)
+			if key != "":
+				row.add_child(UiKit.key_glyph(key))
+		col.add_child(row)
+	col.add_child(UiKit.label("Mouse wheel switches weapons too.", UiKit.SIZE_SMALL, UiKit.MUTED))
+	return col
+
+
+## Short name of the first key or mouse button bound to `action` ("" if none).
+static func _key_name(action: String) -> String:
+	if not InputMap.has_action(action):
+		return ""
+	for event in InputMap.action_get_events(action):
+		if event is InputEventKey:
+			var key := event as InputEventKey
+			var code := key.physical_keycode if key.physical_keycode != KEY_NONE else key.keycode
+			return OS.get_keycode_string(code).to_upper()
+		if event is InputEventMouseButton:
+			match (event as InputEventMouseButton).button_index:
+				MOUSE_BUTTON_LEFT:
+					return "LMB"
+				MOUSE_BUTTON_RIGHT:
+					return "RMB"
+	return ""
 
 
 func _refresh() -> void:

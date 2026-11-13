@@ -1,12 +1,6 @@
-[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
-
-[sub_resource type="Resource" id="req"]
-script = ExtResource("2")
-kind = 4
-amount = 3500
 
 [resource]
 script = ExtResource("1")
@@ -15,7 +9,7 @@ display_name = "Lava Flow"
 description = "Cracked basalt with molten rivers glowing underneath."
 slot = &"weapon_finish"
 rarity = 3
-requirement = SubResource("req")
+price = 1800
 colors = PackedColorArray(0.1098, 0.05098, 0.03922, 1, 0.1647, 0.07059, 0.04706, 1)
 params = {
 "shader": "res://art/shaders/skin_lava.gdshader"

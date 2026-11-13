@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"w_marksman"
+display_name = "Marksman"
+description = "Get %s headshot kills"
+scope = 1
+stat = &"headshots"
+mode = 0
+goal = 20
+param = 0
+xp = 400
+sparks = 50
+mastery_xp = 400
+sort_order = 140
