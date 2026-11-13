@@ -2,7 +2,7 @@
 
 A single-player, first-person arcade zombie survival game made with Godot 4.
 
-Five worlds, each one level: hold the ground around a loadout station through six or
+Ten worlds, each one level: hold the ground around a loadout station through six or
 seven waves (rushes, sieges, ambushes, bounties, a twist and a named alpha boss at the
 end), spend tickets between waves, then follow the exit lights to the portal and step
 through. Clearing a level unlocks the next world. Every zombie carries a stolen **Spark**;
@@ -16,6 +16,10 @@ the **Shop**. New players start in **Boot Camp**, a short, skippable tutorial.
 | 3 | Abyss Aquarium | Tidal Tunnels | After-hours aquarium: glass tunnels, tanks and a kelp atrium | Deep Diver, Mascot Inker, Jelly Head |
 | 4 | Dune Spaceport | Launch Pad 9 | Golden-hour desert spaceport around a rocket on its launch mount | Space Cadet, Jetpack Mechanic, Irradiated Hazmat |
 | 5 | Frostpeak Resort | Summit Lodge | Twilight ski resort under the aurora | Ski Racer, Yeti, Frozen Tourist |
+| 6 | Megamall Midnight | Midnight Mall | Retro-futurist shopping mall after closing time, two floors around a fountain under a glass dome | Mall Walker, Food Court Flinger |
+| 7 | Jungle Expedition | Lost Temple | A jungle-adventure ride gone wild at golden hour: the Jade Idol's temple, a waterfall lagoon and rope bridges | Lost Explorer, Overgrown |
+| 8 | Sugar Rush Factory | Candy Works | A sunlit candy factory hall: chocolate river, striped bridges, a colossal gumball machine and a taffy puller | Gummy Bear, Taffy Puller |
+| 9 | Volcano Isle | Lava Lagoon | Tiki resort under an erupting volcano at dusk: lava river and stone bridges, observatory terrace, hot springs, beach | Fire Dancer, Tiki Bartender |
 
 ![Reference art (left) and the game (right)](references/comparison.png)
 
@@ -82,9 +86,10 @@ fullscreen.
 - **Rounds with a purpose.** Each wave has a kind and a name on its banner: standard,
   rush, siege (heavies first), ambush (every entrance at once), ranged, a **bounty**
   (a golden runner that flees with a ticket prize), a world **twist** (Jackpot double
-  tickets, Blackout, Frenzy, Low Gravity, Whiteout) and a **finale** against the world's
-  named alpha (Big Bruno, Captain Lockdown, Inky the Great, Chief Burnout, Old
-  Frostbite) with its own health bar and slam. Surges announce the entrance a pack is
+  tickets, Blackout, Frenzy, Low Gravity, Whiteout, Power Cut, Monsoon, Sugar Rush,
+  Eruption) and a **finale** against the world's named alpha (Big Bruno, Captain
+  Lockdown, Inky the Great, Chief Burnout, Old Frostbite, The Night Manager, The Idol
+  Keeper, The Confectioner, Kahuna Krakatoa) with its own health bar and slam. Surges announce the entrance a pack is
   coming from. Each wave is graded S/A/B/C by the health it cost, and the grade pays
   tickets. Full design: **[docs/ROUNDS.md](docs/ROUNDS.md)**.
 - **Checkpoint.** Clearing wave 3 reaches the checkpoint: lose on wave 4 or later and the
@@ -120,7 +125,12 @@ fullscreen.
   of spraying); Riot Bruisers block frontal body shots until their shield breaks; Deep
   Divers' helmets shrug off headshots until cracked; Jelly Heads discharge an electric
   ring; Irradiated Hazmats leave a radiation cloud; Summit Lodge has a slippery frozen pond
-  and a final-wave whiteout.
+  and a final-wave whiteout. Mall Walkers pump their arms, then power-walk at you and turn
+  slowly (sidestep), and a headshot spills a Food Court Flinger's soda mid-wind-up;
+  Overgrowns send a creeping vine line along the ground that bursts into slowing thorns;
+  Taffy Pullers whirl and then yank you along a pink floor line, and Gummy Bears shrink
+  and speed up as they are hurt; Lava Lagoon's eruption rains ember bombs, each marked by a
+  glowing ring and a whistle.
 
 ## Weapons
 
@@ -357,6 +367,7 @@ They were written for Blender 5.3 and run here through the `bpy` Python module
 | `build_zombie.py` | Shared zombie rig, the boardwalk cast and each world's Tourist/Lifeguard outfits (`zombie_<world>.glb`) |
 | `zombie_kit.py`, `zombie_anim.py` | Shared zombie body and face kit; all zombie motion (IK gaits with planted feet, attacks, five deaths including a headshot pop, stagger, emerge). Every zombie builder calls `zombie_anim.bake()`, which also writes `art/models/<model>_clips.tres` (each clip's ground speed and event times) |
 | `build_neon_*.py`, `build_aqua_*.py`, `build_dune_*.py`, `build_frost_*.py` | Each world's props, dressing, station, scenery and zombies |
+| `build_mall_*.py`, `build_jungle_*.py`, `build_candy_*.py`, `build_lava_*.py` | Worlds 6-9: each world's props, buildings, station and zombies (with `mall_common.py`, `jungle_common.py`, `candy_common.py`, `lava_common.py`) |
 | `build_world_portals.py` | The themed exit portals of Tidal Tunnels, Launch Pad 9 and Summit Lodge |
 | `operator_kit.py`, `operator_anim.py`, `build_operators.py`, `operators_more.py` | The eighteen operators (shared body kit, clips such as Run, AimIdle, Fire, Victory and Wave, a `WeaponSocket` hand) |
 | `weapon_kit.py` | Shared weapon parts and the sight contract (`SightMount`, `SightPoint`, `IronSight*`, `CharmPoint`) used by both weapon builders |
@@ -386,7 +397,8 @@ python tools/audio_mix_report.py --mixdown neon_skyline out.wav   # 20 s listen-
 
 **Levels.** Each level has a generator in `tools/` (`build_prize_pier.gd`,
 `build_neon_skyline.gd`, `build_tidal_tunnels.gd`, `build_launch_pad.gd`,
-`build_summit_lodge.gd`, and `build_boot_camp.gd` for the tutorial) that writes its scene
+`build_summit_lodge.gd`, `build_midnight_mall.gd`, `build_lost_temple.gd`,
+`build_candy_works.gd`, `build_lava_lagoon.gd`, and `build_boot_camp.gd` for the tutorial) that writes its scene
 and bakes navigation. `tools/map_audit.gd` flood-fills everywhere the player can reach
 (falls out of the world, stuck spots, wall snags, navmesh a zombie cannot fit) and
 captures views with collision drawn over them. Run them **with a
