@@ -20,9 +20,11 @@ var _ball: MeshInstance3D
 var _trail: MultiMeshInstance3D
 var _history: Array[Vector3] = []
 var _spin := Vector3.ZERO
+var _exclude: Array[RID] = []
 
 static var _ball_mesh: SphereMesh
 static var _trail_mesh: SphereMesh
+static var _band_mesh: TorusMesh
 static var _mats := {}
 
 
@@ -52,6 +54,11 @@ func _ready() -> void:
 		_trail_mesh.height = 2.0
 		_trail_mesh.radial_segments = 8
 		_trail_mesh.rings = 4
+		_band_mesh = TorusMesh.new()
+		_band_mesh.inner_radius = 0.92
+		_band_mesh.outer_radius = 1.12
+		_band_mesh.rings = 16
+		_band_mesh.ring_segments = 6
 	_ball = MeshInstance3D.new()
 	_ball.mesh = _ball_mesh
 	_ball.material_override = _material(false)
@@ -59,12 +66,7 @@ func _ready() -> void:
 	_ball.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_ball)
 	var stripe := MeshInstance3D.new()
-	var band := TorusMesh.new()
-	band.inner_radius = 0.92
-	band.outer_radius = 1.12
-	band.rings = 16
-	band.ring_segments = 6
-	stripe.mesh = band
+	stripe.mesh = _band_mesh
 	stripe.material_override = _material(true)
 	_ball.add_child(stripe)
 	_trail = MultiMeshInstance3D.new()
@@ -77,6 +79,18 @@ func _ready() -> void:
 	_trail.top_level = true
 	_trail.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_trail)
+
+
+## Draws a resting projectile of `w` (ball, band and trail) under `parent` so
+## its materials compile behind the level's fade-in (see FxWarmup). It never
+## flies: it is marked done before its first physics frame.
+static func warm_up(parent: Node, at: Vector3, w: WeaponData) -> void:
+	var p := WeaponProjectile.new()
+	p.weapon = w
+	p._done = true
+	parent.add_child(p)
+	p.global_position = at
+	p._update_trail()
 
 
 func _material(glow: bool) -> StandardMaterial3D:
@@ -113,8 +127,9 @@ func _physics_process(delta: float) -> void:
 		_detonate(to, near)
 		return
 	var query := PhysicsRayQueryParameters3D.create(from, to, MASK_WORLD | MASK_ENEMIES)
-	if is_instance_valid(controller) and is_instance_valid(controller.player):
-		query.exclude = [controller.player.get_rid()]
+	if _exclude.is_empty() and is_instance_valid(controller) and is_instance_valid(controller.player):
+		_exclude = [controller.player.get_rid()]
+	query.exclude = _exclude
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		global_position = to

@@ -133,10 +133,7 @@ static func burst(parent: Node, at: Vector3, direction: Vector3, colors: Array, 
 		m.vertex_color_use_as_albedo = true
 		m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		_cube.material = m
-	var b := FxBurst.new()
-	b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	parent.add_child(b)
-	b.setup(at, direction, colors, amount, speed, lifetime, size, spread, gravity, _cube)
+	FxBurst.spawn(parent, at, direction, colors, amount, speed, lifetime, size, spread, gravity, _cube)
 
 
 ## A quick additive glow sphere.
@@ -149,21 +146,26 @@ static func flash(parent: Node, at: Vector3, color: Color, radius: float, life :
 		_flash.height = 1.0
 		_flash.radial_segments = 12
 		_flash.rings = 6
-	var m := StandardMaterial3D.new()
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	m.albedo_color = Color(color.lerp(Color.WHITE, 0.3), 0.9 * Settings.flash_scale())
+	# One material per colour; the fade runs on the node's transparency.
+	var key := "flash" + color.to_html()
+	if not _ring_mats.has(key):
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		m.albedo_color = Color(color.lerp(Color.WHITE, 0.3), 0.9)
+		_ring_mats[key] = m
 	var f := MeshInstance3D.new()
 	f.mesh = _flash
-	f.material_override = m
+	f.material_override = _ring_mats[key]
 	f.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	f.transparency = 1.0 - Settings.flash_scale()
 	parent.add_child(f)
 	f.global_position = at
 	f.scale = Vector3.ONE * radius * 0.4
 	var tw := f.create_tween().set_parallel(true)
 	tw.tween_property(f, "scale", Vector3.ONE * radius * 2.0, life).set_ease(Tween.EASE_OUT)
-	tw.tween_property(m, "albedo_color:a", 0.0, life)
+	tw.tween_property(f, "transparency", 1.0, life)
 	tw.chain().tween_callback(f.queue_free)
 
 
@@ -290,10 +292,7 @@ static func _smoke_material(color: Color) -> StandardMaterial3D:
 static func debris_stars(parent: Node, at: Vector3, color: Color, count := 5) -> void:
 	if parent == null or not parent.is_inside_tree():
 		return
-	var b := FxBurst.new()
-	b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	parent.add_child(b)
-	b.setup(at, Vector3.UP, [color, Color(1.0, 0.85, 0.3), Color.WHITE], count, 8.5, 0.9, 0.55, 60.0, Vector3(0, -15.0, 0), _star_mesh())
+	FxBurst.spawn(parent, at, Vector3.UP, [color, Color(1.0, 0.85, 0.3), Color.WHITE], count, 8.5, 0.9, 0.55, 60.0, Vector3(0, -15.0, 0), _star_mesh())
 
 
 ## Five-pointed star, flat in XY with some depth (FxBurst flattens Z further).

@@ -10,6 +10,8 @@ static var _flash_mesh: Mesh
 static var _popup_pool: Array = []
 static var _spark_mesh: Mesh
 static var _materials := {}
+static var _style: CosmeticItem
+static var _style_frame := -1
 
 
 static func _unshaded(color: Color, energy := 1.0) -> StandardMaterial3D:
@@ -30,7 +32,12 @@ static func _unshaded(color: Color, energy := 1.0) -> StandardMaterial3D:
 static func tracer(parent: Node, from: Vector3, to: Vector3, color: Color, width: float) -> void:
 	if parent == null or from.distance_to(to) < 0.6:
 		return
-	var style := Cosmetics.equipped(&"tracer")
+	# Looked up once a frame (a scatter shot draws a tracer per pellet).
+	var frame := Engine.get_process_frames()
+	if frame != _style_frame:
+		_style_frame = frame
+		_style = Cosmetics.equipped(&"tracer")
+	var style := _style
 	if style and TracerStyles.draw(parent, from, to, width, style):
 		return
 	beam(parent, from, to, color, width)
@@ -63,11 +70,9 @@ static func beam(parent: Node, from: Vector3, to: Vector3, color: Color, width: 
 		m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		m.albedo_color = Color(color.lerp(Color.WHITE, 0.45), 1.0)
 		_materials[key] = m
-	var t := Tracer.new()
+	var t := Tracer.take(parent)
 	t.mesh = _beam_mesh
 	t.material_override = _materials[key]
-	t.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	parent.add_child(t)
 	t.launch(from, to, width, _tracer_mesh, _unshaded(color.lerp(Color.WHITE, 0.55), 1.8))
 
 
@@ -183,7 +188,4 @@ static func _burst(parent: Node, position: Vector3, direction: Vector3, colors: 
 		m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		q.material = m
 		_spark_mesh = q
-	var burst := FxBurst.new()
-	burst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	parent.add_child(burst)
-	burst.setup(position, direction, colors, amount, speed, lifetime, size, spread, gravity, _spark_mesh)
+	FxBurst.spawn(parent, position, direction, colors, amount, speed, lifetime, size, spread, gravity, _spark_mesh)
