@@ -1,13 +1,6 @@
-[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
-
-[sub_resource type="Resource" id="req"]
-script = ExtResource("2")
-kind = 5
-target = &"prize_pier"
-amount = 35000
 
 [resource]
 script = ExtResource("1")
@@ -16,7 +9,7 @@ display_name = "Coin Shower"
 description = "Jackpot! A fountain of gold coins on every kill."
 slot = &"kill_effect"
 rarity = 3
-requirement = SubResource("req")
+price = 1800
 params = {
 "effect": "coins"
 }

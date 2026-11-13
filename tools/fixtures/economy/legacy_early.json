@@ -1,0 +1,44 @@
+{
+	"last_weapon": "ion_carbine",
+	"levels": {
+		"prize_pier": {
+			"best_score": 16000,
+			"best_wave": 8,
+			"clears": 3,
+			"completed": true
+		}
+	},
+	"mastery": {
+		"ion_carbine": {
+			"kills": 160,
+			"xp": 1600
+		},
+		"pulse_pistol": {
+			"kills": 160,
+			"xp": 700
+		}
+	},
+	"sections": {
+		"cosmetics": {
+			"equipped": {},
+			"seen": [],
+			"viewed": []
+		},
+		"progression": {
+			"challenges": {},
+			"completed": [],
+			"first_clears": [
+				"prize_pier"
+			],
+			"runs_played": 12,
+			"xp": 16000
+		},
+		"unlocks": {
+			"granted": []
+		}
+	},
+	"settings": {
+		"fov": 80.0
+	},
+	"version": 2
+}

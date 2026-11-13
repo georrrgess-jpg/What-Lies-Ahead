@@ -5,7 +5,7 @@ extends Node
 
 signal saved
 
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 const DEFAULT_PATH := "user://profile.json"
 
 const DEFAULT_SETTINGS := {
@@ -224,6 +224,13 @@ func _migrate(raw: Dictionary) -> Dictionary:
 				var v = raw["settings"][key]
 				out["settings"][key] = float(v) if typeof(DEFAULT_SETTINGS[key]) == TYPE_FLOAT else v
 	out["last_weapon"] = String(raw.get("last_weapon", ""))
+	# version 2 -> 3: the Sparks economy re-gated and priced cosmetics. The save
+	# is flagged here; LegacyGrant (run by the Cosmetics autoload, once the game
+	# data is loaded) keeps everything it owned and pays its Sparks back pay.
+	if int(raw.get("version", 0)) < 3:
+		var economy: Dictionary = out["sections"].get("economy", {})
+		economy["legacy_pending"] = true
+		out["sections"]["economy"] = economy
 	return out
 
 

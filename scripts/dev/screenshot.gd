@@ -6,7 +6,8 @@ extends Node
 ##
 ## Options (all optional):
 ##   --shot-level=<id>     level to load (default prize_pier)
-##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|<any menu page id: play, settings, locker, arsenal, career, ...>
+##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|kit|<any menu page id: play, settings, locker, arsenal, career, ...>
+##                         (kit = the UI kit gallery, scripts/ui/kit/kit_gallery.gd)
 ##   --shot-locker=<slot>  with --shot-scene=locker: open that tab (avatar, weapon_finish, gloves...)
 ##   --shot-item=<id>      with --shot-scene=locker: select that cosmetic (opens its tab)
 ##   --shot-pos=x,y,z      player feet position
@@ -68,10 +69,13 @@ func _run() -> void:
 	if not scene_kind in ["level", "results", "defeat", "pause", "kiosk"]:
 		await _wait(10)
 		var menu := get_tree().current_scene
-		if scene_kind != "menu":
+		if scene_kind == "kit":
+			# The UI kit's gallery: every component on one screen.
+			menu.add_child(KitGallery.new())
+		elif scene_kind != "menu":
 			menu._show(scene_kind)
 		if scene_kind == "locker":
-			_stage_locker(menu.find_child("locker", false, false))
+			_stage_locker(menu.page("locker"))
 		await _capture(int(_arg("frames", "30")))
 		return
 

@@ -134,8 +134,10 @@ func _build_mastery() -> void:
 
 
 func _build_challenges() -> void:
+	_content.add_child(_section("CONTRACTS", "Three at a time. Finished ones are replaced after the run  ·  %d completed" % ContractBoard.completed_count()))
+	_content.add_child(CareerCards.contracts_row())
 	var done := ChallengeBook.completion()
-	_content.add_child(_section("ACCOUNT CHALLENGES", "%d / %d complete overall" % [done.x, done.y]))
+	_content.add_child(_section("MILESTONES", "%d / %d reached" % [done.x, done.y]))
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 12)

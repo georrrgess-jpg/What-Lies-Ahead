@@ -10,6 +10,12 @@ var weapon_id: StringName
 var menu_page := ""
 ## The startup intro plays once per session.
 var intro_played := false
+## Wave a lost run can be continued from (0 = no checkpoint). The run director
+## sets it when a run ends in defeat past a checkpoint and clears it otherwise.
+var checkpoint_wave := 0
+## Wave the next run should start at (0 = a normal run from wave 1). Set by
+## continue_run(); the run director reads it when the level starts and resets it.
+var resume_wave := 0
 
 
 func _ready() -> void:
@@ -54,6 +60,21 @@ func retry() -> void:
 		start_level(level.id, weapon_id)
 	else:
 		to_menu()
+
+
+## True when the last run was lost past a checkpoint and can be continued.
+func can_continue_run() -> bool:
+	return level != null and checkpoint_wave > 0
+
+
+## Restarts the level at the last checkpoint wave (see can_continue_run()).
+func continue_run() -> void:
+	if not can_continue_run():
+		retry()
+		return
+	resume_wave = checkpoint_wave
+	checkpoint_wave = 0
+	retry()
 
 
 func to_menu(page := "") -> void:
