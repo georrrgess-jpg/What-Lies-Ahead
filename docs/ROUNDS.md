@@ -327,7 +327,7 @@ health left over the clears; run time is in game seconds (waves and breaks).
 | Summit Lodge | 2200 | 2/2, 57 | 2/2, 66 | - | - | 280 | 250 |
 | Midnight Mall | 2050 -> 2250 | 1/4, 73 | 2/2, 55 | 0/1 / 0/1 | 1/1, 90 / 1/1, 100 | 295 | 275 |
 | Lost Temple | 2300 | 3/4, 53 | 2/2, 38 | 0/1 / 1/1, 49 | 1/1, 100 / 1/1, 100 | 300 | 300 |
-| Candy Works | 2500 -> 2350 | 1/4, 70 | 2/2, 89 | 0/1 / 1/1, 42 | 1/1, 100 / 1/1, 100 | 405 | 325 |
+| Candy Works | 2500 -> 2350 | 1/4, 70 | 2/2, 89 (3/3, 31 with the mezzanine navmesh) | 0/1 / 1/1, 42 | 1/1, 100 / 1/1, 100 | 405 -> 340 | 325 |
 | Lava Lagoon | 2050 -> 2400 | 2/4, 36 | 1/2, 34 | 1/1, 49 / 1/1, 23 | 1/1, 100 / 1/1, 100 | 330 | 350 |
 | Sky Harbor | 2700 -> 2500 | 2/4, 74 | 4/4, 41 | 0/1 / 1/1, 26 | 1/1, 100 / 1/1, 88 | 350 | 375 |
 
@@ -343,8 +343,10 @@ ran 40% longer than anyone else's); finale caps 11 (Lost Temple, Lava Lagoon,
 two shamblers fewer there), 13 (Candy Works), 14 with two Sky Divers fewer (Sky
 Harbor); Sky Harbor's gale wave cap 13 with two shamblers fewer; Midnight Mall's
 siege cap 10 with a walker fewer and a shambler fewer in wave 1. Station prices
-are on multiples of 25 and rise world by world (see above). Candy Works is
-still the longest run (about 6.5 minutes against 5-6): its last zombie or two
-of a wave can take 30-60 s to reach the player (93 s a run against about 30
-elsewhere), which is map and close-out work, not wave data.
-
+are on multiples of 25 and rise world by world (see above). Candy Works' long
+waves had a map cause: its navmesh was baked only up to 2.8 m, so the packing
+mezzanine (3 m) and the Foreman's door spawn on it had none, and zombies that
+came in up there crept along the deck until stall recovery dropped them to the
+floor (93 s a run with 1-2 zombies left, against about 30 elsewhere). With the
+deck baked (`tools/build_candy_works.gd`) the tail is 25 s and a Standard run
+330-350 s instead of 400-430 (3/3 clears, 9-53 health left).
