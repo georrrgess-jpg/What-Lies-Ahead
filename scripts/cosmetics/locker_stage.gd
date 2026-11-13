@@ -84,13 +84,10 @@ func show_weapon(weapon: WeaponData, loadout: Dictionary) -> void:
 	if weapon == null or weapon.viewmodel == null:
 		return
 	_model = weapon.viewmodel.instantiate()
+	WeaponCosmetics.prepare_preview(_model)
 	_pivot.add_child(_model)
-	for arm_name in ["ArmL", "ArmR"]:
-		var arm := _model.find_child(arm_name, true, false) as Node3D
-		if arm:
-			arm.visible = false
 	WeaponCosmetics.apply(_model, weapon, loadout)
-	var box := _bounds(_model)
+	var box := WeaponCosmetics.visible_bounds(_model)
 	_model.position = -box.get_center()
 	var fit := WEAPON_SPAN / maxf(0.01, maxf(box.size.x, maxf(box.size.y, box.size.z)))
 	_pivot.scale = Vector3.ONE * fit
@@ -109,6 +106,7 @@ func show_arms(weapon: WeaponData, loadout: Dictionary) -> void:
 	if weapon == null or weapon.viewmodel == null:
 		return
 	_model = weapon.viewmodel.instantiate()
+	WeaponCosmetics.prepare_preview(_model, true)
 	_content.add_child(_model)
 	WeaponCosmetics.apply(_model, weapon, loadout)
 	_model.position = weapon.view_position
@@ -150,11 +148,8 @@ func show_tracer(item: CosmeticItem, weapon: WeaponData) -> void:
 	_muzzle = Vector3(-2.7, 1.2, 0.0)
 	if weapon and weapon.viewmodel:
 		_model = weapon.viewmodel.instantiate()
+		WeaponCosmetics.prepare_preview(_model)
 		_content.add_child(_model)
-		for arm_name in ["ArmL", "ArmR"]:
-			var arm := _model.find_child(arm_name, true, false) as Node3D
-			if arm:
-				arm.visible = false
 		WeaponCosmetics.apply(_model, weapon, Cosmetics.weapon_loadout(weapon.id))
 		_model.position = _muzzle + Vector3(-0.5, -0.08, 0.15)
 		_model.look_at(TRACER_TARGET)
@@ -268,15 +263,3 @@ func _stand(radius: float, y: float) -> Node3D:
 		root.add_child(ring)
 	return root
 
-
-func _bounds(root: Node3D) -> AABB:
-	var result := AABB()
-	var first := true
-	for mi in root.find_children("*", "MeshInstance3D", true, false):
-		var m := mi as MeshInstance3D
-		if not m.is_visible_in_tree() or m.mesh == null or m.get_parent().name == "WeaponCharm":
-			continue
-		var box := root.global_transform.affine_inverse() * m.global_transform * m.mesh.get_aabb()
-		result = box if first else result.merge(box)
-		first = false
-	return result

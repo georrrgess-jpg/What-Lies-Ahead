@@ -9,8 +9,14 @@ extends Node3D
 ## sprint pose, a tilt into strafes, a lag behind the look and behind rising
 ## and falling, a dip and kick on jumps and landings, a roll while sliding and
 ## a lowered weapon while mantling. The bob follows the player's step rhythm,
-## in time with the footsteps, and only on the ground. All of it fades out
-## when aiming down sights, where the sight sits exactly on the screen centre.
+## in time with the footsteps, and only on the ground.
+##
+## Aiming down sights brings the weapon's sight (SightRig: its iron sights or
+## the optic fitted in the Locker) up to the eye: the model is placed so the
+## eye sits on the sight line, turning about the eye, so the sight picture
+## holds while the weapon still sways, kicks and breathes a little. Shots go
+## where the player's unshaken aim points, and an optic's reticle is drawn at
+## exactly that point. A long scope shows only its eyepiece view once it is up.
 ##
 ## The whole rig is scaled down and held very close to the camera. On screen it
 ## looks identical, but it can no longer poke through walls or zombies.
@@ -38,10 +44,21 @@ const LOOK_LAG_MAX := 6.0
 const BOB_SIDE := 0.012
 const BOB_DIP := 0.015
 const BOB_ROLL := 1.0
+## Share of the hip motion the aimed weapon keeps: lag behind the look and
+## the movement poses (rotation, position) and the step bob.
+const AIM_SWAY_ROT := 0.1
+const AIM_SWAY_POS := 0.3
+const AIM_BOB := 0.15
+## Slow drift of the aimed weapon, like breathing (degrees: pitch, yaw).
+const AIM_BREATH := Vector2(0.1, 0.14)
+## Aim blend at which an optic's reticle starts to light, and at which a long
+## scope switches to its eyepiece view.
+const RETICLE_IN := 0.45
+const SCOPE_IN := 0.9
 ## Initial spring velocity per unit of wanted peak (for the pose springs).
 const KICK_GAIN := 30.0
 const HOLO_SHADER := "res://art/shaders/holo.gdshader"
-## Parts the reload animations may move (see art/blender/build_weapons.py).
+## Parts the reload animations may move (see art/blender/weapon_kit.py).
 const ANIMATED_PARTS := ["Cell", "CellHolo", "Slide", "Hammer", "Panel", "Vents", "Barrels", "Pump",
 	"Drum", "Capsules", "CapsulesHolo", "ArmL", "ArmR"]
 
@@ -70,8 +87,15 @@ var _pending: WeaponData   # weapon to show once the old one is lowered
 var _reload_player: Object # the running custom reload (WeaponData.reload_script)
 var _lowering := false
 var _time := 0.0
-## Where the sight sits in model space; aiming puts this point on the screen centre.
-var _sight_local := Vector3(0, 0.13, 0)
+## The fitted sight, and where the eye sits in model space when aiming down it.
+var _sight: SightRig
+var _eye_local := Vector3(0.0, 0.13, 0.55)
+## A long scope's eyepiece glass, shown alone once the scope is up.
+var _scope_lens: MeshInstance3D
+var _scoped := false
+## The aimed field of view the sight was last fitted for.
+var _fit_fov := 0.0
+var _vignette: AimVignette
 
 @onready var player: Player = owner as Player
 
@@ -86,6 +110,9 @@ func _ready() -> void:
 		player.landed.connect(_on_landed)
 		player.slide_started.connect(_on_slide_started)
 		player.traversal_finished.connect(_on_traversal_finished)
+		_vignette = AimVignette.new()
+		add_child(_vignette)
+		Settings.changed.connect(_on_settings_changed)
 
 
 ## The view turned by `look` radians (x right, y down) this frame: the
@@ -145,8 +172,6 @@ func _build_model(weapon: WeaponData) -> void:
 	model.position = Vector3.ZERO
 	_disable_shadows(model)
 	_muzzle = model.find_child("Muzzle", true, false) as Node3D
-	var sight := model.find_child("SightPoint", true, false) as Node3D
-	_sight_local = _local_to_model(sight) if sight else Vector3(0, 0.13, 0.05)
 	_rest.clear()
 	for part_name in ANIMATED_PARTS:
 		var part := model.find_child(part_name, true, false) as Node3D
@@ -157,8 +182,108 @@ func _build_model(weapon: WeaponData) -> void:
 	_build_flash()
 	WeaponCosmetics.apply(model, weapon, Cosmetics.weapon_loadout(weapon.id))
 	_setup_reload_materials()
+	_fit_sight()
 	_raise = 1.0
 	_kick = 0.0
+
+
+# --- aim down sights --------------------------------------------------------------
+
+## Takes over the sight WeaponCosmetics fitted to the model and finds the eye
+## position for the aimed field of view.
+func _fit_sight() -> void:
+	_sight = WeaponSights.rig_of(model)
+	_scoped = false
+	if _scope_lens:
+		_scope_lens.queue_free()
+		_scope_lens = null
+	if _sight == null:
+		return
+	_sight.set_preview(false)
+	_refit_sight()
+	if _sight.scope_view and _sight.lens:
+		_scope_lens = MeshInstance3D.new()
+		_scope_lens.mesh = _sight.lens.mesh
+		_scope_lens.material_override = _sight.lens.get_surface_override_material(0)
+		_scope_lens.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_scope_lens.transform = WeaponCosmetics.to_model(model, _sight.lens)
+		_scope_lens.visible = false
+		_holder.add_child(_scope_lens)
+
+
+func _aimed_fov() -> float:
+	if player == null:
+		return SightRig.DEFAULT_FOV
+	return player.head.base_fov * player.ads_fov_scale()
+
+
+## The eye's place depends on the aimed field of view (the FOV setting and
+## the zoom): the sight's window keeps its size on screen.
+func _refit_sight() -> void:
+	_fit_fov = _aimed_fov()
+	_eye_local = _sight.fit(_fit_fov)
+	if _scope_lens:
+		_scope_lens.transform = WeaponCosmetics.to_model(model, _sight.lens)
+
+
+func _on_settings_changed() -> void:
+	if _sight:
+		_sight.refresh_color()
+
+
+## Magnification the fitted sight adds to the weapon's own aimed zoom.
+func sight_zoom() -> float:
+	return _sight.zoom if _sight else 1.0
+
+
+## Multiplier the fitted sight puts on the weapon's time to aim.
+func sight_ads_time_scale() -> float:
+	return _sight.ads_time_scale if _sight else 1.0
+
+
+## True when the fitted sight draws its own reticle (the HUD hides its dot).
+func sight_has_reticle() -> bool:
+	return _sight != null and _sight.has_reticle
+
+
+## Aimed rotation (degrees): a share of the kick, the look lag and the
+## movement poses, plus a slow breathing drift.
+func _aim_rotation(look_rot: Vector3, pose_rot: Vector3) -> Vector3:
+	var breath := AIM_BREATH * Settings.camera_motion()
+	return Vector3(_kick_rot * 0.35, 0.0, 0.0) + (look_rot + pose_rot) * AIM_SWAY_ROT \
+		+ Vector3(sin(_time * 1.3) * breath.x, sin(_time * 0.8 + 1.0) * breath.y, 0.0)
+
+
+## Lights the optic's reticle at the true point of aim, switches a long scope
+## to its eyepiece view and shades the screen edges.
+func _update_sight(aim: float) -> void:
+	if _sight == null or player == null:
+		return
+	if not is_equal_approx(_aimed_fov(), _fit_fov):
+		_refit_sight()
+	var scope := _sight.scope_view and _scope_lens != null
+	var scoped := scope and aim >= SCOPE_IN
+	if scoped != _scoped:
+		_scoped = scoped
+		model.visible = not scoped
+		_scope_lens.visible = scoped
+	if _sight.has_reticle:
+		var camera := player.camera
+		var aim_basis := camera.global_basis.orthonormalized().inverse() * player.aim_transform().basis
+		var closed := 1.0 - smoothstep(SCOPE_IN, 1.0, aim) if scope else 0.0
+		_sight.set_aim(aim_basis, smoothstep(RETICLE_IN, 0.95, aim), closed)
+	if _vignette == null:
+		return
+	var mask := smoothstep(0.5, SCOPE_IN, aim) if scope else 0.0
+	var centre := Vector2(0.5, 0.5)
+	var radius := 0.4
+	if mask > 0.0:
+		var camera := player.camera
+		var at := _scope_lens.global_position
+		var depth := maxf(0.001, -(camera.global_transform.affine_inverse() * at).z)
+		centre = camera.unproject_position(at) / get_viewport().get_visible_rect().size
+		radius = _sight.lens_radius * VIEW_SCALE * 0.96 / depth / tan(deg_to_rad(camera.fov) * 0.5) * 0.5
+	_vignette.set_state(aim * _sight.vignette, mask, centre, radius)
 
 
 ## Position of `node` in the model's own space (works before the first frame).
@@ -208,11 +333,9 @@ func _process(delta: float) -> void:
 	_kick = lerpf(_kick, 0.0, 1.0 - exp(-14.0 * delta))
 	_kick_rot = lerpf(_kick_rot, 0.0, 1.0 - exp(-12.0 * delta))
 	var ease_raise := _raise * _raise
-	# Aim down sights: square the gun up and slide it so the sight lands on the
-	# exact screen centre. Motion and kick are damped so the sight picture holds.
+	# Aim down sights: square the weapon up and bring its sight line onto the
+	# eye. Motion and kick are damped so the sight picture holds.
 	var aim := ease(player.ads if player else 0.0, -1.8)
-	if _reload_tween and _reload_tween.is_valid():
-		aim *= 0.25
 
 	var pose_pos := _pose_pos.update(_pose_target_pos(), delta)
 	var pose_rot := _pose_rot.update(_pose_target_rot(), delta)
@@ -227,11 +350,13 @@ func _process(delta: float) -> void:
 		+ Vector3(0.0, -ease_raise * 0.45, _kick)
 	var hip_rot := data.view_rotation_degrees + pose_rot + look_rot \
 		+ Vector3(_kick_rot + ease_raise * -35.0, 0.0, bob.z)
-	var ads_pos := Vector3(0, 0, -data.ads_depth / VIEW_SCALE) - _sight_local \
-		+ (look_pos + pose_pos * 0.5) * 0.3 + Vector3(0.0, 0.0, _kick * 0.5) + bob_pos * 0.15
-	var ads_rot := Vector3(_kick_rot * 0.35, 0.0, 0.0) + (look_rot + pose_rot) * 0.1
+	# The weapon turns about the eye, so its sight stays in front of it.
+	var ads_rot := _aim_rotation(look_rot, pose_rot)
+	var ads_pos := -(Basis.from_euler(ads_rot * (PI / 180.0)) * _eye_local) \
+		+ (look_pos + pose_pos * 0.5) * AIM_SWAY_POS + Vector3(0.0, 0.0, _kick * 0.5) + bob_pos * AIM_BOB
 	_holder.position = hip_pos.lerp(ads_pos + charge * 0.4, aim)
 	_holder.rotation_degrees = hip_rot.lerp(ads_rot, aim)
+	_update_sight(aim)
 
 	if _flash_time > 0.0:
 		_flash_time -= delta
@@ -536,8 +661,9 @@ func register_part(part: String) -> void:
 		_rest[part] = {"node": node, "transform": node.transform}
 
 
-## Pulse Pistol "holo-print": the spent cell spins out of the grip, a new one
-## is printed in as a hologram, solidifies with a flare, and the slide snaps home.
+## Pulse Pistol "holo-print": the support hand lets go, the spent cell drops
+## out of the grip and spins away, a new one is printed as a hologram and
+## slides up into the grip, solidifies with a flare, and the slide snaps home.
 func _reload_holo_print(d: float) -> void:
 	_track("Root", d, [[0.14, Vector3(0, 0.02, 0), Vector3(14, 6, -26)], [0.78, Vector3(0, 0.02, 0), Vector3(14, 6, -26)],
 		[1.0, Vector3.ZERO, Vector3.ZERO]])
@@ -545,15 +671,20 @@ func _reload_holo_print(d: float) -> void:
 		[0.86, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_BACK, Tween.EASE_IN)
 	_track("Hammer", d, [[0.1, Vector3.ZERO, Vector3(-40, 0, 0)], [0.82, Vector3.ZERO, Vector3(-40, 0, 0)], [0.9, Vector3.ZERO, Vector3.ZERO]])
 	_glow_ramp(0.08, 0.2, d, 1.0, 0.15)
-	_track("Cell", d, [[0.14, Vector3.ZERO, Vector3.ZERO], [0.42, Vector3(0, -0.34, 0.08), Vector3(540, 0, 90), 0.7]],
-		Tween.TRANS_QUAD, Tween.EASE_IN)
+	# Straight down the grip first (the grip leans 14 degrees), then it tumbles away.
+	_track("Cell", d, [[0.14, Vector3.ZERO, Vector3.ZERO], [0.27, Vector3(0, -0.2, 0.05), Vector3.ZERO],
+		[0.42, Vector3(0, -0.46, 0.16), Vector3(360, 0, 90), 0.7]], Tween.TRANS_QUAD, Tween.EASE_IN)
 	_burst(0.16, d, "EjectPoint", "sparks")
 	_at(0.42, d, func(): var c := _part("Cell"); if c: c.visible = false)
-	_holo_build("CellHolo", 0.44, 0.74, d)
+	_track("CellHolo", d, [[0.44, Vector3(0, -0.2, 0.05), Vector3.ZERO, 1.0, "hold"], [0.62, Vector3(0, -0.2, 0.05), Vector3.ZERO],
+		[0.74, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_CUBIC, Tween.EASE_OUT)
+	_holo_build("CellHolo", 0.44, 0.7, d)
 	_solidify("CellHolo", "Cell", 0.76, d)
 	_burst(0.84, d, "VentPoint", "steam")
-	_track("ArmL", d, [[0.18, Vector3(-0.05, -0.12, 0.08), Vector3(0, 0, -12)], [0.7, Vector3(-0.05, -0.12, 0.08), Vector3(0, 0, -12)],
-		[0.92, Vector3.ZERO, Vector3.ZERO]])
+	# The support hand slides forward off the firing hand, drops away, and comes back the same way.
+	_track("ArmL", d, [[0.1, Vector3(-0.03, -0.012, -0.085), Vector3.ZERO], [0.24, Vector3(-0.12, -0.32, 0.04), Vector3(0, 0, -12)],
+		[0.7, Vector3(-0.12, -0.32, 0.04), Vector3(0, 0, -12)], [0.84, Vector3(-0.03, -0.012, -0.085), Vector3.ZERO],
+		[0.94, Vector3.ZERO, Vector3.ZERO]])
 
 
 ## Ion Carbine "vent purge": vents flip up and blow steam, the cage swings
@@ -570,8 +701,10 @@ func _reload_vent_purge(d: float) -> void:
 	_track("Panel", d, [[0.2, Vector3.ZERO, Vector3.ZERO], [0.34, Vector3.ZERO, Vector3(0, 0, 115)], [0.78, Vector3.ZERO, Vector3(0, 0, 115)],
 		[0.84, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_BACK, Tween.EASE_OUT)
 	_track("Cell", d, [[0.36, Vector3.ZERO, Vector3.ZERO], [0.56, Vector3(-0.34, -0.05, 0.0), Vector3(0, 0, 0), 0.8]], Tween.TRANS_QUAD, Tween.EASE_IN)
-	_track("ArmL", d, [[0.34, Vector3(-0.1, -0.06, 0.06), Vector3.ZERO], [0.52, Vector3(-0.32, -0.05, 0.04), Vector3.ZERO],
-		[0.74, Vector3(-0.1, -0.04, 0.04), Vector3.ZERO], [0.92, Vector3.ZERO, Vector3.ZERO]])
+	# The support hand drops off the foregrip, reaches out under the cell, and returns the same way.
+	_track("ArmL", d, [[0.2, Vector3.ZERO, Vector3.ZERO], [0.3, Vector3(0, -0.11, 0.02), Vector3.ZERO], [0.42, Vector3(-0.22, -0.13, 0.05), Vector3.ZERO],
+		[0.54, Vector3(-0.3, -0.07, 0.05), Vector3.ZERO], [0.74, Vector3(-0.22, -0.13, 0.05), Vector3.ZERO],
+		[0.86, Vector3(0, -0.11, 0.02), Vector3.ZERO], [0.95, Vector3.ZERO, Vector3.ZERO]])
 	_burst(0.42, d, "EjectPoint", "sparks")
 	_at(0.56, d, func(): var c := _part("Cell"); if c: c.visible = false)
 	_track("CellHolo", d, [[0.57, Vector3(-0.22, 0, 0), Vector3.ZERO, 1.0, "hold"], [0.74, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_CUBIC, Tween.EASE_OUT)
@@ -585,7 +718,8 @@ func _reload_vent_purge(d: float) -> void:
 
 ## Scatter Blaster "break open": the barrels drop on their hinge, both spent
 ## capsules kick out, new ones print in, the drum spins up, the action slams
-## shut and the pump racks twice.
+## shut and the pump racks twice (the support hand rides the pump: ArmL is
+## its child).
 func _reload_break_open(d: float) -> void:
 	_track("Root", d, [[0.12, Vector3(0, 0.03, 0.02), Vector3(10, 10, -14)], [0.66, Vector3(0, 0.03, 0.02), Vector3(10, 10, -14)],
 		[0.8, Vector3.ZERO, Vector3.ZERO]])
@@ -603,9 +737,7 @@ func _reload_break_open(d: float) -> void:
 	_burst(0.71, d, "VentPoint", "steam")
 	for i in 2:
 		var t0 := 0.74 + i * 0.12
-		_track("Pump", d, [[t0, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [t0 + 0.05, Vector3(0, 0, 0.13), Vector3.ZERO], [t0 + 0.11, Vector3.ZERO, Vector3.ZERO]],
-			Tween.TRANS_QUAD, Tween.EASE_OUT)
-		_track("ArmL", d, [[t0, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [t0 + 0.05, Vector3(0, 0, 0.13), Vector3.ZERO], [t0 + 0.11, Vector3.ZERO, Vector3.ZERO]],
+		_track("Pump", d, [[t0, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [t0 + 0.05, Vector3(0, 0, 0.068), Vector3.ZERO], [t0 + 0.11, Vector3.ZERO, Vector3.ZERO]],
 			Tween.TRANS_QUAD, Tween.EASE_OUT)
 
 

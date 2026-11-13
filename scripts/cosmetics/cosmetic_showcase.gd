@@ -2,7 +2,8 @@ class_name CosmeticShowcase
 extends Control
 ## The display case of the Locker and the Shop: a spot-lit recess in a
 ## riveted frame that shows any cosmetic live. Operators stand on a pedestal,
-## weapon cosmetics are worn by a weapon hovering over its stand, gloves are
+## weapon cosmetics are worn by a weapon hovering over its stand (a sight
+## also shows the view through its lens in a window), gloves are
 ## held in first person, kill effects pop a dummy zombie, tracers are fired
 ## across the stage, and banners and titles are shown on the player card.
 ## The glow behind takes the colour of the item's rarity.
@@ -27,6 +28,8 @@ var _card: PlayerCard
 var _hint: Label
 var _stamp: KitChip
 var _flash: ColorRect
+var _lens: KitPanel
+var _lens_view: SightPreview
 
 static var _spot_shader: Shader
 
@@ -57,6 +60,7 @@ func _init() -> void:
 	_stage.visible = false
 	_case.add_child(_stage)
 	_build_card_view()
+	_build_lens()
 	_build_overlays()
 	_case.resized.connect(_fit_operator)
 
@@ -85,6 +89,23 @@ func _build_card_view() -> void:
 	_card = PlayerCard.build(true) as PlayerCard
 	_card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_card_view.add_child(_card)
+
+
+## A sight's view through the lens, in a window at the top left of the case.
+func _build_lens() -> void:
+	_lens = UiKit.neon_panel(UiKit.CYAN, 10)
+	_lens.position = Vector2(16, 16)
+	_lens.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_lens.visible = false
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiKit.GAP_XS)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_lens.add_child(col)
+	col.add_child(UiKit.label("THROUGH THE LENS", UiKit.SIZE_SMALL, UiKit.CYAN, true))
+	_lens_view = SightPreview.new()
+	_lens_view.custom_minimum_size = Vector2(250, 176)
+	col.add_child(_lens_view)
+	_case.add_child(_lens)
 
 
 ## The hint at the bottom, the purchase stamp and the flash, above the item.
@@ -120,6 +141,9 @@ func show_item(it: CosmeticItem, weapon: WeaponData, flourish := false) -> void:
 	_card_view.visible = it.slot == &"banner" or it.slot == &"title"
 	_stage.visible = not (_operator.visible or _card_view.visible)
 	(_glow.material as ShaderMaterial).set_shader_parameter("tint", CosmeticItem.rarity_color(it.rarity))
+	_lens.visible = it.slot == &"weapon_sight"
+	if _lens.visible:
+		_lens_view.item = it
 	_hint.text = ""
 	match it.slot:
 		&"avatar":
