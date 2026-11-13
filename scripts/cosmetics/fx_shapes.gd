@@ -346,7 +346,7 @@ static func beam() -> Mesh:
 		var a: Vector3 = tilt * side
 		var tip := tilt * Vector3.FORWARD
 		var quad := [-a * 0.015, tip - a * 0.11, tip + a * 0.11, a * 0.015]
-		var alpha := [0.9, 0.0, 0.0, 0.9]
+		var alpha := [0.55, 0.0, 0.0, 0.55]
 		for idx in [0, 1, 2, 0, 2, 3]:
 			st.set_color(Color(1, 1, 1, alpha[idx]))
 			st.add_vertex(quad[idx])

@@ -32,9 +32,9 @@ const PATTERN_SHADER := "res://art/shaders/tracer_pattern.gdshader"
 const PATTERNS := {
 	"ribbon": [0, "strip", 5.0, 0.2, 0.05, false],
 	"morse": [1, "cross", 6.5, 0.22, 0.05, true],
-	"heartbeat": [2, "cross", 1.8, 0.26, 0.05, false],
+	"heartbeat": [2, "cross", 2.6, 0.26, 0.05, false],
 	"fence": [3, "cross", 8.0, 0.18, 0.04, false],
-	"neon": [4, "cross", 3.5, 0.2, 0.03, false],
+	"neon": [4, "cross", 5.5, 0.2, 0.03, false],
 	"tickets": [5, "strip", 8.0, 0.3, 0.08, false],
 	"chevrons": [6, "cross", 9.0, 0.2, 0.04, true],
 	"candy": [7, "tube", 3.0, 0.2, 0.04, false],

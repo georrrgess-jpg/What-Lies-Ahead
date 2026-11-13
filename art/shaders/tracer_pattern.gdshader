@@ -29,7 +29,7 @@ float heartbeat(float a) {
 	float x = mod(a + seed * 4.0, 4.0);
 	float h = 0.05 * sin(clamp((x - 0.6) / 0.4, 0.0, 1.0) * 3.14159);
 	h += mix(0.0, -0.08, clamp((x - 1.55) / 0.12, 0.0, 1.0));
-	h += mix(0.0, 0.58, clamp((x - 1.67) / 0.12, 0.0, 1.0)) - mix(0.0, 0.73, clamp((x - 1.79) / 0.14, 0.0, 1.0));
+	h += mix(0.0, 0.78, clamp((x - 1.67) / 0.12, 0.0, 1.0)) - mix(0.0, 0.93, clamp((x - 1.79) / 0.14, 0.0, 1.0));
 	h += mix(0.0, 0.23, clamp((x - 1.93) / 0.12, 0.0, 1.0));
 	h += 0.12 * sin(clamp((x - 2.6) / 0.6, 0.0, 1.0) * 3.14159);
 	return h;
@@ -53,7 +53,7 @@ void vertex() {
 	v_along = UV.y * length_m;
 	float width_m = length(MODEL_MATRIX[0].xyz);
 	// The pattern opens up over the first metres so it never fills the screen.
-	VERTEX.xy *= 0.3 + 0.7 * clamp(v_along / 3.0, 0.0, 1.0);
+	VERTEX.xy *= 0.12 + 0.88 * smoothstep(0.0, 6.0, v_along);
 	if (style == 0 || style == 5) {
 		float twist = (style == 0 ? 1.2 : 0.3) * v_along + seed * 6.28;
 		float c = cos(twist);
@@ -133,5 +133,5 @@ void fragment() {
 		col = mix(color_a.rgb, color_b.rgb, stripe) * v_shade;
 	}
 	ALBEDO = col;
-	ALPHA = alpha * (1.0 - fade);
+	ALPHA = alpha * (1.0 - fade) * smoothstep(0.4, 1.8, v_along);
 }

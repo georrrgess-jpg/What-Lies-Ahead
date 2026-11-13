@@ -10,6 +10,7 @@ extends SceneTree
 ##            0.2,0.5): one tile per effect and time
 ##   tracer   every tracer (or --ids), three shots each from the player's view
 ##            in --level, captured --frames after firing (default 4)
+##   icons    the drawn Locker / Shop icons of every kill effect and tracer (or --ids)
 ##   banners  every banner (or --ids), --page=n of 15 at a time, at the compact
 ##            player-card shape, plus a narrow (Locker card) shape with --narrow=1
 ##
@@ -53,6 +54,8 @@ func _run() -> void:
 	match _opt("mode", "kill"):
 		"banners":
 			await _banners()
+		"icons":
+			await _icons()
 		"tracer":
 			await _in_level(_tracers)
 		_:
@@ -97,6 +100,31 @@ func _banners() -> void:
 	_save(root.get_viewport().get_texture().get_image())
 
 
+func _icons() -> void:
+	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+	var bg := ColorRect.new()
+	bg.color = Color(0.2, 0.16, 0.3)
+	bg.size = Vector2(SIZE)
+	root.add_child(bg)
+	var grid := GridContainer.new()
+	grid.columns = 6
+	grid.position = Vector2(8, 6)
+	bg.add_child(grid)
+	var icon_script = load("res://scripts/cosmetics/cosmetic_icon.gd")
+	for it in _items(&"kill_effect") + _items(&"tracer"):
+		var box := VBoxContainer.new()
+		var icon: Control = icon_script.new(it)
+		icon.custom_minimum_size = Vector2(150, 104)
+		box.add_child(icon)
+		var label := Label.new()
+		label.text = it.display_name
+		label.add_theme_font_size_override("font_size", 12)
+		box.add_child(label)
+		grid.add_child(box)
+	await _wait(10)
+	_save(root.get_viewport().get_texture().get_image())
+
+
 # --- in a level -----------------------------------------------------------------
 
 func _in_level(scenario: Callable) -> void:
@@ -127,7 +155,9 @@ func _kills(director) -> void:
 	var ke = load("res://scripts/cosmetics/kill_effects.gd")
 	var times := Array(_opt("times", "0.2,0.5").split(",")).map(func(s): return float(s))
 	var tiles := []
-	var centre := Vector2i(cam.unproject_position(at + Vector3.UP * 0.3))
+	# unproject_position works in the viewport's (scaled) coordinates.
+	var to_image := Vector2(SIZE) / cam.get_viewport().get_visible_rect().size
+	var centre := Vector2i(cam.unproject_position(at + Vector3.UP * 0.3) * to_image)
 	var half := int(_opt("crop", "130"))
 	var crop := Rect2i(centre - Vector2i(half, half), Vector2i(half * 2, half * 2))
 	for it in _items(&"kill_effect"):
@@ -155,7 +185,7 @@ func _tracers(director) -> void:
 			if not ts.draw(parent, from, to, 0.04, it):
 				load("res://scripts/fx/fx.gd").beam(parent, from, to, Color(0.3, 0.95, 1.0), 0.04)
 		await _wait(int(_opt("frames", "4")))
-		tiles.append([root.get_viewport().get_texture().get_image(), String(it.display_name)])
+		tiles.append([root.get_viewport().get_texture().get_image().get_region(Rect2i(300, 170, 560, 315)), String(it.display_name)])
 		await _wait(50)
 	_save(_sheet(tiles, 3, Vector2i(318, 176)))
 

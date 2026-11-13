@@ -256,12 +256,118 @@ def cos_kill_hearts():
     return out
 
 
+# --- Newer kill effect layers (soft: low-passed, short, nothing shrill) ----------
+
+def cos_kill_balloon():
+    """A rubbery squeak as the poodle twists up, then a soft pop."""
+    d = 0.75
+    out = silence(d)
+    squeak = tone(520, 0.3, "tri", vibrato=0.06, vib_rate=22.0) * env(0.3, 0.04, 0.3, power=1.2)
+    place(out, filt(squeak * (1.0 + 0.4 * sweep(1.0, 3.0, 0.3)), low=2500) * 0.5, 0.02)
+    pop = filt(noise(0.08), low=3000, high=200) * env(0.08, 0.0005, 0.06, power=3.0)
+    place(out, pop, 0.48, 0.9)
+    place(out, sweep(260, 90, 0.12, "sine") * env(0.12, 0.001, 0.1) * 0.6, 0.48)
+    return out
+
+
+def cos_kill_disco():
+    """A warm chord stab and a little glass tinkle as the ball shatters."""
+    d = 0.9
+    out = silence(d)
+    chord = sum(tone(note(s), 0.4, "saw") for s in (-5, -1, 2, 7)) * env(0.4, 0.004, 0.38, power=1.6)
+    place(out, filt(chord, low=1800) * 0.4, 0.0)
+    for i in range(6):
+        place(out, filt(bell(rand(1800, 2600), 0.25, gain=0.25, ratios=(1.0, 2.4), weights=(1.0, 0.3)), low=5000), 0.47 + i * 0.035)
+    return out
+
+
+def cos_kill_jackpot():
+    """Reels clunk to a stop, three dings, then a few coins."""
+    d = 0.95
+    out = silence(d)
+    for i in range(3):
+        place(out, click(0.025, 1400, 0.6), 0.05 + i * 0.09)
+        place(out, bell(note(12 + i * 4), 0.3, gain=0.35, ratios=(1.0, 2.0, 3.0), weights=(1.0, 0.3, 0.1)), 0.08 + i * 0.09)
+    for i in range(5):
+        place(out, filt(bell(rand(1500, 2200), 0.16, gain=0.25, ratios=(1.0, 2.4), weights=(1.0, 0.4)), low=5000), 0.42 + i * rand(0.04, 0.07))
+    return out
+
+
+def cos_kill_voxel():
+    """A soft digital fall: a stepped arpeggio down over a filtered sweep."""
+    d = 0.6
+    out = silence(d)
+    place(out, arpeggio([12, 7, 3, 0, -5, -9], 0.05, 0.06, "square", 0.45, low=3000), 0.0)
+    place(out, sweep(900, 160, 0.45, "tri") * env(0.45, 0.01, 0.45, power=1.4) * 0.3, 0.02)
+    return out
+
+
+def cos_kill_ghost():
+    """A friendly breathy 'ooo' that floats up and away."""
+    d = 0.9
+    out = silence(d)
+    t = t_axis(0.8)
+    pitch = 300 + 120 * np.sin(np.pi * t / 0.8)
+    voice = np.sin(2 * np.pi * np.cumsum(pitch * (1 + 0.02 * np.sin(2 * np.pi * 6 * t))) / SR)
+    voice = voice * env(0.8, 0.12, 0.8, power=2.0, release=0.2)
+    place(out, filt(voice, low=1200) * 0.6, 0.02)
+    place(out, filt(noise(0.8), low=1500, high=300) * env(0.8, 0.2, 0.8, power=1.0) * 0.15, 0.02)
+    return out
+
+
+def cos_kill_snow_globe():
+    """Music-box notes inside the glass, then it pops with a soft chime."""
+    d = 0.95
+    out = silence(d)
+    for i, s in enumerate((19, 23, 26, 31)):
+        place(out, filt(bell(note(s), 0.35, gain=0.3, ratios=(1.0, 3.0), weights=(1.0, 0.2)), low=4500), i * 0.11)
+    place(out, filt(noise(0.06), low=4000, high=500) * env(0.06, 0.0005, 0.05, power=3.0) * 0.6, 0.6)
+    place(out, filt(bell(note(26), 0.35, gain=0.35), low=5000), 0.61)
+    return out
+
+
+def cos_kill_black_hole():
+    """A deep whoomp that sucks in (rising noise), then a soft wink."""
+    d = 0.9
+    out = silence(d)
+    place(out, sweep(220, 55, 0.55, "sine") * env(0.55, 0.05, 0.55, power=1.0) * 0.8, 0.0)
+    suck = filt(noise(0.5), low=2500, high=300) * np.linspace(0.0, 1.0, int(SR * 0.5)) ** 2
+    place(out, suck * 0.35, 0.03)
+    place(out, sweep(120, 45, 0.18, "sine") * env(0.18, 0.001, 0.16) * 0.7, 0.53)
+    place(out, filt(bell(note(19), 0.3, gain=0.3), low=4000), 0.54)
+    return out
+
+
+def cos_kill_tickets():
+    """A ticket machine ratchet and a cheerful ding."""
+    d = 0.8
+    out = silence(d)
+    for i in range(10):
+        place(out, click(0.015, 1800, 0.5), i * 0.025)
+    place(out, filt(bell(note(19), 0.45, gain=0.45, ratios=(1.0, 2.76), weights=(1.0, 0.3)), low=4500), 0.27)
+    place(out, filt(noise(0.4), low=3000, high=800) * env(0.4, 0.05, 0.4, power=1.5) * 0.15, 0.3)
+    return out
+
+
+def cos_kill_pinata():
+    """A papery thump and a rustle of streamers."""
+    d = 0.7
+    out = silence(d)
+    place(out, sweep(150, 55, 0.16, "sine") * env(0.16, 0.001, 0.14) * 0.9, 0.0)
+    place(out, filt(noise(0.06), low=2000, high=150) * env(0.06, 0.0005, 0.05, power=2.5) * 0.7, 0.0)
+    for i in range(5):
+        place(out, filt(noise(0.09), low=4000, high=1200) * env(0.09, 0.01, 0.09, power=1.5) * 0.25, 0.05 + i * rand(0.05, 0.09))
+    return out
+
+
 SOUNDS = [
     cos_select, cos_unequip, cos_unlock,
     cos_equip_operator, cos_equip_finish, cos_equip_charm, cos_equip_cell, cos_equip_decal, cos_equip_gloves,
     cos_equip_effect, cos_equip_tracer, cos_equip_banner, cos_equip_title,
     cos_kill_pixel, cos_kill_neon_ring, cos_kill_bubbles, cos_kill_snow, cos_kill_starburst, cos_kill_coins,
     cos_kill_firework, cos_kill_firework_pop, cos_kill_hearts,
+    cos_kill_balloon, cos_kill_disco, cos_kill_jackpot, cos_kill_voxel, cos_kill_ghost, cos_kill_snow_globe,
+    cos_kill_black_hole, cos_kill_tickets, cos_kill_pinata,
 ]
 
 VARIANTS = [(cos_kill_bubbles, (0.92, 1.08)), (cos_kill_coins, (0.94, 1.06)), (cos_kill_pixel, (0.95, 1.05))]

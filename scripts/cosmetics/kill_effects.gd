@@ -175,10 +175,10 @@ static func _disco(parent: Node, at: Vector3, cols: Array) -> void:
 	var hang := at + Vector3.UP * 0.75
 	_glow(parent, at, FxShapes.glow_ball(), cols[0], 0.4, 2.0, 0.14, 0.0)
 	FxSwarm.spawn(parent, hang + Vector3.UP * 0.6, FxShapes.mirror_ball(), [Color.WHITE], {"count": 1, "shape": "up", "spread": 0.0,
-		"speed": Vector2(-4.2, -4.2), "drag": 7.0, "life": Vector2(0.48, 0.48), "size": Vector2(0.6, 0.6), "gravity": Vector3.ZERO,
+		"speed": Vector2(-4.2, -4.2), "drag": 7.0, "life": Vector2(0.48, 0.48), "size": Vector2(0.75, 0.75), "gravity": Vector3.ZERO,
 		"spin": 5.0, "steady": true, "spin_axis": Vector3.UP, "grow": 0.15, "pop": true})
 	FxSwarm.spawn(parent, hang, FxShapes.beam(), cols, {"count": 8, "speed": Vector2.ZERO, "life": Vector2(0.36, 0.42),
-		"size": Vector2(2.2, 2.6), "gravity": Vector3.ZERO, "spin": 4.5, "steady": true, "spin_axis": Vector3.UP, "grow": 0.25, "delay": 0.08})
+		"size": Vector2(1.6, 2.0), "gravity": Vector3.ZERO, "spin": 4.5, "steady": true, "spin_axis": Vector3.UP, "grow": 0.25, "delay": 0.08})
 	FxSwarm.spawn(parent, hang, FxShapes.tile(), [Color(0.85, 0.87, 0.95), Color.WHITE, cols[0], cols[1 % cols.size()]], {"count": 26,
 		"delay": 0.47, "speed": Vector2(2.5, 5.5), "life": Vector2(0.3, 0.45), "size": Vector2(0.07, 0.1), "gravity": Vector3(0, -9.0, 0),
 		"drag": 1.5, "spin": 16.0, "grow": 0.0})
@@ -198,7 +198,7 @@ static func _jackpot(parent: Node, at: Vector3, cols: Array) -> void:
 	for dy in [-0.42, 0.42]:
 		var row: Vector3 = mid + Vector3.UP * dy
 		FxSwarm.spawn(parent, row - right * 0.85, FxShapes.ball(), cols, {"count": 9, "shape": "line", "line_to": row + right * 0.85,
-			"even": true, "speed": Vector2.ZERO, "gravity": Vector3.ZERO, "life": Vector2(0.75, 0.75), "size": Vector2(0.09, 0.09),
+			"even": true, "speed": Vector2.ZERO, "gravity": Vector3.ZERO, "life": Vector2(0.75, 0.75), "size": Vector2(0.11, 0.11),
 			"blink": 5.0, "grow": 0.1})
 	FxSwarm.spawn(parent, mid, FxShapes.coin(), [Color(1.0, 0.78, 0.25), Color(1.0, 0.86, 0.45)], {"count": 12, "shape": "up",
 		"spread": 40.0, "speed": Vector2(4.0, 6.0), "delay": 0.38, "life": Vector2(0.35, 0.45), "size": Vector2(0.13, 0.17),
@@ -207,9 +207,9 @@ static func _jackpot(parent: Node, at: Vector3, cols: Array) -> void:
 
 
 static func _voxel(parent: Node, at: Vector3, cols: Array) -> void:
-	FxSwarm.spawn(parent, at + Vector3.DOWN * 0.15, FxShapes.cube(), cols, {"count": 64, "box": Vector3(0.6, 1.6, 0.4),
+	FxSwarm.spawn(parent, at + Vector3.DOWN * 0.15, FxShapes.cube(), cols, {"count": 84, "box": Vector3(0.6, 1.6, 0.4),
 		"sweep_y": true, "stagger": 0.32, "shape": "up", "spread": 12.0, "speed": Vector2(1.2, 2.6), "life": Vector2(0.28, 0.42),
-		"size": Vector2(0.1, 0.12), "gravity": Vector3(0, 3.0, 0), "drag": 0.5, "quantize": 0.1, "blink": 7.0, "grow": 0.0})
+		"size": Vector2(0.11, 0.13), "gravity": Vector3(0, 3.0, 0), "drag": 0.5, "quantize": 0.1, "blink": 5.0, "grow": 0.0})
 	FxSwarm.spawn(parent, at + Vector3.DOWN * 0.95, FxShapes.ring(), [Color(cols[0], 0.9)], {"count": 1, "shape": "up",
 		"spread": 0.0, "speed": Vector2(4.4, 4.4), "drag": 0.0, "gravity": Vector3.ZERO, "life": Vector2(0.42, 0.42),
 		"size": Vector2(1.1, 1.1), "face": Vector3.UP, "spin": 0.0, "grow": 0.1, "fade": true})
@@ -263,8 +263,8 @@ static func _black_hole(parent: Node, at: Vector3, cols: Array) -> void:
 
 
 static func _tickets(parent: Node, at: Vector3, cols: Array) -> void:
-	FxSwarm.spawn(parent, at, FxShapes.ticket(), cols, {"count": 18, "shape": "up", "spread": 42.0, "speed": Vector2(4.5, 7.0),
-		"life": Vector2(0.65, 0.85), "size": Vector2(0.24, 0.3), "gravity": Vector3(0, -7.0, 0), "drag": 2.6, "spin": 9.0,
+	FxSwarm.spawn(parent, at, FxShapes.ticket(), cols, {"count": 16, "shape": "up", "spread": 42.0, "speed": Vector2(4.5, 7.0),
+		"life": Vector2(0.65, 0.85), "size": Vector2(0.32, 0.4), "gravity": Vector3(0, -7.0, 0), "drag": 2.6, "spin": 9.0,
 		"wobble": 1.2, "grow": 0.08, "stagger": 0.12})
 	FxSwarm.spawn(parent, at, FxShapes.star(), [Color(1.0, 0.85, 0.3), Color.WHITE], {"count": 10, "speed": Vector2(1.5, 3.5),
 		"life": Vector2(0.3, 0.5), "size": Vector2(0.07, 0.1), "gravity": Vector3(0, -2.0, 0), "drag": 2.5, "blink": 8.0, "spin": 6.0})
