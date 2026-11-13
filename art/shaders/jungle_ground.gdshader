@@ -31,7 +31,7 @@ void fragment() {
 	vec3 grass = texture(grass_texture, p * grass_scale).rgb;
 	// Large tone variation so the lawn never reads as a repeat.
 	float big = noise(p * 0.07) * 0.6 + noise(p * 0.19) * 0.4;
-	grass *= mix(vec3(0.8, 0.9, 0.76), vec3(1.12, 1.08, 0.84), big);
+	grass *= mix(vec3(0.66, 0.8, 0.66), vec3(1.0, 0.98, 0.78), big);
 	vec3 dirt = texture(dirt_texture, p * dirt_scale).rgb;
 	float edge = noise(p * 1.7) * 0.35;
 	float k = smoothstep(0.35, 0.65, COLOR.r + edge - 0.17);

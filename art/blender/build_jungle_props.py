@@ -542,10 +542,10 @@ def build_volcano():
         ob.data.materials.append(m)
     parts = [ob]
     parts.append(torus("Rim", 7.2, 1.2, (0, 0, 70.2), m=jglow("JungleLavaGlow", JUNGLE["Lava"], 2.6), major_segs=20, minor_segs=5))
-    smoke = jmat("AshLight", rough=1.0)
-    for i in range(7):
-        z = 76 + i * 9
-        parts.append(sphere(f"Smoke{i}", 7 + i * 2.2, (i * 3.5, i * 1.5, z), scale=(1, 1, 0.75), m=smoke, segs=10, rings=6))
+    smoke = jmat("Ash", rough=1.0)
+    for i in range(4):
+        z = 74 + i * 7
+        parts.append(sphere(f"Smoke{i}", 6.5 - i * 1.2, (i * 4.0, i * 1.5, z), scale=(1, 1, 0.7), m=smoke, segs=10, rings=6))
     save("jungle_volcano", [merge("Volcano", parts)])
 
 

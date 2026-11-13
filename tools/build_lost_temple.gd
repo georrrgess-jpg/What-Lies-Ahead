@@ -91,6 +91,7 @@ func _initialize() -> void:
 	level.add_child(dressing)
 
 	_plan_trails()
+	_clear.append([Vector2(3.0, 18.0), 3.0])
 	_build_ground()
 	_build_temple()
 	_build_terrace_access()
@@ -151,7 +152,7 @@ func _build_environment() -> void:
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.56, 0.68, 0.7)
-	env.ambient_light_energy = 0.46
+	env.ambient_light_energy = 0.38
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_white = 2.6
 	env.tonemap_exposure = 0.96
@@ -176,7 +177,7 @@ func _build_environment() -> void:
 	sun.name = "Sun"
 	sun.transform = Transform3D(Basis.looking_at(-SUN_DIRECTION.normalized(), Vector3.UP), Vector3(0, 30, 0))
 	sun.light_color = Color(1.0, 0.72, 0.46)
-	sun.light_energy = 1.75
+	sun.light_energy = 1.9
 	sun.shadow_enabled = true
 	sun.shadow_bias = 0.06
 	sun.shadow_normal_bias = 1.2
@@ -319,13 +320,14 @@ func _build_temple() -> void:
 	_tier(t, "Tier1E", Vector3(MOUTH_HALF, y0, back), Vector3(TERRACE_X, y1, TIER1_FRONT), stone, band)
 	_tier(t, "Tier1Lintel", Vector3(-MOUTH_HALF, MOUTH_TOP, PASSAGE_BACK), Vector3(MOUTH_HALF, y1, TIER1_FRONT), stone, null)
 	_tier(t, "Tier1Back", Vector3(-MOUTH_HALF, y0, back), Vector3(MOUTH_HALF, y1, PASSAGE_BACK), stone, null)
-	_tier(t, "Tier2", Vector3(-11.0, y1, back + 2.0), Vector3(11.0, y1 + 4.0, -29.5), stone, band)
-	_tier(t, "Tier3", Vector3(-7.0, y1 + 4.0, back + 4.0), Vector3(7.0, y1 + 7.0, -32.0), stone, band)
+	_tier(t, "Tier2", Vector3(-12.0, y1, back + 2.0), Vector3(12.0, y1 + 5.0, -29.5), stone, band)
+	_tier(t, "Tier3", Vector3(-9.0, y1 + 5.0, back + 3.0), Vector3(9.0, y1 + 9.5, -32.5), stone, band)
+	_tier(t, "Tier4", Vector3(-6.0, y1 + 9.5, back + 4.0), Vector3(6.0, y1 + 13.0, -35.0), stone, band)
 	_prop(t, "jungle_idol_face", "IdolFace", Vector3(0, TERRACE_Y, FACE_Z), 0.0, Vector3(10, 10, 1.4))
-	_prop(t, "jungle_shrine", "Shrine", Vector3(0, y1 + 7.0, -36.0), 0.0, Vector3(7, 7, 5))
-	for x in [-5.0, 5.0]:
-		_prop(t, "jungle_brazier", "SummitBrazier%d" % int(x), Vector3(x, y1 + 7.0, -32.8), 0.0, Vector3(1, 1.4, 1))
-		_fire(t, "SummitFire%d" % int(x), Vector3(x, y1 + 7.0 + 1.45, -32.8), 1.4, false)
+	_prop(t, "jungle_shrine", "Shrine", Vector3(0, y1 + 13.0, -39.0), 0.0, Vector3(7, 7, 5)).scale = Vector3.ONE * 1.35
+	for x in [-4.6, 4.6]:
+		_prop(t, "jungle_brazier", "SummitBrazier%d" % int(x), Vector3(x, y1 + 13.0, -35.8), 0.0, Vector3(1, 1.4, 1)).scale = Vector3.ONE * 1.3
+		_fire(t, "SummitFire%d" % int(x), Vector3(x, y1 + 13.0 + 1.9, -35.8), 1.8, false)
 	# Mouth passage: the player never walks in (the spawn is inside).
 	_player_block(t, "MouthBlock", Vector3(MOUTH_HALF * 2.0 + 0.4, 4.0, 0.4), Vector3(0, TERRACE_Y + 2.0, FACE_Z + 0.3))
 	# Face slab collision (it stands proud of tier 1).
@@ -344,8 +346,11 @@ func _build_temple() -> void:
 	# Greenery sprouting from every ledge.
 	var ledges := [
 		[Vector3(-TERRACE_X, y1, TIER1_FRONT), Vector3(TERRACE_X, y1, TIER1_FRONT)],
-		[Vector3(-11.0, y1 + 4.0, -29.5), Vector3(11.0, y1 + 4.0, -29.5)],
-		[Vector3(-7.0, y1 + 7.0, -32.0), Vector3(7.0, y1 + 7.0, -32.0)],
+		[Vector3(-12.0, y1 + 5.0, -29.5), Vector3(12.0, y1 + 5.0, -29.5)],
+		[Vector3(-9.0, y1 + 9.5, -32.5), Vector3(9.0, y1 + 9.5, -32.5)],
+		[Vector3(-6.0, y1 + 13.0, -35.0), Vector3(6.0, y1 + 13.0, -35.0)],
+		[Vector3(18.3, TERRACE_Y, -19.9), Vector3(23.2, TERRACE_Y, -19.9)],
+		[Vector3(17.3, TERRACE_Y, -0.6), Vector3(19.3, TERRACE_Y, -0.6)],
 	]
 	var xforms: Array[Transform3D] = []
 	var rng := RandomNumberGenerator.new()
@@ -501,6 +506,11 @@ func _build_ruins() -> void:
 	_post(r, "NEColumnPost", 0.6, 2.2, Vector3(22.2, y, -24.2))
 	_fire(r, "NETorchFire", Vector3(18.4, y + 2.1, -19.9), 0.6, false)
 	_prop(r, "jungle_tiki_torch", "NETorch", Vector3(18.4, y, -19.9), 0.0, Vector3(0.3, 2.2, 0.3))
+	_prop(r, "jungle_column", "SEColumn", Vector3(22.4, y, 4.0), 15.0, Vector3(1.3, 4.6, 1.3))
+	_post(r, "SEColumnPost", 0.62, 4.6, Vector3(22.4, y, 4.0))
+	_prop(r, "jungle_tiki_torch", "SETorch", Vector3(18.0, y, 4.4), 0.0, Vector3(0.3, 2.2, 0.3))
+	_fire(r, "SETorchFire", Vector3(18.0, y + 2.1, 4.4), 0.6, false)
+	_solid_prop(r, "jungle_crates", "SECrates", Vector3(21.6, y, 0.6), 80.0, Vector3(2.0, 1.6, 1.2))
 	# Boardwalk from the terrace's east end onto the tower.
 	_deck(r, "Boardwalk", Vector3(TERRACE_X, y, -24.0), Vector3(18.0, y, -20.5), planks)
 	_fence_run(r, "BoardwalkRailN", Vector3(TERRACE_X, y, -24.1), Vector3(18.0, y, -24.1), "jungle_rope_rail", 2.0)
@@ -603,24 +613,6 @@ func _build_lagoon() -> void:
 	falls.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	falls.add_to_group("jungle_waterfall", true)
 	lagoon.add_child(falls)
-	var mist := MeshInstance3D.new()
-	mist.name = "FallsMist"
-	var dome := SphereMesh.new()
-	dome.radius = 1.0
-	dome.height = 2.0
-	dome.is_hemisphere = true
-	dome.radial_segments = 24
-	dome.rings = 8
-	mist.mesh = dome
-	var mist_mat := ShaderMaterial.new()
-	mist_mat.shader = load(SHADERS + "frost_cloud.gdshader")
-	mist_mat.set_shader_parameter("strength", 0.22)
-	mist_mat.set_shader_parameter("life", 1.0)
-	mist.material_override = mist_mat
-	mist.scale = Vector3(3.2, 1.8, 3.6)
-	mist.position = FALLS + Vector3(1.0, 0.05, 0)
-	mist.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	lagoon.add_child(mist)
 
 
 # ---------------------------------------------------------------------------
