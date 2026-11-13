@@ -21,6 +21,10 @@ const COMBO_STEP := 0.1          # +10% per chained kill
 const COMBO_MAX := 3.0
 const LONGSHOT_DISTANCE := 28.0
 const MULTI_NAMES := ["", "", "DOUBLE KILL", "TRIPLE KILL", "QUAD KILL", "MEGA KILL"]
+## Wave grades, best first, and the most health a wave may cost for the first
+## three (S = untouched, A = a scratch, B = a few hits; anything more is a C).
+const GRADES: Array[String] = ["S", "A", "B", "C"]
+const GRADE_DAMAGE: Array[float] = [0.0, 20.0, 45.0]
 
 var score := 0
 var combo := 0
@@ -32,6 +36,8 @@ var _multi_count := 0
 var _multi_left := 0.0
 var _multi_points := 0
 var _damage_this_wave := 0.0
+## Index into GRADES of the wave cleared last.
+var last_grade := 0
 ## Points per category, for the results breakdown.
 var breakdown := {"kills": 0, "headshots": 0, "combo": 0, "multi": 0, "style": 0, "waves": 0}
 
@@ -116,11 +122,17 @@ func on_player_damaged(amount: float) -> void:
 
 
 ## Wave-clear bonus: 100 per wave number, doubled if the wave was flawless.
+## Also grades the wave (see GRADES) into `last_grade`.
 func on_wave_cleared(wave_number: int) -> int:
 	var bonus := 100 * wave_number
 	var flawless := _damage_this_wave <= 0.0
 	if flawless:
 		bonus *= 2
+	last_grade = GRADE_DAMAGE.size()
+	for i in GRADE_DAMAGE.size():
+		if _damage_this_wave <= GRADE_DAMAGE[i]:
+			last_grade = i
+			break
 	_damage_this_wave = 0.0
 	breakdown["waves"] += bonus
 	score += bonus

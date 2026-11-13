@@ -20,8 +20,27 @@ var killed_by_headshot := false
 var kill_distance := 0.0
 ## Emitted when the zombie has made no progress for a while (or left the map).
 signal stalled(zombie: Zombie)
+## An alpha crossed a health threshold (phase 1, 2, ...): the director sends its horde.
+signal phase_reached(zombie: Zombie, phase: int)
 
 enum State { CHASE, WINDUP, RECOVER, DEAD, EMERGE }
+
+## Ranks set by the director (see set_rank).
+const RANK_BOSS: StringName = &"boss"
+const RANK_BOUNTY: StringName = &"bounty"
+## Speed factor of the last few zombies of a wave (see `hurry`).
+const HURRY_SPEED := 1.35
+## The largest capsule a zombie moves with (the size of a regular heavy), so
+## an oversized alpha fits through every doorway its horde does. A bigger
+## body gets a second, full-size shape that only shots collide with.
+const MOVE_RADIUS_MAX := 0.8
+const MOVE_HEIGHT_MAX := 2.4
+## Off the navmesh by more than this (m), an unsticking zombie steps back onto it.
+const UNSTICK_MIN := 0.25
+## Strength of an alpha's hit flash, as a share of a regular zombie's.
+const BOSS_FLASH := 0.3
+## Behaviour fields that hold damage dealt to the player (scaled by the difficulty).
+const BEHAVIOUR_DAMAGE_FIELDS: Array[StringName] = [&"damage", &"land_damage", &"landing_damage", &"burst_damage", &"damage_per_second"]
 
 const MODEL_PATH := "res://art/models/zombie.glb"
 ## The material of every opaque zombie surface (tinted per zombie, see _apply_tints).
@@ -59,9 +78,27 @@ const GIRTH_JITTER := 0.03
 var data: EnemyData
 var target: Player
 var health := 100.0
+## Health at spawn (after the difficulty and any rank scaling).
+var max_health := 100.0
 var speed := 1.8
 var state: State = State.CHASE
 var last_hit_weapon: StringName
+## "" for the rank and file, RANK_BOSS for a finale alpha, RANK_BOUNTY for a bounty target.
+var rank: StringName = &""
+## Multiplies every hit this zombie lands (difficulty).
+var damage_scale := 1.0
+## Multiplies the cooldown of its special attacks (difficulty; above 1 = rarer).
+var special_scale := 1.0
+## The last few zombies of a wave sprint straight at the player.
+var hurry := false
+## Places a fleeing zombie (a bounty target) runs to; empty = it fights.
+var flee_points: PackedVector3Array
+
+var _rank_overlay: Material
+var _boss_flash: StandardMaterial3D
+var _body_shape: CollisionShape3D
+## True once _try_unstick() has had its go since the zombie last made progress.
+var _unstuck := false
 
 var _state_time := 0.0
 var _repath := 0.0
@@ -138,8 +175,53 @@ func setup(enemy: EnemyData, chase_target: Player, speed_scale := 1.0) -> void:
 		if b:
 			behaviours.append(b.duplicate(true))
 	target = chase_target
-	health = enemy.max_health
-	speed = enemy.move_speed * speed_scale * (1.0 + randf_range(-enemy.speed_variance, enemy.speed_variance))
+	damage_scale = Difficulty.enemy_damage_scale()
+	special_scale = Difficulty.special_cooldown_scale()
+	max_health = enemy.max_health * Difficulty.enemy_health_scale()
+	health = max_health
+	speed = enemy.move_speed * speed_scale * Difficulty.enemy_speed_scale() \
+		* (1.0 + randf_range(-enemy.speed_variance, enemy.speed_variance))
+	for b in behaviours:
+		for field in BEHAVIOUR_DAMAGE_FIELDS:
+			if field in b:
+				b.set(field, float(b.get(field)) * damage_scale)
+		if &"cooldown" in b:
+			b.set(&"cooldown", float(b.get(&"cooldown")) * special_scale)
+
+
+## Marks this zombie as a finale alpha or a bounty target (before or after it
+## enters the tree). `health_scale` multiplies its health, `tint` is an
+## additive glow over the whole model so the rank reads at a glance.
+func set_rank(new_rank: StringName, health_scale := 1.0, tint := Color.BLACK) -> void:
+	rank = new_rank
+	max_health *= health_scale
+	health = max_health
+	if tint != Color.BLACK:
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		m.albedo_color = tint
+		_rank_overlay = m
+		if _flash_left <= 0.0:
+			_set_overlay(m)
+
+
+## Health left as a fraction of the health it spawned with.
+func health_fraction() -> float:
+	return clampf(health / maxf(1.0, max_health), 0.0, 1.0)
+
+
+## True for a bounty target that runs from the player instead of fighting.
+func is_fleeing() -> bool:
+	return not flee_points.is_empty()
+
+
+## A bounty target that ran out the clock: it slips away (no rewards).
+func escape() -> void:
+	if state == State.DEAD:
+		return
+	Fx.confetti(get_parent(), global_position + Vector3.UP * 0.8)
+	despawn()
 
 
 ## True for the invisible-to-gameplay copy drawn once at level start so its
@@ -160,11 +242,23 @@ func _ready() -> void:
 		add_to_group("zombies")
 	if data == null:
 		data = EnemyData.new()
+	var radius := data.capsule_radius * data.body_scale
+	var height := data.capsule_height * data.body_scale
 	var capsule := CapsuleShape3D.new()
-	capsule.radius = data.capsule_radius * data.body_scale
-	capsule.height = data.capsule_height * data.body_scale
+	capsule.radius = minf(radius, MOVE_RADIUS_MAX)
+	capsule.height = minf(height, MOVE_HEIGHT_MAX)
 	shape.shape = capsule
 	shape.position.y = capsule.height * 0.5
+	if not warmup_only and (radius > MOVE_RADIUS_MAX or height > MOVE_HEIGHT_MAX):
+		# An alpha: it walks with the capped capsule and is shot through this one.
+		var body := CapsuleShape3D.new()
+		body.radius = radius
+		body.height = height
+		_body_shape = CollisionShape3D.new()
+		_body_shape.name = "BodyShape"
+		_body_shape.shape = body
+		_body_shape.position.y = height * 0.5
+		add_child(_body_shape)
 	nav.radius = data.avoidance_radius
 	nav.max_speed = speed * maxf(1.2, data.charge_speed_mult * 1.1)
 	nav.velocity_computed.connect(_on_velocity_computed)
@@ -174,6 +268,8 @@ func _ready() -> void:
 	_stall_anchor = global_position
 	_tempo = randf_range(0.92, 1.08)
 	_build_model()
+	if _rank_overlay:
+		_set_overlay(_rank_overlay)
 	_setup_animation()
 	_setup_head()
 	_play_locomotion(0.0)
@@ -315,7 +411,7 @@ func _react(amount: float, at: Vector3, direction: Vector3, headshot: bool) -> v
 	var to_local := global_transform.affine_inverse()
 	var point := to_local * at
 	var dir := to_local.basis * direction
-	var strength := amount / maxf(1.0, data.max_health) * 3.0 / sqrt(maxf(0.5, data.mass))
+	var strength := amount / maxf(1.0, max_health) * 3.0 / sqrt(maxf(0.5, data.mass))
 	_hit_react.kick(point / maxf(0.1, data.body_scale), dir, headshot, strength)
 
 
@@ -332,7 +428,7 @@ func _physics_process(delta: float) -> void:
 	if _flash_left > 0.0:
 		_flash_left -= delta
 		if _flash_left <= 0.0:
-			_set_overlay(null)
+			_set_overlay(_rank_overlay)
 	_knock = _knock.move_toward(Vector3.ZERO, 11.0 * delta)
 	if _emerge_pending:
 		_emerge_pending = false
@@ -392,7 +488,7 @@ func _physics_process(delta: float) -> void:
 				var facing := forward.dot(to_target.normalized()) if distance > 0.01 else 1.0
 				var landed := target.alive and distance <= data.attack_reach and facing >= 0.3
 				if landed:
-					target.take_damage(data.damage, global_position)
+					target.take_damage(data.damage * damage_scale, global_position)
 				for b in behaviours:
 					b.on_attack(self, landed)
 				_set_state(State.RECOVER)
@@ -409,21 +505,23 @@ func _physics_process(delta: float) -> void:
 
 
 func _chase(delta: float, to_target: Vector3, distance: float) -> void:
-	if target.alive and distance <= data.attack_range:
-		_charge_left = 0.0
-		_begin_attack()
-		return
-	if _update_charge(delta, to_target, distance):
-		return
+	var fleeing := is_fleeing()
+	if not fleeing:
+		if target.alive and distance <= data.attack_range:
+			_charge_left = 0.0
+			_begin_attack()
+			return
+		if _update_charge(delta, to_target, distance):
+			return
 	_repath -= delta
 	if _repath <= 0.0:
 		_repath = REPATH_INTERVAL
-		nav.target_position = _approach_point(distance)
+		nav.target_position = _flee_point() if fleeing else _approach_point(distance)
 		_clear_line = (distance <= 3.5 or data.charge_speed_mult > 1.0) and _has_clear_line()
-	var dir := to_target.normalized()
+	var dir := -to_target.normalized() if fleeing else to_target.normalized()
 	# Close in directly for the last few metres when nothing is in the way;
 	# otherwise follow the navmesh (e.g. around a planter).
-	if (distance > 3.0 or not _clear_line) and not nav.is_navigation_finished():
+	if (fleeing or distance > 3.0 or not _clear_line) and not nav.is_navigation_finished():
 		var next := nav.get_next_path_position()
 		var step := next - global_position
 		step.y = 0.0
@@ -434,6 +532,8 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 	if _enrage > 0.0:
 		_enrage -= delta
 		move_speed *= 1.18
+	if hurry:
+		move_speed *= HURRY_SPEED
 	move_speed *= speed_multiplier
 	speed_multiplier = 1.0
 	if _charge_left > 0.0:
@@ -443,7 +543,7 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 	# Stop at arm's length instead of walking into (and shoving) the player.
 	# Knockback is added after avoidance (in _on_velocity_computed), because the
 	# avoidance agent clamps its output to max_speed and would swallow it.
-	var desired := dir * move_speed if distance > 1.15 else Vector3.ZERO
+	var desired := dir * move_speed if distance > 1.15 or fleeing else Vector3.ZERO
 	_face(dir, delta, 1.0)
 	if nav.avoidance_enabled:
 		nav.velocity = desired
@@ -455,13 +555,30 @@ func _chase(delta: float, to_target: Vector3, distance: float) -> void:
 ## flank side; closer in, straight at the player.
 func _approach_point(distance: float) -> Vector3:
 	var p := target.global_position
-	if distance < 6.0 or absf(_flank) < 0.01:
+	if distance < 6.0 or absf(_flank) < 0.01 or hurry:
 		return p
 	var away := global_position - p
 	away.y = 0.0
 	away = away.normalized().rotated(Vector3.UP, _flank)
 	var radius := clampf((distance - 6.0) * 0.5, 0.0, 4.5)
 	return p + away * radius
+
+
+## Where a fleeing zombie runs: the flee point that puts the most ground
+## between it and the player without running past them to get there.
+func _flee_point() -> Vector3:
+	var from := target.global_position
+	var best := global_position
+	var best_score := -INF
+	for p in flee_points:
+		var score := p.distance_to(from) - 0.6 * p.distance_to(global_position)
+		# Never pick a point on the far side of the player.
+		if (p - global_position).normalized().dot((from - global_position).normalized()) > 0.6:
+			score -= 30.0
+		if score > best_score:
+			best_score = score
+			best = p
+	return best
 
 
 ## A nearby ally just died: speed up and roar for a few seconds.
@@ -494,7 +611,7 @@ func _update_charge(delta: float, to_target: Vector3, distance: float) -> bool:
 			_play_locomotion(0.1)
 		return true
 	if _charge_cooldown <= 0.0 and distance >= data.charge_range.x and distance <= data.charge_range.y and _clear_line:
-		_charge_cooldown = data.charge_cooldown
+		_charge_cooldown = data.charge_cooldown * special_scale
 		_charge_telegraph = data.charge_telegraph
 		velocity = Vector3.ZERO
 		Sfx.play_at(&"bruiser_roar_1", global_position + Vector3.UP * 1.6, 3.0, 0.9)
@@ -535,9 +652,13 @@ func _apply_gravity_and_move() -> void:
 	# overhangs the body capsule fits under.
 	if _head_shape:
 		_head_shape.disabled = true
+	if _body_shape:
+		_body_shape.disabled = true
 	move_and_slide()
 	if _head_shape:
 		_head_shape.disabled = false
+	if _body_shape:
+		_body_shape.disabled = false
 
 
 func _face(direction: Vector3, delta: float, rate: float) -> void:
@@ -666,6 +787,9 @@ func _check_stall(delta: float, distance: float) -> void:
 	if global_position.y < -8.0:
 		stalled.emit(self)
 		return
+	# A bounty target keeps its distance on purpose; the director times it out.
+	if is_fleeing():
+		return
 	_lost_timer = 0.0 if distance < LOST_DISTANCE else _lost_timer + delta
 	if _lost_timer > LOST_SECONDS:
 		_lost_timer = 0.0
@@ -678,19 +802,40 @@ func _check_stall(delta: float, distance: float) -> void:
 	var moved := global_position.distance_to(_stall_anchor)
 	_stall_anchor = global_position
 	if state == State.CHASE and moved < STALL_DISTANCE and distance > data.attack_reach + 1.0:
-		stalled.emit(self)
+		if not _try_unstick():
+			stalled.emit(self)
+	elif moved >= STALL_DISTANCE:
+		_unstuck = false
 
 
-## Called by the director after it relocates a stalled zombie: it climbs in
-## again from the entrance.
-func reset_stall() -> void:
+## Called after the zombie is moved: by the director after it relocates a
+## stalled zombie (it climbs in again from the entrance), or by a leap that
+## landed (`emerge` false: it just carries on).
+func reset_stall(emerge := true) -> void:
 	_stall_timer = 0.0
 	_lost_timer = 0.0
 	_stall_anchor = global_position
 	_repath = 0.0
+	_unstuck = false
 	velocity = Vector3.ZERO
-	if state == State.CHASE and speed > 0.0 and _has_clip(&"Emerge"):
+	if emerge and state == State.CHASE and speed > 0.0 and _has_clip(&"Emerge"):
 		_begin_emerge()
+
+
+## First answer to a stall, before the director has to relocate anything:
+## step onto the nearest navmesh point (a leap or a shove can leave a zombie
+## just off it, where it cannot path) and plan a fresh route. Returns false
+## if the zombie is already on the navmesh, or this was tried already.
+func _try_unstick() -> bool:
+	if _unstuck:
+		return false
+	_unstuck = true
+	var ground := NavigationServer3D.map_get_closest_point(get_world_3d().navigation_map, global_position)
+	_repath = 0.0
+	_flank = 0.0
+	if ground.distance_to(global_position) > UNSTICK_MIN:
+		global_position = ground + Vector3.UP * 0.05
+	return true
 
 
 # --- locomotion ------------------------------------------------------------------
@@ -1110,6 +1255,13 @@ func _flash(duration: float) -> void:
 	var k := lerpf(0.35, 1.0, Settings.flash_scale())
 	_flash_material.albedo_color = Color(0.6, 0.38, 0.5) * k
 	_flash_left = duration
+	# An alpha soaks hundreds of hits: a full flash on each would wash it out.
+	if rank == RANK_BOSS:
+		if _boss_flash == null:
+			_boss_flash = _flash_material.duplicate()
+		_boss_flash.albedo_color = _flash_material.albedo_color * BOSS_FLASH
+		_set_overlay(_boss_flash)
+		return
 	_set_overlay(_flash_material)
 
 

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UiExtension" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ui_extension.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/run/rounds_hud.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+kind = 1
+id = &"hud_rounds"
+title = "Rounds"
+script_ref = ExtResource("2")
+order = 50
+show_on_title = false
+accent = Color(1, 0.36, 0.5, 1)

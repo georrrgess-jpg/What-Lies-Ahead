@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WaveSet" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
@@ -6,124 +6,138 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"neon_punk": 6,
-"hover_courier": 2
+"neon_punk": 8,
+"hover_courier": 3
 }
-spawn_interval = 2.3
+spawn_interval = 2.1
 burst = 1
-max_alive = 4
+max_alive = 6
 speed_scale = 1.0
-late_types_after = 0.4
+late_types_after = 0.5
 banner = ""
+kind = &"standard"
+title = "ROOFTOP WELCOME"
+hint = "Punks spray paint from range: keep moving."
 
 [sub_resource type="Resource" id="wave_2"]
 script = ExtResource("2")
 spawns = {
-"neon_punk": 6,
-"hover_courier": 3,
-"tourist_shambler": 2
+"hover_courier": 14,
+"neon_punk": 4
 }
-spawn_interval = 2.0
+spawn_interval = 1.1
 burst = 1
-max_alive = 6
+max_alive = 9
 speed_scale = 1.0
-late_types_after = 0.3
+late_types_after = 0.0
 banner = ""
+kind = &"rush"
+title = "COURIER RUSH"
+hint = "Couriers leap: sidestep when they crouch."
 
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"hover_courier": 5,
-"neon_punk": 5,
-"tourist_shambler": 3
+"neon_punk": 12,
+"tourist_shambler": 7
 }
-spawn_interval = 1.9
+spawn_interval = 1.44
 burst = 1
-max_alive = 7
+max_alive = 10
 speed_scale = 1.0
-late_types_after = 0.3
-banner = "WAVE 3 — COURIERS INBOUND"
+late_types_after = 0.0
+banner = ""
+kind = &"ranged"
+title = "TAGGER CREW"
+hint = "They shoot from every side: break their line of sight."
+surge_at = 0.5
+surge_count = 4
 
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"neon_punk": 7,
-"hover_courier": 5,
-"lifeguard_runner": 3
+"neon_punk": 11,
+"hover_courier": 8,
+"lifeguard_runner": 4
 }
-spawn_interval = 1.7
+spawn_interval = 1.27
 burst = 1
-max_alive = 8
-speed_scale = 1.03
-late_types_after = 0.2
+max_alive = 11
+speed_scale = 1.0
+late_types_after = 0.3
 banner = ""
+kind = &"bounty"
+title = "THE GOLDEN COURIER"
+hint = "Pop the golden courier before it gets away."
+bounty = &"hover_courier"
+bounty_tickets = 175
 
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"riot_bruiser": 1,
-"neon_punk": 8,
-"hover_courier": 5,
-"tourist_shambler": 4
+"hover_courier": 12,
+"neon_punk": 7,
+"tourist_shambler": 7
 }
-spawn_interval = 1.6
-burst = 1
-max_alive = 9
-speed_scale = 1.05
-late_types_after = 0.05
-banner = "WAVE 5 — RIOT SQUAD ON THE ROOF"
+spawn_interval = 3.74
+burst = 5
+max_alive = 12
+speed_scale = 1.03
+late_types_after = 0.0
+banner = ""
+kind = &"ambush"
+title = "BLACKOUT AMBUSH"
+hint = "The power is out, and they are coming through every entrance."
+twist = &"blackout"
 
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"neon_punk": 6,
-"hover_courier": 8,
-"lifeguard_runner": 3,
-"tourist_shambler": 2,
-"riot_bruiser": 2
+"riot_bruiser": 2,
+"hover_courier": 10,
+"tourist_shambler": 6,
+"neon_punk": 4
 }
-spawn_interval = 2.4
-burst = 2
-max_alive = 10
-speed_scale = 1.08
-late_types_after = 0.2
+spawn_interval = 1.53
+burst = 1
+max_alive = 11
+speed_scale = 1.05
+late_types_after = 0.15
 banner = ""
+kind = &"siege"
+title = "RIOT LINE"
+hint = "Shields block body shots: aim over the top, or get behind them."
+surge_at = 0.6
+surge_count = 5
 
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"hover_courier": 10,
-"neon_punk": 6,
-"tourist_shambler": 5,
-"riot_bruiser": 2
+"hover_courier": 16,
+"tourist_shambler": 8,
+"neon_punk": 5,
+"lifeguard_runner": 5
 }
-spawn_interval = 2.3
+spawn_interval = 2.1
 burst = 2
-max_alive = 10
-speed_scale = 1.1
-late_types_after = 0.15
-banner = ""
-
-[sub_resource type="Resource" id="wave_8"]
-script = ExtResource("2")
-spawns = {
-"hover_courier": 14,
-"neon_punk": 6,
-"lifeguard_runner": 6,
-"riot_bruiser": 2
-}
-spawn_interval = 2.6
-burst = 3
 max_alive = 12
-speed_scale = 1.1
-late_types_after = 0.2
-banner = "FINAL WAVE — BLACKOUT RUSH"
+speed_scale = 1.08
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "CAPTAIN LOCKDOWN"
+hint = "Break his shield, then dodge the volley and the slam."
+boss = &"alpha_riot"
+boss_at = 0.45
+rest_before = 24.0
 
 [resource]
 script = ExtResource("1")
-waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7"), SubResource("wave_8")])
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
 prep_seconds = 12.0
-break_seconds = 20.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 375
 break_refill_fraction = 0.25
 ammo_topup_price = 160
 heal_price = 260
