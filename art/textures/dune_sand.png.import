@@ -15,9 +15,9 @@ dest_files=["res://.godot/imported/dune_sand.png-8b69c19d88d4da7c26f6fa1cf72ca80
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.7
+compress/lossy_quality=0.85
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
