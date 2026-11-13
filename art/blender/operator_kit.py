@@ -380,6 +380,7 @@ def decal(name, outline, proj, m, lift=0.004, sink=0.006, inset=0.2, dome=0.0):
     _face_outward(bm, proj(cu, cv)[1])
     ob = _finish(name, bm, m, (0, 0, 0), (0, 0, 0))
     ob.data.set_sharp_from_angle(angle=math.radians(55))
+    ob["open"] = True      # no underside: left out of the audit's inside tests
     return ob
 
 
@@ -502,7 +503,7 @@ class Kit:
             if region:
                 ob["region"] = region
             if blend:
-                ob["blend"] = list(blend)
+                ob["blend"] = "|".join(str(v) for v in blend)
             self.parts.append(ob)
         return list(parts)
 
@@ -1082,7 +1083,8 @@ def skin(name, kit, armature):
                         g.add([v.index], w, "REPLACE")
             region = "torso"
         elif ob.get("blend"):
-            upper, lower, z_hi, z_lo = ob["blend"]
+            upper, lower, z_hi, z_lo = ob["blend"].split("|")
+            z_hi, z_lo = float(z_hi), float(z_lo)
             groups = [tmp.vertex_groups.new(name=upper), tmp.vertex_groups.new(name=lower)]
             for v in me.vertices:
                 f = min(max((z_hi - v.co.z) / (z_hi - z_lo), 0.0), 1.0)
@@ -1098,7 +1100,7 @@ def skin(name, kit, armature):
             region = REGION.get(ob["bone"], ob.get("region", "extra"))
         glass = any(m.name.startswith("FxGlass") for m in new_slots)
         info.append(dict(name=ob.name, bone=ob["bone"], field=bool(ob["field"]), tag=ob["tag"], region=ob.get("region", region),
-                         occlude=bool(ob["occlude"]) and not glass, glass=glass))
+                         occlude=bool(ob["occlude"]) and not glass, glass=glass or bool(ob.get("open"))))
         temps.append(tmp)
     if os.environ.get("WLA_OPERATOR_STATS"):
         print("[wla] triangles by tag:", dict(sorted(tris_by_tag.items(), key=lambda kv: -kv[1])))

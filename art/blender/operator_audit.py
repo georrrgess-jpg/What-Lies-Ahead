@@ -26,31 +26,35 @@ from mathutils.bvhtree import BVHTree
 from operator_kit import HEAD_C, MODELS_DIR, REGION, weapon_socket_matrix
 
 TOLERANCE = 0.008
-GRIP_TOLERANCE = 0.016
-RAY = Vector((0.31, 0.47, 0.83)).normalized()
+GRIP_TOLERANCE = 0.022
+RAYS = [Vector(v).normalized() for v in ((0.31, 0.47, 0.83), (-0.62, 0.21, -0.75), (0.45, -0.85, 0.27))]
 
 # Region pairs that share a joint: (bone at the joint, radius ignored around it).
 JOINTS = {("head", "torso"): ("Head", 0.125), ("cape", "torso"): ("Cape1", 0.34)}
 for _s in (".L", ".R"):
-    JOINTS[("torso", "upperarm" + _s)] = ("UpperArm" + _s, 0.14)
+    JOINTS[("torso", "upperarm" + _s)] = ("UpperArm" + _s, 0.19)
     JOINTS[("forearm" + _s, "upperarm" + _s)] = ("ForeArm" + _s, 0.1)
-    JOINTS[("forearm" + _s, "hand" + _s)] = ("Hand" + _s, 0.09)
+    JOINTS[("forearm" + _s, "hand" + _s)] = ("Hand" + _s, 0.115)
     JOINTS[("thigh" + _s, "torso")] = ("Thigh" + _s, 0.17)
     JOINTS[("shin" + _s, "thigh" + _s)] = ("Shin" + _s, 0.125)
     JOINTS[("foot" + _s, "shin" + _s)] = ("Foot" + _s, 0.12)
 
 
 def _inside(tree, point):
-    """True if `point` is inside the closed surfaces in `tree` (winding count along a ray)."""
-    count = 0
-    origin = point
-    for _ in range(14):
-        loc, nor, _i, _d = tree.ray_cast(origin, RAY)
-        if loc is None:
-            break
-        count += 1 if nor.dot(RAY) > 0.0 else -1
-        origin = loc + RAY * 1e-4
-    return count > 0
+    """True if `point` is inside the closed surfaces in `tree`: the winding count
+    must agree along three rays, so one odd part never gives a false hit."""
+    for ray in RAYS:
+        count = 0
+        origin = point
+        for _ in range(14):
+            loc, nor, _i, _d = tree.ray_cast(origin, ray)
+            if loc is None:
+                break
+            count += 1 if nor.dot(ray) > 0.0 else -1
+            origin = loc + ray * 1e-4
+        if count <= 0:
+            return False
+    return True
 
 
 class Model:

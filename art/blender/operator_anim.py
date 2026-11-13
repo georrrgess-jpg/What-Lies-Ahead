@@ -307,7 +307,7 @@ def aim_frame(t, kick=0.0):
     """Weapon origin and axes (3x3: right, forward, up) in armature space."""
     b = math.sin(math.tau * t / AIM_LEN)
     b2 = math.sin(2 * math.tau * t / AIM_LEN + 1.0)
-    origin = Vector((-0.15 + 0.003 * b2, -0.385 + 0.035 * kick, 1.17 + 0.006 * b + 0.018 * kick))
+    origin = Vector((-0.15 + 0.003 * b2, -0.415 + 0.03 * kick, 1.14 + 0.006 * b + 0.016 * kick))
     rot = (Quaternion((1, 0, 0), -math.radians(1.2 * b + 7.0 * kick)) @ Quaternion((0, 0, 1), math.radians(0.8 * b2))).to_matrix()
     return origin, rot @ _AIM_AXES
 
@@ -326,7 +326,7 @@ def aim_spec(t, kick=0.0):
         "Cape1": (8.0, 0, 0.0), "Cape2": (4.0, 0, 0.0),
     }
     rot_r = (axes @ _SOCKET_ROT.transposed()).to_quaternion()
-    spec["hand.R"] = dict(pos=origin - rot_r @ _SOCKET_OFFSET, rot=rot_r, pole=Vector((-1.0, 0.1, -0.3)))
+    spec["hand.R"] = dict(pos=origin - rot_r @ _SOCKET_OFFSET, rot=rot_r, pole=Vector((-1.0, 0.2, 0.15)))
     spec["hand.L"] = hand_goal(1, origin + axes @ SUPPORT, axes @ Vector((0.94, 0.34, 0.0)), axes @ Vector((0.0, 0.0, 1.0)),
                                pole=(0.6, 0.05, -0.8))
     spec.update(fingers(-1, (84, 12), thumb=(2, -30)))
@@ -391,10 +391,10 @@ def victory_keys(idle0):
                   arm(-1, 0.55, 0.1, 0.75, bend=40, twist=-60, curl="fist", thumb=(30, 0)))
     pump_up = _merge(body(idle0, shift=(-0.01, 0, 0.0), spine=(-3, 2, 4), chest=(-5, 3, 6), head=(-10, 3, 6)), feet(),
                      arm(-1, 0.6, 0.2, 1.0, bend=24, twist=-50, curl="fist", thumb=(30, 0)),
-                     arm(1, 0.34, 0.1, -1.0, bend=95, twist=20, curl="fist", thumb=(30, 0)))
+                     arm(1, 0.36, 0.1, -1.0, bend=80, twist=20, curl="fist", thumb=(30, 0)))
     pump_down = _merge(body(idle0, shift=(-0.01, 0, -0.035), spine=(3, 2, 4), chest=(3, 3, 6), head=(2, 3, 6)), feet(),
-                       arm(-1, 0.6, 0.35, -0.1, bend=128, twist=-78, curl="fist", thumb=(30, 0)),
-                       arm(1, 0.34, 0.1, -1.0, bend=100, twist=20, curl="fist", thumb=(30, 0)))
+                       arm(-1, 0.6, 0.35, -0.1, bend=108, twist=-78, curl="fist", thumb=(30, 0)),
+                       arm(1, 0.36, 0.1, -1.0, bend=86, twist=20, curl="fist", thumb=(30, 0)))
     keys = [(0.0, idle0), (0.2, crouch), (0.36, air), (0.5, peak), (0.64, air), (0.8, land), (1.06, pump_up), (1.26, pump_down),
             (1.48, pump_up), (1.7, pump_down), (2.3, idle0)]
     return keys, 2.3
@@ -412,7 +412,7 @@ def pose_keys(style, idle0):
         nod = _merge(body(up, head=(9, -3, 8), chest=(3, 0, 6)), touch(-0.05), rest_l)
         return [(0.0, idle0), (0.42, up), (0.74, nod), (1.05, up), (1.35, up), (1.9, idle0)], 1.9
     if style == "big_wave":           # Surf Rescue: arm high overhead, hand on hip
-        hip = arm(1, 0.62, -0.28, -0.72, bend=96, twist=62, curl="fist", thumb=(20, 0))
+        hip = arm(1, 0.9, -0.3, -0.62, bend=104, twist=50, curl="fist", thumb=(20, 0))
         hi = dict(out=0.42, fwd=0.1, up=1.0, twist=-70, curl="open", thumb=(-14, 8))
         lean = body(idle0, shift=(-0.03, 0, 0), hips=(0, -3, 0), spine=(0, 4, 0), chest=(-3, 6, 4), head=(-8, 5, 6))
         a = _merge(lean, arm(-1, bend=34, wrist=(0, -14, 0), **hi), hip)
@@ -433,13 +433,13 @@ def pose_keys(style, idle0):
             return _merge({"hand.R": goal}, fingers(-1, "fist", thumb=(24, 0)))
         a = _merge(body(idle0, chest=(-2, 4, 4), head=(-4, 6, 6)), rap(0.06), rest_l)
         b = _merge(body(idle0, chest=(-2, 4, 4), head=(-2, 8, 6)), rap(0.012), rest_l)
-        ok = _merge(body(idle0, chest=(-3, 0, 0), head=(-6, 0, 0)), arm(-1, 0.35, 0.8, 0.1, bend=96, twist=-10, curl="open", thumb=(-10, 20)),
+        ok = _merge(body(idle0, chest=(-3, 0, 0), head=(-6, 0, 0)), arm(-1, 0.5, 0.9, -0.15, bend=58, twist=-10, curl="open", thumb=(-10, 20)),
                     rest_l)
         return [(0.0, idle0), (0.4, a), (0.56, b), (0.72, a), (0.88, b), (1.04, a), (1.4, ok), (1.75, ok), (2.3, idle0)], 2.3
     if style == "warm_hands":         # Frost Guard: rubs mittens together and gives a hop
         def rub(dz, dx):
-            return _merge(arm(1, 0.16 + dx, 0.62, -0.58 + dz, bend=96, twist=56, wrist=(0, 24, 0), curl=(18, 24), thumb=(10, 0)),
-                          arm(-1, 0.16 - dx, 0.62, -0.58 - dz, bend=96, twist=56, wrist=(0, 24, 0), curl=(18, 24), thumb=(10, 0)))
+            return _merge(arm(1, 0.46 + dx, 0.9, -0.42 + dz, bend=84, twist=44, wrist=(0, 10, 0), curl=(18, 24), thumb=(10, 0)),
+                          arm(-1, 0.46 - dx, 0.9, -0.42 - dz, bend=84, twist=44, wrist=(0, 10, 0), curl=(18, 24), thumb=(10, 0)))
         hunch = body(idle0, shift=(0, 0, -0.03), spine=(5, 0, 0), chest=(6, 0, 0), head=(6, 0, 0))
         hop = body(idle0, shift=(0, 0, 0.0), chest=(-2, 0, 0), head=(-6, 0, 0))
         return [(0.0, idle0), (0.4, _merge(hunch, rub(0.03, 0.0))), (0.6, _merge(hunch, rub(-0.03, 0.0))), (0.8, _merge(hunch, rub(0.03, 0.0))),
@@ -460,7 +460,7 @@ def pose_keys(style, idle0):
                       arm(-1, 1.0, 0.25, 0.42, bend=24, twist=-70, curl="open", thumb=(-14, 8)))
         bow = _merge(body(idle0, shift=(0, 0.05, -0.05), hips=(20, 0, 0), spine=(14, 0, 0), chest=(12, 0, 0), head=(4, 0, 0)),
                      arm(1, 1.0, -0.2, -0.3, bend=20, twist=-20, curl="open", thumb=(-14, 8)),
-                     arm(-1, 0.3, 0.5, -0.8, bend=104, twist=58, curl="open", thumb=(0, 0)))
+                     arm(-1, 0.4, 0.95, -0.45, bend=92, twist=50, curl="open", thumb=(0, 0)))
         return [(0.0, idle0), (0.36, wide), (0.8, wide), (1.2, bow), (1.65, bow), (2.3, idle0)], 2.3
     if style == "glitch":             # GL1TCH: snaps between poses like a skipping sprite
         a = _merge(body(idle0, chest=(0, 8, 10), head=(0, -16, 10)), arm(1, 1.0, 0.0, 0.1, bend=92, twist=-88, curl="open"),

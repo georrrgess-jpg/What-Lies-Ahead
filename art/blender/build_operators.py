@@ -269,7 +269,7 @@ def op_neon_courier():
           bone="Head", tag="hair")
     k.neck()
     # Helmet: a moulded shell over the top of the head, vents, glow stripe and a peak.
-    shell_parts = k.hair_cap(helmet, hairline(0.36, 0.3, 0.16, 0.02), grow=0.15, name="Helmet", tag="headgear")
+    shell_parts = k.hair_cap(helmet, hairline(0.36, 0.3, 0.16, 0.02), grow=0.2, name="Helmet", tag="headgear")
     top = Surface(shell_parts).projector("top")
     hy = HEAD_C.y
     k.add([strip(k.n("HelmetStripe"), line_path((0, hy - 0.22), (0, hy + 0.24), 0.034, steps=10, taper=0.5), top, neon_c, lift=0.006)]
@@ -349,7 +349,7 @@ def op_deep_diver():
 
     k.torso(suit)
     # Corselet: the brass collar the helmet seals onto.
-    k.add(loft(k.n("Corselet"), [(1.315, 0.265, 0.165, 0, 0, 2.4), (1.345, 0.25, 0.158, 0, 0, 2.4), (1.385, 0.17, 0.125, 0, 0, 2.2), (1.4, 0.15, 0.115, 0, 0, 2.2)],
+    k.add(loft(k.n("Corselet"), [(1.315, 0.265, 0.16, 0, 0, 2.4), (1.34, 0.25, 0.15, 0, 0, 2.4), (1.375, 0.17, 0.12, 0, 0, 2.2), (1.388, 0.15, 0.11, 0, 0, 2.2)],
                brass_dark, segs=24, sub=1, caps=("flat", "flat"), sharp=70), field=True, tag="shell")
     k.shells.append((1.3, 1.4, 0.02))
     front = k.on_torso("front")
@@ -362,9 +362,9 @@ def op_deep_diver():
     tanks = []
     for side in (1, -1):
         tanks += [limb(k.n(f"Tank{side}"), (side * 0.092, by, 0.99), (side * 0.092, by, 1.3), 0.086, 0.086, tank, segs=12),
-                  cyl(k.n(f"TankValve{side}"), 0.03, 0.07, (side * 0.092, by, 1.4), segs=10, bevel=0.01, m=brass_dark)]
+                  cyl(k.n(f"TankValve{side}"), 0.03, 0.05, (side * 0.092, by, 1.385), segs=10, bevel=0.01, m=brass_dark)]
     tanks.append(box(k.n("TankBand"), (0.37, 0.19, 0.045), (0, by - 0.01, 1.14), bevel=0.018, m=dark))
-    tanks.append(tube(k.n("AirHose"), [(0.092, by, 1.43), (0.06, by + 0.02, 1.52), (0.0, c.y + radius + 0.06, c.z + 0.06)], 0.022, m=dark, segs=8))
+    tanks.append(tube(k.n("AirHose"), [(0.092, by, 1.4), (0.12, by + 0.03, 1.415), (0.16, by + 0.04, 1.39)], 0.02, m=dark, segs=8))
     k.add(tanks, bone="Chest", tag="gear")
     shoulder_straps(k, dark, 0.04, 1.02, "Harness")
     k.belt(0.985, 0.06, dark)
@@ -394,7 +394,7 @@ def op_deep_diver():
 def op_frost_guard():
     """Summit Lodge patroller: quilted parka with a fur-trimmed hood, goggles,
     knit scarf, mittens and snow boots."""
-    k = Kit("FG_", "#f2c8a8", dict(shoulder=1.08, chest=1.1, waist=1.2, hip=1.08, depth=1.1, arm=1.2, leg=1.12))
+    k = Kit("FG_", "#f2c8a8", dict(shoulder=1.08, chest=1.05, waist=1.2, hip=1.08, depth=1.02, arm=1.18, leg=1.06))
     parka = mat("Parka", "#4fb4ff", rough=0.55)
     parka_dark = mat("ParkaDark", "#2f7fcf", rough=0.55)
     fur = mat("Fur", "#f7f4f2", rough=0.95)
@@ -410,32 +410,32 @@ def op_frost_guard():
     k.face(iris="#3a6fbf", brow="#c9a37a", mouth="smile", lids=0.05, brow_tilt=-10, blush="#ff9fb0")
     k.hair_cap(hair, hairline(0.4, 0.3, 0.2, 0.0), grow=0.035)
     k.neck()
-    c = HEAD_C + Vector((0, 0.035, 0.025))
-    radius, opening = 0.305, 49.0
+    c = HEAD_C + Vector((0, 0.035, 0.06))
+    radius, opening = 0.3, 49.0
     rim_r = radius * math.sin(math.radians(opening))
     rim_y = c.y - radius * math.cos(math.radians(opening))
-    hood = [open_shell(k.n("Hood"), radius, c, opening, parka, scale=(1.0, 1.0, 0.95), thickness=0.03),
+    hood = [open_shell(k.n("Hood"), radius, c, opening, parka, scale=(1.0, 1.0, 0.9), thickness=0.03),
             torus(k.n("HoodFur"), rim_r + 0.02, 0.055, (0, rim_y, c.z), rot=rad(90, 0, 0), m=fur, major_segs=28, minor_segs=8),
-            blob(k.n("Pom"), 0.075, c + Vector((0, 0, radius * 0.95 + 0.045)), fur),
+            blob(k.n("Pom"), 0.075, c + Vector((0, 0, radius * 0.9 + 0.045)), fur),
             box(k.n("GoggleFrame"), (0.3, 0.05, 0.08), (0, rim_y - 0.03, c.z + rim_r + 0.045), rot=rad(-28, 0, 0), bevel=0.03, m=dark)]
     for side in (1, -1):
         hood.append(blob(k.n(f"Goggle{side}"), 1.0, (side * 0.075, rim_y - 0.05, c.z + rim_r + 0.04), lens, scale=(0.062, 0.03, 0.042), rot=rad(-28, 0, 0)))
     k.add(hood, bone="Head", tag="headgear")
 
     k.torso(parka_dark, lower_m=pants, split_z=0.93)
-    k.shell("Parka", 0.87, 1.36, parka, grow=0.018, thickness=0.02, flare=0.03)
+    k.shell("Parka", 0.9, 1.36, parka, grow=0.018, thickness=0.02, flare=0.012)
     for i, z in enumerate((1.0, 1.11, 1.22)):
         k.belt(z, 0.016, parka_dark, grow=-0.004, name=f"Quilt{i}")
-    k.belt(0.885, 0.055, fur, grow=0.004, name="FurHem")
+    k.belt(0.918, 0.05, fur, grow=0.004, name="FurHem")
     front = k.on_torso("front")
     detail(k, [strip(k.n("Zip"), line_path((0, 0.93), (0, 1.3), 0.024, steps=10), front, parka_dark, lift=0.006),
                decal(k.n("Patch"), rrect(-0.15, 1.255, 0.085, 0.085, 0.02), front, scarf, lift=0.005),
                strip(k.n("PatchH"), line_path((-0.178, 1.255), (-0.122, 1.255), 0.018, steps=2), front, fur, lift=0.009, sink=0.0),
                strip(k.n("PatchV"), line_path((-0.15, 1.227), (-0.15, 1.283), 0.018, steps=2), front, fur, lift=0.009, sink=0.0),
-               strip(k.n("ScarfTail"), [(0.07, 1.37, 0.04), (0.1, 1.3, 0.05), (0.115, 1.2, 0.05), (0.12, 1.11, 0.046)], front, scarf, lift=0.016),
-               strip(k.n("ScarfStripeA"), line_path((0.067, 1.15), (0.167, 1.15), 0.022, steps=2), front, fur, lift=0.02, sink=0.0),
-               strip(k.n("ScarfStripeB"), line_path((0.064, 1.19), (0.164, 1.19), 0.022, steps=2), front, fur, lift=0.02, sink=0.0)])
-    k.add(torus(k.n("ScarfWrap"), 0.125, 0.052, (0, 0.0, 1.4), m=scarf, major_segs=22, minor_segs=8), bone="Chest", tag="scarf")
+               strip(k.n("ScarfTail"), [(0.07, 1.37, 0.04), (0.1, 1.3, 0.05), (0.115, 1.22, 0.05), (0.12, 1.15, 0.046)], front, scarf, lift=0.012),
+               strip(k.n("ScarfStripeA"), line_path((0.067, 1.18), (0.167, 1.18), 0.02, steps=2), front, fur, lift=0.016, sink=0.0),
+               strip(k.n("ScarfStripeB"), line_path((0.064, 1.215), (0.164, 1.215), 0.02, steps=2), front, fur, lift=0.016, sink=0.0)])
+    k.add(torus(k.n("ScarfWrap"), 0.12, 0.04, (0, 0.0, 1.385), m=scarf, major_segs=22, minor_segs=8), bone="Chest", tag="scarf")
 
     def limbs(side, s):
         k.upper_arm(side, parka)
@@ -472,12 +472,12 @@ def op_astro_cadet():
         k.add(blob(k.n(f"Fringe{i}"), 0.07, HEAD_C + Vector((x, -0.2, 0.135 - abs(x) * 0.25)), hair, scale=(0.95, 0.5, 0.62), rot=rad(0, x * 180, 0)),
               bone="Head", tag="hair")
     k.neck(shade, r=0.08)
-    k.add(blob(k.n("Bubble"), 0.335, HEAD_C + Vector((0, 0, 0.02)), glass, segs=28, rings=16), bone="Head", tag="headgear")
+    k.add(blob(k.n("Bubble"), 0.315, HEAD_C + Vector((0, 0, 0.035)), glass, segs=28, rings=16), bone="Head", tag="headgear")
 
     k.torso(suit)
-    k.add([loft(k.n("Yoke"), [(1.33, 0.262, 0.17, 0, 0, 2.4), (1.37, 0.25, 0.2, 0, 0, 2.2), (1.41, 0.235, 0.215, 0, 0, 2.0)], suit, segs=24, sub=1,
+    k.add([loft(k.n("Yoke"), [(1.33, 0.262, 0.17, 0, 0, 2.4), (1.37, 0.24, 0.18, 0, 0, 2.2), (1.41, 0.205, 0.185, 0, 0, 2.0)], suit, segs=24, sub=1,
                 caps=("flat", "flat"), sharp=70),
-           torus(k.n("NeckRing"), 0.235, 0.045, (0, 0, 1.418), m=shade, major_segs=30, minor_segs=8)], bone="Chest", tag="shell")
+           torus(k.n("NeckRing"), 0.205, 0.04, (0, 0, 1.418), m=shade, major_segs=30, minor_segs=8)], bone="Chest", tag="shell")
     front = k.on_torso("front")
     detail(k, [decal(k.n("ChestPlate"), rrect(0, 1.195, 0.3, 0.19, 0.035), front, shade, lift=0.006),
                decal(k.n("Display"), rrect(0, 1.155, 0.19, 0.055, 0.012), front, dark, lift=0.011, sink=0.0),
@@ -491,8 +491,8 @@ def op_astro_cadet():
     pack = [box(k.n("Pack"), (0.4, 0.17, 0.42), (0, by, 1.15), bevel=0.06, segs=3, m=suit),
             box(k.n("PackBand"), (0.41, 0.18, 0.055), (0, by, 1.27), bevel=0.02, m=orange),
             blob(k.n("PackLight"), 0.028, (0.0, by + 0.09, 1.2), light_g, segs=8, rings=6),
-            cyl(k.n("Antenna"), 0.01, 0.2, (0.15, by + 0.02, 1.45), rot=rad(0, 10, 0), segs=6, bevel=0.0, m=dark),
-            blob(k.n("AntennaTip"), 0.026, (0.167, by + 0.02, 1.55), light_r, segs=8, rings=6)]
+            cyl(k.n("Antenna"), 0.01, 0.12, (0.19, by + 0.05, 1.41), rot=rad(0, 10, 0), segs=6, bevel=0.0, m=dark),
+            blob(k.n("AntennaTip"), 0.026, (0.2, by + 0.05, 1.47), light_r, segs=8, rings=6)]
     for side in (1, -1):
         pack.append(limb(k.n(f"PackTank{side}"), (side * 0.215, by + 0.01, 0.99), (side * 0.215, by + 0.01, 1.3), 0.05, 0.05, shade, segs=10))
     k.add(pack, bone="Chest", tag="gear")
@@ -512,7 +512,7 @@ def op_astro_cadet():
         k.leg_band(side, "Shin", -0.03, 0.14, shade, grow=0.01, name="Knee")
         k.shoe(side, shade, dark, toe_m=suit, style="boot", collar_m=orange, shaft=0.15, shaft_m=suit)
     both(limbs)
-    return k, "salute", dict(bend=18, out=0.28)
+    return k, "salute", dict(bend=18, out=0.33)
 
 
 def op_midway_maestro():
@@ -637,7 +637,7 @@ def op_glitch():
         k.shoe(side, frame, holo2, toe_m=frame_hi, style="sneaker", collar_m=frame_hi)
     both(limbs)
     # Pixels breaking off the edges of the projection.
-    bits = [("UpperArm.L", sx(1, SHOULDER) + Vector((0.07, 0.02, 0.07)), 0.045, holo), ("UpperArm.L", sx(1, SHOULDER) + Vector((0.11, -0.02, 0.0)), 0.03, holo2),
+    bits = [("UpperArm.L", sx(1, SHOULDER) + Vector((0.085, 0.02, 0.0)), 0.045, holo), ("UpperArm.L", sx(1, SHOULDER) + Vector((0.1, -0.03, -0.07)), 0.03, holo2),
             ("ForeArm.R", sx(-1, ELBOW.lerp(WRIST, 0.5)) + Vector((-0.07, 0.01, 0.0)), 0.04, holo), ("ForeArm.R", sx(-1, ELBOW.lerp(WRIST, 0.3)) + Vector((-0.085, -0.02, 0.03)), 0.026, holo2),
             ("Thigh.L", sx(1, HIP.lerp(KNEE, 0.5)) + Vector((0.095, 0.0, 0.0)), 0.04, holo), ("Shin.R", sx(-1, KNEE.lerp(HIP, -0.4)) + Vector((-0.08, 0.02, 0.0)), 0.034, holo2)]
     for i, (bone, p, size, m) in enumerate(bits):
