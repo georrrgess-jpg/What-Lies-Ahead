@@ -9,7 +9,7 @@ display_name = "Disco Fever"
 description = "A spinning mirror ball sweeps coloured spotlights round, then shatters into glinting tiles."
 slot = &"kill_effect"
 rarity = 2
-price = 2800
+price = 1500
 params = {
 "effect": "disco"
 }

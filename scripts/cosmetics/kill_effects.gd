@@ -180,7 +180,7 @@ static func _disco(parent: Node, at: Vector3, cols: Array) -> void:
 	FxSwarm.spawn(parent, hang, FxShapes.beam(), cols, {"count": 8, "speed": Vector2.ZERO, "life": Vector2(0.36, 0.42),
 		"size": Vector2(1.6, 2.0), "gravity": Vector3.ZERO, "spin": 4.5, "steady": true, "spin_axis": Vector3.UP, "grow": 0.25, "delay": 0.08})
 	FxSwarm.spawn(parent, hang, FxShapes.tile(), [Color(0.85, 0.87, 0.95), Color.WHITE, cols[0], cols[1 % cols.size()]], {"count": 26,
-		"delay": 0.47, "speed": Vector2(2.5, 5.5), "life": Vector2(0.3, 0.45), "size": Vector2(0.07, 0.1), "gravity": Vector3(0, -9.0, 0),
+		"delay": 0.47, "speed": Vector2(2.5, 5.5), "life": Vector2(0.3, 0.45), "size": Vector2(0.1, 0.14), "gravity": Vector3(0, -9.0, 0),
 		"drag": 1.5, "spin": 16.0, "grow": 0.0})
 	FxSwarm.spawn(parent, hang, FxShapes.star(), [Color.WHITE] + cols, {"count": 10, "delay": 0.47, "speed": Vector2(1.0, 3.0),
 		"life": Vector2(0.25, 0.4), "size": Vector2(0.08, 0.12), "gravity": Vector3.ZERO, "drag": 2.0, "blink": 9.0, "spin": 6.0})

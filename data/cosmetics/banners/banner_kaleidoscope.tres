@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = &"banner_kaleidoscope"
-display_name = "Kaleidoscope"
+display_name = "Kaleido Spin"
 description = "Six-fold mirrored colours turning like a toy kaleidoscope."
 slot = &"banner"
 rarity = 2
