@@ -406,7 +406,7 @@ func _world_sky(st: CineStage) -> void:
 
 ## Where each new world's alpha walks on (on its own set): [position, yaw].
 const ALPHA_SPOTS := [[Vector3(-2.5, 0, -3.5), 0.0], [Vector3(-4.0, 0, -6.5), 0.0], [Vector3(-6.0, 0, -5.0), 10.0],
-	[Vector3(-5.0, 0, 6.0), 0.0], [Vector3(-30.0, 0, 2.5), 60.0]]
+	[Vector3(-5.0, 0, 6.0), 0.0], [Vector3(-33.0, 0, 0.5), 90.0]]
 
 
 ## A new world's alpha boss walks at a low lens on the hit, its name beside it.

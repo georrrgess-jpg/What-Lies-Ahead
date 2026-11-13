@@ -113,4 +113,4 @@ ffmpeg -nostdin -v error -y -pattern_type glob -i "$WORK/sheet_*.png" -vf "tile=
 ls -l "$OUT" "$SHEET"
 
 # Frame-to-frame motion check (repeated frames, hitches, speed jumps).
-python3 tools/video_motion_report.py "$OUT" --shots "$WORK/shots_rendered.txt" --json "$WORK/motion.json" | head -3
+python3 tools/video_motion_report.py "$OUT" --shots "$WORK/shots_rendered.txt" --json "$WORK/motion.json"
