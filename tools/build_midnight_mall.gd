@@ -60,6 +60,11 @@ const ELEVATOR := Vector3(0.0, 0.0, -16.2)
 const ESC_X := 8.3        # escalator centre lines (east +, west -)
 const ESC_HALF := 1.5     # escalator half-width (cladding)
 const ESC_WALK := 1.25    # half-width of the walkway between the balustrades
+## The escalators sit beside the station, clear of the court's patrol circle:
+## the east one rises north from z 7.5 to its top at ESC_TOP_E, the west one
+## rises south from z -2.5 to ESC_TOP_W.
+const ESC_TOP_E := -2.5
+const ESC_TOP_W := 7.5
 const PORTAL := Vector3(10.0, UP, -22.4)
 ## Light-sized batching cells (the Compatibility renderer lights an object with
 ## at most 8 omni lights, so merged geometry is split into 12 m cells).
@@ -498,9 +503,9 @@ func _rail_gaps(i: int) -> Array:
 		0:
 			return [[VX - VC - 1.1, VX - VC + 1.1]]     # north edge: the elevator bridge (x -1.1..1.1)
 		2:
-			return [[VZ - VC - 1.0, VZ - VC + 2.0]]      # east edge, z -1..2: the east landing
+			return [[VZ - VC + ESC_TOP_E - 3.0, VZ - VC + ESC_TOP_E]]     # east edge: the east landing
 		6:
-			return [[VZ - VC - 1.0, VZ - VC + 2.0]]      # west edge, z 1..-2: the west landing
+			return [[VZ - VC - ESC_TOP_W - 3.0, VZ - VC - ESC_TOP_W]]     # west edge: the west landing
 	return []
 
 
@@ -521,12 +526,12 @@ func _build_balconies() -> void:
 			if t1 - t0 > 0.01:
 				_rail(b, "Rail%d_%d" % [i, k], a.lerp(c, t0), a.lerp(c, t1), UP)
 	# Escalator landings, joined to the east and west balconies.
-	_landing(b, "LandingEast", Vector2(ESC_X - ESC_HALF, -1.0), Vector2(VX, 2.0))
-	_landing(b, "LandingWest", Vector2(-VX, -2.0), Vector2(-ESC_X + ESC_HALF, 1.0))
-	_rail(b, "LandingEastN", Vector2(ESC_X - ESC_HALF, -1.0), Vector2(VX, -1.0), UP)
-	_rail(b, "LandingEastW", Vector2(ESC_X - ESC_HALF, -1.0), Vector2(ESC_X - ESC_HALF, 2.0), UP)
-	_rail(b, "LandingWestS", Vector2(-VX, 1.0), Vector2(-ESC_X + ESC_HALF, 1.0), UP)
-	_rail(b, "LandingWestE", Vector2(-ESC_X + ESC_HALF, -2.0), Vector2(-ESC_X + ESC_HALF, 1.0), UP)
+	_landing(b, "LandingEast", Vector2(ESC_X - ESC_HALF, ESC_TOP_E - 3.0), Vector2(VX, ESC_TOP_E))
+	_landing(b, "LandingWest", Vector2(-VX, ESC_TOP_W), Vector2(-ESC_X + ESC_HALF, ESC_TOP_W + 3.0))
+	_rail(b, "LandingEastN", Vector2(ESC_X - ESC_HALF, ESC_TOP_E - 3.0), Vector2(VX, ESC_TOP_E - 3.0), UP)
+	_rail(b, "LandingEastW", Vector2(ESC_X - ESC_HALF, ESC_TOP_E - 3.0), Vector2(ESC_X - ESC_HALF, ESC_TOP_E), UP)
+	_rail(b, "LandingWestS", Vector2(-VX, ESC_TOP_W + 3.0), Vector2(-ESC_X + ESC_HALF, ESC_TOP_W + 3.0), UP)
+	_rail(b, "LandingWestE", Vector2(-ESC_X + ESC_HALF, ESC_TOP_W), Vector2(-ESC_X + ESC_HALF, ESC_TOP_W + 3.0), UP)
 	# Columns just outside the void edge on both floors.
 	var cols: Array[Vector2] = []
 	for p in OCT:
@@ -539,8 +544,10 @@ func _build_balconies() -> void:
 	for p in cols:
 		for floor_y in [0.0, UP]:
 			var h := (UP - SLAB) if floor_y == 0.0 else (CEIL - UP)
-			_post(b, "Column%d" % k, 0.42, h, Vector3(p.x, floor_y, p.y))
-			xforms.append(Transform3D(Basis().scaled(Vector3(1, h, 1)), Vector3(p.x, floor_y + h * 0.5, p.y)))
+			# Upstairs the columns stand on the rail line, so the balcony has no pinch behind them.
+			var at := p if floor_y == 0.0 else _on_edge(p)
+			_post(b, "Column%d" % k, 0.42, h, Vector3(at.x, floor_y, at.y))
+			xforms.append(Transform3D(Basis().scaled(Vector3(1, h, 1)), Vector3(at.x, floor_y + h * 0.5, at.y)))
 			k += 1
 	_multimesh(dressing, "Columns", _cylinder_mesh(0.42, 1.0, "cream"), xforms)
 	var rings: Array[Transform3D] = []
@@ -550,6 +557,15 @@ func _build_balconies() -> void:
 		rings.append(Transform3D(Basis(), base + Vector3(0, t.basis.y.length() - 0.2, 0)))
 	_multimesh(dressing, "ColumnRings", _cylinder_mesh(0.5, 0.3, "chrome"), rings)
 	_build_ceiling_lights()
+
+
+## A column position pulled back onto the void outline (vertices and long sides).
+func _on_edge(p: Vector2) -> Vector2:
+	var q := Vector2(signf(p.x) * minf(absf(p.x), VX), signf(p.y) * minf(absf(p.y), VZ))
+	if absf(q.x) > VX - VC and absf(q.y) > VZ - VC:
+		return Vector2(signf(p.x) * VX if absf(p.x) - VX > absf(p.y) - VZ else signf(p.x) * (VX - VC),
+			signf(p.y) * (VZ - VC) if absf(p.x) - VX > absf(p.y) - VZ else signf(p.y) * VZ)
+	return q
 
 
 func _rail(parent: Node3D, rail_name: String, a: Vector2, b: Vector2, floor_y: float) -> void:
@@ -679,8 +695,8 @@ func _beam(a: Vector3, b: Vector3, thick: float) -> Transform3D:
 
 func _build_escalators() -> void:
 	var esc := _node(geo, "Escalators")
-	_escalator(esc, "EscalatorEast", "mall_escalator", ESC_X, 12.0, -1.0)
-	_escalator(esc, "EscalatorWest", "mall_escalator_dead", -ESC_X, -12.0, 1.0)
+	_escalator(esc, "EscalatorEast", "mall_escalator", ESC_X, ESC_TOP_E + 10.0, -1.0)
+	_escalator(esc, "EscalatorWest", "mall_escalator_dead", -ESC_X, ESC_TOP_W - 10.0, 1.0)
 
 
 ## An escalator whose foot is at z_foot, rising toward `dir` (-1 north, +1 south)
@@ -770,7 +786,7 @@ func _build_fountain() -> void:
 	var light := _omni(lights, "FountainGlow", FOUNTAIN + Vector3(0, 2.0, 0), Color(1.0, 0.45, 0.85), 2.2, 10.0)
 	light.add_to_group("mall_fountain_light", true)
 	# A ring of benches facing the fountain.
-	for a_deg in [55.0, 125.0]:
+	for a_deg in [125.0, 235.0]:
 		var a := deg_to_rad(a_deg)
 		var p := FOUNTAIN + Vector3(sin(a), 0, cos(a)) * 6.2
 		_solid_multi("mall_bench", p, rad_to_deg(a), Vector3(2.3, 0.85, 0.7))
@@ -1139,6 +1155,10 @@ func _build_entrances() -> void:
 	for x in [-2.75, 2.75]:
 		_collider(e, "CinemaWall%d" % int(x), Vector3(2.3, 4.6, 0.4), Vector3(x, UP + 2.3, HZ + 0.2))
 	_collider(e, "CinemaLintel", Vector3(3.2, 2.0, 0.4), Vector3(0, UP + 4.0, HZ + 0.2))
+	# Close the gaps between the cinema front and the shop-front pilasters.
+	for x in [-4.65, 4.65]:
+		_bbox("navy", Vector3(1.5, CEIL - UP, 0.4), Vector3(x, UP + (CEIL - UP) * 0.5, HZ + 0.2))
+		_collider(e, "CinemaSide%d" % int(x), Vector3(1.5, CEIL - UP, 0.4), Vector3(x, UP + (CEIL - UP) * 0.5, HZ + 0.2))
 	_bbox("violet", Vector3(12.0, 0.05, 5.6), Vector3(0, UP + 0.025, 27.2))
 	_bbox("interior_pink", Vector3(12.0, CEIL - UP, 0.1), Vector3(0, UP + (CEIL - UP) * 0.5, Z1 - 0.1))
 	_bbox("panel_light", Vector3(6.0, 0.05, 3.0), Vector3(0, CEIL - 0.1, 27.2))
@@ -1193,7 +1213,7 @@ func _build_hall_dressing() -> void:
 	var palms := [Vector3(-14.0, 0, -20.5), Vector3(-14.0, 0, 20.5), Vector3(14.0, 0, 21.0), Vector3(-14.6, 0, -8.0),
 		Vector3(-14.6, 0, 8.0), Vector3(6.0, 0, -21.0), Vector3(-6.5, 0, 21.0), Vector3(6.5, 0, 21.0),
 		Vector3(-14.0, UP, -21.0), Vector3(14.0, UP, 21.0), Vector3(-14.5, UP, 6.0), Vector3(14.5, UP, -6.0),
-		Vector3(-6.0, UP, 21.5), Vector3(-5.0, UP, -21.5)]
+		Vector3(-12.0, UP, 21.5), Vector3(-5.0, UP, -21.5)]
 	var k := 0
 	for p in palms:
 		_multi_add("mall_palm", p, k * 41.0)
@@ -1306,12 +1326,13 @@ func _build_exit() -> void:
 	portal.name = "Portal"
 	geo.add_child(portal)
 	portal.position = PORTAL
-	var route: Array[Vector3] = [STATION + Vector3(3.6, 0, 3.0), Vector3(5.0, 0, 14.6), Vector3(ESC_X, 0, 14.6)]
+	var foot := ESC_TOP_E + 10.0
+	var route: Array[Vector3] = [STATION + Vector3(3.4, 0, 2.4), Vector3(5.0, 0, foot + 2.0), Vector3(ESC_X, 0, foot + 2.0)]
 	for i in 6:
 		var t := (i + 0.5) / 6.0
-		route.append(Vector3(ESC_X, UP * t, 12.0 - 10.0 * t))
-	route.append_array([Vector3(ESC_X + 0.5, UP, 0.0), Vector3(13.5, UP, -2.0), Vector3(14.0, UP, -8.0), Vector3(14.0, UP, -14.0),
-		Vector3(13.0, UP, -19.0), Vector3(PORTAL.x, UP, PORTAL.z + 2.4)])
+		route.append(Vector3(ESC_X, UP * t, foot - 10.0 * t))
+	route.append_array([Vector3(ESC_X + 0.5, UP, ESC_TOP_E - 1.5), Vector3(13.5, UP, ESC_TOP_E - 3.5), Vector3(14.0, UP, -10.0),
+		Vector3(14.0, UP, -15.0), Vector3(13.0, UP, -19.0), Vector3(PORTAL.x, UP, PORTAL.z + 2.4)])
 	var holder := _node(level, "ExitLights")
 	var mesh := _chevron_mesh()
 	var order := 0

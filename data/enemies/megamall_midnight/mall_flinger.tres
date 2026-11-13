@@ -9,10 +9,10 @@
 script = ExtResource("4")
 min_range = 6.0
 max_range = 24.0
-cooldown = 5.0
-windup = 0.9
-damage = 7.0
-projectile_speed = 14.0
+cooldown = 6.5
+windup = 1.0
+damage = 5.0
+projectile_speed = 13.0
 arc = 0.75
 size = 0.3
 color = Color(1, 0.35, 0.72, 1)
