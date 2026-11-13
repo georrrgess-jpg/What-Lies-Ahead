@@ -189,14 +189,20 @@ func _apply_settings() -> void:
 	head.base_fov = clampf(float(Settings.value("fov")), 55.0, 110.0)
 
 
-func _unhandled_input(event: InputEvent) -> void:
+## Mouse look is read here, before the GUI, so a toast or card that happens to
+## sit under the captured cursor (the screen centre) never swallows the motion.
+## Menus that need the mouse release the capture, which stops this.
+func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and controls_enabled and alive:
 		# Screen pixels (mouse counts), not viewport units: the same turn at any window size.
 		var look: Vector2 = (event as InputEventMouseMotion).screen_relative * Settings.look_radians() * _aim_look_scale()
 		rotate_y(-look.x)
 		_pitch = clampf(_pitch - look.y * Settings.look_y_sign(), -1.45, 1.45)
 		view.add_look(look)
-	elif controls_enabled and alive:
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if controls_enabled and alive and not event is InputEventMouseMotion:
 		_weapon_switch_input(event)
 
 

@@ -176,6 +176,7 @@ func _run() -> void:
 	director.set_process_unhandled_input(false)
 	player.set_physics_process(false)
 	player.set_process_unhandled_input(false)
+	player.set_process_input(false)
 
 	var pos := _vec(_arg("pos", "5.0,0.0,15.5"))
 	player.global_position = pos
