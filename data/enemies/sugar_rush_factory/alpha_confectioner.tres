@@ -8,8 +8,8 @@
 
 [sub_resource type="Resource" id="yank"]
 script = ExtResource("4")
-min_range = 6.0
-max_range = 17.0
+min_range = 8.0
+max_range = 18.0
 cooldown = 12.0
 windup = 1.45
 lock_fraction = 0.5

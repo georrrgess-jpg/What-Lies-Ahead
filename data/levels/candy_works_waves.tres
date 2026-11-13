@@ -119,7 +119,7 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"candy_taffy_puller": 8,
+"candy_taffy_puller": 6,
 "candy_gummy": 12,
 "lifeguard_runner": 3,
 "frost_yeti": 1

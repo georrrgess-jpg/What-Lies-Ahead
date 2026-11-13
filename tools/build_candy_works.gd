@@ -588,7 +588,7 @@ func _build_roof() -> void:
 	_multimesh(roof, "Trusses", steel, truss_xf, true)
 	_multimesh(roof, "GlazingBars", steel, bar_xf, true)
 	# The big hanging sign over the main bridge.
-	_prop(dressing, "candy_sign", "FactorySign", Vector3(0, 9.6, (RIVER_Z0 + RIVER_Z1) * 0.5), 0.0, Vector3(11, 3, 0.4))
+	_prop(dressing, "candy_sign", "FactorySign", Vector3(0, 13.0, (RIVER_Z0 + RIVER_Z1) * 0.5), 0.0, Vector3(11, 3, 0.4))
 
 
 # ---------------------------------------------------------------------------
@@ -890,7 +890,7 @@ func _build_pipes() -> void:
 	_pipe_run(mint, Vector3(-23.6, 11.5, 6.0), Vector3(-23.6, 9.0, 6.0))
 	# Overhead lines across the hall to the mezzanine and the packing line.
 	_pipe_run(pink, Vector3(-HALL_X, 12.4, 18.0), Vector3(HALL_X, 12.4, 18.0))
-	_pipe_run(mint, Vector3(HALL_X, 10.0, 6.0), Vector3(-8.0, 10.0, 6.0))
+	_pipe_run(mint, Vector3(HALL_X, 10.0, 6.0), Vector3(-23.6, 10.0, 6.0))
 	_pipe_run(pink, Vector3(-5.0, 12.4, 18.0), Vector3(-5.0, 4.5, 18.0))
 	_pipe_run(pink, Vector3(-5.0, 4.5, 18.0), Vector3(-5.0, 4.5, BELT_Z))
 	_multimesh(dressing, "PipesPink", _model_mesh("candy_pipe"), pink, true)
