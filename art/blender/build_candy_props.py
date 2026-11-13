@@ -106,7 +106,7 @@ def build_taffy_puller():
     mint, mint_d, cream = cmat("Mint", rough=0.45), cmat("MintDeep", rough=0.45), cmat("Cream")
     steel, steel_d, gold = cmat("Steel", rough=0.35, metal=0.5), cmat("SteelDark", rough=0.4, metal=0.4), cmat("Gold", rough=0.3, metal=0.6)
     pink, pink_d = cmat("Pink", rough=0.4), cmat("PinkDeep", rough=0.4)
-    taffy = mat("CandyTaffy", "#ff9ec9", rough=0.35, emit=0.15)
+    taffy = mat("CandyTaffy", "#ff6fb0", rough=0.3, emit=0.25)
     hub = (0, -1.2, 4.6)
     p = [
         box("Housing", (4.6, 3.0, 2.4), (0, 0.4, 1.2), bevel=0.2, m=mint),
@@ -121,6 +121,9 @@ def build_taffy_puller():
         box("HookBar", (0.3, 1.6, 0.3), (0, -1.0, 8.05), bevel=0.06, m=steel),
         cyl("Hook", 0.22, 1.0, (0, -1.7, 7.7), rot=rad(90, 0, 0), segs=16, bevel=0.05, m=gold),
         sphere("HookTaffy", 0.55, (0, -1.7, 7.45), scale=(1.4, 1.1, 0.8), m=taffy, segs=16, rings=10),
+        # A thick rope of taffy sags from the hook down past the hub to the tray.
+        tube("HookRope", [(0.3, -1.75, 7.2), (0.7, -1.9, 6.2), (0.5, -2.0, 5.2), (-0.4, -2.05, 4.0), (-1.2, -1.9, 2.7), (-1.6, -1.65, 1.35)],
+             0.2, m=taffy, segs=10, radius_end=0.14),
         # Control panel with lit buttons.
         box("Panel", (1.2, 0.3, 0.9), (1.6, -1.15, 1.6), rot=rad(-20, 0, 0), bevel=0.06, m=cream),
     ]
@@ -133,7 +136,7 @@ def build_taffy_puller():
     machine = merge("TaffyPuller", p)
     # The arms: two spokes from the hub ending in pins; a taffy rope loops
     # from each pin past the hub (it turns with them).
-    arm_len = 2.5
+    arm_len = 2.8
     a = [cyl("ArmHub", 0.6, 0.5, (0, 0, 0), rot=rad(90, 0, 0), segs=24, bevel=0.1, m=gold)]
     for s in (-1, 1):
         a += [
@@ -145,7 +148,7 @@ def build_taffy_puller():
     for i in range(33):
         t = math.tau * i / 32
         loop.append((math.cos(t) * arm_len * 1.02, -1.15, math.sin(t) * 0.5 * (1.0 - 0.35 * math.cos(2 * t))))
-    a.append(tube("TaffyLoop", loop, 0.24, m=taffy, segs=10, cap=False))
+    a.append(tube("TaffyLoop", loop, 0.32, m=taffy, segs=10, cap=False))
     loop_b = [(x * 0.92, y - 0.2, z * 0.8 + 0.12) for x, y, z in loop]
     a.append(tube("TaffyLoopB", loop_b, 0.17, m=taffy, segs=8, cap=False))
     arms = merge("Arms", a)
