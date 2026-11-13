@@ -302,7 +302,7 @@ def op_halfpipe():
     k.hair_cap(hair, _hairline(0.5, 0.25, -0.05, -0.35), grow=0.03)
     k.hair_cap(beanie, _hairline(0.36, 0.26, 0.16, 0.02), grow=0.075, name="Beanie", tag="headgear",
                volume=lambda d: 0.07 * max(0.0, d.y) * max(0.0, d.z + 0.2))
-    k.head_band("BeanieRib", 0.075, 0.125, char, grow=0.085)
+    k.head_band("BeanieRib", 0.07, 0.12, char, grow=0.026)
     c = HEAD_C + Vector((0, 0.01, -0.005))
     phone_parts = [torus(k.n("Headband"), 0.305, 0.02, c, rot=rad(90, 0, 0), m=phones, major_segs=32, minor_segs=8, arc=math.pi)]
     for side in (1, -1):
@@ -583,15 +583,14 @@ def op_cosmic_sheriff():
     and boots with star spurs."""
     k = Kit("CS_", "#9a6a48", dict(shoulder=1.04, waist=0.98))
     hat_m = mat("Hat", "#d8a86a", rough=0.6)
-    hat_dark = mat("HatDark", "#a8783a", rough=0.6)
     turq = mat("Turquoise", "#1fb5a8", rough=0.4)
     shirt = mat("Shirt", "#fff1dc", rough=0.6)
     vest = mat("Vest", "#b5532a", rough=0.55)
     rust = mat("Rust", "#8a3a1c", rough=0.55)
     gold = mat("Gold", "#ffc23d", rough=0.25, metal=0.85)
     silver = mat("Silver", "#d6dbe6", rough=0.25, metal=0.85)
-    jeans = mat("Jeans", "#3a4f8a", rough=0.65)
-    chaps = mat("Chaps", "#7a4424", rough=0.55)
+    jeans = mat("Jeans", "#2a3a70", rough=0.65)
+    chaps = mat("Chaps", "#5a2e1c", rough=0.55)
     glove_m = mat("RidingGlove", "#c98a4a", rough=0.6)
     boot = mat("Boot", "#5a3424", rough=0.5)
     glow = mat("RayGlow", "#7cff4a", rough=0.3, emit=2.6)
@@ -609,9 +608,6 @@ def op_cosmic_sheriff():
                 hat_m, segs=28, sub=3, frame=f, caps=("flat", "round"), cap_h=(None, 0.02)),
            loft(k.n("HatBand"), [(0.014, 0.256, 0.242, 0, 0, 2.3), (0.02, 0.259, 0.245, 0, 0, 2.3), (0.06, 0.253, 0.24, 0, 0, 2.3), (0.066, 0.25, 0.237, 0, 0, 2.3)],
                 turq, segs=28, sub=1, frame=f, caps=("flat", "flat"), sharp=70)]
-    for side in (1, -1):    # the brim curls up at the sides
-        hat.append(tube(k.n(f"Curl{side}"), [f @ Vector((side * 0.26, -0.29, 0.02)), f @ Vector((side * 0.38, -0.1, 0.06)), f @ Vector((side * 0.39, 0.1, 0.06)),
-                                             f @ Vector((side * 0.26, 0.29, 0.02))], 0.02, m=hat_dark, segs=10))
     pp = f @ Vector((0.0, -0.255, 0.04))
     hat += [blob(k.n("Planet"), 0.034, pp, planet, segs=12, rings=8),
             torus(k.n("PlanetRing"), 0.055, 0.008, pp, rot=rad(70, 20, 0), m=gold, major_segs=20, minor_segs=6),
@@ -690,7 +686,7 @@ def op_timber_jack():
           bone="Head", tag="face")
     k.neck()
     hat_parts = k.hair_cap(check, _hairline(0.42, 0.34, 0.2, 0.0), grow=0.08, name="Trapper", tag="headgear")
-    k.head_band("TrapperFur", 0.12, 0.2, fur, grow=0.11)
+    k.head_band("TrapperFur", 0.1, 0.19, fur, grow=0.05)
     top = Surface(hat_parts).projector("top")
     hy = HEAD_C.y
     k.add([strip(k.n(f"HatCheckX{i}"), line_path((-0.24, hy + y), (0.24, hy + y), 0.035, steps=8), top, check_dark, lift=0.003) for i, y in
