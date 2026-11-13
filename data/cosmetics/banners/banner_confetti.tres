@@ -9,7 +9,7 @@ display_name = "Party Time"
 description = "Confetti that never stops falling."
 slot = &"banner"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(1, 0.902, 0.9569, 1, 1, 0.2471, 0.6431, 1, 0.2078, 0.9412, 1, 1)
 params = {
 "style": 5

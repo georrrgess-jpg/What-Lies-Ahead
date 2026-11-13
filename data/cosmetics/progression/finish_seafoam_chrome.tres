@@ -9,7 +9,7 @@ display_name = "Seafoam Chrome"
 description = "Weapon finish for every weapon."
 slot = &"weapon_finish"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(0.498, 0.890, 0.816, 1, 1.000, 0.953, 0.863, 1)
 params = {
 "metallic": 0.85,

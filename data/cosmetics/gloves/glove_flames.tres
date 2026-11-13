@@ -9,7 +9,7 @@ display_name = "Hot Hands"
 description = "Flames licking up the sleeves. Handle with care."
 slot = &"gloves"
 rarity = 2
-price = 900
+price = 1500
 colors = PackedColorArray(0.1098, 0.09412, 0.1882, 1, 1, 0.4157, 0.1647, 1, 1, 0.4157, 0.1647, 1, 0.1098, 0.09412, 0.1882, 1, 1, 0.4157, 0.1647, 1, 1, 0.851, 0.2314, 1)
 params = {
 "pattern": "flames",

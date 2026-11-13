@@ -9,7 +9,7 @@ display_name = "Fizzy"
 description = "Pink soda, rising bubbles."
 slot = &"banner"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(1, 0.5412, 0.7843, 1, 1, 0.8157, 0.9098, 1, 1, 1, 1, 1)
 params = {
 "style": 8

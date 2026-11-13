@@ -9,7 +9,7 @@ display_name = "Plush Zombie"
 description = "The only zombie you will ever want to hug."
 slot = &"weapon_charm"
 rarity = 2
-price = 900
+price = 2800
 params = {
 "charm": "Plush"
 }

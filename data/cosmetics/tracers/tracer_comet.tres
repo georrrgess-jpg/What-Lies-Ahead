@@ -9,7 +9,7 @@ display_name = "Golden Comet"
 description = "A blazing golden star with a sparkling tail."
 slot = &"tracer"
 rarity = 3
-price = 1800
+price = 5600
 colors = PackedColorArray(1, 0.7608, 0.2392, 1, 1, 0.9412, 0.6902, 1)
 params = {
 "style": "comet"

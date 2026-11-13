@@ -9,7 +9,7 @@ display_name = "Golden Ticket"
 description = "Admits one. To anywhere."
 slot = &"weapon_charm"
 rarity = 3
-price = 1800
+price = 5600
 params = {
 "charm": "Ticket"
 }

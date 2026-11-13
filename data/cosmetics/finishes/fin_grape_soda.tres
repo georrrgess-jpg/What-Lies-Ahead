@@ -9,7 +9,7 @@ display_name = "Grape Soda"
 description = "Fizzy purple with a lime-green kick."
 slot = &"weapon_finish"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(0.5412, 0.3098, 0.8784, 1, 0.7137, 1, 0.2902, 1)
 params = {
 "metallic": 0.0,

@@ -9,7 +9,7 @@ display_name = "Cotton Candy"
 description = "Fluffy pink with blue polka dots. Sticky fingers not included."
 slot = &"gloves"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(1, 0.7608, 0.8863, 1, 0.5608, 0.8471, 1, 1, 1, 1, 1, 1, 0.1647, 0.1412, 0.251, 1, 0.5608, 0.8471, 1, 1, 1, 1, 1, 1)
 params = {
 "pattern": "dots",

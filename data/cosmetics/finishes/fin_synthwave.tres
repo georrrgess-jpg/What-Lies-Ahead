@@ -9,7 +9,7 @@ display_name = "Synthwave Grid"
 description = "Sunset orange grid lines on a midnight purple body."
 slot = &"weapon_finish"
 rarity = 2
-price = 900
+price = 1500
 colors = PackedColorArray(0.102, 0.03922, 0.1804, 1, 0.1647, 0.05882, 0.251, 1)
 params = {
 "shader": "res://art/shaders/skin_wireframe.gdshader",

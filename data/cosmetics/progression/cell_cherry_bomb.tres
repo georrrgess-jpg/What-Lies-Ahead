@@ -9,7 +9,7 @@ display_name = "Cherry Bomb Cell"
 description = "Energy cell for every weapon."
 slot = &"weapon_cell"
 rarity = 2
-price = 900
+price = 1500
 colors = PackedColorArray(1.000, 0.188, 0.282, 1)
 params = {
 

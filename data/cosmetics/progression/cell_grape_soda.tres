@@ -9,7 +9,7 @@ display_name = "Grape Soda Cell"
 description = "Energy cell for every weapon."
 slot = &"weapon_cell"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(0.706, 0.420, 1.000, 1)
 params = {
 

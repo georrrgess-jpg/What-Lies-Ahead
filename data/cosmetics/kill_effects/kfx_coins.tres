@@ -9,7 +9,7 @@ display_name = "Coin Shower"
 description = "Jackpot! A fountain of gold coins on every kill."
 slot = &"kill_effect"
 rarity = 3
-price = 1800
+price = 5600
 params = {
 "effect": "coins"
 }

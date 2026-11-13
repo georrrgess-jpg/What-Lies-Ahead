@@ -378,6 +378,17 @@ def afford(d, sparks):
     return '%d %s' % (count, top if count == 1 else top.replace('legendary', 'legendarie') + 's')
 
 
+def afford_goals(d, shop):
+    """(name, price): the ladder price of each rarity, then the showpiece prices in use."""
+    eco = d['eco'] or {}
+    ladder = eco.get('prices') or []
+    premium = [p for p in (eco.get('premium_prices') or []) if p]
+    goals = [(n, p) for n, p in zip(['common', 'rare', 'epic', 'legendary'], ladder) if p]
+    prices = {c['price'] for c in shop}
+    goals += [('showpiece', p) for p in sorted(set(premium) & prices)]
+    return goals
+
+
 def table(rows, header, markdown):
     if markdown:
         print('| ' + ' | '.join(header) + ' |')
@@ -410,6 +421,8 @@ def main():
     shop = [c for c in d['cosmetics'] if c['price']]
     shop_total = sum(c['price'] for c in shop)
     shop_run = shop_clear = None
+    goals = afford_goals(d, shop)
+    reached = {}
     for i, (index, victory) in enumerate(plan, 1):
         row = p.run(index, victory)
         if i <= runs_shown:
@@ -423,6 +436,9 @@ def main():
         if cap_run is None and p.level() >= cap:
             cap_run, cap_clear = i, p.clears
             at_cap = dict(p.earned)
+        for name, price in goals:
+            if (name, price) not in reached and p.wallet >= price:
+                reached[(name, price)] = i
         if shop and shop_run is None and p.wallet >= shop_total:
             shop_run, shop_clear = i, p.clears
         history.append((victory, row['sparks']))
@@ -455,6 +471,10 @@ def main():
                    ['Clears to buy everything', '%s (%s runs)' % (shop_clear, shop_run)],
                    ['Sparks per session of 3 runs: first five sessions / after the cap', '%d / %d' % (
                        sum(x for _, x in history[:15]) / 5, sum(x for _, x in history[cap_run:cap_run + 30]) / 10)],
+                   ['Sparks per run: first 15 runs / after the cap', '%d / %d' % (
+                       sum(x for _, x in history[:15]) / 15, sum(x for _, x in history[cap_run:cap_run + 30]) / 30)],
+                   ['Runs of saving (new profile) to afford a', ', '.join(
+                       '%s %s: %s' % (name, '{:,}'.format(price), reached.get((name, price), '-')) for name, price in goals)],
                    ['Where Sparks come from (up to the cap)', ', '.join('%s %d%%' % (k, round(100.0 * v / earned)) for k, v in sorted(at_cap.items(), key=lambda kv: -kv[1]) if v * 100 >= earned)]]
     table(totals, ['Totals', ''], markdown)
     if eco:

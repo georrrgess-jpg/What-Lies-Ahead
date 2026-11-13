@@ -9,7 +9,7 @@ display_name = "First Snow"
 description = "Big soft flakes drifting down."
 slot = &"banner"
 rarity = 1
-price = 400
+price = 650
 colors = PackedColorArray(0.1843, 0.3725, 0.6588, 1, 0.749, 0.9569, 1, 1, 1, 1, 1, 1)
 params = {
 "style": 11

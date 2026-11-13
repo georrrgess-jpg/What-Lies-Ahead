@@ -9,7 +9,7 @@ display_name = "Starburst"
 description = "A blinding flash and a spray of spinning stars."
 slot = &"kill_effect"
 rarity = 2
-price = 900
+price = 2800
 params = {
 "effect": "starburst"
 }

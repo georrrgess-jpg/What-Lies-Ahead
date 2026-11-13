@@ -9,7 +9,7 @@ display_name = "Pixel Camo"
 description = "Matches the Digital Camo finish, pixel for pixel."
 slot = &"gloves"
 rarity = 1
-price = 400
+price = 650
 colors = PackedColorArray(0.3725, 0.4784, 0.2353, 1, 0.1647, 0.2275, 0.1176, 1, 0.1647, 0.2275, 0.1176, 1, 0.3725, 0.4784, 0.2353, 1, 0.1647, 0.2275, 0.1176, 1, 0.6588, 0.6275, 0.4392, 1)
 params = {
 "pattern": "pixels",

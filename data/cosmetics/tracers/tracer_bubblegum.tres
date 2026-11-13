@@ -9,7 +9,7 @@ display_name = "Bubblegum Beam"
 description = "Pink lasers. Obviously."
 slot = &"tracer"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(1, 0.3098, 0.6902, 1)
 params = {
 "style": "solid"

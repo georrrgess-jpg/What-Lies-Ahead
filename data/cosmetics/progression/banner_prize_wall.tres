@@ -9,7 +9,7 @@ display_name = "Prize Wall"
 description = "Player banner."
 slot = &"banner"
 rarity = 2
-price = 900
+price = 1500
 colors = PackedColorArray(0.416, 0.204, 0.722, 1, 1.000, 0.247, 0.643, 1, 1.000, 0.761, 0.290, 1)
 params = {
 "pattern": "chevrons"

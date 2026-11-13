@@ -9,7 +9,7 @@ display_name = "Sparkle Trail"
 description = "Leaves glitter hanging in the air behind every shot."
 slot = &"tracer"
 rarity = 1
-price = 400
+price = 650
 colors = PackedColorArray(1, 0.8235, 0.2275, 1, 1, 0.6118, 0.8118, 1)
 params = {
 "style": "sparkle"

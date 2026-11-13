@@ -9,7 +9,7 @@ display_name = "Finish Line"
 description = "Checkered flags rolling by."
 slot = &"banner"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(0.1098, 0.09412, 0.1882, 1, 0.9686, 0.9569, 0.949, 1, 1, 0.2471, 0.6431, 1)
 params = {
 "style": 6

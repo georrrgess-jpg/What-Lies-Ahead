@@ -9,7 +9,7 @@ display_name = "Rainbow Road"
 description = "Every shot paints a rainbow."
 slot = &"tracer"
 rarity = 2
-price = 900
+price = 2800
 params = {
 "style": "rainbow"
 }

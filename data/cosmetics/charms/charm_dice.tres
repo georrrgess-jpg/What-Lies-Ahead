@@ -9,7 +9,7 @@ display_name = "Lucky Dice"
 description = "Rolls a five every time. Allegedly."
 slot = &"weapon_charm"
 rarity = 0
-price = 150
+price = 250
 params = {
 "charm": "Dice"
 }

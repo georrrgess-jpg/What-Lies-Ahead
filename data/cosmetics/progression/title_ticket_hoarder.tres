@@ -9,7 +9,7 @@ display_name = "Ticket Hoarder"
 description = "Player title."
 slot = &"title"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(1.000, 0.761, 0.290, 1)
 params = {
 

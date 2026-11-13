@@ -9,7 +9,7 @@ display_name = "Bubblegum"
 description = "Chewy pink with grape-purple panels. Do not chew."
 slot = &"weapon_finish"
 rarity = 0
-price = 150
+price = 250
 colors = PackedColorArray(1, 0.549, 0.7765, 1, 0.4784, 0.1725, 1, 1)
 params = {
 "metallic": 0.0,

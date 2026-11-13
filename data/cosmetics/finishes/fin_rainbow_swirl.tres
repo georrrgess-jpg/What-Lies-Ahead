@@ -9,7 +9,7 @@ display_name = "Rainbow Swirl"
 description = "Every flavour at once, slowly swirling."
 slot = &"weapon_finish"
 rarity = 2
-price = 900
+price = 1500
 colors = PackedColorArray(1, 1, 1, 1, 1, 0.2471, 0.6431, 1)
 params = {
 "shader": "res://art/shaders/skin_candy.gdshader",

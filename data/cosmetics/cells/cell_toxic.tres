@@ -9,6 +9,6 @@ display_name = "Toxic Waste"
 description = "Radioactive green. Totally safe. Probably."
 slot = &"weapon_cell"
 rarity = 2
-price = 900
+price = 1500
 colors = PackedColorArray(0.2235, 1, 0.4157, 1)
 sort_order = 3207

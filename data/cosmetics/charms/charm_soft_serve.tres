@@ -9,7 +9,7 @@ display_name = "Soft Serve"
 description = "Strawberry swirl with a cherry on top. Never melts."
 slot = &"weapon_charm"
 rarity = 1
-price = 400
+price = 650
 params = {
 "charm": "SoftServe"
 }
