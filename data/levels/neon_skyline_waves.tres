@@ -38,10 +38,10 @@ hint = "Couriers leap: sidestep when they crouch."
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"neon_punk": 14,
-"tourist_shambler": 6
+"neon_punk": 12,
+"tourist_shambler": 7
 }
-spawn_interval = 1.36
+spawn_interval = 1.44
 burst = 1
 max_alive = 10
 speed_scale = 1.0
@@ -93,12 +93,12 @@ twist = &"blackout"
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"riot_bruiser": 3,
+"riot_bruiser": 2,
 "hover_courier": 10,
-"neon_punk": 7,
-"tourist_shambler": 3
+"tourist_shambler": 6,
+"neon_punk": 4
 }
-spawn_interval = 1.44
+spawn_interval = 1.53
 burst = 1
 max_alive = 11
 speed_scale = 1.05
