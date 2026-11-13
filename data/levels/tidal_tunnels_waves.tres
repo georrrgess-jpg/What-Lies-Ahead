@@ -112,15 +112,15 @@ twist = &"frenzy"
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"jelly_head": 14,
+"jelly_head": 10,
 "deep_diver": 10,
-"tourist_shambler": 4,
-"lifeguard_runner": 4,
+"tourist_shambler": 6,
+"lifeguard_runner": 3,
 "mascot_inker": 2
 }
 spawn_interval = 2.1
 burst = 2
-max_alive = 12
+max_alive = 11
 speed_scale = 1.06
 late_types_after = 0.1
 banner = ""
