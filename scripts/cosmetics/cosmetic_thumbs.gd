@@ -193,7 +193,8 @@ func _weapon(loadout: Dictionary, arms_only: bool, weapon: WeaponData = null) ->
 	if arms_only:
 		# Just the firing hand: hide the weapon and the other arm.
 		for node in model.find_children("*", "MeshInstance3D", true, false):
-			(node as MeshInstance3D).visible = String(node.name) == "ArmR"
+			if not String(node.name).begins_with("ArmR"):
+				(node as MeshInstance3D).visible = false
 	model.rotation_degrees = Vector3(10, -65, 0) if not arms_only else Vector3(15, 205, 0)
 	return model
 

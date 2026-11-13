@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_road_studs"
+display_name = "Road Studs"
+description = "Black leather with chrome studs across the knuckles, the back of the hand and the cuff."
+slot = &"gloves"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.1373, 0.1098, 0.1333, 1, 0.8471, 0.8588, 0.902, 1, 0.4784, 0.1255, 0.1882, 1, 0.2275, 0.1961, 0.2706, 1)
+params = {
+"kit": "Studs",
+"metallic": 0.35,
+"roughness": 0.32
+}
+sort_order = 6124

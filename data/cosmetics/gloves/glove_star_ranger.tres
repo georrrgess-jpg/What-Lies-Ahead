@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_star_ranger"
+display_name = "Star Ranger"
+description = "A space ranger's tan gauntlet with a big flared turquoise cuff and a silver star. Saddle up, cadet."
+slot = &"gloves"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.7882, 0.5412, 0.2902, 1, 0.9098, 0.9098, 0.9412, 1, 0.1216, 0.7098, 0.6588, 1, 0.4784, 0.2902, 0.1725, 1)
+params = {
+"kit": "Bell",
+"roughness": 0.45
+}
+sort_order = 6223

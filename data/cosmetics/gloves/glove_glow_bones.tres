@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_glow_bones"
+display_name = "Glow Bones"
+description = "Black gloves printed with glow-in-the-dark cartoon bones. Spooky, and easy to find in the dark."
+slot = &"gloves"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.1098, 0.09412, 0.1882, 1, 0.1686, 0.1569, 0.2118, 1, 0.7137, 1, 0.2275, 1, 0.1098, 0.09412, 0.1882, 1, 0.9098, 1, 0.8157, 1, 0.7137, 1, 0.2275, 1)
+params = {
+"pattern": "bones",
+"pattern_on": ["Glove", "Sleeve"],
+"glow": 1.2
+}
+sort_order = 6020

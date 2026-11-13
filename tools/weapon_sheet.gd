@@ -227,7 +227,7 @@ func _pose(view, w, pose: String) -> void:
 	var holder: Node3D = view._holder
 	match pose:
 		"ads":
-			holder.position = Vector3(0, 0, -w.ads_depth / VIEW_SCALE) - view._sight_local
+			holder.position = -view._eye_local
 			holder.rotation_degrees = Vector3.ZERO
 		"sprint":
 			holder.position = w.view_position + SPRINT_POS

@@ -32,16 +32,23 @@ extends RefCounted
 ## Arms: a gloves item or an operator. colors [glove, plate, cuff, sleeve,
 ##   accent, third]; params pattern (see PATTERNS), pattern_on (material
 ##   names), scale, metallic, roughness, glow, shader + shader_on.
+##   params.kit: a glove shape or a list of them (weapon_kit.py GLOVE_KITS: the hidden
+##   "ArmRKit<Shape>" / "ArmLKit<Shape>" children of the arms, shown only when
+##   asked for); params.fingerless: the finger tips ("GloveTip") show skin
+##   (params.skin, a colour string, default SKIN). Otherwise GloveTip follows Glove.
 
 const CHARMS_SCENE := "res://art/models/cosmetic_charms.glb"
 const DECALS_SCENE := "res://art/models/cosmetic_decals.glb"
 const GLOVE_SHADER := "res://art/shaders/skin_glove.gdshader"
 const ARM_MATERIALS := ["Glove", "GlovePlate", "Cuff", "Sleeve"]
+## The finger tips: the glove's colour, or skin on fingerless gloves.
+const GLOVE_TIP := "GloveTip"
+const SKIN := Color("e8b08a")
 ## A cell cosmetic's glow energy, as a share of the model's own (see Cells).
 const CELL_GLOW := 0.55
 const PATTERNS := {
 	"solid": 0, "stripes": 1, "camo": 2, "checker": 3, "dots": 4, "knit": 5, "tiger": 6,
-	"neon": 7, "scales": 8, "flames": 9, "stars": 10, "pixels": 11,
+	"neon": 7, "scales": 8, "flames": 9, "stars": 10, "pixels": 11, "circuit": 12, "bones": 13,
 }
 
 static var _shaders := {}
@@ -53,6 +60,7 @@ static func apply(model: Node3D, _weapon: WeaponData, loadout: Dictionary) -> vo
 	var finish: CosmeticItem = loadout.get("finish")
 	var cell: CosmeticItem = loadout.get("cell")
 	_walk(model, finish, cell, loadout.get("arms"))
+	_apply_glove_kit(model, loadout.get("arms"))
 	_apply_decal(model, loadout.get("decal"))
 	_apply_charm(model, loadout.get("charm"))
 	_apply_cell_animation(model, cell)
@@ -143,7 +151,7 @@ static func _walk(node: Node, finish: CosmeticItem, cell: CosmeticItem, arms: Co
 				c.emission_energy_multiplier = base.emission_energy_multiplier * CELL_GLOW
 				tint_cell(c, cell.color(0))
 				replacement = c
-			elif arms and mat_name in ARM_MATERIALS:
+			elif arms and (mat_name in ARM_MATERIALS or mat_name == GLOVE_TIP):
 				replacement = arm_material(arms, mat_name, base)
 			mi.set_surface_override_material(i, replacement)
 	for child in node.get_children():
@@ -167,9 +175,18 @@ static func cell_glow_color(c: Color) -> Color:
 ## The material an arm look (gloves item or operator) puts on one of the
 ## first-person arm surfaces.
 static func arm_material(look: CosmeticItem, mat_name: String, base: StandardMaterial3D) -> Material:
+	if mat_name == GLOVE_TIP and not look.params.get("fingerless", false):
+		return arm_material(look, "Glove", base)
 	var key := "arm|%s|%s" % [look.id, mat_name]
 	if _materials.has(key):
 		return _materials[key]
+	if mat_name == GLOVE_TIP:
+		var skin: StandardMaterial3D = base.duplicate()
+		skin.albedo_color = Color(String(look.params.get("skin", SKIN.to_html())))
+		skin.roughness = 0.55
+		skin.metallic = 0.0
+		_materials[key] = skin
+		return skin
 	var index := ARM_MATERIALS.find(mat_name)
 	var col := look.color(index, base.albedo_color)
 	var p := look.params
@@ -208,6 +225,27 @@ static func arm_material(look: CosmeticItem, mat_name: String, base: StandardMat
 		out = s
 	_materials[key] = out
 	return out
+
+
+## The glove shapes `look` asks for (params.kit: a name or a list of names).
+static func glove_kits(look: CosmeticItem) -> Array:
+	if look == null or not look.params.has("kit"):
+		return []
+	var kit: Variant = look.params["kit"]
+	return kit if kit is Array else [String(kit)]
+
+
+## Shows the arms' glove-shape meshes the arm look asks for and hides the rest.
+static func _apply_glove_kit(model: Node3D, arms: CosmeticItem) -> void:
+	var wanted := glove_kits(arms)
+	for arm_name in ["ArmR", "ArmL"]:
+		var arm := model.find_child(arm_name, true, false)
+		if arm == null:
+			continue
+		for child in arm.get_children():
+			var child_name := String(child.name)
+			if child is Node3D and child_name.begins_with(arm_name + "Kit"):
+				(child as Node3D).visible = child_name.trim_prefix(arm_name + "Kit") in wanted
 
 
 # --- decals -------------------------------------------------------------------

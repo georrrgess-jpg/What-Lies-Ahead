@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_showtime"
+display_name = "Showtime"
+description = "A magician's white gloves with a ruffled cuff over a gold frill and a gold star cufflink. Nothing up the sleeves."
+slot = &"gloves"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.9843, 0.9804, 1, 1, 1, 0.7882, 0.2902, 1, 0.9843, 0.9804, 1, 1, 0.1098, 0.09412, 0.1882, 1)
+params = {
+"kit": "Frill",
+"roughness": 0.5
+}
+sort_order = 6125
