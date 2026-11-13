@@ -16,6 +16,12 @@ signal ended
 
 const LOOKAHEAD := 4
 const MUSIC_DB := -3.0
+## Frames of black before the first shot while FxWarmup draws every effect,
+## enemy and weapon of the reel once, so their shaders compile up front
+## instead of mid-shot (a video trims these frames).
+const WARMUP_FRAMES := FxWarmup.FRAMES + 2
+## Levels that are not in GameData's world list (the Boot Camp tutorial).
+const EXTRA_LEVELS := "res://data/tutorial/%s.tres"
 
 var shots: Array[CineShot] = []
 var music_path := "res://audio/music/showreel_trailer.ogg"
@@ -51,6 +57,10 @@ var _paused: Array[AudioStreamPlayer] = []
 var _last_tick := 0
 var _worst: Array = []
 var _load_ms := {}
+## Per cut: [shot, worst frame ms of the cut and the 3 frames after it].
+var _cut_ms: Array = []
+var _frame_ms: PackedFloat32Array = []
+var _warmup_left := WARMUP_FRAMES
 
 
 func _ready() -> void:
@@ -78,10 +88,20 @@ func _ready() -> void:
 	var first := maxi(0, _shot_at(start_at))
 	_clock = shots[first].start if not shots.is_empty() else 0.0
 	_prepare_from(first)
+	_warm_up()
 	if render_mode:
 		# A video has no wall-clock: load the first set now so frame one is the shot.
 		_wait_for(shots[first].set_id)
-		_begin()
+
+
+## Draws one of every enemy, kill effect, tracer and weapon in front of the
+## camera behind the black (FxWarmup), so no shot compiles a shader mid-move.
+func _warm_up() -> void:
+	var warm := FxWarmup.new()
+	warm.name = "FxWarmup"
+	add_child(warm)
+	camera.global_transform = Transform3D(Basis.IDENTITY, Vector3(0, -400, 0))
+	warm.run(camera, GameData.enemies(), GameData.weapons())
 
 
 func _begin() -> void:
@@ -171,11 +191,13 @@ func _input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if _done:
 		return
-	_track_frame_time()
+	if report:
+		_track_frame_time()
 	if not _running:
 		var first := _shot_at(_clock)
 		_collect_jobs()
-		if first >= 0 and _sets.has(shots[first].set_id):
+		_warmup_left -= 1
+		if _warmup_left <= 0 and first >= 0 and _sets.has(shots[first].set_id):
 			_begin()
 		return
 	_clock += delta / maxf(Engine.time_scale, 0.0001)
@@ -266,6 +288,8 @@ func _prepare_from(i: int) -> void:
 			_sets[id] = CineStudio.new()
 			continue
 		var level := GameData.level(StringName(id))
+		if level == null and ResourceLoader.exists(EXTRA_LEVELS % id):
+			level = load(EXTRA_LEVELS % id) as LevelData
 		if level == null:
 			push_warning("showreel: unknown set " + id)
 			_sets[id] = CineStudio.new()
@@ -329,13 +353,32 @@ func _finish_job(id: String) -> void:
 func _track_frame_time() -> void:
 	var now := Time.get_ticks_usec()
 	if _last_tick > 0 and _running and _index >= 0:
-		_worst.append([(now - _last_tick) / 1000.0, shots[_index].id, snappedf(_clock, 0.01)])
+		var ms := (now - _last_tick) / 1000.0
+		_frame_ms.append(ms)
+		_note_cut_frame(ms)
+		_worst.append([ms, shots[_index].id, snappedf(_clock, 0.01)])
 		_worst.sort_custom(func(a, b): return a[0] > b[0])
 		if _worst.size() > 5:
 			_worst.resize(5)
 	_last_tick = now
 
 
+## The frame a cut lands on and the next three count toward that cut.
+func _note_cut_frame(ms: float) -> void:
+	var since := _clock - shots[_index].start
+	if _cut_ms.is_empty() or _cut_ms[-1][0] != shots[_index].id:
+		_cut_ms.append([shots[_index].id, ms, 0])
+	elif _cut_ms[-1][2] < 3 and since < 0.5:
+		_cut_ms[-1][1] = maxf(_cut_ms[-1][1], ms)
+		_cut_ms[-1][2] += 1
+
+
 func _print_report() -> void:
 	print("[showreel] set timings (ms): ", _load_ms)
 	print("[showreel] worst frames (ms, shot, time): ", _worst)
+	var sorted := _frame_ms.duplicate()
+	sorted.sort()
+	var median := sorted[sorted.size() / 2] if not sorted.is_empty() else 0.0
+	var cuts := _cut_ms.duplicate()
+	cuts.sort_custom(func(a, b): return a[1] > b[1])
+	print("[showreel] median frame %.1f ms; worst cut frames (shot, ms): %s" % [median, str(cuts.slice(0, 8).map(func(c): return [c[0], snappedf(c[1], 0.1)]))])

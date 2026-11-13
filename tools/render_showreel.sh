@@ -13,6 +13,7 @@
 #   tools/render_showreel.sh --segment 12     # seconds per segment (default 10)
 #
 # GODOT (default: godot) is the editor binary; run from the project root.
+# The end runs tools/video_motion_report.py on the result (stutter check).
 # The project's window override makes the movie 1600x900; it is scaled to 720p.
 set -euo pipefail
 
@@ -65,19 +66,24 @@ for seg in "${segments[@]}"; do
 			-- --showreel --showreel-from="$from" --showreel-to="$to" 2>&1 | grep '^\[showreel\] start frame' || true)
 		# Frames written before the reel's first frame are trimmed when joining.
 		frame=$(echo "$log" | awk '{print $4}')
-		echo "${frame:-0}" > "$avi.done"
+		echo "${frame:-0} $(awk "BEGIN{printf \"%d\", ($to - $from) * $FPS + 0.5}")" > "$avi.done"
 	fi
 	parts+=("$avi")
 done
 
-# Join the segments (trimming each one's lead-in) and encode.
+# Join the segments and encode. Each segment keeps exactly its own frames:
+# the lead-in before the reel's first frame and the frame the movie maker
+# writes after the reel has stopped are both trimmed, so no frame repeats at a
+# join and the picture stays on the music's beat to the end.
 inputs=()
 filter=""
 n=0
 for avi in "${parts[@]}"; do
-	skip=$(cat "$avi.done")
+	read -r skip count < "$avi.done"
+	count=${count:-100000}
 	inputs+=(-i "$avi")
-	filter+="[$n:v]trim=start_frame=$skip,setpts=PTS-STARTPTS[v$n];[$n:a]atrim=start=$(awk "BEGIN{print $skip / $FPS}"),asetpts=PTS-STARTPTS[a$n];"
+	filter+="[$n:v]trim=start_frame=$skip:end_frame=$((skip + count)),setpts=PTS-STARTPTS[v$n];"
+	filter+="[$n:a]atrim=start=$(awk "BEGIN{print $skip / $FPS}"):end=$(awk "BEGIN{print ($skip + $count) / $FPS}"),asetpts=PTS-STARTPTS[a$n];"
 	n=$((n + 1))
 done
 concat=""
@@ -99,3 +105,6 @@ done < "$WORK/shots.txt"
 rows=$(( ($(ls "$WORK"/sheet_*.png | wc -l) + 3) / 4 ))
 ffmpeg -nostdin -v error -y -pattern_type glob -i "$WORK/sheet_*.png" -vf "tile=4x$rows:padding=4" -frames:v 1 -q:v 3 "$SHEET"
 ls -l "$OUT" "$SHEET"
+
+# Frame-to-frame motion check (repeated frames, hitches, speed jumps).
+python3 tools/video_motion_report.py "$OUT" --shots "$WORK/shots.txt" --json "$WORK/motion.json" | head -3
