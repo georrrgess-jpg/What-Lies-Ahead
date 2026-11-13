@@ -8,6 +8,17 @@ extends RefCounted
 ##   rainbow    a beam cycling through the rainbow along its length
 ##   lightning  a jagged, flickering bolt with forks
 ##   comet      a glowing head racing to the target with a sparkling tail
+##   bubbles    a thin beam leaving soap bubbles that drift up and pop
+## and the pattern styles (PATTERNS), drawn with one shared unit mesh and
+## art/shaders/tracer_pattern.gdshader, so no mesh is built per shot:
+##   ribbon     a satin ribbon twisting along the shot (front colour 0, back 1)
+##   morse      dots and dashes spelling P-O-P racing to the target
+##   heartbeat  an ECG line with a spike every few metres and a running blip
+##   fence      four laser rails with rungs streaming along them
+##   neon       a fat neon-sign tube with a hot core that strikes on
+##   tickets    a slowly curling roll of prize tickets
+##   chevrons   arrows streaming to the target
+##   candy      a candy-stripe tube with spiralling stripes
 ## params.flakes = true swaps sparkle glitter for snowflakes.
 ##
 ## The coloured ribbons are drawn with normal (mix) blending: added light
@@ -15,8 +26,25 @@ extends RefCounted
 ## of these items.
 
 const MAX_SEGMENTS := 160
+const PATTERN_SHADER := "res://art/shaders/tracer_pattern.gdshader"
+## Pattern styles: shader style index, unit mesh, width (times the weapon's
+## tracer width), life, reveal time and whether a thin beam runs underneath.
+const PATTERNS := {
+	"ribbon": [0, "strip", 5.0, 0.2, 0.05, false],
+	"morse": [1, "cross", 6.5, 0.22, 0.05, true],
+	"heartbeat": [2, "cross", 2.6, 0.26, 0.05, false],
+	"fence": [3, "cross", 8.0, 0.18, 0.04, false],
+	"neon": [4, "cross", 5.5, 0.2, 0.03, false],
+	"tickets": [5, "strip", 8.0, 0.3, 0.08, false],
+	"chevrons": [6, "cross", 9.0, 0.2, 0.04, true],
+	"candy": [7, "tube", 3.0, 0.2, 0.04, false],
+}
+## Segments along the shared unit meshes (the heartbeat bends along them).
+const UNIT_SEGMENTS := 400
 
 static var _ribbon_material: StandardMaterial3D
+static var _unit_meshes := {}
+static var _pattern_materials := {}
 
 
 ## Draws a styled tracer. Returns false if the style is unknown (the caller
@@ -42,20 +70,95 @@ static func draw(parent: Node, from: Vector3, to: Vector3, width: float, item: C
 		"comet":
 			Fx.beam(parent, from, to, c0, width * 0.5)
 			_comet(parent, from, to, c0, c1)
+		"bubbles":
+			Fx.beam(parent, from, to, c0, width * 0.5)
+			_bubble_trail(parent, from, to, [c0, c1, Color.WHITE])
 		_:
-			return false
+			if not PATTERNS.has(style):
+				return false
+			_pattern(parent, from, to, width, style, c0, c1)
 	return true
 
 
 static func _spawn(parent: Node, from: Vector3, to: Vector3, mesh: Mesh, life: float, reveal: float, flicker := false) -> void:
 	if parent == null or not parent.is_inside_tree():
 		return
-	var t := StyledTracer.new()
+	var t := StyledTracer.take(parent)
 	t.mesh = mesh
 	t.material_override = _material()
-	t.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	parent.add_child(t)
 	t.launch(from, to, life, reveal, flicker)
+
+
+static func _pattern(parent: Node, from: Vector3, to: Vector3, width: float, style: String, c0: Color, c1: Color) -> void:
+	if parent == null or not parent.is_inside_tree():
+		return
+	var spec: Array = PATTERNS[style]
+	if spec[5]:
+		Fx.beam(parent, from, to, c0, width * 0.35)
+	var t := StyledTracer.take(parent)
+	t.mesh = unit_mesh(spec[1])
+	t.material_override = pattern_material(spec[0], c0, c1)
+	t.launch_pattern(from, to, width * spec[2], spec[3], spec[4])
+
+
+## The pattern shader with one item's colours (cached per style and colours).
+static func pattern_material(index: int, c0: Color, c1: Color) -> ShaderMaterial:
+	var key := "%d|%s|%s" % [index, c0.to_html(), c1.to_html()]
+	if not _pattern_materials.has(key):
+		var m := ShaderMaterial.new()
+		m.shader = load(PATTERN_SHADER)
+		m.set_shader_parameter("style", index)
+		m.set_shader_parameter("color_a", c0)
+		m.set_shader_parameter("color_b", c1)
+		_pattern_materials[key] = m
+	return _pattern_materials[key]
+
+
+## A shared unit mesh along +Z from 0 to 1 with UV.y = z and UV.x across:
+## "strip" (one flat strip in X), "cross" (strips in X and Y, seen from any
+## side) or "tube" (UV.x round it).
+static func unit_mesh(kind: String) -> Mesh:
+	if _unit_meshes.has(kind):
+		return _unit_meshes[kind]
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rim := PackedVector2Array()
+	if kind == "tube":
+		for k in 11:
+			rim.append(Vector2(cos(TAU * k / 10.0), sin(TAU * k / 10.0)) * 0.5)
+	for i in UNIT_SEGMENTS:
+		var z0 := float(i) / UNIT_SEGMENTS
+		var z1 := float(i + 1) / UNIT_SEGMENTS
+		if kind == "tube":
+			for k in 10:
+				_unit_quad(st, rim[k], rim[k + 1], z0, z1, k / 10.0, (k + 1) / 10.0)
+		else:
+			_unit_quad(st, Vector2(-0.5, 0.0), Vector2(0.5, 0.0), z0, z1, 0.0, 1.0)
+			if kind == "cross":
+				_unit_quad(st, Vector2(0.0, -0.5), Vector2(0.0, 0.5), z0, z1, 0.0, 1.0)
+	_unit_meshes[kind] = st.commit()
+	return _unit_meshes[kind]
+
+
+static func _unit_quad(st: SurfaceTool, a: Vector2, b: Vector2, z0: float, z1: float, u0: float, u1: float) -> void:
+	var corners := [Vector3(a.x, a.y, z0), Vector3(b.x, b.y, z0), Vector3(b.x, b.y, z1), Vector3(a.x, a.y, z1)]
+	var uvs := [Vector2(u0, z0), Vector2(u1, z0), Vector2(u1, z1), Vector2(u0, z1)]
+	for idx in [0, 1, 2, 0, 2, 3]:
+		st.set_uv(uvs[idx])
+		st.add_vertex(corners[idx])
+
+
+## Soap bubbles hanging along the shot (drifting up, popping) with a fizz of
+## coloured beads so the trail reads against a bright sky too.
+static func _bubble_trail(parent: Node, from: Vector3, to: Vector3, cols: Array) -> void:
+	var length := from.distance_to(to)
+	var start := from + (to - from).normalized() * minf(1.5, length * 0.3)
+	FxSwarm.spawn(parent, start, FxShapes.bubble(), cols, {"count": clampi(int(length * 1.2), 6, 40), "shape": "line",
+		"line_to": to, "jitter": 0.1, "speed": Vector2(0.1, 0.4), "life": Vector2(0.5, 0.9), "size": Vector2(0.1, 0.18),
+		"gravity": Vector3(0, 1.2, 0), "drag": 2.0, "wobble": 0.5, "pop": true, "grow": 0.2, "spin": 0.0, "stagger": 0.05})
+	FxSwarm.spawn(parent, start, FxShapes.ball(), cols, {"count": clampi(int(length * 1.0), 5, 32), "shape": "line", "line_to": to,
+		"jitter": 0.08, "speed": Vector2(0.1, 0.5), "life": Vector2(0.3, 0.6), "size": Vector2(0.03, 0.05),
+		"gravity": Vector3(0, 0.8, 0), "drag": 2.0})
 
 
 ## Unshaded, vertex-coloured, alpha-blended (see the note at the top).

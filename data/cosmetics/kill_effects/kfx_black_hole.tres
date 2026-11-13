@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_black_hole"
+display_name = "Event Horizon"
+description = "A tiny black hole swallows a spiral of sparkles, then collapses in a blinding wink."
+slot = &"kill_effect"
+rarity = 3
+price = 5600
+params = {
+"effect": "black_hole"
+}
+sort_order = 7309

@@ -5,7 +5,8 @@ extends RefCounted
 ## effect in params.effect (see EFFECTS) and may override the colours; each
 ## effect also plays its own small sound layer ("cos_kill_<effect>").
 
-const EFFECTS := ["confetti", "pixel", "neon_ring", "bubbles", "snow", "starburst", "coins", "firework", "hearts"]
+const EFFECTS := ["confetti", "pixel", "neon_ring", "bubbles", "snow", "starburst", "coins", "firework", "hearts",
+	"balloon", "disco", "jackpot", "voxel", "ghost", "snow_globe", "black_hole", "tickets", "pinata"]
 
 const DEFAULT_COLORS := {
 	"pixel": [Color(0.3, 1.0, 0.45), Color(0.25, 0.85, 1.0), Color(1.0, 0.3, 0.75), Color(1.0, 0.9, 0.2)],
@@ -16,6 +17,15 @@ const DEFAULT_COLORS := {
 	"coins": [Color(1.0, 0.78, 0.25), Color(1.0, 0.86, 0.45)],
 	"firework": [Color(1.0, 0.3, 0.45), Color(0.4, 0.8, 1.0), Color(1.0, 0.9, 0.3), Color(0.7, 1.0, 0.4)],
 	"hearts": [Color(1.0, 0.3, 0.55), Color(1.0, 0.55, 0.75), Color(0.95, 0.15, 0.35)],
+	"balloon": [Color(1.0, 0.45, 0.75), Color(1.0, 0.85, 0.3), Color(0.35, 0.85, 1.0), Color(0.6, 1.0, 0.45)],
+	"disco": [Color(1.0, 0.35, 0.8), Color(0.3, 0.9, 1.0), Color(1.0, 0.9, 0.35), Color(0.65, 0.45, 1.0)],
+	"jackpot": [Color(1.0, 0.8, 0.25), Color(1.0, 0.95, 0.75)],
+	"voxel": [Color(0.25, 1.0, 0.9), Color(1.0, 0.3, 0.85), Color(0.6, 0.95, 1.0)],
+	"ghost": [Color(0.92, 0.9, 1.0), Color(0.75, 0.7, 1.0)],
+	"snow_globe": [Color.WHITE, Color(0.75, 0.92, 1.0)],
+	"black_hole": [Color(0.7, 0.35, 1.0), Color(0.3, 0.85, 1.0), Color(1.0, 0.85, 1.0)],
+	"tickets": [Color(1.0, 0.42, 0.3), Color(1.0, 0.75, 0.25), Color(1.0, 0.4, 0.65), Color(0.3, 0.85, 0.8)],
+	"pinata": [Color(1.0, 0.3, 0.6), Color(0.55, 1.0, 0.3), Color(1.0, 0.6, 0.15), Color(0.2, 0.85, 1.0), Color(1.0, 0.9, 0.25)],
 }
 
 
@@ -42,6 +52,15 @@ static func play(parent: Node, at: Vector3, item: CosmeticItem, with_sound := tr
 		"coins": _coins(parent, at, cols)
 		"firework": _firework(parent, at, cols)
 		"hearts": _hearts(parent, at, cols)
+		"balloon": _balloon(parent, at, cols)
+		"disco": _disco(parent, at, cols)
+		"jackpot": _jackpot(parent, at, cols)
+		"voxel": _voxel(parent, at, cols)
+		"ghost": _ghost(parent, at, cols)
+		"snow_globe": _snow_globe(parent, at, cols)
+		"black_hole": _black_hole(parent, at, cols)
+		"tickets": _tickets(parent, at, cols)
+		"pinata": _pinata(parent, at, cols)
 		_:
 			Fx.kill_burst(parent, at)
 			return
@@ -134,6 +153,155 @@ static func _hearts(parent: Node, at: Vector3, cols: Array) -> void:
 		"life": Vector2(0.9, 1.3), "size": Vector2(0.17, 0.26), "gravity": Vector3(0, 0.9, 0), "drag": 2.6, "wobble": 0.5,
 		"spin": 2.5, "spin_axis": Vector3.UP, "pop": true})
 	_flash(parent, at, FxShapes.ball(), cols[1 % cols.size()], 0.35, 1.3, 0.16)
+
+
+static func _balloon(parent: Node, at: Vector3, cols: Array) -> void:
+	var face := _to_camera(parent, at)
+	var col: Color = cols[randi() % cols.size()]
+	FxSwarm.spawn(parent, at, FxShapes.balloon_dog(), [col], {"count": 1, "shape": "up", "spread": 0.0, "speed": Vector2(1.4, 1.4),
+		"life": Vector2(0.5, 0.5), "size": Vector2(1.0, 1.0), "gravity": Vector3.ZERO, "drag": 5.0, "face": face, "spin_axis": face,
+		"spin": 0.0, "sway": 0.22, "sway_hz": 4.0, "grow": 0.3, "pop": true})
+	var top := at + Vector3.UP * 0.3
+	FxSwarm.spawn(parent, top, FxShapes.cube(), [col, col.darkened(0.25), col.lightened(0.2)], {"count": 20, "delay": 0.48,
+		"speed": Vector2(3.0, 6.0), "life": Vector2(0.25, 0.45), "size": Vector2(0.07, 0.13), "stretch": Vector3(1.0, 0.12, 0.7),
+		"gravity": Vector3(0, -9.0, 0), "drag": 3.0, "spin": 14.0, "grow": 0.0})
+	FxSwarm.spawn(parent, top, FxShapes.ball(), cols + [Color.WHITE], {"count": 14, "delay": 0.48, "speed": Vector2(2.0, 4.5),
+		"life": Vector2(0.25, 0.4), "size": Vector2(0.04, 0.07), "gravity": Vector3(0, -6.0, 0), "drag": 2.0, "grow": 0.0})
+	_glow(parent, top, FxShapes.ring(), Color.WHITE, 0.5, 3.0, 0.22, 0.48, face)
+
+
+static func _disco(parent: Node, at: Vector3, cols: Array) -> void:
+	var face := _to_camera(parent, at)
+	var hang := at + Vector3.UP * 0.75
+	_glow(parent, at, FxShapes.glow_ball(), cols[0], 0.4, 2.0, 0.14, 0.0)
+	FxSwarm.spawn(parent, hang + Vector3.UP * 0.6, FxShapes.mirror_ball(), [Color.WHITE], {"count": 1, "shape": "up", "spread": 0.0,
+		"speed": Vector2(-4.2, -4.2), "drag": 7.0, "life": Vector2(0.48, 0.48), "size": Vector2(0.75, 0.75), "gravity": Vector3.ZERO,
+		"spin": 5.0, "steady": true, "spin_axis": Vector3.UP, "grow": 0.15, "pop": true})
+	FxSwarm.spawn(parent, hang, FxShapes.beam(), cols, {"count": 8, "speed": Vector2.ZERO, "life": Vector2(0.36, 0.42),
+		"size": Vector2(1.6, 2.0), "gravity": Vector3.ZERO, "spin": 4.5, "steady": true, "spin_axis": Vector3.UP, "grow": 0.25, "delay": 0.08})
+	FxSwarm.spawn(parent, hang, FxShapes.tile(), [Color(0.85, 0.87, 0.95), Color.WHITE, cols[0], cols[1 % cols.size()]], {"count": 26,
+		"delay": 0.47, "speed": Vector2(2.5, 5.5), "life": Vector2(0.3, 0.45), "size": Vector2(0.1, 0.14), "gravity": Vector3(0, -9.0, 0),
+		"drag": 1.5, "spin": 16.0, "grow": 0.0})
+	FxSwarm.spawn(parent, hang, FxShapes.star(), [Color.WHITE] + cols, {"count": 10, "delay": 0.47, "speed": Vector2(1.0, 3.0),
+		"life": Vector2(0.25, 0.4), "size": Vector2(0.08, 0.12), "gravity": Vector3.ZERO, "drag": 2.0, "blink": 9.0, "spin": 6.0})
+	_glow(parent, hang, FxShapes.star_quad(), cols[0].lerp(Color.WHITE, 0.5), 1.4, 1.6, 0.22, 0.47, face)
+
+
+static func _jackpot(parent: Node, at: Vector3, cols: Array) -> void:
+	var face := _to_camera(parent, at)
+	var right := Vector3.UP.cross(face).normalized()
+	var mid := at + Vector3.UP * 0.55
+	FxSwarm.spawn(parent, mid - right * 0.6, FxShapes.lucky_seven(), [Color.WHITE], {"count": 3, "shape": "line",
+		"line_to": mid + right * 0.6, "even": true, "sweep": true, "stagger": 0.16, "speed": Vector2.ZERO, "gravity": Vector3.ZERO,
+		"life": Vector2(0.7, 0.7), "size": Vector2(0.5, 0.5), "face": face, "spin_axis": right, "spin": 40.0, "steady": true,
+		"reel": 0.28, "grow": 0.08, "pop": true})
+	for dy in [-0.42, 0.42]:
+		var row: Vector3 = mid + Vector3.UP * dy
+		FxSwarm.spawn(parent, row - right * 0.85, FxShapes.ball(), cols, {"count": 9, "shape": "line", "line_to": row + right * 0.85,
+			"even": true, "speed": Vector2.ZERO, "gravity": Vector3.ZERO, "life": Vector2(0.75, 0.75), "size": Vector2(0.11, 0.11),
+			"blink": 5.0, "grow": 0.1})
+	FxSwarm.spawn(parent, mid, FxShapes.coin(), [Color(1.0, 0.78, 0.25), Color(1.0, 0.86, 0.45)], {"count": 12, "shape": "up",
+		"spread": 40.0, "speed": Vector2(4.0, 6.0), "delay": 0.38, "life": Vector2(0.35, 0.45), "size": Vector2(0.13, 0.17),
+		"gravity": Vector3(0, -14.0, 0), "drag": 0.4, "spin": 16.0, "spin_axis": Vector3.RIGHT, "grow": 0.05})
+	_glow(parent, mid, FxShapes.star_quad(), cols[0], 1.2, 1.5, 0.25, 0.36, face)
+
+
+static func _voxel(parent: Node, at: Vector3, cols: Array) -> void:
+	FxSwarm.spawn(parent, at + Vector3.DOWN * 0.15, FxShapes.cube(), cols, {"count": 84, "box": Vector3(0.6, 1.6, 0.4),
+		"sweep_y": true, "stagger": 0.32, "shape": "up", "spread": 12.0, "speed": Vector2(1.2, 2.6), "life": Vector2(0.28, 0.42),
+		"size": Vector2(0.11, 0.13), "gravity": Vector3(0, 3.0, 0), "drag": 0.5, "quantize": 0.1, "blink": 5.0, "grow": 0.0})
+	FxSwarm.spawn(parent, at + Vector3.DOWN * 0.95, FxShapes.ring(), [Color(cols[0], 0.9)], {"count": 1, "shape": "up",
+		"spread": 0.0, "speed": Vector2(4.4, 4.4), "drag": 0.0, "gravity": Vector3.ZERO, "life": Vector2(0.42, 0.42),
+		"size": Vector2(1.1, 1.1), "face": Vector3.UP, "spin": 0.0, "grow": 0.1, "fade": true})
+	_glow(parent, at, FxShapes.glow_ball(), cols[0], 0.5, 1.8, 0.16, 0.0)
+
+
+static func _ghost(parent: Node, at: Vector3, cols: Array) -> void:
+	var face := _to_camera(parent, at)
+	FxSwarm.spawn(parent, at, FxShapes.ball(), [Color.WHITE, Color(0.85, 0.85, 1.0)], {"count": 10, "speed": Vector2(0.6, 1.6),
+		"life": Vector2(0.35, 0.6), "size": Vector2(0.14, 0.24), "gravity": Vector3(0, 0.6, 0), "drag": 2.5, "grow": 0.2})
+	FxSwarm.spawn(parent, at, FxShapes.ghost(), [cols[0]], {"count": 1, "shape": "up", "spread": 0.0, "speed": Vector2(1.8, 1.8),
+		"drag": 1.5, "gravity": Vector3(0, 0.4, 0), "life": Vector2(0.85, 0.85), "size": Vector2(0.8, 0.8), "face": face,
+		"spin_axis": face, "spin": 0.0, "sway": 0.3, "sway_hz": 2.6, "grow": 0.18})
+	FxSwarm.spawn(parent, at, FxShapes.star(), [cols[1 % cols.size()], Color.WHITE], {"count": 8, "speed": Vector2(0.8, 2.0),
+		"life": Vector2(0.4, 0.7), "size": Vector2(0.05, 0.08), "gravity": Vector3(0, 1.0, 0), "drag": 2.0, "blink": 6.0, "stagger": 0.2})
+
+
+static func _snow_globe(parent: Node, at: Vector3, cols: Array) -> void:
+	var face := _to_camera(parent, at)
+	var g := at + Vector3.UP * 0.1
+	var globe := {"count": 1, "speed": Vector2.ZERO, "gravity": Vector3.ZERO, "life": Vector2(0.62, 0.62), "size": Vector2(1.3, 1.3),
+		"spin": 0.0, "spin_axis": Vector3.UP, "grow": 0.2, "pop": true}
+	FxSwarm.spawn(parent, g, FxShapes.globe_base(), [Color.WHITE], globe)
+	FxSwarm.spawn(parent, g, FxShapes.bubble(), [cols[1 % cols.size()]], globe)
+	FxSwarm.spawn(parent, g, FxShapes.snowflake(), cols, {"count": 24, "jitter": 0.32, "speed": Vector2(0.2, 0.6), "orbit": 6.0,
+		"life": Vector2(0.45, 0.6), "size": Vector2(0.08, 0.12), "gravity": Vector3(0, -0.5, 0), "drag": 1.0, "spin": 5.0,
+		"grow": 0.15, "stagger": 0.05})
+	FxSwarm.spawn(parent, g, FxShapes.cube(), [Color.WHITE, Color(0.8, 0.95, 1.0)], {"count": 16, "delay": 0.6,
+		"speed": Vector2(2.0, 4.0), "life": Vector2(0.2, 0.3), "size": Vector2(0.03, 0.05), "gravity": Vector3(0, -4.0, 0),
+		"blink": 9.0, "grow": 0.0})
+	_glow(parent, g, FxShapes.star_quad(), Color(0.85, 0.95, 1.0), 1.3, 1.4, 0.22, 0.6, face)
+
+
+static func _black_hole(parent: Node, at: Vector3, cols: Array) -> void:
+	var face := _to_camera(parent, at)
+	# The accretion rings lean back so they read as ellipses round the core.
+	var tilt := (face + Vector3.UP * 1.6).normalized()
+	FxSwarm.spawn(parent, at, FxShapes.ball(), [Color(0.03, 0.0, 0.06)], {"count": 1, "speed": Vector2.ZERO, "gravity": Vector3.ZERO,
+		"life": Vector2(0.55, 0.55), "size": Vector2(0.42, 0.42), "spin": 0.0, "grow": 0.35, "pop": true})
+	for k in 2:
+		FxSwarm.spawn(parent, at, FxShapes.ring(), [Color(cols[k % cols.size()], 0.9 - k * 0.2)], {"count": 1, "speed": Vector2.ZERO,
+			"gravity": Vector3.ZERO, "life": Vector2(0.55, 0.55), "size": Vector2(1.0 - k * 0.25, 1.0 - k * 0.25), "face": tilt,
+			"spin": 0.0, "grow": 0.3, "pop": true})
+	FxSwarm.spawn(parent, at, FxShapes.star(), cols, {"count": 30, "radius": 1.7, "speed": Vector2(-3.0, -3.4), "drag": 0.0,
+		"gravity": Vector3.ZERO, "orbit": 4.0, "life": Vector2(0.42, 0.5), "size": Vector2(0.07, 0.11), "spin": 6.0,
+		"stagger": 0.08, "grow": 0.1})
+	_glow(parent, at, FxShapes.star_quad(), Color.WHITE, 1.6, 1.3, 0.2, 0.53, face)
+	_glow(parent, at, FxShapes.ring(), cols[1 % cols.size()], 0.4, 4.0, 0.3, 0.53, face)
+	FxSwarm.spawn(parent, at, FxShapes.cube(), [Color.WHITE] + cols, {"count": 12, "delay": 0.53, "speed": Vector2(4.0, 7.0),
+		"life": Vector2(0.2, 0.3), "size": Vector2(0.04, 0.06), "gravity": Vector3.ZERO, "drag": 3.0, "blink": 9.0, "grow": 0.0})
+
+
+static func _tickets(parent: Node, at: Vector3, cols: Array) -> void:
+	FxSwarm.spawn(parent, at, FxShapes.ticket(), cols, {"count": 16, "shape": "up", "spread": 42.0, "speed": Vector2(4.5, 7.0),
+		"life": Vector2(0.65, 0.85), "size": Vector2(0.32, 0.4), "gravity": Vector3(0, -7.0, 0), "drag": 2.6, "spin": 9.0,
+		"wobble": 1.2, "grow": 0.08, "stagger": 0.12})
+	FxSwarm.spawn(parent, at, FxShapes.star(), [Color(1.0, 0.85, 0.3), Color.WHITE], {"count": 10, "speed": Vector2(1.5, 3.5),
+		"life": Vector2(0.3, 0.5), "size": Vector2(0.07, 0.1), "gravity": Vector3(0, -2.0, 0), "drag": 2.5, "blink": 8.0, "spin": 6.0})
+	_glow(parent, at, FxShapes.glow_ball(), Color(1.0, 0.75, 0.35), 0.4, 2.2, 0.16, 0.0)
+
+
+static func _pinata(parent: Node, at: Vector3, cols: Array) -> void:
+	FxSwarm.spawn(parent, at, FxShapes.candy(), cols, {"count": 16, "speed": Vector2(3.0, 5.5), "life": Vector2(0.6, 0.8),
+		"size": Vector2(0.16, 0.2), "gravity": Vector3(0, -11.0, 0), "drag": 1.0, "spin": 10.0, "bounce": -1.0, "grow": 0.05})
+	FxSwarm.spawn(parent, at, FxShapes.cube(), cols, {"count": 12, "shape": "up", "spread": 75.0, "speed": Vector2(5.0, 7.5),
+		"life": Vector2(0.55, 0.75), "size": Vector2(0.4, 0.55), "stretch": Vector3(0.22, 0.03, 1.0), "align": true,
+		"gravity": Vector3(0, -7.0, 0), "drag": 2.2})
+	FxSwarm.spawn(parent, at, FxShapes.cube(), cols, {"count": 20, "speed": Vector2(2.0, 5.0), "life": Vector2(0.4, 0.7),
+		"size": Vector2(0.05, 0.07), "stretch": Vector3(1.0, 0.15, 0.6), "gravity": Vector3(0, -4.0, 0), "drag": 2.5, "spin": 12.0})
+	_glow(parent, at, FxShapes.glow_ball(), cols[0], 0.4, 2.0, 0.14, 0.0)
+
+
+## Direction from `at` to the camera, levelled (props turn to face the player).
+static func _to_camera(parent: Node, at: Vector3) -> Vector3:
+	var cam := parent.get_viewport().get_camera_3d() if parent.is_inside_tree() else null
+	if cam == null:
+		return Vector3.BACK
+	var d := cam.global_position - at
+	d.y = 0.0
+	return d.normalized() if d.length() > 0.01 else Vector3.BACK
+
+
+## A pooled additive flash (glow ball, star or ring) that swells by `expand`
+## and fades over `life`, after `delay`; `face` turns flat ones to the camera.
+static func _glow(parent: Node, at: Vector3, mesh: Mesh, color: Color, size: float, expand: float, life: float, delay: float,
+		face := Vector3.ZERO) -> void:
+	var strength := Settings.flash_scale()
+	if strength < 0.05:
+		return
+	FxSwarm.spawn(parent, at, mesh, [Color(color, 0.85 * strength)], {"count": 1, "speed": Vector2.ZERO, "life": Vector2(life, life),
+		"size": Vector2(size, size), "gravity": Vector3.ZERO, "spin": 0.0, "grow": 0.0, "expand": expand, "fade": true,
+		"delay": delay, "face": face})
 
 
 ## An expanding ring facing `normal`, starting after `delay`.

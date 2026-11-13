@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_snow_globe"
+display_name = "Snow Globe"
+description = "A glass globe closes over the spot, a flurry swirls inside, then it pops with a twinkle."
+slot = &"kill_effect"
+rarity = 2
+price = 1500
+params = {
+"effect": "snow_globe"
+}
+sort_order = 7211

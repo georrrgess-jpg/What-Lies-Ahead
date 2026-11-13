@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 3500
+
+[resource]
+script = ExtResource("1")
+id = &"banner_pixel_hills"
+display_name = "Pixel Hills"
+description = "An 8-bit landscape of rolling hills, clouds and a blocky sun."
+slot = &"banner"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.4, 0.75, 1, 1, 0.35, 0.8, 0.3, 1, 1, 0.85, 0.3, 1)
+params = {
+"style": 32
+}
+sort_order = 9130

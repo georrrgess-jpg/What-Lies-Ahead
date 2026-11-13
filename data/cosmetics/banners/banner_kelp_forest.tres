@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"tidal_tunnels"
+
+[resource]
+script = ExtResource("1")
+id = &"banner_kelp_forest"
+display_name = "Kelp Forest"
+description = "Sun rays through the water, swaying kelp and a school of fish."
+slot = &"banner"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.02, 0.2, 0.32, 1, 0.15, 0.75, 0.6, 1, 0.7, 1, 0.95, 1)
+params = {
+"style": 16
+}
+sort_order = 9123

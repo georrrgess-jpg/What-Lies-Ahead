@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_disco"
+display_name = "Disco Fever"
+description = "A spinning mirror ball sweeps coloured spotlights round, then shatters into glinting tiles."
+slot = &"kill_effect"
+rarity = 2
+price = 1500
+params = {
+"effect": "disco"
+}
+sort_order = 7212

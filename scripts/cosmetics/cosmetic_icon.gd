@@ -5,6 +5,9 @@ extends Control
 ## rainbow tracers cycle their colours; everything else draws once.
 
 const CELL_ICON_SHADER := "res://art/shaders/cell_icon.gdshader"
+## Kill effects and tracers drawn as one picture of their main prop or pattern.
+const PROP_EFFECTS := ["balloon", "disco", "jackpot", "voxel", "ghost", "snow_globe", "black_hole", "tickets", "pinata"]
+const PATTERN_TRACERS := ["ribbon", "morse", "heartbeat", "fence", "bubbles", "neon", "tickets", "chevrons", "candy"]
 
 var item: CosmeticItem
 var _time := 0.0
@@ -79,6 +82,9 @@ func _draw_kill_effect() -> void:
 		cols = [Color(1.0, 0.85, 0.25), Color(1.0, 0.45, 0.8), Color(0.3, 0.95, 1.0)]
 	var mid := size * 0.5
 	var r := minf(size.x, size.y) * 0.32
+	if effect in PROP_EFFECTS:
+		_draw_prop_effect(effect, cols, mid, r)
+		return
 	draw_circle(mid, r * 0.35, Color(cols[0], 0.35))
 	draw_circle(mid, r * 0.18, Color(1, 1, 1, 0.8))
 	if effect == "neon_ring":
@@ -110,6 +116,9 @@ func _draw_tracer() -> void:
 	var y := size.y * 0.5
 	var x0 := size.x * 0.1
 	var x1 := size.x * 0.9
+	if style in PATTERN_TRACERS:
+		_draw_pattern_tracer(style, c0, c1, y, x0, x1)
+		return
 	var pts := PackedVector2Array()
 	match style:
 		"helix":
@@ -198,3 +207,170 @@ func _confetti_piece(p: Vector2, s: float, c: Color, a: float) -> void:
 	var d := Vector2(cos(a), sin(a))
 	var n := Vector2(-d.y, d.x)
 	draw_colored_polygon(PackedVector2Array([p - d * s - n * s * 0.4, p + d * s - n * s * 0.4, p + d * s + n * s * 0.4, p - d * s + n * s * 0.4]), c)
+
+
+## The newer kill effects: their main prop in the middle, a few bits round it.
+func _draw_prop_effect(effect: String, cols: Array, mid: Vector2, r: float) -> void:
+	var c0: Color = cols[0]
+	var c1: Color = cols[1 % cols.size()]
+	for i in 8:
+		var a := TAU * i / 8.0 + 0.4
+		var p := mid + Vector2(cos(a), sin(a)) * r * 1.15
+		var c: Color = cols[i % cols.size()]
+		match effect:
+			"snow_globe": _snowflake(p, r * 0.12, c)
+			"black_hole": _star(mid + Vector2(cos(a + 0.6), sin(a + 0.6) * 0.5) * r * (0.9 + 0.08 * i), r * 0.09, c)
+			"voxel": draw_rect(Rect2(((mid + Vector2(cos(a), sin(a)) * r * 0.95) / 6.0).round() * 6.0, Vector2(r * 0.14, r * 0.14)), c)
+			"jackpot", "ghost": pass
+			_: _confetti_piece(p, r * 0.13, c, a)
+	match effect:
+		"balloon":
+			var w := r * 0.2
+			for seg in [[Vector2(-0.6, 0.1), Vector2(0.3, 0.1)], [Vector2(0.35, 0.05), Vector2(0.5, -0.45)], [Vector2(0.5, -0.5), Vector2(0.95, -0.5)],
+					[Vector2(0.3, 0.2), Vector2(0.35, 0.75)], [Vector2(-0.55, 0.2), Vector2(-0.6, 0.75)], [Vector2(-0.65, 0.0), Vector2(-0.85, -0.45)]]:
+				var a2: Vector2 = mid + seg[0] * r
+				var b2: Vector2 = mid + seg[1] * r
+				draw_line(a2, b2, c0, w * 2.0)
+				draw_circle(a2, w, c0)
+				draw_circle(b2, w, c0)
+			draw_circle(mid + Vector2(-0.88, -0.5) * r, w * 1.2, c0)
+			draw_circle(mid + Vector2(-0.3, -0.02) * r, w * 0.45, Color(1, 1, 1, 0.6))
+		"disco":
+			for k in 5:
+				var a3 := 0.5 + k * 0.55
+				var tip := mid + Vector2(cos(a3), sin(a3)) * r * 1.5
+				draw_colored_polygon(PackedVector2Array([mid, tip + Vector2(sin(a3), -cos(a3)) * r * 0.2, tip - Vector2(sin(a3), -cos(a3)) * r * 0.2]), Color(cols[k % cols.size()], 0.55))
+			draw_circle(mid, r * 0.6, Color(0.62, 0.65, 0.75))
+			for k in 5:
+				var yy := mid.y - r * 0.6 + r * 0.24 * (k + 0.5)
+				var half := sqrt(maxf(0.0, r * r * 0.36 - (yy - mid.y) * (yy - mid.y)))
+				draw_line(Vector2(mid.x - half, yy), Vector2(mid.x + half, yy), Color(0.4, 0.42, 0.55), 2.0)
+			for k in 4:
+				draw_line(Vector2(mid.x - r * 0.6 + r * 0.3 * (k + 0.5) * 0.8 + r * 0.06, mid.y - r * 0.55), Vector2(mid.x - r * 0.6 + r * 0.3 * (k + 0.5) * 0.8 + r * 0.06, mid.y + r * 0.55), Color(0.4, 0.42, 0.55), 2.0)
+			draw_circle(mid + Vector2(-0.22, -0.25) * r, r * 0.13, Color.WHITE)
+		"jackpot":
+			var font := ThemeDB.fallback_font
+			var fs := int(r * 1.2)
+			var at := mid + Vector2(-r * 1.05, r * 0.42)
+			draw_string_outline(font, at, "777", HORIZONTAL_ALIGNMENT_LEFT, -1, fs, int(r * 0.25), c0)
+			draw_string(font, at, "777", HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.95, 0.15, 0.25))
+			for k in 7:
+				for row in [-1.0, 1.0]:
+					draw_circle(mid + Vector2(-r * 1.2 + k * r * 0.4, row * r * 0.85), r * 0.08, c0 if k % 2 == 0 else Color.WHITE)
+		"voxel":
+			for y in 7:
+				for x in 3 if y > 1 else 2:
+					var cell := Rect2(mid + Vector2((x - (1.5 if y > 1 else 1.0)) * r * 0.24, (y - 3.5) * r * 0.24), Vector2(r * 0.2, r * 0.2))
+					draw_rect(cell, Color(cols[(x + y) % cols.size()], 1.0 - y * 0.08))
+		"ghost":
+			var pts := PackedVector2Array()
+			for i in 13:
+				var a4 := PI + PI * i / 12.0
+				pts.append(mid + Vector2(cos(a4), sin(a4)) * r * 0.62 + Vector2(0, -r * 0.1))
+			for i in 7:
+				var x := r * 0.62 - r * 1.24 * i / 6.0
+				pts.append(mid + Vector2(x, r * (0.7 if i % 2 == 0 else 0.5)))
+			draw_colored_polygon(pts, c0)
+			draw_polyline(pts + PackedVector2Array([pts[0]]), Color(UiKit.INK, 0.6), 2.0, true)
+			for side in [-1.0, 1.0]:
+				draw_circle(mid + Vector2(side * r * 0.22, -r * 0.15), r * 0.1, UiKit.INK)
+				draw_circle(mid + Vector2(side * r * 0.38, r * 0.05), r * 0.08, Color(1.0, 0.55, 0.7, 0.8))
+		"snow_globe":
+			draw_rect(Rect2(mid + Vector2(-r * 0.6, r * 0.55), Vector2(r * 1.2, r * 0.35)), Color(1.0, 0.75, 0.3))
+			draw_rect(Rect2(mid + Vector2(-r * 0.62, r * 0.68), Vector2(r * 1.24, r * 0.08)), Color(0.9, 0.2, 0.32))
+			draw_circle(mid, r * 0.7, Color(c1, 0.25))
+			draw_colored_polygon(PackedVector2Array([mid + Vector2(0, -r * 0.35), mid + Vector2(r * 0.3, r * 0.45), mid + Vector2(-r * 0.3, r * 0.45)]), Color(0.2, 0.7, 0.42))
+			draw_arc(mid, r * 0.7, 0.0, TAU, 40, Color(1, 1, 1, 0.85), 3.0, true)
+			draw_arc(mid, r * 0.55, -2.5, -1.7, 12, Color(1, 1, 1, 0.9), 3.0, true)
+		"black_hole":
+			draw_set_transform(mid, -0.3, Vector2(1.0, 0.42))
+			draw_arc(Vector2.ZERO, r * 0.95, 0.0, TAU, 48, c0, 6.0, true)
+			draw_arc(Vector2.ZERO, r * 0.75, 0.0, TAU, 48, c1, 4.0, true)
+			draw_set_transform(Vector2.ZERO)
+			draw_circle(mid, r * 0.42, Color(0.03, 0.0, 0.06))
+			draw_arc(mid, r * 0.44, 0.0, TAU, 32, Color(c0, 0.8), 2.0, true)
+		"tickets":
+			for k in 3:
+				_ticket(mid + Vector2((k - 1) * r * 0.6, (k - 1) * -r * 0.25), r * 0.85, -0.4 + k * 0.4, cols[k % cols.size()])
+		"pinata":
+			for k in 3:
+				var a5 := -0.5 + k * 1.0
+				var p2 := mid + Vector2(cos(a5 * 2.0), sin(a5 * 2.0)) * r * 0.35
+				var c: Color = cols[k % cols.size()]
+				draw_colored_polygon(PackedVector2Array([p2 + Vector2(-r * 0.2, 0), p2 + Vector2(-r * 0.45, -r * 0.15), p2 + Vector2(-r * 0.45, r * 0.15)]), c.lightened(0.2))
+				draw_colored_polygon(PackedVector2Array([p2 + Vector2(r * 0.2, 0), p2 + Vector2(r * 0.45, -r * 0.15), p2 + Vector2(r * 0.45, r * 0.15)]), c.lightened(0.2))
+				draw_circle(p2, r * 0.24, c)
+
+
+func _ticket(p: Vector2, w: float, angle: float, c: Color) -> void:
+	draw_set_transform(p, angle)
+	draw_rect(Rect2(-w * 0.5, -w * 0.25, w, w * 0.5), c)
+	draw_rect(Rect2(-w * 0.36, -w * 0.15, w * 0.72, w * 0.3), c.darkened(0.25), false, 2.0)
+	_star(Vector2.ZERO, w * 0.12, Color(1, 1, 1, 0.9))
+	draw_set_transform(Vector2.ZERO)
+
+
+## The pattern tracers and the bubble stream.
+func _draw_pattern_tracer(style: String, c0: Color, c1: Color, y: float, x0: float, x1: float) -> void:
+	var h := size.y
+	match style:
+		"ribbon":
+			for i in 24:
+				var t0 := i / 24.0
+				var t1 := (i + 1) / 24.0
+				var w := absf(cos(t0 * TAU * 1.5)) * h * 0.14 + 2.0
+				draw_line(Vector2(lerpf(x0, x1, t0), y), Vector2(lerpf(x0, x1, t1), y), c0 if fmod(t0 * 3.0 + 0.25, 1.0) < 0.5 else c1, w)
+		"morse":
+			var x := x0
+			for run in [1, 3, 3, 1, 0, 3, 3, 3, 0, 1, 3]:
+				if run > 0:
+					var len: float = run * h * 0.05
+					draw_line(Vector2(x + h * 0.025, y), Vector2(x + len - h * 0.025, y), c0, h * 0.05)
+					draw_circle(Vector2(x + h * 0.025, y), h * 0.025, c0)
+					draw_circle(Vector2(x + len - h * 0.025, y), h * 0.025, c0)
+					x += len + h * 0.04
+				else:
+					x += h * 0.08
+		"heartbeat":
+			var pts := PackedVector2Array()
+			for k in 2:
+				var bx := lerpf(x0, x1, k * 0.5)
+				var seg := (x1 - x0) * 0.5
+				for v in [[0.0, 0.0], [0.3, 0.0], [0.36, -0.05], [0.42, 0.0], [0.5, 0.06], [0.56, -0.3], [0.62, 0.15], [0.68, 0.0], [0.8, -0.06], [0.9, 0.0]]:
+					pts.append(Vector2(bx + seg * v[0], y + h * v[1]))
+			pts.append(Vector2(x1, y))
+			draw_polyline(pts, Color(c0, 0.4), 9.0, true)
+			draw_polyline(pts, c0.lerp(Color.WHITE, 0.3), 4.0, true)
+		"fence":
+			for side in [-1.0, 1.0]:
+				draw_line(Vector2(x0, y + side * h * 0.12), Vector2(x1, y + side * h * 0.12), c0, 4.0)
+			for i in 9:
+				var xx := lerpf(x0, x1, (i + 0.5) / 9.0)
+				draw_line(Vector2(xx, y - h * 0.12), Vector2(xx, y + h * 0.12), c1, 3.0)
+		"bubbles":
+			draw_line(Vector2(x0, y), Vector2(x1, y), c0, 3.0)
+			for i in 7:
+				var p := Vector2(lerpf(x0, x1, (i + 0.5) / 7.0), y - h * (0.08 + 0.08 * float(i % 3)))
+				draw_arc(p, h * (0.05 + 0.02 * float(i % 2)), 0.0, TAU, 20, c1 if i % 2 else c0, 2.5, true)
+		"neon":
+			draw_line(Vector2(x0, y), Vector2(x1, y), Color(c0, 0.25), h * 0.26)
+			draw_line(Vector2(x0, y), Vector2(x1, y), c0, h * 0.13)
+			draw_line(Vector2(x0, y), Vector2(x1, y), c0.lerp(Color.WHITE, 0.8), h * 0.04)
+		"tickets":
+			for i in 4:
+				var w := (x1 - x0) / 4.0
+				var cx := x0 + w * (i + 0.5)
+				draw_rect(Rect2(cx - w * 0.47, y - h * 0.11, w * 0.94, h * 0.22), c0)
+				draw_rect(Rect2(cx - w * 0.36, y - h * 0.07, w * 0.72, h * 0.14), c1, false, 2.0)
+				_star(Vector2(cx, y), h * 0.045, c1)
+		"chevrons":
+			for i in 5:
+				var cx := lerpf(x0, x1, (i + 0.5) / 5.0)
+				draw_polyline(PackedVector2Array([Vector2(cx - h * 0.08, y - h * 0.14), Vector2(cx + h * 0.04, y), Vector2(cx - h * 0.08, y + h * 0.14)]), c0, 6.0, true)
+		"candy":
+			var r := h * 0.08
+			draw_line(Vector2(x0, y), Vector2(x1, y), c1, r * 2.0)
+			var x2 := x0
+			while x2 < x1 - r:
+				draw_colored_polygon(PackedVector2Array([Vector2(x2, y + r), Vector2(x2 + r, y + r), Vector2(minf(x2 + r * 2.0, x1), y - r), Vector2(minf(x2 + r, x1), y - r)]), c0)
+				x2 += r * 2.6

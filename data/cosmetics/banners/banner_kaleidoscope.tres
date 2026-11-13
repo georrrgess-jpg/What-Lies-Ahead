@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_kaleidoscope"
+display_name = "Kaleido Spin"
+description = "Six-fold mirrored colours turning like a toy kaleidoscope."
+slot = &"banner"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.2, 0.05, 0.35, 1, 1, 0.35, 0.65, 1, 0.3, 0.95, 0.85, 1)
+params = {
+"style": 28
+}
+sort_order = 9223

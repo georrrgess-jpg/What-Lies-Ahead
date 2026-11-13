@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_prize_wheel"
+display_name = "Prize Wheel"
+description = "The big prize wheel spins, ticks and lands on a winner."
+slot = &"banner"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.3, 0.08, 0.4, 1, 1, 0.3, 0.5, 1, 1, 0.85, 0.3, 1)
+params = {
+"style": 34
+}
+sort_order = 9225

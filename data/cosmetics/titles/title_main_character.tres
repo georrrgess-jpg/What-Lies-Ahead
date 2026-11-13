@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"title_main_character"
+display_name = "Main Character"
+description = "The camera follows them around."
+slot = &"title"
+rarity = 2
+price = 2800
+sort_order = 10242

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_picnic_plaid"
+display_name = "Picnic Plaid"
+description = "Red and cream gingham, ready for a boardwalk picnic."
+slot = &"banner"
+rarity = 0
+price = 250
+colors = PackedColorArray(1, 0.95, 0.88, 1, 0.9, 0.2, 0.25, 1, 0.6, 0.1, 0.15, 1)
+params = {
+"style": 29
+}
+sort_order = 9025

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_argyle"
+display_name = "Argyle"
+description = "A cosy sweater pattern with stitched diamonds."
+slot = &"banner"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.35, 0.15, 0.4, 1, 0.95, 0.5, 0.6, 1, 1, 0.9, 0.7, 1)
+params = {
+"style": 27
+}
+sort_order = 9024

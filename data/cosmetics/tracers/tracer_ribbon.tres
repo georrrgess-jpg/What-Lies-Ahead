@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_ribbon"
+display_name = "Gift Ribbon"
+description = "A satin ribbon twists along every shot: pink on one side, gold on the other."
+slot = &"tracer"
+rarity = 1
+price = 650
+colors = PackedColorArray(1, 0.35, 0.62, 1, 1, 0.8, 0.28, 1)
+params = {
+"style": "ribbon"
+}
+sort_order = 8109

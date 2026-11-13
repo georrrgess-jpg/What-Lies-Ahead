@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_candy"
+display_name = "Candy Stripe"
+description = "A red and white candy-cane tube with stripes spiralling down it."
+slot = &"tracer"
+rarity = 1
+price = 650
+colors = PackedColorArray(1, 0.18, 0.3, 1, 1, 0.97, 0.95, 1)
+params = {
+"style": "candy"
+}
+sort_order = 8112
