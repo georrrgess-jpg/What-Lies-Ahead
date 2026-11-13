@@ -6,13 +6,13 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"sky_balloon_vendor": 3,
-"tourist_shambler": 9,
-"sky_diver": 4
+"sky_balloon_vendor": 4,
+"tourist_shambler": 10,
+"sky_diver": 6
 }
-spawn_interval = 1.75
+spawn_interval = 1.6
 burst = 1
-max_alive = 8
+max_alive = 9
 speed_scale = 1.0
 late_types_after = 0.35
 banner = ""
@@ -23,13 +23,13 @@ hint = "Divers land where the ring glows: step out of it."
 [sub_resource type="Resource" id="wave_2"]
 script = ExtResource("2")
 spawns = {
-"sky_diver": 14,
+"sky_diver": 16,
 "lifeguard_runner": 5,
-"tourist_shambler": 3
+"tourist_shambler": 4
 }
-spawn_interval = 1.0
+spawn_interval = 0.95
 burst = 1
-max_alive = 11
+max_alive = 12
 speed_scale = 1.0
 late_types_after = 0.0
 banner = ""
@@ -45,7 +45,7 @@ spawns = {
 "sky_balloon_vendor": 7,
 "tourist_shambler": 10,
 "lava_tiki_bartender": 2,
-"sky_diver": 4
+"sky_diver": 5
 }
 spawn_interval = 1.25
 burst = 1
@@ -62,14 +62,14 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"sky_diver": 10,
-"tourist_shambler": 9,
-"sky_balloon_vendor": 4,
+"sky_diver": 12,
+"tourist_shambler": 10,
+"sky_balloon_vendor": 5,
 "boardwalk_bruiser": 1
 }
 spawn_interval = 1.2
 burst = 1
-max_alive = 12
+max_alive = 13
 speed_scale = 1.05
 late_types_after = 0.2
 banner = ""
@@ -84,13 +84,13 @@ script = ExtResource("2")
 spawns = {
 "boardwalk_bruiser": 2,
 "frost_yeti": 1,
-"tourist_shambler": 10,
-"sky_diver": 6,
-"sky_balloon_vendor": 4
+"tourist_shambler": 11,
+"sky_diver": 8,
+"sky_balloon_vendor": 5
 }
 spawn_interval = 1.35
 burst = 1
-max_alive = 13
+max_alive = 14
 speed_scale = 1.06
 late_types_after = 0.25
 banner = ""
@@ -101,14 +101,14 @@ hint = "The heavies cross one bridge at a time: hold the far end."
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 11,
-"sky_diver": 9,
-"sky_balloon_vendor": 5,
-"lava_fire_dancer": 3
+"tourist_shambler": 12,
+"sky_diver": 11,
+"sky_balloon_vendor": 6,
+"lava_fire_dancer": 4
 }
-spawn_interval = 1.25
+spawn_interval = 1.15
 burst = 1
-max_alive = 13
+max_alive = 14
 speed_scale = 1.08
 late_types_after = 0.15
 banner = ""
@@ -123,13 +123,13 @@ twist = &"gale"
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 13,
-"sky_diver": 7,
-"sky_balloon_vendor": 3,
-"lava_fire_dancer": 2
+"sky_diver": 8,
+"sky_balloon_vendor": 4,
+"lava_fire_dancer": 3
 }
 spawn_interval = 1.9
 burst = 2
-max_alive = 13
+max_alive = 14
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""

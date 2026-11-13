@@ -15,6 +15,8 @@ extends DuneLeapBehaviour
 @export var marker_color := Color(1.0, 0.36, 0.42)
 @export var canopy_colors: Array[Color] = [Color(0.91, 0.22, 0.31), Color(1.0, 0.95, 0.88)]
 @export var chute_sound: StringName = &"sky_chute_pop"
+## How much of the player's motion the landing leads (0 = where they stood).
+@export var lead := 0.55
 
 var _marker: MeshInstance3D
 var _canopy: MeshInstance3D
@@ -24,6 +26,16 @@ var _size := 1.0
 static var _ring_mesh: TorusMesh
 static var _disc_mesh: CylinderMesh
 static var _canopy_meshes := {}
+
+
+## Seconds before the first dive (a random pick in this range): divers come
+## in hot, so they dive before they close to melee range.
+@export var first_dive := Vector2(0.4, 1.6)
+
+
+func on_ready(z: Zombie) -> void:
+	super.on_ready(z)
+	_cool = randf_range(first_dive.x, first_dive.y)
 
 
 ## Dives at a player in range: always when they stand higher or out of sight
@@ -36,9 +48,10 @@ func _wants_leap(z: Zombie) -> bool:
 	return higher or z.has_line_of_sight() or d > max_range * 0.6
 
 
-## Lands right where the player stood when the crouch began.
+## Aims where the player is heading (part of their motion over the crouch and
+## the flight), fixed when the crouch begins.
 func _landing_goal(z: Zombie) -> Vector3:
-	var p := z.target.global_position
+	var p := z.target.global_position + z.target.velocity * Vector3(1, 0, 1) * (windup + flight_time) * lead
 	var back := z.global_position - p
 	back.y = 0.0
 	return p + back.normalized() * land_offset

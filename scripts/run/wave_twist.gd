@@ -11,8 +11,10 @@ extends RefCounted
 ##                and the leapers and jetpacks go off more often
 ##   whiteout     Summit Lodge: the storm closes in (the level's FrostWeather
 ##                prop brings the fog and wind on the final wave)
+##   gale         Sky Harbor: the wind rises and leans on the player (the
+##                level's SkyGale prop, scripts/props/sky_gale.gd)
 
-const IDS: Array[StringName] = [&"jackpot", &"blackout", &"frenzy", &"low_gravity", &"whiteout"]
+const IDS: Array[StringName] = [&"jackpot", &"blackout", &"frenzy", &"low_gravity", &"whiteout", &"gale"]
 
 const JACKPOT_TICKETS := 2.0
 const BLACKOUT_LIGHT := 0.32
