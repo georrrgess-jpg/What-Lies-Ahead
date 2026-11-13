@@ -219,8 +219,8 @@ get a short welcome-back card instead. Code: `scripts/onboarding/`, level
 
 ## Main menu and the startup screen
 
-The **startup screen** cuts through quick live vignettes from the game, slams the logo
-in as a marquee sign with chasing bulbs, calls out the game's features with real counts,
+The **startup screen** opens on a soft, low score and quick wordless vignettes from the
+game, reveals the logo as a marquee sign with chasing bulbs, shows the feature counts,
 then holds on *PRESS ANY KEY* over the live menu backdrop; any key skips it, and it plays
 once per session. The menu is styled as a **carnival arcade at sunset** (marquee signs,
 riveted teal frames, cream signboards; see **[docs/UI_STYLE.md](docs/UI_STYLE.md)**) over a
@@ -233,10 +233,11 @@ key art with a slow pan, the difficulty and a tip. The HUD, pause menu, loadout 
 panel and results use the same kit.
 
 **The trailer.** *WATCH TRAILER* on the title screen (it also plays as an attract mode
-when the menu sits idle) runs a 70-second in-engine short made from the real levels,
-zombies, operators, weapons, skins and kill effects: a cold open on the pier, a world
-tour, the cast, kills, the arsenal with its best skins, the operators, the station and
-progression, and the title card. Any key returns to the menu. A rendered copy is in
+when the menu sits idle) runs a 72-second in-engine short made from the real levels,
+zombies, operators, weapons, skins and kill effects. It opens on the Prize Pier at dusk
+with no words, on a low, warm score, then whip-pans through the five worlds, the cast and
+the kills, and shows the new animated finishes, charms, sights and all 18 operators,
+graded per act with in-engine rack focus, lens flares and speed ramps into slow motion. Any key returns to the menu. A rendered copy is in
 [`media/what-lies-ahead-showreel.mp4`](media/) (`tools/render_showreel.sh` renders it;
 see **[docs/SHOWREEL.md](docs/SHOWREEL.md)**).
 
