@@ -56,6 +56,7 @@ var _late_scripts: Array = []
 var _light_count := 0
 var _mesh_cache := {}
 var _bunting: SurfaceTool
+var _lines: SurfaceTool
 var _bunting_count := 0
 
 
@@ -74,6 +75,8 @@ func _initialize() -> void:
 	level.add_child(dressing)
 	_bunting = SurfaceTool.new()
 	_bunting.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_lines = SurfaceTool.new()
+	_lines.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	_build_hub()
 	_build_dock()
@@ -628,37 +631,17 @@ func _string_bunting(a: Vector3, b: Vector3, sag: float) -> void:
 			_bunting.set_uv(Vector2(0.5, v[1]))
 			_bunting.add_vertex(v[0])
 	_bunting_count += 1
-	# The string itself.
-	var line := MeshInstance3D.new()
-	line.name = "BuntingLine%d" % _bunting_count
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.012
-	cyl.bottom_radius = 0.012
-	cyl.height = 1.0
-	cyl.radial_segments = 4
-	cyl.rings = 1
-	cyl.material = _mat("rope", Color(0.9, 0.82, 0.62), 0.9)
-	line.mesh = cyl
-	line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	dressing.add_child(line)
-	var mid := a.lerp(b, 0.5) - Vector3.UP * sag * 0.75
-	_orient_between(line, a, mid, b)
-
-
-## Places a unit cylinder as two straight runs a-m and m-b (a cheap sag).
-func _orient_between(line: MeshInstance3D, a: Vector3, m: Vector3, b: Vector3) -> void:
-	var second := line.duplicate() as MeshInstance3D
-	second.name = line.name + "B"
-	line.get_parent().add_child(second)
-	for pair in [[line, a, m], [second, m, b]]:
-		var node: MeshInstance3D = pair[0]
-		var p: Vector3 = pair[1]
-		var q: Vector3 = pair[2]
-		var dir := (q - p)
-		var y := dir.normalized()
-		var x := y.cross(Vector3.FORWARD if absf(y.z) < 0.9 else Vector3.RIGHT).normalized()
-		var z := x.cross(y)
-		node.transform = Transform3D(Basis(x, y * dir.length(), z), (p + q) * 0.5)
+	# The string itself: a thin ribbon along the sag (part of one mesh).
+	var steps := 10
+	for k in steps:
+		var ta := float(k) / steps
+		var tb := float(k + 1) / steps
+		var pa := a.lerp(b, ta) - Vector3.UP * sag * 4.0 * ta * (1.0 - ta)
+		var pb := a.lerp(b, tb) - Vector3.UP * sag * 4.0 * tb * (1.0 - tb)
+		var up := Vector3.UP * 0.025
+		for v in [pa + up, pb + up, pb - up, pa + up, pb - up, pa - up]:
+			_lines.set_normal(normal)
+			_lines.add_vertex(v)
 
 
 func _finish_bunting() -> void:
@@ -671,6 +654,14 @@ func _finish_bunting() -> void:
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.add_to_group("sky_bunting", true)
 	dressing.add_child(mi)
+	var lines := MeshInstance3D.new()
+	lines.name = "BuntingLines"
+	lines.mesh = _lines.commit()
+	var rope := _mat("rope", Color(0.9, 0.82, 0.62), 0.9)
+	rope.cull_mode = BaseMaterial3D.CULL_DISABLED
+	lines.material_override = rope
+	lines.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dressing.add_child(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -906,8 +897,8 @@ func _build_cloud_banks(parent: Node3D) -> void:
 		m.set_shader_parameter("drift", 0.01 + k * 0.004)
 		mats.append(m)
 	var count := 0
-	for ring in [[60.0, 140.0, -42.0, -18.0, 22, Vector2(40, 80)], [180.0, 420.0, -40.0, 30.0, 26, Vector2(90, 200)],
-			[500.0, 900.0, -45.0, 10.0, 18, Vector2(220, 420)]]:
+	for ring in [[60.0, 140.0, -42.0, -18.0, 15, Vector2(50, 95)], [180.0, 420.0, -40.0, 30.0, 18, Vector2(110, 230)],
+			[500.0, 900.0, -45.0, 10.0, 13, Vector2(260, 480)]]:
 		for k in int(ring[4]):
 			var a: float = TAU * k / float(ring[4]) + rng.randf_range(-0.12, 0.12)
 			var d: float = rng.randf_range(ring[0], ring[1])
@@ -964,8 +955,8 @@ func _build_exit() -> void:
 func _build_markers() -> void:
 	var start := Marker3D.new()
 	start.name = "PlayerSpawn"
-	start.position = Vector3(2.5, 0.1, 10.5)
-	start.rotation.y = deg_to_rad(4.0)
+	start.position = Vector3(0.0, 0.1, 11.5)
+	start.rotation.y = deg_to_rad(0.0)
 	start.add_to_group("player_spawn", true)
 	level.add_child(start)
 

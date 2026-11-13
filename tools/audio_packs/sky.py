@@ -8,7 +8,7 @@ Diver, Balloon Vendor and Captain Cumulus voices, the dive, balloons and the gal
                                         oom-pah-pah tuba and accordion, brushed snare
     audio/music/sky_harbor_final.ogg    its final-wave variant (timpani on every
                                         downbeat, a snare roll drive, brass stabs)
-    audio/music/sky_ambience.ogg        16 s: wind over the islands, flapping
+    audio/music/sky_ambience.ogg        12 s: wind over the islands, flapping
                                         bunting, creaking ropes, a far propeller hum
                                         and wind chimes
     audio/sfx/sky_*.wav                 enemy, dive, balloon and gale sounds
@@ -155,9 +155,9 @@ def sky_harbor_loop(intense=False):
 
 
 def sky_ambience():
-    """16 s seamless bed: wind breathing over the islands, bunting flapping,
+    """12 s seamless bed: wind breathing over the islands, bunting flapping,
     rope creaks, a far propeller hum and a few wind chimes."""
-    d = 16.0
+    d = 12.0
     n = int(SR * (d + 1.0))
     t = np.arange(n) / SR
     left = wind_bed(n, 0.0) * 0.8
@@ -165,16 +165,16 @@ def sky_ambience():
     hum = (np.sin(2 * np.pi * 46 * t) + 0.5 * np.sin(2 * np.pi * 92 * t)) * (0.6 + 0.4 * np.sin(2 * np.pi * t * 3.0) ** 2) * 0.05
     left += hum
     right += hum * 0.7
-    for _ in range(28):
+    for _ in range(21):
         at = rng.uniform(0, d - 0.5)
         flap = sum(band(noise(0.05), 900, 700) * env(0.05, 0.003, 0.04, power=1.5) for _ in range(1))
         for k in range(3):
             place(left if k % 2 else right, flap, at + k * 0.07, rng.uniform(0.05, 0.12))
-    for at in (2.5, 7.8, 12.1):
+    for at in (2.5, 6.8, 9.9):
         f = rng.uniform(180, 260)
         creak = sweep(f, f * 1.3, 0.5, "saw", 0.6) * env(0.5, 0.08, 0.4, power=1.0)
         place(left, filt(creak, low=1800, high=150), at, 0.05)
-    for at in (4.0, 4.3, 4.5, 10.6, 10.9):
+    for at in (4.0, 4.3, 4.5, 8.6, 8.9):
         place(right, glock(note(int(rng.integers(19, 31))), 1.2), at, 0.03)
     stereo = np.stack([left, right], axis=1)
     return loopable(stereo, 1.0)
