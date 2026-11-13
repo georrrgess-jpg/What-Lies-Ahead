@@ -139,8 +139,10 @@ Weapons fire at exactly their data rate. Spread blooms under sustained fire and 
 shortly after the trigger rests, so bursts and aiming down sights matter at range.
 Every weapon has its own model, holographic reload animation, sounds and reticle.
 
-**Aiming down sights** brings the weapon's real sight to your eye on every weapon: the
-camera looks along the sight line (each model has a `SightMount` rail point and a
+**Aiming down sights** runs on the render clock: the zoom and the sight share one eased
+curve and recoil is spring-followed, so aiming and firing are smooth on 60–240 Hz
+displays (`tools/feel_probe.gd` counts per-frame hitches). It brings the weapon's real
+sight to your eye on every weapon: the camera looks along the sight line (each model has a `SightMount` rail point and a
 `SightPoint` eye line), the view zooms by the weapon and optic, spread tightens, and the
 hip reticle gives way to the optic. **Sights** are per-weapon cosmetics (Locker tab
 *Sights*): iron sights, Red Dot, Holo Ring, Chevron, Prism 2x, Lancer Scope and shop
@@ -165,10 +167,12 @@ beam, projectile and splash, pierce, chain, chill/shock and heat), implemented o
   eleven one-time milestones.
 - **Weapon mastery**: 10 ranks per weapon in Bronze, Silver, Gold, Diamond and Prismatic
   tiers, earned by using that weapon. Ranks unlock mastery camos and badges and pay Sparks.
-- **Shop**: 65 items plus sights on a price ladder (Common 150, Rare 400, Epic 900,
-  Legendary 1,800 Sparks): the best animated weapon finishes, energy cells, gloves,
-  charms, kill effects, tracers, decals, banners, titles and optics. Four items a day are
-  featured at 25% off. Every item has a 3D preview and a confirm step.
+- **Shop**: 69 items on a price ladder (Common 250, Rare 650, Epic 1,500, Legendary 3,000
+  Sparks), with one or two showpieces per section at 1,250 / 2,800 / 5,600: the best
+  animated weapon finishes, energy cells, gloves, charms, kill effects, tracers, decals,
+  banners, titles and optics. A common or rare is affordable after a run, a legendary
+  after about four. Four items a day are featured at 25% off. Every item has a 3D preview
+  and a confirm step.
 - **Locker**: 200 cosmetics in eleven categories: operators (nine characters that also
   set your first-person arms), weapon finishes (including animated shader skins), sights,
   energy cells, decals, charms, gloves, kill effects, tracers, banners and titles. Weapon
