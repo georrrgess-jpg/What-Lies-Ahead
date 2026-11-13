@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WorldData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/world_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="2"]
+[ext_resource type="Resource" path="res://data/levels/lost_temple.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("4")
+kind = 2
+target = &"midnight_mall"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"jungle_expedition"
+display_name = "Jungle Expedition"
+blurb = "A jungle-adventure ride swallowed by the jungle, at golden hour. The boats are beached, the carts have stalled, and the Jade Idol is watching."
+levels = Array[ExtResource("2")]([ExtResource("3")])
+sort_order = 70
+tagline = "Keep your hands inside the ride at all times."
+requirement = SubResource("unlock")
+accent_color = Color(0.24, 1, 0.69, 1)
+secondary_color = Color(1, 0.62, 0.24, 1)
+backdrop_color = Color(0.06, 0.2, 0.14, 1)

@@ -4,13 +4,13 @@ shader_type sky;
 // zenith, a big warm sun with a glow, and sunlit cumulus banks (procedural,
 // static so the radiance never re-renders). `storm` (0..1, driven by
 // JungleWeather during the monsoon) rolls in a low grey-green overcast.
-uniform vec3 zenith_color : source_color = vec3(0.24, 0.52, 0.62);
-uniform vec3 mid_color : source_color = vec3(0.62, 0.74, 0.72);
-uniform vec3 horizon_color : source_color = vec3(1.0, 0.74, 0.46);
+uniform vec3 zenith_color : source_color = vec3(0.2, 0.44, 0.6);
+uniform vec3 mid_color : source_color = vec3(0.78, 0.72, 0.64);
+uniform vec3 horizon_color : source_color = vec3(1.0, 0.6, 0.34);
 uniform vec3 ground_color : source_color = vec3(0.36, 0.42, 0.3);
 uniform vec3 sun_color : source_color = vec3(1.0, 0.82, 0.52);
-uniform vec3 cloud_lit : source_color = vec3(1.0, 0.86, 0.66);
-uniform vec3 cloud_shade : source_color = vec3(0.56, 0.52, 0.58);
+uniform vec3 cloud_lit : source_color = vec3(1.0, 0.8, 0.6);
+uniform vec3 cloud_shade : source_color = vec3(0.62, 0.5, 0.56);
 uniform vec3 storm_color : source_color = vec3(0.3, 0.36, 0.36);
 uniform float storm : hint_range(0.0, 1.0) = 0.0;
 uniform float cloud_cover : hint_range(0.0, 1.0) = 0.42;

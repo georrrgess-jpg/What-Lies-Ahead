@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/lost_temple_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"lost_temple"
+display_name = "Lost Temple"
+blurb = "Hold the outfitters hut in the forecourt of the Jade Idol's temple, then follow the torches to the ride's exit."
+scene_path = "res://scenes/levels/lost_temple.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"lost_temple_loop"
+music_final = &"lost_temple_final"
+ambience = &"jungle_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(0.24, 1, 0.69, 1)
+menu_camera_from = Vector3(22, 10, 24)
+menu_camera_to = Vector3(-2, 5, -14)
+heal_item_name = "Coconut water"
+loading_tips = PackedStringArray("Lost Explorers crouch and rustle before they leap: they can reach the terrace and the rope bridge.", "An Overgrown plants its fists before a line of vines creeps toward you. Step off the glowing line.", "Thorny brambles left by a vine lash slow you down. Get out of them.", "A headshot while an Overgrown is winding up cancels its vine lash.", "The temple terrace and the rope bridge are high ground: stairs, a ramp and the camp stairs lead up.", "When the monsoon rolls in, the fog closes: listen for the vines and watch the threat ring.")
