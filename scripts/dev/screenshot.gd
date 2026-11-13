@@ -9,7 +9,13 @@ extends Node
 ##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|kit|<any menu page id: play, settings, locker, arsenal, career, ...>
 ##                         (kit = the UI kit gallery, scripts/ui/kit/kit_gallery.gd)
 ##   --shot-locker=<slot>  with --shot-scene=locker: open that tab (avatar, weapon_finish, gloves...)
-##   --shot-item=<id>      with --shot-scene=locker: select that cosmetic (opens its tab)
+##   --shot-item=<id>      with --shot-scene=locker or shop: select that cosmetic (opens its tab)
+##   --shot-filter=owned|sale   with --shot-scene=locker: the tray's filter
+##   --shot-sparks=n       menu scenes: set the Sparks balance first
+##   --shot-tour=all|buy   with --shot-scene=locker: several stills in one run, saved as <shot>_<name>.png:
+##                         all = every category; buy = --shot-item before, in the confirm dialog, bought, equipped
+##   --shot-run=<file.gd>  menu scenes: instead of a still, run that script's `run(shot, menu)` (headless
+##                         probes; see scripts/dev/meta_pages_probe.gd), then quit
 ##   --shot-pos=x,y,z      player feet position
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
 ##   --shot-pitch=deg
@@ -74,9 +80,19 @@ func _run() -> void:
 			menu.add_child(KitGallery.new())
 		elif scene_kind != "menu":
 			menu._show(scene_kind)
+		_stage_wallet()
 		if scene_kind == "locker":
 			_stage_locker(menu.page("locker"))
-		await _capture(int(_arg("frames", "30")))
+		if scene_kind == "shop" and _arg("item", "") != "":
+			menu.page("shop").select_item(StringName(_arg("item", "")))
+		if _arg("run", "") != "":
+			await (load(_arg("run", "")) as GDScript).new().run(self, menu)
+			get_tree().quit()
+		elif _arg("tour", "") != "":
+			await _tour_locker(menu.page("locker"), _arg("tour", ""))
+			get_tree().quit()
+		else:
+			await _capture(int(_arg("frames", "30")))
 		return
 
 	if _arg("sight", "") != "":
@@ -206,6 +222,46 @@ func _stage_locker(page: Node) -> void:
 		page.show_category(StringName(_arg("locker", "")))
 	if _arg("item", "") != "":
 		page.select_item(StringName(_arg("item", "")))
+	if _arg("filter", "") != "":
+		page._filters.select(StringName(_arg("filter", "")), true)
+
+
+## --shot-sparks: the balance the menu pages see.
+func _stage_wallet() -> void:
+	if _arg("sparks", "") == "":
+		return
+	Profile.section("wallet")["balance"] = int(_arg("sparks", "0"))
+	Wallet.balance_changed.emit(Wallet.balance())
+
+
+## --shot-tour: several Locker stills in one run (the launch is the slow part).
+func _tour_locker(page: Node, tour: String) -> void:
+	var frames := int(_arg("frames", "40"))
+	if tour == "buy":
+		var item := Cosmetics.item(StringName(_arg("item", "")))
+		await _snap("1_before", frames)
+		page._activate(item)
+		await _snap("2_confirm", 24)
+		for node in get_tree().current_scene.get_children():
+			if node is KitDialog:
+				node._close(true)
+		await _snap("3_bought", 22)
+		await _wait(120)
+		page._activate(item)
+		await _snap("4_equipped", 30)
+		return
+	for cat in LockerCatalog.CATEGORIES:
+		page.show_category(cat["slot"])
+		await _snap(String(cat["slot"]), frames)
+
+
+## Saves a still next to the --shot path, as <shot>_<suffix>.png, and carries on.
+func _snap(suffix: String, frames: int) -> void:
+	await _wait(frames)
+	await RenderingServer.frame_post_draw
+	var file := "%s_%s.png" % [path.get_basename(), suffix]
+	var err := get_viewport().get_texture().get_image().save_png(file)
+	print("[shot] saved %s error=%d" % [file, err])
 
 
 func _press(action: String, down: bool) -> void:

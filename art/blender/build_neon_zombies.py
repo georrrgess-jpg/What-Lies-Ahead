@@ -29,8 +29,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wla_common import *  # noqa: F401,F403
 import zombie_anim  # noqa: E402
-from build_zombie import FPS, bind, build_armature, skin  # noqa: E402,F401
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+from build_zombie import FPS, bind, build_armature, save_zombie, skin  # noqa: E402,F401
+from zombie_kit import (HEAD_Y, cap_crown, head_band, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
 
 
@@ -121,7 +121,7 @@ def punk_accessories(m):
         spikes.append(cyl(f"{p}Mo{i}", 0.05, h, (0, y, 1.87 + h * 0.5 - 0.05), rot=rad(-15 + i * 5, 0, 0), segs=6, bevel=0.0,
                           m=m["hair_pink"], radius_top=0.008))
     acc = {"Acc_Punk_Mohawk": bind("Head", spikes + [
-        box(p + "MoBase", (0.1, 0.5, 0.08), (0, HEAD_Y, 1.87), bevel=0.03, m=m["hair_pink"])])}
+        box(p + "MoBase", (0.1, 0.44, 0.08), (0, HEAD_Y + 0.02, 1.885), bevel=0.03, m=m["hair_pink"])])}
     liberty = []
     for i in range(9):
         a = math.tau * i / 9
@@ -129,10 +129,10 @@ def punk_accessories(m):
         liberty.append(cyl(f"{p}Lib{i}", 0.045, 0.24, (x * 1.3, HEAD_Y + y * 1.3, 1.95), rot=(-y * 2.2, x * 2.2, 0),
                            segs=6, bevel=0.0, m=m["hair_cyan"], radius_top=0.006))
     acc["Acc_Punk_Spikes"] = bind("Head", liberty + [
-        sphere(p + "LibCap", 0.28, (0, HEAD_Y, 1.8), scale=(1.05, 1.0, 0.5), m=m["hair_cyan"], segs=12, rings=6)])
+        cap_crown(p + "LibCap", w, m["hair_cyan"], rim=1.79, top=1.96, off=0.02)])
     acc["Acc_Punk_Beanie"] = bind("Head", [
-        sphere(p + "Beanie", 0.32, (0, HEAD_Y + 0.01, 1.82), scale=(1.02, 0.96, 0.75), m=m["shirt"], segs=14, rings=8),
-        band(p + "BeanieBand", (0, HEAD_Y, 1.82), (0, HEAD_Y, 1.72), w * 0.53, 0.285, m["pipe_lime"], n=3.3, thick=0.025, segs=24),
+        cap_crown(p + "Beanie", w, m["shirt"], rim=1.74, top=2.05),
+        head_band(p + "BeanieBand", w, 1.815, 1.72, m["pipe_lime"], off=0.04, thick=0.025),
         sphere(p + "Pom", 0.07, (0, HEAD_Y + 0.02, 2.06), m=m["pipe_pink"], segs=8, rings=5),
     ])
     fy = face_y(w, 1.645)
@@ -163,12 +163,12 @@ def courier(m):
     parts = head(p, m, w)
     fy = face_y(w, 1.74)
     parts += bind("Head", [
-        sphere(p + "Helmet", 0.31, (0, HEAD_Y + 0.02, 1.76), scale=(1.0, 1.1, 0.8), m=white, segs=18, rings=9),
-        torus(p + "HelmetBand", 0.305, 0.022, (0, HEAD_Y + 0.02, 1.72), m=pink, major_segs=26, minor_segs=5),
+        cap_crown(p + "Helmet", w, white, rim=1.715, top=2.0, off=0.045, segs=28),
+        head_band(p + "HelmetBand", w, 1.75, 1.71, pink, off=0.052, thick=0.018),
         box(p + "Visor", (0.48, 0.07, 0.09), (0, fy - 0.06, 1.75), rot=rad(-8, 0, 0), bevel=0.03, m=cyan),
         box(p + "EarCupL", (0.07, 0.17, 0.17), (w * 0.53, HEAD_Y, 1.6), bevel=0.035, m=dark),
         box(p + "EarCupR", (0.07, 0.17, 0.17), (-w * 0.53, HEAD_Y, 1.6), bevel=0.035, m=dark),
-        tube(p + "Mic", [(w * 0.52, HEAD_Y - 0.06, 1.55), (w * 0.4, HEAD_Y - 0.2, 1.46), (w * 0.12, face_y(w, 1.43) - 0.03, 1.42)], 0.012,
+        tube(p + "Mic", [(w * 0.52, HEAD_Y - 0.06, 1.55), (w * 0.4, HEAD_Y - 0.2, 1.46), (w * 0.2, face_y(w, 1.43) - 0.06, 1.39)], 0.012,
              m=dark, segs=5),
     ])
     tor, body = torso(p, jacket, w=0.54, d=0.38, z0=0.88, hunch=0.04, hem=jacket, hem_tear=0)
@@ -212,8 +212,8 @@ def courier_accessories(m):
             sphere(p + "Tip", 0.035, (0.2, 0.54, 1.95), m=m["pipe_cyan"], segs=8, rings=5),
         ]),
         "Acc_Courier_Scarf": bind("Spine", [
-            torus(p + "Scarf", 0.15, 0.05, (0, 0.0, 1.4), m=m["pipe_pink"], major_segs=16, minor_segs=6),
-            box(p + "ScarfTail", (0.1, 0.05, 0.3), (0.08, 0.18, 1.28), rot=rad(25, 10, 0), bevel=0.02, m=m["pipe_pink"]),
+            torus(p + "Scarf", 0.15, 0.05, (0, 0.0, 1.37), rot=rad(24, 0, 0), m=m["pipe_pink"], major_segs=16, minor_segs=6),
+            box(p + "ScarfTail", (0.1, 0.05, 0.3), (0.09, -0.215, 1.14), rot=rad(-4, 0, 6), bevel=0.02, m=m["pipe_pink"]),
         ]),
         "Acc_Courier_Goggles": bind("Head", [
             band(p + "GoggleBand", (0, HEAD_Y, 1.93), (0, HEAD_Y, 1.88), 0.31, 0.33, m["dark"], n=2.6, thick=0.015, segs=24),
@@ -240,7 +240,7 @@ def riot(m):
     fy = face_y(w, 1.6)
     parts += bind("Head", [
         sk.shell(p + "Helmet", suit, 1.96, 1.44, off=0.06, gap=118, segs=28, steps=6, lip=0.04),
-        sphere(p + "HelmetTop", 0.37, (0, HEAD_Y + 0.02, 1.86), scale=(1.0, 1.02, 0.6), m=suit, segs=18, rings=9),
+        cap_crown(p + "HelmetTop", w, suit, rim=1.835, top=2.08, off=0.06, segs=28),
         box(p + "HelmetRidge", (0.09, 0.62, 0.07), (0, HEAD_Y + 0.02, 2.06), bevel=0.025, m=plate),
         # Clear visor: the zombie's face shows through.
         dome_visor(p, w, m["visor_glass"]),
@@ -349,7 +349,7 @@ def build_one(name, outfit, body, accessories, clips):
     for acc_name, parts in accessories(m).items():
         meshes.append(skin(acc_name, parts, armature))
     zombie_anim.bake(armature, clips, name)
-    save(name, [armature] + meshes, animations=True)
+    save_zombie(name, [armature] + meshes)
 
 
 def build():

@@ -1,188 +1,278 @@
 class_name CareerPage
 extends MenuPage
-## Career: account level and progress, the next rewards on the level track,
-## weapon mastery for every weapon (tier badge, rank, XP, kills, reward strip)
-## and challenges with progress bars. Weapon lists scroll, so any number of
-## weapons fits. Registered by data/ui/career.tres.
+## Career: where the player stands and what comes next, on one screen.
+##   - The level road: every level's reward as a card on a road that scrolls
+##     sideways (claimed, NEXT, upcoming), beside the level and its XP bar.
+##   - Goals: the three active contracts and the long-term milestones.
+##   - Weapon mastery: a card per weapon with tier, rank and the next reward.
+##   - Lifetime numbers in the header row.
+## Whatever has the keyboard focus (or the pointer) is explained in the line
+## under its section. Enter on a road reward or a weapon opens it in the
+## Locker. Registered by data/ui/career.tres.
 
-const TRACK_LENGTH := 8
+## Claimed levels kept in view to the left of the next one.
+const ROAD_LEAD := 2
+const MASTERY_COLUMNS := 4
 
-var _card_slot: MarginContainer
-var _track_title: Label
-var _track: HBoxContainer
-var _tab_buttons := {}
-var _content: VBoxContainer
-var _scroll: ScrollContainer
-var _tab := "mastery"
+var _header: HBoxContainer
+var _level_slot: MarginContainer
+var _road_scroll: ScrollContainer
+var _road: HBoxContainer
+var _road_detail: Label
+var _contracts: MarginContainer
+var _milestones: HBoxContainer
+var _goal_detail: Label
+var _goal_note: Label
+var _milestone_note: Label
+var _mastery: GridContainer
+var _mastery_detail: Label
+var _thumbs: CosmeticThumbs
+var _next_card: Control
+
+
+func uses_shell_header() -> bool:
+	return true
+
+
+func header_extra() -> Control:
+	return _header
 
 
 func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.NAVY, 0.94), UiKit.PINK, 26, 4, 26))
-	center.add_child(panel)
+	_thumbs = CosmeticThumbs.new()
+	add_child(_thumbs)
+	_header = HBoxContainer.new()
+	_header.alignment = BoxContainer.ALIGNMENT_END
+	_header.add_theme_constant_override("separation", UiKit.GAP_S)
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 12)
-	col.custom_minimum_size = Vector2(1700, 0)
-	panel.add_child(col)
-	col.add_child(_header())
-	_card_slot = MarginContainer.new()
-	col.add_child(_card_slot)
-	_track_title = UiKit.label("", 28, UiKit.AMBER, true)
-	col.add_child(_track_title)
-	_track = HBoxContainer.new()
-	_track.add_theme_constant_override("separation", 10)
-	col.add_child(_track)
-	col.add_child(_tabs())
-	_scroll = ScrollContainer.new()
-	_scroll.custom_minimum_size = Vector2(0, 380)
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_style_scrollbar(_scroll.get_v_scroll_bar())
-	col.add_child(_scroll)
-	var margin := MarginContainer.new()
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_right", 22)
-	_scroll.add_child(margin)
-	_content = VBoxContainer.new()
-	_content.add_theme_constant_override("separation", 12)
-	margin.add_child(_content)
-	refresh()
+	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	col.add_theme_constant_override("separation", UiKit.GAP_M)
+	add_child(col)
+	col.add_child(_build_road())
+	var row := HBoxContainer.new()
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", UiKit.GAP_L)
+	col.add_child(row)
+	row.add_child(_build_goals())
+	row.add_child(_build_mastery())
 
 
 func refresh() -> void:
-	if _content == null:
+	if _road == null:
 		return
-	_clear(_card_slot)
-	_card_slot.add_child(CareerCards.player_card())
-	_build_track()
-	_select_tab(_tab)
+	_fill_header()
+	_clear(_level_slot)
+	_level_slot.add_child(CareerCards.level_block())
+	_fill_road()
+	_fill_goals()
+	_fill_mastery()
+	UiFx.stagger_in(_mastery.get_children())
+	_show_next_level.call_deferred()
 
 
-func _header() -> Control:
-	var head := HBoxContainer.new()
-	var title := UiKit.label("CAREER", 64, UiKit.AMBER, true)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(title)
-	var back_button := UiKit.soft_button("BACK", 30)
-	back_button.pressed.connect(func(): back.emit())
-	head.add_child(back_button)
-	return head
+func first_focus() -> Control:
+	return _next_card
 
 
-func _tabs() -> Control:
+# --- layout ---------------------------------------------------------------------
+
+## The level block and the road of level rewards on one signboard.
+func _build_road() -> Control:
+	var board := UiKit.signboard()
+	board.set_padding(30, 24)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	var group := ButtonGroup.new()
-	for entry in [["mastery", "WEAPON MASTERY"], ["challenges", "CHALLENGES"]]:
-		var b := UiKit.soft_button(entry[1], 28)
-		b.toggle_mode = true
-		b.button_group = group
-		b.custom_minimum_size = Vector2(320, 0)
-		var on := UiKit.box(UiKit.PINK, UiKit.PINK_DARK, 18, 0, 10)
-		on.border_width_bottom = 6
-		b.add_theme_stylebox_override("pressed", on)
-		b.add_theme_stylebox_override("hover_pressed", on)
-		b.pressed.connect(_on_tab_pressed.bind(entry[0]))
-		row.add_child(b)
-		_tab_buttons[entry[0]] = b
-		if entry[0] == "mastery":
-			b.name = "FirstFocus"
-	var hint := UiKit.label("Mastery rewards unlock per weapon. Click an unlocked one to equip it.", 20, Color(1, 1, 1, 0.6))
-	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(hint)
-	return row
+	row.add_theme_constant_override("separation", UiKit.GAP_L)
+	board.add_child(row)
+	_level_slot = MarginContainer.new()
+	_level_slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(_level_slot)
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override("separation", UiKit.GAP_XS)
+	row.add_child(col)
+	col.add_child(UiKit.section("LEVEL ROAD", "Every level pays Sparks and gives one thing"))
+	_road_scroll = ScrollContainer.new()
+	_road_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_road_scroll.follow_focus = true
+	_road_scroll.custom_minimum_size.y = CareerCards.ROAD_CARD.y + 44
+	col.add_child(_road_scroll)
+	var pad := MarginContainer.new()
+	for side in ["left", "top", "right"]:
+		pad.add_theme_constant_override("margin_" + side, 14)
+	pad.add_theme_constant_override("margin_bottom", 10)
+	_road_scroll.add_child(pad)
+	_road = HBoxContainer.new()
+	_road.add_theme_constant_override("separation", 0)
+	pad.add_child(_road)
+	_road_detail = _detail_line()
+	col.add_child(_road_detail)
+	return board
 
 
-func _build_track() -> void:
-	_clear(_track)
-	var lvl := Progression.level()
-	var first := mini(lvl + 1, Progression.MAX_LEVEL - TRACK_LENGTH + 1)
-	_track_title.text = "REWARD TRACK  ·  EVERY LEVEL UNLOCKS SOMETHING" if lvl < Progression.MAX_LEVEL else "REWARD TRACK  ·  MAX LEVEL, EVERYTHING UNLOCKED"
-	for l in range(first, first + TRACK_LENGTH):
-		_track.add_child(CareerCards.track_card(l, lvl))
+## Contracts and milestones.
+func _build_goals() -> Control:
+	var board := UiKit.signboard()
+	board.custom_minimum_size.x = 760
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiKit.GAP_S)
+	board.add_child(col)
+	var contracts_head := UiKit.section("CONTRACTS", " ")
+	_goal_note = contracts_head.get_child(2) as Label
+	col.add_child(contracts_head)
+	_contracts = MarginContainer.new()
+	col.add_child(_contracts)
+	var milestones_head := UiKit.section("MILESTONES", " ", UiKit.AMBER)
+	_milestone_note = milestones_head.get_child(2) as Label
+	col.add_child(milestones_head)
+	_milestones = HBoxContainer.new()
+	_milestones.add_theme_constant_override("separation", UiKit.GAP_S)
+	col.add_child(_milestones)
+	col.add_child(UiKit.filler())
+	_goal_detail = _detail_line()
+	_goal_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_goal_detail.max_lines_visible = 2
+	_goal_detail.custom_minimum_size.y = 56
+	col.add_child(_goal_detail)
+	return board
 
 
-func _on_tab_pressed(tab: String) -> void:
-	_select_tab(tab)
-	_scroll.scroll_vertical = 0
+func _build_mastery() -> Control:
+	var tray := UiKit.metal_frame(34)
+	tray.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiKit.GAP_S)
+	tray.add_child(col)
+	col.add_child(UiKit.section("WEAPON MASTERY", "Ten ranks per weapon, a reward at each"))
+	_mastery = GridContainer.new()
+	_mastery.columns = MASTERY_COLUMNS
+	_mastery.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_mastery.add_theme_constant_override("h_separation", UiKit.GAP_S)
+	_mastery.add_theme_constant_override("v_separation", UiKit.GAP_S)
+	col.add_child(_mastery)
+	_mastery_detail = _detail_line()
+	col.add_child(_mastery_detail)
+	return tray
 
 
-func _select_tab(tab: String) -> void:
-	_tab = tab
-	(_tab_buttons[tab] as Button).set_pressed_no_signal(true)
-	_clear(_content)
-	if tab == "mastery":
-		_build_mastery()
-	else:
-		_build_challenges()
+## The line under a section that explains the focused tile.
+func _detail_line() -> Label:
+	var l := UiKit.label("", UiKit.SIZE_SMALL, UiKit.CREAM)
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	l.clip_text = true
+	return l
 
 
-func _build_mastery() -> void:
-	var grid := GridContainer.new()
-	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_content.add_child(grid)
+# --- content --------------------------------------------------------------------
+
+## Lifetime numbers, right of the marquee.
+func _fill_header() -> void:
+	_clear(_header)
+	var clears := 0
+	for key in Profile.data["levels"]:
+		clears += int(Profile.data["levels"][key].get("clears", 0))
+	_header.add_child(CareerCards.stat_tile("ZOMBIES POPPED", Wallet.format(Mastery.total_kills())))
+	_header.add_child(CareerCards.stat_tile("LEVEL CLEARS", Wallet.format(clears)))
+	_header.add_child(CareerCards.stat_tile("RUNS", Wallet.format(int(Profile.section("progression").get("runs_played", 0)))))
+	_header.add_child(CareerCards.stat_tile("CONTRACTS", Wallet.format(ContractBoard.completed_count())))
+	_header.add_child(CareerCards.stat_tile("SPARKS EARNED", Wallet.format(Wallet.lifetime_earned()), Wallet.COLOR))
+
+
+func _fill_road() -> void:
+	_clear(_road)
+	_next_card = null
+	var current := Progression.level()
+	for lvl in range(2, Progression.MAX_LEVEL + 1):
+		if lvl > 2:
+			_road.add_child(CareerCards.road_link(lvl <= current + 1))
+		var card := CareerCards.road_card(lvl, current, _thumbs)
+		card.focus_entered.connect(_show_road_detail.bind(card))
+		card.mouse_entered.connect(_show_road_detail.bind(card))
+		card.pressed.connect(_open_reward.bind(card))
+		_road.add_child(card)
+		if lvl == mini(current + 1, Progression.MAX_LEVEL):
+			_next_card = card
+	if _next_card:
+		_show_road_detail(_next_card)
+
+
+func _fill_goals() -> void:
+	_clear(_contracts)
+	var row := CareerCards.contracts_row()
+	_contracts.add_child(row)
+	for tile: CareerTile in row.get_children():
+		tile.highlighted.connect(_show_goal_detail)
+	_goal_note.text = "Three at a time  ·  %d completed" % ContractBoard.completed_count()
+	_clear(_milestones)
+	var reached := 0
+	var milestones := ChallengeBook.of_scope(Challenge.Scope.ACCOUNT)
+	for ch in milestones:
+		var tile := CareerCards.milestone_tile(ch)
+		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tile.highlighted.connect(_show_goal_detail)
+		_milestones.add_child(tile)
+		if ChallengeBook.is_complete(ch):
+			reached += 1
+	_milestone_note.text = "%d of %d reached" % [reached, milestones.size()]
+	if row.get_child_count() > 0:
+		_show_goal_detail(row.get_child(0) as CareerTile)
+
+
+func _fill_mastery() -> void:
+	_clear(_mastery)
 	for w in GameData.weapons():
-		grid.add_child(CareerCards.weapon_card(w, _select_tab.bind("mastery")))
+		var tile := CareerCards.mastery_card(w)
+		tile.highlighted.connect(_show_mastery_detail)
+		tile.pressed.connect(_open_weapon.bind(w.id))
+		_mastery.add_child(tile)
+	if _mastery.get_child_count() > 0:
+		_show_mastery_detail(_mastery.get_child(0) as CareerTile)
 
 
-func _build_challenges() -> void:
-	_content.add_child(_section("CONTRACTS", "Three at a time. Finished ones are replaced after the run  ·  %d completed" % ContractBoard.completed_count()))
-	_content.add_child(CareerCards.contracts_row())
-	var done := ChallengeBook.completion()
-	_content.add_child(_section("MILESTONES", "%d / %d reached" % [done.x, done.y]))
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	_content.add_child(grid)
-	for ch in ChallengeBook.of_scope(Challenge.Scope.ACCOUNT):
-		grid.add_child(CareerCards.challenge_tile(ch, &""))
-	var weapon_challenges := ChallengeBook.of_scope(Challenge.Scope.WEAPON)
-	if weapon_challenges.is_empty():
+## Scrolls the road so the next level sits near its left end.
+func _show_next_level() -> void:
+	if _next_card == null:
 		return
-	_content.add_child(_section("WEAPON CHALLENGES", "Every weapon has its own set; rewards include mastery XP"))
-	for w in GameData.weapons():
-		var head := HBoxContainer.new()
-		head.add_theme_constant_override("separation", 10)
-		head.add_child(TierBadge.new(Mastery.rank(w.id), 40.0))
-		var name := UiKit.label(w.display_name.to_upper(), 28, Color.WHITE, true)
-		name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		head.add_child(name)
-		_content.add_child(head)
-		var row := GridContainer.new()
-		row.columns = mini(weapon_challenges.size(), 5)
-		row.add_theme_constant_override("h_separation", 10)
-		row.add_theme_constant_override("v_separation", 10)
-		_content.add_child(row)
-		for ch in weapon_challenges:
-			row.add_child(CareerCards.challenge_tile(ch, w.id, true))
+	var step := CareerCards.ROAD_CARD.x + 20.0
+	_road_scroll.scroll_horizontal = int(maxf(0.0, _next_card.position.x - step * ROAD_LEAD))
 
 
-func _section(title: String, note: String) -> Control:
-	var row := HBoxContainer.new()
-	var t := UiKit.label(title, 30, UiKit.CYAN, true)
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(t)
-	var n := UiKit.label(note, 20, Color(1, 1, 1, 0.65))
-	n.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(n)
-	return row
+# --- behaviour ------------------------------------------------------------------
+
+func _show_road_detail(card: Control) -> void:
+	_road_detail.text = String(card.get_meta(&"detail", ""))
 
 
-static func _style_scrollbar(bar: ScrollBar) -> void:
-	bar.custom_minimum_size = Vector2(14, 0)
-	bar.add_theme_stylebox_override("scroll", UiKit.box(Color(UiKit.INK, 0.8), Color.TRANSPARENT, 7, 0, 0))
-	bar.add_theme_stylebox_override("grabber", UiKit.box(UiKit.PINK, Color.TRANSPARENT, 7, 0, 0))
-	bar.add_theme_stylebox_override("grabber_highlight", UiKit.box(UiKit.PINK_LIGHT, Color.TRANSPARENT, 7, 0, 0))
-	bar.add_theme_stylebox_override("grabber_pressed", UiKit.box(UiKit.CYAN, Color.TRANSPARENT, 7, 0, 0))
+func _show_goal_detail(tile: CareerTile) -> void:
+	_goal_detail.text = tile.detail
+
+
+func _show_mastery_detail(tile: CareerTile) -> void:
+	_mastery_detail.text = tile.detail
+
+
+## Enter on a cosmetic reward of the road shows it in the Locker.
+func _open_reward(card: Control) -> void:
+	var locker_card := card as LockerCard
+	if locker_card == null or locker_card.item == null:
+		return
+	open_page.emit(&"locker")
+	var locker := _locker()
+	if locker:
+		locker.select_item(locker_card.item.id)
+
+
+## Enter on a weapon shows its skins in the Locker.
+func _open_weapon(weapon_id: StringName) -> void:
+	open_page.emit(&"locker")
+	var locker := _locker()
+	if locker:
+		locker.select_weapon(weapon_id)
+		locker.show_category(&"weapon_finish")
+
+
+func _locker() -> LockerPage:
+	var menu := get_tree().current_scene
+	return menu.page("locker") as LockerPage if menu.has_method("page") else null
 
 
 static func _clear(node: Node) -> void:

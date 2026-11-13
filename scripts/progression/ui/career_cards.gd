@@ -1,85 +1,25 @@
 class_name CareerCards
 extends RefCounted
-## Builders for the Career page's cards: the player card, reward-track cards,
-## weapon mastery cards and challenge tiles. Each returns a finished Control.
+## Builders for the Career page, all from the UI kit: the level block, the
+## cards of the level road, contract and milestone tiles, weapon mastery
+## cards and the small stat tiles. Each returns a finished Control; tiles
+## carry the longer text the page shows while they are focused.
 
-## Account level, XP bar, equipped title and banner, lifetime stats.
-static func player_card() -> Control:
-	var lvl := Progression.level()
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.9), Color(ProgStyle.level_color(lvl), 0.7), 20, 3, 0))
-	card.clip_contents = true
-	var banner_item := Cosmetics.equipped(&"banner")
-	if banner_item:
-		var art := RewardArt.new(banner_item, false, Vector2.ZERO)
-		art.modulate = Color(1, 1, 1, 0.55)
-		card.add_child(art)
-	card.add_child(shade_gradient(0.92, 0.35))
-	var margin := MarginContainer.new()
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 18)
-	margin.add_theme_constant_override("margin_left", 26)
-	card.add_child(margin)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 26)
-	margin.add_child(row)
-	row.add_child(LevelEmblem.new(lvl, 128.0))
-	row.add_child(_level_column(lvl))
-	row.add_child(_stats_column())
-	return card
+const ROAD_CARD := Vector2(172, 200)
+const MASTERY_CARD := Vector2(236, 150)
+const CONTRACT_TILE := Vector2(210, 164)
+const MILESTONE_TILE := Vector2(54, 54)
 
 
-static func _level_column(lvl: int) -> Control:
-	var col := VBoxContainer.new()
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", 4)
-	var title := Cosmetics.equipped(&"title")
-	var title_text := title.display_name.to_upper() if title else "PIER ROOKIE"
-	col.add_child(UiKit.label(title_text, 24, title.color(0, UiKit.CREAM) if title else Color(1, 1, 1, 0.65), true))
-	var head := HBoxContainer.new()
-	col.add_child(head)
-	var level_label := UiKit.arcade_label("LEVEL %d" % lvl, 58, Color.WHITE)
-	level_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(level_label)
-	var bar := ProgStyle.bar(22.0, ProgStyle.XP_COLOR)
-	bar.value = Progression.level_progress()
-	col.add_child(bar)
-	var foot := HBoxContainer.new()
-	col.add_child(foot)
-	var xp_text := UiKit.label("%s XP total" % ProgStyle.num(Progression.xp()), 22, UiKit.CREAM)
-	xp_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	foot.add_child(xp_text)
-	var next := "MAX LEVEL" if lvl >= Progression.MAX_LEVEL else "%s XP to level %d" % [ProgStyle.num(Progression.xp_to_next()), lvl + 1]
-	foot.add_child(UiKit.label(next, 22, ProgStyle.XP_COLOR, true))
-	return col
-
-
-static func _stats_column() -> Control:
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
-	grid.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var done := ChallengeBook.completion()
-	var clears := 0
-	for key in Profile.data["levels"]:
-		clears += int(Profile.data["levels"][key].get("clears", 0))
-	grid.add_child(_stat("LIFETIME KILLS", ProgStyle.num(Mastery.total_kills())))
-	grid.add_child(_stat("LEVEL CLEARS", ProgStyle.num(clears)))
-	grid.add_child(_stat("CHALLENGES", "%d / %d" % [done.x, done.y]))
-	grid.add_child(_stat("RUNS", ProgStyle.num(int(Profile.section("progression").get("runs_played", 0)))))
-	return grid
-
-
-static func _stat(caption: String, value: String) -> Control:
-	var box := PanelContainer.new()
-	box.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.75), Color.TRANSPARENT, 14, 0, 10))
-	box.custom_minimum_size = Vector2(190, 0)
+## A caption over a value on a dark tile ("ZOMBIES POPPED" / "1,500").
+static func stat_tile(caption: String, value: String, accent := UiKit.CYAN) -> Control:
+	var box := UiKit.card_panel(10)
+	box.custom_minimum_size.x = 150
+	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", -8)
 	box.add_child(v)
-	var c := UiKit.label(caption, 17, UiKit.CYAN, true)
+	var c := UiKit.label(caption, UiKit.SIZE_SMALL, accent, true)
 	c.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(c)
 	var val := UiKit.label(value, 34, Color.WHITE, true)
@@ -88,170 +28,85 @@ static func _stat(caption: String, value: String) -> Control:
 	return box
 
 
-## Left-to-right darkening so text stays readable over any banner.
-static func shade_gradient(left_alpha: float, right_alpha: float) -> TextureRect:
-	var grad := Gradient.new()
-	grad.colors = PackedColorArray([Color(UiKit.INK, left_alpha), Color(UiKit.INK, right_alpha)])
-	var tex := GradientTexture2D.new()
-	tex.gradient = grad
-	tex.width = 64
-	tex.height = 4
-	var rect := TextureRect.new()
-	rect.texture = tex
-	rect.stretch_mode = TextureRect.STRETCH_SCALE
-	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return rect
+## The player's level: badge, title, XP bar and what is left to the next level.
+static func level_block() -> Control:
+	var lvl := Progression.level()
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiKit.GAP_M)
+	row.add_child(UiKit.level_badge(132.0))
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.custom_minimum_size.x = 250
+	col.add_theme_constant_override("separation", 0)
+	row.add_child(col)
+	var title := Cosmetics.equipped_or_default(&"title")
+	col.add_child(UiKit.label((title.display_name if title else "Rookie").to_upper(), 22, UiKit.CYAN, true))
+	col.add_child(UiKit.sign_label("LEVEL %d" % lvl, 54))
+	var bar := UiKit.progress(Progression.level_progress(), 18.0, UiKit.AMBER)
+	col.add_child(bar)
+	col.add_child(UiKit.spacer(UiKit.GAP_XS))
+	var next := "Top level reached" if lvl >= Progression.MAX_LEVEL else "%s XP to level %d" % [Wallet.format(Progression.xp_to_next()), lvl + 1]
+	col.add_child(UiKit.label(next, UiKit.SIZE_SMALL, UiKit.CREAM))
+	return row
 
 
-# --- reward track ------------------------------------------------------------------
+# --- level road ---------------------------------------------------------------------
 
-## One level on the reward track: level chip, preview, reward name and kind.
-static func track_card(lvl: int, current: int) -> Control:
-	var items := Progression.level_rewards(lvl)
-	var item: CosmeticItem = items[0] if not items.is_empty() else null
-	var owned := lvl <= current
+## One level of the road: what it gives (a cosmetic, a weapon or a stamp) and
+## its Sparks. Levels already reached read "Claimed"; the next one is outlined.
+static func road_card(lvl: int, current: int, thumbs: CosmeticThumbs) -> ItemCard:
+	var rewards := Progression.level_rewards(lvl)
+	var weapons := Progression.level_weapons(lvl)
+	var card: ItemCard
+	if weapons.is_empty() and not rewards.is_empty():
+		var locker_card := LockerCard.create(ROAD_CARD)
+		locker_card.show_item(rewards[0], null, thumbs)
+		locker_card.set_new(false)
+		card = locker_card
+	else:
+		var stamp := Progression.stamp(lvl)
+		card = UiKit.item_card((stamp[0] if not stamp.is_empty() else "Level %d" % lvl).to_upper(), ROAD_CARD)
+		card.set_preview(RewardArt.stamp(stamp[0] if not stamp.is_empty() else "Level", false, Vector2.ZERO))
+		card.set_rarity(UiKit.AMBER if not weapons.is_empty() else Color.TRANSPARENT)
+	card.toggle_mode = false
 	var is_next := lvl == current + 1
-	var accent := CosmeticItem.rarity_color(item.rarity) if item else UiKit.AMBER
-	var card := PanelContainer.new()
-	var border := UiKit.CYAN if is_next else Color(accent, 0.45)
-	card.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.82), border, 16, 4 if is_next else 2, 10))
-	card.custom_minimum_size = Vector2(190, 0)
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 4)
-	card.add_child(v)
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 6)
-	v.add_child(head)
-	head.add_child(LevelEmblem.new(lvl, 34.0))
-	var tag := UiKit.label("NEXT" if is_next else ("OWNED" if owned else "LEVEL %d" % lvl), 18, UiKit.CYAN if is_next else UiKit.CREAM, true)
-	tag.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	head.add_child(tag)
-	var stamp := Progression.stamp(lvl)
-	var art := RewardArt.new(item, false, Vector2(150, 84)) if item else RewardArt.stamp(stamp[0] if not stamp.is_empty() else "", false, Vector2(150, 84))
-	art.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	v.add_child(art)
-	var name := UiKit.label(item.display_name if item else (stamp[0] if not stamp.is_empty() else "—"), 22, Color.WHITE, true)
-	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	name.custom_minimum_size = Vector2(150, 0)
-	v.add_child(name)
-	var kind := item.slot_label() if item else Progression.stamp_kind(lvl)
-	v.add_child(UiKit.label("%s  ·  +%d Sparks" % [kind, Progression.level_sparks(lvl)], 17, Color(accent, 0.9) if item else UiKit.AMBER))
-	card.tooltip_text = item.description if item else (stamp[1] if stamp.size() > 1 else "")
+	card.set_tag("NEXT  ·  LV %d" % lvl if is_next else "LV %d" % lvl, UiKit.PINK if is_next else (UiKit.AMBER if Progression.is_milestone_level(lvl) else UiKit.CYAN))
+	if lvl <= current:
+		card.set_status("Claimed", UiKit.GREEN)
+	else:
+		card.set_price(Progression.level_sparks(lvl))
 	if is_next:
-		var bar := ProgStyle.bar(8.0, UiKit.CYAN)
-		bar.value = Progression.level_progress()
-		v.add_child(bar)
+		card.add_theme_stylebox_override("normal", KitTex.box(&"card_selected"))
+	card.set_meta(&"detail", road_detail(lvl, current))
 	return card
 
 
-# --- weapon mastery -------------------------------------------------------------------
-
-## Tier badge, rank, XP bar, kills and the weapon's rank-by-rank reward strip.
-## Owned rewards in the strip equip on click; `on_change` runs afterwards.
-static func weapon_card(w: WeaponData, on_change: Callable) -> Control:
-	var rank := Mastery.rank(w.id)
-	var tier_col := ProgStyle.rank_color(rank)
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.78), Color(tier_col, 0.5 if rank > 0 else 0.15), 18, 3, 14))
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 8)
-	card.add_child(v)
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 14)
-	v.add_child(head)
-	head.add_child(TierBadge.new(rank, 74.0))
-	var names := VBoxContainer.new()
-	names.add_theme_constant_override("separation", -6)
-	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	names.alignment = BoxContainer.ALIGNMENT_CENTER
-	head.add_child(names)
-	names.add_child(UiKit.label(w.display_name.to_upper(), 32, Color.WHITE, true))
-	names.add_child(UiKit.label(Mastery.rank_label(rank), 22, tier_col if rank > 0 else Color(1, 1, 1, 0.55), true))
-	var kills := VBoxContainer.new()
-	kills.add_theme_constant_override("separation", -8)
-	kills.alignment = BoxContainer.ALIGNMENT_CENTER
-	head.add_child(kills)
-	var kv := UiKit.label(ProgStyle.num(Mastery.kills(w.id)), 32, Color.WHITE, true)
-	kv.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	kills.add_child(kv)
-	var kc := UiKit.label("KILLS", 16, UiKit.CYAN, true)
-	kc.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	kills.add_child(kc)
-	var bar := ProgStyle.bar(14.0, tier_col if rank > 0 else UiKit.CYAN)
-	bar.value = Mastery.rank_progress(w.id)
-	v.add_child(bar)
-	var ceiling := Mastery.rank_ceiling(rank)
-	var xp_text := "%s XP · fully mastered" % ProgStyle.num(Mastery.xp(w.id)) if ceiling < 0 \
-		else "%s / %s XP to rank %d" % [ProgStyle.num(Mastery.xp(w.id)), ProgStyle.num(ceiling), rank + 1]
-	var info := HBoxContainer.new()
-	v.add_child(info)
-	var xp_label := UiKit.label(xp_text, 19, UiKit.CREAM)
-	xp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.add_child(xp_label)
-	if not ChallengeBook.of_scope(Challenge.Scope.WEAPON).is_empty():
-		info.add_child(UiKit.label(_challenge_count(w.id), 19, UiKit.GREEN, true))
-	v.add_child(_reward_strip(w, rank, on_change))
-	var next := _next_reward(w.id, rank)
-	if next:
-		var t := Mastery.tier(next.requirement.amount)
-		v.add_child(UiKit.label("NEXT  ·  %s (%s) at rank %d" % [next.display_name, next.slot_label().to_lower(), next.requirement.amount], 18, t.color if t else UiKit.CREAM, true))
-	return card
+## "LEVEL 12  ·  New weapon: Rail Lancer  ·  +110 Sparks  ·  2 levels to go".
+static func road_detail(lvl: int, current: int) -> String:
+	var parts := PackedStringArray(["LEVEL %d" % lvl])
+	var reward := Progression.reward_text(lvl)
+	if reward != "":
+		parts.append(reward)
+	parts.append("+%d %s" % [Progression.level_sparks(lvl), Wallet.CURRENCY])
+	if lvl <= current:
+		parts.append("claimed")
+	elif lvl == current + 1:
+		parts.append("%s XP to go" % Wallet.format(Progression.xp_to_next()))
+	else:
+		parts.append("%d levels to go" % (lvl - current))
+	return "  ·  ".join(parts)
 
 
-static func _next_reward(weapon_id: StringName, rank: int) -> CosmeticItem:
-	for it in Mastery.rank_track(weapon_id):
-		if it.requirement.amount > rank:
-			return it
-	return null
-
-
-static func _challenge_count(weapon_id: StringName) -> String:
-	var list := ChallengeBook.of_scope(Challenge.Scope.WEAPON)
-	var done := list.filter(func(ch): return ChallengeBook.is_complete(ch, weapon_id)).size()
-	return "CHALLENGES %d/%d" % [done, list.size()]
-
-
-static func _reward_strip(w: WeaponData, rank: int, on_change: Callable) -> Control:
-	var strip := HBoxContainer.new()
-	strip.add_theme_constant_override("separation", 4)
-	var by_rank := {}
-	for it in Mastery.rank_track(w.id):
-		if not by_rank.has(it.requirement.amount):
-			by_rank[it.requirement.amount] = it
-	for r in range(1, Mastery.max_rank() + 1):
-		var cell := VBoxContainer.new()
-		cell.add_theme_constant_override("separation", 0)
-		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		strip.add_child(cell)
-		var it: CosmeticItem = by_rank.get(r)
-		var art := RewardArt.new(it, rank < r, Vector2(42, 42)) if it else RewardArt.stamp("", rank < r, Vector2(42, 42))
-		art.mouse_filter = Control.MOUSE_FILTER_PASS
-		art.tooltip_text = "Rank %d: %s (%s)" % [r, it.display_name, it.slot_label()] if it else "Rank %d" % r
-		if it and rank >= r:
-			_make_equippable(art, w.id, on_change)
-		cell.add_child(art)
-		var t := Mastery.tier(r)
-		var lab := UiKit.label(str(r), 15, t.color if rank >= r else Color(1, 1, 1, 0.4), true)
-		lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		cell.add_child(lab)
-	return strip
-
-
-## Click toggles the item on this weapon; the equipped one wears a ring.
-static func _make_equippable(art: RewardArt, weapon_id: StringName, on_change: Callable) -> void:
-	var it := art.item
-	art.equipped = Cosmetics.equipped(it.slot, weapon_id) == it
-	art.mouse_filter = Control.MOUSE_FILTER_STOP
-	art.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	art.tooltip_text += "\nClick to %s" % ("unequip" if art.equipped else "equip")
-	art.gui_input.connect(func(event: InputEvent):
-		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			Cosmetics.equip(it.slot, null if art.equipped else it, weapon_id)
-			Sfx.play(&"ui_click", -6.0)
-			on_change.call())
+## The piece of road between two level cards (lit once it has been walked).
+static func road_link(walked: bool) -> Control:
+	var link := ColorRect.new()
+	link.color = UiKit.CYAN if walked else Color("3a2d6b")
+	link.custom_minimum_size = Vector2(20, 8)
+	link.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	# Above the soft shadows the cards cast on either side.
+	link.z_index = 1
+	link.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return link
 
 
 # --- contracts and milestones ---------------------------------------------------------
@@ -260,86 +115,173 @@ static func _make_equippable(art: RewardArt, weapon_id: StringName, on_change: C
 ## goal, progress bar and reward.
 static func contracts_row() -> Control:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", UiKit.GAP_S)
 	for entry in ContractBoard.active():
 		row.add_child(contract_tile(entry))
 	return row
 
 
 ## One active contract: name, goal, progress and what it pays.
-static func contract_tile(entry: Dictionary) -> Control:
+static func contract_tile(entry: Dictionary) -> CareerTile:
 	var template := ContractBoard.template(entry)
 	var done := ContractBoard.is_done(entry)
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.78), Color(UiKit.GREEN if done else Wallet.COLOR_GLOW, 0.6), 16, 2, 12))
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 2)
-	card.add_child(v)
-	var top := HBoxContainer.new()
-	v.add_child(top)
-	var name := UiKit.label(ContractBoard.title(entry).to_upper(), 26, UiKit.GREEN if done else Color.WHITE, true)
-	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(name)
-	var reward := "+%d Sparks  ·  +%s XP" % [template.sparks, ProgStyle.num(template.xp)] if template else ""
-	top.add_child(UiKit.label(reward, 19, Wallet.COLOR, true))
-	var desc := UiKit.label(ContractBoard.describe(entry), 19, UiKit.CREAM)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(desc)
-	var bar_row := HBoxContainer.new()
-	bar_row.add_theme_constant_override("separation", 10)
-	v.add_child(bar_row)
-	var bar := ProgStyle.bar(12.0, UiKit.GREEN if done else Wallet.COLOR_GLOW)
-	bar.value = ContractBoard.fraction(entry)
-	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bar_row.add_child(bar)
-	var count := "DONE" if done else "%s / %s" % [ProgStyle.num(ContractBoard.progress(entry)), ProgStyle.num(ContractBoard.goal(entry))]
-	bar_row.add_child(UiKit.label(count, 18, UiKit.GREEN if done else Color.WHITE, true))
-	return card
+	var tile := CareerTile.make(CONTRACT_TILE)
+	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tile.set_marked(done)
+	var name := UiKit.label(ContractBoard.title(entry).to_upper(), 24, UiKit.GREEN if done else UiKit.CREAM, true)
+	name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	tile.body.add_child(name)
+	var goal := UiKit.body(ContractBoard.describe(entry), 0.0, UiKit.SIZE_SMALL, UiKit.MUTED)
+	goal.max_lines_visible = 2
+	goal.add_theme_constant_override("line_spacing", -6)
+	goal.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tile.body.add_child(goal)
+	tile.body.add_child(_meter(ContractBoard.fraction(entry), UiKit.GREEN if done else Wallet.COLOR_GLOW,
+		"DONE" if done else "%s / %s" % [Wallet.format(ContractBoard.progress(entry)), Wallet.format(ContractBoard.goal(entry))]))
+	if template:
+		tile.body.add_child(_pay_row(template.sparks, template.xp))
+		tile.detail = "%s  ·  %s  ·  pays %d %s and %s XP%s" % [ContractBoard.title(entry).to_upper(), ContractBoard.describe(entry),
+			template.sparks, Wallet.CURRENCY, Wallet.format(template.xp), ". Done: a new one is dealt after the run" if done else ""]
+	return tile
 
 
-
-## A challenge with its progress bar, XP reward and any cosmetic reward.
-static func challenge_tile(ch: Challenge, weapon_id: StringName, compact := false) -> Control:
-	var done := ChallengeBook.is_complete(ch, weapon_id)
-	var card := PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.78), Color(UiKit.GREEN, 0.6) if done else Color(1, 1, 1, 0.08), 16, 2, 12))
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	card.add_child(row)
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 2)
-	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(v)
-	var top := HBoxContainer.new()
-	v.add_child(top)
-	var name := UiKit.label(ch.display_name.to_upper(), 24 if compact else 27, UiKit.GREEN if done else Color.WHITE, true)
-	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(name)
-	var pay := "+%s XP" % ProgStyle.num(ch.xp)
+## A long-term goal as a small medal: a check once reached, a ring of
+## progress until then. The page shows what it asks for while it is focused.
+static func milestone_tile(ch: Challenge) -> CareerTile:
+	var done := ChallengeBook.is_complete(ch)
+	var tile := CareerTile.make(MILESTONE_TILE, 6)
+	tile.set_marked(done)
+	var medal := MilestoneMedal.new()
+	medal.fraction = ChallengeBook.fraction(ch)
+	medal.done = done
+	medal.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tile.body.add_child(medal)
+	var pay := "%s XP" % Wallet.format(ch.xp)
 	if ch.sparks > 0:
-		pay = "+%d Sparks  ·  %s" % [ch.sparks, pay]
-	top.add_child(UiKit.label(pay, 20, UiKit.AMBER, true))
-	var desc := UiKit.label(ch.describe(), 19, UiKit.CREAM)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(desc)
-	var bar_row := HBoxContainer.new()
-	bar_row.add_theme_constant_override("separation", 10)
-	v.add_child(bar_row)
-	var bar := ProgStyle.bar(12.0, UiKit.GREEN if done else UiKit.CYAN)
-	bar.value = ChallengeBook.fraction(ch, weapon_id)
+		pay = "%d %s and %s" % [ch.sparks, Wallet.CURRENCY, pay]
+	var rewards := ChallengeBook.rewards(ch)
+	if not rewards.is_empty():
+		pay += " and the %s %s" % [rewards[0].display_name, rewards[0].slot_label().to_lower()]
+	var count := "reached" if done else "%s / %s" % [Wallet.format(ChallengeBook.progress(ch)), Wallet.format(ch.goal)]
+	tile.detail = "%s  ·  %s  ·  %s  ·  pays %s" % [ch.display_name.to_upper(), ch.describe(), count, pay]
+	return tile
+
+
+# --- weapon mastery -------------------------------------------------------------------
+
+## One weapon: tier badge, rank, progress to the next rank and what that
+## rank gives. Locked weapons say what unlocks them.
+static func mastery_card(w: WeaponData) -> CareerTile:
+	var rank := Mastery.rank(w.id)
+	var unlocked := GameData.is_weapon_unlocked(w)
+	var tier_color := ProgStyle.rank_color(rank)
+	var tile := CareerTile.make(MASTERY_CARD)
+	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tile.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", UiKit.GAP_S)
+	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tile.body.add_child(head)
+	head.add_child(TierBadge.new(rank, 62.0))
+	var names := VBoxContainer.new()
+	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	names.alignment = BoxContainer.ALIGNMENT_CENTER
+	names.add_theme_constant_override("separation", -6)
+	names.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	head.add_child(names)
+	var name := UiKit.label(w.display_name.to_upper(), 22, UiKit.CREAM if unlocked else UiKit.MUTED, true)
+	name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name.max_lines_visible = 2
+	name.add_theme_constant_override("line_spacing", -8)
+	names.add_child(name)
+	var standing := "Locked"
+	if unlocked:
+		standing = "Mastered" if rank >= Mastery.max_rank() else Mastery.rank_label(rank).capitalize()
+	var rank_label := UiKit.label(standing, UiKit.SIZE_SMALL, tier_color if rank > 0 else UiKit.MUTED, true)
+	rank_label.clip_text = true
+	names.add_child(rank_label)
+	tile.body.add_child(UiKit.filler())
+	var next := _next_reward(w.id, rank)
+	var foot := "Fully mastered"
+	if not unlocked:
+		foot = w.unlock.describe() if w.unlock else "Locked"
+	elif next:
+		foot = "Rank %d: %s" % [next.requirement.amount, next.display_name]
+	tile.body.add_child(_meter(Mastery.rank_progress(w.id), tier_color if rank > 0 else UiKit.CYAN, ""))
+	var foot_label := UiKit.label(foot, UiKit.SIZE_SMALL, UiKit.AMBER if not unlocked else UiKit.MUTED)
+	foot_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	tile.body.add_child(foot_label)
+	tile.detail = _mastery_detail(w, rank, next, unlocked)
+	tile.set_meta(&"weapon", w.id)
+	return tile
+
+
+static func _mastery_detail(w: WeaponData, rank: int, next: CosmeticItem, unlocked: bool) -> String:
+	if not unlocked:
+		return "%s  ·  %s to unlock it" % [w.display_name.to_upper(), w.unlock.describe() if w.unlock else "Locked"]
+	var parts := PackedStringArray([w.display_name.to_upper(), "%s kills" % Wallet.format(Mastery.kills(w.id))])
+	var ceiling := Mastery.rank_ceiling(rank)
+	if ceiling < 0:
+		parts.append("%s XP, fully mastered" % Wallet.format(Mastery.xp(w.id)))
+	else:
+		parts.append("%s / %s XP to rank %d" % [Wallet.format(Mastery.xp(w.id)), Wallet.format(ceiling), rank + 1])
+	if next:
+		parts.append("next: %s (%s)" % [next.display_name, next.slot_label().to_lower()])
+	return "  ·  ".join(parts)
+
+
+static func _next_reward(weapon_id: StringName, rank: int) -> CosmeticItem:
+	for it in Mastery.rank_track(weapon_id):
+		if it.price == 0 and it.requirement.amount > rank:
+			return it
+	return null
+
+
+# --- shared pieces --------------------------------------------------------------------
+
+## A slim bar with an optional count to its right.
+static func _meter(fraction: float, color: Color, count: String) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiKit.GAP_S)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bar := UiKit.progress(fraction, 12.0, color)
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bar_row.add_child(bar)
-	var count := "DONE" if done else "%s / %s" % [ProgStyle.num(ChallengeBook.progress(ch, weapon_id)), ProgStyle.num(ch.goal)]
-	bar_row.add_child(UiKit.label(count, 18, UiKit.GREEN if done else Color.WHITE, true))
-	var rewards := ChallengeBook.rewards(ch)
-	if not rewards.is_empty() and not compact:
-		var art := RewardArt.new(rewards[0], not done, Vector2(118, 72))
-		art.mouse_filter = Control.MOUSE_FILTER_PASS
-		art.tooltip_text = "%s: %s" % [rewards[0].slot_label(), rewards[0].display_name]
-		art.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(art)
-	return card
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(bar)
+	if count != "":
+		row.add_child(UiKit.label(count, UiKit.SIZE_SMALL, UiKit.CREAM, true))
+	return row
+
+
+## What a goal pays: Sparks and XP.
+static func _pay_row(sparks: int, xp: int) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiKit.GAP_M)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if sparks > 0:
+		row.add_child(UiKit.price_tag(sparks, UiKit.SIZE_SMALL))
+	row.add_child(UiKit.label("+%s XP" % Wallet.format(xp), UiKit.SIZE_SMALL, ProgStyle.XP_COLOR, true))
+	return row
+
+
+## The face of a milestone tile: a ring that fills with progress around a
+## star, or a green check once the milestone is reached.
+class MilestoneMedal extends Control:
+	var fraction := 0.0
+	var done := false
+
+	func _init() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r := minf(size.x, size.y) * 0.5 - 3.0
+		draw_arc(c, r, 0.0, TAU, 32, Color("4a3b86"), 4.0, true)
+		var color := UiKit.GREEN if done else UiKit.AMBER
+		if done or fraction > 0.0:
+			draw_arc(c, r, -PI * 0.5, -PI * 0.5 + TAU * (1.0 if done else fraction), 32, color, 4.0, true)
+		var icon := KitTex.tex(&"icon_check" if done else &"icon_star")
+		if icon:
+			var side := r * 1.15
+			draw_texture_rect(icon, Rect2(c - Vector2(side, side) * 0.5, Vector2(side, side)), false, color if done else Color(color, 0.35 + 0.65 * fraction))

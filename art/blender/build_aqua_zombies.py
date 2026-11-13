@@ -24,9 +24,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from aqua_common import *  # noqa: F401,F403
-from build_zombie import FPS, bind, build_armature, skin  # noqa: E402
+from build_zombie import FPS, bind, build_armature, save_zombie, skin  # noqa: E402
 import zombie_anim  # noqa: E402
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, hair, head, hips, leg, neck,  # noqa: E402
+from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, hair, hair_top, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
 
 
@@ -66,7 +66,7 @@ def diver(m):
     p = "D_"
     suit, dark, white = m["shirt"], m["dark"], m["white"]
     parts = head(p, m, 0.6)
-    parts += hair(p, 0.6, dark, "flat", 8)
+    parts += hair(p, 0.6, dark, "flat", 8) + hair_top(p, 0.6, dark, "flat", 8)
     tor, body = torso(p, suit, w=0.76, d=0.5, z0=0.9, belly=0.05, hunch=0.05)
     parts += tor
     parts += neck(p, dark, 0.3)
@@ -131,8 +131,8 @@ def diver_accessories(m):
         a = math.tau * i / 8
         helmet.append(sphere(f"{p}Bolt{i}", 0.03, (math.cos(a) * 0.47, math.sin(a) * 0.47, 1.26), m=bd, segs=6, rings=4))
     torch = [
-        cyl(p + "TorchBody", 0.06, 0.24, (0.34, -0.14, 1.3), rot=rad(80, 0, 0), segs=10, bevel=0.02, m=m["dark"]),
-        cyl(p + "TorchLens", 0.065, 0.02, (0.34, -0.27, 1.28), rot=rad(80, 0, 0), segs=10, bevel=0.0, m=m["torch"]),
+        cyl(p + "TorchBody", 0.06, 0.24, (0.56, -0.1, 1.33), rot=rad(80, 0, 0), segs=10, bevel=0.02, m=m["dark"]),
+        cyl(p + "TorchLens", 0.065, 0.02, (0.56, -0.23, 1.31), rot=rad(80, 0, 0), segs=10, bevel=0.0, m=m["torch"]),
     ]
     knife = [box(p + "Sheath", (0.07, 0.05, 0.28), (0.31, -0.12, 0.6), bevel=0.02, m=m["dark"]),
              box(p + "Handle", (0.05, 0.05, 0.1), (0.31, -0.12, 0.78), bevel=0.02, m=m["fin"])]
@@ -334,7 +334,7 @@ def build():
         for name, parts in group.items():
             meshes.append(skin(name, parts, armature))
     zombie_anim.bake(armature, zombie_anim.aqua_clips, "aqua_zombies")
-    save("aqua_zombies", [armature] + meshes, animations=True)
+    save_zombie("aqua_zombies", [armature] + meshes)
 
 
 if __name__ == "__main__":
