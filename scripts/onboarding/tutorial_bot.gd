@@ -81,7 +81,7 @@ func _menu_tick(delta: float) -> void:
 		return
 	if _menu_wait > 0.6 and not _started:
 		_started = true
-		print("[dev] TUTORIAL starting from the menu (state=%s)" % Onboarding.tutorial_state())
+		print("[dev] TUTORIAL starting from the menu (state=%s wants_first_run=%s welcome_back=%s)" % [Onboarding.tutorial_state(), Onboarding.wants_first_run(), Onboarding.wants_welcome_back()])
 		Onboarding.start_tutorial()
 
 

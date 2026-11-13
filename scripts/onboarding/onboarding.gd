@@ -52,7 +52,9 @@ static func wants_first_run() -> bool:
 ## A save carried over to the Sparks economy (LegacyGrant) that has not seen
 ## the one-time "Welcome back" card yet.
 static func wants_welcome_back() -> bool:
-	return Profile.section("economy").has("legacy") and not seen(&"welcome_back")
+	if not Profile.section("economy").has("legacy") or seen(&"welcome_back"):
+		return false
+	return legacy_sparks() > 0 or is_returning_profile()
 
 
 ## Sparks the carried-over save was paid (0 if none).
@@ -67,7 +69,11 @@ static func is_returning_profile() -> bool:
 		return true
 	if int(Profile.section("progression").get("runs_played", 0)) > 0:
 		return true
-	return not (Profile.data.get("levels", {}) as Dictionary).is_empty()
+	# Level entries are created when first read: only real progress counts.
+	for entry in (Profile.data.get("levels", {}) as Dictionary).values():
+		if int(entry.get("best_wave", 0)) > 0 or bool(entry.get("completed", false)):
+			return true
+	return false
 
 
 ## Starts the first-run flow on top of the main menu (`menu` is the MainMenu).

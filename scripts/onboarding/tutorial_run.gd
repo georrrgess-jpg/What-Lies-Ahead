@@ -21,7 +21,6 @@ func _begin() -> void:
 	Progression.tracker = null
 	tickets = 0
 	tickets_changed.emit(tickets)
-	notice.emit("", &"info")
 	_set_state(State.WAVE)
 	if kiosk:
 		kiosk.set_open(false)

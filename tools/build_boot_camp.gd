@@ -593,7 +593,7 @@ func _build_markers() -> void:
 		"Balloon0": Vector3(-5.2, 3.4, 1.0), "Balloon1": Vector3(5.4, 3.0, 0.0), "Balloon2": Vector3(0.0, 6.4, -9.0),
 		"PadMove": Vector3(0, 0, -6.0), "PadSprint": Vector3(0, 0, -25.5), "PadJump": Vector3(0, 0, HURDLE_Z - 3.0),
 		"PadMantle": Vector3(0, 1.2, CRATE_Z), "PadVault": Vector3(0, 0, BARRIER_Z - 3.2), "PadSlide": Vector3(0, 0, SIGN_Z - 3.6),
-		"FiringLine": Vector3(0, 0, COUNTER_Z + 1.6),
+		"FiringLine": Vector3(0, 0, COUNTER_Z + 1.2),
 		"Target0": Vector3(-4.5, 0.45, -74.0), "Target1": Vector3(-2.2, 0.45, -74.0), "Target2": Vector3(0.0, 0.45, -74.0),
 		"Target3": Vector3(2.2, 0.45, -74.0), "Target4": Vector3(4.5, 0.45, -74.0),
 		"FarTarget": Vector3(0.0, 0.0, -94.5),

@@ -80,10 +80,6 @@ func _build_card() -> void:
 	_keys.add_theme_constant_override("v_separation", UiKit.GAP_XS)
 	_keys.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_keys)
-	_station_row = HBoxContainer.new()
-	_station_row.add_theme_constant_override("separation", UiKit.GAP_M)
-	_station_row.visible = false
-	col.add_child(_station_row)
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 0)
 	col.add_child(_list)
@@ -137,6 +133,10 @@ func _build_guide() -> void:
 	_speech.custom_minimum_size.y = 76
 	_speech.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	col.add_child(_speech)
+	_station_row = HBoxContainer.new()
+	_station_row.add_theme_constant_override("separation", UiKit.GAP_S)
+	_station_row.visible = false
+	col.add_child(_station_row)
 	_guide.modulate.a = 0.0
 
 
@@ -166,8 +166,10 @@ func show_step(i: int, new_section: bool) -> void:
 		_keys.add_child(KeyGlyph.prompt(_key_name(k[0]), k[1]))
 	for r in _rows.size():
 		_style_row(r, first + r, i)
-	var compact := String(s["id"]) in ["station", "portal"]
-	_list.visible = not compact
+	# At the station the HUD's own station panel takes the left side: the
+	# card steps aside and the purchase ticks ride on BOLT's bubble.
+	_card.visible = String(s["id"]) != "station"
+	_list.visible = String(s["id"]) != "portal"
 	_station_row.visible = String(s["id"]) == "station"
 	_card.pivot_offset = Vector2(0, 0)
 	UiFx.pulse(_title, 1.08)
@@ -245,7 +247,7 @@ func set_skip_progress(fraction: float) -> void:
 func _process(delta: float) -> void:
 	_skip_time = maxf(0.0, _skip_time - delta)
 	_skip.modulate.a = clampf(_skip_time, 0.0, 1.0)
-	_skip.position = _card.position + Vector2(8, _card.size.y + UiKit.GAP_S)
+	_skip.position = _card.position + Vector2(8, (_card.size.y if _card.visible else 0.0) + UiKit.GAP_S)
 	_tick_speech(delta)
 
 

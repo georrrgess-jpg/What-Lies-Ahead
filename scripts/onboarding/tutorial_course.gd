@@ -167,6 +167,7 @@ func enter_step(i: int) -> void:
 	var id := current_id()
 	_setup_step(id)
 	hud.show_step(i, section_of(i) != section_of(i - 1) if i > 0 else true)
+	run.notice.emit(String(step(i)["title"]), &"objective")
 	hud.say(step(i)["lines"])
 	step_started.emit(i)
 
@@ -315,6 +316,7 @@ func stage(i: int) -> void:
 		if i > 0 and is_instance_valid(b):
 			b.queue_free()
 	enter_step(i)
+	hud.say(step(i)["lines"], true)
 
 
 ## Steps of the first two sections can be done again; nothing pays twice.
