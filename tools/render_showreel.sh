@@ -10,6 +10,7 @@
 #
 #   tools/render_showreel.sh                  # the whole reel
 #   tools/render_showreel.sh --to 16          # only the shots that start before 16 s (a test)
+#   tools/render_showreel.sh --from 22 --to 40 --out build/test.mp4   # the shots starting in 22-40 s
 #   tools/render_showreel.sh --segment 12     # seconds per segment (default 10)
 #
 # GODOT (default: godot) is the editor binary; run from the project root.
@@ -22,10 +23,12 @@ OUT=media/what-lies-ahead-showreel.mp4
 WORK=build/showreel
 SEGMENT=10
 LIMIT=100000
+FIRST=0
 FPS=30
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--to) LIMIT=$2; shift 2 ;;
+		--from) FIRST=$2; shift 2 ;;
 		--segment) SEGMENT=$2; shift 2 ;;
 		--out) OUT=$2; shift 2 ;;
 		*) echo "unknown option $1" >&2; exit 2 ;;
@@ -44,6 +47,7 @@ segments=()
 seg_start=""
 while read -r _ index id start length; do
 	awk "BEGIN{exit !($start >= $LIMIT)}" && break
+	awk "BEGIN{exit !($start < $FIRST)}" && continue
 	[ -z "$seg_start" ] && seg_start=$start
 	seg_end=$(awk "BEGIN{print $start + $length}")
 	if awk "BEGIN{exit !($seg_end - $seg_start >= $SEGMENT)}"; then
@@ -97,14 +101,16 @@ ffmpeg -nostdin -v error -y "${inputs[@]}" -filter_complex "$filter" -map "[v]" 
 # Contact sheet: the frame 60% into every rendered shot.
 rm -f "$WORK"/sheet_*.png
 total=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$OUT")
+# The shot list on the rendered video's own clock (it starts at --from).
+awk -v f="$FIRST" '$4 >= f {printf "SHOT %s %s %.2f %s\n", $2, $3, $4 - f, $5}' "$WORK/shots.txt" > "$WORK/shots_rendered.txt"
 while read -r _ index id start length; do
 	at=$(awk "BEGIN{print $start + $length * 0.6}")
 	awk "BEGIN{exit !($at < $total)}" || break
 	ffmpeg -nostdin -v error -y -ss "$at" -i "$OUT" -frames:v 1 -vf scale=480:270 "$WORK/sheet_$(printf %02d "$index").png"
-done < "$WORK/shots.txt"
+done < "$WORK/shots_rendered.txt"
 rows=$(( ($(ls "$WORK"/sheet_*.png | wc -l) + 3) / 4 ))
 ffmpeg -nostdin -v error -y -pattern_type glob -i "$WORK/sheet_*.png" -vf "tile=4x$rows:padding=4" -frames:v 1 -q:v 3 "$SHEET"
 ls -l "$OUT" "$SHEET"
 
 # Frame-to-frame motion check (repeated frames, hitches, speed jumps).
-python3 tools/video_motion_report.py "$OUT" --shots "$WORK/shots.txt" --json "$WORK/motion.json" | head -3
+python3 tools/video_motion_report.py "$OUT" --shots "$WORK/shots_rendered.txt" --json "$WORK/motion.json" | head -3
