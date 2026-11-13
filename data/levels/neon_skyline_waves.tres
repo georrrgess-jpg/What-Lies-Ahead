@@ -56,7 +56,7 @@ surge_count = 4
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"neon_punk": 11,
+"neon_punk": 9,
 "hover_courier": 8,
 "lifeguard_runner": 4
 }

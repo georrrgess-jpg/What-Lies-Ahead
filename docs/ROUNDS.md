@@ -84,13 +84,19 @@ bar with a notch at each phase in the HUD's top slot: `RoundsBossBar`,
 `data/ui/hud_boss_bar.tres`). Surge and bounty markers and the close-out
 pings are a full-screen overlay (`rounds_hud.gd`, `data/ui/hud_rounds.tres`).
 
-| World | Alpha | Built on | Its patterns |
-|---|---|---|---|
-| Prize Pier | Big Bruno | Boardwalk Bruiser | roar-then-charge; ground slam |
-| Neon Skyline | Captain Lockdown | Riot Bruiser | riot shield (break it or aim over it); shield charge; 5-orb volley; ground slam |
-| Tidal Tunnels | Inky the Great | Mascot Inker (the world has no heavy) | 5-glob lobbed ink volley at range; a ring of 10 slow ink orbs at mid range; ground slam |
-| Launch Pad 9 | Chief Burnout | Jetpack Mechanic (no heavy) | jetpack hop with a 3 m landing blast; 3-flare volley; ground slam |
-| Summit Lodge | Old Frostbite | Yeti | big snowball lob; 3-snowball fan; ground slam |
+| World | Alpha | Health (Standard) | Built on | Its patterns |
+|---|---|---|---|---|
+| Prize Pier | Big Bruno | 1800 | Boardwalk Bruiser | roar-then-charge; 3-orb lob; ground slam (the slowest: 1.3 s) |
+| Neon Skyline | Captain Lockdown | 1900 + 500 shield | Riot Bruiser | riot shield (break it or aim over it); shield charge; 5-orb volley; ground slam |
+| Tidal Tunnels | Inky the Great | 2100 | Mascot Inker (the world has no heavy) | 5-glob lobbed ink volley at range; a fan of 7 slow ink orbs at mid range; ground slam |
+| Launch Pad 9 | Chief Burnout | 2000 | Jetpack Mechanic (no heavy) | jetpack hop with a 3 m landing blast; 3-flare volley; ground slam; a slow, heavy swing |
+| Summit Lodge | Old Frostbite | 2200 | Yeti | big snowball lob; 3-snowball fan; ground slam |
+
+Alpha health climbs with the worlds (the first one, right after the tutorial,
+is the softest and the most telegraphed). The finale's horde lists its slow
+regular first: that type opens the wave and is the one that keeps trickling in
+as escorts while the alpha stands, so a finale is about the alpha, not about a
+stream of runners.
 
 Shared rules (`AlphaBossBehaviour`):
 
@@ -161,12 +167,12 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 | | Casual | Standard | Hard |
 |---|---|---|---|
 | Enemy health | 80% | 100% | 120% |
-| Alpha health | 70% | 100% | 115% |
-| Enemy damage | 60% | 100% | 115% |
+| Alpha health | 70% | 100% | 100% |
+| Enemy damage | 60% | 100% | 105% |
 | Enemy speed | 95% | 100% | 105% |
-| Crowd cap | 80% | 100% | 115% |
+| Crowd cap | 80% | 100% | 110% |
 | Spawn interval | 120% | 100% | 90% |
-| Special-attack cooldowns | 145% | 100% | 85% |
+| Special-attack cooldowns | 145% | 100% | 90% |
 | Pace bounds (min-max) | 0.55-1.0 | 0.7-1.35 | 0.85-1.4 |
 | Spawn pause for a player in trouble | 6 s per wave | 3.5 s | none |
 | Health back at every wave clear | +20 | - | - |
@@ -175,7 +181,10 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 
 Casual never presses, eases early, and tops the player up between waves: a
 first-time player can make mistakes in every wave and still finish. Hard is
-more, faster and angrier, with no safety net. The run score is not scaled, so
+more, faster and angrier, with no safety net. Its alphas keep Standard health
+(tougher escorts, more of them and faster specials already make the finale
+harder) and its hits are only 5% heavier: the extra crowd is the threat, and a
+player who dodges and dashes can still clear every world. The run score is not scaled, so
 best scores stay comparable. The tier is shown on the HUD chip and is in the
 result (`difficulty`, `difficulty_label`).
 
@@ -245,20 +254,22 @@ health left, grades, average pace and seconds of spawn pause.
 
 ## Validation (final grid)
 
-One bot run per level, weapon (Pulse Pistol, Ion Carbine) and tier, played
-one at a time on the merged build. Health left at the portal ("lost" = the
-run ended in defeat; every loss but two was in the finale). The bot aims well,
-never aims down sights and never dodges projectiles; it backs out of a slam
-ring. Single runs swing by about ±30.
+Bot runs on the balanced build (update 4), one at a time, full runs from wave
+1. Clears and the mean health left at the portal over the runs that cleared.
+The bot aims well, never aims down sights, never dodges projectiles, never
+dashes; it backs out of a slam ring. Single runs swing by about ±30.
 
-| Level | Casual P / C | Standard P / C | Hard P / C |
-|---|---|---|---|
-| Prize Pier | 100 / 100 | 46 / 81 | 32 / lost (alpha at 3%) |
-| Neon Skyline | 100 / 97 | 58 / 99 | lost / lost |
-| Tidal Tunnels | 100 / 96 | 92 / lost (alpha at 1%) | lost (wave 4) / 8 |
-| Launch Pad 9 | 90 / 92 | 40 / 88 | lost / 1 |
-| Summit Lodge | 100 / 100 | 98 / 39 | lost / lost (wave 5) |
+| Level | Standard before | Standard after (8 weapons) | Hard after | Casual after |
+|---|---|---|---|---|
+| Prize Pier | 6/8, 46 | 10/10, 82 | 3/3, 71 | 1/1, 100 |
+| Neon Skyline | 6/8, 37 | 14/15, 49 | 4/5, 18 | 1/1, 97 |
+| Tidal Tunnels | 8/8, 58 | 9/10, 51 | 2/3, 43 | 1/1, 95 |
+| Launch Pad 9 | 5/8, 50 | 10/10, 59 | 0/1 | 1/1, 78 |
+| Summit Lodge | 3/8, 21 | 7/10, 47 | 2/5, 40 | 1/1, 100 |
 
-Casual 10/10 (90-100 health), Standard 9/10, Hard 3/10. A level takes the
-bot 4-5.5 minutes of play (a human, slower to clear and using the breaks,
-lands at about 6-9).
+Before, every Standard loss was in a finale, usually after waves the bot
+cleared untouched (Big Bruno, 2800 health, was the toughest alpha of all).
+After: Standard 50/55 (the remaining losses are finales and one early Tidal
+Tunnels ink wave before the Inker was softened), Hard 11/17 (was 3/10 and 0/5),
+Casual 5/5. `python3 tools/balance_report.py` prints the weapons' time-to-kill
+table from data.
