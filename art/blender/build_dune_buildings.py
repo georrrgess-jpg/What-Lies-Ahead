@@ -1,6 +1,8 @@
 """Dune Spaceport buildings: the zombie entrances and the skyline around the pad.
 
-    dune_hangar.glb        barrel-roof hangar, 18 x 22 m, front opening 12 x 7 m.
+    dune_hangar_a.glb / dune_hangar_b.glb
+                           barrel-roof hangar, 18 x 22 m, front opening 12 x 7 m, lettered A / B,
+                           with the parked shuttle and workshop racks inside.
     dune_hangar_door_l.glb / dune_hangar_door_r.glb
                            its sliding door panels (6.2 x 7 m, origin at the bottom centre);
                            closed, they sit at x = -3 / +3 on the door track (local z = 11.75).
@@ -38,17 +40,34 @@ def _arch(radius_extra=0.0, steps=20):
 
 
 def build_hangar():
+    """Both hangar shells (lettered A and B) and their shared sliding doors."""
     reset_scene()
+    shells = {"dune_hangar_" + letter.lower(): [_hangar_shell(letter)] for letter in ("A", "B")}
+    # Sliding door panels: corrugated rust with a hazard edge and a stencil.
+    doors = {}
+    for name, s in (("DoorL", -1), ("DoorR", 1)):
+        dp = corrugated(name + "C", DOOR_W / 2 + 0.2, DOOR_H - 0.1, (0, 0, 0.05), 0.0, pitch=0.42, depth=0.16,
+                        m=dmat("DoorRust", "#c45a32", rough=0.6), m_rib=dmat("DoorRustDark", "#a8452a", rough=0.6))
+        dp += hazard_band(name + "Edge", 0.5, DOOR_H - 0.3, (-s * (DOOR_W / 4 - 0.1), -0.16, DOOR_H / 2), 0.0, stripe=0.25, slant=0.06)
+        dp.append(box(name + "Rail", (DOOR_W / 2 + 0.3, 0.24, 0.3), (0, -0.05, 0.2), bevel=0.06, m=dmat("SteelDark", rough=0.45, metal=0.4)))
+        dp.append(box(name + "Bar", (DOOR_W / 2 + 0.2, 0.2, 0.22), (0, -0.14, 3.2), bevel=0.05, m=dmat("RustDark", rough=0.6)))
+        dp.append(text(name + "Num", "LP9", 1.1, 0.06, (s * 0.6, -0.2, 4.8), m=dmat("Hull", rough=0.45)))
+        doors["dune_hangar_door_" + ("l" if s < 0 else "r")] = [merge(name, dp)]
+    save_split("dune_hangar", {**shells, **doors})
+
+
+def _hangar_shell(letter):
+    """One hangar shell, its gable roundel and name board lettered `letter`, with
+    the workshop inside (see _hangar_interior)."""
     wall, wall_dk = dmat("HangarWall", "#ead8b6", rough=0.75), dmat("HangarWallDark", "#c9b48f", rough=0.8)
     roof, rib = dmat("HangarRoof", "#2b8f88", rough=0.6), dmat("HangarRib", "#1e6764", rough=0.6)
     rust, rdark = dmat("Rust", rough=0.55), dmat("RustDark", rough=0.6)
-    inside = dmat("Interior", rough=1.0)
-    floor = dmat("HangarFloor", "#5a4c48", rough=0.95)
-    steel, sdark = dmat("Steel", rough=0.4, metal=0.5), dmat("SteelDark", rough=0.45, metal=0.4)
+    inside = dmat("HangarLiner", "#5b4a52", rough=0.95)
+    sdark = dmat("SteelDark", rough=0.45, metal=0.4)
+    steel = dmat("Steel", rough=0.4, metal=0.5)
     glass = dglow("HangarWindow", "#ffcf7a", 1.3)
     lamp = dglow("HangarLamp", "#fff0c0", 2.4)
     white = dmat("Hull", rough=0.45)
-    dark = dmat("HazardDark", rough=0.6)
     parts = []
     hw, hd = H_W / 2, H_D / 2
     arch_out = _arch(0.0)
@@ -59,6 +78,8 @@ def build_hangar():
         parts.append(fbox(f"SideLiner{s}", (0.1, H_D - 0.6, H_WALL), (s * (hw - 0.3), 0, H_WALL / 2), m=inside))
         parts.append(box(f"SideBase{s}", (0.6, H_D + 0.2, 0.6), (s * hw, 0, 0.3), bevel=0.08, m=rdark))
         parts += window_strip(f"Clere{s}", 6, 3.2, (2.2, 0.9), (s * (hw + 0.36), 0, 4.7), math.radians(90 * s), m_frame=rust, m_glass=glass)
+        # The clerestory glows on the inside too.
+        parts += window_strip(f"ClereIn{s}", 6, 3.2, (2.2, 0.9), (s * (hw - 0.4), 0, 4.7), math.radians(90 * s + 180), m_frame=rust, m_glass=glass)
     back_outline = [(-hw, 0.0), (hw, 0.0)] + arch_out
     parts.append(make_flat(prism("BackWall", back_outline, 0.4, (0, hd, 0), m=wall)))
     parts.append(make_flat(prism("BackLiner", [(-hw + 0.4, 0.0), (hw - 0.4, 0.0)] + _arch(-0.6), 0.1, (0, hd - 0.3, 0), m=inside)))
@@ -68,6 +89,8 @@ def build_hangar():
     for i in range(9):
         y = -hd + 0.2 + i * (H_D - 0.4) / 8
         parts.append(make_flat(prism(f"Rib{i}", _arch(0.18) + list(reversed(_arch(-0.02))), 0.45, (0, y, 0), m=rib)))
+        # Steel roof truss inside, under each outer rib.
+        parts.append(make_flat(prism(f"Truss{i}", _arch(-0.45) + list(reversed(_arch(-0.75))), 0.3, (0, y, 0), m=sdark)))
     # Roof vents along the ridge.
     for i in range(3):
         y = -6 + i * 6
@@ -85,37 +108,90 @@ def build_hangar():
         parts.append(box(f"Flood{s}", (0.6, 0.7, 0.45), (s * (DOOR_W / 2 + 0.4), -hd - 0.85, DOOR_H - 0.7), bevel=0.08, m=sdark))
         parts.append(fbox(f"FloodLens{s}", (0.46, 0.06, 0.3), (s * (DOOR_W / 2 + 0.4), -hd - 1.22, DOOR_H - 0.75), m=lamp))
         parts.append(rod(f"Downpipe{s}", (s * (hw - 0.4), -hd - 0.35, 0.2), (s * (hw - 0.4), -hd - 0.35, H_WALL + 0.4), 0.12, m=rdark))
-    # Big number roundel and name board on the gable.
+    # Big letter roundel and name board on the gable.
     parts.append(cyl("Roundel", 1.25, 0.14, (0, -hd - 0.3, 8.75), rot=(math.pi / 2, 0, 0), segs=28, bevel=0.05, m=rust))
     parts.append(cyl("RoundelIn", 1.0, 0.16, (0, -hd - 0.33, 8.75), rot=(math.pi / 2, 0, 0), segs=28, bevel=0.04, m=white))
-    parts.append(text("RoundelNum", "2", 1.3, 0.12, (0, -hd - 0.43, 8.72), m=rust))
+    parts.append(text("RoundelLetter", letter, 1.3, 0.12, (0, -hd - 0.43, 8.72), m=rust))
     parts.append(box("NameBoard", (5.6, 0.2, 0.8), (-5.2, -hd - 0.3, 6.3 + 1.75), bevel=0.05, m=dmat("Navy", rough=0.5)))
-    parts.append(text("NameText", "HANGAR", 0.55, 0.06, (-5.2, -hd - 0.43, 8.05), m=white))
-    # Interior: dark floor, lamps hanging in the gloom, a parked shuttle nose.
-    parts.append(fbox("Floor", (H_W - 0.8, H_D - 0.8, 0.05), (0, 0, 0.03), m=floor))
+    parts.append(text("NameText", "HANGAR " + letter, 0.55, 0.06, (-5.2, -hd - 0.43, 8.05), m=white))
+    parts += _hangar_interior(letter)
+    return merge("Hangar" + letter, parts)
+
+
+def _hangar_interior(letter):
+    """Workshop floor, hanging lamps, the parked shuttle (nose to the doors) and
+    the racks along the walls. The shuttle and its wings sit inside the level's
+    colliders; the racks hug the walls, clear of the zombies' path to the door."""
+    floor = dmat("HangarFloor", "#6a5a56", rough=0.95)
+    lamp = dglow("HangarLamp", "#fff0c0", 2.4)
+    white, teal, rust = dmat("Hull", rough=0.45), dmat("Teal", rough=0.45), dmat("Rust", rough=0.55)
+    steel, sdark, navy = dmat("Steel", rough=0.4, metal=0.5), dmat("SteelDark", rough=0.45, metal=0.4), dmat("Navy", rough=0.5)
+    canopy = dmat("ShuttleCanopy", "#1d2a44", rough=0.15, metal=0.3)
+    yellow, red = dmat("Hazard"), dmat("Red", rough=0.5)
+    crate = dmat("CrateTan", "#c89a5e", rough=0.8)
+    hd = H_D / 2
+    parts = [fbox("Floor", (H_W - 0.8, H_D - 0.8, 0.05), (0, 0, 0.03), m=floor)]
+    # Painted bay round the shuttle and a lead-in line to the doors.
+    for name, size, loc in (("BayN", (13.0, 0.18, 0.02), (1.5, -3.6, 0.06)), ("BayS", (13.0, 0.18, 0.02), (1.5, 10.2, 0.06)),
+                            ("BayW", (0.18, 13.8, 0.02), (-5.0, 3.3, 0.06)), ("BayE", (0.18, 13.8, 0.02), (8.0, 3.3, 0.06))):
+        parts.append(fbox("Paint" + name, size, loc, m=yellow))
+    for i in range(4):
+        parts.append(fbox(f"Lead{i}", (0.18, 1.2, 0.02), (0, -5.0 - i * 1.8, 0.06), m=yellow))
+    parts.append(text("FloorLetter", letter, 2.4, 0.02, (-5.5, -6.5, 0.07), rot=(-math.pi / 2, 0, 0), m=yellow))
+    # Hanging lamps.
     for i in range(3):
         for s in (-1, 1):
             parts.append(sphere(f"InLamp{i}{s}", 0.35, (s * 4.0, -6 + i * 6, 8.0), scale=(1, 1, 0.6), m=lamp, segs=10, rings=6))
             parts.append(rod(f"InLampWire{i}{s}", (s * 4.0, -6 + i * 6, 8.2), (s * 4.0, -6 + i * 6, 9.6), 0.03, m=sdark))
-    nose = lathe("ShuttleNose", [(2.2, 0.0), (2.2, 4.0), (1.7, 6.5), (0.9, 8.2), (0.0, 8.8)], m=white, segs=24)
-    nose.rotation_euler = (math.pi / 2, 0, 0)
-    nose.location = (1.5, 6.5, 2.6)
-    parts.append(nose)
-    parts.append(box("ShuttleCart", (3.6, 4.0, 0.8), (1.5, 8.5, 0.4), bevel=0.1, m=rust))
-    parts.append(lathe("ShuttleStripe", [(2.23, 0.0), (2.23, 0.6)], m=dmat("Teal", rough=0.45), segs=24, loc=(1.5, 4.5, 2.6),
-                       rot=(math.pi / 2, 0, 0)))
-    shell_ob = merge("Hangar", parts)
-    # Sliding door panels: corrugated rust with a hazard edge and a stencil.
-    doors = {}
-    for name, s in (("DoorL", -1), ("DoorR", 1)):
-        dp = corrugated(name + "C", DOOR_W / 2 + 0.2, DOOR_H - 0.1, (0, 0, 0.05), 0.0, pitch=0.42, depth=0.16,
-                        m=dmat("DoorRust", "#c45a32", rough=0.6), m_rib=dmat("DoorRustDark", "#a8452a", rough=0.6))
-        dp += hazard_band(name + "Edge", 0.5, DOOR_H - 0.3, (-s * (DOOR_W / 4 - 0.1), -0.16, DOOR_H / 2), 0.0, stripe=0.25, slant=0.06)
-        dp.append(box(name + "Rail", (DOOR_W / 2 + 0.3, 0.24, 0.3), (0, -0.05, 0.2), bevel=0.06, m=sdark))
-        dp.append(box(name + "Bar", (DOOR_W / 2 + 0.2, 0.2, 0.22), (0, -0.14, 3.2), bevel=0.05, m=rdark))
-        dp.append(text(name + "Num", "02", 1.1, 0.06, (s * 0.6, -0.2, 4.8), m=white))
-        doors["dune_hangar_door_" + ("l" if s < 0 else "r")] = [merge(name, dp)]
-    save_split("dune_hangar", {"dune_hangar": [shell_ob], **doors})
+    # The shuttle: fuselage on its cradle, swept wings, a tail fin and a dark canopy.
+    sx, sz = 1.5, 2.6
+    body = lathe("ShuttleBody", [(0.0, -3.4), (2.0, -3.4), (2.2, -3.0), (2.2, 4.0), (1.7, 6.5), (0.9, 8.2), (0.0, 8.8)], m=white, segs=24)
+    body.rotation_euler = (math.pi / 2, 0, 0)
+    body.location = (sx, 6.5, sz)
+    parts.append(body)
+    parts.append(lathe("ShuttleStripe", [(2.23, 0.0), (2.23, 0.6)], m=teal, segs=24, loc=(sx, 4.5, sz), rot=(math.pi / 2, 0, 0)))
+    parts.append(lathe("ShuttleStripeB", [(2.23, 0.0), (2.23, 0.35)], m=rust, segs=24, loc=(sx, 3.6, sz), rot=(math.pi / 2, 0, 0)))
+    parts.append(sphere("ShuttleCanopy", 1.0, (sx, 1.0, sz + 1.55), scale=(1.05, 1.7, 0.5), m=canopy, segs=16, rings=8))
+    for s in (-1, 1):
+        wing = [(0.0, 0.0), (4.2, 1.6), (4.2, 3.4), (0.0, 5.2)]
+        parts.append(make_flat(prism(f"Wing{s}", [(s * x, y) for x, y in wing], 0.28, (sx + s * 1.9, 3.5, sz - 0.9),
+                                     rot=(-math.pi / 2, 0, 0), m=white)))
+        tip = [(3.9, 1.5), (4.3, 1.6), (4.3, 3.4), (3.9, 3.5)]
+        parts.append(make_flat(prism(f"WingTip{s}", [(s * x, y) for x, y in tip], 0.3, (sx + s * 1.9, 3.5, sz - 0.9),
+                                     rot=(-math.pi / 2, 0, 0), m=rust)))
+    parts.append(make_flat(prism("TailFin", [(0.0, 0.0), (3.2, 0.0), (3.4, 2.8), (2.2, 2.8)], 0.3, (sx, 6.4, sz + 1.9),
+                                 rot=(0, 0, math.pi / 2), m=white)))
+    parts.append(make_flat(prism("TailFinTip", [(2.2, 2.8), (3.4, 2.8), (3.45, 3.2), (2.15, 3.2)], 0.32, (sx, 6.4, sz + 1.9),
+                                 rot=(0, 0, math.pi / 2), m=teal)))
+    parts.append(box("ShuttleCart", (3.6, 4.0, 0.8), (sx, 8.5, 0.4), bevel=0.1, m=rust))
+    parts.append(box("ShuttleCradle", (3.0, 1.2, 1.0), (sx, 1.6, 0.5), bevel=0.1, m=rust))
+    for x in (-1.1, 1.1):
+        parts.append(cyl(f"CradleWheel{int(x * 10)}", 0.3, 0.25, (sx + x, 1.6, 0.3), rot=(0, math.pi / 2, 0), segs=12, bevel=0.03, m=sdark))
+    # Racks on the back wall either side of the tail, stocked with crates.
+    for rx in (-6.0, 6.4):
+        parts.append(box(f"RackBack{rx}", (3.2, 0.1, 3.4), (rx, hd - 0.55, 1.7), bevel=0.0, m=sdark))
+        for k in range(3):
+            z = 0.25 + k * 1.15
+            parts.append(box(f"RackShelf{rx}{k}", (3.2, 0.9, 0.08), (rx, hd - 1.0, z), bevel=0.0, m=steel))
+            for j in range(2):
+                parts.append(box(f"RackCrate{rx}{k}{j}", (1.0, 0.75, 0.7), (rx - 0.8 + j * 1.5, hd - 1.0, z + 0.4), bevel=0.06,
+                                 m=crate if (j + k) % 2 else teal))
+        for ex in (-1.55, 1.55):
+            parts.append(box(f"RackPost{rx}{ex}", (0.1, 0.9, 3.4), (rx + ex, hd - 1.0, 1.7), bevel=0.0, m=yellow))
+    # Tool chests, workbenches with pegboards and drums along the side walls.
+    for s in (-1, 1):
+        x = s * (H_W / 2 - 0.85)
+        parts.append(box(f"Chest{s}", (0.9, 1.6, 1.1), (x, 2.0, 0.55), bevel=0.06, m=red))
+        for k in range(3):
+            parts.append(fbox(f"ChestDrawer{s}{k}", (0.04, 1.4, 0.06), (x - s * 0.46, 2.0, 0.3 + k * 0.3), m=sdark))
+        parts.append(box(f"Bench{s}", (0.9, 3.0, 0.12), (x, -1.2, 0.95), bevel=0.03, m=dmat("RustDark", rough=0.6)))
+        for k, y in enumerate((-2.5, 0.1)):
+            parts.append(box(f"BenchLeg{s}{k}", (0.8, 0.1, 0.9), (x, y, 0.45), bevel=0.0, m=sdark))
+        parts.append(box(f"Pegboard{s}", (0.06, 3.0, 1.4), (x + s * 0.4, -1.2, 2.0), bevel=0.0, m=navy))
+        for k in range(5):
+            parts.append(fbox(f"Tool{s}{k}", (0.05, 0.16, 0.6 - (k % 2) * 0.2), (x + s * 0.35, -2.3 + k * 0.55, 2.0), m=steel))
+        parts.append(cyl(f"Drum{s}", 0.35, 1.0, (x + s * 0.1, -4.6, 0.5), segs=14, bevel=0.03, m=teal if s < 0 else rust))
+    return parts
 
 
 def build_tower():
@@ -291,8 +367,9 @@ def build_tunnel():
     # Sand berm heaped over the tunnel and drifting around the portal.
     # (The mounds stay clear of the tunnel corridor, so its dark interior reads.)
     parts.append(sphere("BermTop", 1.0, (0, 7.0, 6.4), scale=(8.5, 7.5, 2.6), m=sand, segs=28, rings=14))
-    parts.append(sphere("BermL", 1.0, (-9.5, 5.0, -0.6), scale=(6.0, 7.5, 5.6), m=sdk, segs=24, rings=12))
-    parts.append(sphere("BermR", 1.0, (9.5, 5.5, -0.7), scale=(6.0, 7.0, 5.2), m=sand, segs=24, rings=12))
+    # The side mounds stop behind the blast-wall line (local y 0.6), never poking into the arena.
+    parts.append(sphere("BermL", 1.0, (-9.5, 6.6, -0.6), scale=(6.0, 5.8, 5.6), m=sdk, segs=24, rings=12))
+    parts.append(sphere("BermR", 1.0, (9.5, 6.6, -0.7), scale=(6.0, 5.8, 5.2), m=sand, segs=24, rings=12))
     parts.append(sphere("BermBack", 1.0, (0, 17.0, -0.5), scale=(10.0, 4.0, 6.0), m=sand, segs=24, rings=12))
     save("dune_tunnel", [merge("Tunnel", parts)])
 

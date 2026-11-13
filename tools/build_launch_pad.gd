@@ -500,19 +500,20 @@ func _build_hangars() -> void:
 	var hangars := Node3D.new()
 	hangars.name = "Hangars"
 	geo.add_child(hangars)
-	_hangar(hangars, "HangarA", HANGAR_A, 90.0, 4.5, 6.0)
-	_hangar(hangars, "HangarB", HANGAR_B, 0.0, 6.0, 2.5)
+	_hangar(hangars, "HangarA", "dune_hangar_a", HANGAR_A, 90.0, 4.5, 6.0)
+	_hangar(hangars, "HangarB", "dune_hangar_b", HANGAR_B, 0.0, 6.0, 2.5)
 
 
-## One hangar: shell, two sliding doors opened by `open_l` / `open_r` metres,
-## its walls and the parked shuttle as colliders. Local front = +Z.
-func _hangar(parent: Node3D, hangar_name: String, centre: Vector3, yaw: float, open_l: float, open_r: float) -> void:
+## One hangar: shell model, two sliding doors opened by `open_l` / `open_r`
+## metres, its walls and the parked shuttle (body, then wings) as colliders.
+## Local front = +Z.
+func _hangar(parent: Node3D, hangar_name: String, model: String, centre: Vector3, yaw: float, open_l: float, open_r: float) -> void:
 	var holder := Node3D.new()
 	holder.name = hangar_name
 	holder.position = centre
 	holder.rotation.y = deg_to_rad(yaw)
 	parent.add_child(holder)
-	var shell := _instance("dune_hangar")
+	var shell := _instance(model)
 	shell.name = "Shell"
 	holder.add_child(shell)
 	var door_l := _instance("dune_hangar_door_l")
@@ -527,7 +528,7 @@ func _hangar(parent: Node3D, hangar_name: String, centre: Vector3, yaw: float, o
 		[Vector3(0.6, 7, 22), Vector3(-9.0, 3.5, 0)], [Vector3(0.6, 7, 22), Vector3(9.0, 3.5, 0)],
 		[Vector3(18, 7, 0.6), Vector3(0, 3.5, -11.0)],
 		[Vector3(3.6, 7, 1.0), Vector3(-7.4, 3.5, 11.2)], [Vector3(3.6, 7, 1.0), Vector3(7.4, 3.5, 11.2)],
-		[Vector3(4.6, 4.6, 11.0), Vector3(1.5, 2.3, -3.0)],
+		[Vector3(4.6, 4.8, 12.8), Vector3(1.5, 2.4, -3.9)], [Vector3(12.6, 2.0, 5.4), Vector3(1.5, 1.0, -6.1)],
 	]:
 		_collider(holder, "Collider%d" % holder.get_child_count(), spec[0], spec[1])
 
