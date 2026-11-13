@@ -6,8 +6,8 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"lava_tiki_bartender": 4,
-"tourist_shambler": 8,
+"lava_tiki_bartender": 3,
+"tourist_shambler": 9,
 "lava_fire_dancer": 4
 }
 spawn_interval = 1.8
@@ -122,7 +122,7 @@ script = ExtResource("2")
 spawns = {
 "tourist_shambler": 12,
 "lava_fire_dancer": 10,
-"lava_tiki_bartender": 4,
+"lava_tiki_bartender": 3,
 "lifeguard_runner": 3
 }
 spawn_interval = 1.95

@@ -781,7 +781,7 @@ func _build_boardwalk() -> void:
 	box.size = Vector3(3.6, 0.4, length + 0.4)
 	shape.shape = box
 	shape.position = Vector3(BEACH_STAIRS_X, BEACH_Y * 0.5 - 0.17, top + run * 0.5)
-	shape.rotation.x = -angle
+	shape.rotation.x = angle
 	body.add_child(shape)
 	var steps := 12
 	for k in steps:

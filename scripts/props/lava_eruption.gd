@@ -11,13 +11,15 @@ extends Node
 const TWIST := &"eruption"
 
 ## Seconds between bombs (a random pick in this range).
-@export var interval := Vector2(1.7, 2.8)
+@export var interval := Vector2(2.3, 3.4)
 ## Seconds from the ring appearing to the impact.
 @export var telegraph := 1.7
 ## Seconds of the bomb's fall (the end of the telegraph).
 @export var fall_time := 0.6
 @export var radius := 2.0
-@export var damage := 10.0
+@export var damage := 7.0
+## Share of the bombs aimed close to the player (the rest land around them).
+@export_range(0.0, 1.0) var near_share := 0.4
 ## Seconds for the sky to flare up or calm down.
 @export var transition := 3.0
 
@@ -104,7 +106,7 @@ func _launch() -> void:
 	if player == null or not player.alive:
 		return
 	for attempt in 6:
-		var near := _rng.randf() < 0.55
+		var near := _rng.randf() < near_share
 		var dist := _rng.randf_range(0.0, 2.5) if near else _rng.randf_range(3.0, 9.0)
 		var a := _rng.randf_range(0.0, TAU)
 		var guess := player.global_position + player.velocity * Vector3(1, 0, 1) * 0.6 + Vector3(cos(a), 0, sin(a)) * dist
