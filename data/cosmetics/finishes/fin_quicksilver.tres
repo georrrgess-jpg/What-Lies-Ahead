@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_quicksilver"
+display_name = "Quicksilver"
+description = "Liquid mercury that never sets: the mirror surface ripples, pools and runs along the weapon. Smoked chrome trim."
+slot = &"weapon_finish"
+rarity = 3
+price = 5600
+colors = PackedColorArray(0.851, 0.8667, 0.902, 1, 0.3216, 0.3333, 0.4, 1)
+params = {
+"shader": "res://art/shaders/finish_quicksilver.gdshader"
+}
+sort_order = 2344

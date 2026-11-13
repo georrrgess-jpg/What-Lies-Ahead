@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_harlequin"
+display_name = "Harlequin"
+description = "Jester diamonds in plum, teal and gold, outlined in fine black lines."
+slot = &"weapon_finish"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.6039, 0.1647, 0.5255, 1, 0.102, 0.0627, 0.1255, 1)
+params = {
+"shader": "res://art/shaders/finish_graphic.gdshader",
+"shader_params": {
+"pattern": 1,
+"color_b": Color(0.0784, 0.6392, 0.6039, 1),
+"color_c": Color(0.949, 0.7137, 0.1882, 1),
+"color_d": Color(0.0706, 0.0392, 0.0784, 1),
+"trim_pin": 1.0,
+"roughness": 0.3
+}
+}
+sort_order = 2132

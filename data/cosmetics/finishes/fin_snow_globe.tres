@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_snow_globe"
+display_name = "Snow Globe"
+description = "Glossy navy glass with fat snowflakes drifting down and a warm glow below. Polished silver trim."
+slot = &"weapon_finish"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.0392, 0.0784, 0.2392, 1, 0.8, 0.8196, 0.8784, 1)
+params = {
+"shader": "res://art/shaders/finish_snowglobe.gdshader"
+}
+sort_order = 2142

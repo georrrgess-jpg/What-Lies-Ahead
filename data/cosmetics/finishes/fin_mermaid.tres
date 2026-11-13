@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_mermaid"
+display_name = "Mermaid Scales"
+description = "Overlapping scales with pearly rims that shift from teal to violet as the weapon turns, silvery on the trim."
+slot = &"weapon_finish"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.0588, 0.6392, 0.6275, 1, 0.7882, 0.8314, 0.8784, 1)
+params = {
+"shader": "res://art/shaders/finish_crafted.gdshader",
+"shader_params": {
+"pattern": 3,
+"color_b": Color(0.5412, 0.2392, 0.851, 1),
+"color_c": Color(0.949, 0.9255, 1, 1)
+}
+}
+sort_order = 2238

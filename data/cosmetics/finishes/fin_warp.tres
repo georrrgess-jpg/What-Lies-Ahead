@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_warp"
+display_name = "Warp Speed"
+description = "Star streaks rush down the barrel towards you in three layers, blue-white heads and red-shifted tails."
+slot = &"weapon_finish"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.0118, 0.0118, 0.051, 1, 0.0784, 0.0902, 0.1412, 1)
+params = {
+"shader": "res://art/shaders/finish_warp.gdshader"
+}
+sort_order = 2240

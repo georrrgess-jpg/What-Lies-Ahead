@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_data_rain"
+display_name = "Data Rain"
+description = "Columns of glowing glyphs rain down black glass, each with a white-hot head and a fading green trail."
+slot = &"weapon_finish"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.0078, 0.0314, 0.0314, 1, 0.0392, 0.0588, 0.0706, 1)
+params = {
+"shader": "res://art/shaders/finish_data_rain.gdshader",
+"shader_params": {
+"rain_color": Color(0.2, 1, 0.549, 1)
+}
+}
+sort_order = 2233

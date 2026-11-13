@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_marquee"
+display_name = "Marquee Lights"
+description = "Red lacquer studded with carnival bulbs in gold sockets. They chase down the weapon in threes, then the whole board flashes."
+slot = &"weapon_finish"
+rarity = 3
+price = 3000
+colors = PackedColorArray(0.6196, 0.0392, 0.0902, 1, 1, 0.7412, 0.251, 1)
+params = {
+"shader": "res://art/shaders/finish_marquee.gdshader",
+"shader_params": {
+"bulb_color": Color(1, 0.8588, 0.502, 1)
+}
+}
+sort_order = 2341

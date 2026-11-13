@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+amount = 6
+
+[resource]
+script = ExtResource("1")
+id = &"fin_walnut"
+display_name = "Lodge Walnut"
+description = "Oiled walnut with flowing grain and open pores, panelled in darker stained walnut."
+slot = &"weapon_finish"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.4784, 0.2902, 0.1647, 1, 0.2275, 0.1333, 0.0784, 1)
+params = {
+"shader": "res://art/shaders/finish_crafted.gdshader",
+"shader_params": {
+"pattern": 0,
+"color_b": Color(0.1647, 0.0863, 0.0471, 1)
+}
+}
+sort_order = 2146

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_arcade_carpet"
+display_name = "Arcade Carpet"
+description = "That cosmic arcade-carpet print: neon rings, triangles and squiggles scattered over black."
+slot = &"weapon_finish"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.0431, 0.0314, 0.0784, 1, 0.1412, 0.102, 0.2275, 1)
+params = {
+"shader": "res://art/shaders/finish_graphic.gdshader",
+"shader_params": {
+"pattern": 9,
+"color_b": Color(0.1686, 0.9412, 1, 1),
+"color_c": Color(1, 0.2471, 0.6431, 1),
+"color_d": Color(1, 0.8863, 0.2392, 1),
+"roughness": 0.85,
+"metallic": 0.0
+}
+}
+sort_order = 2133

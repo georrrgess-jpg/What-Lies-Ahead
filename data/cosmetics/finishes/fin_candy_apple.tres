@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 5
+target = &"prize_pier"
+amount = 30000
+
+[resource]
+script = ExtResource("1")
+id = &"fin_candy_apple"
+display_name = "Candy Apple"
+description = "Deep candy-apple red under a clear coat, full of gold flakes that glitter as the weapon turns. Gold flake trim."
+slot = &"weapon_finish"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.4784, 0.0157, 0.0627, 1, 0.851, 0.651, 0.251, 1)
+params = {
+"shader": "res://art/shaders/finish_crafted.gdshader",
+"shader_params": {
+"pattern": 5,
+"color_b": Color(1, 0.8235, 0.4784, 1)
+}
+}
+sort_order = 2134

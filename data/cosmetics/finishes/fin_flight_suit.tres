@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 1250
+
+[resource]
+script = ExtResource("1")
+id = &"fin_flight_suit"
+display_name = "Flight Suit"
+description = "International orange with black stencil bands and white chevrons pointing downrange. White trim with black bands."
+slot = &"weapon_finish"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.3529, 0.0784, 1, 0.949, 0.9412, 0.9176, 1)
+params = {
+"shader": "res://art/shaders/finish_graphic.gdshader",
+"shader_params": {
+"pattern": 7,
+"color_b": Color(0.949, 0.9412, 0.9176, 1),
+"color_d": Color(0.0784, 0.0784, 0.0941, 1),
+"roughness": 0.6,
+"metallic": 0.0
+}
+}
+sort_order = 2036

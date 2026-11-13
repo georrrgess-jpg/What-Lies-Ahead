@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_lodge_tartan"
+display_name = "Lodge Tartan"
+description = "Green and navy tartan with red and gold overchecks, and a red sett on the trim."
+slot = &"weapon_finish"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.1216, 0.3529, 0.2, 1, 0.4784, 0.0941, 0.1255, 1)
+params = {
+"shader": "res://art/shaders/finish_textile.gdshader",
+"shader_params": {
+"pattern": 1,
+"color_b": Color(0.0784, 0.1255, 0.302, 1),
+"color_c": Color(0.7843, 0.1176, 0.1569, 1),
+"color_d": Color(0.9098, 0.7216, 0.1882, 1)
+}
+}
+sort_order = 2143

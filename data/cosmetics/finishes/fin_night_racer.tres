@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_night_racer"
+display_name = "Night Racer"
+description = "Gloss black with twin cyan racing stripes down the spine and a cyan body line, all pinstriped in pink."
+slot = &"weapon_finish"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.0471, 0.0471, 0.0706, 1, 0.0824, 0.0824, 0.1098, 1)
+params = {
+"shader": "res://art/shaders/finish_graphic.gdshader",
+"shader_params": {
+"pattern": 3,
+"color_b": Color(0.1216, 0.8784, 1, 1),
+"color_c": Color(1, 0.2471, 0.6431, 1),
+"trim_pin": 1.0,
+"roughness": 0.18,
+"metallic": 0.1
+}
+}
+sort_order = 2033

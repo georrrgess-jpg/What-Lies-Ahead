@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_bass_drop"
+display_name = "Bass Drop"
+description = "LED equalizer bars along both sides pump to the beat: green at rest, yellow and pink at the peaks."
+slot = &"weapon_finish"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.051, 0.0392, 0.0784, 1, 0.102, 0.0902, 0.1412, 1)
+params = {
+"shader": "res://art/shaders/finish_equalizer.gdshader"
+}
+sort_order = 2234
