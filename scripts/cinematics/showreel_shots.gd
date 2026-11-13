@@ -365,7 +365,7 @@ func _kill_headshot(st: CineStage) -> void:
 		st.kill(z, &"pulse_pistol", true, Vector3(-1, 0, 0)))
 	st.at(0.35, func(): Sfx.play(&"headshot_ping", -8.0))
 	st.focus_on(func(): return head, 0.2, 0.008)
-	st.flare_at(func(): return head, Color(1.0, 0.85, 0.6), 0.5, 0.3, 0.02, 0.4, 0.5)
+	st.flare_at(func(): return head, Color(1.0, 0.85, 0.6), 0.22, 0.3, 0.02, 0.35, 0.3)
 
 
 ## First person on the game's own viewmodel: one sweep, five kills in five
@@ -559,25 +559,36 @@ func _finishes(st: CineStage) -> void:
 	st.focus_on(func(): return pivot.global_position, 0.35, 0.006)
 
 
-## Two charms swing as their weapons turn: a saucer spinning its lights, a
-## Ferris wheel turning; the cells pulse and the decals catch the light.
+## Two charms swing as their weapons rock: a saucer spinning its lights, a
+## Ferris wheel turning; the camera trucks from one to the other while the
+## cells pulse and the decals catch the light.
 func _charms(st: CineStage) -> void:
 	st.overlay.grade(&"studio")
 	st.lighting(0.8, 1.0, 1.2)
 	var pivots: Array[Node3D] = []
+	var models: Array[Node3D] = []
 	for i in CHARM_RIGS.size():
 		var r: Array = CHARM_RIGS[i]
 		var model := st.weapon(r[0], r[1], r[2])
 		WeaponCosmetics.apply(model, GameData.weapon(r[0]), {"finish": Cosmetics.item(r[1]), "charm": Cosmetics.item(r[2]), "cell": Cosmetics.item(r[3]), "decal": Cosmetics.item(r[4])})
-		var p := _turntable(st, model, 1.3 + i * 0.05, 1.0)
-		p.position.x = -0.55 + i * 1.1
+		var p := _turntable(st, model, 1.3, 1.0)
+		p.position.x = -0.6 + i * 1.2
+		p.rotation.y = deg_to_rad(90.0)
 		pivots.append(p)
+		models.append(model)
 	st.every_frame(func(t: float):
 		for i in pivots.size():
-			pivots[i].rotation.z = sin(t * 2.2 + i * 1.7) * 0.16
-			pivots[i].rotation.y = deg_to_rad((65.0 + t * 12.0) if i == 0 else (115.0 - t * 12.0)))
-	st.fov(28.0, 24.0)
-	st.orbit(Vector3(0, 1.1, 0), 2.0, -0.05, -16.0, 14.0, Vector3(0, -0.02, 0), -1.2)
+			pivots[i].rotation.z = sin(t * 2.4 + i * 1.7) * 0.14
+			pivots[i].rotation.y = deg_to_rad(90.0 + sin(t * 1.1 + i) * 12.0))
+	var charm_at := func(i: int) -> Vector3:
+		var anchor := models[i].find_child("CharmPoint", true, false) as Node3D
+		return (anchor.global_position if anchor else pivots[i].global_position) + Vector3(0, -0.1, 0)
+	st.fov(30.0, 27.0)
+	st.track(func(k: float) -> Transform3D:
+		var e := ease(k, -1.6)
+		var at: Vector3 = (charm_at.call(0) as Vector3).lerp(charm_at.call(1), e)
+		var from := at + Vector3(lerpf(0.12, -0.12, e), 0.04, 0.72)
+		return Transform3D(Basis.looking_at(at - from), from))
 	st.light(Vector3(0, 2.0, 1.4), Color("ffe6c8"), 1.4, 4.0)
 	st.at(0.2, st.overlay.title_card.bind("%d cosmetics" % GameData.cosmetics().size(), "Make it yours", Vector2(0.5, 0.8), 1.4, UiKit.PINK, 64))
 
