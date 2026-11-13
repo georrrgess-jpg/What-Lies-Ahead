@@ -102,13 +102,13 @@ hint = "The heavies cross one bridge at a time: hold the far end."
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 12,
-"sky_diver": 10,
+"sky_diver": 9,
 "sky_balloon_vendor": 6,
 "lava_fire_dancer": 4
 }
 spawn_interval = 1.05
 burst = 1
-max_alive = 15
+max_alive = 14
 speed_scale = 1.08
 late_types_after = 0.15
 banner = ""

@@ -121,7 +121,7 @@ spawns = {
 "lifeguard_runner": 3,
 "jungle_overgrown": 1
 }
-spawn_interval = 2.0
+spawn_interval = 2.2
 burst = 2
 max_alive = 12
 speed_scale = 1.1
