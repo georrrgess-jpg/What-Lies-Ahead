@@ -4,7 +4,7 @@ gummy wobble and the Sugar Rush siren.
 
     python tools/gen_audio.py candy
 
-    audio/music/candy_works_loop.ogg    36 s bouncy candy-pop loop at 132 BPM in C:
+    audio/music/candy_works_loop.ogg    30 s bouncy candy-pop loop at 128 BPM in C:
                                         music box, marimba, a springy bass and
                                         toy-box drums, two sections and a turnaround
     audio/music/candy_works_final.ogg   its final-wave variant (claps, crashes, a
@@ -77,17 +77,17 @@ HOOK = [
 
 
 def candy_works_loop(intense=False):
-    """132 BPM, C major, 20 bars. Section A (bars 1-8): the music-box hook over
-    C - Am - F - G with marimba off-beats and a springy bass. Section B (9-16):
+    """128 BPM, C major, 16 bars. Section A (bars 1-8): the music-box hook over
+    C - Am - F - G with marimba off-beats and a springy bass. Section B (9-12):
     F - G - Em - Am with the hook up an octave on marimba and the music box
-    sparkling arpeggios, boings on every fourth bar. Turnaround (17-20):
+    sparkling arpeggios, boings on every fourth bar. Turnaround (13-16):
     Dm - G - C - G with a rising run back to the top.
 
     intense=True (candy_works_final): claps, crashes and risers, sixteenth hats,
     a galloping bass, the hook doubled an octave up. Same tempo and length."""
-    bpm = 132.0
+    bpm = 128.0
     beat = 60.0 / bpm
-    bars = 20
+    bars = 16
     d = bars * 4 * beat
     left, right = silence(d + 2.0), silence(d + 2.0)
 
@@ -103,7 +103,7 @@ def candy_works_loop(intense=False):
     hand_clap, crash = clap(), cymbal()
     spring = boing()
     for bar in range(bars):
-        section = 0 if bar < 8 else (1 if bar < 16 else 2)
+        section = 0 if bar < 8 else (1 if bar < 12 else 2)
         root, triad = (CHORDS_A, CHORDS_B, TURN)[section][bar % 4]
         t0 = bar * 4 * beat
         if intense and bar % 4 == 0:
@@ -153,9 +153,9 @@ def candy_works_loop(intense=False):
 
 
 def candy_ambience():
-    """24 s seamless bed: the hall's machine hum, belts clattering, steam
+    """16 s seamless bed: the hall's machine hum, belts clattering, steam
     hisses, the chocolate river bubbling and a far-off bell."""
-    d = 24.0
+    d = 16.0
     n = int(SR * (d + 1.0))
     t = np.arange(n) / SR
     hum = (np.sin(2 * np.pi * 110 * t) * 0.4 + np.sin(2 * np.pi * 220 * t) * 0.25 + np.sin(2 * np.pi * 330 * t) * 0.1)
@@ -170,17 +170,17 @@ def candy_ambience():
             place(buf, band(noise(0.03), 1500 + 300 * side, 700) * env(0.03, 0.001, power=2.0), k, 0.05 * rng.uniform(0.6, 1.0))
             k += 1.0 / rate
     # Chocolate river: low bubbling plops.
-    for _ in range(70):
+    for _ in range(46):
         at = rng.uniform(0.0, d)
         f = rng.uniform(140, 320)
         plop = sweep(f, f * 1.8, 0.09, "sine", 0.6) * env(0.09, 0.004, 0.08, power=1.8)
         place(left if rng.random() < 0.5 else right, filt(plop, low=900), at, 0.12)
     # Steam vents and a far bell.
-    for at in (3.0, 11.5, 18.0):
+    for at in (2.5, 10.0):
         hiss = band(noise(1.4), 4200, 2600) * env(1.4, 0.08, 1.4, power=0.9, release=0.4)
         place(left, hiss, at, 0.09)
         place(right, hiss, at + 0.05, 0.06)
-    for at in (7.0, 19.5):
+    for at in (6.0,):
         ding = music_box(note(15), 2.2, 1.0) + music_box(note(22), 2.2, 0.5)
         place(left, ding, at, 0.05)
         place(right, ding, at + 0.03, 0.07)
@@ -278,7 +278,7 @@ def candy_chef_laugh_2():
 
 def candy_siren():
     """The Sugar Rush alarm: a two-tone factory siren with a candy bell on top."""
-    d = 2.4
+    d = 1.8
     t = t_axis(d)
     f = np.where((t * 2.5) % 1.0 < 0.5, 660.0, 880.0)
     siren = osc(2 * np.pi * np.cumsum(f) / SR, "square") * 0.4 + np.sin(2 * np.pi * np.cumsum(f) / SR) * 0.6

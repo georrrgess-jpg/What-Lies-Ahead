@@ -56,15 +56,15 @@ def build_gumball_machine():
     count = 0
     tries = 0
     placed = []
-    while count < 230 and tries < 8000:
+    while count < 150 and tries < 8000:
         tries += 1
-        br = rng.uniform(0.42, 0.5)
+        br = rng.uniform(0.5, 0.6)
         x, y = rng.uniform(-gr, gr), rng.uniform(-gr, gr)
         z = rng.uniform(gz - gr, gz + gr * 0.45)
         v = Vector((x, y, z - gz))
         if v.length > gr - br - 0.06:
             continue
-        if any((Vector((x, y, z)) - q).length < br + 0.42 for q in placed):
+        if any((Vector((x, y, z)) - q).length < br + 0.52 for q in placed):
             continue
         placed.append(Vector((x, y, z)))
         p.append(ico(f"Ball{count:03d}", br, (x, y, z), balls[count % len(balls)]))
