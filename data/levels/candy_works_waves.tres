@@ -24,7 +24,8 @@ script = ExtResource("2")
 spawns = {
 "lifeguard_runner": 8,
 "dune_space_cadet": 6,
-"candy_gummy": 6
+"candy_gummy": 6,
+"candy_taffy_puller": 1
 }
 spawn_interval = 1.05
 burst = 1
@@ -41,7 +42,7 @@ surge_count = 4
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"candy_taffy_puller": 7,
+"candy_taffy_puller": 8,
 "neon_punk": 4,
 "candy_gummy": 8
 }
@@ -61,7 +62,7 @@ surge_count = 5
 script = ExtResource("2")
 spawns = {
 "candy_gummy": 10,
-"candy_taffy_puller": 5,
+"candy_taffy_puller": 6,
 "lifeguard_runner": 6,
 "tourist_shambler": 4
 }
@@ -79,8 +80,9 @@ hint = "Every door opens at once: find a wall and hold it."
 script = ExtResource("2")
 spawns = {
 "candy_gummy": 10,
-"candy_taffy_puller": 5,
+"candy_taffy_puller": 6,
 "boardwalk_bruiser": 1,
+"riot_bruiser": 1,
 "lifeguard_runner": 4
 }
 spawn_interval = 1.1
@@ -100,7 +102,7 @@ script = ExtResource("2")
 spawns = {
 "riot_bruiser": 2,
 "candy_gummy": 12,
-"candy_taffy_puller": 5,
+"candy_taffy_puller": 6,
 "hover_courier": 5
 }
 spawn_interval = 1.25

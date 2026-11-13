@@ -123,7 +123,7 @@ twist = &"gale"
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 14,
-"sky_diver": 10,
+"sky_diver": 11,
 "sky_balloon_vendor": 4,
 "lava_fire_dancer": 3
 }

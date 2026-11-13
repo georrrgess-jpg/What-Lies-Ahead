@@ -40,7 +40,7 @@ hint = "They steer slowly at full stride: sidestep and shoot."
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"riot_bruiser": 1,
+"boardwalk_bruiser": 1,
 "mall_flinger": 4,
 "mall_walker": 10,
 "tourist_shambler": 3
@@ -53,7 +53,7 @@ late_types_after = 0.12
 banner = ""
 kind = &"siege"
 title = "SECURITY BREACH"
-hint = "Shields first. A headshot mid-windup spills a Flinger's soda."
+hint = "Bruiser first. A headshot mid-windup spills a Flinger's soda."
 surge_at = 0.55
 surge_count = 5
 
@@ -105,7 +105,7 @@ spawns = {
 }
 spawn_interval = 1.3
 burst = 1
-max_alive = 13
+max_alive = 12
 speed_scale = 1.08
 late_types_after = 0.2
 banner = ""
