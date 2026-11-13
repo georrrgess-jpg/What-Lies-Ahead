@@ -14,10 +14,17 @@ frost_zombies.
 Findings
 
   static  acc-acc      two accessories that can be worn together cross
-          acc-face     an accessory crosses a face part (brows, eyes, teeth)
-          headgear     hair or built-in headgear pokes out through a head accessory
+          acc-face     a face part (brow, eye, tooth) sticks out through a head
+                       accessory, or any other accessory crosses the face
+          headgear     hair, ears or built-in headgear stick out through a
+                       bigger head accessory
           acc-feature  an accessory crosses a collar, hood, strap, prop...
-          face-feature a face part crosses hair or built-in headgear
+          face-feature a face part sticks out through hair or built-in headgear
+
+On the head, "sticks out through" means the two surfaces cross and the smaller
+part has vertices outside the other above the lowest point of the crossing: a
+cap pulled down over the brows or hair showing below a hat's rim is fine, a
+brow or a tuft coming out through the hat is a finding.
   clips   a part sinks >= DEPTH into a part on another bone, deeper than it
           does at rest (arms through bellies, props through legs...), counted
           once per clip and pair of (mesh, bone)
@@ -61,6 +68,14 @@ FEATURE = re.compile(r"(Collar|Hood|Lapel|Strap|String|Chain|Pouch|Tank|Pack|Can
 # both ways round, why).
 INTENDED = [
     (r"Acc_Frozen_Ice/", "the ice block encases the frozen tourist and all he wears"),
+    (r"Acc_Diver_Helmet/.*\|Face_Diver", "the diving helmet seals the whole head in"),
+    (r"Face_Hazmat_\w+/.*\|Outfit_Hazmat/H_Hood", "the mask sits in the opening of the hood"),
+    (r"Face_Octo_\w+/.*\|Outfit_Octo/O_(FaceRing|Hood)", "the face pushes through the costume's face hole"),
+    (r"Face_Yeti_\w+/.*\|Outfit_Yeti/Y_(FaceRim|HoodTop)", "the fur hood frames the face"),
+    (r"Outfit_Tourist/T_Clump\d+\|Acc_Tourist_Hair/", "the curly wig sits on the fringe"),
+    (r"Outfit_Yeti/Y_HoodFur\d*\|Acc_Yeti_Beanie/", "the little beanie nestles in the fur"),
+    (r"Outfit_Courier/C_Helmet\|Acc_Courier_Goggles/", "the goggles are strapped round the helmet"),
+    (r"Outfit_Bruiser/B_Crop\|Acc_Bruiser_(Headband|Shades)/", "the headband and the arms of the shades lie in the crop"),
     (r"Acc_Cadet_(Antenna|Pennant)/.*\|Outfit_Cadet/C_(Pack|Tank)", "mounted on the backpack"),
     (r"Acc_Lifeguard_Gloves/.*\|Acc_Lifeguard_Net/", "the glove holds the net"),
     (r"Acc_Lifeguard_(Towel|Tube)/.*\|Outfit_Lifeguard/L_Strap", "worn over the tank top's straps"),
@@ -124,19 +139,39 @@ class Part:
         return loc is not None and (v - loc).dot(n) * self.sign < 0.0
 
 
-def crossing(p, q):
-    """(length of the crossing curve, its points) between two parts at rest, or None."""
+def crossing(p, q, hidden=()):
+    """(length of the crossing curve, its points) between two parts at rest, or
+    None. The stretches of the curve buried inside the solids in `hidden` (the
+    skull, the torso) cannot be seen and do not count."""
     if np.any(p.lo > q.hi) or np.any(q.lo > p.hi):
         return None
     pairs = p.bvh.overlap(q.bvh)
     if len(pairs) < 2:
         return None
-    ip, iq = sorted({i for i, _ in pairs}), sorted({j for _, j in pairs})
-    cp, cq = p.C[ip], q.C[iq]
-    sides = [c for c in (cp, cq) if len(c) > 1] or [cp]
+    sides = []
+    for part, idx in ((p, sorted({i for i, _ in pairs})), (q, sorted({j for _, j in pairs}))):
+        pts = part.C[idx]
+        if hidden:
+            pts = pts[[not any(h.inside(c) for h in hidden) for c in pts]]
+        if len(pts) > 1:
+            sides.append(pts)
+    if not sides:
+        return None
     ext = min(float(np.linalg.norm(c.max(0) - c.min(0))) for c in sides)
-    pts = cp if len(cp) >= len(cq) else cq
-    return ext, pts
+    return ext, max(sides, key=len)
+
+
+def pokes(part, x, cover):
+    """True if `part` has vertices outside every closed part of `cover`, above
+    the lowest point of their crossing `x`."""
+    low = float(x[1][:, 2].min()) + 0.02
+    count = 0
+    for v in part.V:
+        if v[2] > low and not any(q.inside(v) for q in cover):
+            count += 1
+            if count >= 3:
+                return True
+    return False
 
 
 def intended(a, b):
@@ -218,6 +253,7 @@ def static_audit(outfit, groups, slots):
     accs = {n: g for n, g in groups.items() if n.startswith(f"Acc_{outfit}_")}
     faces = {n: g for n, g in groups.items() if n.startswith(f"Face_{outfit}_")}
     head_feats = [p for p in body if p.bone == "Head" and not p.name.endswith("Skull")]
+    solids = [p for p in body if p.closed and p.name.endswith(("Skull", "Torso", "Pelvis"))]
     feats = [p for p in body if p.bone != "Head" and FEATURE.search(p.name)]
 
     def label(p):
@@ -236,34 +272,32 @@ def static_audit(outfit, groups, slots):
         if na in accs and nb in accs:
             for a in accs[na]:
                 for b in accs[nb]:
-                    x = crossing(a, b)
+                    x = crossing(a, b, solids)
                     if x and x[0] >= CROSS:
                         add("acc-acc", a, b, x[0])
     for na, parts in accs.items():
+        reach = max(q.r for q in parts)
         for a in parts:
             for fparts in faces.values():
                 for f in fparts:
-                    x = crossing(a, f)
-                    if x and x[0] >= CROSS * 0.75:
+                    x = crossing(a, f, solids)
+                    if x and x[0] >= CROSS * 0.75 and (a.bone != "Head" or pokes(f, x, parts)):
                         add("acc-face", a, f, x[0])
             if a.bone == "Head":
                 for h in head_feats:
-                    x = crossing(a, h)
-                    if x and x[0] >= CROSS:
-                        top = float(x[1][:, 2].max())
-                        above = [v for v in h.V if v[2] > top + 0.015 and not any(q.inside(v) for q in parts)]
-                        if len(above) >= 3:
-                            add("headgear", h, a, x[0])
+                    x = crossing(a, h, solids)
+                    if x and x[0] >= CROSS and h.r < reach and pokes(h, x, parts):
+                        add("headgear", h, a, x[0])
             else:
                 for f in feats:
-                    x = crossing(a, f)
+                    x = crossing(a, f, solids)
                     if x and x[0] >= CROSS:
                         add("acc-feature", a, f, x[0])
     for fparts in faces.values():
         for f in fparts:
             for h in head_feats:
-                x = crossing(f, h)
-                if x and x[0] >= CROSS * 0.75:
+                x = crossing(f, h, solids)
+                if x and x[0] >= CROSS * 0.75 and pokes(f, x, [h]):
                     add("face-feature", f, h, x[0])
     return out
 
@@ -324,9 +358,10 @@ def clip_audit(outfit, groups, slots, clips, rig):
                 R[bname] = m
                 T[bname] = np.array(pos[bname]) - m @ h
             posed = np.array([R[bone_of[i]] @ centres[i] + T[bone_of[i]] for i in range(n)])
+            gone = {b for b, k in pose.scale.items() if k < 0.5}    # a popped head
             if not cname.startswith("Emerge"):
                 for i, p in enumerate(parts):
-                    if posed[i][2] - radii[i] < -GROUND:
+                    if p.bone not in gone and posed[i][2] - radii[i] < -GROUND:
                         z = float((p.S @ R[p.bone].T + T[p.bone])[:, 2].min())
                         if z < -GROUND:
                             key = (cname, f"{p.group}:{p.bone}")
@@ -334,6 +369,8 @@ def clip_audit(outfit, groups, slots, clips, rig):
             d = np.linalg.norm(posed[cand[:, 0]] - posed[cand[:, 1]], axis=1)
             for i, j in cand[d < rsum]:
                 a, b = parts[i], parts[j]
+                if a.bone in gone or b.bone in gone:
+                    continue
                 dep = pair_depth(a, b, R[a.bone], T[a.bone], R[b.bone], T[b.bone])
                 if dep < DEPTH:
                     continue
@@ -371,7 +408,7 @@ class Recorder:
         self.clips = clipset(self.rig)
         return self.clips
 
-    def save(self, name, export_objects):
+    def save(self, name, export_objects, animations=False):
         groups, self.groups = self.groups, {}
         if self.wanted and name not in self.wanted:
             return
@@ -405,19 +442,23 @@ def main():
     for mod in mods:
         mod.skin = rec.skin
         mod.save_zombie = rec.save
+        mod.save = rec.save
     names = {build_zombie: {"zombie", "zombie_neon", "zombie_aqua", "zombie_dune", "zombie_frost"},
              build_neon_zombies: {"neon_punk", "neon_courier", "neon_riot"}, build_aqua_zombies: {"aqua_zombies"},
              build_dune_zombies: {"dune_zombies"}, build_frost_zombies: {"frost_zombies"}}
     for mod in mods:
         if not rec.wanted or rec.wanted & names[mod]:
             mod.build()
-    tot = Counter()
+    tot, depth = Counter(), Counter()
     for r in rec.results.values():
         tot["static"] += len({f["key"] for f in r["static"]})
         tot["static part pairs"] += len(r["static"])
         tot["clips"] += len(r["clips"])
         tot["ground"] += len(r["ground"])
-    print("[audit] TOTAL " + ", ".join(f"{k} {v}" for k, v in tot.items()))
+        depth["clips"] += sum(f["size"] for f in r["clips"])
+        depth["ground"] += sum(f["size"] for f in r["ground"])
+    print("[audit] TOTAL " + ", ".join(f"{k} {v}" for k, v in tot.items())
+          + "; summed depth: " + ", ".join(f"{k} {v:.1f} m" for k, v in depth.items()))
     if "json" in opts:
         with open(opts["json"], "w") as f:
             json.dump(rec.results, f, indent=1)

@@ -327,51 +327,75 @@ def keyed(rig, name, keys, loop=False, plant=True, flat=False, floor=False, **me
 
 
 # Points fixed to a shin or a forearm (rest offsets from the bone's tail) that
-# must stay above the floor in a collapse: heel, toe tip and ankle; the wrist
-# and the fingertips.
+# must stay above the floor in a collapse: the four corners of the sole and the
+# ankle; the wrist, the knuckles and the fingertips.
 _FLOOR_POINTS = {
-    "Shin": (Vector((0, FOOT[0], -FOOT[2])), Vector((0, -FOOT[1], -FOOT[2])), Vector((0, 0, 0.02))),
-    "ForeArm": (Vector((0, 0, 0.05)), Vector((0, -0.05, -0.2))),
+    "Shin": (Vector((0.1, FOOT[0], -FOOT[2])), Vector((-0.1, FOOT[0], -FOOT[2])), Vector((0.1, -FOOT[1], -FOOT[2])),
+             Vector((-0.1, -FOOT[1], -FOOT[2])), Vector((0, 0, 0.02))),
+    "ForeArm": (Vector((0, 0, 0.05)), Vector((0.06, -0.03, -0.12)), Vector((-0.06, -0.03, -0.12)), Vector((0, -0.07, -0.25))),
 }
 _FLOOR_JOINT = {"Shin": 0.09, "ForeArm": 0.075}
+_FLOOR_SWINGS = tuple(a for k in range(0, 21) for a in ((k * 8.0, -k * 8.0) if k else (0.0,)))
+_FLOOR_FOLD = math.radians(32.0)    # a knee or elbow never closes further than this
 # Balls standing in for the trunk and head: (bone, rest centre, radius).
 _FLOOR_TRUNK = (("Hips", (0, 0, 0.86), 0.21), ("Spine", (0, 0.02, 1.2), 0.24), ("Head", (0, HEAD_FWD, 1.6), 0.29))
 
 
 def _above_floor(rig, pose):
-    """Free (FK) limbs in the death clips: where a foot, knee, hand or elbow
-    would dip into the floor, swing the thigh or upper arm and bend the knee or
-    elbow by the smallest angle that keeps it out. Returns the pose."""
+    """Free (FK) limbs in the death clips: where the trunk, a foot, knee, hand
+    or elbow would dip into the floor, lift the hips, swing the thigh or upper
+    arm, and bend the knee or elbow (turning the toes out, so a foot can lie
+    on its side) by the smallest amount that keeps it out without folding the
+    joint shut. Returns the pose."""
     pos, world = rig.fk(pose.rot, pose.hips)
     low = min(rig.point(pos, world, bone, Vector(at)).z - r for bone, at, r in _FLOOR_TRUNK)
     if low < 0.0:
         pose.hips = pose.hips + Vector((0, 0, -low))
-    for chain in list(LEG.values()) + list(ARM.values()):
-        upper, lower = chain
-        kind = lower.split(".")[0]
+    for s, side in SIDES:
+        for upper, lower in (LEG[s], ARM[s]):
+            kind = lower.split(".")[0]
 
-        def lowest(bone):
-            pos, world = rig.fk(pose.rot, pose.hips)
-            if bone == upper:
-                return pos[lower].z - _FLOOR_JOINT[kind]
-            return min(rig.point(pos, world, lower, rig.tail[lower] + off).z for off in _FLOOR_POINTS[kind])
+            def state():
+                """(lowest point of the joint, of the end, the joint's inner
+                angle, whether the end is clear of the trunk and head)."""
+                pos, world = rig.fk(pose.rot, pose.hips)
+                end = rig.point(pos, world, lower, rig.tail[lower])
+                pts = [rig.point(pos, world, lower, rig.tail[lower] + off) for off in _FLOOR_POINTS[kind]]
+                balls = [(rig.point(pos, world, bone, Vector(at)), r) for bone, at, r in _FLOOR_TRUNK]
+                clear = all((pt - c).length > r + 0.04 for pt in pts for c, r in balls)
+                return pos[lower].z - _FLOOR_JOINT[kind], min(pt.z for pt in pts), (pos[upper] - pos[lower]).angle(end - pos[lower], 0.0), clear
 
-        for bone in (upper, lower):
-            if lowest(bone) >= 0.0:
+            if state()[0] < 0.0:
+                q = pose.rot.get(upper, Quaternion())
+                pose.rot[upper] = min((q @ euler_q(a, 0, 0) for a in _FLOOR_SWINGS),
+                                      key=lambda c: _floor_cost(pose, upper, c, state, 0))
+            if state()[1] >= 0.0:
                 continue
-            q = pose.rot.get(bone, Quaternion())
-            done = False
-            for step in range(1, 31):
-                for sign in (1.0, -1.0):
-                    pose.rot[bone] = q @ euler_q(sign * step * 6.0, 0, 0)
-                    if lowest(bone) >= 0.0:
-                        done = True
-                        break
-                if done:
+            q = pose.rot.get(lower, Quaternion())
+            twists = (0.0, 45.0, 90.0) if kind == "Shin" else (0.0,)
+            options = [(abs(a) + 0.4 * t, q @ euler_q(a, 0, 0) @ euler_q(0, 0, side * t)) for t in twists for a in _FLOOR_SWINGS]
+            best, best_cost = q, None
+            for bias, c in sorted(options, key=lambda o: o[0]):
+                pose.rot[lower] = c
+                _, ends, inner, clear = state()
+                # Feasible: out of the floor, not folded shut and not through
+                # the body; otherwise the least bad (shallowest) such pose.
+                ok = inner >= _FLOOR_FOLD and clear
+                cost = bias if (ends >= 0.0 and ok) else 1000.0 - 100.0 * min(ends, 0.0) + (0.0 if ok else 500.0)
+                if best_cost is None or cost < best_cost:
+                    best, best_cost = c, cost
+                if cost == bias:
                     break
-            if not done:
-                pose.rot[bone] = q
+            pose.rot[lower] = best
     return pose
+
+
+def _floor_cost(pose, bone, candidate, state, index):
+    """How far `candidate` leaves the joint under the floor (0 = clear), with a
+    small penalty for the size of the swing so the smallest one wins."""
+    pose.rot[bone] = candidate
+    depth = -min(state()[index], 0.0)
+    return depth * 1000.0 + candidate.angle
 
 
 # ---------------------------------------------------------------------------

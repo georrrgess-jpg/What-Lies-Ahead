@@ -576,27 +576,60 @@ def head_band(name, w, top, bottom, m, off=0.012, thick=0.02, segs=26, flare=0.0
                 a_bot=a1 + off, b_bot=b1 + off)
 
 
+def cap_crown(name, w, m, rim=1.745, top=2.0, off=0.03, segs=26, lip=0.022):
+    """The crown of a cap, beanie, bandana or helmet on a head of width w: a
+    dome that hugs the skull from `rim` up to `top`, `off` proud of it and open
+    underneath. The rim sits above the ears and the fringe, and the wall is
+    thick enough to swallow the brows and the tops of the eyes, so a hat pulled
+    low never has the face or the hair poking through it."""
+    sk = skull(w)
+    dome = rim + (top - rim) * 0.3
+
+    def ring(z, k):
+        a, b, cx, cy = sk.section(min(z, 1.82))
+        return ((cx, cy, z), (a + off) * k, (b + off) * k, SKULL_N - 0.5 * (1.0 - k))
+    (c, a, b, n) = ring(rim, 1.0)
+    rings = [((c[0], c[1], rim + 0.006), a - lip, b - lip, n), ring(rim, 1.0), ring(dome, 1.0)]
+    for i in range(1, 7):
+        t = math.pi / 2 * i / 6
+        rings.append(ring(dome + (top - dome) * math.sin(t), max(math.cos(t), 0.02)))
+    return loft(name, rings, m, axis=(0, 0, 1), segs=segs, cap0=False, cap1=True)
+
+
 def hair(p, w, m, style="fringe", seed=2):
-    """Head-bound hair: "fringe" (a ragged band round the back, balding on top),
-    "mop" (fringe plus a tousled top), "flat" (a short crop) or "tufts"."""
+    """Head-bound hair that stays under any hat: "fringe" and "mop" get a ragged
+    band of clumps round the back, ear to ear; "flat" the lower edge of a short
+    crop. The hair on top of the head is separate (see `hair_top`), so builders
+    can make it an accessory that hats replace."""
     sk = skull(w)
     parts = []
     rng = random.Random(seed)
     if style in ("fringe", "mop"):
-        # A ring of shaggy clumps round the back of the head, ear to ear.
         for i in range(11):
             a = math.radians(-84 + 168 * i / 10)
-            # Lowest at the nape, rising above the ears at the sides.
-            z = 1.56 + 0.13 * abs(math.sin(a)) ** 2 + rng.uniform(-0.02, 0.03)
+            # Lowest at the nape, a little higher above the ears, and never
+            # above the line where hats sit.
+            z = 1.545 + 0.04 * abs(math.sin(a)) ** 2 + rng.uniform(-0.015, 0.015)
             ra, rb, cx, cy = sk.section(z)
             x, y = cx + math.sin(a) * ra * 0.98, cy + math.cos(a) * rb * 0.98
-            parts.append(sphere(f"{p}Clump{i}", rng.uniform(0.072, 0.094), (x, y, z), scale=(1.0, 1.0, 1.6),
+            parts.append(sphere(f"{p}Clump{i}", rng.uniform(0.068, 0.085), (x, y, z), scale=(1.0, 1.0, 1.4),
                                 rot=(math.cos(a) * 0.35, -math.sin(a) * 0.35, 0), m=m, segs=10, rings=7))
     if style == "flat":
-        parts.append(sk.shell(p + "Crop", m, 1.86, 1.6, off=0.016, gap=110, tear=tear_fn(26, seed, 5, -0.03), segs=26, steps=4, lip=0.018))
+        parts.append(sk.shell(p + "Crop", m, 1.7, 1.6, off=0.016, gap=110, tear=tear_fn(26, seed, 5, -0.03), segs=26, steps=2, lip=0.014))
+    return bind("Head", parts)
+
+
+def hair_top(p, w, m, style="mop", seed=2):
+    """The hair on top of the head: "mop" and "tufts" are tousled locks, "flat"
+    the crown of a short crop; "fringe" is bald on top (nothing)."""
+    sk = skull(w)
+    parts = []
+    rng = random.Random(seed + 100)
+    if style == "flat":
+        parts.append(sk.shell(p + "CropCrown", m, 1.86, 1.69, off=0.016, gap=110, segs=26, steps=3, lip=0.014))
         parts.append(sphere(p + "CropTop", w * 0.47, (0, HEAD_Y + 0.02, 1.8), scale=(1.0, 0.86, 0.36), m=m, segs=16, rings=7))
     if style in ("mop", "tufts"):
-        # Tousled locks: fat tapered curls leaning every which way from the crown.
+        # Fat tapered curls leaning every which way from the crown.
         for i in range(6 if style == "mop" else 3):
             a = rng.uniform(-1.2, 1.2) + (math.pi / 2 if style == "tufts" else 0.0)
             x, y = math.sin(a) * w * 0.24, HEAD_Y + math.cos(a) * 0.11
@@ -650,8 +683,8 @@ def marks_parts(p, w, m, dark, seed=1):
         a = (cx - side * 0.022, sk.front(cx - side * 0.022, cz + 0.014) - 0.004, cz + 0.014)
         b = (cx + side * 0.022, sk.front(cx + side * 0.022, cz - 0.014) - 0.004, cz - 0.014)
         parts.append(tube(f"{p}Stitch{i}", [a, b], 0.006, m=m["dark"], segs=4))
-    # Blotches on the other cheek and temple.
-    for i, (fx, z, r) in enumerate(((-0.4, 1.47, 0.03), (-0.44, 1.7, 0.036))):
+    # Blotches on the other cheek and beside the eye (below where hats sit).
+    for i, (fx, z, r) in enumerate(((-0.4, 1.47, 0.03), (-0.465, 1.635, 0.03))):
         x = side * fx * w
         parts.append(sphere(f"{p}Blotch{i}", r, (x, sk.front(x, z) + r * 0.25, z), scale=(1.0, 0.45, 1.15), m=dark, segs=8, rings=5))
     return parts
@@ -692,6 +725,7 @@ def face_parts(p, f, m, w, tongue=None, eye_z=1.62, k=1.0, lid=None, brow=None):
     brow = brow or m["skin_dark"]
     tongue = tongue or m["skin_dark"]
     parts = []
+    sk = skull(w)
     er = 0.1 * k * (w / 0.6) ** 0.5
     for i, side in enumerate((1, -1)):
         size = f["eyes"][i]
@@ -711,9 +745,13 @@ def face_parts(p, f, m, w, tongue=None, eye_z=1.62, k=1.0, lid=None, brow=None):
             parts.append(dome(f"{p}Lid{i}", r * 1.07, (ex, ey, ez), (sc[0], sc[1] * 1.08, sc[2]), lid, tilt=math.radians(tilt),
                               roll=math.radians(-side * f["roll"]), segs=14, rings=4))
         parts.append(sphere(f"{p}Bag{i}", r * 0.78, (ex + side * r * 0.08, fy + 0.016, ez - r * 0.92), scale=(1.0, 0.4, 0.3), m=lid, segs=10, rings=5))
+        # Brows follow the curve of the forehead, a finger proud of it, so a hat
+        # pulled low covers them instead of being pierced by them.
         bt = f["brows"][i]
-        parts.append(box(f"{p}Brow{i}", (r * 2.1, 0.07, 0.055 * k), (ex, face_y(w, ez + r * 1.4) - 0.005, ez + r * 1.35 + f["bz"][i]),
-                         rot=rad(0, -side * bt, 0), bevel=0.022, m=brow))
+        bz = ez + r * 1.35 + f["bz"][i]
+        turn = math.atan2(sk.front(ex + side * 0.05, bz) - sk.front(ex - side * 0.05, bz), 0.1)
+        parts.append(box(f"{p}Brow{i}", (r * 2.1, 0.05, 0.055 * k), (ex, sk.front(ex, bz) + 0.011, bz),
+                         rot=(0.0, math.radians(-side * bt), side * turn), bevel=0.02, m=brow))
     parts += mouth_parts(p, f["mouth"], m, w, tongue, k)
     return parts
 

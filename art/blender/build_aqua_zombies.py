@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from aqua_common import *  # noqa: F401,F403
 from build_zombie import FPS, bind, build_armature, save_zombie, skin  # noqa: E402
 import zombie_anim  # noqa: E402
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, hair, head, hips, leg, neck,  # noqa: E402
+from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, decal, face_y, faces, hair, hair_top, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
 
 
@@ -66,7 +66,7 @@ def diver(m):
     p = "D_"
     suit, dark, white = m["shirt"], m["dark"], m["white"]
     parts = head(p, m, 0.6)
-    parts += hair(p, 0.6, dark, "flat", 8)
+    parts += hair(p, 0.6, dark, "flat", 8) + hair_top(p, 0.6, dark, "flat", 8)
     tor, body = torso(p, suit, w=0.76, d=0.5, z0=0.9, belly=0.05, hunch=0.05)
     parts += tor
     parts += neck(p, dark, 0.3)

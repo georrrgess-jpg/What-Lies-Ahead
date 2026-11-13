@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from frost_common import *  # noqa: F401,F403
 import build_zombie as bz
 import zombie_anim  # noqa: E402
-from zombie_kit import (HEAD_Y, head_band, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+from zombie_kit import (HEAD_Y, cap_crown, head_band, arm, band, base_materials, blob, face_y, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, torso)
 
 
@@ -75,10 +75,10 @@ def skier(m):
     fy = face_y(w, 1.66)
     parts += bz.bind("Head", [
         sk.shell(p + "Helmet", navy, 1.92, 1.5, off=0.04, gap=140, segs=26, steps=5, lip=0.03),
-        sphere(p + "HelmetTop", 0.31, (0, HEAD_Y + 0.02, 1.82), scale=(1.06, 1.06, 0.66), m=navy, segs=18, rings=9),
+        cap_crown(p + "HelmetTop", w, navy, rim=1.805, top=2.03, off=0.04, segs=28),
         box(p + "HelmetStripe", (0.1, 0.64, 0.08), (0, HEAD_Y + 0.02, 2.0), bevel=0.03, m=m["accent"]),
         box(p + "Visor", (0.58, 0.1, 0.13), (0, fy - 0.07, 1.72), rot=rad(-6, 0, 0), bevel=0.05, segs=3, m=m["visor"]),
-        box(p + "ChinGuard", (0.3, 0.12, 0.08), (0, face_y(w, 1.3) - 0.03, 1.3), bevel=0.03, m=navy),
+        box(p + "ChinGuard", (0.3, 0.1, 0.07), (0, face_y(w, 1.3) - 0.06, 1.262), bevel=0.03, m=navy),
     ])
     tor, body = torso(p, suit, w=0.52, d=0.37, z0=0.9, hunch=0.05)
     parts += tor
@@ -129,8 +129,8 @@ def skier_accessories(m):
         "Acc_Skier_Skis": skis,
         "Acc_Skier_Poles": poles,
         "Acc_Skier_Medal": bz.bind("Spine", [
-            cyl(p + "Medal", 0.07, 0.02, (0.0, -0.23, 1.31), rot=rad(90, 0, 0), segs=14, bevel=0.0, m=m["gold"]),
-            tube(p + "Ribbon", [(-0.1, -0.16, 1.43), (0.0, -0.22, 1.34), (0.1, -0.16, 1.43)], 0.015, m=m["accent"], segs=5),
+            cyl(p + "Medal", 0.07, 0.02, (0.0, -0.235, 1.2), rot=rad(90, 0, 0), segs=14, bevel=0.0, m=m["gold"]),
+            tube(p + "Ribbon", [(-0.17, -0.08, 1.42), (0.0, -0.225, 1.26), (0.17, -0.08, 1.42)], 0.015, m=m["accent"], segs=5),
         ]),
         "Acc_Skier_Goggles": bz.bind("Head", [
             box(p + "Goggles", (0.44, 0.08, 0.12), (0, HEAD_Y - 0.25, 1.9), rot=rad(-25, 0, 0), bevel=0.04, m=m["accent"]),
@@ -306,8 +306,8 @@ def frozen_accessories(m):
             + bz.bind("ForeArm.R", [crystal(p + "ForeR", (0.26, 0.28, 0.3), (-0.43, 0, 0.8), rad(0, -6, 4), ice)])
         ),
         "Acc_Frozen_Beanie": bz.bind("Head", [
-            sphere(p + "Beanie", 0.33, (0, HEAD_Y + 0.02, 1.8), scale=(1.0, 1.0, 0.8), m=m["beanie"], segs=16, rings=9),
-            head_band(p + "BeanieCuff", 0.62, 1.8, 1.7, m["white"], off=0.017, thick=0.03),
+            cap_crown(p + "Beanie", 0.62, m["beanie"], rim=1.74, top=2.06),
+            head_band(p + "BeanieCuff", 0.62, 1.81, 1.715, m["white"], off=0.04, thick=0.03),
             sphere(p + "Pompom", 0.1, (0, HEAD_Y + 0.02, 2.08), m=m["white"], segs=10, rings=7),
         ]),
         "Acc_Frozen_Earmuffs": bz.bind("Head", [

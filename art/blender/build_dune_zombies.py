@@ -33,7 +33,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dune_kit import *  # noqa: F401,F403
 from build_zombie import FPS, bind, build_armature, save_zombie, skin  # noqa: E402
 import zombie_anim  # noqa: E402
-from zombie_kit import (HEAD_Y, head_band, arm, band, base_materials, blob, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+from zombie_kit import (HEAD_Y, cap_crown, head_band, arm, band, base_materials, blob, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
 
 
@@ -188,7 +188,7 @@ def mechanic_accessories(m):
     w = 0.6
     acc = {
         "Acc_Mechanic_Cap": bind("Head", [
-            sphere(p + "Cap", 0.33, (0, HEAD_Y, 1.8), scale=(1.0, 0.95, 0.6), m=m["rust"], segs=16, rings=8),
+            cap_crown(p + "Cap", w, m["rust"], top=1.99),
             box(p + "CapBrim", (0.36, 0.26, 0.045), (0, HEAD_Y - 0.37, 1.77), rot=rad(10, 0, 0), bevel=0.02, m=m["rust"]),
             box(p + "CapPatch", (0.18, 0.04, 0.1), (0, HEAD_Y - 0.28, 1.86), rot=rad(-18, 0, 0), bevel=0.015, m=m["white"]),
         ]),
@@ -202,8 +202,8 @@ def mechanic_accessories(m):
             box(p + "WrenchJaw", (0.14, 0.06, 0.12), (-0.44, -0.2, 0.12), rot=rad(-20, 0, 0), bevel=0.02, m=m["steel"]),
         ]),
         "Acc_Mechanic_Rag": bind("Head", [
-            sphere(p + "Bandana", 0.32, (0, HEAD_Y + 0.01, 1.76), scale=(1.0, 0.94, 0.62), m=m["rust"], segs=16, rings=8),
-            box(p + "Knot", (0.1, 0.08, 0.08), (0, HEAD_Y + 0.29, 1.68), bevel=0.025, m=m["rust"]),
+            cap_crown(p + "Bandana", w, m["rust"], rim=1.72, top=1.95, off=0.026),
+            box(p + "Knot", (0.1, 0.08, 0.08), (0, HEAD_Y + 0.3, 1.75), bevel=0.025, m=m["rust"]),
         ]),
     }
     acc.update(faces("Mechanic", m, 0.6, ("Grin", "Snarl", "Clench", "Derp")))
