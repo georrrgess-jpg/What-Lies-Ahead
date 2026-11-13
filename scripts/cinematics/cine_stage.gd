@@ -10,6 +10,10 @@ extends RefCounted
 ## (slowmo) only slows the game world.
 
 const ZOMBIE_SCENE := "res://scenes/enemies/zombie.tscn"
+## The reel is framed for 16:9: on a narrower screen the camera keeps the
+## 16:9 width (more shows above and below, under the bars) so nothing framed
+## to the sides is cut off.
+const FRAME_ASPECT := 16.0 / 9.0
 
 ## Seconds since the shot started (unscaled).
 var t := 0.0
@@ -19,7 +23,8 @@ var length := 1.0
 var actors: Node3D
 var camera: Camera3D
 var overlay: CineOverlay
-## The set the shot plays on (a level scene or the studio).
+## The set the shot plays on (a level scene or the studio); CinePlayer sets
+## it at the cut (a shot built ahead of time may not have its set loaded yet).
 var set_root: Node3D
 
 var _events: Array = []
@@ -45,10 +50,17 @@ func _init(actor_root: Node3D, cam: Camera3D, ui: CineOverlay, on_set: Node3D, s
 
 # --- timeline -----------------------------------------------------------------
 
-## Calls `f` once when the shot reaches `at` seconds.
+## Calls `f` once when the shot reaches `at` seconds. Events at the same time
+## run in the order they were added; one added while the shot plays (from
+## another event) runs no earlier than the next update. Anything a shot does
+## to the frame, the grade or the light goes through here (at 0: its first
+## frame), so a shot can be built ahead of its cut without touching the one
+## on screen.
 func at(when: float, f: Callable) -> void:
-	_events.append([when, f])
-	_events.sort_custom(func(a, b): return a[0] < b[0])
+	var i := _events.size()
+	while i > _next_event and _events[i - 1][0] > when:
+		i -= 1
+	_events.insert(i, [when, f])
 
 
 ## Calls `f(t)` every frame of the shot (t = the shot's local time).
@@ -125,6 +137,40 @@ func track(f: Callable) -> void:
 	_track = f
 
 
+## A camera path through keys `[time, position, look_at]` (shot seconds): a
+## Catmull-Rom curve through both, so the camera's speed never jumps at a key.
+## The ends hold still (zero speed) only if their keys repeat a position.
+func spline(keys: Array) -> void:
+	_track = func(_k: float) -> Transform3D:
+		return _look(_spline_at(keys, 1, t), _spline_at(keys, 2, t))
+
+
+static func _spline_at(keys: Array, field: int, time: float) -> Vector3:
+	var n := keys.size()
+	if time <= keys[0][0]:
+		return keys[0][field]
+	if time >= keys[n - 1][0]:
+		return keys[n - 1][field]
+	var i := 0
+	while i < n - 2 and time >= keys[i + 1][0]:
+		i += 1
+	var t0: float = keys[i][0]
+	var t1: float = keys[i + 1][0]
+	var p0: Vector3 = keys[maxi(i - 1, 0)][field]
+	var p1: Vector3 = keys[i][field]
+	var p2: Vector3 = keys[i + 1][field]
+	var p3: Vector3 = keys[mini(i + 2, n - 1)][field]
+	# Tangents scaled by the neighbouring spans keep the speed continuous
+	# across keys that are unevenly spaced in time.
+	var span := t1 - t0
+	var m1: Vector3 = (p2 - p0) / maxf(0.001, float(keys[mini(i + 1, n - 1)][0]) - float(keys[maxi(i - 1, 0)][0])) * span
+	var m2: Vector3 = (p3 - p1) / maxf(0.001, float(keys[mini(i + 2, n - 1)][0]) - float(keys[i][0])) * span
+	var u := (time - t0) / maxf(0.001, span)
+	var u2 := u * u
+	var u3 := u2 * u
+	return p1 * (2.0 * u3 - 3.0 * u2 + 1.0) + m1 * (u3 - 2.0 * u2 + u) + p2 * (-2.0 * u3 + 3.0 * u2) + m2 * (u3 - u2)
+
+
 ## Field of view from `from` to `to` over the shot (a zoom).
 func fov(from: float, to := -1.0) -> void:
 	_fov = Vector2(from, to if to > 0.0 else from)
@@ -146,7 +192,7 @@ func _update_camera() -> void:
 	var k := clampf(t / maxf(0.01, length), 0.0, 1.0)
 	if _track.is_valid():
 		camera.global_transform = _track.call(k)
-	camera.fov = lerpf(_fov.x, _fov.y, ease(k, -1.6))
+	lens_fov(lerpf(_fov.x, _fov.y, ease(k, -1.6)))
 	_apply_whips()
 	var jolt := 0.0
 	for s in _shakes:
@@ -154,9 +200,22 @@ func _update_camera() -> void:
 		if age >= 0.0 and age < s[2]:
 			jolt += s[1] * (1.0 - age / s[2]) * Settings.shake_scale()
 	if jolt > 0.0:
+		# Slow enough (4-6 Hz) to read as a jolt at 30 fps, not as jitter.
 		var b := camera.global_basis
-		camera.global_position += (b.x * sin(t * 91.0) + b.y * cos(t * 77.0)) * jolt
-		camera.rotate_object_local(Vector3.FORWARD, sin(t * 63.0) * jolt * 0.25)
+		camera.global_position += (b.x * sin(t * 37.0) + b.y * cos(t * 29.0 + 1.3)) * jolt
+		camera.rotate_object_local(Vector3.FORWARD, sin(t * 23.0) * jolt * 0.25)
+
+
+## Sets the vertical field of view of the 16:9 frame; on a narrower screen the
+## camera keeps that frame's width instead (see FRAME_ASPECT).
+func lens_fov(vertical: float) -> void:
+	var size := camera.get_viewport().get_visible_rect().size
+	if size.x / maxf(1.0, size.y) < FRAME_ASPECT - 0.01:
+		camera.keep_aspect = Camera3D.KEEP_WIDTH
+		camera.fov = rad_to_deg(2.0 * atan(tan(deg_to_rad(vertical) * 0.5) * FRAME_ASPECT))
+	else:
+		camera.keep_aspect = Camera3D.KEEP_HEIGHT
+		camera.fov = vertical
 
 
 func _apply_whips() -> void:
@@ -343,6 +402,10 @@ func environment() -> Environment:
 ## and the sun's energy times `sun`. Restored to the level's own at the next
 ## shot on the set (CinePlayer calls restore_lighting()).
 func lighting(ambient := 1.0, exposure := 1.0, glow := -1.0, sun := 1.0) -> void:
+	at(0.0, _relight.bind(ambient, exposure, glow, sun))
+
+
+func _relight(ambient: float, exposure: float, glow: float, sun: float) -> void:
 	var env := environment()
 	if env == null:
 		return

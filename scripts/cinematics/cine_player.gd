@@ -16,6 +16,16 @@ signal ended
 
 const LOOKAHEAD := 4
 const MUSIC_DB := -3.0
+## Frames of black before the first shot while FxWarmup draws every effect,
+## enemy and weapon of the reel once, so their shaders compile up front
+## instead of mid-shot (a video trims these frames).
+const WARMUP_FRAMES := FxWarmup.FRAMES + 2
+## Size of the offscreen view a set is drawn into once before its cut.
+const WARM_VIEW := Vector2i(192, 108)
+## Frames that view draws the set (its materials compile here, not at the cut).
+const WARM_DRAWS := 2
+## Levels that are not in GameData's world list (the Boot Camp tutorial).
+const EXTRA_LEVELS := "res://data/tutorial/%s.tres"
 
 var shots: Array[CineShot] = []
 var music_path := "res://audio/music/showreel_trailer.ogg"
@@ -51,6 +61,16 @@ var _paused: Array[AudioStreamPlayer] = []
 var _last_tick := 0
 var _worst: Array = []
 var _load_ms := {}
+## Per cut: [shot, worst frame ms of the cut and the 3 frames after it].
+var _cut_ms: Array = []
+var _frame_ms: PackedFloat32Array = []
+var _warmup_left := WARMUP_FRAMES
+## Shots built during the warm-up (CineShot.prebuild), hidden and paused:
+## shot index -> [actor root, CineStage]. Their cut only shows them.
+var _built := {}
+var _build_queue: Array[int] = []
+## Sets drawing into their offscreen warm-up view: id -> [SubViewport, draws left].
+var _warming := {}
 
 
 func _ready() -> void:
@@ -78,10 +98,23 @@ func _ready() -> void:
 	var first := maxi(0, _shot_at(start_at))
 	_clock = shots[first].start if not shots.is_empty() else 0.0
 	_prepare_from(first)
+	_warm_up()
+	for k in range(first, shots.size()):
+		if shots[k].prebuild and shots[k].start < stop_at:
+			_build_queue.append(k)
 	if render_mode:
 		# A video has no wall-clock: load the first set now so frame one is the shot.
 		_wait_for(shots[first].set_id)
-		_begin()
+
+
+## Draws one of every enemy, kill effect, tracer and weapon in front of the
+## camera behind the black (FxWarmup), so no shot compiles a shader mid-move.
+func _warm_up() -> void:
+	var warm := FxWarmup.new()
+	warm.name = "FxWarmup"
+	add_child(warm)
+	camera.global_transform = Transform3D(Basis.IDENTITY, Vector3(0, -400, 0))
+	warm.run(camera, GameData.enemies(), GameData.weapons())
 
 
 func _begin() -> void:
@@ -171,11 +204,17 @@ func _input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if _done:
 		return
-	_track_frame_time()
+	if report:
+		_track_frame_time()
 	if not _running:
 		var first := _shot_at(_clock)
 		_collect_jobs()
-		if first >= 0 and _sets.has(shots[first].set_id):
+		_tick_warming()
+		_warmup_left -= 1
+		# One heavy shot is built per frame, behind the black.
+		if not _build_queue.is_empty():
+			_build_ahead(_build_queue.pop_front())
+		elif _warmup_left <= 0 and first >= 0 and _sets.has(shots[first].set_id):
 			_begin()
 		return
 	_clock += delta / maxf(Engine.time_scale, 0.0001)
@@ -186,6 +225,7 @@ func _process(delta: float) -> void:
 	if i != _index:
 		_cut(i)
 	_collect_jobs()
+	_tick_warming()
 	if _stage:
 		_stage.update(_clock - shots[_index].start, delta)
 
@@ -218,15 +258,92 @@ func _cut(i: int) -> void:
 		_attach_set(shot.set_id)
 	_release_unused(i)
 	_prepare_from(i + 1)
-	_actors = Node3D.new()
-	_actors.name = "Shot_" + shot.id
-	add_child(_actors)
 	overlay.reset_lens()
 	camera.near = 0.05
 	CineStage.restore_lighting(_sets[shot.set_id])
-	_stage = CineStage.new(_actors, camera, overlay, _sets[shot.set_id], shot.length)
-	shot.build.call(_stage)
+	if _built.has(i):
+		_actors = _built[i][0]
+		_stage = _built[i][1]
+		for sleeper in _built[i][2]:
+			var z: Zombie = sleeper[0]
+			if is_instance_valid(z):
+				if sleeper[1]:
+					z.add_to_group(&"zombies")
+				z.nav.avoidance_enabled = sleeper[2]
+		_built.erase(i)
+		_actors.visible = true
+		_actors.process_mode = Node.PROCESS_MODE_INHERIT
+	else:
+		_actors = _new_actor_root(shot)
+		_stage = CineStage.new(_actors, camera, overlay, null, shot.length)
+		shot.build.call(_stage)
+	_stage.set_root = _sets[shot.set_id]
 	_stage.update(_clock - shot.start, 0.0)
+
+
+func _new_actor_root(shot: CineShot) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Shot_" + shot.id
+	add_child(root)
+	return root
+
+
+## Builds shot `i` now, hidden and paused, so its cut costs nothing but
+## showing it (its zombies, operators and viewmodels are already made).
+## Everything a shot does to the frame or the light waits for its first
+## frame (CineStage.at), so building it early changes nothing on screen.
+func _build_ahead(i: int) -> void:
+	var root := _new_actor_root(shots[i])
+	root.visible = false
+	root.process_mode = Node.PROCESS_MODE_DISABLED
+	var stage := CineStage.new(root, camera, overlay, null, shots[i].length)
+	shots[i].build.call(stage)
+	# Asleep until shown: out of the "zombies" group (a shatter or a splash in
+	# an earlier shot must not reach them) and out of the avoidance, which
+	# would move their bodies while those are out of the physics world.
+	var sleepers: Array = []
+	for node in root.find_children("*", "Zombie", true, false):
+		var z := node as Zombie
+		sleepers.append([z, z.is_in_group(&"zombies"), z.nav.avoidance_enabled])
+		z.remove_from_group(&"zombies")
+		z.nav.avoidance_enabled = false
+	_built[i] = [root, stage, sleepers]
+
+
+## Draws a loaded set once or twice into a small offscreen view of its own,
+## from its menu camera, so its materials compile before its cut.
+func _warm_set(id: String) -> void:
+	var level := _level_data(id)
+	if level == null or level.menu_camera_from.is_equal_approx(level.menu_camera_to):
+		return
+	var view := SubViewport.new()
+	view.size = WARM_VIEW
+	view.own_world_3d = true
+	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(view)
+	view.add_child(_sets[id])
+	var cam := Camera3D.new()
+	cam.far = camera.far
+	view.add_child(cam)
+	cam.look_at_from_position(level.menu_camera_from, level.menu_camera_to)
+	cam.current = true
+	_warming[id] = [view, WARM_DRAWS]
+
+
+func _tick_warming() -> void:
+	for id in _warming.keys():
+		_warming[id][1] -= 1
+		if _warming[id][1] < 0:
+			_end_warm(id)
+
+
+## Takes set `id` out of its warm-up view (it is attached at its cut).
+func _end_warm(id: String) -> void:
+	var view: SubViewport = _warming[id][0]
+	_warming.erase(id)
+	if _sets.has(id) and _sets[id].get_parent() == view:
+		view.remove_child(_sets[id])
+	view.queue_free()
 
 
 func _attach_set(id: String) -> void:
@@ -236,6 +353,8 @@ func _attach_set(id: String) -> void:
 			remove_child(old)
 	if not _sets.has(id):
 		_wait_for(id)
+	if _warming.has(id):
+		_end_warm(id)
 	var s: Node3D = _sets[id]
 	var t0 := Time.get_ticks_usec()
 	add_child(s)
@@ -265,7 +384,7 @@ func _prepare_from(i: int) -> void:
 		if id == "studio":
 			_sets[id] = CineStudio.new()
 			continue
-		var level := GameData.level(StringName(id))
+		var level := _level_data(id)
 		if level == null:
 			push_warning("showreel: unknown set " + id)
 			_sets[id] = CineStudio.new()
@@ -273,6 +392,13 @@ func _prepare_from(i: int) -> void:
 		_loading[id] = level.scene_path
 		_load_ms[id + " requested"] = snappedf(_clock, 0.01)
 		ResourceLoader.load_threaded_request(level.scene_path)
+
+
+func _level_data(id: String) -> LevelData:
+	var level := GameData.level(StringName(id))
+	if level == null and ResourceLoader.exists(EXTRA_LEVELS % id):
+		level = load(EXTRA_LEVELS % id) as LevelData
+	return level
 
 
 ## Worker thread: instantiates a loaded level as scenery (no RunDirector).
@@ -297,6 +423,8 @@ func _collect_jobs() -> void:
 	for id in _jobs.keys():
 		if WorkerThreadPool.is_task_completed(_jobs[id]):
 			_finish_job(id)
+			if id != _active_set:
+				_warm_set(id)
 
 
 func _start_instance(id: String) -> void:
@@ -329,13 +457,32 @@ func _finish_job(id: String) -> void:
 func _track_frame_time() -> void:
 	var now := Time.get_ticks_usec()
 	if _last_tick > 0 and _running and _index >= 0:
-		_worst.append([(now - _last_tick) / 1000.0, shots[_index].id, snappedf(_clock, 0.01)])
+		var ms := (now - _last_tick) / 1000.0
+		_frame_ms.append(ms)
+		_note_cut_frame(ms)
+		_worst.append([ms, shots[_index].id, snappedf(_clock, 0.01)])
 		_worst.sort_custom(func(a, b): return a[0] > b[0])
 		if _worst.size() > 5:
 			_worst.resize(5)
 	_last_tick = now
 
 
+## The frame a cut lands on and the next three count toward that cut.
+func _note_cut_frame(ms: float) -> void:
+	var since := _clock - shots[_index].start
+	if _cut_ms.is_empty() or _cut_ms[-1][0] != shots[_index].id:
+		_cut_ms.append([shots[_index].id, ms, 0])
+	elif _cut_ms[-1][2] < 3 and since < 0.5:
+		_cut_ms[-1][1] = maxf(_cut_ms[-1][1], ms)
+		_cut_ms[-1][2] += 1
+
+
 func _print_report() -> void:
 	print("[showreel] set timings (ms): ", _load_ms)
 	print("[showreel] worst frames (ms, shot, time): ", _worst)
+	var sorted := _frame_ms.duplicate()
+	sorted.sort()
+	var median := sorted[sorted.size() / 2] if not sorted.is_empty() else 0.0
+	var cuts := _cut_ms.duplicate()
+	cuts.sort_custom(func(a, b): return a[1] > b[1])
+	print("[showreel] median frame %.1f ms; worst cut frames (shot, ms): %s" % [median, str(cuts.slice(0, 8).map(func(c): return [c[0], snappedf(c[1], 0.1)]))])

@@ -3,9 +3,10 @@ extends RefCounted
 ## The showreel's shot list (docs/SHOWREEL.md has the plan and its timing).
 ## Every shot is a method that stages one CineStage; build() returns them in
 ## order. Times inside a shot are its own seconds; the reel is locked to
-## audio/music/showreel_trailer.ogg (120 BPM, a bar is 2 s), so lengths add
-## up to the cuts in that track: 12 (title boom), 16 (the beat comes in),
-## 28 (drop), 42 (arsenal), 54 (operators), 62 and 66 (title card hits), 72 (end).
+## audio/music/showreel_trailer.ogg (120 BPM, a bar is 2 s, a beat 0.5 s), so
+## lengths add up to the cuts in that track: 12 (title boom), 16 (the beat
+## comes in), 24-39 (the new worlds: a hit on every alpha), 42 (drop), 62
+## (arsenal), 72 (operators), 78 and 82 (title card hits), 88 (end).
 ##
 ## Actors, levels and cosmetics are referenced by id, so the reel always shows
 ## the game's current models and effects. The picks below are the only place
@@ -16,6 +17,12 @@ const NEON := "neon_skyline"
 const TIDAL := "tidal_tunnels"
 const DUNE := "launch_pad"
 const FROST := "summit_lodge"
+const MALL := "midnight_mall"
+const TEMPLE := "lost_temple"
+const CANDY := "candy_works"
+const LAVA := "lava_lagoon"
+const SKY := "sky_harbor"
+const BOOT := "boot_camp"
 const STUDIO := "studio"
 
 # --- featured items (swap ids here) ---------------------------------------------
@@ -27,7 +34,6 @@ const LINEUP_FRONT: Array[StringName] = [&"op_stunt_ace", &"op_halfpipe", &"op_t
 const LINEUP_BACK: Array[StringName] = [&"op_boardwalk_ranger", &"op_surf_rescue", &"op_neon_courier", &"op_deep_diver",
 	&"op_glitch", &"op_astro_cadet", &"op_frost_guard", &"op_arcade_champion", &"op_midway_maestro"]
 const HERO := &"op_windup"
-const SQUAD: Array[StringName] = [&"op_stunt_ace", &"op_pixel_pal", &"op_halfpipe"]
 const FINALE_SQUAD: Array[StringName] = [&"op_cosmic_sheriff", &"op_glitch", &"op_mech_jockey"]
 ## Kill effects: the five of the first-person sweep, the hero's, the alpha's showpiece.
 const KILL_FX: Array[StringName] = [&"kfx_jackpot", &"kfx_balloon", &"kfx_ghost", &"kfx_disco", &"kfx_tickets"]
@@ -46,15 +52,29 @@ const ARSENAL_FINISHES: Array[StringName] = [&"fin_marquee", &"fin_data_rain", &
 ## The finishes the camera lingers on (one bar half each), with their cells.
 const LINGER: Array[StringName] = [&"fin_marquee", &"fin_cathedral", &"fin_quicksilver", &"fin_kaleidoscope"]
 const LINGER_CELLS: Array[StringName] = [&"cellx_marquee", &"cellx_rainbow_road", &"cellx_fusion", &"cellx_twinkle"]
-## The charm close-up: [weapon, finish, charm, cell, decal] per side.
-const CHARM_RIGS := [[&"scatter_blaster", &"fin_warp", &"charmx_ufo", &"cellx_hyperspace", &"decalx_neon_kitty"],
-	[&"pulse_pistol", &"fin_lava_lamp", &"charmx_ferris_wheel", &"cellx_siren", &"decalx_lucky_sevens"]]
+## The sight brought to the eye in the aim-down-sights shot (on the cannon).
+const ADS_SIGHT := &"sightx_gemcut"
 const SIGHTS: Array[StringName] = [&"sightx_gallery", &"sightx_gemcut", &"sightx_zombie_eye", &"sightx_periscope"]
 
+## Shots heavy enough to build during the warm-up instead of at their cut
+## (CinePlayer measures each cut: --showreel-report=1).
+const BUILT_AHEAD: Array[String] = ["open_sunset", "cast_horde", "kill_headshot", "kill_sweep", "ads", "moves",
+	"kill_cryo", "kill_lobber", "bounty", "kill_alpha", "arsenal", "finishes", "sights", "operators", "op_action", "finale"]
+
 ## The whole cast, in the order of the march (front first).
-const CAST: Array[StringName] = [&"boardwalk_bruiser", &"riot_bruiser", &"frost_yeti", &"tourist_shambler",
-	&"lifeguard_runner", &"neon_punk", &"hover_courier", &"deep_diver", &"mascot_inker", &"jelly_head",
-	&"dune_space_cadet", &"dune_jet_mechanic", &"dune_hazmat_worker", &"frost_ski_racer", &"frost_frozen_tourist"]
+const CAST: Array[StringName] = [&"boardwalk_bruiser", &"riot_bruiser", &"frost_yeti", &"jungle_overgrown",
+	&"tourist_shambler", &"mall_walker", &"candy_gummy", &"lava_fire_dancer",
+	&"lifeguard_runner", &"neon_punk", &"sky_diver", &"jungle_explorer",
+	&"hover_courier", &"deep_diver", &"candy_taffy_puller", &"lava_tiki_bartender",
+	&"mascot_inker", &"jelly_head", &"mall_flinger", &"sky_balloon_vendor"]
+## The five new worlds: [set, its two zombies, its alpha, grade].
+const NEW_WORLDS := [
+	[MALL, &"mall_walker", &"mall_flinger", &"alpha_night_manager", &"night"],
+	[TEMPLE, &"jungle_explorer", &"jungle_overgrown", &"alpha_idol_keeper", &"golden"],
+	[CANDY, &"candy_gummy", &"candy_taffy_puller", &"alpha_confectioner", &"day"],
+	[LAVA, &"lava_fire_dancer", &"lava_tiki_bartender", &"alpha_kahuna", &"dusk"],
+	[SKY, &"sky_diver", &"sky_balloon_vendor", &"alpha_captain", &"day"],
+]
 
 ## The low sun over the sea behind the Ferris wheel (Prize Pier), for flares.
 const PIER_SUN := Vector3(-120, 9, -70)
@@ -70,33 +90,45 @@ static func build() -> Array[CineShot]:
 		CineShot.make("open_horde", PIER, 3.0, s._open_horde),
 		# The title boom (12)
 		CineShot.make("title", PIER, 4.0, s._title),
-		# Worlds, joined by whip pans (16-24)
+		# Ten worlds: the first four joined by whip pans (16-24)...
 		CineShot.make("world_neon", NEON, 2.0, s._world_neon),
 		CineShot.make("world_tidal", TIDAL, 2.0, s._world_tidal),
 		CineShot.make("world_dune", DUNE, 2.0, s._world_dune),
 		CineShot.make("world_frost", FROST, 2.0, s._world_frost),
-		# The cast (24-28)
-		CineShot.make("cast_yeti", FROST, 2.0, s._cast_yeti),
-		CineShot.make("cast_horde", PIER, 2.0, s._cast_horde),
-		# ACT II: the drop, kills (28-42)
+		# ...the five new ones, each a landmark and its alpha on a hit (24-39)
+		CineShot.make("world_mall", MALL, 2.0, s._world_mall),
+		CineShot.make("alpha_mall", MALL, 1.0, s._alpha.bind(0)),
+		CineShot.make("world_temple", TEMPLE, 2.0, s._world_temple),
+		CineShot.make("alpha_temple", TEMPLE, 1.0, s._alpha.bind(1)),
+		CineShot.make("world_candy", CANDY, 2.0, s._world_candy),
+		CineShot.make("alpha_candy", CANDY, 1.0, s._alpha.bind(2)),
+		CineShot.make("world_lava", LAVA, 2.0, s._world_lava),
+		CineShot.make("alpha_lava", LAVA, 1.0, s._alpha.bind(3)),
+		CineShot.make("world_sky", SKY, 2.0, s._world_sky),
+		CineShot.make("alpha_sky", SKY, 1.0, s._alpha.bind(4)),
+		# The breath: the whole cast in slow motion (39-42)
+		CineShot.make("cast_horde", PIER, 3.0, s._cast_horde),
+		# ACT II: the drop. Play: kills, sights, moves, Sparks (42-62)
 		CineShot.make("kill_headshot", PIER, 2.0, s._kill_headshot),
 		CineShot.make("kill_sweep", PIER, 3.0, s._kill_sweep),
+		CineShot.make("ads", PIER, 2.0, s._ads),
+		CineShot.make("boot_camp", BOOT, 2.0, s._boot_camp),
+		CineShot.make("moves", BOOT, 3.0, s._moves),
 		CineShot.make("kill_cryo", PIER, 2.0, s._kill_cryo),
-		CineShot.make("kill_arc", PIER, 2.0, s._kill_arc),
 		CineShot.make("kill_lobber", NEON, 2.0, s._kill_lobber),
-		CineShot.make("kill_alpha", NEON, 3.0, s._kill_alpha),
-		# The arsenal and its skins (42-54)
+		CineShot.make("bounty", PIER, 2.0, s._bounty),
+		CineShot.make("kill_alpha", NEON, 2.0, s._kill_alpha),
+		# Make it yours: the arsenal, finishes, sights, operators (62-78)
 		CineShot.make("arsenal", STUDIO, 4.0, s._arsenal),
 		CineShot.make("finishes", STUDIO, 4.0, s._finishes),
-		CineShot.make("charms", STUDIO, 2.0, s._charms),
 		CineShot.make("sights", STUDIO, 2.0, s._sights),
-		# Operators (54-62)
 		CineShot.make("operators", STUDIO, 3.0, s._operators),
 		CineShot.make("op_action", PIER, 3.0, s._op_action),
-		CineShot.make("op_squad", PIER, 2.0, s._op_squad),
-		# ACT III: the title card (62-72)
+		# ACT III: the title card (78-88)
 		CineShot.make("finale", PIER, 10.0, s._finale),
 	]
+	for shot in list:
+		shot.prebuild = shot.id in BUILT_AHEAD
 	return list
 
 
@@ -120,7 +152,7 @@ func _world_caption(st: CineStage, level_id: String) -> void:
 ## A first-person weapon on the game's own viewmodel rig (WeaponView: sway,
 ## kick, muzzle flash and the weapon's real reload), pinned to the lens, with
 ## the operator's arms in `gloves`.
-func _viewmodel(st: CineStage, weapon_id: StringName, finish: StringName, gloves: StringName, cell: StringName = &"") -> WeaponView:
+func _viewmodel(st: CineStage, weapon_id: StringName, finish: StringName, gloves: StringName, cell: StringName = &"", sight: StringName = &"") -> WeaponView:
 	var w := GameData.weapon(weapon_id)
 	var view := WeaponView.new()
 	st.actors.add_child(view)
@@ -130,8 +162,11 @@ func _viewmodel(st: CineStage, weapon_id: StringName, finish: StringName, gloves
 	loadout["arms"] = Cosmetics.item(gloves)
 	if cell != &"":
 		loadout["cell"] = Cosmetics.item(cell)
+	if sight != &"":
+		loadout["sight"] = Cosmetics.item(sight)
 	WeaponCosmetics.apply(view.model, w, loadout)
-	st.camera.near = 0.02
+	view.refit_sight()
+	st.at(0.0, func(): st.camera.near = 0.02)
 	st.after_camera(func(_t: float):
 		view.global_transform = st.camera.global_transform.scaled_local(Vector3.ONE * WeaponView.VIEW_SCALE))
 	return view
@@ -192,10 +227,10 @@ func _item_name(id: StringName) -> String:
 ## Dusk on the pier: a low crane past a lamp post toward the Ferris wheel,
 ## a lone tourist shambling across in silhouette against the sky.
 func _open_sunset(st: CineStage) -> void:
-	st.overlay.bars(1.0, 0.0)
-	st.overlay.fade(1.0, 0.0)
-	st.overlay.fade(0.0, 2.4)
-	st.overlay.grade(&"dusk")
+	st.at(0.0, st.overlay.bars.bind(1.0, 0.0))
+	st.at(0.0, st.overlay.fade.bind(1.0, 0.0))
+	st.at(0.0, st.overlay.fade.bind(0.0, 2.4))
+	st.at(0.0, st.overlay.grade.bind(&"dusk"))
 	st.lighting(0.35, 0.9, 1.1, 0.3)
 	st.fov(40.0, 34.0)
 	st.dolly(Vector3(-6, 0.35, 8.5), Vector3(-30, 6.0, -22), Vector3(-9.5, 1.6, 3.5), Vector3(-32, 8.0, -24), -1.4)
@@ -210,7 +245,7 @@ func _open_sunset(st: CineStage) -> void:
 ## The tourist in close-up, rimmed in neon pink; its eyes catch cyan light
 ## and it lifts its head into a slow, silent roar.
 func _open_eyes(st: CineStage) -> void:
-	st.overlay.grade(&"dusk")
+	st.at(0.0, st.overlay.grade.bind(&"dusk"))
 	st.lighting(0.3, 0.9, 1.2, 0.25)
 	var z := st.zombie(&"tourist_shambler", Vector3(-5, 0, -3), 45.0, "Idle", 0.5)
 	var face := st.head(z) + Vector3(0, -0.05, 0)
@@ -229,7 +264,7 @@ func _open_eyes(st: CineStage) -> void:
 ## Ground level, slow motion: shuffling feet pass the lens, the focus racks
 ## to the horde walking out of the sunset.
 func _open_horde(st: CineStage) -> void:
-	st.overlay.grade(&"dusk")
+	st.at(0.0, st.overlay.grade.bind(&"dusk"))
 	st.lighting(0.35, 0.9, 1.1, 0.3)
 	st.slowmo(0.0, 3.0, 0.5, 0.01, 0.2)
 	var eye := Vector3(-7.0, 0.3, 6.0)
@@ -241,7 +276,7 @@ func _open_horde(st: CineStage) -> void:
 		var p := Vector3(-13.0 - (i % 3) * 2.2 - i * 0.6, 0, -2.0 - ((i + 1) % 3) * 1.8 - i * 0.7)
 		st.walker(kinds[i], p, 40.0 + randf_range(-8.0, 8.0), 0.7 + 0.05 * (i % 3))
 	st.flare_at(func(): return PIER_SUN, SUN_COLOR, 0.5)
-	st.overlay.focus(Vector2(0.68, 0.72), 0.12, 0.012)
+	st.at(0.0, st.overlay.focus.bind(Vector2(0.68, 0.72), 0.12, 0.012))
 	st.at(1.0, st.overlay.focus.bind(Vector2(0.4, 0.45), 0.22, 0.008, 0.8))
 	st.at(0.0, func(): st.play(near, "Walk", 0.9))
 
@@ -251,8 +286,8 @@ func _open_horde(st: CineStage) -> void:
 ## The boom: the camera cranes up out of the horde to the Ferris wheel and
 ## the logo rises into the dusk.
 func _title(st: CineStage) -> void:
-	st.overlay.grade(&"dusk")
-	st.overlay.grade(&"golden", 3.0)
+	st.at(0.0, st.overlay.grade.bind(&"dusk"))
+	st.at(0.0, st.overlay.grade.bind(&"golden", 3.0))
 	st.lighting(0.5, 0.95, 1.2, 0.5)
 	st.at(0.25, func(): st.overlay.logo(Vector2(0.5, 0.4), 150, 1.4))
 	st.at(3.3, st.overlay.clear_text.bind(0.6))
@@ -269,7 +304,7 @@ func _title(st: CineStage) -> void:
 # --- worlds ----------------------------------------------------------------------
 
 func _world_neon(st: CineStage) -> void:
-	st.overlay.grade(&"night")
+	st.at(0.0, st.overlay.grade.bind(&"night"))
 	st.lighting(1.0, 1.0, 1.1)
 	_world_caption(st, NEON)
 	var l := GameData.level(&"neon_skyline")
@@ -281,7 +316,7 @@ func _world_neon(st: CineStage) -> void:
 
 
 func _world_tidal(st: CineStage) -> void:
-	st.overlay.grade(&"night")
+	st.at(0.0, st.overlay.grade.bind(&"night"))
 	st.lighting(1.0, 1.0, 1.0)
 	_world_caption(st, TIDAL)
 	var l := GameData.level(&"tidal_tunnels")
@@ -293,7 +328,7 @@ func _world_tidal(st: CineStage) -> void:
 
 
 func _world_dune(st: CineStage) -> void:
-	st.overlay.grade(&"day")
+	st.at(0.0, st.overlay.grade.bind(&"day"))
 	_world_caption(st, DUNE)
 	st.fov(52.0, 46.0)
 	st.dolly(Vector3(7, 1.2, 12), Vector3(0, 8, -9), Vector3(9, 3.2, 14.5), Vector3(0, 18, -9))
@@ -305,56 +340,129 @@ func _world_dune(st: CineStage) -> void:
 
 
 func _world_frost(st: CineStage) -> void:
-	st.overlay.grade(&"night")
+	st.at(0.0, st.overlay.grade.bind(&"night"))
 	st.lighting(1.0, 1.0, 1.3)
 	_world_caption(st, FROST)
 	var l := GameData.level(&"summit_lodge")
 	st.fov(50.0, 44.0)
 	st.dolly(l.menu_camera_from, l.menu_camera_to, l.menu_camera_from.lerp(l.menu_camera_to, 0.2) + Vector3(0, -1.5, 0), l.menu_camera_to + Vector3(0, 1.5, 0))
 	st.whip(70.0, 0.25, true)
+	st.whip(70.0, 0.22)
+
+
+## A new world's landmark: the camera drifts in (never stopping at the cut)
+## while two of its zombies come at the lens.
+func _landmark(st: CineStage, index: int, from: Vector3, look_from: Vector3, to: Vector3, look_to: Vector3, fov: Vector2, walkers: Array) -> void:
+	var w: Array = NEW_WORLDS[index]
+	st.at(0.0, st.overlay.grade.bind(w[4]))
+	_world_caption(st, w[0])
+	st.fov(fov.x, fov.y)
+	st.dolly(from, look_from, to, look_to, -1.15)
+	for i in walkers.size():
+		var spot: Array = walkers[i]
+		st.walker(w[1 + i % 2], spot[0], spot[1], 0.85)
+
+
+## Midnight Mall: down from the glass dome toward the Moonfall Fountain.
+func _world_mall(st: CineStage) -> void:
+	st.whip(70.0, 0.22, true)
+	st.lighting(1.0, 1.0, 1.15)
+	_landmark(st, 0, Vector3(-8.0, 7.5, 17.0), Vector3(0, 3.5, -9), Vector3(-5.0, 3.6, 6.5), Vector3(0, 4.2, -11),
+		Vector2(52.0, 46.0), [[Vector3(-2.5, 0, -3.0), 10.0], [Vector3(2.5, 0, -4.5), -10.0], [Vector3(4.5, 0, -1.0), -25.0]])
+
+
+## Lost Temple: rising toward the Jade Idol's carved face at golden hour.
+func _world_temple(st: CineStage) -> void:
+	st.lighting(1.0, 1.0, 1.1)
+	_landmark(st, 1, Vector3(7.0, 1.6, 15.0), Vector3(0, 7.0, -24), Vector3(6.0, 4.2, 7.5), Vector3(0, 8.0, -26),
+		Vector2(48.0, 44.0), [[Vector3(-2.0, 0, -6.0), 15.0], [Vector3(3.5, 0, -8.0), -5.0], [Vector3(-5.5, 0, -9.0), 20.0]])
+
+
+## Candy Works: low across the factory floor to the colossal gumball machine.
+func _world_candy(st: CineStage) -> void:
+	_landmark(st, 2, Vector3(-10.0, 1.6, 18.0), Vector3(0, 9.0, -28), Vector3(-9.0, 3.6, 9.0), Vector3(0, 11.0, -28),
+		Vector2(50.0, 45.0), [[Vector3(-3.0, 0, -4.0), 10.0], [Vector3(-7.0, 0, -2.0), 30.0], [Vector3(3.0, 0, -6.0), -10.0]])
+
+
+## Lava Lagoon: Mount Kahuna erupts (the world's twist): the sky flares red
+## and ember bombs drop into their glowing rings among the fire dancers.
+func _world_lava(st: CineStage) -> void:
+	st.lighting(1.0, 1.0, 1.2)
+	_landmark(st, 3, Vector3(-6.0, 1.7, 17.0), Vector3(14, 24, -300), Vector3(-4.5, 3.2, 10.0), Vector3(16, 28, -300),
+		Vector2(50.0, 46.0), [[Vector3(-2.0, 0, -3.0), 5.0], [Vector3(4.0, 0, -5.0), -15.0], [Vector3(-7.5, 0, -1.0), 25.0]])
+	# The world's twist, by hand (it normally follows the run director's waves).
+	st.at(0.0, func():
+		var eruption := st.set_root.find_child("Eruption", false, false) as LavaEruption
+		if eruption == null:
+			return
+		eruption.telegraph = 1.0
+		eruption.fall_time = 0.45
+		eruption.erupt_now()
+		for spot in [[0.0, Vector3(-4.5, 0, 6.0)], [0.35, Vector3(5.0, 0, 5.5)], [0.7, Vector3(-8.0, 0, 1.5)]]:
+			st.at(spot[0], eruption.strike_at.bind(spot[1])))
+	st.shake(1.0, 0.05, 0.4)
+
+
+## Sky Harbor: across the hub isle to the airship Cumulus at its mooring.
+func _world_sky(st: CineStage) -> void:
+	st.lighting(1.0, 1.0, 1.1)
+	_landmark(st, 4, Vector3(-19.0, 1.8, 8.0), Vector3(-53, 12, -1.5), Vector3(-23.5, 3.6, 5.5), Vector3(-53, 14, -1.5),
+		Vector2(50.0, 46.0), [[Vector3(-31.0, 0, 1.0), 75.0], [Vector3(-33.0, 0, -2.5), 85.0], [Vector3(-29.0, 0, -4.0), 95.0]])
+
+
+## Where each new world's alpha walks on (on its own set): [position, yaw].
+const ALPHA_SPOTS := [[Vector3(-2.5, 0, -3.5), 0.0], [Vector3(-4.0, 0, -6.5), 0.0], [Vector3(-6.0, 0, -5.0), 10.0],
+	[Vector3(-5.0, 0, 6.0), 0.0], [Vector3(-33.0, 0, 0.5), 90.0]]
+
+
+## A new world's alpha boss walks at a low lens on the hit, its name beside it.
+func _alpha(st: CineStage, index: int) -> void:
+	var w: Array = NEW_WORLDS[index]
+	var spot: Array = ALPHA_SPOTS[index]
+	st.at(0.0, st.overlay.grade.bind(w[4]))
+	st.lighting(0.85, 1.0, 1.25)
+	var z := st.walker(w[3], spot[0], spot[1], 0.8)
+	var fwd := Vector3(sin(deg_to_rad(spot[1])), 0, cos(deg_to_rad(spot[1])))
+	var side := fwd.cross(Vector3.UP)
+	var tall := 1.75 * z.data.body_scale
+	st.fov(40.0, 36.0)
+	# Far enough back that the whole head and shoulders stay inside the bars.
+	st.track(func(k: float) -> Transform3D:
+		var at := z.global_position if is_instance_valid(z) else (spot[0] as Vector3)
+		var from := at + fwd * lerpf(8.6, 7.8, k) + side * lerpf(1.9, 1.5, k) + Vector3.UP * 1.0
+		return Transform3D(Basis.looking_at(at + Vector3.UP * tall * 0.55 - from), from))
+	st.light(spot[0] + fwd * 2.5 + Vector3.UP * 3.0, UiKit.PINK if w[4] == &"night" else Color("ffd9a8"), 2.5, 9.0)
+	st.shake(0.0, 0.06, 0.5)
+	st.at(0.05, st.overlay.title_card.bind(_enemy_name(w[3]), "Alpha", Vector2(0.3, 0.74), 0.4, UiKit.RED, 56))
 
 
 # --- the cast --------------------------------------------------------------------
 
-func _cast_yeti(st: CineStage) -> void:
-	st.overlay.grade(&"night")
-	st.lighting(0.8, 1.0, 1.3)
-	var z := st.zombie(&"frost_yeti", Vector3(3, 0, 8), 10.0, "Idle", 1.0, true)
-	st.light(Vector3(3, 2.4, 6.0), Color("8fd8ff"), 2.5, 6.0)
-	st.fov(44.0, 36.0)
-	st.dolly(Vector3(3.6, 0.45, 13.5), Vector3(3, 2.0, 8), Vector3(3.5, 0.4, 12.0), Vector3(3, 2.4, 8))
-	st.at(0.85, func():
-		st.play(z, "Roar", 1.0, 0.0, 0.15)
-		Sfx.play_at(&"bruiser_roar_1", st.head(z), 0.0, 0.8))
-	st.slowmo(0.9, 1.6, 0.45, 0.08, 0.3)
-	st.shake(0.95, 0.07, 0.6)
-
-
 ## Every kind of zombie marches at the lens in slow motion, low and close.
 func _cast_horde(st: CineStage) -> void:
-	st.overlay.grade(&"golden")
+	st.at(0.0, st.overlay.grade.bind(&"golden"))
 	st.lighting(0.55, 0.95, 1.1, 0.6)
-	st.slowmo(0.0, 2.0, 0.5, 0.01, 0.15)
+	st.slowmo(0.0, 3.0, 0.5, 0.01, 0.4)
 	var i := 0
 	for row in 5:
-		for col in 3:
+		for col in 4:
 			if i >= CAST.size():
 				break
 			var x := -9.0 - row * 2.2
-			var z := -13.0 + (col - 1) * 2.0 + (row % 2) * 0.8
+			var z := -12.6 + (col - 1.5) * 1.9 + (row % 2) * 0.7
 			st.walker(CAST[i], Vector3(x, 0, z), 90.0, 0.9)
 			i += 1
 	st.fov(40.0, 48.0)
 	st.dolly(Vector3(-1.5, 0.6, -12.5), Vector3(-13, 1.8, -12.6), Vector3(0.5, 1.0, -12.0), Vector3(-13, 1.8, -12.6))
 	st.flare_at(func(): return PIER_SUN, SUN_COLOR, 0.35)
-	st.at(0.15, st.overlay.title_card.bind("%d kinds of trouble" % GameData.enemies().size(), "The horde", Vector2(0.5, 0.2), 1.2, UiKit.AMBER, 72))
+	st.at(0.15, st.overlay.title_card.bind("%d kinds of trouble" % GameData.enemies().size(), "The horde", Vector2(0.5, 0.2), 1.8, UiKit.AMBER, 72))
 
 
 # --- ACT II: kills -----------------------------------------------------------------
 
 ## The drop: a speed ramp into a bolt to the head, the pop in slow motion.
 func _kill_headshot(st: CineStage) -> void:
-	st.overlay.grade(&"day")
+	st.at(0.0, st.overlay.grade.bind(&"day"))
 	var z := st.walker(&"tourist_shambler", Vector3(-6, 0, 14), 20.0, 0.8)
 	var head := st.head(z)
 	st.fov(36.0, 28.0)
@@ -371,7 +479,7 @@ func _kill_headshot(st: CineStage) -> void:
 ## First person on the game's own viewmodel: one sweep, five kills in five
 ## kill effects and five tracers, then the weapon's reload.
 func _kill_sweep(st: CineStage) -> void:
-	st.overlay.grade(&"day")
+	st.at(0.0, st.overlay.grade.bind(&"day"))
 	var eye := Vector3(2, 1.6, -13)
 	var targets: Array[Zombie] = []
 	for i in 5:
@@ -394,7 +502,7 @@ func _kill_sweep(st: CineStage) -> void:
 
 
 func _kill_cryo(st: CineStage) -> void:
-	st.overlay.grade(&"day")
+	st.at(0.0, st.overlay.grade.bind(&"day"))
 	var cryo := GameData.weapon(&"cryo_beam")
 	var zs: Array[Zombie] = []
 	for i in 3:
@@ -420,32 +528,8 @@ func _kill_cryo(st: CineStage) -> void:
 	st.focus_on(func(): return st.chest(zs[1]) if is_instance_valid(zs[1]) else Vector3(-6, 1, 14), 0.3, 0.006)
 
 
-func _kill_arc(st: CineStage) -> void:
-	st.overlay.grade(&"day")
-	var arc := GameData.weapon(&"arc_coil")
-	var zs: Array[Zombie] = []
-	var spots := [Vector3(-6, 0, -11), Vector3(-8.2, 0, -12.6), Vector3(-7.4, 0, -15.6), Vector3(-10.2, 0, -14.4), Vector3(-11, 0, -10.8)]
-	for p in spots:
-		zs.append(st.zombie(&"tourist_shambler" if zs.size() % 2 == 0 else &"lifeguard_runner", p, 95.0, "Walk", 0.6))
-	var muzzle := Vector3(0.5, 1.35, -10.0)
-	st.fov(50.0, 44.0)
-	st.dolly(Vector3(-2.5, 2.4, -7.5), Vector3(-8.5, 0.9, -13), Vector3(-3.4, 1.8, -8.6), Vector3(-8.6, 0.9, -13))
-	st.at(0.3, func():
-		Sfx.play(arc.fire_sound, -5.0)
-		LightningBolt.spawn(st.actors, muzzle, st.chest(zs[0]), arc.tracer_color, 0.09, 0.3, 0.3))
-	for i in zs.size():
-		st.at(0.3 + i * 0.09, func():
-			if i > 0:
-				LightningBolt.spawn(st.actors, st.chest(zs[i - 1]), st.chest(zs[i]), arc.tracer_color, 0.07, 0.3, 0.25)
-				Sfx.play_at(arc.chain_sound, st.chest(zs[i]), -6.0)
-			WeaponFx.shock_crackle(zs[i]))
-		st.at(0.75 + i * 0.06, st.kill.bind(zs[i], &"arc_coil", false, Vector3(-1, 0, 0), 3.0))
-	st.slowmo(0.3, 0.9, 0.4, 0.05, 0.3)
-	st.flare_at(func(): return muzzle, arc.tracer_color, 0.4, 0.3, 0.02, 0.5, 0.3)
-
-
 func _kill_lobber(st: CineStage) -> void:
-	st.overlay.grade(&"night")
+	st.at(0.0, st.overlay.grade.bind(&"night"))
 	var lob := GameData.weapon(&"bumper_lobber")
 	var zs: Array[Zombie] = []
 	var centre := Vector3(-3, 0, 1)
@@ -483,27 +567,28 @@ func _kill_lobber(st: CineStage) -> void:
 
 
 func _kill_alpha(st: CineStage) -> void:
-	# The Neon Skyline finale's named alpha (its data already makes it big).
-	st.overlay.grade(&"night")
+	# The Neon Skyline finale's named alpha (its data already makes it big),
+	# framed from far enough back that its head and shield stay in the frame.
+	st.at(0.0, st.overlay.grade.bind(&"night"))
 	var z := st.walker(&"alpha_riot", Vector3(-6, 0, 2), 90.0, 0.8)
-	st.move(z, Vector3.ZERO, 1.2)
+	st.move(z, Vector3.ZERO, 0.9)
 	var muzzle := Vector3(7, 1.5, 3.4)
-	st.fov(40.0, 32.0)
+	st.fov(40.0, 34.0)
 	st.track(func(k: float) -> Transform3D:
 		var at := z.global_position if is_instance_valid(z) else Vector3(-4, 0, 2)
-		var from := at + Vector3(5.6 - k * 1.2, 0.45, 3.2 - k * 0.6)
-		return Transform3D(Basis.looking_at(at + Vector3(0, 2.4, 0) - from), from))
-	for i in 5:
-		st.at(0.15 + i * 0.18, func():
+		var from := at + Vector3(7.0 - k * 0.8, 1.0, 4.0 - k * 0.4)
+		return Transform3D(Basis.looking_at(at + Vector3(0, 1.75, 0) - from), from))
+	for i in 4:
+		st.at(0.1 + i * 0.16, func():
 			var to := st.chest(z) + Vector3(0, 0.6, 0) * z.data.body_scale
 			st.shoot(&"comet_cannon", muzzle, to)
 			st.hit(z, &"comet_cannon", 1.0, to, to - muzzle))
-	st.at(0.25, st.overlay.title_card.bind(_enemy_name(&"alpha_riot"), "Alpha", Vector2(0.24, 0.76), 0.9, UiKit.RED, 56))
-	st.slowmo(1.25, 3.0, 0.3, 0.06, 0.6)
-	st.at(1.25, func():
+	st.at(0.1, st.overlay.title_card.bind(_enemy_name(&"alpha_riot"), "Alpha", Vector2(0.26, 0.74), 0.6, UiKit.RED, 56))
+	st.slowmo(0.9, 2.0, 0.3, 0.15, 0.5)
+	st.at(0.9, func():
 		st.shoot(&"rail_lancer", muzzle, st.chest(z) + Vector3(0, 0.5, 0), 1.0, true, HERO_TRACER)
 		st.kill(z, &"rail_lancer", false, Vector3(-1, 0, 0), 4.0, SHOWPIECE_KILL))
-	st.shake(1.3, 0.12, 0.6)
+	st.shake(0.95, 0.1, 0.6)
 	st.focus_on(func(): return st.chest(z) if is_instance_valid(z) else Vector3(-4, 1.5, 2), 0.3, 0.006)
 
 
@@ -512,12 +597,104 @@ func _enemy_name(id: StringName) -> String:
 	return e.display_name if e else String(id)
 
 
+## Aim down sights: the cannon comes up to the eye on the game's own eye
+## line, its optic's reticle lights on a far head, the view zooms, two shots
+## and the head pops in slow motion.
+func _ads(st: CineStage) -> void:
+	st.at(0.0, st.overlay.grade.bind(&"day"))
+	var eye := Vector3(3.0, 1.6, -12.0)
+	var z := st.walker(&"lifeguard_runner", Vector3(-13.0, 0, -15.5), 75.0, 0.7)
+	st.walker(&"tourist_shambler", Vector3(-11.0, 0, -9.5), 100.0, 0.7)
+	var view := _viewmodel(st, &"comet_cannon", ARSENAL_FINISHES[3], GLOVES[1], &"", ADS_SIGHT)
+	st.after_camera(func(t: float):
+		var k := smoothstep(0.15, 0.6, t)
+		view.staged_aim = k
+		st.lens_fov(lerpf(64.0, 64.0 / 1.6, k)))
+	st.track(func(_k: float) -> Transform3D:
+		var head := st.head(z) if is_instance_valid(z) else Vector3(-12.0, 1.6, -15.0)
+		var look := head.lerp(eye + (head - eye).normalized() * 10.0 + Vector3(0, -0.6, 2.0), 1.0 - smoothstep(0.0, 0.6, st.t))
+		return Transform3D(Basis.looking_at(look - eye), eye))
+	st.at(0.05, st.overlay.caption.bind(_item_name(ADS_SIGHT), 1.2, UiKit.CYAN))
+	st.at(0.85, func(): _fire_view(st, view, &"comet_cannon", st.chest(z) + Vector3(0, 0.2, 0)))
+	st.at(1.05, func():
+		_fire_view(st, view, &"comet_cannon", st.head(z), HERO_TRACER)
+		st.kill(z, &"comet_cannon", true, Vector3(-1, 0, -0.2), 4.0, KILL_FX[3]))
+	st.slowmo(1.05, 2.0, 0.35, 0.12, 0.4)
+
+
+## Boot Camp: up the training midway past its arches; an operator sprints
+## the course toward the loadout station.
+func _boot_camp(st: CineStage) -> void:
+	st.at(0.0, st.overlay.grade.bind(&"day"))
+	var op := st.operator(LINEUP_FRONT[1], Vector3(0.8, 0, -4.0), 180.0, "Run")
+	st.move(op, Vector3(0, 0, -Operators.RUN_SPEED))
+	st.fov(46.0, 42.0)
+	st.dolly(Vector3(2.6, 1.3, 4.5), Vector3(0, 2.4, -30), Vector3(3.4, 4.6, -3.0), Vector3(0, 1.4, -38), -1.15)
+	st.at(0.1, st.overlay.title_card.bind("Boot Camp", "Learn the ropes", Vector2(0.5, 0.78), 1.3, UiKit.CYAN, 72))
+
+
+## First person down the Boot Camp lane: up onto the crates (mantle), over
+## the barrier (vault) and under the low sign in a slide, on one camera curve.
+func _moves(st: CineStage) -> void:
+	st.at(0.0, st.overlay.grade.bind(&"day"))
+	var view := _viewmodel(st, &"ion_carbine", ARSENAL_FINISHES[1], GLOVES[0])
+	var x := 0.9
+	st.spline([
+		[0.0, Vector3(x, 1.6, -32.4), Vector3(x, 1.3, -44)],
+		[0.45, Vector3(x, 1.55, -35.9), Vector3(x, 1.0, -40)],
+		[0.8, Vector3(x, 2.85, -37.3), Vector3(x, 2.2, -45)],
+		[1.05, Vector3(x, 2.8, -38.9), Vector3(x, 1.8, -48)],
+		[1.35, Vector3(x, 1.6, -41.2), Vector3(x, 1.5, -52)],
+		[1.7, Vector3(x, 2.15, -45.0), Vector3(x, 1.5, -55)],
+		[1.95, Vector3(x, 1.6, -47.4), Vector3(x, 1.3, -60)],
+		[2.3, Vector3(x, 0.95, -50.2), Vector3(x, 0.9, -62)],
+		[2.65, Vector3(x, 0.82, -53.0), Vector3(x, 1.0, -64)],
+		[3.0, Vector3(x, 1.25, -56.0), Vector3(x, 1.3, -68)],
+	])
+	st.fov(68.0, 74.0)
+	st.every_frame(func(t: float):
+		var mantle := smoothstep(0.3, 0.55, t) * (1.0 - smoothstep(0.85, 1.1, t))
+		var vault := smoothstep(1.5, 1.65, t) * (1.0 - smoothstep(1.8, 2.0, t))
+		view.staged_mantle = maxf(mantle, vault)
+		view.staged_slide = smoothstep(2.1, 2.35, t) * (1.0 - smoothstep(2.75, 3.0, t))
+		view.staged_sprint = clampf(1.0 - view.staged_mantle - view.staged_slide, 0.0, 1.0)
+		view.staged_gait = Vector2(t * TAU * 1.7, view.staged_sprint))
+	st.at(0.1, st.overlay.caption.bind("Sprint  ·  mantle  ·  vault  ·  slide  ·  dash", 2.3, UiKit.CREAM))
+	st.at(2.15, func(): Sfx.play(&"ui_whoosh", -10.0, 0.7))
+
+
+## A bounty: the golden runner bolts with its ticket prize and drops to a
+## headshot; its Sparks fly out of it and home on the lens.
+func _bounty(st: CineStage) -> void:
+	st.at(0.0, st.overlay.grade.bind(&"golden"))
+	var z := st.walker(&"lifeguard_runner", Vector3(-9.0, 0, 13.5), 90.0, 1.0, true)
+	z.set_rank(Zombie.RANK_BOUNTY, 1.0, Color(0.55, 0.42, 0.05))
+	st.fov(42.0, 38.0)
+	st.track(func(k: float) -> Transform3D:
+		var at := z.global_position if is_instance_valid(z) else Vector3(-3, 0, 13.5)
+		var from := Vector3(at.x + lerpf(-1.0, 1.4, k), 1.3, 19.5)
+		return Transform3D(Basis.looking_at(at + Vector3(0.6, 1.0, 0) - from), from))
+	var sparks := SparkField.new()
+	st.actors.add_child(sparks)
+	st.after_camera(func(_t: float):
+		var b := st.camera.global_basis
+		sparks.global_position = st.camera.global_position - b.y * 0.35 - b.z * 0.6)
+	st.at(0.1, st.overlay.title_card.bind("Bounty", "Catch it, cash it", Vector2(0.5, 0.22), 0.8, UiKit.AMBER, 64))
+	st.at(0.8, func():
+		st.shoot(&"pulse_pistol", st.head(z) + Vector3(6, 0.3, 5), st.head(z), 1.0, true, HERO_TRACER)
+		var at := st.chest(z)
+		st.kill(z, &"pulse_pistol", true, Vector3(1, 0, 0), 4.0, &"kfx_jackpot")
+		sparks.drop(at, 40))
+	st.slowmo(0.8, 1.6, 0.4, 0.1, 0.4)
+	st.at(1.0, func(): st.overlay.spark_counter(1200, 1240, 0.8, Vector2(0.5, 0.74)))
+
+
 # --- the arsenal -----------------------------------------------------------------
 
 ## Eight weapons on the turntable, one per beat, each in an animated finish;
 ## the turn carries on across the cuts (match cuts).
 func _arsenal(st: CineStage) -> void:
-	st.overlay.grade(&"studio")
+	st.at(0.0, st.overlay.grade.bind(&"studio"))
 	st.lighting(1.0, 1.0, 1.1)
 	var pivots: Array[Node3D] = []
 	for i in WEAPONS.size():
@@ -539,7 +716,7 @@ func _arsenal(st: CineStage) -> void:
 ## A slow macro glide along the carbine; the finish changes on the beat and
 ## the camera lingers on each animated one, a Ferris wheel charm turning.
 func _finishes(st: CineStage) -> void:
-	st.overlay.grade(&"studio")
+	st.at(0.0, st.overlay.grade.bind(&"studio"))
 	st.lighting(0.8, 1.0, 1.2)
 	var model := st.weapon(&"ion_carbine", LINGER[0], &"charmx_ferris_wheel")
 	var w := GameData.weapon(&"ion_carbine")
@@ -556,47 +733,14 @@ func _finishes(st: CineStage) -> void:
 				WeaponCosmetics.apply(model, w, {"finish": Cosmetics.item(LINGER[i]), "cell": Cosmetics.item(LINGER_CELLS[i]), "charm": Cosmetics.item(&"charmx_ferris_wheel")})
 				st.overlay.flash(Color.WHITE, 0.25, 0.12)
 			st.overlay.caption(_item_name(LINGER[i]), 0.55, UiKit.CREAM))
+	st.at(1.6, st.overlay.title_card.bind("%d cosmetics" % GameData.cosmetics().size(), "Sparks buy them in the Shop", Vector2(0.5, 0.22), 1.6, UiKit.PINK, 64))
 	st.focus_on(func(): return pivot.global_position, 0.35, 0.006)
-
-
-## Two charms swing as their weapons rock: a saucer spinning its lights, a
-## Ferris wheel turning; the camera trucks from one to the other while the
-## cells pulse and the decals catch the light.
-func _charms(st: CineStage) -> void:
-	st.overlay.grade(&"studio")
-	st.lighting(0.8, 1.0, 1.2)
-	var pivots: Array[Node3D] = []
-	var models: Array[Node3D] = []
-	for i in CHARM_RIGS.size():
-		var r: Array = CHARM_RIGS[i]
-		var model := st.weapon(r[0], r[1], r[2])
-		WeaponCosmetics.apply(model, GameData.weapon(r[0]), {"finish": Cosmetics.item(r[1]), "charm": Cosmetics.item(r[2]), "cell": Cosmetics.item(r[3]), "decal": Cosmetics.item(r[4])})
-		var p := _turntable(st, model, 1.3, 1.0)
-		p.position.x = -0.6 + i * 1.2
-		p.rotation.y = deg_to_rad(90.0)
-		pivots.append(p)
-		models.append(model)
-	st.every_frame(func(t: float):
-		for i in pivots.size():
-			pivots[i].rotation.z = sin(t * 2.4 + i * 1.7) * 0.14
-			pivots[i].rotation.y = deg_to_rad(90.0 + sin(t * 1.1 + i) * 12.0))
-	var charm_at := func(i: int) -> Vector3:
-		var anchor := models[i].find_child("CharmPoint", true, false) as Node3D
-		return (anchor.global_position if anchor else pivots[i].global_position) + Vector3(0, -0.1, 0)
-	st.fov(30.0, 27.0)
-	st.track(func(k: float) -> Transform3D:
-		var e := ease(k, -1.6)
-		var at: Vector3 = (charm_at.call(0) as Vector3).lerp(charm_at.call(1), e)
-		var from := at + Vector3(lerpf(0.12, -0.12, e), 0.04, 0.72)
-		return Transform3D(Basis.looking_at(at - from), from))
-	st.light(Vector3(0, 2.0, 1.4), Color("ffe6c8"), 1.4, 4.0)
-	st.at(0.2, st.overlay.title_card.bind("%d cosmetics" % GameData.cosmetics().size(), "Make it yours", Vector2(0.5, 0.8), 1.4, UiKit.PINK, 64))
 
 
 ## The sight changes on a cannon held in profile; the frame holds still so
 ## each swap reads as a match cut.
 func _sights(st: CineStage) -> void:
-	st.overlay.grade(&"studio")
+	st.at(0.0, st.overlay.grade.bind(&"studio"))
 	var models: Array[Node3D] = []
 	for i in SIGHTS.size():
 		var m := st.weapon(&"comet_cannon", &"fin_quicksilver", &"", SIGHTS[i])
@@ -605,8 +749,9 @@ func _sights(st: CineStage) -> void:
 		m.scale = Vector3.ONE * 2.2
 		m.visible = i == 0
 		models.append(m)
-	st.fov(30.0, 24.0)
-	st.dolly(Vector3(1.5, 1.6, 0.9), Vector3(0, 1.38, -0.15), Vector3(1.05, 1.52, 0.55), Vector3(0, 1.4, -0.15))
+	# Far enough back that the whole cannon and its optic stay in frame.
+	st.fov(32.0, 28.0)
+	st.dolly(Vector3(2.0, 1.8, 1.35), Vector3(0, 1.42, -0.1), Vector3(1.7, 1.72, 1.1), Vector3(0, 1.44, -0.1), -1.15)
 	st.every_frame(func(t: float):
 		var k := clampi(int(t / 0.5), 0, models.size() - 1)
 		for i in models.size():
@@ -624,7 +769,7 @@ func _sights(st: CineStage) -> void:
 ## The line-up: the newest operators in front, the originals behind, each
 ## striking its pose as the camera trucks past under neon rim lights.
 func _operators(st: CineStage) -> void:
-	st.overlay.grade(&"studio")
+	st.at(0.0, st.overlay.grade.bind(&"studio"))
 	st.lighting(0.9, 1.0, 1.1)
 	var rows := [[LINEUP_FRONT, 0.9, 0.0], [LINEUP_BACK, -0.9, 0.55]]
 	var n := 0
@@ -638,14 +783,15 @@ func _operators(st: CineStage) -> void:
 	st.whip(-70.0, 0.22, true)
 	st.light(Vector3(-4, 2.5, -2.5), UiKit.PINK, 3.0, 9.0)
 	st.light(Vector3(4, 2.5, -2.5), UiKit.CYAN, 3.0, 9.0)
-	st.fov(38.0, 34.0)
-	st.dolly(Vector3(-4.2, 1.1, 5.0), Vector3(-2.0, 1.15, 0), Vector3(4.2, 1.2, 5.0), Vector3(2.0, 1.15, 0), -1.2)
-	st.at(0.15, st.overlay.title_card.bind("%d operators" % GameData.cosmetics().filter(func(c): return c.slot == &"avatar").size(), "Suit up", Vector2(0.5, 0.17), 2.2, UiKit.AMBER, 72))
+	# Wide enough for whole heads in both rows; the card sits low, over legs.
+	st.fov(40.0, 37.0)
+	st.dolly(Vector3(-3.6, 1.45, 6.4), Vector3(-1.6, 1.2, 0), Vector3(3.6, 1.5, 6.4), Vector3(1.6, 1.2, 0), -1.15)
+	st.at(0.15, st.overlay.title_card.bind("%d operators" % GameData.cosmetics().filter(func(c): return c.slot == &"avatar").size(), "Suit up", Vector2(0.5, 0.84), 2.2, UiKit.AMBER, 64))
 
 
 ## The hero runs, stops, aims and fires; the chase camera swings round.
 func _op_action(st: CineStage) -> void:
-	st.overlay.grade(&"golden")
+	st.at(0.0, st.overlay.grade.bind(&"golden"))
 	var op := st.operator(HERO, Vector3(8, 0, 16), -90.0, "Run")
 	var gun := st.weapon(&"ion_carbine", ARSENAL_FINISHES[0])
 	Operators.hold_weapon(op, gun)
@@ -656,10 +802,12 @@ func _op_action(st: CineStage) -> void:
 	st.at(1.5, Operators.play.bind(op, "AimIdle", "", 0.2))
 	st.fov(46.0, 40.0)
 	st.track(func(k: float) -> Transform3D:
+		# The hero stays whole in frame (head, hands and weapon), a little right
+		# of centre, looking into the space the shots go.
 		var at := op.global_position
-		var side := lerpf(3.4, 2.2, ease(k, -1.5))
-		var from := at + Vector3(-1.4 + k * 2.8, 1.4, side)
-		return Transform3D(Basis.looking_at(at + Vector3(-1.6, 1.15, 0) - from), from))
+		var side := lerpf(4.4, 3.4, ease(k, -1.5))
+		var from := at + Vector3(-0.6 + k * 1.8, 1.55, side)
+		return Transform3D(Basis.looking_at(at + Vector3(-0.9, 1.1, 0) - from), from))
 	for i in 3:
 		st.at(1.9 + i * 0.18, func():
 			Operators.play(op, "Fire", "AimIdle", 0.05)
@@ -669,42 +817,14 @@ func _op_action(st: CineStage) -> void:
 	st.whip(70.0, 0.2)
 
 
-## Three operators open fire together, low and side-on, in slow motion.
-func _op_squad(st: CineStage) -> void:
-	st.overlay.grade(&"golden")
-	var guns := [&"scatter_blaster", &"rail_lancer", &"pulse_pistol"]
-	var ops: Array[Node3D] = []
-	var models: Array[Node3D] = []
-	for i in SQUAD.size():
-		var op := st.operator(SQUAD[i], Vector3(-3.2 + i * 1.25, 0, 13.4 + absf(i - 1) * 0.6), -90.0, "AimIdle")
-		var m := st.weapon(guns[i], ARSENAL_FINISHES[(i * 3 + 2) % ARSENAL_FINISHES.size()])
-		Operators.hold_weapon(op, m)
-		ops.append(op)
-		models.append(m)
-	var targets: Array[Zombie] = []
-	for i in 4:
-		targets.append(st.walker(CAST[i + 3], Vector3(-11.0 - i * 1.3, 0, 12.4 + i * 0.9), 90.0, 0.8))
-	st.whip(70.0, 0.2, true)
-	st.slowmo(0.4, 2.0, 0.4, 0.1, 0.2)
-	st.fov(40.0, 36.0)
-	st.dolly(Vector3(-1.0, 0.5, 17.0), Vector3(-5.5, 1.3, 13.6), Vector3(-1.6, 0.6, 16.4), Vector3(-6.5, 1.3, 13.6))
-	for i in 4:
-		var z := targets[i]
-		var who := i % ops.size()
-		st.at(0.35 + i * 0.2, func():
-			Operators.play(ops[who], "Fire", "AimIdle", 0.05)
-			st.shoot(guns[who], st.muzzle(models[who]), st.chest(z), 1.0, true, TRACERS[(i + 2) % TRACERS.size()])
-			st.kill(z, guns[who], i == 3, Vector3(-1, 0, 0), 4.0, KILL_FX[(i + 1) % KILL_FX.size()]))
-
-
 # --- ACT III: the title card -------------------------------------------------------
 
 ## Silhouettes against the sunset: three operators hold the line as the horde
 ## comes; the camera cranes up and back, the logo rises, PLAY NOW on the hit.
 func _finale(st: CineStage) -> void:
-	st.overlay.grade(&"golden")
-	st.overlay.fade(1.0, 0.0, Color.WHITE)
-	st.overlay.fade(0.0, 0.6, Color.WHITE)
+	st.at(0.0, st.overlay.grade.bind(&"golden"))
+	st.at(0.0, st.overlay.fade.bind(1.0, 0.0, Color.WHITE))
+	st.at(0.0, st.overlay.fade.bind(0.0, 0.6, Color.WHITE))
 	st.lighting(0.45, 0.95, 1.2, 0.45)
 	for i in FINALE_SQUAD.size():
 		var op := st.operator(FINALE_SQUAD[i], Vector3(-2 + i * 1.2, 0, 15 + absf(i - 1) * 0.7), -100.0, "AimIdle")
@@ -719,7 +839,7 @@ func _finale(st: CineStage) -> void:
 		"%d WORLDS" % GameData.worlds().size(), "%d WEAPONS" % GameData.weapons().size(),
 		"%d ZOMBIES" % GameData.enemies().size(),
 		"%d OPERATORS" % GameData.cosmetics().filter(func(c): return c.slot == &"avatar").size(),
-		"%d COSMETICS" % GameData.cosmetics().size()])
-	st.at(1.9, st.overlay.chips.bind(counts, Vector2(0.5, 0.6), 0.14, [UiKit.CYAN, UiKit.PINK, UiKit.AMBER, UiKit.CYAN, UiKit.PINK]))
+		"%d COSMETICS" % GameData.cosmetics().size(), "3 DIFFICULTIES"])
+	st.at(1.9, st.overlay.chips.bind(counts, Vector2(0.5, 0.6), 0.14, [UiKit.CYAN, UiKit.PINK, UiKit.AMBER, UiKit.CYAN, UiKit.PINK, UiKit.AMBER]))
 	st.at(4.0, func(): st.overlay.marquee("PLAY NOW", 84, Vector2(0.5, 0.8)))
 	st.at(8.4, st.overlay.fade.bind(1.0, 1.5))

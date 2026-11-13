@@ -8,6 +8,9 @@ var id := ""
 ## A level id (its scene is the set) or "studio" (CineStudio).
 var set_id := ""
 var length := 2.0
+## Build it during the reel's warm-up, behind the black, instead of at its
+## cut (for shots with many or heavy actors: first-person views, line-ups).
+var prebuild := false
 var build: Callable
 ## Filled in by CinePlayer: when the shot starts on the timeline.
 var start := 0.0

@@ -11,6 +11,10 @@ extends CanvasLayer
 const WIPE_SHADER := "res://art/shaders/cine_wipe.gdshader"
 const GRADE_SHADER := "res://art/shaders/cine_grade.gdshader"
 const BAR_HEIGHT := 96.0
+## The picture between the bars (1920 x 888 on the 16:9 canvas): on any
+## screen shape the bars leave this aspect, matching the 16:9 framing the
+## camera keeps (CineStage.FRAME_ASPECT), so nothing is cropped differently.
+const PICTURE_ASPECT := 1920.0 / (1080.0 - 2.0 * BAR_HEIGHT)
 ## Looks per act: [lift (shadows), gain (highlights), contrast, saturation, vignette].
 const GRADES := {
 	&"neutral": [Vector3.ZERO, Vector3.ONE, 1.0, 1.0, 0.0],
@@ -32,6 +36,7 @@ var _grade: ColorRect
 var _grade_mat: ShaderMaterial
 var _grade_tween: Tween
 var _lens_tween: Tween
+var _bar_amount := 1.0
 
 
 func _init() -> void:
@@ -89,6 +94,12 @@ func _on_resized() -> void:
 	var aspect := Vector2(root.size.x / maxf(1.0, root.size.y), 1.0)
 	_wipe_mat.set_shader_parameter("aspect", aspect)
 	_grade_mat.set_shader_parameter("aspect", aspect)
+	bars(_bar_amount, 0.0)
+
+
+## Height of one letterbox bar on this screen (canvas pixels).
+func bar_height() -> float:
+	return maxf(0.0, (root.size.y - root.size.x / PICTURE_ASPECT) * 0.5)
 
 
 func _tween() -> Tween:
@@ -152,7 +163,8 @@ func reset_lens() -> void:
 
 ## Letterbox bars: 1 = cinematic, 0 = gone, over `seconds`.
 func bars(amount: float, seconds := 0.4) -> void:
-	var h := BAR_HEIGHT * amount
+	_bar_amount = amount
+	var h := bar_height() * amount
 	for i in _bars.size():
 		var bar := _bars[i]
 		var top := i == 0
@@ -248,7 +260,7 @@ func name_card(title: String, note: String, accent := UiKit.PINK, hold := 1.3, r
 	col.add_child(UiKit.sign_label(title.to_upper(), UiKit.SIZE_TITLE))
 	_text_layer.add_child(panel)
 	panel.reset_size()
-	var y := root.size.y - BAR_HEIGHT - panel.size.y - 34.0
+	var y := root.size.y - bar_height() - panel.size.y - 34.0
 	var x := root.size.x - panel.size.x - 72.0 if right else 72.0
 	panel.position = Vector2(x + (500.0 if right else -500.0), y)
 	panel.modulate.a = 0.0
@@ -278,7 +290,7 @@ func title_card(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 1.
 	col.add_child(t)
 	_text_layer.add_child(col)
 	col.reset_size()
-	var home := root.size * at - col.size * 0.5
+	var home := _inside(root.size * at - col.size * 0.5, col.size)
 	col.position = home + Vector2(0, 18)
 	col.modulate.a = 0.0
 	var tw := _tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -296,7 +308,7 @@ func caption(text: String, hold := 1.2, color := UiKit.CREAM) -> Label:
 	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
 	l.add_theme_constant_override("shadow_offset_y", 2)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_place(l, Vector2(0.5, 1.0 - (BAR_HEIGHT + 46.0) / maxf(1.0, root.size.y)))
+	_place(l, Vector2(0.5, 1.0 - (bar_height() + 46.0) / maxf(1.0, root.size.y)))
 	l.modulate.a = 0.0
 	var tw := _tween()
 	tw.tween_property(l, "modulate:a", 1.0, 0.35)
@@ -352,7 +364,7 @@ func logo(at := Vector2(0.5, 0.36), size_px := 150, reveal := 0.0) -> NeonLogo:
 	_text_layer.add_child(l)
 	l.show_now()
 	l.reset_size()
-	l.position = root.size * at - l.custom_minimum_size * 0.5
+	l.position = _inside(root.size * at - l.custom_minimum_size * 0.5, l.custom_minimum_size)
 	l.pivot_offset = l.custom_minimum_size * 0.5
 	l.modulate.a = 0.0
 	var tw := _tween().set_parallel(true)
@@ -372,7 +384,7 @@ func marquee(text: String, font_size := 72, at := Vector2(0.5, 0.8)) -> MarqueeS
 	var m := UiKit.marquee(text, font_size)
 	_text_layer.add_child(m)
 	m.reset_size()
-	var home := root.size * at - m.size * 0.5
+	var home := _inside(root.size * at - m.size * 0.5, m.size)
 	m.position = home - Vector2(0, 260)
 	m.modulate.a = 0.0
 	var tw := _tween().set_parallel(true)
@@ -396,7 +408,7 @@ func chips(texts: PackedStringArray, at := Vector2(0.5, 0.62), step := 0.12, col
 		tw.tween_interval(step * i)
 		tw.tween_property(c, "modulate:a", 1.0, 0.08)
 	row.reset_size()
-	row.position = root.size * at - row.size * 0.5
+	row.position = _inside(root.size * at - row.size * 0.5, row.size)
 	return row
 
 
@@ -423,8 +435,17 @@ func spark_counter(from: int, to: int, seconds: float, at := Vector2(0.5, 0.2)) 
 func _place(l: Control, at: Vector2) -> void:
 	_text_layer.add_child(l)
 	l.reset_size()
-	l.position = root.size * at - l.size * 0.5
+	l.position = _inside(root.size * at - l.size * 0.5, l.size)
 	l.pivot_offset = l.size * 0.5
+
+
+## Keeps a piece of type of `size` at `pos` inside the picture between the
+## bars, with a margin (title-safe on any screen shape).
+func _inside(pos: Vector2, size: Vector2) -> Vector2:
+	var margin := 28.0
+	var top := bar_height() * _bar_amount + margin
+	var bottom := root.size.y - bar_height() * _bar_amount - margin - size.y
+	return Vector2(clampf(pos.x, margin, maxf(margin, root.size.x - margin - size.x)), clampf(pos.y, top, maxf(top, bottom)))
 
 
 func _out(tw: Tween, c: Control) -> void:

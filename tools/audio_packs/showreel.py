@@ -2,7 +2,7 @@
 
     python tools/gen_audio.py showreel
 
-showreel_trailer: 72 s at 120 BPM (one bar = 2 s), A minor, written against the
+showreel_trailer: 88 s at 120 BPM (one bar = 2 s), A minor, written against the
 shot list in docs/SHOWREEL.md. Every cut lands on a bar or a beat:
 
      0-12  cold open  warm and low, building slowly: a soft pad fades up from
@@ -11,14 +11,15 @@ shot list in docs/SHOWREEL.md. Every cut lands on a bar or a beat:
                       before 12. No chimes, cymbals, noise sweeps or clicks:
                       nothing above the bed, nothing bright (see _intro)
     12     BOOM       the title: a sub drop, a dark thump, a low brass chord
-    16-26  build      the beat comes in under the world tour; a whoosh and a low
-                      tom on each whip pan (18, 20, 22), a boom for the yeti (24)
-    26-28  breath     the horde in slow motion: bass pulse and a riser only
-    28     DROP       the kills: full beat, gallop bass, lead, claps
-    42     shift      the arsenal: arp on top, a soft tom per weapon 42-46
-    54     lift       operators
-    62     HIT        the final title card, pad and tail
-    66     HIT        "PLAY NOW", decaying to silence at 72
+    16-39  build      the beat comes in under the world tour; a whoosh and a low
+                      tom on each whip pan (18, 20, 22, 24), a low tom on each new
+                      world (27, 30, 33, 36) and a boom on each alpha (26 ... 38)
+    39-42  breath     the horde in slow motion: bass pulse and a riser only
+    42     DROP       play: full beat, gallop bass, lead, claps
+    62     shift      the arsenal: arp on top, a soft tom per weapon 62-66
+    72     lift       operators (a whoosh into it, and into the finale at 78)
+    78     HIT        the final title card, pad and tail
+    82     HIT        "PLAY NOW", decaying to silence at 88
 
 cine_startup: the 8.5 s startup screen (scripts/ui/intro_overlay.gd), in the
 same voice: a pad and the distant organ rise from silence, four soft low
@@ -30,9 +31,15 @@ from gen_audio import *  # noqa: F401,F403
 BPM = 120.0
 BEAT = 60.0 / BPM
 BAR = 4 * BEAT
-LENGTH = 72.0
+LENGTH = 88.0
 TITLE = 12.0
-DROP_AT = 28.0
+BREATH = (39.0, 42.0)
+DROP_AT = 42.0
+ARSENAL = 62.0
+FINALE = 78.0
+# The new worlds: a low tom on each landmark cut, a boom on each alpha.
+WORLD_CUTS = (27.0, 30.0, 33.0, 36.0)
+ALPHA_HITS = (26.0, 29.0, 32.0, 35.0, 38.0)
 
 # Chord roots in semitones from A4 with their triads.
 AM, F, C, G, EM, DM, E = (-12, (0, 3, 7)), (-16, (0, 4, 7)), (-9, (0, 4, 7)), (-14, (0, 4, 7)), (-17, (0, 3, 7)), (-19, (0, 3, 7)), (-17, (0, 4, 7))
@@ -216,67 +223,79 @@ def showreel_trailer():
     for b in range(4):
         both(_heartbeat(), TITLE + 2.0 + b * BEAT, 0.35)
 
-    # Whip pans in the world tour, the yeti, the breath before the drop.
-    for at in (18.0, 20.0, 22.0):
-        both(_whoosh(), at - 0.22, 0.5, 0.3 + 0.2 * ((at - 18.0) / 2.0))
+    # Whip pans in the world tour, the new worlds and their alphas.
+    for at in (18.0, 20.0, 22.0, 24.0):
+        both(_whoosh(), at - 0.22, 0.5, 0.3 + 0.1 * ((at - 18.0) / 2.0))
         both(_tom(110), at, 0.45)
-    both(_low_boom(2.4), 24.0, 0.7)
-    both(_whoosh(0.4), 53.8, 0.45, 0.4)
-    both(_whoosh(0.4), 59.8, 0.45, 0.6)
-    both(riser(2.0) * 0.8, 26.0, 0.3, 0.55)
+    for at in WORLD_CUTS:
+        both(_tom(120), at, 0.35)
+    for i, at in enumerate(ALPHA_HITS):
+        both(_low_boom(1.6), at, 0.55 + 0.04 * i)
+        both(_tom(80), at, 0.4)
+    for at in (ARSENAL + 9.8, FINALE - 0.2):
+        both(_whoosh(0.4), at, 0.45, 0.5)
+    # The breath: a riser and a snare roll into the drop, heartbeats under it.
+    both(riser(BREATH[1] - BREATH[0]) * 0.8, BREATH[0], 0.3, 0.55)
     for s in range(8):
-        both(snare, 27.0 + s * BEAT * 0.25, 0.05 + 0.015 * s)
-    for b in range(4):
-        both(_heartbeat(), 26.0 + b * BEAT, 0.5)
+        both(snare, DROP_AT - 1.0 + s * BEAT * 0.25, 0.05 + 0.015 * s)
+    for b in range(6):
+        both(_heartbeat(), BREATH[0] + b * BEAT, 0.5)
+    both(_pad(*E, BREATH[1] - BREATH[0], cutoff=900, attack=0.5, release=0.2), BREATH[0], 0.5)
 
     # Hits that the cuts land on.
-    for at, g in ((DROP_AT, 1.0), (62.0, 0.95), (66.0, 0.8)):
+    for at, g in ((DROP_AT, 1.0), (FINALE, 0.95), (FINALE + 4.0, 0.8)):
         both(boom, at, g)
         both(_low_boom(3.0), at, 0.5)
-    both(_brass(-12, (0, 3, 7), 2.6), 62.0, 0.2)
-    both(_brass(-9, (0, 4, 7), 3.6), 66.0, 0.2)
+    both(_brass(-12, (0, 3, 7), 2.6), FINALE, 0.2)
+    both(_brass(-9, (0, 4, 7), 3.6), FINALE + 4.0, 0.2)
     for b in range(8):
-        both(_tom(140), 42.0 + b * BEAT, 0.16, 0.3 + 0.05 * b)
+        both(_tom(140), ARSENAL + b * BEAT, 0.16, 0.3 + 0.05 * b)
 
-    # Groove: build (16-26), breath (26-28), drop (28-62).
-    for bar in range(8, 31):
+    # Groove: build (16-39), breath (39-42), drop (42-78).
+    breath = lambda at: BREATH[0] <= at < BREATH[1]  # noqa: E731
+    for bar in range(8, int(FINALE / BAR)):
         t0 = bar * BAR
-        if 26.0 <= t0 < DROP_AT:
-            root, triad = E
-            pad = _pad(root, triad, BAR, cutoff=900, attack=0.5, release=0.2)
-            both(pad, t0, 0.5)
-            continue
         drop = t0 >= DROP_AT
-        root, triad = (DROP[(bar - 14) % 8] if drop else BUILD[(bar - 8) % 4])
-        if drop and bar % 4 == 2:
+        root, triad = (DROP[(bar - int(DROP_AT / BAR)) % 8] if drop else BUILD[(bar - 8) % 4])
+        if drop and bar % 4 == 1:
             both(_soft_crash(1.4), t0, 0.12, 0.4)
         for b in range(4):
-            both(kick, t0 + b * BEAT, 0.5 if drop or t0 >= 18.0 else 0.3 + 0.1 * b)
+            at = t0 + b * BEAT
+            if breath(at):
+                continue
+            both(kick, at, 0.5 if drop or t0 >= 18.0 else 0.3 + 0.1 * b)
             if drop and b in (1, 3):
-                both(snare, t0 + b * BEAT, 0.28)
-                both(hand_clap, t0 + b * BEAT, 0.14, 0.45)
+                both(snare, at, 0.28)
+                both(hand_clap, at, 0.14, 0.45)
             if drop or t0 >= 20.0:
                 for h in range(4 if drop else 2):
-                    both(hat, t0 + (b + h / (4.0 if drop else 2.0)) * BEAT, 0.06 + (0.05 if h % 2 else 0.0), 0.62)
+                    both(hat, at + h / (4.0 if drop else 2.0) * BEAT, 0.06 + (0.05 if h % 2 else 0.0), 0.62)
             if drop:
-                both(ohat, t0 + (b + 0.5) * BEAT, 0.04, 0.7)
+                both(ohat, at + 0.5 * BEAT, 0.04, 0.7)
         steps = 16 if drop else 8
         for e in range(steps):
+            at = t0 + e * BAR / steps
+            if breath(at):
+                continue
             octave = (e % 4 == 2) if drop else (e % 2 == 1)
             ln = BAR / steps * 0.95
             x = tone(note(root - 12 + (12 if octave else 0)), ln, "tri") * env(ln, 0.004, ln * 1.2, power=1.0)
-            both(audible_bass(x), t0 + e * BAR / steps, 0.4)
-        pad = sum(tone(note(root + s), BAR, "saw", 0.003, 4.0) for s in triad)
-        both(filt(pad, low=1600 if drop else 900) * env(BAR, 0.3, BAR * 2, power=0.5, release=0.3), t0, 0.05)
+            both(audible_bass(x), at, 0.4)
+        if not breath(t0):
+            pad = sum(tone(note(root + s), BAR, "saw", 0.003, 4.0) for s in triad)
+            both(filt(pad, low=1600 if drop else 900) * env(BAR, 0.3, BAR * 2, power=0.5, release=0.3), t0, 0.05)
         if t0 >= 20.0:
-            arp_steps = 16 if t0 >= 42.0 else 8
+            arp_steps = 16 if t0 >= ARSENAL else 8
             for e in range(arp_steps):
+                at = t0 + e * BAR / arp_steps
+                if breath(at):
+                    continue
                 semis = triad[e % 3] + (12 if (e // 3) % 2 else 0)
                 ln = BAR / arp_steps * 0.8
                 x = tone(note(root + 12 + semis), ln, "square") * env(ln, 0.003, BEAT * 0.4, power=1.4)
-                both(filt(x, low=3500), t0 + e * BAR / arp_steps, 0.06, 0.25 + 0.5 * (e % 2))
-        if drop and bar % 2 == 0:
-            phrase = [(7, 0.0, 1.0), (12, 1.0, 0.5), (10, 1.5, 0.5), (7, 2.0, 1.0), (3, 3.0, 1.0)] if bar % 4 == 2 \
+                both(filt(x, low=3500), at, 0.06, 0.25 + 0.5 * (e % 2))
+        if drop and bar % 2 == 1:
+            phrase = [(7, 0.0, 1.0), (12, 1.0, 0.5), (10, 1.5, 0.5), (7, 2.0, 1.0), (3, 3.0, 1.0)] if bar % 4 == 1 \
                 else [(5, 0.0, 1.0), (7, 1.0, 1.0), (12, 2.0, 2.0)]
             for semis, at, length in phrase:
                 ln = length * BEAT * 0.95
@@ -284,7 +303,7 @@ def showreel_trailer():
                 both(filt(x, low=3000), t0 + at * BEAT, 0.11, 0.55)
     # Outro pad under the title card.
     tail = sum(tone(note(r), 10.0, "saw", 0.003, 4.0) for r in (-12, -5, 0, 3)) * env(10.0, 0.4, 7.0, power=0.6, release=1.0)
-    both(filt(tail, low=1800), 62.0, 0.07)
+    both(filt(tail, low=1800), FINALE, 0.07)
     stereo = np.stack([left, right], axis=1)
     fade_out = np.clip((LENGTH + 0.3 - t_axis(n)) / 3.5, 0.0, 1.0)[:, None]
     return (stereo * fade_out)[: int(LENGTH * SR)]
