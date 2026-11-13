@@ -17,8 +17,8 @@ extends SceneTree
 ## it raises the sight, holds it, lowers it (phase "ads"); per weapon it then
 ## fires a sustained string from the hip ("hip") and aimed ("aimed"): held
 ## for automatics and beams, tapped at the fire rate for the others, charged
-## and let go for charge weapons. Every
-## rendered frame, after everything else has moved, it records:
+## and let go for charge weapons. Every rendered frame, after everything else
+## has moved, it records:
 ##   fov      the camera's field of view
 ##   cam_dir  the camera's view direction       cam_pos  its position
 ##   vm_dir   the viewmodel's direction, in the camera's space
@@ -29,13 +29,14 @@ extends SceneTree
 ## still frame, a still frame in a move, a jump): smooth motion sampled at any
 ## rate stays well under it. Only frames that move (above MOVING of the
 ## segment's fastest change) count, and the frames a shot lands in are left
-## out (a kick starts there, on purpose). Printed per phase and channel: hitches /
-## moving frames; then each channel's fastest change per second (deg/s for
-## fov and directions, m/s or view units/s for positions): a value that jumps
-## in one frame shows up as a peak that grows with the frame rate, a smooth
-## one stays put. For the firing phases, the shots fired. For "ads" also: how long after the press the picture stops
-## changing (fov and viewmodel within SETTLED of their end), and how much the
-## FOV still changes once the viewmodel is in place (the sight "swimming").
+## out (a kick starts there, on purpose). Printed per phase and channel:
+## hitches / moving frames; then each channel's fastest change per second
+## (deg/s for fov and directions, m/s or view units/s for positions): a value
+## that jumps in one frame shows up as a peak that grows with the frame rate,
+## a smooth one stays put; for the firing phases, the shots fired. For "ads"
+## also: how long after the press the picture stops changing (fov and
+## viewmodel within SETTLED of their end), and how much the FOV still changes
+## once the viewmodel is in place (the sight "swimming").
 ##
 ## Script mode compiles this file before the autoloads exist, so it only uses
 ## untyped references to game classes.
@@ -171,7 +172,7 @@ func _run() -> void:
 		for item in items:
 			_hold(player, weapon, item, sights)
 			await _seconds(0.35)
-			await _ads(sampler, player, weapon, item)
+			await _ads(sampler, weapon, item)
 		if _opt("fire", "1") == "1" and not items.is_empty():
 			_hold(player, weapon, items[0], sights)
 			await _seconds(0.35)
@@ -192,7 +193,7 @@ func _hold(player, weapon, item, sights) -> void:
 	view._raise = 0.0
 
 
-func _ads(sampler, player, weapon, item) -> void:
+func _ads(sampler, weapon, item) -> void:
 	sampler.frames = []
 	sampler.shot_frames = {}
 	sampler.phase = "ads"
