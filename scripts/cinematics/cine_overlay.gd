@@ -1,13 +1,25 @@
 class_name CineOverlay
 extends CanvasLayer
-## The 2D layer of a cinematic: letterbox bars, flashes, fades, wipes and the
-## kinetic type (the UI kit's display font, docs/UI_STYLE.md). Every motion
-## runs on unscaled time so slow motion never slows the titles.
+## The 2D layer of a cinematic: the lens and colour grade (cine_grade.gdshader:
+## a look per act, fake depth of field, whip-pan smear, anamorphic flares),
+## letterbox bars, flashes, fades, wipes and the type (the UI kit's display
+## font, docs/UI_STYLE.md). Every motion runs on unscaled time so slow motion
+## never slows the titles.
 ##
 ## Coordinates are the 1920x1080 canvas; `at` positions are fractions of it.
 
 const WIPE_SHADER := "res://art/shaders/cine_wipe.gdshader"
+const GRADE_SHADER := "res://art/shaders/cine_grade.gdshader"
 const BAR_HEIGHT := 96.0
+## Looks per act: [lift (shadows), gain (highlights), contrast, saturation, vignette].
+const GRADES := {
+	&"neutral": [Vector3.ZERO, Vector3.ONE, 1.0, 1.0, 0.0],
+	&"dusk": [Vector3(0.05, 0.015, 0.08), Vector3(1.1, 0.94, 0.84), 1.16, 0.95, 0.6],
+	&"day": [Vector3(0.015, 0.0, 0.035), Vector3(1.04, 1.0, 0.96), 1.07, 1.08, 0.32],
+	&"night": [Vector3(0.03, 0.0, 0.06), Vector3(1.0, 0.96, 1.08), 1.1, 1.14, 0.42],
+	&"studio": [Vector3(0.02, 0.0, 0.045), Vector3(1.04, 1.0, 1.05), 1.08, 1.1, 0.48],
+	&"golden": [Vector3(0.05, 0.02, 0.06), Vector3(1.12, 0.98, 0.86), 1.1, 1.04, 0.5],
+}
 
 var root: Control
 var _bars: Array[ColorRect] = []
@@ -16,6 +28,10 @@ var _fade: ColorRect
 var _wipe: ColorRect
 var _wipe_mat: ShaderMaterial
 var _text_layer: Control
+var _grade: ColorRect
+var _grade_mat: ShaderMaterial
+var _grade_tween: Tween
+var _lens_tween: Tween
 
 
 func _init() -> void:
@@ -28,6 +44,10 @@ func _ready() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(root)
 	UiKit.apply(root)
+	_grade = _full(ColorRect.new())
+	_grade_mat = ShaderMaterial.new()
+	_grade_mat.shader = load(GRADE_SHADER)
+	_grade.material = _grade_mat
 	_text_layer = _full(Control.new())
 	for top in [true, false]:
 		var bar := ColorRect.new()
@@ -52,6 +72,9 @@ func _ready() -> void:
 	_wipe.visible = false
 	root.resized.connect(_on_resized)
 	_on_resized()
+	grade(&"neutral")
+	focus(Vector2(0.5, 0.5), 0.3, 0.0)
+	reset_lens()
 	bars(1.0, 0.0)
 
 
@@ -63,11 +86,66 @@ func _full(c: Control) -> Control:
 
 
 func _on_resized() -> void:
-	_wipe_mat.set_shader_parameter("aspect", Vector2(root.size.x / maxf(1.0, root.size.y), 1.0))
+	var aspect := Vector2(root.size.x / maxf(1.0, root.size.y), 1.0)
+	_wipe_mat.set_shader_parameter("aspect", aspect)
+	_grade_mat.set_shader_parameter("aspect", aspect)
 
 
 func _tween() -> Tween:
 	return create_tween().set_ignore_time_scale(true)
+
+
+# --- lens and grade -------------------------------------------------------------
+
+## Blends to the look `look_name` (GRADES) over `seconds` (0 = at once, on a cut).
+func grade(look_name: StringName, seconds := 0.0) -> void:
+	var g: Array = GRADES.get(look_name, GRADES[&"neutral"])
+	if _grade_tween and _grade_tween.is_valid():
+		_grade_tween.kill()
+	var params := {"lift": g[0], "gain": g[1], "contrast": g[2], "saturation": g[3], "vignette": g[4]}
+	if seconds <= 0.0:
+		for key in params:
+			_grade_mat.set_shader_parameter(key, params[key])
+		return
+	_grade_tween = _tween().set_parallel(true)
+	for key in params:
+		_grade_tween.tween_method(func(v): _grade_mat.set_shader_parameter(key, v), _grade_mat.get_shader_parameter(key), params[key], seconds)
+
+
+## Fake shallow focus: sharp within `radius` (screen heights) of `point`
+## (fractions of the screen), blurring by up to `amount` beyond; a rack focus
+## is a second call with another point and `seconds` > 0. amount 0 = all sharp.
+func focus(point: Vector2, radius := 0.25, amount := 0.012, seconds := 0.0) -> void:
+	if _lens_tween and _lens_tween.is_valid():
+		_lens_tween.kill()
+	if seconds <= 0.0:
+		_grade_mat.set_shader_parameter("focus", point)
+		_grade_mat.set_shader_parameter("focus_radius", radius)
+		_grade_mat.set_shader_parameter("defocus", amount)
+		return
+	_lens_tween = _tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	for pair in [["focus", point], ["focus_radius", radius], ["defocus", amount]]:
+		_lens_tween.tween_method(func(v): _grade_mat.set_shader_parameter(pair[0], v), _grade_mat.get_shader_parameter(pair[0]), pair[1], seconds)
+
+
+## Directional motion blur (a whip pan): `span` in screen fractions (0 = off).
+func smear(span: Vector2) -> void:
+	_grade_mat.set_shader_parameter("smear", span)
+
+
+## An anamorphic flare at `at` (fractions of the screen); strength 0 = off.
+func flare(at: Vector2, color: Color, strength: float) -> void:
+	_grade_mat.set_shader_parameter("flare_pos", at)
+	_grade_mat.set_shader_parameter("flare_color", Vector4(color.r, color.g, color.b, strength))
+
+
+## Every lens effect off (each shot starts clean).
+func reset_lens() -> void:
+	if _lens_tween and _lens_tween.is_valid():
+		_lens_tween.kill()
+	_grade_mat.set_shader_parameter("defocus", 0.0)
+	smear(Vector2.ZERO)
+	flare(Vector2.ZERO, Color.BLACK, 0.0)
 
 
 # --- frame --------------------------------------------------------------------
@@ -184,6 +262,55 @@ func name_card(title: String, note: String, accent := UiKit.PINK, hold := 1.3, r
 	return panel
 
 
+## A clean title card: a small spaced kicker over a large title in the
+## display face, fading and drifting in (no slam), holding `hold` seconds.
+## `at` is the centre as a fraction of the screen.
+func title_card(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 1.6, accent := UiKit.CYAN, title_size := 84) -> Control:
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", 2)
+	if kicker != "":
+		var k := UiKit.label(_spaced(kicker.to_upper()), UiKit.SIZE_LABEL, accent, true)
+		k.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(k)
+	var t := UiKit.sign_label(title.to_upper(), title_size)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(t)
+	_text_layer.add_child(col)
+	col.reset_size()
+	var home := root.size * at - col.size * 0.5
+	col.position = home + Vector2(0, 18)
+	col.modulate.a = 0.0
+	var tw := _tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(col, "position:y", home.y, 0.6)
+	tw.tween_property(col, "modulate:a", 1.0, 0.45)
+	tw.chain().tween_interval(hold)
+	tw.chain().tween_property(col, "modulate:a", 0.0, 0.4)
+	tw.chain().tween_callback(col.queue_free)
+	return col
+
+
+## A small spaced caption low in the frame (a place name), fading in and out.
+func caption(text: String, hold := 1.2, color := UiKit.CREAM) -> Label:
+	var l := UiKit.label(_spaced(text.to_upper()), UiKit.SIZE_LABEL, color, true)
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	l.add_theme_constant_override("shadow_offset_y", 2)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_place(l, Vector2(0.5, 1.0 - (BAR_HEIGHT + 46.0) / maxf(1.0, root.size.y)))
+	l.modulate.a = 0.0
+	var tw := _tween()
+	tw.tween_property(l, "modulate:a", 1.0, 0.35)
+	tw.tween_interval(hold)
+	tw.tween_property(l, "modulate:a", 0.0, 0.35)
+	tw.tween_callback(l.queue_free)
+	return l
+
+
+## Letter-spaced capitals for small type ("N E O N").
+func _spaced(text: String) -> String:
+	return " ".join(text.split("")).replace("   ", "     ")
+
+
 ## A centred reward card (rank up, level up, unlock) that punches in.
 func reward_card(title: String, note: String, accent: Color, hold := 0.8, at := Vector2(0.5, 0.5), icon: StringName = &"") -> Control:
 	var panel := UiKit.neon_panel(accent)
@@ -217,8 +344,9 @@ func reward_card(title: String, note: String, accent: Color, hold := 0.8, at := 
 	return panel
 
 
-## The game's logo, slammed in at `at`; stays until clear().
-func logo(at := Vector2(0.5, 0.36), size_px := 150) -> NeonLogo:
+## The game's logo at `at`; stays until clear(). With `reveal` > 0 it
+## fades up and settles over that many seconds instead of slamming in.
+func logo(at := Vector2(0.5, 0.36), size_px := 150, reveal := 0.0) -> NeonLogo:
 	var l := NeonLogo.new()
 	l.size_px = size_px
 	_text_layer.add_child(l)
@@ -226,9 +354,14 @@ func logo(at := Vector2(0.5, 0.36), size_px := 150) -> NeonLogo:
 	l.reset_size()
 	l.position = root.size * at - l.custom_minimum_size * 0.5
 	l.pivot_offset = l.custom_minimum_size * 0.5
-	l.scale = Vector2.ONE * 2.0
 	l.modulate.a = 0.0
 	var tw := _tween().set_parallel(true)
+	if reveal > 0.0:
+		l.scale = Vector2.ONE * 1.12
+		tw.tween_property(l, "scale", Vector2.ONE, reveal * 2.0).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+		tw.tween_property(l, "modulate:a", 1.0, reveal).set_trans(Tween.TRANS_SINE)
+		return l
+	l.scale = Vector2.ONE * 2.0
 	tw.tween_property(l, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(l, "modulate:a", 1.0, 0.1)
 	return l
