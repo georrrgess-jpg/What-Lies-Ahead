@@ -79,6 +79,11 @@ func _actions() -> Control:
 	_controls_button = _button(col, "CONTROLS", SignButton.Kind.SECONDARY, _toggle_controls)
 	_button(col, "RESTART RUN", SignButton.Kind.NEUTRAL, func():
 		UiKit.confirm(_root, "RESTART THE RUN?", "This run starts over from the first wave. XP and mastery earned so far are kept.", "RESTART", _leave.bind(true)))
+	if _director.has_method("skip_tutorial"):
+		_button(col, "SKIP TUTORIAL", SignButton.Kind.NEUTRAL, func():
+			UiKit.confirm(_root, "SKIP BOOT CAMP?", "You go to the main menu. Replay it any time from the title screen.", "SKIP", func():
+				get_tree().paused = false
+				_director.skip_tutorial())).name = "SkipTutorial"
 	_button(col, "MAIN MENU", SignButton.Kind.NEUTRAL, func():
 		UiKit.confirm(_root, "LEAVE THE RUN?", "You go back to the main menu. XP and mastery earned so far are kept.", "LEAVE", _leave.bind(false)))
 	return tray

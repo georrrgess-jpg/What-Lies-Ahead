@@ -16,10 +16,13 @@ var checkpoint_wave := 0
 ## Wave the next run should start at (0 = a normal run from wave 1). Set by
 ## continue_run(); the run director reads it when the level starts and resets it.
 var resume_wave := 0
+## True while the Boot Camp tutorial is the level being played.
+var tutorial_active := false
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	Onboarding.install(self)
 	# Developer hooks (automated playtests / screenshots). No effect in normal play.
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--autoplay") or arg.begins_with("--shot") or arg == "--dump-profile":
@@ -36,6 +39,7 @@ func start_level(level_id: StringName, starter_weapon: StringName) -> bool:
 		push_warning("Game: level '%s' is not available" % level_id)
 		return false
 	level = data
+	tutorial_active = false
 	# The given weapon becomes the primary (the dev tools may pick a locked
 	# one); an empty id starts with the saved Loadout.
 	var starter := GameData.weapon(starter_weapon)
@@ -44,6 +48,20 @@ func start_level(level_id: StringName, starter_weapon: StringName) -> bool:
 	get_tree().paused = false
 	_load_level(data)
 	return true
+
+
+## Starts the Boot Camp tutorial level (see Onboarding.start_tutorial()). It is
+## not in the world list, so it skips the unlock check and keeps the loadout.
+func start_tutorial(data: LevelData) -> void:
+	level = data
+	if level.world == null and not GameData.worlds().is_empty():
+		level.world = GameData.worlds()[0]
+	tutorial_active = true
+	weapon_id = &"ion_carbine"
+	checkpoint_wave = 0
+	resume_wave = 0
+	get_tree().paused = false
+	_load_level(data)
 
 
 ## Shows the loading card (threaded load) unless running headless tests.
@@ -56,7 +74,9 @@ func _load_level(data: LevelData) -> void:
 
 ## Reloads the level scene, which rebuilds the run from scratch.
 func retry() -> void:
-	if level:
+	if tutorial_active:
+		Onboarding.start_tutorial()
+	elif level:
 		start_level(level.id, weapon_id)
 	else:
 		to_menu()
@@ -79,6 +99,7 @@ func continue_run() -> void:
 
 func to_menu(page := "") -> void:
 	menu_page = page
+	tutorial_active = false
 	get_tree().paused = false
 	capture_mouse(false)
 	get_tree().change_scene_to_file(MENU_SCENE)

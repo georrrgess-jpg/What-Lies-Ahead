@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="WaveSet" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
+
+[sub_resource type="Resource" id="cast"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 6,
+"boardwalk_bruiser": 1,
+"mascot_inker": 1,
+"lifeguard_runner": 2
+}
+banner = "BOOT CAMP"
+
+[resource]
+script = ExtResource("1")
+waves = Array[ExtResource("2")]([SubResource("cast")])
+prep_seconds = 9999.0
+break_seconds = 9999.0
+break_refill_fraction = 0.0
+ammo_topup_price = 100
+heal_price = 150
+heal_amount = 60.0
+heals_per_break = 1
+starting_tickets = 0
+overshield_price = 300
+overshield_amount = 50.0
+damage_boost_price = 400
+damage_boost_scale = 1.2
+ticket_score_rate = 0

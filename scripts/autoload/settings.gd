@@ -11,7 +11,7 @@ const LOOK_RADIANS := TAU / (34.0 / 2.54 * 800.0)
 const LEGACY_LOOK_RADIANS := 0.0022
 const LOOK_RANGE := Vector2(0.1, 5.0)
 ## Defaults of options newer than Profile.DEFAULT_SETTINGS.
-const EXTRA_DEFAULTS := {"look_sensitivity": 1.0, "camera_motion": 1.0, "aim_mode": "hold", "sight_color": "auto"}
+const EXTRA_DEFAULTS := {"look_sensitivity": 1.0, "camera_motion": 1.0, "aim_mode": "hold", "sight_color": "auto", "tips": true}
 
 var _headless := false
 

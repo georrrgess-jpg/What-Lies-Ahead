@@ -118,6 +118,7 @@ sound_category = Dictionary[StringName, StringName]({
 &"rounds_boss_slam": &"enemy_attack",
 &"rounds_boss_volley": &"enemy_attack",
 &"eco_": &"ui",
+&"onb_": &"cue",
 &"menu_theme": &"music",
 &"boardwalk_loop": &"music",
 &"boardwalk_final": &"music",

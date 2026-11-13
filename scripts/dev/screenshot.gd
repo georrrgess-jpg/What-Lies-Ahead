@@ -45,6 +45,8 @@ extends Node
 ##   --shot-times=a,b,...  with --shot-scene=intro or showreel: one capture per time (seconds), saved
 ##                         as <shot>_<time>.png
 ##   --shot-threat=1       a zombie behind-right of the player starts its windup (threat warning check)
+##   --shot-scene=tutorial|first_run|coach|hint   onboarding stills (--shot-step, --shot-card,
+##                         --shot-page: see scripts/onboarding/tutorial_shots.gd)
 ##   --shot-banner=wave|final|cleared|boss|portal|victory|defeat   play that HUD banner before the capture
 
 var path := ""
@@ -124,6 +126,9 @@ func _run() -> void:
 		if not args.has("times"):
 			args["times"] = times[0]
 		await _capture_times(func(): return reel.clock())
+		return
+	if scene_kind in ["tutorial", "first_run", "welcome_back", "coach", "hint"]:
+		await TutorialShots.run(self, scene_kind)
 		return
 	# Anything that is not an in-level scene is treated as a menu page id.
 	if not scene_kind in ["level", "results", "defeat", "pause", "kiosk"]:

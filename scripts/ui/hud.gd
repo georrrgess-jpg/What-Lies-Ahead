@@ -197,6 +197,13 @@ func set_round_type(text: String, color := UiKit.CYAN) -> void:
 	_header.set_chip(text.to_upper(), color)
 
 
+## Hides the wave counter and clears the start-of-run notices (the tutorial
+## shows its own objective card there).
+func hide_wave_counter() -> void:
+	_header.visible = false
+	_stack.clear()
+
+
 ## Level start: hold black for a few frames (while FxWarmup compiles shaders
 ## underneath), then fade the world in.
 func fade_in() -> void:
