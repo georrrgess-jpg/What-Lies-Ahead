@@ -102,7 +102,7 @@ func _build_swap(col: VBoxContainer) -> void:
 		var picture := TextureRect.new()
 		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		picture.custom_minimum_size = Vector2(176, 84) if held else Vector2(112, 54)
+		picture.custom_minimum_size = Vector2(176, 84) if held else Vector2(136, 58)
 		picture.modulate = Color.WHITE if held else Color(0.75, 0.72, 0.88)
 		v.add_child(picture)
 		var name_label := UiKit.label("", 22 if held else 16, UiKit.CREAM if held else UiKit.MUTED, true)
