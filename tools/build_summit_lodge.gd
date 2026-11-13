@@ -411,6 +411,9 @@ func _build_terrace() -> void:
 	for x in [-15.6, -11.2, -6.8, -3.2]:
 		_post(t, "RoofPost%d" % int(absf(x) * 10), 0.22, 3.6, Vector3(x, TERRACE_Y, -17.6))
 	_collider(t, "Windbreak", Vector3(0.3, 2.4, 6.4), Vector3(TERRACE_X0 + 0.2, TERRACE_Y + 1.2, -20.8))
+	# The roof itself (art in the lodge model) is off-limits to the player.
+	_player_block(t, "RoofCap", Vector3(TERRACE_X1 - TERRACE_X0 + 1.0, 4.0, TERRACE_Z1 - TERRACE_Z0 + 1.0),
+		Vector3(cx, TERRACE_Y + 3.3 + 2.0, cz))
 
 	# Railings along the front edge (gaps for the ramps and stairs) and the east side.
 	_fence_run(t, "RailFrontW", Vector3(TERRACE_X0 + 3.0, TERRACE_Y, TERRACE_Z1 + 0.15), Vector3(-3.0, TERRACE_Y, TERRACE_Z1 + 0.15))
@@ -426,6 +429,7 @@ func _build_terrace() -> void:
 	for heater in [["HeaterA", Vector3(-14.8, y, -18.6)], ["HeaterB", Vector3(-5.0, y, -18.6)]]:
 		_prop(t, "frost_heater", heater[0], heater[1], 0.0, Vector3(0.5, 2.4, 0.5))
 		_post(t, heater[0] + "Collision", 0.27, 2.4, heater[1])
+		_player_block(t, heater[0] + "Cap", Vector3(0.9, 1.4, 0.9), heater[1] + Vector3(0, 3.1, 0))
 	_solid_prop(t, "frost_ski_rack", "TerraceRack", Vector3(1.5, y, -23.2), 0.0, Vector3(3.0, 1.6, 0.9))
 	_solid_prop(t, "frost_fire_table", "FireTable", Vector3(5.0, y, -19.4), 0.0, Vector3(2.4, 0.7, 1.4))
 	_fire(t, "FireTableFlame", Vector3(5.0, y + 0.62, -19.4), 0.75, false)
@@ -433,7 +437,8 @@ func _build_terrace() -> void:
 		var a := deg_to_rad(-120.0 + k * 60.0)
 		var p := Vector3(5.0, y, -19.4) + Vector3(sin(a), 0, cos(a)) * Vector3(2.0, 0, 1.6)
 		_prop(dressing, "frost_chair", "LoungeChair%d" % k, p, rad_to_deg(a) + 180.0, Vector3(0.8, 1.0, 0.9))
-	_solid_prop(t, "frost_crates", "KitchenCrates", Vector3(10.6, y, -22.6), 0.0, Vector3(1.6, 1.2, 1.2))
+	# Clear of the kitchen doorway (zombies come out of it and turn east).
+	_solid_prop(t, "frost_crates", "KitchenCrates", Vector3(11.1, y, -21.2), 90.0, Vector3(1.6, 1.2, 1.2))
 
 
 ## A ramp from the terrace edge (z_top, at deck height) down to the ground (z_bottom).
@@ -768,6 +773,7 @@ func _build_arena_props() -> void:
 		var tree := _prop(dressing, "frost_pine", "Pine%d" % i, p[0], i * 53.0, Vector3(3, 8, 3))
 		tree.scale = Vector3.ONE * p[1]
 		_post(props, "Pine%dTrunk" % i, 0.38, 4.0, p[0])
+		_player_block(props, "Pine%dCap" % i, Vector3(1.6, 4.0, 1.6), p[0] + Vector3(0, 6.0, 0))
 		i += 1
 
 	# Lantern posts around the plaza and along the edges of the trails.
@@ -780,6 +786,7 @@ func _build_arena_props() -> void:
 	for p in lamps:
 		_prop(dressing, "frost_lamp", "Lantern%02d" % i, p, i * 37.0, Vector3(0.3, 3.6, 0.3))
 		_post(props, "Lantern%02dPost" % i, 0.17, 3.4, p)
+		_player_block(props, "Lantern%02dCap" % i, Vector3(0.5, 2.0, 0.5), p + Vector3(0, 4.4, 0))
 		i += 1
 	_build_string_lights(lamps)
 
@@ -1565,6 +1572,25 @@ func _visual_box(parent: Node3D, box_name: String, size: Vector3, pos: Vector3, 
 
 
 ## Invisible collision box (for props whose art comes from a .glb).
+## Invisible player-only collider (physics layer 5: zombies, bullets and the
+## navmesh ignore it): keeps the player off perches and out of gaps.
+func _player_block(parent: Node3D, block_name: String, size: Vector3, pos: Vector3, yaw := 0.0) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = block_name
+	body.collision_layer = 16
+	body.collision_mask = 0
+	body.position = pos
+	body.rotation.y = yaw
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	return body
+
+
 ## Invisible upright cylinder collider for posts, poles and trunks: a zombie
 ## pressing on a round post slides off it, where the flat face of a box post
 ## can hold one that walks straight into it.

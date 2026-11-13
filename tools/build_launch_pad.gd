@@ -473,10 +473,10 @@ func _build_walls() -> void:
 	level.add_child(pw)
 	var h := 14.0
 	for spec in [
-		[Vector3(X1 - X0 + 2.0, h, 0.4), Vector3(0, h * 0.5, Z1 + 0.2)],
-		[Vector3(X1 - X0 + 2.0, h, 0.4), Vector3(0, h * 0.5, -32.2)],
-		[Vector3(0.4, h, Z1 + 34.0), Vector3(X0 - 0.2, h * 0.5, -2.8)],
-		[Vector3(0.4, h, Z1 + 34.0), Vector3(X1 + 0.2, h * 0.5, -2.8)],
+		[Vector3(X1 - X0 + 2.0, h, 0.4), Vector3(0, h * 0.5, Z1 - 0.3)],
+		[Vector3(X1 - X0 + 2.0, h, 0.4), Vector3(0, h * 0.5, -31.7)],
+		[Vector3(0.4, h, Z1 + 34.0), Vector3(X0 + 0.3, h * 0.5, -2.8)],
+		[Vector3(0.4, h, Z1 + 34.0), Vector3(X1 - 0.3, h * 0.5, -2.8)],
 	]:
 		var wall := StaticBody3D.new()
 		wall.name = "PlayerWall%d" % pw.get_child_count()
@@ -630,6 +630,7 @@ func _build_cover() -> void:
 			_tint(box, "ContainerPaint", CONTAINER_COLORS[(int(c[2]) + k * 2) % CONTAINER_COLORS.size()])
 		var col := _collider(cover, "Container%dCollision" % i, Vector3(6.1, 2.6 * levels, 2.44), pos + Vector3(0, 1.3 * levels, 0))
 		col.rotation.y = deg_to_rad(c[1])
+		_player_block(cover, "Container%dCap" % i, Vector3(6.1, 2.0, 2.44), pos + Vector3(0, 2.6 * levels + 1.0, 0), deg_to_rad(c[1]))
 		i += 1
 	# Jersey barriers: low cover in the plaza and along the lanes.
 	var barriers := [
@@ -659,6 +660,8 @@ func _build_cover() -> void:
 		var offset := Vector3(1.9, 0, 0).rotated(Vector3.UP, deg_to_rad(s[2])) if s[0] == "dune_tug" else Vector3.ZERO
 		var col := _collider(cover, "Prop%dCollision" % i, size, s[1] + offset + Vector3(0, size.y * 0.5, 0))
 		col.rotation.y = deg_to_rad(s[2])
+		if size.y > 2.2:
+			_player_block(cover, "Prop%dCap" % i, Vector3(size.x, 2.0, size.z), s[1] + offset + Vector3(0, size.y + 1.0, 0), deg_to_rad(s[2]))
 		i += 1
 	# Floodlight masts in the corners, facing the pad.
 	for spot in [Vector3(-24.8, 0, 24.8), Vector3(24.8, 0, 24.8), Vector3(24.8, 0, -30.2), Vector3(-24.8, 0, -30.2)]:
@@ -682,6 +685,8 @@ func _build_cover() -> void:
 		var yaw := deg_to_rad(a[2])
 		var col := _collider(cover, "Accent%dCollision" % i, size, a[1] + (a[4] as Vector3).rotated(Vector3.UP, yaw) + Vector3(0, size.y * 0.5, 0))
 		col.rotation.y = yaw
+		if size.y > 2.2:
+			_player_block(cover, "Accent%dCap" % i, Vector3(size.x, 2.0, size.z), col.position + Vector3(0, size.y * 0.5 + 1.0, 0), yaw)
 		i += 1
 	_prop(dressing, "dune_windsock", "Windsock", Vector3(24.6, 0, 20.0), 70.0)
 	_post(cover, "WindsockPole", 0.2, 4.0, Vector3(24.6, 0, 20.0))
@@ -1355,6 +1360,25 @@ func _box(parent: Node3D, box_name: String, size: Vector3, pos: Vector3, materia
 	mi.name = "Mesh"
 	mi.mesh = _box_mesh(size, material)
 	body.add_child(mi)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	return body
+
+
+## Invisible player-only collider (physics layer 5: zombies, bullets and the
+## navmesh ignore it): keeps the player off perches and out of gaps.
+func _player_block(parent: Node3D, block_name: String, size: Vector3, pos: Vector3, yaw := 0.0) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = block_name
+	body.collision_layer = 16
+	body.collision_mask = 0
+	body.position = pos
+	body.rotation.y = yaw
+	parent.add_child(body)
 	var shape := CollisionShape3D.new()
 	shape.name = "CollisionShape3D"
 	var box := BoxShape3D.new()

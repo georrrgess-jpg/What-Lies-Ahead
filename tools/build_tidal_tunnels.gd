@@ -424,6 +424,16 @@ func _build_rotunda() -> void:
 				_recolor(pillar, "PillarLed", _glow_mat("led_amber", Color(1.0, 0.68, 0.3), 2.6))
 			var c := _collider(geo, "PillarCol%d%s" % [int(centre), "A" if s < 0 else "B"], Vector3(1.6, 9.0, 1.8), p + Vector3(0, 4.5, 0))
 			c.rotation.y = -a
+	# Behind the jamb pillars: solid fills between the rotunda wall and the core
+	# walls (that space has no floor; nobody may squeeze into it).
+	for centre in [0.0, 90.0, 180.0]:
+		var ac := deg_to_rad(centre)
+		var radial := Vector3(cos(ac), 0, sin(ac))
+		var side := Vector3(-radial.z, 0, radial.x)
+		for s in [-1.0, 1.0]:
+			var fill := _collider(geo, "JambFill%d%s" % [int(centre), "A" if s < 0 else "B"], Vector3(2.4, 6.0, 1.9),
+				radial * 12.85 + side * s * 4.8 + Vector3(0, 3.0, 0))
+			fill.rotation.y = -ac + PI * 0.5
 	# Floor inlay rings around the station (scenery).
 	var inlay := _node(dressing, "FloorInlay")
 	_flat_ring(inlay, "RingOuter", 10.6, 10.85, _glow_mat("inlay_cyan", Color(0.2, 0.85, 1.0), 1.2))
@@ -921,6 +931,10 @@ func _build_lobby() -> void:
 			Vector2(bottom_x, -0.04)], wall_z0, wall_z1, slab_m)
 		_prism_collider(lobby, "RampSide%s" % side_name, [Vector2(bottom_x, 0.0), Vector2(top_x, 0.0), Vector2(top_x, MEZZ_Y + RAIL_H),
 			Vector2(bottom_x, RAIL_H)], wall_z0, wall_z1)
+		var side_cap := _prism_collider(lobby, "RampSideCap%s" % side_name, [Vector2(bottom_x, RAIL_H), Vector2(top_x, MEZZ_Y + RAIL_H),
+			Vector2(top_x, MEZZ_Y + RAIL_H + 2.0), Vector2(bottom_x, RAIL_H + 2.0)], wall_z0, wall_z1)
+		side_cap.collision_layer = 16
+		side_cap.collision_mask = 0
 		var start := Vector3(minf(top_x, bottom_x), MEZZ_Y if s > 0 else 0.0, RAMP_Z0 + RAMP_WALL * 0.5)
 		var run := Vector3(RAMP_LEN, -MEZZ_Y if s > 0 else MEZZ_Y, 0.0)
 		for k in 3:
@@ -975,6 +989,7 @@ func _build_lobby() -> void:
 		x += 2.0 * MEZZ_X / 7.0
 		n += 1
 	_collider(lobby, "MezzRailCol", Vector3(2.0 * MEZZ_X, 1.2, 0.2), Vector3(0, MEZZ_Y + 0.6, MEZZ_Z + 0.12))
+	_player_block(lobby, "MezzRailCap", Vector3(2.0 * MEZZ_X + 0.4, 2.0, 0.2), Vector3(0, MEZZ_Y + 2.2, MEZZ_Z + 0.12))
 	# Gift shop under the mezzanine (front at z = MEZZ_Z, facing north).
 	_prop(lobby, "aqua_gift_shop", "GiftShop", Vector3(0, 0, MEZZ_Z), 180.0, Vector3(17, 3.2, 4.4))
 	for s in [-1.0, 1.0]:
@@ -1028,6 +1043,7 @@ func _build_lobby() -> void:
 	for spot in [Vector3(-9.0, 0, 15.0), Vector3(9.0, 0, 15.0)]:
 		_prop(lobby, "aqua_info_kiosk", "InfoKiosk%d" % int(spot.x), spot, 0.0, Vector3(1, 2.5, 0.5))
 		_collider(lobby, "InfoKioskCol%d" % int(spot.x), Vector3(1.0, 2.4, 0.5), spot + Vector3(0, 1.2, 0))
+		_player_block(lobby, "InfoKioskCap%d" % int(spot.x), Vector3(1.0, 1.6, 0.5), spot + Vector3(0, 3.2, 0))
 	for spot in [Vector3(-7.4, 0, 19.8), Vector3(7.4, 0, 19.8), Vector3(-16.0, 0, -12.5), Vector3(16.0, 0, 12.6), Vector3(-22.4, 0, -14.0)]:
 		_prop(lobby, "aqua_bin", "Bin%d%d" % [int(spot.x), int(spot.z)], spot, 0.0, Vector3(0.6, 1, 0.6))
 		_post(lobby, "BinCol%d%d" % [int(spot.x), int(spot.z)], 0.32, 1.0, spot)
@@ -1163,6 +1179,7 @@ func _build_entrances() -> void:
 	_room_walls(ent, "Dock", X1, X1 + 4.4, 4.6, 9.4, 4.0, wall, "W")
 	_collider(ent, "DockCrates", Vector3(1.2, 1.8, 1.6), Vector3(X1 + 3.0, 0.9, 5.4))
 	_collider(ent, "DockCrates2", Vector3(2.2, 1.2, 1.4), Vector3(X1 + 2.9, 0.6, 8.6))
+	_collider(ent, "DockCratesBack", Vector3(0.8, 1.8, 1.6), Vector3(X1 + 4.0, 0.9, 5.4))
 	# 4. Staff door on the west wall.
 	_prop(ent, "aqua_staff_door", "StaffDoor", Vector3(X0, 0, 11.5), 90.0, Vector3(3, 3, 0.5))
 	_slab(ent, "StaffFloor", X0 - 4.0, X0 + 0.1, 10.3, 12.7, concrete)
@@ -1494,7 +1511,10 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.cell_size = 0.25
 	mesh.cell_height = 0.25
 	mesh.agent_height = 1.75
-	mesh.agent_radius = 0.5
+	# Paths keep 0.75 m off walls and props (a multiple of the cell size): the
+	# narrow channels a 0.5 m radius left beside signposts and wall corners
+	# squeezed Deep Divers until they stalled.
+	mesh.agent_radius = 0.75
 	mesh.agent_max_climb = 0.25
 	mesh.agent_max_slope = 32.0
 	mesh.region_min_size = 6.0
@@ -2069,6 +2089,25 @@ func _post(parent: Node3D, post_name: String, radius: float, height: float, base
 	cyl.radius = radius
 	cyl.height = height
 	shape.shape = cyl
+	body.add_child(shape)
+	return body
+
+
+## Invisible player-only collider (physics layer 5: zombies, bullets and the
+## navmesh ignore it): keeps the player off perches and out of gaps.
+func _player_block(parent: Node3D, block_name: String, size: Vector3, pos: Vector3, yaw := 0.0) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = block_name
+	body.collision_layer = 16
+	body.collision_mask = 0
+	body.position = pos
+	body.rotation.y = yaw
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
 	body.add_child(shape)
 	return body
 
