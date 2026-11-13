@@ -276,7 +276,7 @@ def run_foot(side, phase):
     return dict(pos=Vector((x, y, z)), yaw=4.0 * side, pitch=pitch)
 
 
-def run_spec(t):
+def run_spec(t, head_pitch=-13.0):
     ph = (t / RUN_LEN) % 1.0
     w = math.tau * ph
     spec = {
@@ -284,7 +284,7 @@ def run_spec(t):
         "Hips": (9.0, 2.5 * math.sin(w + 0.9), -8.0 * math.cos(w + 0.2)),
         "Spine": (5.0, -1.5 * math.sin(w + 0.9), 6.0 * math.cos(w + 0.2)),
         "Chest": (4.0, -1.0 * math.sin(w + 0.9), 9.0 * math.cos(w + 0.2)),
-        "Head": (-13.0 + 1.5 * math.cos(2 * w), 0.0, -7.0 * math.cos(w + 0.2)),
+        "Head": (head_pitch + 1.5 * math.cos(2 * w), 0.0, -7.0 * math.cos(w + 0.2)),
         "foot.L": run_foot(1, ph), "foot.R": run_foot(-1, (ph + 0.5) % 1.0),
         "Cape1": (34.0 + 5.0 * math.sin(2 * w), 0, 4.0 * math.sin(w)),
         "Cape2": (12.0 + 8.0 * math.sin(2 * w - 1.0), 0, 5.0 * math.sin(w - 0.8)),
@@ -303,30 +303,33 @@ _AIM_AXES = Matrix(((-1, 0, 0), (0, -1, 0), (0, 0, 1))).transposed()
 SUPPORT = Vector((0.0, 0.16, -0.136))       # where the left palm meets the fore-end (weapon space)
 
 
-def aim_frame(t, kick=0.0):
-    """Weapon origin and axes (3x3: right, forward, up) in armature space."""
+def aim_frame(t, kick=0.0, offset=(0.0, 0.0, 0.0)):
+    """Weapon origin and axes (3x3: right, forward, up) in armature space.
+    `offset` moves the hold for bulky costumes (x out to the right, y forward, z up)."""
     b = math.sin(math.tau * t / AIM_LEN)
     b2 = math.sin(2 * math.tau * t / AIM_LEN + 1.0)
-    origin = Vector((-0.15 + 0.003 * b2, -0.415 + 0.03 * kick, 1.14 + 0.006 * b + 0.016 * kick))
+    origin = Vector((-0.15 - offset[0] + 0.003 * b2, -0.415 - offset[1] + 0.012 * kick, 1.14 + offset[2] + 0.006 * b + 0.024 * kick))
     rot = (Quaternion((1, 0, 0), -math.radians(1.2 * b + 7.0 * kick)) @ Quaternion((0, 0, 1), math.radians(0.8 * b2))).to_matrix()
     return origin, rot @ _AIM_AXES
 
 
-def aim_spec(t, kick=0.0):
+def aim_spec(t, kick=0.0, offset=(0.0, 0.0, 0.0)):
     b = math.sin(math.tau * t / AIM_LEN)
-    origin, axes = aim_frame(t, kick)
+    origin, axes = aim_frame(t, kick, offset)
     spec = {
         "hips_loc": Vector((0.0, -0.03 + 0.012 * kick, -0.065 + 0.004 * b)),
         "Hips": (5.0 - 2.0 * kick, 0.0, -22.0),
-        "Spine": (3.0 - 2.0 * kick, 0.0, -8.0),
-        "Chest": (3.0 + 0.8 * b - 3.0 * kick, -2.0, -10.0),
+        "Spine": (3.0 - kick, 0.0, -8.0),
+        # The recoil rolls the chest a little instead of leaning it back, so
+        # the right arm never presses into the flank.
+        "Chest": (3.0 + 0.8 * b - kick, -2.0 - 4.0 * kick, -10.0),
         "Head": (-6.0 + 3.0 * kick, -4.0, 37.0),
         "foot.L": dict(pos=Vector((0.12, -0.17, ANKLE.z)), yaw=-4.0),
         "foot.R": dict(pos=Vector((-0.17, 0.16, ANKLE.z)), yaw=-44.0),
         "Cape1": (8.0, 0, 0.0), "Cape2": (4.0, 0, 0.0),
     }
     rot_r = (axes @ _SOCKET_ROT.transposed()).to_quaternion()
-    spec["hand.R"] = dict(pos=origin - rot_r @ _SOCKET_OFFSET, rot=rot_r, pole=Vector((-1.0, 0.2, 0.15)))
+    spec["hand.R"] = dict(pos=origin - rot_r @ _SOCKET_OFFSET, rot=rot_r, pole=Vector((-1.0, 0.2, 0.4)))
     spec["hand.L"] = hand_goal(1, origin + axes @ SUPPORT, axes @ Vector((0.94, 0.34, 0.0)), axes @ Vector((0.0, 0.0, 1.0)),
                                pole=(0.6, 0.05, -0.8))
     spec.update(fingers(-1, (84, 12), thumb=(2, -30)))
@@ -383,7 +386,7 @@ def victory_keys(idle0):
                     arm(1, 0.3, -0.35, -1.0, bend=70, twist=10, curl="fist", thumb=(30, 0)),
                     arm(-1, 0.3, -0.35, -1.0, bend=70, twist=10, curl="fist", thumb=(30, 0)))
     high = dict(out=0.66, fwd=0.12, up=1.0, bend=14, twist=-40, curl="fist", thumb=(30, 0))
-    air = _merge(body(idle0, shift=(0, 0, 0.2), hips=(-4, 0, 0), spine=(-5, 0, 0), chest=(-7, 0, 0), head=(-14, 0, 0)), feet(0.26, 34.0, 0.15),
+    air = _merge(body(idle0, shift=(0, 0, 0.2), hips=(-4, 0, 0), spine=(-5, 0, 0), chest=(-7, 0, 0), head=(-6, 0, 0)), feet(0.26, 34.0, 0.15),
                  arm(1, **high), arm(-1, **high))
     peak = _merge(body(air, shift=(0, 0, 0.27)), feet(0.34, 40.0, 0.16))
     land = _merge(body(idle0, shift=(0, 0, -0.09), hips=(7, 0, 0), spine=(5, 0, 0), chest=(2, 0, 0), head=(-6, 0, 0)), feet(),
@@ -513,9 +516,11 @@ def build_clips(rig, pose_style, idle_style=None):
     idle0 = idle_spec(0.0, idle_style)
     keys, length = pose_keys(pose_style, idle0)
     clips["Pose"] = keyed_frames(rig, keys, length)
-    clips["Run-loop"] = [solve(rig, run_spec(f / FPS)) for f in range(int(round(RUN_LEN * FPS)) + 1)]
-    clips["AimIdle-loop"] = [solve(rig, aim_spec(f / FPS)) for f in range(int(AIM_LEN * FPS) + 1)]
-    clips["Fire"] = [solve(rig, aim_spec(0.0, fire_kick(f / FPS))) for f in range(int(0.5 * FPS) + 1)]
+    style = idle_style or {}
+    hold = style.get("aim", (0.0, 0.0, 0.0))
+    clips["Run-loop"] = [solve(rig, run_spec(f / FPS, style.get("run_head", -13.0))) for f in range(int(round(RUN_LEN * FPS)) + 1)]
+    clips["AimIdle-loop"] = [solve(rig, aim_spec(f / FPS, 0.0, hold)) for f in range(int(AIM_LEN * FPS) + 1)]
+    clips["Fire"] = [solve(rig, aim_spec(0.0, fire_kick(f / FPS), hold)) for f in range(int(0.5 * FPS) + 1)]
     keys, length = victory_keys(idle0)
     clips["Victory"] = keyed_frames(rig, keys, length)
     keys, length = wave_keys(idle0)
