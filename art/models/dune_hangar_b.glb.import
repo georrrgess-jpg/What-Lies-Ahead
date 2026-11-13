@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dwtiv2edv0wb6"
-path="res://.godot/imported/dune_hangar.glb-25207eb1218d738060f7381eb3c6c6e1.scn"
+uid="uid://thhju24cs6bc"
+path="res://.godot/imported/dune_hangar_b.glb-a3733f91963eb18b0ceafc5df53d4c82.scn"
 
 [deps]
 
-source_file="res://art/models/dune_hangar.glb"
-dest_files=["res://.godot/imported/dune_hangar.glb-25207eb1218d738060f7381eb3c6c6e1.scn"]
+source_file="res://art/models/dune_hangar_b.glb"
+dest_files=["res://.godot/imported/dune_hangar_b.glb-a3733f91963eb18b0ceafc5df53d4c82.scn"]
 
 [params]
 

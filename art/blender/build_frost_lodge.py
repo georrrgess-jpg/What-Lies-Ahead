@@ -128,14 +128,30 @@ def kitchen_wing():
         # The door, swung open against the wall.
         box("DoorLeaf", (0.12, 1.9, 2.3), (14.75, y0 - 1.0, FLOOR + 1.17), bevel=0.03, m=fmat("Red", rough=0.5)),
         box("DoorPane", (0.14, 0.9, 0.7), (14.75, y0 - 1.0, FLOOR + 1.75), bevel=0.02, m=glass),
-        # Warm kitchen glimpsed through the door.
-        box("KitchenBackWall", (4.2, 0.2, 3.0), (13.5, 4.3, FLOOR + 1.5), bevel=0.0, m=fglow("FrostKitchenGlow", "#ffb062", 1.6)),
-        box("KitchenShelf", (3.0, 0.4, 0.1), (13.5, 4.0, FLOOR + 1.8), bevel=0.02, m=dark),
-        box("KitchenCounter", (3.2, 0.7, 1.0), (13.5, 3.9, FLOOR + 0.5), bevel=0.04, m=fmat("Steel", metal=0.6, rough=0.3)),
+        # The kitchen through the door: tiled back wall, a range with a hood,
+        # a fridge, a pot rail and a lit ceiling panel (all against the walls,
+        # clear of the zombies' path from the middle of the room to the door).
+        box("KitchenBackWall", (4.2, 0.2, 3.0), (13.5, 4.3, FLOOR + 1.5), bevel=0.0, m=mat("FrostKitchenTile", "#e9d9c4", rough=0.4)),
+        box("KitchenSplash", (3.0, 0.06, 0.8), (13.0, 4.18, FLOOR + 1.4), bevel=0.0, m=mat("FrostKitchenSplash", "#5aa7b8", rough=0.3)),
+        box("KitchenCounter", (2.6, 0.7, 1.0), (12.85, 3.9, FLOOR + 0.5), bevel=0.04, m=fmat("Steel", metal=0.6, rough=0.3)),
+        box("KitchenRange", (1.0, 0.04, 0.5), (12.6, 3.9, FLOOR + 1.02), bevel=0.0, m=fmat("Charcoal")),
+        box("KitchenBurnerA", (0.3, 0.3, 0.03), (12.35, 3.75, FLOOR + 1.04), bevel=0.0, m=fglow("FrostBurner", "#ff6a3a", 2.4)),
+        box("KitchenBurnerB", (0.3, 0.3, 0.03), (12.85, 3.75, FLOOR + 1.04), bevel=0.0, m=fglow("FrostBurner", "#ff6a3a", 2.4)),
+        box("KitchenPot", (0.36, 0.36, 0.3), (12.35, 3.75, FLOOR + 1.2), bevel=0.06, m=fmat("Red", rough=0.5)),
+        box("KitchenHood", (1.4, 0.8, 0.5), (12.6, 3.85, FLOOR + 2.55), bevel=0.04, m=fmat("Steel", metal=0.6, rough=0.3)),
+        box("KitchenRail", (2.4, 0.05, 0.05), (13.0, 4.12, FLOOR + 2.05), bevel=0.0, m=dark),
+        box("KitchenPanA", (0.3, 0.04, 0.42), (12.2, 4.1, FLOOR + 1.8), bevel=0.02, m=fmat("Charcoal")),
+        box("KitchenPanB", (0.24, 0.04, 0.36), (13.6, 4.1, FLOOR + 1.83), bevel=0.02, m=fmat("Charcoal")),
+        box("KitchenFridge", (0.9, 0.75, 2.2), (14.95, 3.85, FLOOR + 1.1), bevel=0.06, m=mat("FrostFridge", "#d8e6f2", rough=0.35)),
+        box("KitchenFridgeHandle", (0.05, 0.05, 0.7), (14.6, 3.46, FLOOR + 1.3), bevel=0.0, m=dark),
         box("KitchenFloor", (4.2, 3.8, 0.05), (13.5, 2.5, FLOOR + 0.02), bevel=0.0, m=mat("FrostTile", "#7a6a8e")),
         box("KitchenCeiling", (4.2, 3.8, 0.1), (13.5, 2.5, FLOOR + 2.9), bevel=0.0, m=dark),
+        box("KitchenLight", (1.6, 0.8, 0.04), (13.5, 2.6, FLOOR + 2.83), bevel=0.0, m=fglow("FrostKitchenGlow", "#ffd9a0", 2.2)),
         box("KitchenSideW", (0.2, 3.8, 3.0), (11.5, 2.5, FLOOR + 1.5), bevel=0.0, m=logs),
         box("KitchenSideE", (0.2, 3.8, 3.0), (15.5, 2.5, FLOOR + 1.5), bevel=0.0, m=logs),
+        box("KitchenMenu", (0.04, 1.0, 0.7), (11.62, 2.2, FLOOR + 1.7), bevel=0.0, m=fmat("Charcoal")),
+        box("KitchenMenuText", (0.03, 0.8, 0.08), (11.65, 2.2, FLOOR + 1.85), bevel=0.0, m=fglow("FrostMenuChalk", "#fff4dc", 1.2)),
+        box("KitchenMenuText2", (0.03, 0.6, 0.08), (11.65, 2.2, FLOOR + 1.6), bevel=0.0, m=fglow("FrostMenuChalk", "#fff4dc", 1.2)),
         # Sign and lamp over the door.
         box("SignBoard", (2.2, 0.12, 0.5), (13.5, y0 - 0.26, 4.35), bevel=0.04, m=fmat("Navy")),
         text("SignText", "KITCHEN", 0.3, 0.03, (13.5, y0 - 0.34, 4.35), m=fmat("White")),
@@ -232,12 +248,12 @@ def build_shed():
         box("FrontB", (2.4, 0.3, h), (w / 2 - 1.2, -d / 2, h / 2), bevel=0.04, m=steel),
         box("FrontTop", (4.4, 0.3, 0.9), (0, -d / 2, h - 0.45), bevel=0.04, m=steel),
         box("DoorRoll", (4.6, 0.6, 0.6), (0, -d / 2 - 0.2, h - 0.75), bevel=0.2, segs=3, m=dark),
-        box("Interior", (w - 0.8, 0.1, h - 0.6), (0, d / 2 - 0.25, h / 2), bevel=0.0, m=fglow("FrostShedGlow", "#ffa860", 0.9)),
         box("Bench", (3.0, 0.8, 0.9), (-1.8, d / 2 - 0.8, 0.45), bevel=0.04, m=fmat("TimberDark")),
         box("SignBoard", (3.0, 0.1, 0.55), (0, -d / 2 - 0.2, h + 0.4), bevel=0.03, m=fmat("Navy")),
         text("SignText", "MAINTENANCE", 0.32, 0.03, (0, -d / 2 - 0.28, h + 0.4), m=fmat("Yellow")),
         bulb("WorkLamp", 0.2, (0, 0, h - 0.4), fglow("FrostLantern", "#ffc46b", 3.2)),
     ]
+    parts += _shed_interior(w, d, h)
     # Corrugation ribs.
     for i in range(14):
         x = -w / 2 + 0.4 + i * (w - 0.8) / 13
@@ -265,6 +281,42 @@ def build_shed():
         parts.append(cyl(f"Drum{i}", 0.32, 0.9, (x + 0.2, y - 0.9, 0.45), segs=12, bevel=0.03, m=fmat("Red", rough=0.5)))
         parts.append(sphere(f"DrumSnow{i}", 0.28, (x + 0.2, y - 0.9, 0.92), scale=(1, 1, 0.35), m=snow, segs=8, rings=4))
     save("frost_shed", [merge("Shed", parts)])
+
+
+def _shed_interior(w, d, h):
+    """Workshop inside the shed, seen through the raised door: warm plank
+    lining, a pegboard of tools over the bench, shelves of cans and parts, a
+    stack of tyres and a ceiling strip light. Kept to the walls, clear of the
+    doorway path."""
+    lining = mat("FrostShedLining", "#8a5a3e", rough=0.85, emit=0.35)
+    dark, steel = fmat("Charcoal"), fmat("SteelDark", rough=0.5, metal=0.3)
+    red, yellow, timber = fmat("Red", rough=0.5), fmat("Yellow"), fmat("TimberDark")
+    parts = [
+        box("LiningBack", (w - 0.8, 0.06, h - 0.3), (0, d / 2 - 0.2, (h - 0.3) / 2), bevel=0.0, m=lining),
+        box("LiningA", (0.06, d - 0.6, h - 0.3), (-w / 2 + 0.2, 0, (h - 0.3) / 2), bevel=0.0, m=lining),
+        box("LiningB", (0.06, d - 0.6, h - 0.3), (w / 2 - 0.2, 0, (h - 0.3) / 2), bevel=0.0, m=lining),
+        box("Ceiling", (w - 0.4, d - 0.4, 0.08), (0, 0, h - 0.1), bevel=0.0, m=dark),
+        box("StripLight", (2.4, 0.2, 0.06), (0, 0.6, h - 0.2), bevel=0.0, m=fglow("FrostShedStrip", "#ffe2b0", 2.4)),
+        box("Pegboard", (2.8, 0.05, 1.2), (-1.8, d / 2 - 0.26, 1.75), bevel=0.0, m=fmat("Navy")),
+    ]
+    for k in range(6):
+        parts.append(box(f"Tool{k}", (0.12, 0.04, 0.7 - (k % 3) * 0.15), (-3.0 + k * 0.48, d / 2 - 0.3, 1.8), bevel=0.0, m=steel))
+    # Shelving on the back wall, east of the bench.
+    for k in range(3):
+        z = 0.5 + k * 1.0
+        parts.append(box(f"Shelf{k}", (2.4, 0.6, 0.06), (2.3, d / 2 - 0.55, z), bevel=0.0, m=timber))
+        for j in range(3):
+            parts.append(box(f"Can{k}{j}", (0.38, 0.28, 0.5), (1.5 + j * 0.8, d / 2 - 0.55, z + 0.28), bevel=0.04,
+                             m=red if (j + k) % 2 else yellow))
+    for ex in (-1.2, 1.2):
+        parts.append(box(f"ShelfPost{ex}", (0.08, 0.6, 3.0), (2.3 + ex, d / 2 - 0.55, 1.5), bevel=0.0, m=steel))
+    # Tyres stacked by the west wall; snow shovels leaning on the east wall.
+    for k in range(3):
+        parts.append(torus(f"InTyre{k}", 0.42, 0.17, (-w / 2 + 0.8, -1.2, 0.2 + k * 0.32), m=dark, major_segs=16, minor_segs=6))
+    for k in range(2):
+        parts.append(box(f"Shovel{k}", (0.06, 0.06, 1.4), (w / 2 - 0.45, -1.4 + k * 0.5, 0.75), rot=(0.15, 0, 0), bevel=0.0, m=timber))
+        parts.append(box(f"ShovelBlade{k}", (0.08, 0.42, 0.36), (w / 2 - 0.45, -1.5 + k * 0.5, 0.2), bevel=0.02, m=yellow))
+    return parts
 
 
 BUILDERS = {"lodge": build_lodge, "shed": build_shed}
