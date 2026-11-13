@@ -10,8 +10,12 @@ extends RefCounted
 ##   begin() / step()   then drive the body through the move, one physics tick
 ##               at a time, with move_and_slide (so a zombie in the way blocks it).
 ##
-## Every move is swept with the capsule itself before it starts (test_move with
-## the player's own collision mask): up, across, then down onto the landing.
+## What lies ahead is first looked for with a thin-margin sweep (_look): with
+## the body's own margin, a wall the capsule is brushing would answer every
+## sweep (at several times the cost) instead of the step or ledge ahead.
+## Every move is then swept with the capsule itself before it starts (test_move
+## with the player's own collision mask and margin): up, across, then down onto
+## the landing.
 ## So a move never ends inside geometry or under a low ceiling, and it never
 ## crosses the invisible player-only walls (physics layer 5), which stop the
 ## sweep like any other wall.
@@ -41,17 +45,22 @@ const VAULT_MAX_DEPTH := 0.8
 const VAULT_MAX_DROP := 1.5
 ## Share of the run-up speed a vault keeps, and its slowest crossing speed.
 const VAULT_KEEP := 0.85
-const VAULT_MIN_SPEED := 4.6
+const VAULT_MIN_SPEED := 5.0
 ## From this run-up speed a vault wins over a mantle where both fit.
 const VAULT_PREFER_SPEED := 6.0
 ## Share of the run-up speed a mantle keeps, and its slowest exit.
-const MANTLE_KEEP := 0.7
-const MANTLE_MIN_EXIT := 2.2
+const MANTLE_KEEP := 0.75
+const MANTLE_MIN_EXIT := 3.0
 ## Speed over the top once the capsule clears the ledge.
-const MANTLE_OVER_SPEED := 4.6
+const MANTLE_OVER_SPEED := 5.4
+## Pull-up time: a base plus this much per metre of rise (mantle, vault).
+const MANTLE_RISE_TIME := Vector2(0.13, 0.07)
+const VAULT_RISE_TIME := Vector2(0.06, 0.06)
 const FLOOR_NORMAL := 0.7
 const TOP_NORMAL := 0.85
 const MASK_WORLD := 1
+## Margin of the look-ahead sweeps (_look).
+const LOOK_MARGIN := 0.001
 const MASK_ENEMIES := 4
 
 ## The move in progress (NONE when idle).
@@ -67,6 +76,11 @@ var _plan_dir := Vector3.ZERO
 var _plan_ledge := 0.0
 var _plan_gap := 0.0
 var _plan_forward := 0.0
+# The last ledge that failed the full check (see _missed_before): feet x,
+# ledge height, feet z, and the run-up and vault classes; and the feet's height.
+var _miss := Vector4(INF, INF, INF, -1.0)
+var _miss_feet_y := INF
+var _miss_dir := Vector3.ZERO
 # The move in progress.
 var _dir := Vector3.ZERO
 var _start := Vector3.ZERO
@@ -117,12 +131,15 @@ func step_up(motion: Vector3) -> float:
 	var dir := motion / travel
 	# Look a little further than this tick: move_and_slide would wedge the
 	# capsule against the edge before a sweep of this tick's travel sees it.
-	if not _sweep(xf, dir * (travel + STEP_LOOKAHEAD)):
+	if not _look(xf, dir * (travel + STEP_LOOKAHEAD)):
 		return -1.0
-	if _hit.get_normal().y > STEP_FLAT or _is_enemy(_hit.get_collider()):
+	# A step touches the capsule's round bottom, no higher than the step
+	# itself: a contact above that is a wall (and needs no ray to say so).
+	var contact := _hit.get_position()
+	if contact.y > xf.origin.y + STEP_HEIGHT + 0.02 or _hit.get_normal().y > STEP_FLAT or _is_enemy(_hit.get_collider()):
 		return -1.0
 	# A step has a flat top just past its edge, no higher than STEP_HEIGHT.
-	var past := _hit.get_position() + dir * 0.04
+	var past := contact + dir * 0.04
 	var top := _cast(Vector3(past.x, xf.origin.y + STEP_HEIGHT + 0.05, past.z), Vector3(past.x, xf.origin.y + 0.01, past.z))
 	if top.is_empty() or (top["normal"] as Vector3).y < STEP_FLAT or top["position"].y > xf.origin.y + STEP_HEIGHT + 0.01:
 		return -1.0
@@ -143,38 +160,58 @@ func step_up(motion: Vector3) -> float:
 
 ## Looks for a ledge along `dir` (flat, unit length). `floor_y` is the height
 ## of the floor the player last stood on, `speed` the run-up speed toward the
-## ledge. Returns the kind of move found; begin() starts it.
-func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float) -> Kind:
+## ledge. A ledge lower than `min_height` above the feet is ignored (in the
+## air: one the jump clears by itself) before the costlier checks run.
+## Returns the kind of move found; begin() starts it.
+func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float, min_height := -INF) -> Kind:
 	_plan_kind = Kind.NONE
 	var xf := _body.global_transform
 	var feet := xf.origin
-	if not _sweep(xf, dir * REACH):
+	if not _look(xf, dir * REACH):
 		return Kind.NONE
 	var normal := _hit.get_normal()
 	if normal.y > FLOOR_NORMAL or normal.dot(dir) > -0.5 or _is_enemy(_hit.get_collider()):
 		return Kind.NONE
 	var face := maxf((_hit.get_position() - feet).dot(dir), _radius)
 	var ledge := _find_top(feet, dir, face, floor_y, airborne)
-	if is_nan(ledge):
+	if is_nan(ledge) or ledge - feet.y < min_height:
+		return Kind.NONE
+	var classes := (1.0 if speed >= VAULT_PREFER_SPEED else 0.0) + (2.0 if ledge - feet.y <= VAULT_MAX_HEIGHT else 0.0)
+	var miss := Vector4(feet.x, ledge, feet.z, classes)
+	if _missed_before(miss, feet.y, dir):
 		return Kind.NONE
 	var rise := ledge + CLEARANCE - feet.y
-	if _sweep(xf, Vector3.UP * rise):
-		return Kind.NONE
 	var raised := xf.translated(Vector3.UP * rise)
-	var can_mantle := _check_mantle(raised, feet, dir, face, ledge)
+	var clear := not _sweep(xf, Vector3.UP * rise)
+	var can_mantle := clear and _check_mantle(raised, feet, dir, face, ledge)
 	var mantle_forward := _plan_forward
-	var can_vault := ledge - feet.y <= VAULT_MAX_HEIGHT and _check_vault(raised, feet, dir, face, ledge)
-	if can_vault and (speed >= VAULT_PREFER_SPEED or not can_mantle):
+	# The vault only matters at a run, or where no mantle fits.
+	var wants_vault := speed >= VAULT_PREFER_SPEED or not can_mantle
+	var can_vault := clear and wants_vault and ledge - feet.y <= VAULT_MAX_HEIGHT and _check_vault(raised, feet, dir, face, ledge)
+	if can_vault:
 		_plan_kind = Kind.VAULT
 	elif can_mantle:
 		_plan_kind = Kind.MANTLE
 		_plan_forward = mantle_forward
 	else:
+		_miss = miss
+		_miss_feet_y = feet.y
+		_miss_dir = dir
 		return Kind.NONE
 	_plan_dir = dir
 	_plan_ledge = ledge
 	_plan_gap = face - _radius
 	return _plan_kind
+
+
+## True when the same ledge, seen from the same spot along the same direction
+## (and with the same run-up and vault height classes, in `miss.w`), failed
+## the full check last time from feet no higher than now. Rising cannot help:
+## the mantle check does not depend on the feet's height, and the climb and
+## the vault's drop only get shorter. So a jump pushing at a ledge it cannot
+## use re-checks it only once it falls or moves.
+func _missed_before(miss: Vector4, feet_y: float, dir: Vector3) -> bool:
+	return feet_y >= _miss_feet_y and dir.dot(_miss_dir) > 0.9999 and miss.distance_squared_to(_miss) < 1e-4
 
 
 ## Top of the obstacle just past its face, within the allowed heights; NAN if none.
@@ -239,6 +276,15 @@ func _sweep(from: Transform3D, motion: Vector3) -> bool:
 	return _body.test_move(from, motion, _hit, _body.safe_margin)
 
 
+## A look-ahead sweep: reaches as far as _sweep would (the motion plus the
+## body's margin) but with a thin margin, so it reports what is ahead rather
+## than a wall alongside. True if it hits something (details in _hit).
+func _look(from: Transform3D, motion: Vector3) -> bool:
+	var length := motion.length()
+	var reach := motion * ((length + _body.safe_margin - LOOK_MARGIN) / length) if length > 0.0 else motion
+	return _body.test_move(from, reach, _hit, LOOK_MARGIN)
+
+
 func _cast(from: Vector3, to: Vector3) -> Dictionary:
 	_ray.from = from
 	_ray.to = to
@@ -265,12 +311,12 @@ func begin(run_up: float) -> void:
 	var toward := maxf(0.0, run_up)
 	if kind == Kind.VAULT:
 		_speed = maxf(toward * VAULT_KEEP, VAULT_MIN_SPEED)
-		_rise_time = 0.07 + 0.07 * _rise
+		_rise_time = VAULT_RISE_TIME.x + VAULT_RISE_TIME.y * _rise
 		_exit_speed = _speed
 		_duration = maxf(_rise_time, _forward / _speed)
 	else:
 		_speed = MANTLE_OVER_SPEED
-		_rise_time = 0.15 + 0.08 * _rise
+		_rise_time = MANTLE_RISE_TIME.x + MANTLE_RISE_TIME.y * _rise
 		_exit_speed = maxf(toward * MANTLE_KEEP, MANTLE_MIN_EXIT)
 		_duration = _rise_time * 0.85 + (_forward - _gap) / _speed
 

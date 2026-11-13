@@ -94,6 +94,7 @@ sound_category = Dictionary[StringName, StringName]({
 &"jump": &"player",
 &"land": &"player",
 &"slide": &"player",
+&"move_": &"player",
 &"player_hurt": &"player",
 &"heartbeat": &"player",
 &"frost_chill": &"player",
