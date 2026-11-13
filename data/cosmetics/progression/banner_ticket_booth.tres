@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"banner_ticket_booth"
 display_name = "Ticket Booth"
-description = "Player banner. Reach player level 22."
+description = "Player banner."
 slot = &"banner"
 rarity = 1
 price = 400

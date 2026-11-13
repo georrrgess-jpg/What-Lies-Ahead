@@ -35,10 +35,15 @@ static func request(from: Control, it: CosmeticItem, weapon_id: StringName, on_b
 	var left := Wallet.balance() - price
 	var text := "%s for %s %s.\nYou keep %s." % [LockerCatalog.category_label(it), Wallet.format(price), Wallet.CURRENCY, Wallet.format(left)]
 	return UiKit.confirm(_host(from), "BUY %s?" % it.display_name.to_upper(), text, "BUY",
-		func(): _buy(it, weapon_id, on_bought))
+		func(): _buy(it, weapon_id, on_bought, price))
 
 
-static func _buy(it: CosmeticItem, weapon_id: StringName, on_bought: Callable) -> void:
+static func _buy(it: CosmeticItem, weapon_id: StringName, on_bought: Callable, quoted: int) -> void:
+	# The price may have changed while the dialog was open (the daily picks roll over).
+	if Cosmetics.price_of(it) != quoted:
+		UiSound.deny()
+		UiKit.toast("The price changed. Check it and try again.", UiKit.AMBER, &"icon_spark")
+		return
 	if not Cosmetics.buy(it, weapon_id):
 		UiSound.deny()
 		return

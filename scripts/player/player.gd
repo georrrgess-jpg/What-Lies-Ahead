@@ -328,7 +328,7 @@ func _update_aim(delta: float, can_act: bool) -> void:
 		_aim_latched = false
 		_aim_held = able and Input.is_action_pressed("aim")
 	else:
-		if not able or weapons.is_switching() or Input.is_action_just_pressed("sprint"):
+		if not able or Input.is_action_just_pressed("sprint"):
 			_aim_latched = false
 		elif Input.is_action_just_pressed("aim"):
 			_aim_latched = not _aim_latched

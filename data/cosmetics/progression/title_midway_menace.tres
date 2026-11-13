@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"title_midway_menace"
 display_name = "Midway Menace"
-description = "Player title. Reach player level 12."
+description = "Player title."
 slot = &"title"
 rarity = 0
 price = 150

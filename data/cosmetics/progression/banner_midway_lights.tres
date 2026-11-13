@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"banner_midway_lights"
 display_name = "Midway Lights"
-description = "Player banner. Reach player level 11."
+description = "Player banner."
 slot = &"banner"
 rarity = 0
 price = 150

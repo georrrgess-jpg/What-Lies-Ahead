@@ -758,6 +758,10 @@ func _on_zombie_stalled(z: Zombie) -> void:
 		_alive.erase(z)
 		_recoveries.erase(key)
 		enemy_recovered.emit(z, true)
+		if z == bounty:
+			bounty = null
+			bounty_changed.emit(null)
+			notice.emit("The bounty got away", &"info")
 		z.despawn()
 		return
 	enemy_recovered.emit(z, false)

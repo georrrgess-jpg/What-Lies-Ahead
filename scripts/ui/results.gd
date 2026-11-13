@@ -328,17 +328,26 @@ func _buttons(victory: bool, next: LevelData) -> Control:
 	row.add_theme_constant_override("separation", UiKit.GAP_L)
 	var primary: SignButton = null
 	if next:
-		primary = _button(row, "NEXT WORLD", SignButton.Kind.PRIMARY, func(): Game.start_level(next.id, &""))
+		primary = _button(row, "NEXT WORLD", SignButton.Kind.PRIMARY, func(): _leave(func(): Game.start_level(next.id, &"")))
 		primary.name = "NextWorld"
 	elif not victory and Game.can_continue_run():
-		primary = _button(row, "CONTINUE FROM WAVE %d" % Game.checkpoint_wave, SignButton.Kind.PRIMARY, func(): Game.continue_run())
+		primary = _button(row, "CONTINUE FROM WAVE %d" % Game.checkpoint_wave, SignButton.Kind.PRIMARY, func(): _leave(Game.continue_run))
 		primary.name = "ContinueRun"
-	var retry := _button(row, "RETRY", SignButton.Kind.SECONDARY if primary else SignButton.Kind.PRIMARY, func(): Game.retry())
+	var retry := _button(row, "RETRY", SignButton.Kind.SECONDARY if primary else SignButton.Kind.PRIMARY, func(): _leave(Game.retry))
 	retry.name = "Retry"
 	var menu := _button(row, "MAIN MENU", SignButton.Kind.NEUTRAL if primary else SignButton.Kind.SECONDARY, func(): Game.to_menu())
 	menu.name = "MainMenu"
 	(primary if primary else retry).grab_focus.call_deferred()
 	return row
+
+
+## Stops the finished level (zombies, twists, sounds) so it does not play on
+## under the loading card, then runs `go` (retry, continue or next world).
+func _leave(go: Callable) -> void:
+	var level := get_tree().current_scene
+	if level:
+		level.process_mode = Node.PROCESS_MODE_DISABLED
+	go.call()
 
 
 func _button(row: HBoxContainer, text: String, kind: SignButton.Kind, action: Callable) -> SignButton:

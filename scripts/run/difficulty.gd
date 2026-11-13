@@ -33,7 +33,7 @@ const CONTINUE_REWARD_SCALE := 0.75
 ##   relief                    seconds of spawn pause the director may grant a player in trouble, per wave
 ##   wave_heal                 health restored at every wave clear
 ##   tickets                   multiplies ticket income
-##   reward                    multiplies score, account XP and Sparks
+##   reward                    multiplies account XP and Sparks (not the score)
 const TABLE := {
 	&"casual": {
 		"health": 0.8, "boss_health": 0.7, "damage": 0.6, "speed": 0.95,
@@ -89,7 +89,7 @@ static func color(id: StringName) -> Color:
 static func effects(id: StringName) -> PackedStringArray:
 	var row: Dictionary = TABLE.get(id, TABLE[DEFAULT])
 	var out := PackedStringArray()
-	for item in [["damage", "Enemy damage"], ["health", "Enemy health"], ["max_alive", "Horde size"], ["reward", "Rewards"]]:
+	for item in [["damage", "Enemy damage"], ["health", "Enemy health"], ["max_alive", "Horde size"], ["reward", "XP & Sparks"]]:
 		var percent := int(round((float(row[item[0]]) - 1.0) * 100.0))
 		if percent != 0:
 			out.append("%s %+d%%" % [item[1], percent])
