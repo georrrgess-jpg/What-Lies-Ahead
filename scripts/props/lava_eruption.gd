@@ -17,9 +17,9 @@ const TWIST := &"eruption"
 ## Seconds of the bomb's fall (the end of the telegraph).
 @export var fall_time := 0.6
 @export var radius := 2.0
-@export var damage := 7.0
+@export var damage := 5.0
 ## Share of the bombs aimed close to the player (the rest land around them).
-@export_range(0.0, 1.0) var near_share := 0.4
+@export_range(0.0, 1.0) var near_share := 0.3
 ## Seconds for the sky to flare up or calm down.
 @export var transition := 3.0
 

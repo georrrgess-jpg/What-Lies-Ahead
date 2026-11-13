@@ -42,8 +42,8 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"lava_tiki_bartender": 8,
-"tourist_shambler": 9,
+"lava_tiki_bartender": 7,
+"tourist_shambler": 10,
 "lava_fire_dancer": 5
 }
 spawn_interval = 1.3
@@ -101,8 +101,8 @@ script = ExtResource("2")
 spawns = {
 "tourist_shambler": 11,
 "lava_fire_dancer": 9,
-"lava_tiki_bartender": 5,
-"boardwalk_bruiser": 2
+"lava_tiki_bartender": 4,
+"boardwalk_bruiser": 1
 }
 spawn_interval = 1.3
 burst = 1
@@ -120,10 +120,10 @@ twist = &"eruption"
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 12,
-"lava_fire_dancer": 10,
+"tourist_shambler": 13,
+"lava_fire_dancer": 7,
 "lava_tiki_bartender": 3,
-"lifeguard_runner": 3
+"lifeguard_runner": 2
 }
 spawn_interval = 1.95
 burst = 2
