@@ -6,8 +6,7 @@
 [sub_resource type="Resource" id="req"]
 script = ExtResource("2")
 kind = 1
-target = &""
-amount = 7
+amount = 13
 
 [resource]
 script = ExtResource("1")
