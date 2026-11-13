@@ -20,6 +20,7 @@ func _ready() -> void:
 	add_child(row)
 	var board := UiKit.signboard()
 	board.custom_minimum_size.x = 1060
+	board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(board)
 	_scroll = UiKit.scroll()
 	board.add_child(_scroll)
@@ -33,7 +34,7 @@ func _ready() -> void:
 	_panel.closed.connect(func(): back.emit())
 	margin.add_child(_panel)
 	var side := UiKit.signboard()
-	side.custom_minimum_size.x = 620
+	side.custom_minimum_size.x = 540
 	side.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	side.add_child(SettingsPanel.controls_reference())
 	row.add_child(side)

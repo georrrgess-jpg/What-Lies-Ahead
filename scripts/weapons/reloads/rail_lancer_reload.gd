@@ -22,8 +22,10 @@ func play(v: WeaponView, d: float) -> void:
 	v.burst(0.34, d, "EjectPoint", "sparks")
 	v.hide_part(0.5, d, "Cell")
 	# The support hand drops away to fetch a capacitor and returns to the handguard.
-	v.track("ArmL", d, [[0.26, Vector3(-0.03, -0.24, 0.14), Vector3(25, 0, 0)], [0.74, Vector3(-0.03, -0.24, 0.14), Vector3(25, 0, 0)],
-		[0.92, Vector3.ZERO, Vector3.ZERO]])
+	# (Straight down off the handguard first, so the fingers clear it.)
+	v.track("ArmL", d, [[0.12, Vector3(0, -0.1, 0), Vector3.ZERO], [0.26, Vector3(-0.03, -0.26, 0.14), Vector3(25, 0, 0)],
+		[0.74, Vector3(-0.03, -0.26, 0.14), Vector3(25, 0, 0)], [0.85, Vector3(0, -0.1, 0), Vector3.ZERO],
+		[0.93, Vector3.ZERO, Vector3.ZERO]])
 	# A hologram capacitor prints in and slots home.
 	v.track("CellHolo", d, [[0.52, Vector3(-0.1, -0.05, 0), Vector3(0, 0, 30), 1.0, "hold"], [0.7, Vector3(-0.08, -0.04, 0), Vector3(0, 0, 20)],
 		[0.76, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_CUBIC, Tween.EASE_OUT)

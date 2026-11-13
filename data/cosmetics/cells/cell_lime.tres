@@ -1,12 +1,6 @@
-[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
-
-[sub_resource type="Resource" id="req"]
-script = ExtResource("2")
-kind = 1
-amount = 3
 
 [resource]
 script = ExtResource("1")
@@ -15,6 +9,6 @@ display_name = "Lime Fizz"
 description = "Zesty green energy. Tingles a bit."
 slot = &"weapon_cell"
 rarity = 0
-requirement = SubResource("req")
+price = 150
 colors = PackedColorArray(0.4902, 1, 0.2902, 1)
 sort_order = 3000

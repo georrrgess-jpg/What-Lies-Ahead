@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"c_sparks"
+display_name = "Spark Collector"
+description = "Free %s Sparks from zombies"
+scope = 0
+stat = &"sparks"
+mode = 0
+goal = 300
+param = 0
+xp = 300
+sparks = 40
+mastery_xp = 0
+sort_order = 70

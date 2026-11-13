@@ -19,6 +19,12 @@ extends CharacterBody3D
 ##     speed that tires when slides are chained, pulled along by slopes;
 ##   - firing or aiming ends a sprint at once, and the weapon takes a beat to
 ##     come up out of its sprint pose before it fires.
+##
+## Aiming down sights: hold the aim button, or tap it with the "toggle" aim
+## setting (sprinting, sliding, mantling or switching weapon lets go). The
+## sight comes up over the weapon's ads_time; reloading and switching lower it
+## and it comes back up by itself afterwards. The zoom is the weapon's own
+## times that of the sight fitted to it.
 
 signal health_changed(current: float, maximum: float)
 signal damaged(amount: float, source_position: Vector3)
@@ -139,7 +145,9 @@ var gait_phase := 0.0
 var gait_amount := 0.0
 
 var _pitch := 0.0
+## The player wants to aim (button held, or toggled on).
 var _aim_held := false
+var _aim_latched := false
 var _heartbeat_timer := 0.0
 var _coyote := 0.0
 var _jump_buffer := 0.0
@@ -210,9 +218,15 @@ func _weapon_switch_input(event: InputEvent) -> void:
 		weapons.switch_next()
 
 
-## The held weapon's aim-down-sights FOV as a share of the normal FOV.
+## The aim-down-sights FOV as a share of the normal FOV: the held weapon's
+## own zoom, magnified further by the sight fitted to it.
 func ads_fov_scale() -> float:
-	return weapons.current.ads_fov_scale if weapons and weapons.current else 0.8
+	var scale := weapons.current.ads_fov_scale if weapons and weapons.current else 0.8
+	var zoom := view.sight_zoom()
+	if zoom <= 1.0:
+		return scale
+	var half := deg_to_rad(head.base_fov) * 0.5
+	return atan(tan(half * scale) / zoom) / half
 
 
 func is_aiming() -> bool:
@@ -305,12 +319,28 @@ func _tick_timers(delta: float, can_act: bool, on_floor: bool) -> void:
 		_sprint_block = maxf(0.0, _sprint_block - delta)
 
 
-## Aim down sights (hold right mouse). Sliding and mantling drop the aim.
+## Aim down sights: hold the aim button, or tap it to toggle (Settings
+## "aim_mode"). Sliding and mantling drop the aim; a reload or a weapon switch
+## lowers the sight and it comes back up afterwards.
 func _update_aim(delta: float, can_act: bool) -> void:
-	_aim_held = can_act and Input.is_action_pressed("aim") and not sliding \
-		and not _traverse.is_active() and weapons.current != null
+	var able := can_act and not sliding and not _traverse.is_active() and weapons.current != null
+	if not Settings.aim_toggles():
+		_aim_latched = false
+		_aim_held = able and Input.is_action_pressed("aim")
+	else:
+		if not able or weapons.is_switching() or Input.is_action_just_pressed("sprint"):
+			_aim_latched = false
+		elif Input.is_action_just_pressed("aim"):
+			_aim_latched = not _aim_latched
+		_aim_held = _aim_latched
+	var sight_up := _aim_held and not weapons.is_reloading() and not weapons.is_switching()
+	ads = move_toward(ads, 1.0 if sight_up else 0.0, delta / _aim_time())
+
+
+## Seconds to raise or lower the sight: the weapon's, scaled by its sight.
+func _aim_time() -> float:
 	var ads_time := weapons.current.ads_time if weapons.current else 0.18
-	ads = move_toward(ads, 1.0 if _aim_held else 0.0, delta / maxf(0.05, ads_time))
+	return maxf(0.05, ads_time * view.sight_ads_time_scale())
 
 
 func _update_sprint(delta: float, can_act: bool, input: Vector2) -> void:

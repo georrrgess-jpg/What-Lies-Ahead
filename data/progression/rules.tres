@@ -4,13 +4,13 @@
 
 [resource]
 script = ExtResource("1")
-level_base_xp = 3500
-level_step_xp = 300
-level_curve_xp = 1.0
+level_base_xp = 1800
+level_step_xp = 400
+level_curve_xp = 0.0
 score_xp_rate = 0.06
 wave_xp_base = 75
 wave_xp_per_wave = 25
 clear_xp = 1000
 clear_xp_per_world = 250
 first_clear_xp = 1500
-stamps = PackedStringArray("", "", "", "", "", "", "", "", "", "Lucky Gull|A gull that has seen things. It approves of you.", "", "", "", "Corn Dog Connoisseur|Tried every stand on the pier. Twice.", "", "", "", "Whack-a-Zombie|Top score on the original arcade cabinet.", "", "Bumper Car Bandit|Never once drove in the right direction.", "", "Ring Toss Ace|Three rings, three bottles, zero mercy.", "", "Salt Air|You stopped noticing the smell a while ago.", "", "", "", "After Hours|Survived the late-night crowd.", "", "Tilt-a-Whirl Veteran|Still dizzy. Still shooting.", "", "Prize Claw|Finally won the plush shark.", "Boardwalk Regular|The kiosk vendor knows your order.", "", "Lifeguard on Duty|Took the tower back from the runners.", "", "", "Fortune Teller|The machine said what lies ahead: more zombies.", "", "Skee-Ball Sharpshooter|Hundred-point hole, every time.", "", "Pier Pressure|Held the midway with no backup.", "", "Funhouse Mirror|Even your reflection is armed.", "Coaster Rider|Front row, hands up, carbine out.", "", "Ticket Tycoon|Enough tickets to buy the whole pier.", "Sunset Watcher|Paused mid-wave to admire the view. Once.", "", "Almost Legendary|One more level. The pier is watching.", "")
+stamps = PackedStringArray()

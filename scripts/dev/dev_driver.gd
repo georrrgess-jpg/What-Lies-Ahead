@@ -14,6 +14,8 @@ extends Node
 ##   --boost              bot buys the damage boost whenever it can afford it (before
 ##                        the overshield, which it always buys when it can)
 ##   --aim-error=<deg>    random aim error for the bot (default 1.2)
+##   --ads                bot aims down sights whenever it stands and shoots
+##   --sight=<id>         every weapon wears this sight for the session (data/cosmetics/sights)
 ##   --god                bot takes no damage (for flow tests, not for tuning)
 ##   --then=retry|menu|next   after the results screen, press Retry / Main Menu /
 ##                        Next World once
@@ -36,6 +38,8 @@ var buy_boost := false
 var _switches := 0
 var _switch_cancels := 0
 var aim_error := 1.2
+var use_ads := false
+var _aimed_time := 0.0
 var god := false
 var then := ""
 var max_seconds := 1500.0
@@ -97,6 +101,11 @@ func _ready() -> void:
 			buy_boost = true
 		elif arg.begins_with("--aim-error="):
 			aim_error = float(arg.trim_prefix("--aim-error="))
+		elif arg == "--ads":
+			use_ads = true
+		elif arg.begins_with("--sight="):
+			for w in GameData.weapons():
+				WeaponSights.wear_for_session(w.id, StringName(arg.trim_prefix("--sight=")))
 		elif arg == "--god":
 			god = true
 		elif arg.begins_with("--then="):
@@ -427,6 +436,7 @@ func _do_fight(delta: float) -> void:
 
 	if target == null:
 		_release("fire")
+		_release("aim")
 		return
 
 	# Aim with a slowly wandering error, like a human hand.
@@ -449,6 +459,10 @@ func _do_fight(delta: float) -> void:
 	var aligned := absf(angle_difference(_player.rotation.y, yaw)) < deg_to_rad(4.0)
 	var dist := to.length()
 	var in_range := dist < _bot_range(w.current)
+	if use_ads:
+		# Steady shots from the sights; back at the hip when it has to move.
+		_set_held("aim", in_range and not should_move)
+		_aimed_time += delta if _player.is_aiming() else 0.0
 	if w.current.charge_time > 0.0:
 		_fire_charge(w, target, aligned, in_range, dist)
 	elif aligned and in_range and not w.is_reloading():
@@ -654,11 +668,17 @@ func _after_run() -> void:
 			for u in row["unlocks"]:
 				unlocks.append(String(u.id))
 			rows.append("%s +%dxp %dkills rank %d->%d unlocks=%s" % [row["weapon"].id, row["xp_gained"], row["kills"], row["rank_before"], row["rank_after"], unlocks])
-		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d cashed=%d score=%d headshots=%d best_combo=%d switches=%d/%d" % [
+		var sparks := Wallet.settle(r)
+		var career := Progression.settle(r)
+		print("[dev] RESULT victory=%s waves=%d/%d kills=%d time=%.0fs min_hp=%d tickets_left=%d cashed=%d score=%d headshots=%d best_combo=%d switches=%d/%d sparks=%d wallet=%d xp=%d level=%d" % [
 			r["victory"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_min_health), _director.tickets, int(r.get("tickets_cashed", 0)),
-			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0)), _switch_cancels, _switches])
+			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0)), _switch_cancels, _switches,
+			int(sparks.get("total", 0)), Wallet.balance(), int(career.get("total", 0)), Progression.level()])
 		for line in rows:
 			print("[dev]   ", line)
+		if use_ads:
+			print("[dev] aimed down sights for %.0fs" % _aimed_time)
+		print("[dev]   sparks: ", sparks.get("lines", []), " contracts done: ", (career.get("contracts", []) as Array).map(func(e): return e["id"]))
 		print("[dev] profile: ", JSON.stringify(Profile.data["mastery"]), " levels=", JSON.stringify(Profile.data["levels"]))
 		_wait_for_results()
 

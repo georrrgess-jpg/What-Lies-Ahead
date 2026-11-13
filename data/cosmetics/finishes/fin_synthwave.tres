@@ -1,12 +1,6 @@
-[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
-
-[sub_resource type="Resource" id="req"]
-script = ExtResource("2")
-kind = 1
-amount = 30
 
 [resource]
 script = ExtResource("1")
@@ -15,7 +9,7 @@ display_name = "Synthwave Grid"
 description = "Sunset orange grid lines on a midnight purple body."
 slot = &"weapon_finish"
 rarity = 2
-requirement = SubResource("req")
+price = 900
 colors = PackedColorArray(0.102, 0.03922, 0.1804, 1, 0.1647, 0.05882, 0.251, 1)
 params = {
 "shader": "res://art/shaders/skin_wireframe.gdshader",

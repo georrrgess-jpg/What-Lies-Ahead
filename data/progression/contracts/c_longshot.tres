@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Challenge" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/challenge.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"c_longshot"
+display_name = "Eagle Eye"
+description = "Get %s longshot kills (28 m or more)"
+scope = 0
+stat = &"longshots"
+mode = 0
+goal = 5
+param = 3
+xp = 400
+sparks = 50
+mastery_xp = 0
+sort_order = 110

@@ -8,13 +8,23 @@ extends Node
 ##   --shot-level=<id>     level to load (default prize_pier)
 ##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|kit|<any menu page id: play, settings, locker, arsenal, career, ...>
 ##                         (kit = the UI kit gallery, scripts/ui/kit/kit_gallery.gd)
+##   --shot-keys=a,b,...   on a menu page: press these in turn before the capture and print the
+##                         page and the focused control after each (keyboard-only navigation
+##                         check). Each is an input action (ui_down, ui_accept, ui_cancel) or
+##                         a key as key:<name> (key:E, key:PageDown)
 ##   --shot-locker=<slot>  with --shot-scene=locker: open that tab (avatar, weapon_finish, gloves...)
-##   --shot-item=<id>      with --shot-scene=locker: select that cosmetic (opens its tab)
+##   --shot-item=<id>      with --shot-scene=locker or shop: select that cosmetic (opens its tab)
+##   --shot-filter=owned|sale   with --shot-scene=locker: the tray's filter
+##   --shot-sparks=n       menu scenes: set the Sparks balance first
+##   --shot-tour=all|buy   with --shot-scene=locker: several stills in one run, saved as <shot>_<name>.png:
+##                         all = every category; buy = --shot-item before, in the confirm dialog, bought, equipped
+##   --shot-run=<file.gd>  menu scenes: instead of a still, run that script's `run(shot, menu)` (headless
+##                         probes; see scripts/dev/meta_pages_probe.gd), then quit
 ##   --shot-pos=x,y,z      player feet position
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
 ##   --shot-pitch=deg
 ##   --shot-fov=deg        vertical field of view
-##   --shot-weapon=id
+##   --shot-weapon=id      (with --shot-scene=arsenal: the weapon shown on the stand)
 ##   --shot-zombies=0|1    stage the four reference zombies
 ##   --shot-hud=0|1
 ##   --shot-frames=n       frames to wait before capturing
@@ -28,7 +38,8 @@ extends Node
 ##   --shot-fx=confetti|pop|burst|tracer|muzzle   spawn one effect 3 m in front of the camera
 ##   --shot-stutter=1      kill three zombies one at a time and print every frame's duration
 ##   --shot-move=1         movement probe: jump height, slide speed, rail wall
-##   --shot-ads=1          hold aim-down-sights
+##   --shot-ads=1          hold aim-down-sights (0.5 = half-way through raising the sight)
+##   --shot-sight=<id>     fit this sight (data/cosmetics/sights) to the weapon for the shot
 ##   --shot-threat=1       a zombie behind-right of the player starts its windup (threat warning check)
 
 var path := ""
@@ -54,6 +65,35 @@ func _wait(frames: int) -> void:
 		await get_tree().process_frame
 
 
+## Presses a sequence of actions or keys on the menu, one at a time, and
+## prints where each left the page and the keyboard focus.
+func _press_keys(menu: Node, keys: String) -> void:
+	await _wait(20)
+	for token in keys.split(",", false):
+		for pressed in [true, false]:
+			Input.parse_input_event(_key_event(token, pressed))
+			await _wait(2)
+		await _wait(24)
+		var focus := menu.get_viewport().gui_get_focus_owner()
+		var what := "none"
+		if focus:
+			what = "%s %s" % [focus.get_class(), focus.get("text") if focus.get("text") else focus.name]
+		print("[keys] %-14s page=%-9s focus=%s" % [token, menu._current_page, what])
+
+
+func _key_event(token: String, pressed: bool) -> InputEvent:
+	if token.begins_with("key:"):
+		var key := InputEventKey.new()
+		key.physical_keycode = OS.find_keycode_from_string(token.trim_prefix("key:"))
+		key.keycode = key.physical_keycode
+		key.pressed = pressed
+		return key
+	var action := InputEventAction.new()
+	action.action = token
+	action.pressed = pressed
+	return action
+
+
 func _run() -> void:
 	var scene_kind := _arg("scene", "level")
 	await _wait(3)
@@ -73,11 +113,27 @@ func _run() -> void:
 			menu.add_child(KitGallery.new())
 		elif scene_kind != "menu":
 			menu._show(scene_kind)
+		_stage_wallet()
 		if scene_kind == "locker":
 			_stage_locker(menu.page("locker"))
-		await _capture(int(_arg("frames", "30")))
+		if scene_kind == "shop" and _arg("item", "") != "":
+			menu.page("shop").select_item(StringName(_arg("item", "")))
+		if scene_kind == "arsenal" and args.has("weapon"):
+			menu.page("arsenal")._select(GameData.weapon(StringName(_arg("weapon", ""))))
+		if args.has("keys"):
+			await _press_keys(menu, _arg("keys", ""))
+		if _arg("run", "") != "":
+			await (load(_arg("run", "")) as GDScript).new().run(self, menu)
+			get_tree().quit()
+		elif _arg("tour", "") != "":
+			await _tour_locker(menu.page("locker"), _arg("tour", ""))
+			get_tree().quit()
+		else:
+			await _capture(int(_arg("frames", "30")))
 		return
 
+	if _arg("sight", "") != "":
+		WeaponSights.wear_for_session(StringName(_arg("weapon", "ion_carbine")), StringName(_arg("sight", "")))
 	Game.start_level(StringName(_arg("level", "prize_pier")), StringName(_arg("weapon", "ion_carbine")))
 	var director: RunDirector = null
 	while director == null or director.player == null:
@@ -133,8 +189,7 @@ func _run() -> void:
 
 	if _arg("hud", "1") == "0":
 		director.hud.visible = false
-	if _arg("ads", "0") == "1":
-		player.ads = 1.0
+	player.ads = clampf(float(_arg("ads", "0")), 0.0, 1.0)
 	if _arg("reload", "0") == "1":
 		player.weapons._ammo[player.weapons.current.id]["mag"] = 1
 		player.weapons.start_reload()
@@ -204,6 +259,46 @@ func _stage_locker(page: Node) -> void:
 		page.show_category(StringName(_arg("locker", "")))
 	if _arg("item", "") != "":
 		page.select_item(StringName(_arg("item", "")))
+	if _arg("filter", "") != "":
+		page._filters.select(StringName(_arg("filter", "")), true)
+
+
+## --shot-sparks: the balance the menu pages see.
+func _stage_wallet() -> void:
+	if _arg("sparks", "") == "":
+		return
+	Profile.section("wallet")["balance"] = int(_arg("sparks", "0"))
+	Wallet.balance_changed.emit(Wallet.balance())
+
+
+## --shot-tour: several Locker stills in one run (the launch is the slow part).
+func _tour_locker(page: Node, tour: String) -> void:
+	var frames := int(_arg("frames", "40"))
+	if tour == "buy":
+		var item := Cosmetics.item(StringName(_arg("item", "")))
+		await _snap("1_before", frames)
+		page._activate(item)
+		await _snap("2_confirm", 24)
+		for node in get_tree().current_scene.get_children():
+			if node is KitDialog:
+				node._close(true)
+		await _snap("3_bought", 22)
+		await _wait(120)
+		page._activate(item)
+		await _snap("4_equipped", 30)
+		return
+	for cat in LockerCatalog.CATEGORIES:
+		page.show_category(cat["slot"])
+		await _snap(String(cat["slot"]), frames)
+
+
+## Saves a still next to the --shot path, as <shot>_<suffix>.png, and carries on.
+func _snap(suffix: String, frames: int) -> void:
+	await _wait(frames)
+	await RenderingServer.frame_post_draw
+	var file := "%s_%s.png" % [path.get_basename(), suffix]
+	var err := get_viewport().get_texture().get_image().save_png(file)
+	print("[shot] saved %s error=%d" % [file, err])
 
 
 func _press(action: String, down: bool) -> void:

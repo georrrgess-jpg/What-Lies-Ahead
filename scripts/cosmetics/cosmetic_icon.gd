@@ -1,8 +1,8 @@
 class_name CosmeticIcon
 extends Control
-## Flat, drawn icons for cosmetics that have no model: energy cells, kill
-## effects and tracers (Locker cards). Animated cells and rainbow tracers
-## cycle their colours.
+## Flat, drawn icons for cosmetics that have no thumbnail: energy cells, kill
+## effects, tracers and sights (Locker and Shop cards). Animated cells and
+## rainbow tracers cycle their colours; everything else draws once.
 
 var item: CosmeticItem
 var _time := 0.0
@@ -11,12 +11,12 @@ var _time := 0.0
 func _init(it: CosmeticItem = null) -> void:
 	item = it
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_process(item != null and (item.params.has("animate") or String(item.params.get("style", "")) == "rainbow"))
 
 
 func _process(delta: float) -> void:
-	if item and (item.params.has("animate") or String(item.params.get("style", "")) == "rainbow"):
-		_time += delta
-		queue_redraw()
+	_time += delta
+	queue_redraw()
 
 
 func _draw() -> void:
@@ -26,6 +26,7 @@ func _draw() -> void:
 		&"weapon_cell": _draw_cell()
 		&"kill_effect": _draw_kill_effect()
 		&"tracer": _draw_tracer()
+		&"weapon_sight": _draw_sight()
 
 
 func _draw_cell() -> void:
@@ -127,6 +128,27 @@ func _draw_tracer() -> void:
 						_snowflake(p, 9.0, c1)
 					else:
 						_star(p, 9.0, c1 if i % 2 else Color.WHITE)
+
+
+## An optic seen from behind: a lens in a housing with the reticle lit.
+func _draw_sight() -> void:
+	var c := item.color(0, UiKit.CYAN)
+	var mid := size * 0.5
+	var r := minf(size.x, size.y) * 0.34
+	var housing := StyleBoxFlat.new()
+	housing.bg_color = Color("2a2440")
+	housing.border_color = Color("4a3b86")
+	housing.set_border_width_all(4)
+	housing.set_corner_radius_all(int(r * 0.45))
+	draw_style_box(housing, Rect2(mid - Vector2(r * 1.25, r * 1.1), Vector2(r * 2.5, r * 2.2)))
+	draw_rect(Rect2(mid.x - r * 0.9, mid.y + r * 1.1, r * 1.8, r * 0.35), Color("1b1730"))
+	draw_circle(mid, r * 0.92, Color(c, 0.14))
+	draw_arc(mid, r * 0.92, 0.0, TAU, 40, Color(c, 0.5), 3.0, true)
+	draw_arc(mid, r * 0.42, 0.0, TAU, 28, c, 3.0, true)
+	draw_circle(mid, r * 0.11, c.lerp(Color.WHITE, 0.5))
+	for k in 4:
+		var d := Vector2.RIGHT.rotated(TAU * k / 4.0)
+		draw_line(mid + d * r * 0.55, mid + d * r * 0.82, c, 3.0, true)
 
 
 func _star(p: Vector2, r: float, c: Color) -> void:

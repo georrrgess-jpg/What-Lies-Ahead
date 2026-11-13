@@ -9,7 +9,7 @@ extends SubViewport
 const SIZE := 192
 ## Oldest thumbnails are dropped beyond this many (each is about 150 KB).
 const MAX_CACHED := 160
-const BAKED_SLOTS := [&"avatar", &"weapon_finish", &"weapon_charm", &"weapon_decal", &"gloves"]
+const BAKED_SLOTS := [&"avatar", &"weapon_finish", &"weapon_charm", &"weapon_decal", &"gloves", &"weapon_sight"]
 
 static var _cache := {}
 
@@ -24,9 +24,10 @@ static func can_bake(item: CosmeticItem) -> bool:
 	return item != null and item.slot in BAKED_SLOTS
 
 
-## Cache key: weapon skins are shown on the weapon they are browsed for.
+## Cache key: weapon skins (and iron sights) are shown on the weapon they are browsed for.
 static func key(item: CosmeticItem, weapon: WeaponData) -> String:
-	if item.slot == &"weapon_finish" and weapon:
+	var on_weapon := item.slot == &"weapon_finish" or item.slot == &"weapon_sight" and WeaponSights.optic_name(item) == ""
+	if on_weapon and weapon:
 		return "%s@%s" % [item.id, weapon.id]
 	return String(item.id)
 
@@ -139,6 +140,14 @@ func _build(item: CosmeticItem, weapon: WeaponData) -> Node3D:
 			return _weapon({"finish": item}, false, weapon)
 		&"gloves":
 			return _weapon({"arms": item}, true)
+		&"weapon_sight":
+			# An optic on its own, from the eye's side so its reticle shows;
+			# iron sights on the weapon they belong to.
+			var optic := WeaponSights.build_optic(item)
+			if optic == null:
+				return _weapon({}, false, weapon)
+			optic.rotation_degrees = Vector3(6, 28, 0)
+			return optic
 		&"weapon_decal" when not item.params.has("emblem"):
 			# A tint of a weapon's own emblem: show it on that weapon.
 			return _weapon({"decal": item}, false, GameData.weapon(item.weapon_id))
@@ -179,11 +188,12 @@ func _weapon(loadout: Dictionary, arms_only: bool, weapon: WeaponData = null) ->
 	if weapon == null or weapon.viewmodel == null:
 		return null
 	var model: Node3D = weapon.viewmodel.instantiate()
+	WeaponCosmetics.prepare_preview(model, arms_only)
 	WeaponCosmetics.apply(model, weapon, loadout)
-	for child in model.get_children():
-		if child is Node3D:
-			var keep := String(child.name) == "ArmR" if arms_only else not String(child.name).begins_with("Arm")
-			child.visible = keep
+	if arms_only:
+		# Just the firing hand: hide the weapon and the other arm.
+		for node in model.find_children("*", "MeshInstance3D", true, false):
+			(node as MeshInstance3D).visible = String(node.name) == "ArmR"
 	model.rotation_degrees = Vector3(10, -65, 0) if not arms_only else Vector3(15, 205, 0)
 	return model
 
@@ -203,9 +213,15 @@ func _frame(root: Node3D, item: CosmeticItem) -> void:
 		# Head and shoulders.
 		box = AABB(Vector3(-0.45, 1.15, -0.4), Vector3(0.9, 0.95, 0.8))
 	elif item.slot == &"gloves":
-		# The fist and cuff (the forearm runs on off-screen).
-		box = AABB(Vector3(-0.16, -0.26, -0.12), Vector3(0.32, 0.34, 0.36))
+		# The hand and cuff (the forearm runs on off-screen).
+		var arm := root.find_child("ArmR", true, false) as Node3D
+		var hand := arm.global_position if arm else Vector3.ZERO
+		box = AABB(hand + Vector3(-0.2, -0.2, -0.17), Vector3(0.34, 0.34, 0.34))
 	var centre := box.get_center()
 	var radius := maxf(box.size.x, maxf(box.size.y, box.size.z)) * 0.5
 	var dist := radius / tan(deg_to_rad(_camera.fov * 0.5)) * (1.05 if item.slot == &"avatar" else 1.15)
+	if item.slot == &"weapon_finish" and box.size.y >= box.size.x * 0.9:
+		# A weapon as tall as it is long (a pistol) has its near side closer to
+		# the camera than its outline suggests: step back so nothing is cropped.
+		dist += box.size.z * 0.5
 	_camera.look_at_from_position(centre + Vector3(0, radius * 0.15, dist), centre)

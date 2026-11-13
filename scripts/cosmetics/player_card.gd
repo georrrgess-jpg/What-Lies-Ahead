@@ -1,7 +1,8 @@
 class_name PlayerCard
 extends Control
-## The player card: the equipped banner (animated), operator portrait, title
-## and account level. It follows the equipped cosmetics live.
+## The player card: the equipped banner (animated) in a cream sign trim, the
+## operator portrait, the title in sign lettering, and the level shield with
+## the XP bar. It follows the equipped cosmetics live.
 ##
 ##   add_child(PlayerCard.build(true))    # compact strip for the title screen
 ##   add_child(PlayerCard.build(false))   # full card (results, Locker)
@@ -18,7 +19,6 @@ var slim := false
 var _banner: BannerView
 var _portrait: OperatorPreview
 var _title: Label
-var _level: Label
 var _bar: ProgressBar
 var _operator: Label
 var _stats: Label
@@ -56,7 +56,7 @@ func _ready() -> void:
 	var frame := Panel.new()
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	frame.add_theme_stylebox_override("panel", UiKit.box(Color.TRANSPARENT, Color(1, 1, 1, 0.35), 18, 3, 0))
+	frame.add_theme_stylebox_override("panel", UiKit.box(Color.TRANSPARENT, UiKit.CREAM, 18, 4, 0))
 	add_child(frame)
 	Cosmetics.equipped_changed.connect(_on_equipped_changed)
 	refresh()
@@ -70,18 +70,17 @@ func _info_column() -> Control:
 	var plate := PanelContainer.new()
 	plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	plate.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	plate.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.5), Color.TRANSPARENT, 14, 0, 10 if compact else 14))
+	plate.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.62), Color.TRANSPARENT, 14, 0, 10 if compact else 14))
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 2)
 	plate.add_child(col)
-	_title = UiKit.arcade_label("", 30 if slim else (34 if compact else 46))
+	_title = UiKit.sign_label("", 30 if slim else (34 if compact else 46))
 	_title.clip_text = true
 	col.add_child(_title)
 	var level_row := HBoxContainer.new()
-	level_row.add_theme_constant_override("separation", 12)
+	level_row.add_theme_constant_override("separation", UiKit.GAP_S)
 	col.add_child(level_row)
-	_level = UiKit.arcade_label("", 22 if compact else 26, UiKit.AMBER)
-	level_row.add_child(_level)
+	level_row.add_child(UiKit.level_badge(40.0 if compact else 52.0))
 	_bar = UiKit.progress(0.0, 12.0 if compact else 14.0, UiKit.AMBER)
 	_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -116,8 +115,7 @@ func refresh() -> void:
 	_banner.set_banner(_shown(&"banner"))
 	var title := _shown(&"title")
 	_title.text = (title.display_name if title else "Rookie").to_upper()
-	_title.add_theme_color_override("font_color", CosmeticItem.rarity_color(title.rarity).lerp(Color.WHITE, 0.35) if title else Color.WHITE)
-	_level.text = "LV %d" % Progression.level()
+	_title.add_theme_color_override("font_color", CosmeticItem.rarity_color(title.rarity).lerp(UiKit.CREAM, 0.45) if title else UiKit.CREAM)
 	_bar.value = Progression.level_progress()
 	var op := _shown(&"avatar")
 	_operator.text = "Operator  ·  %s" % (op.display_name if op else "Boardwalk Ranger")

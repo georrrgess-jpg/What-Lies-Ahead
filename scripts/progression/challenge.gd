@@ -1,15 +1,18 @@
 class_name Challenge
 extends Resource
-## A goal tracked across runs: "25 headshots with this weapon", "reach a
-## 20-kill combo", "clear a level without dropping below 25% health".
-## Drop a .tres in data/progression/challenges/ to add one.
+## A goal tracked across runs: "250 headshot kills", "reach a 20-kill combo",
+## "clear a level without dropping below 25% health". The same resource
+## describes both kinds of goal:
 ##
-## WEAPON challenges exist once per weapon (every weapon, including ones added
-## later); ACCOUNT challenges once per profile. Progress lives in
-## Profile.section("progression") (see ChallengeBook).
+##   Milestones  data/progression/challenges/   long-term account goals, each
+##               completed once (ChallengeBook); some unlock a cosmetic.
+##   Contracts   data/progression/contracts/    short goals, three active at a
+##               time, dealt again and again (ContractBoard). A WEAPON
+##               contract is dealt for one weapon and also pays mastery XP.
 ##
 ## Stats recorded by the run tracker (scripts/progression/run_tracker.gd):
 ##   kills, headshots, multi_kills, longshots, close_calls   (per kill; weapon + account)
+##   heavy_kills, sparks                                    (per kill; account)
 ##   flawless_waves, waves                                  (per wave)
 ##   clears, healthy_clears                                 (per cleared level)
 ##   best_combo, run_score                                  (best value in one run)
@@ -36,6 +39,8 @@ enum Mode {
 @export var param := 0
 ## Account XP on completion.
 @export var xp := 500
+## Sparks on completion.
+@export var sparks := 0
 ## Mastery XP on completion (weapon challenges, to that weapon).
 @export var mastery_xp := 0
 @export var sort_order := 0

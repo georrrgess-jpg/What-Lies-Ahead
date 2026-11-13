@@ -20,7 +20,7 @@ static func build(_result: Dictionary) -> Control:
 	row.add_child(side)
 	var fresh := Cosmetics.unlocked_this_run()
 	if fresh.is_empty():
-		side.add_child(UiKit.label("LOCKER", 24, UiKit.AMBER, true))
+		side.add_child(UiKit.label("LOCKER", UiKit.SIZE_LABEL, UiKit.CYAN, true))
 		var owned := 0
 		for it in GameData.cosmetics():
 			if Cosmetics.is_owned_anywhere(it):
@@ -30,7 +30,7 @@ static func build(_result: Dictionary) -> Control:
 		side.add_child(bar)
 		return row
 	fresh.sort_custom(func(a, b): return a.rarity > b.rarity)
-	side.add_child(UiKit.label("NEW IN YOUR LOCKER", 24, UiKit.AMBER, true))
+	side.add_child(UiKit.label("NEW IN YOUR LOCKER", UiKit.SIZE_LABEL, UiKit.CYAN, true))
 	var chips := HFlowContainer.new()
 	chips.add_theme_constant_override("h_separation", 8)
 	chips.add_theme_constant_override("v_separation", 8)
@@ -44,12 +44,10 @@ static func build(_result: Dictionary) -> Control:
 
 
 static func _chip(it: CosmeticItem) -> Control:
-	var c := CosmeticItem.rarity_color(it.rarity)
-	var chip := PanelContainer.new()
-	chip.add_theme_stylebox_override("panel", UiKit.box(Color(c, 0.22), c, 12, 2, 8))
+	var chip := UiKit.card_panel(10)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", -6)
 	chip.add_child(col)
-	col.add_child(UiKit.label(it.display_name, 20, Color.WHITE, true))
-	col.add_child(UiKit.label(LockerCatalog.category_label(it), 15, UiKit.CREAM))
+	col.add_child(UiKit.label(it.display_name.to_upper(), 22, CosmeticItem.rarity_color(it.rarity).lerp(UiKit.CREAM, 0.3), true))
+	col.add_child(UiKit.label(LockerCatalog.category_label(it), UiKit.SIZE_SMALL, UiKit.MUTED))
 	return chip

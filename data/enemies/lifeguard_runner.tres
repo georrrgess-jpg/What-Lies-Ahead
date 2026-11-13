@@ -13,7 +13,7 @@ world = &"neon_rooftops"
 model_scene = ExtResource("model_neon")
 shirt_colors = Array[Color]([Color(0.7, 1, 0.2, 1), Color(0.2, 0.9, 1, 1), Color(1, 0.25, 0.65, 1), Color(1, 0.55, 0.15, 1)])
 skin_colors = Array[Color]([Color(0.5, 0.92, 0.48, 1), Color(0.42, 0.88, 0.58, 1), Color(0.62, 0.95, 0.42, 1), Color(0.46, 0.86, 0.66, 1)])
-accessory_slots = PackedStringArray("Acc_Lifeguard_Headphones||", "Acc_Lifeguard_Visor||", "Acc_Lifeguard_Armband|", "Acc_Lifeguard_Bottle||")
+accessory_slots = PackedStringArray("Acc_Lifeguard_Headphones|Acc_Lifeguard_Visor+Acc_Lifeguard_TopHair|Acc_Lifeguard_TopHair|Acc_Lifeguard_TopHair", "Acc_Lifeguard_Armband|", "Acc_Lifeguard_Bottle||")
 
 [sub_resource type="Resource" id="look_aqua"]
 script = ExtResource("look")
@@ -29,7 +29,7 @@ world = &"dune_spaceport"
 model_scene = ExtResource("model_dune")
 shirt_colors = Array[Color]([Color(0.17, 0.24, 0.5, 1), Color(0.13, 0.55, 0.55, 1), Color(0.38, 0.42, 0.52, 1), Color(0.5, 0.18, 0.22, 1)])
 skin_colors = Array[Color]([Color(0.64, 0.82, 0.29, 1), Color(0.5, 0.78, 0.38, 1), Color(0.72, 0.8, 0.33, 1), Color(0.48, 0.74, 0.5, 1)])
-accessory_slots = PackedStringArray("Acc_Lifeguard_Wands|Acc_Lifeguard_Wands|Acc_Lifeguard_Clipboard", "Acc_Lifeguard_Headset|Acc_Lifeguard_CrewHelmet|Acc_Lifeguard_Headset+Acc_Lifeguard_CrewHelmet|")
+accessory_slots = PackedStringArray("Acc_Lifeguard_Wands|Acc_Lifeguard_Wands|Acc_Lifeguard_Clipboard", "Acc_Lifeguard_Headset|Acc_Lifeguard_CrewHelmet|Acc_Lifeguard_Headset+Acc_Lifeguard_CrewHelmet|Acc_Lifeguard_TopHair")
 
 [sub_resource type="Resource" id="look_frost"]
 script = ExtResource("look")
@@ -63,7 +63,7 @@ body_scale = 0.88
 capsule_radius = 0.4
 capsule_height = 1.9
 head_height = 1.2
-accessory_slots = PackedStringArray("Acc_Lifeguard_Whistle|", "Acc_Lifeguard_Shades||", "Acc_Lifeguard_Zinc||", "Acc_Lifeguard_Tube|Acc_Lifeguard_Towel||")
+accessory_slots = PackedStringArray("Acc_Lifeguard_Shades||", "Acc_Lifeguard_Zinc||", "Acc_Lifeguard_Tube|Acc_Lifeguard_Towel|Acc_Lifeguard_Whistle|Acc_Lifeguard_Tube+Acc_Lifeguard_Whistle|")
 skin_colors = Array[Color]([Color(0.64, 0.82, 0.29, 1), Color(0.5, 0.78, 0.38, 1), Color(0.72, 0.8, 0.33, 1), Color(0.48, 0.74, 0.5, 1)])
 move_animation = &"Run"
 animation_reference_speed = 5.9

@@ -24,6 +24,8 @@ signal stalled(zombie: Zombie)
 enum State { CHASE, WINDUP, RECOVER, DEAD, EMERGE }
 
 const MODEL_PATH := "res://art/models/zombie.glb"
+## The material of every opaque zombie surface (tinted per zombie, see _apply_tints).
+const BODY_MATERIAL: ShaderMaterial = preload("res://art/materials/zombie_body.tres")
 const GRAVITY := 22.0
 const REPATH_INTERVAL := 0.3
 const STALL_WINDOW := 5.0
@@ -994,12 +996,7 @@ func _build_model() -> void:
 			elif mesh_name.begins_with("Acc_"):
 				mi.visible = chosen.has(mesh_name)
 		_vary_look()
-		if not data.shirt_colors.is_empty():
-			_tint("Shirt", data.shirt_colors[randi() % data.shirt_colors.size()])
-		if not data.skin_colors.is_empty():
-			var skin: Color = _vary_skin(data.skin_colors[randi() % data.skin_colors.size()])
-			_tint("Skin", skin)
-			_tint("SkinDark", skin.darkened(0.3))
+		_apply_tints()
 	else:
 		_build_placeholder()
 
@@ -1040,16 +1037,25 @@ func _collect_meshes(node: Node) -> void:
 		_collect_meshes(child)
 
 
-func _tint(material_name: String, color: Color) -> void:
+## Every opaque part of a zombie mesh shares one material whose colours live in
+## the vertices (art/shaders/zombie_body.gdshader). A zombie with shirt or skin
+## colours gets its own copy with those tints, shared by all its meshes.
+func _apply_tints() -> void:
+	if data.shirt_colors.is_empty() and data.skin_colors.is_empty():
+		return
+	var look: ShaderMaterial = BODY_MATERIAL.duplicate()
+	if not data.shirt_colors.is_empty():
+		look.set_shader_parameter(&"shirt_tint", data.shirt_colors[randi() % data.shirt_colors.size()])
+	if not data.skin_colors.is_empty():
+		var skin: Color = _vary_skin(data.skin_colors[randi() % data.skin_colors.size()])
+		look.set_shader_parameter(&"skin_tint", skin)
+		look.set_shader_parameter(&"skin_dark_tint", skin.darkened(0.3))
 	for mi in _meshes:
 		if not mi.visible or mi.mesh == null:
 			continue
 		for i in mi.mesh.get_surface_count():
-			var base := mi.mesh.surface_get_material(i) as StandardMaterial3D
-			if base and String(base.resource_name) == material_name:
-				var m: StandardMaterial3D = base.duplicate()
-				m.albedo_color = color
-				mi.set_surface_override_material(i, m)
+			if mi.mesh.surface_get_material(i) == BODY_MATERIAL:
+				mi.set_surface_override_material(i, look)
 
 
 func _build_placeholder() -> void:

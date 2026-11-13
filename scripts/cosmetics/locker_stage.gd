@@ -1,9 +1,9 @@
 class_name LockerStage
 extends SubViewportContainer
-## The Locker's 3D preview for items that need a scene: a weapon on a
-## turntable wearing the item (drag to spin), the first-person arms in a
-## gloves skin, a zombie popping with a kill effect on a loop, or shots
-## fired across the stage with a tracer.
+## The Locker's 3D preview for items that need a scene: a weapon turning
+## over its display stand wearing the item (drag to spin), the first-person
+## arms in a gloves skin, a zombie popping with a kill effect on a loop, or
+## shots fired across the stage with a tracer.
 
 enum Mode { NONE, WEAPON, ARMS, KILL_EFFECT, TRACER }
 
@@ -12,6 +12,8 @@ const KILL_LOOP := 2.4
 const SHOT_LOOP := 0.7
 const BURST := [0.0, 0.08, 0.16]
 const TRACER_TARGET := Vector3(3.3, 1.0, -0.8)
+## The weapon's longest side on the stand, in stage units.
+const WEAPON_SPAN := 0.62
 
 var mode := Mode.NONE
 var _viewport: SubViewport
@@ -82,15 +84,14 @@ func show_weapon(weapon: WeaponData, loadout: Dictionary) -> void:
 	if weapon == null or weapon.viewmodel == null:
 		return
 	_model = weapon.viewmodel.instantiate()
+	WeaponCosmetics.prepare_preview(_model)
 	_pivot.add_child(_model)
-	for arm_name in ["ArmL", "ArmR"]:
-		var arm := _model.find_child(arm_name, true, false) as Node3D
-		if arm:
-			arm.visible = false
 	WeaponCosmetics.apply(_model, weapon, loadout)
-	var box := _bounds(_model)
+	var box := WeaponCosmetics.visible_bounds(_model)
 	_model.position = -box.get_center()
-	_pivot.scale = Vector3.ONE * (0.62 / maxf(0.01, maxf(box.size.x, maxf(box.size.y, box.size.z))))
+	var fit := WEAPON_SPAN / maxf(0.01, maxf(box.size.x, maxf(box.size.y, box.size.z)))
+	_pivot.scale = Vector3.ONE * fit
+	_content.add_child(_stand(0.3, -box.size.y * fit * 0.5 - 0.07))
 	_yaw = 62.0
 	_idle = 0.0
 	_camera.fov = 40.0
@@ -105,6 +106,7 @@ func show_arms(weapon: WeaponData, loadout: Dictionary) -> void:
 	if weapon == null or weapon.viewmodel == null:
 		return
 	_model = weapon.viewmodel.instantiate()
+	WeaponCosmetics.prepare_preview(_model, true)
 	_content.add_child(_model)
 	WeaponCosmetics.apply(_model, weapon, loadout)
 	_model.position = weapon.view_position
@@ -125,6 +127,7 @@ func show_kill_effect(item: CosmeticItem) -> void:
 	for mi in _model.find_children("*", "MeshInstance3D", true, false):
 		mi.visible = String(mi.name) in ["Outfit_Tourist", "Acc_Tourist_Cap", "Face_Tourist_Grin"]
 	_content.add_child(_model)
+	_content.add_child(_stand(0.85, 0.0))
 	_model.rotation_degrees.y = 20.0
 	var anim := _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if anim:
@@ -132,7 +135,7 @@ func show_kill_effect(item: CosmeticItem) -> void:
 		if anim.has_animation(clip):
 			anim.play(clip)
 	_camera.fov = 40.0
-	_camera.look_at_from_position(Vector3(0, 1.45, 5.4), Vector3(0, 1.25, 0))
+	_camera.look_at_from_position(Vector3(0, 1.45, 4.5), Vector3(0, 1.2, 0))
 	_timer = KILL_LOOP - 1.0
 
 
@@ -145,11 +148,8 @@ func show_tracer(item: CosmeticItem, weapon: WeaponData) -> void:
 	_muzzle = Vector3(-2.7, 1.2, 0.0)
 	if weapon and weapon.viewmodel:
 		_model = weapon.viewmodel.instantiate()
+		WeaponCosmetics.prepare_preview(_model)
 		_content.add_child(_model)
-		for arm_name in ["ArmL", "ArmR"]:
-			var arm := _model.find_child(arm_name, true, false) as Node3D
-			if arm:
-				arm.visible = false
 		WeaponCosmetics.apply(_model, weapon, Cosmetics.weapon_loadout(weapon.id))
 		_model.position = _muzzle + Vector3(-0.5, -0.08, 0.15)
 		_model.look_at(TRACER_TARGET)
@@ -159,7 +159,7 @@ func show_tracer(item: CosmeticItem, weapon: WeaponData) -> void:
 		if muzzle:
 			_muzzle = _model.transform * WeaponCosmetics.to_model(_model, muzzle).origin
 	_camera.fov = 48.0
-	_camera.look_at_from_position(Vector3(0.3, 1.9, 6.6), Vector3(0.3, 1.05, -0.3))
+	_camera.look_at_from_position(Vector3(0.3, 1.55, 4.7), Vector3(0.3, 1.05, -0.3))
 
 
 func _process(delta: float) -> void:
@@ -229,14 +229,37 @@ func _gui_input(event: InputEvent) -> void:
 		_idle = 0.0
 
 
-func _bounds(root: Node3D) -> AABB:
-	var result := AABB()
-	var first := true
-	for mi in root.find_children("*", "MeshInstance3D", true, false):
-		var m := mi as MeshInstance3D
-		if not m.is_visible_in_tree() or m.mesh == null or m.get_parent().name == "WeaponCharm":
-			continue
-		var box := root.global_transform.affine_inverse() * m.global_transform * m.mesh.get_aabb()
-		result = box if first else result.merge(box)
-		first = false
-	return result
+## A display stand: a dark disc with a glowing rim, its top at height `y`.
+func _stand(radius: float, y: float) -> Node3D:
+	var root := Node3D.new()
+	root.position.y = y
+	var disc := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = radius
+	cyl.bottom_radius = radius * 1.08
+	cyl.height = radius * 0.14
+	cyl.radial_segments = 48
+	disc.mesh = cyl
+	var paint := StandardMaterial3D.new()
+	paint.albedo_color = UiKit.NAVY
+	paint.roughness = 0.35
+	paint.metallic = 0.3
+	disc.material_override = paint
+	disc.position.y = -cyl.height * 0.5
+	root.add_child(disc)
+	for spec in [[1.0, 0.045, UiKit.CYAN], [0.62, 0.02, Color(UiKit.CYAN, 0.55)]]:
+		var ring := MeshInstance3D.new()
+		var torus := TorusMesh.new()
+		torus.outer_radius = radius * float(spec[0])
+		torus.inner_radius = torus.outer_radius - radius * float(spec[1])
+		torus.rings = 48
+		torus.ring_segments = 6
+		ring.mesh = torus
+		var glow := StandardMaterial3D.new()
+		glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		glow.albedo_color = spec[2]
+		ring.material_override = glow
+		ring.scale.y = 0.35
+		root.add_child(ring)
+	return root
+
