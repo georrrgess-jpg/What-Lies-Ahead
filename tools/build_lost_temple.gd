@@ -252,8 +252,8 @@ func _build_ground() -> void:
 	floor_mat.shader = load(SHADERS + "jungle_ground.gdshader")
 	floor_mat.set_shader_parameter("grass_texture", load(TEXTURES + "jungle_grass.png"))
 	floor_mat.set_shader_parameter("dirt_texture", load(TEXTURES + "jungle_dirt.png"))
-	holder.add_child(_terrain_mesh("TerrainNear", Rect2(-60, -80, 120, 140), 1.0, floor_mat, 0.0, true))
-	holder.add_child(_terrain_mesh("TerrainFar", Rect2(-700, -700, 1400, 1400), 16.0, floor_mat, 3.0, false))
+	holder.add_child(_terrain_mesh("TerrainNear", Rect2(-60, -80, 120, 138), 2.0, floor_mat, 0.0, true))
+	holder.add_child(_terrain_mesh("TerrainFar", Rect2(-696, -696, 1392, 1392), 24.0, floor_mat, 3.0, false))
 
 
 ## A heightfield patch; `paint` writes the trail (R) and damp shade (G)
@@ -281,7 +281,6 @@ func _terrain_mesh(mesh_name: String, area: Rect2, cell: float, material: Materi
 			else:
 				col.g = 0.55
 			st.set_color(col)
-			st.set_uv(Vector2(i, j))
 			st.add_vertex(Vector3(x, h, z))
 	for j in nz:
 		for i in nx:
@@ -294,7 +293,8 @@ func _terrain_mesh(mesh_name: String, area: Rect2, cell: float, material: Materi
 	st.generate_normals()
 	var mi := MeshInstance3D.new()
 	mi.name = mesh_name
-	mi.mesh = st.commit()
+	# The floor shader works in world space: no UVs, and compressed attributes keep the scene small.
+	mi.mesh = st.commit(null, Mesh.ARRAY_FLAG_COMPRESS_ATTRIBUTES)
 	mi.material_override = material
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return mi

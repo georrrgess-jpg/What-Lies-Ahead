@@ -3,8 +3,8 @@ extends Node
 ## Lost Temple weather: the Monsoon twist. When a wave whose twist is
 ## `monsoon` starts, a tropical downpour rolls in: the sky clouds over, the
 ## sun and the haze turn grey-green, the fog closes in, rain sheets down, the
-## waterfall roars and lightning flashes with thunder. It clears once the wave
-## is won. Listens to the run director, so it stays calm behind the main menu.
+## waterfall runs faster and lightning flashes with thunder. It clears once
+## the wave is won. Listens to the run director, so it stays calm behind the main menu.
 
 const TWIST := &"monsoon"
 
@@ -17,9 +17,6 @@ const TWIST := &"monsoon"
 @export var storm_ambient_energy := 0.55
 ## Seconds between lightning strikes (random in this range).
 @export var lightning_gap := Vector2(5.0, 11.0)
-@export var ambience := &"jungle_ambience"
-@export var storm_ambience := &"jungle_monsoon_ambience"
-@export var ambience_db := -10.0
 
 var _director: RunDirector
 var _storm := 0.0
@@ -78,13 +75,10 @@ func _on_wave_started(_number: int, _total: int, _banner: String) -> void:
 	if wave and wave.twist == TWIST:
 		_target = 1.0
 		_next_strike = 2.5
-		Sfx.play_ambience(storm_ambience, ambience_db + 2.0)
 
 
 func _on_wave_cleared(_number: int, _total: int) -> void:
-	if _target > 0.0:
-		_target = 0.0
-		Sfx.play_ambience(ambience, ambience_db)
+	_target = 0.0
 
 
 func _strike() -> void:

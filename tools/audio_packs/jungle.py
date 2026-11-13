@@ -9,7 +9,6 @@ Lost Explorer and Overgrown voices, the vine lash, brambles and the monsoon.
     audio/music/lost_temple_final.ogg        its final-wave variant (toms, claps, a galloping
                                              bass and the flute over both sections)
     audio/music/jungle_ambience.ogg          birds and insects, a distant waterfall, frogs
-    audio/music/jungle_monsoon_ambience.ogg  the monsoon: heavy rain, gusts and far thunder
     audio/sfx/jungle_*.wav                   enemy, vine, bramble and thunder sounds
 """
 import numpy as np
@@ -182,47 +181,27 @@ def _birds(n, count, lo, hi, gain):
 
 
 def jungle_ambience():
-    """24 s seamless bed: insects, bird calls, frogs and the distant waterfall."""
-    d = 24.0
+    """16 s seamless bed: insects, bird calls, frogs and the distant waterfall."""
+    d = 16.0
     n = int(SR * (d + 1.0))
     t = np.arange(n) / SR
     falls_l = filt(rng.uniform(-1, 1, n), low=900, high=60) * 0.5
     falls_r = filt(rng.uniform(-1, 1, n), low=900, high=60) * 0.35
     insects = band(rng.uniform(-1, 1, n), 5200, 900) * (0.55 + 0.45 * np.sin(2 * np.pi * 7.0 * t) ** 2) * 0.22
     cicada = band(rng.uniform(-1, 1, n), 3900, 300) * (0.5 + 0.5 * np.sin(2 * np.pi * t / 6.0)) ** 3 * 0.35
-    left = falls_l + insects + cicada * 0.6 + _birds(n, 26, 1800, 3600, 0.16)
-    right = falls_r + np.roll(insects, int(SR * 0.3)) + cicada + _birds(n, 22, 2200, 4200, 0.14)
+    left = falls_l + insects + cicada * 0.6 + _birds(n, 18, 1800, 3600, 0.16)
+    right = falls_r + np.roll(insects, int(SR * 0.3)) + cicada + _birds(n, 15, 2200, 4200, 0.14)
     # Frogs: low wooden croaks.
-    for _ in range(18):
+    for _ in range(12):
         at = rng.uniform(0.5, d - 1.0)
         f = rng.uniform(140, 220)
         croak = groan(f, 0.18, glide=0.2, formants=((600, 180), (1300, 260)), rasp=0.2, wobble=0.0) * 0.25
         place(left if rng.uniform() < 0.5 else right, croak, at, 0.5)
     # A distant macaw-ish squawk now and then.
-    for at in (5.0, 17.5):
+    for at in (4.0, 11.5):
         sq = groan(620, 0.35, glide=0.3, formants=((1400, 300), (2600, 400)), rasp=0.4, wobble=0.1)
         place(left, sq, at, 0.08)
         place(right, sq, at + 0.03, 0.05)
-    stereo = np.stack([left, right], axis=1)
-    return loopable(stereo, 1.0)
-
-
-def jungle_monsoon_ambience():
-    """20 s seamless bed: heavy rain on leaves, gusts, a far rumble of thunder."""
-    d = 20.0
-    n = int(SR * (d + 1.0))
-    t = np.arange(n) / SR
-    rain_l = filt(rng.uniform(-1, 1, n), low=6000, high=400)
-    rain_r = filt(rng.uniform(-1, 1, n), low=6000, high=400)
-    drops = (rng.uniform(0, 1, n) > 0.985).astype(float) * rng.uniform(-1, 1, n)
-    drops = band(drops, 2600, 1800) * 1.5
-    gust = 0.6 + 0.4 * (0.5 + 0.5 * np.sin(2 * np.pi * t / 5.0)) ** 2
-    left = (rain_l * 0.8 + drops) * gust
-    right = (rain_r * 0.8 + np.roll(drops, 777)) * (0.6 + 0.4 * (0.5 + 0.5 * np.sin(2 * np.pi * t / 5.0 + 1.2)) ** 2)
-    for at in (3.0, 12.5):
-        rumble = filt(rng.uniform(-1, 1, int(SR * 4.0)), low=140) * env(4.0, 0.6, 4.0, power=1.2, release=1.0) * 1.6
-        place(left, rumble, at, 0.6)
-        place(right, rumble, at + 0.05, 0.6)
     stereo = np.stack([left, right], axis=1)
     return loopable(stereo, 1.0)
 
@@ -315,7 +294,7 @@ def jungle_snare():
 
 def jungle_thunder():
     """Monsoon lightning: a sharp crack rolling into a long rumble."""
-    d = 3.2
+    d = 2.4
     out = silence(d)
     place(out, filt(noise(0.12), high=1200) * env(0.12, 0.0005, power=1.6) * 1.2, 0.0, 1.0)
     rumble = filt(noise(d), low=220) * env(d, 0.05, d, power=1.0, release=0.8)
@@ -329,10 +308,7 @@ SOUNDS = [
     jungle_overgrown_groan_1, jungle_overgrown_groan_2, jungle_vine_creak, jungle_vine_burst, jungle_snare, jungle_thunder,
 ]
 
-VARIANTS = [
-    (jungle_explorer_yell_1, (0.92, 1.1)), (jungle_leap_land, (0.9, 1.1)), (jungle_overgrown_groan_1, (0.92, 1.06)),
-    (jungle_vine_burst, (0.92, 1.08)),
-]
+VARIANTS = [(jungle_leap_land, (0.9, 1.1))]
 
 LOOPS = {}
 
@@ -340,5 +316,4 @@ MUSIC = {
     "lost_temple_loop": lost_temple_loop,
     "lost_temple_final": lambda: lost_temple_loop(intense=True),
     "jungle_ambience": jungle_ambience,
-    "jungle_monsoon_ambience": jungle_monsoon_ambience,
 }
