@@ -519,6 +519,20 @@ func _build_ruins() -> void:
 	_deck(r, "Bridge", Vector3(BRIDGE_X0, y, -19.5), Vector3(BRIDGE_X1, y, -1.5), planks, 0.22)
 	_fence_run(r, "BridgeRailW", Vector3(BRIDGE_X0 - 0.1, y, -19.5), Vector3(BRIDGE_X0 - 0.1, y, -1.5), "jungle_rope_rail", 2.0)
 	_fence_run(r, "BridgeRailE", Vector3(BRIDGE_X1 + 0.1, y, -19.5), Vector3(BRIDGE_X1 + 0.1, y, -1.5), "jungle_rope_rail", 2.0)
+	# Thick undergrowth fills the low space under the boardwalk and the bridge
+	# (too low for the big zombies to walk under).
+	for u in [["UnderBoardwalk", Vector3(TERRACE_X, 0, -26.2), Vector3(18.0, 1.4, -20.5)],
+			["UnderBridge", Vector3(BRIDGE_X0 - 0.2, 0, -19.5), Vector3(ARENA + 0.4, 1.4, -1.5)]]:
+		var lo: Vector3 = u[1]
+		var hi: Vector3 = u[2]
+		_collider(r, u[0], hi - lo, (lo + hi) * 0.5)
+		var bushes: Array[Transform3D] = []
+		var z := lo.z + 1.0
+		while z < hi.z:
+			for x in [lo.x + 0.8, (lo.x + hi.x) * 0.5, hi.x - 0.8]:
+				bushes.append(Transform3D(Basis(Vector3.UP, z * 1.7 + x).scaled(Vector3.ONE * 1.25), Vector3(x, 0, z)))
+			z += 1.8
+		_multimesh(dressing, u[0] + "Bushes", "jungle_bush", bushes)
 	# The SE platform's stairs down to the camp.
 	_stairs(r, "CampStairs", 18.0, 21.4, 5.0, 10.4, planks)
 
@@ -1161,8 +1175,10 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.agent_max_climb = 0.25
 	mesh.agent_max_slope = 40.0
 	mesh.region_min_size = 14.0
-	# Walkable surfaces up to the terrace and the ruins (keeps roofs and tier tops out).
-	mesh.filter_baking_aabb = AABB(Vector3(-36, -1.0, -36), Vector3(72, TERRACE_Y + 1.2, 72))
+	# Up to just over tier 1's top: the terrace and the ruins are walkable, and
+	# the tier tops above them become islands that are dropped below (a box
+	# that reaches above the filter would leave walkable polygons inside it).
+	mesh.filter_baking_aabb = AABB(Vector3(-36, -1.0, -36), Vector3(72, TERRACE_Y + 4.8, 72))
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, region)
 	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
