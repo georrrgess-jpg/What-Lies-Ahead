@@ -457,6 +457,11 @@ func _refresh_states() -> void:
 func _refresh_badges() -> void:
 	for cat in LockerCatalog.CATEGORIES:
 		_tabs.set_badge(cat["slot"], Cosmetics.new_count(cat["slot"]))
+		# Keep the count inside the tab's top right corner (the strip clips nothing above it).
+		var badge := _tabs.button(cat["slot"]).get_node_or_null("Badge") as Control
+		if badge:
+			badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+			badge.position += Vector2(-6.0, 2.0)
 
 
 func _refresh_collection() -> void:

@@ -45,7 +45,8 @@ func refresh_state() -> void:
 	if state == LockerCatalog.State.LOCKED or state == LockerCatalog.State.FOR_SALE and gated:
 		set_locked(LockerCatalog.unlock_short(item))
 	elif state == LockerCatalog.State.FOR_SALE:
-		set_price(item.price, Wallet.can_afford(item.price))
+		var price := Cosmetics.price_of(item)
+		set_price(price, Wallet.can_afford(price))
 	else:
 		set_status("")
 

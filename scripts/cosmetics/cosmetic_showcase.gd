@@ -91,9 +91,10 @@ func _build_card_view() -> void:
 func _build_overlays() -> void:
 	_hint = UiKit.label("", UiKit.SIZE_SMALL, Color(UiKit.MUTED, 0.85))
 	_hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_hint.offset_bottom = -6
+	_hint.offset_bottom = -4
+	_hint.offset_right = -16
 	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_case.add_child(_hint)
 	_flash = ColorRect.new()
@@ -189,9 +190,9 @@ void fragment() {
 	vec2 d = (UV - vec2(0.5, 0.6)) * vec2(1.0, 1.25);
 	float g = smoothstep(0.78, 0.0, length(d));
 	vec3 glow = mix(vec3(0.42, 0.2, 0.72), tint.rgb, 0.55);
-	COLOR = vec4(mix(vec3(0.06, 0.04, 0.15), glow * 0.72, g * g), 1.0);
+	COLOR = vec4(mix(vec3(0.07, 0.05, 0.17), glow * 0.9, g * g), 1.0);
 	float rays = 0.5 + 0.5 * sin(atan(d.y, d.x) * 14.0 + TIME * 0.2);
-	COLOR.rgb += glow * rays * g * 0.16;
+	COLOR.rgb += glow * rays * g * 0.22;
 	COLOR.rgb *= 1.0 - 0.35 * smoothstep(0.35, 0.75, abs(UV.y - 0.5) * 1.5);
 }"""
 	var m := ShaderMaterial.new()

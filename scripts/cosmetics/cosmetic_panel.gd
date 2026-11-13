@@ -246,7 +246,7 @@ func _owned_text_for(it: CosmeticItem) -> String:
 
 
 func _show_requirement(ctx: StringName, for_sale: bool) -> void:
-	_requirement_text.text = LockerCatalog.unlock_text(item)
+	_requirement_text.text = item.requirement.describe() if for_sale and item.requirement else LockerCatalog.unlock_text(item)
 	var fraction := LockerCatalog.progress(item, ctx)
 	_requirement_bar.get_parent().visible = fraction >= 0.0
 	_requirement_bar.value = maxf(0.0, fraction)
@@ -255,7 +255,7 @@ func _show_requirement(ctx: StringName, for_sale: bool) -> void:
 	_requirement_price.visible = for_sale
 	if for_sale:
 		_requirement_price.add_child(UiKit.label("THEN", UiKit.SIZE_SMALL, UiKit.MUTED, true))
-		_requirement_price.add_child(UiKit.price_tag(item.price, 22))
+		_requirement_price.add_child(UiKit.price_tag(Cosmetics.price_of(item), 22))
 
 
 ## The face of the BUY button: "BUY" and the price on a dark plate (red when
@@ -274,7 +274,7 @@ func _show_price(affordable: bool) -> void:
 	pad.add_theme_constant_override("margin_right", 14)
 	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	plate.add_child(pad)
-	pad.add_child(UiKit.price_tag(item.price, 34, affordable))
+	pad.add_child(UiKit.price_tag(Cosmetics.price_of(item), 34, affordable))
 	_buy_price.add_child(plate)
 	_buy.modulate = Color.WHITE if affordable else Color(0.82, 0.8, 0.86)
 

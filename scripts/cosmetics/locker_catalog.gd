@@ -111,7 +111,7 @@ static func _group(it: CosmeticItem, st: State, ctx: StringName) -> int:
 static func _rank_in_group(it: CosmeticItem, st: State, ctx: StringName) -> float:
 	match st:
 		State.FOR_SALE:
-			return float(it.price)
+			return float(Cosmetics.price_of(it))
 		State.LOCKED:
 			return 1.0 - maxf(0.0, progress(it, ctx))
 	return 0.0
@@ -160,7 +160,7 @@ static func unlock_short(it: CosmeticItem) -> String:
 			return "Score %s" % compact(r.amount)
 		Requirement.Kind.LEVEL_CLEARED:
 			var level := GameData.level(r.target)
-			return "Clear %s" % (level.display_name if level else "level")
+			return level.display_name if level else "Clear a level"
 		Requirement.Kind.CHALLENGE:
 			return "Challenge"
 	return "Special"

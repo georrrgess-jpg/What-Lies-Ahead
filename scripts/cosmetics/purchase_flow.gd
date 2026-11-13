@@ -14,7 +14,7 @@ const BURST_SPARKS := 18
 
 ## Sparks the player still needs to afford `it` (0 when they can).
 static func shortfall(it: CosmeticItem) -> int:
-	return maxi(0, it.price - Wallet.balance())
+	return maxi(0, Cosmetics.price_of(it) - Wallet.balance())
 
 
 ## Starts buying `it` (for `weapon_id` when its requirement is per weapon).
@@ -25,14 +25,15 @@ static func request(from: Control, it: CosmeticItem, weapon_id: StringName, on_b
 		return null
 	if not Cosmetics.can_unlock_purchase(it, weapon_id):
 		UiSound.deny()
-		UiKit.toast("Locked: %s first." % LockerCatalog.unlock_text(it).to_lower(), UiKit.AMBER, &"icon_lock")
+		UiKit.toast("Locked: %s first." % it.requirement.describe(), UiKit.AMBER, &"icon_lock")
 		return null
-	if not Wallet.can_afford(it.price):
+	var price := Cosmetics.price_of(it)
+	if not Wallet.can_afford(price):
 		UiSound.deny()
 		UiKit.toast("%s more %s needed. %s" % [Wallet.format(shortfall(it)), Wallet.CURRENCY, EARN_HINT], UiKit.RED, &"icon_spark", 5.0)
 		return null
-	var left := Wallet.balance() - it.price
-	var text := "%s for %s %s.\nYou keep %s." % [LockerCatalog.category_label(it), Wallet.format(it.price), Wallet.CURRENCY, Wallet.format(left)]
+	var left := Wallet.balance() - price
+	var text := "%s for %s %s.\nYou keep %s." % [LockerCatalog.category_label(it), Wallet.format(price), Wallet.CURRENCY, Wallet.format(left)]
 	return UiKit.confirm(_host(from), "BUY %s?" % it.display_name.to_upper(), text, "BUY",
 		func(): _buy(it, weapon_id, on_bought))
 
