@@ -23,7 +23,8 @@ var length := 1.0
 var actors: Node3D
 var camera: Camera3D
 var overlay: CineOverlay
-## The set the shot plays on (a level scene or the studio).
+## The set the shot plays on (a level scene or the studio); CinePlayer sets
+## it at the cut (a shot built ahead of time may not have its set loaded yet).
 var set_root: Node3D
 
 var _events: Array = []
@@ -49,10 +50,17 @@ func _init(actor_root: Node3D, cam: Camera3D, ui: CineOverlay, on_set: Node3D, s
 
 # --- timeline -----------------------------------------------------------------
 
-## Calls `f` once when the shot reaches `at` seconds.
+## Calls `f` once when the shot reaches `at` seconds. Events at the same time
+## run in the order they were added; one added while the shot plays (from
+## another event) runs no earlier than the next update. Anything a shot does
+## to the frame, the grade or the light goes through here (at 0: its first
+## frame), so a shot can be built ahead of its cut without touching the one
+## on screen.
 func at(when: float, f: Callable) -> void:
-	_events.append([when, f])
-	_events.sort_custom(func(a, b): return a[0] < b[0])
+	var i := _events.size()
+	while i > _next_event and _events[i - 1][0] > when:
+		i -= 1
+	_events.insert(i, [when, f])
 
 
 ## Calls `f(t)` every frame of the shot (t = the shot's local time).
@@ -394,6 +402,10 @@ func environment() -> Environment:
 ## and the sun's energy times `sun`. Restored to the level's own at the next
 ## shot on the set (CinePlayer calls restore_lighting()).
 func lighting(ambient := 1.0, exposure := 1.0, glow := -1.0, sun := 1.0) -> void:
+	at(0.0, _relight.bind(ambient, exposure, glow, sun))
+
+
+func _relight(ambient: float, exposure: float, glow: float, sun: float) -> void:
 	var env := environment()
 	if env == null:
 		return

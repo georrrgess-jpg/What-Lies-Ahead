@@ -121,6 +121,16 @@ var _scoped := false
 var _fit_fov := 0.0
 var _vignette: AimVignette
 
+## Staged by a cinematic (no Player behind the view; ignored when there is
+## one): the aim blend (0 hip, 1 down the sight, its reticle lit), the
+## sprint, slide and mantle poses (0-1) and the run bob (x phase in radians,
+## y amount 0-1).
+var staged_aim := 0.0
+var staged_sprint := 0.0
+var staged_slide := 0.0
+var staged_mantle := 0.0
+var staged_gait := Vector2.ZERO
+
 @onready var player: Player = owner as Player
 
 
@@ -259,6 +269,11 @@ func _on_settings_changed() -> void:
 		_sight.refresh_color()
 
 
+## Fits the sight the model wears now again (after its cosmetics changed).
+func refit_sight() -> void:
+	_fit_sight()
+
+
 ## Magnification the fitted sight adds to the weapon's own aimed zoom.
 func sight_zoom() -> float:
 	return _sight.zoom if _sight else 1.0
@@ -293,7 +308,12 @@ func _seat_motion(aim: float, delta: float) -> Vector3:
 ## Lights the optic's reticle at the true point of aim, switches a long scope
 ## to its eyepiece view and shades the screen edges.
 func _update_sight(aim: float) -> void:
-	if _sight == null or player == null:
+	if _sight == null:
+		return
+	if player == null:
+		# Staged: the reticle lights straight ahead as the sight comes up.
+		if _sight.has_reticle:
+			_sight.set_aim(Basis.IDENTITY, smoothstep(RETICLE_IN, 0.95, aim))
 		return
 	if not is_equal_approx(_aimed_fov(), _fit_fov):
 		_refit_sight()
@@ -370,7 +390,7 @@ func _process(delta: float) -> void:
 	var ease_raise := _raise * _raise
 	# Aim down sights: square the weapon up and bring its sight line onto the
 	# eye. Motion and kick are damped so the sight picture holds.
-	var aim := player.aim_blend if player else 0.0
+	var aim := player.aim_blend if player else staged_aim
 	var seat := _seat_motion(aim, delta)
 
 	var pose_pos := _pose_pos.update(_pose_target_pos(), delta)
@@ -416,7 +436,7 @@ func _update_kick(delta: float) -> void:
 ## mantle or vault, a trail behind strafes and behind vertical speed.
 func _pose_target_pos() -> Vector3:
 	if player == null:
-		return Vector3.ZERO
+		return SPRINT_POS * staged_sprint + SLIDE_POS * staged_slide + MANTLE_POS * staged_mantle
 	var lv := player.local_velocity()
 	var strafe := clampf(lv.x / player.walk_speed, -1.0, 1.0)
 	var target := SPRINT_POS * player.sprint_amount \
@@ -430,7 +450,7 @@ func _pose_target_pos() -> Vector3:
 
 func _pose_target_rot() -> Vector3:
 	if player == null:
-		return Vector3.ZERO
+		return SPRINT_ROT * staged_sprint + SLIDE_ROT * staged_slide + MANTLE_ROT * staged_mantle
 	var strafe := clampf(player.local_velocity().x / player.walk_speed, -1.0, 1.0)
 	var target := SPRINT_ROT * player.sprint_amount + Vector3(0.0, 0.0, -STRAFE_ROLL * strafe)
 	if player.sliding:
@@ -443,11 +463,9 @@ func _pose_target_rot() -> Vector3:
 ## Bob on the player's step rhythm: a side swing across each stride and a dip
 ## as each foot lands. x, y in view units; z is the roll in degrees.
 func _bob() -> Vector3:
-	if player == null:
-		return Vector3.ZERO
-	var phase := player.gait_phase
+	var phase := player.gait_phase if player else staged_gait.x
 	var c := cos(phase)
-	var size := player.gait_amount * (1.0 + 0.5 * player.sprint_amount)
+	var size := (player.gait_amount * (1.0 + 0.5 * player.sprint_amount)) if player else staged_gait.y * (1.0 + 0.5 * staged_sprint)
 	return Vector3(BOB_SIDE * sin(phase), BOB_DIP * (0.5 - c * c * c * c), BOB_ROLL * sin(phase)) * size
 
 

@@ -100,6 +100,20 @@ func _apply(k: float) -> void:
 		_crater.light_energy = _crater_energy * (1.0 + 2.5 * k)
 
 
+## For a cinematic (no run director): the volcano erupts now (the sky and
+## crater flare at once and stay up).
+func erupt_now() -> void:
+	_active = true
+	_level = 1.0
+	_apply(1.0)
+
+
+## For a cinematic: an ember bomb lands at `at` after the telegraph, its ring
+## growing there first. It hurts no one without a run director.
+func strike_at(at: Vector3) -> void:
+	_start(at)
+
+
 ## Picks a landing spot near the player and starts its ring.
 func _launch() -> void:
 	var player := _director.player if _director else null

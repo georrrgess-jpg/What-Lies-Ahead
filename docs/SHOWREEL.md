@@ -10,7 +10,8 @@ TRAILER, or as an attract mode), and renders to a video.
 | The shot list (staging of every shot) and the featured items (ids at the top) | `scripts/cinematics/showreel_shots.gd` |
 | Timeline player: sets, cuts, music, skip, hand-back to the menu | `scripts/cinematics/cine_player.gd` (`CinePlayer`) |
 | Per-shot toolkit: camera moves (dolly, orbit, follow, spline), whip pans, speed ramps, relighting, focus, flares, actors, kills | `scripts/cinematics/cine_stage.gd` (`CineStage`) |
-| First-person weapon without a player (aim down sights, sprint/slide/mantle poses, run bob) | `scripts/cinematics/cine_viewmodel.gd` (`CineViewmodel`) |
+| First-person weapon without a player: `WeaponView.staged_aim`, `staged_sprint`/`slide`/`mantle`, `staged_gait`, `refit_sight()` | `scripts/player/weapon_view.gd` |
+| The Eruption twist on cue: `LavaEruption.erupt_now()`, `strike_at(point)` | `scripts/props/lava_eruption.gd` |
 | Lens and colour grade, letterbox, flashes, wipes, title cards (UI kit) | `scripts/cinematics/cine_overlay.gd`, `art/shaders/cine_grade.gdshader`, `art/shaders/cine_wipe.gdshader` |
 | The studio set (arsenal, line-up) | `scripts/cinematics/cine_studio.gd` |
 | Music: `showreel_trailer` and the startup score `cine_startup` | `tools/audio_packs/showreel.py` (`python3 tools/gen_audio.py showreel`) |
@@ -39,10 +40,17 @@ TRAILER, or as an attract mode), and renders to a video.
   chains with `LightningBolt`, blasts with `WeaponFx.explosion`, Sparks with
   `SparkField`. Everything is referenced by id, so the reel shows whatever the
   models, maps and effects look like today.
-* **Warm-up.** Before the first frame the player holds black for a few frames
-  while `FxWarmup` draws one of every enemy, kill effect, tracer, projectile and
-  weapon in front of the camera, so no shot compiles a shader mid-move (a video
-  trims these frames).
+* **Warm-up, so no cut hitches.** Before the first frame the player holds
+  black while `FxWarmup` draws one of every enemy, kill effect, tracer,
+  projectile and weapon (their shaders compile there), and the heavy shots
+  (`CineShot.prebuild`, the list `BUILT_AHEAD`: first-person views, line-ups,
+  hordes) are built one per frame, hidden and paused; their cut only shows
+  them. A shot's effects on the frame, the grade and the light all go through
+  `stage.at(0.0, ...)` (so building it early touches nothing on screen) and
+  its set is handed over at the cut (`stage.set_root`). Each level set, once
+  instantiated, is drawn twice into a small offscreen view of its own from its
+  menu camera before its cut, so its materials compile there and not on the
+  cut. A video trims the warm-up frames.
 * **Framing on any screen.** Shots are framed for 16:9. On a narrower screen
   the camera keeps the 16:9 width (`CineStage.lens_fov`) and the letterbox bars
   keep the same picture aspect (1920 x 888), so nothing framed to the sides is
@@ -77,11 +85,12 @@ TRAILER, or as an attract mode), and renders to a video.
   scaled by the key spacing, so its speed never jumps at a key (the
   first-person mantle, vault and slide is one such curve). Shakes run at
   4-6 Hz so they read as a jolt at 30 fps, not as frame-to-frame jitter.
-* **First person** uses the game's own viewmodel (`CineViewmodel`, a
-  `WeaponView`): sway, kick, the muzzle flash and the weapon's real reload,
-  with gloves on the arms; `aim` brings the real sight to the eye on the same
-  eye line the game aims along (its reticle lit), and `sprint`, `slide`,
-  `mantle` and `gait` drive the movement poses and the run bob.
+* **First person** uses the game's own viewmodel (`WeaponView`): sway, kick,
+  the muzzle flash and the weapon's real reload, with gloves on the arms; with
+  no player behind it `staged_aim` brings the real sight to the eye on the same
+  eye line the game aims along (its reticle lit), and `staged_sprint`,
+  `staged_slide`, `staged_mantle` and `staged_gait` drive the movement poses
+  and the run bob.
 * **Words**: none in the cold open. A few title cards in the kit's sign face
   (`overlay.title_card`: a spaced kicker over a title, fading and drifting in)
   and small spaced captions for place and item names (`overlay.caption`).
