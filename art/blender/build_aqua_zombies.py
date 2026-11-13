@@ -131,8 +131,8 @@ def diver_accessories(m):
         a = math.tau * i / 8
         helmet.append(sphere(f"{p}Bolt{i}", 0.03, (math.cos(a) * 0.47, math.sin(a) * 0.47, 1.26), m=bd, segs=6, rings=4))
     torch = [
-        cyl(p + "TorchBody", 0.06, 0.24, (0.34, -0.14, 1.3), rot=rad(80, 0, 0), segs=10, bevel=0.02, m=m["dark"]),
-        cyl(p + "TorchLens", 0.065, 0.02, (0.34, -0.27, 1.28), rot=rad(80, 0, 0), segs=10, bevel=0.0, m=m["torch"]),
+        cyl(p + "TorchBody", 0.06, 0.24, (0.56, -0.1, 1.33), rot=rad(80, 0, 0), segs=10, bevel=0.02, m=m["dark"]),
+        cyl(p + "TorchLens", 0.065, 0.02, (0.56, -0.23, 1.31), rot=rad(80, 0, 0), segs=10, bevel=0.0, m=m["torch"]),
     ]
     knife = [box(p + "Sheath", (0.07, 0.05, 0.28), (0.31, -0.12, 0.6), bevel=0.02, m=m["dark"]),
              box(p + "Handle", (0.05, 0.05, 0.1), (0.31, -0.12, 0.78), bevel=0.02, m=m["fin"])]

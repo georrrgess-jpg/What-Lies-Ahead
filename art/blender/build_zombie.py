@@ -398,7 +398,7 @@ def tourist_accessories(m):
         a = math.tau * i / 7
         curls.append(sphere(f"{p}Top{i}", 0.11, (math.cos(a) * 0.14, HEAD_Y + math.sin(a) * 0.13 + 0.04, 1.93), m=m["hair_red"], segs=8, rings=6))
     for side in (-1, 1):
-        curls.append(sphere(f"{p}Side{side}", 0.1, (side * 0.33, HEAD_Y + 0.07, 1.56), scale=(0.7, 1.0, 1.6), m=m["hair_red"], segs=8, rings=6))
+        curls.append(sphere(f"{p}Side{side}", 0.115, (side * 0.335, HEAD_Y + 0.03, 1.57), scale=(0.75, 1.0, 1.5), m=m["hair_red"], segs=8, rings=6))
     acc["Acc_Tourist_Hair"] = bind("Head", curls)
     acc["Acc_Tourist_Shades"] = bind("Head", [
         box(p + "ShadeBar", (0.5, 0.04, 0.04), (0, HEAD_Y - 0.21, 1.93), rot=rad(-35, 0, 0), bevel=0.012, m=m["pink"]),
@@ -440,8 +440,8 @@ def lifeguard(m):
     parts += tank_straps(p, m, "lean", white)
     y = chest_front("lean")
     parts += bind("Head", [
-        cap_crown(p + "Cap", 0.54, red, top=1.99),
-        box(p + "CapBrim", (0.34, 0.26, 0.045), (0, HEAD_Y - 0.36, 1.77), rot=rad(10, 0, 0), bevel=0.02, m=red),
+        cap_crown(p + "Cap", 0.54, red, top=1.99, off=0.034),
+        box(p + "CapBrim", (0.34, 0.26, 0.045), (0, HEAD_Y - 0.405, 1.765), rot=rad(10, 0, 0), bevel=0.02, m=red),
         box(p + "CapPatch", (0.2, 0.04, 0.13), (0, HEAD_Y - 0.27, 1.86), rot=rad(-18, 0, 0), bevel=0.015, m=white),
         box(p + "CapCrossH", (0.12, 0.03, 0.035), (0, HEAD_Y - 0.292, 1.865), rot=rad(-18, 0, 0), bevel=0.0, m=red),
         box(p + "CapCrossV", (0.035, 0.03, 0.1), (0, HEAD_Y - 0.292, 1.865), rot=rad(-18, 0, 0), bevel=0.0, m=red),
@@ -462,8 +462,8 @@ def lifeguard_accessories(m):
     y = chest_front("lean")
     return {
         "Acc_Lifeguard_Whistle": bind("Spine", [
-            cyl(p + "Whistle", 0.035, 0.07, (0.1, y - 0.025, 1.3), rot=rad(0, 90, 0), segs=10, bevel=0.008, m=m["yellow"]),
-            tube(p + "Cord", [(0.06, y - 0.015, 1.3), (-0.12, y - 0.005, 1.31), (-0.2, -0.05, 1.42)], 0.012, m=white, segs=5),
+            cyl(p + "Whistle", 0.035, 0.07, (0.1, y - 0.025, 1.24), rot=rad(0, 90, 0), segs=10, bevel=0.008, m=m["yellow"]),
+            tube(p + "Cord", [(0.06, y - 0.015, 1.24), (-0.15, y - 0.005, 1.26), (-0.22, -0.05, 1.42)], 0.012, m=white, segs=5),
         ]),
         "Acc_Lifeguard_Shades": bind("Head", [
             box(p + "ShadeBar", (0.44, 0.04, 0.035), (0, HEAD_Y - 0.34, 1.82), rot=rad(14, 0, 0), bevel=0.01, m=white),
@@ -481,11 +481,11 @@ def lifeguard_accessories(m):
             tube(p + "TubeStrap", [(0.2, y + 0.02, 1.38), (0.16, 0.0, 1.44), (0.15, 0.2, 1.4)], 0.02, m=white, segs=5),
         ]),
         "Acc_Lifeguard_Towel": bind("Spine", [
-            torus(p + "Towel", 0.15, 0.055, (0, -0.01, 1.375), rot=rad(28, 0, 0), m=m["yellow"], major_segs=18, minor_segs=7),
-            box(p + "TowelEndL", (0.1, 0.05, 0.3), (0.1, y - 0.02, 1.24), rot=rad(4, 0, 6), bevel=0.02, m=m["yellow"]),
-            box(p + "TowelEndR", (0.1, 0.05, 0.24), (-0.1, y - 0.02, 1.27), rot=rad(4, 0, -6), bevel=0.02, m=m["yellow"]),
-            box(p + "TowelStripeL", (0.105, 0.055, 0.04), (0.1, y - 0.02, 1.15), rot=rad(4, 0, 6), bevel=0.01, m=red),
-            box(p + "TowelStripeR", (0.105, 0.055, 0.04), (-0.1, y - 0.02, 1.2), rot=rad(4, 0, -6), bevel=0.01, m=red),
+            torus(p + "Towel", 0.19, 0.055, (0, 0.01, 1.325), rot=rad(38, 0, 0), m=m["yellow"], major_segs=18, minor_segs=7),
+            box(p + "TowelEndL", (0.1, 0.05, 0.3), (0.1, y - 0.02, 1.11), rot=rad(4, 0, 6), bevel=0.02, m=m["yellow"]),
+            box(p + "TowelEndR", (0.1, 0.05, 0.24), (-0.1, y - 0.02, 1.14), rot=rad(4, 0, -6), bevel=0.02, m=m["yellow"]),
+            box(p + "TowelStripeL", (0.105, 0.055, 0.04), (0.1, y - 0.02, 1.02), rot=rad(4, 0, 6), bevel=0.01, m=red),
+            box(p + "TowelStripeR", (0.105, 0.055, 0.04), (-0.1, y - 0.02, 1.07), rot=rad(4, 0, -6), bevel=0.01, m=red),
         ]),
     }
 
@@ -533,13 +533,13 @@ def bruiser_accessories(m):
     acc = {
         "Acc_Bruiser_TopHair": hair_top(p, 0.62, m["dark"], "flat", 4),
         "Acc_Bruiser_Headband": bind("Head", [
-            head_band(p + "Headband", 0.62, 1.78, 1.7, pink, off=0.012, thick=0.02),
-            box(p + "BandKnot", (0.1, 0.1, 0.1), (0.0, HEAD_Y + 0.29, 1.73), bevel=0.03, m=pink),
-            box(p + "BandTailA", (0.06, 0.18, 0.05), (0.06, HEAD_Y + 0.37, 1.66), rot=rad(-30, 0, 20), bevel=0.015, m=pink),
-            box(p + "BandTailB", (0.06, 0.18, 0.05), (-0.06, HEAD_Y + 0.37, 1.64), rot=rad(-40, 0, -20), bevel=0.015, m=pink),
+            head_band(p + "Headband", 0.62, 1.845, 1.775, pink, off=0.03, thick=0.022),
+            box(p + "BandKnot", (0.1, 0.1, 0.1), (0.0, HEAD_Y + 0.3, 1.8), bevel=0.03, m=pink),
+            box(p + "BandTailA", (0.06, 0.18, 0.05), (0.06, HEAD_Y + 0.38, 1.73), rot=rad(-30, 0, 20), bevel=0.015, m=pink),
+            box(p + "BandTailB", (0.06, 0.18, 0.05), (-0.06, HEAD_Y + 0.38, 1.71), rot=rad(-40, 0, -20), bevel=0.015, m=pink),
         ]),
         "Acc_Bruiser_Bandana": bind("Head", [
-            cap_crown(p + "Bandana", 0.62, m["red"], rim=1.72, top=1.95, off=0.026),
+            cap_crown(p + "Bandana", 0.62, m["red"], rim=1.725, top=1.95, off=0.032),
             box(p + "BandanaKnot", (0.12, 0.1, 0.1), (0.0, HEAD_Y + 0.3, 1.75), bevel=0.03, m=m["red"]),
             box(p + "BandanaTail", (0.1, 0.06, 0.2), (0.04, HEAD_Y + 0.34, 1.65), rot=rad(-15, 10, 0), bevel=0.02, m=m["red"]),
         ] + [sphere(f"{p}Dot{i}", 0.03, (math.cos(a) * 0.3, HEAD_Y + math.sin(a) * 0.255, 1.86), scale=(1, 1, 0.5), m=white, segs=6, rings=4)
@@ -553,10 +553,10 @@ def bruiser_accessories(m):
                                    + [cyl(f"{p}Spike{i}", 0.04, 0.14, (0, HEAD_Y - 0.18 + i * 0.09, 1.99), rot=rad(-20 + i * 10, 0, 0), segs=6, bevel=0.0,
                                           m=dark, radius_top=0.01) for i in range(5)]),
         "Acc_Bruiser_Shades": bind("Head", [
-            box(p + "Wrap", (0.6, 0.06, 0.1), (0, face_y(0.62, 1.64) - 0.04, 1.64), bevel=0.03, m=m["lens"]),
-            box(p + "WrapGlint", (0.2, 0.065, 0.025), (-0.12, face_y(0.62, 1.66) - 0.042, 1.665), bevel=0.0, m=m["lens_mirror"]),
-            box(p + "ArmL", (0.03, 0.3, 0.03), (0.31, HEAD_Y - 0.1, 1.65), bevel=0.008, m=m["lens"]),
-            box(p + "ArmR", (0.03, 0.3, 0.03), (-0.31, HEAD_Y - 0.1, 1.65), bevel=0.008, m=m["lens"]),
+            box(p + "Wrap", (0.6, 0.06, 0.1), (0, face_y(0.62, 1.64) - 0.062, 1.64), bevel=0.03, m=m["lens"]),
+            box(p + "WrapGlint", (0.2, 0.065, 0.025), (-0.12, face_y(0.62, 1.66) - 0.064, 1.665), bevel=0.0, m=m["lens_mirror"]),
+            box(p + "ArmL", (0.03, 0.34, 0.03), (0.315, HEAD_Y - 0.12, 1.65), bevel=0.008, m=m["lens"]),
+            box(p + "ArmR", (0.03, 0.34, 0.03), (-0.315, HEAD_Y - 0.12, 1.65), bevel=0.008, m=m["lens"]),
         ]),
         "Acc_Bruiser_Chain": bind("Spine", [
             tube(p + "Chain", [(-0.27, -0.1, 1.43), (-0.21, -0.31, 1.27), (0.0, -0.355, 1.2), (0.21, -0.31, 1.27), (0.27, -0.1, 1.43)], 0.022,
@@ -589,8 +589,9 @@ def hood(p, m, build, up=False):
     hw = BUILDS[build]["head"]
     if up:
         sk = skull(hw)
-        return bind("Head", [sk.shell(p + "Hood", m, 1.95, 1.36, off=0.05, gap=150, segs=26, steps=7, lip=0.03),
-                             sphere(p + "HoodTop", hw * 0.56, (0, HEAD_Y + 0.02, 1.84), scale=(1.0, 0.98, 0.62), m=m, segs=16, rings=8)])
+        # Roomy enough for the ears and the fringe to stay inside it.
+        return bind("Head", [sk.shell(p + "Hood", m, 1.93, 1.36, off=0.09, gap=150, segs=26, steps=7, lip=0.03),
+                             cap_crown(p + "HoodTop", hw, m, rim=1.8, top=2.05, off=0.09)])
     w, d = BUILDS[build]["chest"]
     return bind("Spine", [torus(p + "Hood", w * 0.24, 0.07, (0, d * 0.32, 1.44), rot=rad(-20, 0, 0), m=m, major_segs=20, minor_segs=8),
                           sphere(p + "HoodBack", w * 0.25, (0, d * 0.5, 1.36), scale=(1.1, 0.5, 0.9), m=m, segs=14, rings=8)])
@@ -685,12 +686,12 @@ def tourist_neon_accessories(m):
         "Acc_Tourist_TopHair": hair_top(p, BUILDS["wide"]["head"], m["dark"], "mop", 21),
         "Acc_Tourist_LedCap": bind("Head", [
             cap_crown(p + "Cap", 0.62, m["dark"]),
-            box(p + "Brim", (0.36, 0.3, 0.045), (0, HEAD_Y - 0.37, 1.77), rot=rad(8, 0, 0), bevel=0.02, m=m["dark"]),
-            box(p + "BrimGlow", (0.37, 0.02, 0.05), (0, HEAD_Y - 0.52, 1.75), rot=rad(8, 0, 0), bevel=0.008, m=m["glow_pink"]),
+            box(p + "Brim", (0.36, 0.3, 0.045), (0, HEAD_Y - 0.445, 1.762), rot=rad(8, 0, 0), bevel=0.02, m=m["dark"]),
+            box(p + "BrimGlow", (0.37, 0.02, 0.05), (0, HEAD_Y - 0.595, 1.742), rot=rad(8, 0, 0), bevel=0.008, m=m["glow_pink"]),
             head_band(p + "CapRing", 0.62, 1.79, 1.762, m["glow_cyan"], off=0.037, thick=0.012),
         ]),
         "Acc_Tourist_HoodUp": hood(p, m["shirt"], "wide", up=True),
-        "Acc_Tourist_GlowNecklace": bind("Spine", [torus(p + "Glow", 0.2, 0.016, (0, -0.06, 1.37), rot=rad(26, 0, 0), m=m["glow_lime"],
+        "Acc_Tourist_GlowNecklace": bind("Spine", [torus(p + "Glow", 0.22, 0.016, (0, -0.05, 1.35), rot=rad(34, 0, 0), m=m["glow_lime"],
                                                          major_segs=24, minor_segs=5)]),
         "Acc_Tourist_Phone": held(p, -1, [
             box(p + "Phone", (0.04, 0.1, 0.17), (gx - 0.05, gy - 0.02, gz + 0.02), rot=rad(-30, 0, 0), bevel=0.012, m=m["dark"]),
@@ -730,14 +731,14 @@ def lifeguard_neon_accessories(m):
         "Acc_Lifeguard_Headphones": bind("Head", [
             tube(p + "Band", [(-w * 0.52, HEAD_Y, 1.6), (-w * 0.42, HEAD_Y, 1.86), (0, HEAD_Y, 1.95), (w * 0.42, HEAD_Y, 1.86), (w * 0.52, HEAD_Y, 1.6)],
                  0.022, m=m["dark"], segs=6),
-            cyl(p + "CupL", 0.09, 0.07, (w * 0.53, HEAD_Y, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["dark"]),
-            cyl(p + "CupR", 0.09, 0.07, (-w * 0.53, HEAD_Y, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["dark"]),
-            cyl(p + "GlowL", 0.06, 0.02, (w * 0.57, HEAD_Y, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.0, m=m["glow_cyan"]),
-            cyl(p + "GlowR", 0.06, 0.02, (-w * 0.57, HEAD_Y, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.0, m=m["glow_cyan"]),
+            cyl(p + "CupL", 0.1, 0.1, (w * 0.53 + 0.035, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["dark"]),
+            cyl(p + "CupR", 0.1, 0.1, (-w * 0.53 - 0.035, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["dark"]),
+            cyl(p + "GlowL", 0.065, 0.02, (w * 0.53 + 0.085, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.0, m=m["glow_cyan"]),
+            cyl(p + "GlowR", 0.065, 0.02, (-w * 0.53 - 0.085, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.0, m=m["glow_cyan"]),
         ]),
         "Acc_Lifeguard_Visor": bind("Head", [
-            head_band(p + "VisorBand", w, 1.8, 1.74, m["white"], off=0.012, thick=0.02),
-            box(p + "VisorBrim", (0.36, 0.22, 0.03), (0, HEAD_Y - 0.36, 1.76), rot=rad(12, 0, 0), bevel=0.012, m=m["glow_pink"]),
+            head_band(p + "VisorBand", w, 1.845, 1.785, m["white"], off=0.03, thick=0.022),
+            box(p + "VisorBrim", (0.36, 0.22, 0.03), (0, HEAD_Y - 0.385, 1.8), rot=rad(12, 0, 0), bevel=0.012, m=m["glow_pink"]),
         ]),
         "Acc_Lifeguard_Armband": bind("UpperArm.L", [
             band(p + "Arm", (0.39, 0, 1.17), (0.4, 0, 1.06), 0.09, 0.09, m["dark"], n=2.6, thick=0.015, segs=14),
@@ -850,8 +851,8 @@ def lifeguard_aqua(m):
         decal(p + "Logo", tor, (-0.12, body.front(-0.12, 1.24), 1.24), 0.045, m["white"], petals=3, segs=18),
     ])
     parts += bind("Head", [
-        cap_crown(p + "Cap", 0.54, m["navy"], top=1.99),
-        box(p + "CapBrim", (0.34, 0.26, 0.045), (0, HEAD_Y - 0.36, 1.77), rot=rad(10, 0, 0), bevel=0.02, m=m["navy"]),
+        cap_crown(p + "Cap", 0.54, m["navy"], top=1.99, off=0.034),
+        box(p + "CapBrim", (0.34, 0.26, 0.045), (0, HEAD_Y - 0.405, 1.765), rot=rad(10, 0, 0), bevel=0.02, m=m["navy"]),
         sphere(p + "CapFish", 0.06, (0, HEAD_Y - 0.275, 1.86), scale=(1.2, 0.3, 0.6), rot=rad(-18, 0, 0), m=m["teal"], segs=10, rings=5),
     ])
     return parts
@@ -935,7 +936,7 @@ def tourist_dune_accessories(m):
     return {
         "Acc_Tourist_TopHair": hair_top(p, BUILDS["wide"]["head"], m["dark"], "mop", 41),
         "Acc_Tourist_Antennae": bind("Head", [
-            head_band(p + "Band", w, 1.8, 1.74, m["teal"], off=0.012, thick=0.02),
+            head_band(p + "Band", w, 1.85, 1.79, m["teal"], off=0.03, thick=0.022),
             tube(p + "StalkL", [(0.14, HEAD_Y, 1.84), (0.2, HEAD_Y - 0.02, 2.0), (0.26, HEAD_Y - 0.06, 2.1)], 0.016, m=m["teal"], segs=6),
             tube(p + "StalkR", [(-0.14, HEAD_Y, 1.84), (-0.2, HEAD_Y - 0.02, 2.0), (-0.26, HEAD_Y - 0.06, 2.1)], 0.016, m=m["teal"], segs=6),
             sphere(p + "BallL", 0.055, (0.27, HEAD_Y - 0.07, 2.13), m=m["alien"], segs=10, rings=6),
@@ -950,7 +951,7 @@ def tourist_dune_accessories(m):
         ]),
         "Acc_Tourist_SpaceCap": bind("Head", [
             cap_crown(p + "Cap", 0.62, m["white"]),
-            box(p + "Brim", (0.36, 0.3, 0.045), (0, HEAD_Y - 0.37, 1.77), rot=rad(8, 0, 0), bevel=0.02, m=m["teal"]),
+            box(p + "Brim", (0.36, 0.3, 0.045), (0, HEAD_Y - 0.445, 1.762), rot=rad(8, 0, 0), bevel=0.02, m=m["teal"]),
             sphere(p + "CapStar", 0.06, (0, HEAD_Y - 0.29, 1.86), scale=(1.0, 0.3, 1.0), rot=rad(-20, 0, 0), m=m["shirt"], segs=10, rings=5),
         ]),
         "Acc_Tourist_FannyPack": bind("Hips", [
@@ -996,8 +997,8 @@ def lifeguard_dune_accessories(m):
         "Acc_Lifeguard_Headset": bind("Head", [
             tube(p + "Band", [(-w * 0.52, HEAD_Y, 1.6), (-w * 0.4, HEAD_Y, 1.88), (0, HEAD_Y, 1.95), (w * 0.4, HEAD_Y, 1.88), (w * 0.52, HEAD_Y, 1.6)],
                  0.02, m=m["dark"], segs=6),
-            cyl(p + "CupL", 0.085, 0.07, (w * 0.53, HEAD_Y, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["orange"]),
-            cyl(p + "CupR", 0.085, 0.07, (-w * 0.53, HEAD_Y, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["orange"]),
+            cyl(p + "CupL", 0.1, 0.1, (w * 0.53 + 0.035, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["orange"]),
+            cyl(p + "CupR", 0.1, 0.1, (-w * 0.53 - 0.035, HEAD_Y + 0.01, 1.58), rot=rad(0, 90, 0), segs=14, bevel=0.02, m=m["orange"]),
             tube(p + "Mic", [(w * 0.53, HEAD_Y - 0.04, 1.54), (w * 0.4, HEAD_Y - 0.2, 1.44), (w * 0.2, face_y(w, 1.42) - 0.06, 1.39)], 0.012,
                  m=m["dark"], segs=5),
         ]),
@@ -1064,14 +1065,14 @@ def tourist_frost_accessories(m):
         "Acc_Tourist_TopHair": hair_top(p, BUILDS["wide"]["head"], m["dark"], "mop", 51),
         "Acc_Tourist_Bobble": bind("Head", [
             cap_crown(p + "Beanie", w, m["accent"], rim=1.74, top=2.08),
-            head_band(p + "Cuff", w, 1.81, 1.715, m["shirt"], off=0.04, thick=0.03),
+            head_band(p + "Cuff", w, 1.815, 1.735, m["shirt"], off=0.042, thick=0.03),
             sphere(p + "Pompom", 0.1, (0, HEAD_Y + 0.02, 2.1), m=m["white"], segs=10, rings=7),
         ]),
         "Acc_Tourist_Trapper": bind("Head", [
-            sk.shell(p + "Trapper", m["cocoa"], 1.98, 1.66, off=0.03, gap=120, segs=26, steps=4, lip=0.03),
+            sk.shell(p + "Trapper", m["cocoa"], 1.98, 1.73, off=0.03, gap=120, segs=26, steps=4, lip=0.03),
             sphere(p + "TrapTop", w * 0.52, (0, HEAD_Y, 1.86), scale=(1.0, 0.98, 0.5), m=m["cocoa"], segs=16, rings=8),
-            box(p + "FlapL", (0.07, 0.2, 0.26), (w * 0.53, HEAD_Y, 1.56), bevel=0.03, m=m["white"]),
-            box(p + "FlapR", (0.07, 0.2, 0.26), (-w * 0.53, HEAD_Y, 1.56), bevel=0.03, m=m["white"]),
+            box(p + "FlapL", (0.08, 0.22, 0.3), (w * 0.53 + 0.03, HEAD_Y + 0.01, 1.58), bevel=0.03, m=m["white"]),
+            box(p + "FlapR", (0.08, 0.22, 0.3), (-w * 0.53 - 0.03, HEAD_Y + 0.01, 1.58), bevel=0.03, m=m["white"]),
             head_band(p + "Fur", w, 1.82, 1.72, m["white"], off=0.032, thick=0.03),
         ]),
         "Acc_Tourist_Mug": held(p, -1, [
@@ -1081,9 +1082,9 @@ def tourist_frost_accessories(m):
             sphere(p + "Marsh", 0.025, (gx + 0.01, gy - 0.03, gz + 0.1), m=m["white"], segs=6, rings=4),
         ]),
         "Acc_Tourist_Scarf": bind("Spine", [
-            torus(p + "Scarf", 0.17, 0.065, (0, -0.02, 1.365), rot=rad(28, 0, 0), m=m["accent"], major_segs=18, minor_segs=7),
-            box(p + "Tail", (0.12, 0.05, 0.38), (0.12, chest_front("wide") - 0.03, 1.24), rot=rad(4, 0, 8), bevel=0.02, m=m["accent"]),
-            box(p + "TailStripe", (0.125, 0.055, 0.04), (0.125, chest_front("wide") - 0.03, 1.12), rot=rad(4, 0, 8), bevel=0.01, m=m["shirt"]),
+            torus(p + "Scarf", 0.21, 0.065, (0, 0.0, 1.33), rot=rad(38, 0, 0), m=m["accent"], major_segs=18, minor_segs=7),
+            box(p + "Tail", (0.12, 0.05, 0.38), (0.12, chest_front("wide") - 0.03, 1.08), rot=rad(4, 0, 8), bevel=0.02, m=m["accent"]),
+            box(p + "TailStripe", (0.125, 0.055, 0.04), (0.125, chest_front("wide") - 0.03, 0.96), rot=rad(4, 0, 8), bevel=0.01, m=m["shirt"]),
         ]),
     }
 
@@ -1110,7 +1111,7 @@ def lifeguard_frost_accessories(m):
     w = BUILDS["lean"]["head"]
     return {
         "Acc_Lifeguard_Goggles": bind("Head", [
-            head_band(p + "Strap", w, 1.84, 1.78, m["dark"], off=0.012, thick=0.02),
+            head_band(p + "Strap", w, 1.84, 1.78, m["dark"], off=0.03, thick=0.022),
             box(p + "Frame", (0.34, 0.08, 0.13), (0, HEAD_Y - 0.28, 1.83), rot=rad(-15, 0, 0), bevel=0.04, m=m["white"]),
             box(p + "Lens", (0.3, 0.06, 0.1), (0, HEAD_Y - 0.31, 1.83), rot=rad(-15, 0, 0), bevel=0.035, m=m["lens"]),
         ]),

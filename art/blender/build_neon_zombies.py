@@ -121,7 +121,7 @@ def punk_accessories(m):
         spikes.append(cyl(f"{p}Mo{i}", 0.05, h, (0, y, 1.87 + h * 0.5 - 0.05), rot=rad(-15 + i * 5, 0, 0), segs=6, bevel=0.0,
                           m=m["hair_pink"], radius_top=0.008))
     acc = {"Acc_Punk_Mohawk": bind("Head", spikes + [
-        box(p + "MoBase", (0.1, 0.5, 0.08), (0, HEAD_Y, 1.87), bevel=0.03, m=m["hair_pink"])])}
+        box(p + "MoBase", (0.1, 0.44, 0.08), (0, HEAD_Y + 0.02, 1.885), bevel=0.03, m=m["hair_pink"])])}
     liberty = []
     for i in range(9):
         a = math.tau * i / 9
@@ -129,7 +129,7 @@ def punk_accessories(m):
         liberty.append(cyl(f"{p}Lib{i}", 0.045, 0.24, (x * 1.3, HEAD_Y + y * 1.3, 1.95), rot=(-y * 2.2, x * 2.2, 0),
                            segs=6, bevel=0.0, m=m["hair_cyan"], radius_top=0.006))
     acc["Acc_Punk_Spikes"] = bind("Head", liberty + [
-        sphere(p + "LibCap", 0.28, (0, HEAD_Y, 1.8), scale=(1.05, 1.0, 0.5), m=m["hair_cyan"], segs=12, rings=6)])
+        cap_crown(p + "LibCap", w, m["hair_cyan"], rim=1.79, top=1.96, off=0.02)])
     acc["Acc_Punk_Beanie"] = bind("Head", [
         cap_crown(p + "Beanie", w, m["shirt"], rim=1.74, top=2.05),
         head_band(p + "BeanieBand", w, 1.815, 1.72, m["pipe_lime"], off=0.04, thick=0.025),
@@ -213,7 +213,7 @@ def courier_accessories(m):
         ]),
         "Acc_Courier_Scarf": bind("Spine", [
             torus(p + "Scarf", 0.15, 0.05, (0, 0.0, 1.37), rot=rad(24, 0, 0), m=m["pipe_pink"], major_segs=16, minor_segs=6),
-            box(p + "ScarfTail", (0.1, 0.05, 0.3), (0.08, 0.18, 1.28), rot=rad(25, 10, 0), bevel=0.02, m=m["pipe_pink"]),
+            box(p + "ScarfTail", (0.1, 0.05, 0.3), (0.09, -0.215, 1.14), rot=rad(-4, 0, 6), bevel=0.02, m=m["pipe_pink"]),
         ]),
         "Acc_Courier_Goggles": bind("Head", [
             band(p + "GoggleBand", (0, HEAD_Y, 1.93), (0, HEAD_Y, 1.88), 0.31, 0.33, m["dark"], n=2.6, thick=0.015, segs=24),

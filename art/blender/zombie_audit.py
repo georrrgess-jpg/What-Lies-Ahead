@@ -58,12 +58,13 @@ GROUND = 0.035      # ground finding: this far below the floor
 CROSS = 0.02        # static finding: the crossing curve is at least this long
 JOINT = 0.25        # ...not counting what sits this close to either part's joint
 STEP = 4            # clip poses sampled (of KEY_FPS = 48 per second)
+HEAD_AXIS_Y = -0.03  # zombie_kit.HEAD_Y: the head's vertical axis
 STYLES = ("Heavy", "Diver", "Octo", "Hazmat", "Mechanic", "Skier")
 # Clips only some enemies play (their behaviours ask for them by name).
 EXCLUSIVE = {"Spit": {"Octo"}, "Throw": {"Yeti"}, "Tuck": {"Skier"}, "Spray": {"Punk"}, "Leap": {"Courier"},
              "Roar": {"Bruiser", "Yeti", "Riot"}, "Bound": {"Cadet"}, "Hover": {"Mechanic"},
              "Crouch": {"Cadet", "Mechanic", "Courier"}}
-FEATURE = re.compile(r"(Collar|Hood|Lapel|Strap|String|Chain|Pouch|Tank|Pack|Can|Baton|Holster|Badge|Scarf|Label|Hose|Valve|Box)")
+FEATURE = re.compile(r"(Collar|Hood|Lapel|Strap|String|Chain|Pouch|Tank|Pack|Can|Baton|Holster|Badge|Scarf|Hose|Valve|Box)")
 # Crossings that are part of the design: (regex on "mesh/part|mesh/part", tried
 # both ways round, why).
 INTENDED = [
@@ -75,6 +76,15 @@ INTENDED = [
     (r"Outfit_Tourist/T_Clump\d+\|Acc_Tourist_Hair/", "the curly wig sits on the fringe"),
     (r"Outfit_Yeti/Y_HoodFur\d*\|Acc_Yeti_Beanie/", "the little beanie nestles in the fur"),
     (r"Outfit_Courier/C_Helmet\|Acc_Courier_Goggles/", "the goggles are strapped round the helmet"),
+    (r"Outfit_Lifeguard/L_Cap\w*\|Acc_Lifeguard_Shades/", "the shades rest on the cap's brim"),
+    (r"Acc_Lifeguard_Zinc/", "sunscreen dabbed on the nose and cheeks"),
+    (r"Outfit_\w+/\w+(Clump\d+|Crop)\|Acc_\w+_(Headphones|Headset|Earmuffs|Trapper)/", "hair shows round ear cups and flaps"),
+    (r"Outfit_\w+/\w+(Clump\d+|Crop)\|Acc_\w+_(Visor|Shades)/\w+Arm", "the arms of glasses tuck into the hair"),
+    (r"Acc_Tourist_Hair/.*\|Face_Tourist_\w+/\w+Brow", "the curly wig comes down to the brows"),
+    (r"Acc_\w+_(Backpack|Pack)/.*\|Outfit_\w+/\w+(Hood\w*|Collar)", "the hood or collar rests on the pack"),
+    (r"Acc_Jelly_Hat/", "the jellyfish hat's bell and tentacles drape over the head, hair and pack"),
+    (r"Acc_Diver_Helmet/.*\|Acc_Diver_Seaweed/", "seaweed caught on the helmet's collar"),
+    (r"Acc_Courier_Box/.*\|Outfit_Courier/C_Strap", "the box hangs from the harness straps"),
     (r"Outfit_Bruiser/B_Crop\|Acc_Bruiser_(Headband|Shades)/", "the headband and the arms of the shades lie in the crop"),
     (r"Acc_Cadet_(Antenna|Pennant)/.*\|Outfit_Cadet/C_(Pack|Tank)", "mounted on the backpack"),
     (r"Acc_Lifeguard_Gloves/.*\|Acc_Lifeguard_Net/", "the glove holds the net"),
@@ -162,12 +172,21 @@ def crossing(p, q, hidden=()):
 
 
 def pokes(part, x, cover):
-    """True if `part` has vertices outside every closed part of `cover`, above
-    the lowest point of their crossing `x`."""
+    """True if the head part `part` shows through the headgear `cover`: it has
+    vertices above the lowest point of their crossing `x` that `cover` does
+    not hide (looking in at the head from the side, nothing of `cover` is in
+    front of them)."""
     low = float(x[1][:, 2].min()) + 0.02
     count = 0
     for v in part.V:
-        if v[2] > low and not any(q.inside(v) for q in cover):
+        if v[2] <= low:
+            continue
+        out = Vector((v[0], v[1] - HEAD_AXIS_Y, 0.0))
+        if out.length < 1e-4:
+            continue
+        out.normalize()
+        origin = Vector(v) + out * 0.002
+        if not any(q.bvh.ray_cast(origin, out, 0.6)[0] is not None for q in cover):
             count += 1
             if count >= 3:
                 return True

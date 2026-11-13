@@ -615,7 +615,7 @@ def hair(p, w, m, style="fringe", seed=2):
             parts.append(sphere(f"{p}Clump{i}", rng.uniform(0.068, 0.085), (x, y, z), scale=(1.0, 1.0, 1.4),
                                 rot=(math.cos(a) * 0.35, -math.sin(a) * 0.35, 0), m=m, segs=10, rings=7))
     if style == "flat":
-        parts.append(sk.shell(p + "Crop", m, 1.7, 1.6, off=0.016, gap=110, tear=tear_fn(26, seed, 5, -0.03), segs=26, steps=2, lip=0.014))
+        parts.append(sk.shell(p + "Crop", m, 1.7, 1.6, off=0.016, gap=126, tear=tear_fn(26, seed, 5, -0.03), segs=26, steps=2, lip=0.014))
     return bind("Head", parts)
 
 
@@ -749,8 +749,9 @@ def face_parts(p, f, m, w, tongue=None, eye_z=1.62, k=1.0, lid=None, brow=None):
         # pulled low covers them instead of being pierced by them.
         bt = f["brows"][i]
         bz = ez + r * 1.35 + f["bz"][i]
-        turn = math.atan2(sk.front(ex + side * 0.05, bz) - sk.front(ex - side * 0.05, bz), 0.1)
-        parts.append(box(f"{p}Brow{i}", (r * 2.1, 0.05, 0.055 * k), (ex, sk.front(ex, bz) + 0.011, bz),
+        y_in, y_out = sk.front(ex - side * r * 0.9, bz), sk.front(ex + side * r * 0.9, bz)
+        turn = math.atan2(y_out - y_in, r * 1.8)
+        parts.append(box(f"{p}Brow{i}", (r * 2.1, 0.05, 0.055 * k), (ex, (y_in + y_out) * 0.5 + 0.006, bz),
                          rot=(0.0, math.radians(-side * bt), side * turn), bevel=0.02, m=brow))
     parts += mouth_parts(p, f["mouth"], m, w, tongue, k)
     return parts

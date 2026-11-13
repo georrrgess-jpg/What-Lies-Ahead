@@ -139,11 +139,11 @@ def mechanic(m):
     coverall, vest, white, dark, rust = m["shirt"], m["hivis"], m["white"], m["dark"], m["rust"]
     parts = head(p, m, w, ears=False)
     parts += hair(p, w, dark, "fringe", 14)
-    parts += bind("Head", [band(p + "EarBand", (0, HEAD_Y, 1.93), (0, HEAD_Y, 1.87), w * 0.53 + 0.02, 0.2, dark, n=2.6, thick=0.02, segs=22)])
+    parts += bind("Head", [band(p + "EarBand", (0, HEAD_Y, 1.96), (0, HEAD_Y, 1.905), w * 0.5 + 0.075, 0.29, dark, n=2.6, thick=0.02, segs=22)])
     for side in (-1, 1):
         parts += bind("Head", [
             cyl(f"{p}EarCup{side}", 0.14, 0.12, (side * (w * 0.5 + 0.05), HEAD_Y, 1.6), rot=(0, math.pi / 2, 0), segs=16, bevel=0.04, m=rust),
-            box(f"{p}EarArm{side}", (0.05, 0.08, 0.28), (side * (w * 0.5 + 0.04), HEAD_Y, 1.78), bevel=0.02, m=dark),
+            box(f"{p}EarArm{side}", (0.045, 0.08, 0.3), (side * (w * 0.5 + 0.07), HEAD_Y, 1.79), bevel=0.02, m=dark),
         ])
     tor, body = torso(p, coverall, w=0.7, d=0.47, z0=0.9, belly=0.05, hunch=0.05)
     parts += tor
@@ -189,20 +189,20 @@ def mechanic_accessories(m):
     acc = {
         "Acc_Mechanic_Cap": bind("Head", [
             cap_crown(p + "Cap", w, m["rust"], top=1.99),
-            box(p + "CapBrim", (0.36, 0.26, 0.045), (0, HEAD_Y - 0.37, 1.77), rot=rad(10, 0, 0), bevel=0.02, m=m["rust"]),
+            box(p + "CapBrim", (0.36, 0.26, 0.045), (0, HEAD_Y - 0.41, 1.765), rot=rad(10, 0, 0), bevel=0.02, m=m["rust"]),
             box(p + "CapPatch", (0.18, 0.04, 0.1), (0, HEAD_Y - 0.28, 1.86), rot=rad(-18, 0, 0), bevel=0.015, m=m["white"]),
         ]),
         "Acc_Mechanic_Goggles": bind("Head", [
-            head_band(p + "GoggleBand", w, 1.85, 1.79, m["dark"], off=0.012, thick=0.02),
-            cyl(p + "GoggleL", 0.09, 0.08, (-0.12, HEAD_Y - 0.28, 1.83), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
-            cyl(p + "GoggleR", 0.09, 0.08, (0.12, HEAD_Y - 0.28, 1.83), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
+            head_band(p + "GoggleBand", w, 1.875, 1.815, m["dark"], off=0.03, thick=0.022),
+            cyl(p + "GoggleL", 0.085, 0.08, (-0.12, HEAD_Y - 0.29, 1.865), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
+            cyl(p + "GoggleR", 0.085, 0.08, (0.12, HEAD_Y - 0.29, 1.865), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
         ]),
         "Acc_Mechanic_Wrench": bind("ForeArm.R", [
             box(p + "WrenchShaft", (0.06, 0.05, 0.5), (-0.44, -0.12, 0.36), rot=rad(-20, 0, 0), bevel=0.015, m=m["steel"]),
             box(p + "WrenchJaw", (0.14, 0.06, 0.12), (-0.44, -0.2, 0.12), rot=rad(-20, 0, 0), bevel=0.02, m=m["steel"]),
         ]),
         "Acc_Mechanic_Rag": bind("Head", [
-            cap_crown(p + "Bandana", w, m["rust"], rim=1.72, top=1.95, off=0.026),
+            cap_crown(p + "Bandana", w, m["rust"], rim=1.725, top=1.95, off=0.032),
             box(p + "Knot", (0.1, 0.08, 0.08), (0, HEAD_Y + 0.3, 1.75), bevel=0.025, m=m["rust"]),
         ]),
     }
