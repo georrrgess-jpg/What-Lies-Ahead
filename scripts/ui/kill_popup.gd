@@ -2,11 +2,16 @@ class_name KillPopup
 extends Node3D
 ## Floating reward above a defeated zombie: the score the kill was worth in
 ## big arcade digits, a flavour line above it (HEADSHOT, COMBO x1.4) and the
-## tickets it paid as a small line below. Popups are pooled, so kills don't
-## allocate (and re-rasterise) fresh text objects.
+## tickets it paid as a small line below. The score pops first, the other
+## lines snap in after it, and the popup drifts up and to one side before it
+## shrinks away. Popups are pooled, so kills don't allocate (and re-rasterise)
+## fresh text objects.
 
 const RISE := 0.9
 const LIFE := 0.95
+const FADE := 0.3
+## Sideways drift (metres) of a popup as it rises.
+const DRIFT := 0.22
 const SCORE_COLOR := Color(1.0, 0.8, 0.25)
 const TICKET_COLOR := Color(1.0, 0.95, 0.85)
 const OUTLINE := Color(0.12, 0.05, 0.2)
@@ -83,13 +88,21 @@ func _play(at: Vector3, points: int, tickets: int, flavour: String, flavour_colo
 	global_position = at
 	# Bigger rewards pop bigger (a 600-point headshot reads from across the pier).
 	var size := clampf(0.9 + points / 1200.0, 0.9, 1.45)
-	scale = Vector3.ONE * size * 0.45
+	scale = Vector3.ONE * size * 0.3
+	# The lines arrive one after another: score, then flavour, then tickets.
+	_flavour.scale = Vector3.ONE * 0.01
+	_tickets.scale = Vector3.ONE * 0.01
+	# Each popup drifts its own way, so the rewards of a multi-kill fan out.
+	var drift := Vector3(DRIFT, 0.0, 0.0).rotated(Vector3.UP, randf() * TAU)
 	if _tween and _tween.is_valid():
 		_tween.kill()
 	_tween = create_tween().set_parallel(true)
-	_tween.tween_property(self, "scale", Vector3.ONE * size, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_tween.tween_property(self, "global_position", at + Vector3.UP * RISE, LIFE).set_ease(Tween.EASE_OUT)
-	_tween.tween_method(func(a: float): _set_colors(SCORE_COLOR, flavour_color, a), 1.0, 0.0, 0.35).set_delay(LIFE - 0.35)
+	_tween.tween_property(self, "scale", Vector3.ONE * size, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(_flavour, "scale", Vector3.ONE, 0.16).set_delay(0.06).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(_tickets, "scale", Vector3.ONE, 0.16).set_delay(0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(self, "global_position", at + Vector3.UP * RISE + drift, LIFE).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_tween.tween_method(func(a: float): _set_colors(SCORE_COLOR, flavour_color, a), 1.0, 0.0, FADE).set_delay(LIFE - FADE)
+	_tween.tween_property(self, "scale", Vector3.ONE * size * 0.8, FADE).set_delay(LIFE - FADE).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	_tween.chain().tween_callback(_release)
 
 
