@@ -61,7 +61,7 @@ func _needs_redraw() -> bool:
 	var data := w.current
 	var changed := false
 	if data.charge_time > 0.0:
-		var k := w.charge_progress()
+		var k := w.shown_charge()
 		changed = changed or k != _last_charge or k >= 1.0
 		_last_charge = k
 	if data.uses_heat():
@@ -82,7 +82,7 @@ func _draw() -> void:
 	var data := w.current
 	var c := size * 0.5
 	if data.charge_time > 0.0:
-		_draw_charge(c, w.charge_progress(), data)
+		_draw_charge(c, w.shown_charge(), data)
 	if data.uses_heat():
 		_draw_heat(w.heat(), w.is_reloading(), data)
 	if data.burst_count > 1:
@@ -93,7 +93,7 @@ func _draw() -> void:
 
 func _draw_charge(c: Vector2, k: float, data: WeaponData) -> void:
 	# The idle ring steps aside for an optic's own reticle; a charge still shows.
-	var idle := 1.0 - player.ads if k <= 0.0 and player.view.sight_has_reticle() else 1.0
+	var idle := 1.0 - player.aim_blend if k <= 0.0 and player.view.sight_has_reticle() else 1.0
 	var ink := Color(UiKit.INK, 0.6 * idle)
 	draw_arc(c, RING_RADIUS, 0.0, TAU, 64, ink, 8.0, true)
 	if k <= 0.0:

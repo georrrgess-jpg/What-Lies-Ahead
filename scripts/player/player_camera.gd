@@ -11,7 +11,12 @@ extends Node3D
 ##     impact, eased steps up curbs, a nod while mantling, a dip as a slide
 ##     drops in, a lean into dashes and long landings, and a field of view
 ##     that widens a little with speed (sprints, slides) on top of the FOV
-##     setting but never while aiming.
+##     setting but never while aiming;
+##   - aiming zooms on the same eased blend that brings the sight up
+##     (Player.aim_blend), so the sight picture arrives with the zoom;
+##   - recoil kicks a goal that recovers on its own; the view follows it
+##     through a stiff spring, so a kick rises over a few frames and settles
+##     instead of jumping in one.
 ## Motion scales with Settings.camera_motion(); shake with Settings.shake_scale().
 
 const SLIDE_HEIGHT := 0.98
@@ -42,6 +47,10 @@ const DASH_DIP := 0.02
 const LAND_LEAN := 3.0
 ## How fast an eased step-up catches up (1/s).
 const STEP_EASE := 16.0
+## Recoil: how fast the kick's goal recovers (1/s: pitch, yaw), and the
+## spring the view follows it with (rad/s, damping).
+const RECOIL_RECOVER := Vector2(9.0, 10.0)
+const RECOIL_FOLLOW := Vector2(55.0, 0.65)
 
 ## Vertical field of view from the settings.
 var base_fov := 72.0
@@ -49,7 +58,14 @@ var base_fov := 72.0
 var recoil := 0.0
 
 var _recoil_yaw := 0.0
+## Where the recoil is headed (x pitch, y yaw, radians).
+var _recoil_goal := Vector2.ZERO
+var _recoil_follow := MotionSpring.new(RECOIL_FOLLOW.x, RECOIL_FOLLOW.y)
 var _trauma := 0.0
+## Shake strength (trauma squared), eased so a hit fades the shake in.
+var _shake := 0.0
+## The field of view without the zoom (the setting plus the speed widening).
+var _hip_fov := 72.0
 var _shake_time := 0.0
 var _hit_roll := 0.0
 var _death_time := 0.0
@@ -74,7 +90,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_recover(delta)
 	var motion := Settings.camera_motion()
-	var aim := player.ads
+	var aim := player.aim_blend
 	_crouch = move_toward(_crouch, 1.0 if player.is_crouched() else 0.0, delta * 7.0)
 	var bump := _bump.update(Vector3.ZERO, delta)
 	var traverse := _traverse_pose.update(_traverse_target(), delta)
@@ -85,7 +101,7 @@ func _process(delta: float) -> void:
 	rotation.x = player.look_pitch() + recoil + (bump.x + traverse.x) * motion
 	rotation.y = _recoil_yaw
 
-	var shake := _trauma * _trauma * Settings.shake_scale() * lerpf(1.0, 0.5, aim)
+	var shake := _shake * Settings.shake_scale() * lerpf(1.0, 0.5, aim)
 	var strafe := clampf(player.local_velocity().x / player.walk_speed, -1.0, 1.0)
 	_roll = lerpf(_roll, -deg_to_rad(STRAFE_ROLL) * strafe * (1.0 - 0.7 * aim), 1.0 - exp(-8.0 * delta))
 	camera.rotation = Vector3(
@@ -100,9 +116,13 @@ func _process(delta: float) -> void:
 
 ## Recoil and damage roll recover; shake is a decaying "trauma" value.
 func _recover(delta: float) -> void:
-	recoil = lerpf(recoil, 0.0, 1.0 - exp(-9.0 * delta))
-	_recoil_yaw = lerpf(_recoil_yaw, 0.0, 1.0 - exp(-10.0 * delta))
+	_recoil_goal.x *= exp(-RECOIL_RECOVER.x * delta)
+	_recoil_goal.y *= exp(-RECOIL_RECOVER.y * delta)
+	var follow := _recoil_follow.update(Vector3(_recoil_goal.x, _recoil_goal.y, 0.0), delta)
+	recoil = follow.x
+	_recoil_yaw = follow.y
 	_trauma = maxf(0.0, _trauma - 1.6 * delta)
+	_shake = lerpf(_shake, _trauma * _trauma, 1.0 - exp(-30.0 * delta))
 	_shake_time += delta * 38.0
 	_hit_roll = lerpf(_hit_roll, 0.0, 1.0 - exp(-7.0 * delta))
 	_step_offset *= exp(-STEP_EASE * delta)
@@ -137,13 +157,17 @@ func _slump(delta: float) -> void:
 
 
 ## Speed widens the view a little (sprinting, sliding, slide-jumps); aiming
-## zooms to the weapon's ADS field of view.
+## zooms to the weapon's ADS field of view on the aim blend itself, with no
+## smoothing of its own, so the zoom never trails the sight. The zoom runs
+## on the tangent of the half-angle, so magnification grows evenly (and the
+## look slows by exactly what is seen, Player._aim_look_scale()).
 func _update_fov(delta: float, motion: float) -> void:
 	var walk := player.walk_speed * player.weapons.move_scale()
 	var fast := clampf((player.horizontal_speed() - walk) / maxf(1.0, player.slide_max_speed - walk), 0.0, 1.0)
-	var target := base_fov + SPEED_FOV * fast * motion
-	target = lerpf(target, base_fov * player.ads_fov_scale(), ease(player.ads, -1.6))
-	camera.fov = lerpf(camera.fov, target, 1.0 - exp(-14.0 * delta))
+	_hip_fov = lerpf(_hip_fov, base_fov + SPEED_FOV * fast * motion, 1.0 - exp(-14.0 * delta))
+	var hip := tan(deg_to_rad(_hip_fov) * 0.5)
+	var aimed := tan(deg_to_rad(base_fov * player.ads_fov_scale()) * 0.5)
+	camera.fov = rad_to_deg(2.0 * atan(lerpf(hip, aimed, player.aim_blend)))
 
 
 ## Where shots go from: the eye where the camera shows it (the smoothed body
@@ -196,8 +220,8 @@ func land_lean(side: float) -> void:
 
 ## Kicks the view up by `degrees` and sideways by `yaw_degrees` (recovers on its own).
 func add_recoil(degrees: float, yaw_degrees := 0.0) -> void:
-	recoil = minf(recoil + deg_to_rad(degrees), deg_to_rad(9.0))
-	_recoil_yaw = clampf(_recoil_yaw + deg_to_rad(yaw_degrees), deg_to_rad(-3.0), deg_to_rad(3.0))
+	_recoil_goal.x = minf(_recoil_goal.x + deg_to_rad(degrees), deg_to_rad(9.0))
+	_recoil_goal.y = clampf(_recoil_goal.y + deg_to_rad(yaw_degrees), deg_to_rad(-3.0), deg_to_rad(3.0))
 
 
 func add_trauma(amount: float) -> void:
@@ -208,4 +232,4 @@ func add_trauma(amount: float) -> void:
 ## body's space) and knocks the aim down a little.
 func hit_from(local: Vector3) -> void:
 	_hit_roll = clampf(-local.x, -1.0, 1.0) * 0.09 + (0.04 if local.z > 0.0 else 0.0)
-	recoil -= deg_to_rad(2.5)
+	_recoil_goal.x -= deg_to_rad(2.5)
