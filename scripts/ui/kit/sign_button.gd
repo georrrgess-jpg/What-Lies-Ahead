@@ -2,7 +2,7 @@ class_name SignButton
 extends Button
 ## The kit's button: a painted fairground sign with a darker lip. It grows a
 ## little and sends a shine across its face on hover or keyboard focus,
-## squashes when pressed, shows a cyan ring while focused and plays the kit's
+## squashes when pressed, shows the focus ring while focused and plays the kit's
 ## sounds. Make one through UiKit (sign_button, back_button, icon_button,
 ## toggle_button) or SignButton.make().
 

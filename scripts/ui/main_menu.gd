@@ -227,6 +227,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	if step != 0:
 		_step_section(step)
 		get_viewport().set_input_as_handled()
+	elif get_viewport().gui_get_focus_owner() == null and _is_navigation(event):
+		# Nothing has focus (its control went away): hand it back to the page.
+		_focus_page(_nodes[_current_page])
+		get_viewport().set_input_as_handled()
+
+
+func _is_navigation(event: InputEvent) -> bool:
+	for action in [&"ui_up", &"ui_down", &"ui_left", &"ui_right", &"ui_accept", &"ui_focus_next", &"ui_focus_prev"]:
+		if event.is_action_pressed(action):
+			return true
+	return false
 
 
 ## -1 / 1 for the keys and buttons that step through the top bar's sections.

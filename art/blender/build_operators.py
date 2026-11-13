@@ -36,6 +36,11 @@ from operator_kit import HEAD_C, SHOULDER, ELBOW, WRIST, HIP, KNEE, Kit, sx
 from operator_anim import Rig, build_clips, bake_clips, curve
 
 
+# Operators in bulky costumes hold the weapon a little further out to the
+# right and closer in, so the right arm keeps clear of the jacket (see aim_frame).
+BULKY_HOLD = (0.06, -0.035, -0.015)
+
+
 # ---------------------------------------------------------------------------
 # Shared costume pieces
 # ---------------------------------------------------------------------------
@@ -264,12 +269,12 @@ def op_neon_courier():
     k.head()
     k.face(iris="#4a2c1a", brow="#1a1220", mouth="smirk", lids=0.2, brow_tilt=5, blush="#c8584e")
     k.hair_cap(hair, hairline(0.5, 0.2, -0.1, -0.38), grow=0.03)
-    k.add([blob(k.n("Puff"), 0.125, HEAD_C + Vector((0, 0.27, -0.06)), hair),
-           torus(k.n("PuffTie"), 0.07, 0.018, HEAD_C + Vector((0, 0.19, -0.05)), rot=rad(90, 0, 0), m=neon_p, major_segs=16, minor_segs=6)],
+    k.add([blob(k.n("Puff"), 0.11, HEAD_C + Vector((0, 0.285, -0.13)), hair),
+           torus(k.n("PuffTie"), 0.07, 0.018, HEAD_C + Vector((0, 0.205, -0.115)), rot=rad(90, 0, 0), m=neon_p, major_segs=16, minor_segs=6)],
           bone="Head", tag="hair")
     k.neck()
     # Helmet: a moulded shell over the top of the head, vents, glow stripe and a peak.
-    shell_parts = k.hair_cap(helmet, hairline(0.36, 0.3, 0.16, 0.02), grow=0.2, name="Helmet", tag="headgear")
+    shell_parts = k.hair_cap(helmet, hairline(0.36, 0.3, 0.18, 0.1), grow=0.2, name="Helmet", tag="headgear")
     top = Surface(shell_parts).projector("top")
     hy = HEAD_C.y
     k.add([strip(k.n("HelmetStripe"), line_path((0, hy - 0.22), (0, hy + 0.24), 0.034, steps=10, taper=0.5), top, neon_c, lift=0.006)]
@@ -307,7 +312,7 @@ def op_neon_courier():
         k.leg_band(side, "Shin", 0.78, 0.9, panel, grow=0.01, name="AnkleCuff")
         k.shoe(side, shoe_m, neon_c, toe_m=shoe_m, lace_m=neon_p, heel_m=helmet, stripe_m=neon_p, tongue_m=shoe_m)
     both(limbs)
-    return k, "thumbs_up", dict(bend=22)
+    return k, "thumbs_up", dict(bend=22, aim=BULKY_HOLD)
 
 
 def op_deep_diver():
@@ -349,7 +354,7 @@ def op_deep_diver():
 
     k.torso(suit)
     # Corselet: the brass collar the helmet seals onto.
-    k.add(loft(k.n("Corselet"), [(1.315, 0.265, 0.16, 0, 0, 2.4), (1.34, 0.25, 0.15, 0, 0, 2.4), (1.375, 0.17, 0.12, 0, 0, 2.2), (1.388, 0.15, 0.11, 0, 0, 2.2)],
+    k.add(loft(k.n("Corselet"), [(1.315, 0.265, 0.16, 0, 0, 2.4), (1.34, 0.25, 0.15, 0, 0, 2.4), (1.368, 0.17, 0.12, 0, 0, 2.2), (1.38, 0.15, 0.11, 0, 0, 2.2)],
                brass_dark, segs=24, sub=1, caps=("flat", "flat"), sharp=70), field=True, tag="shell")
     k.shells.append((1.3, 1.4, 0.02))
     front = k.on_torso("front")
@@ -388,13 +393,13 @@ def op_deep_diver():
     k.add([cyl(k.n("Gauge"), 0.05, 0.035, gp, rot=rad(0, 90, 0), segs=14, bevel=0.01, m=brass_dark),
            cyl(k.n("GaugeFace"), 0.037, 0.012, gp + Vector((0.016, 0, 0)), rot=rad(0, 90, 0), segs=14, bevel=0.0,
                m=mat("GaugeGlow", "#baffff", rough=0.3, emit=1.6))], bone="ForeArm.L", tag="arm")
-    return k, "knock", dict(bend=20, out=0.27, look=0.8)
+    return k, "knock", dict(bend=20, out=0.27, look=0.8, run_head=-7.0)
 
 
 def op_frost_guard():
     """Summit Lodge patroller: quilted parka with a fur-trimmed hood, goggles,
     knit scarf, mittens and snow boots."""
-    k = Kit("FG_", "#f2c8a8", dict(shoulder=1.02, chest=1.03, waist=1.14, hip=1.06, depth=1.02, arm=1.16, leg=1.06))
+    k = Kit("FG_", "#f2c8a8", dict(shoulder=1.0, chest=0.98, waist=1.1, hip=1.06, depth=0.95, arm=1.12, leg=1.06))
     parka = mat("Parka", "#4fb4ff", rough=0.55)
     parka_dark = mat("ParkaDark", "#2f7fcf", rough=0.55)
     fur = mat("Fur", "#f7f4f2", rough=0.95)
@@ -423,7 +428,7 @@ def op_frost_guard():
     k.add(hood, bone="Head", tag="headgear")
 
     k.torso(parka_dark, lower_m=pants, split_z=0.93)
-    k.shell("Parka", 0.9, 1.36, parka, grow=0.018, thickness=0.02, flare=0.012)
+    k.shell("Parka", 0.9, 1.36, parka, grow=0.014, thickness=0.018, flare=0.012)
     for i, z in enumerate((1.0, 1.11, 1.22)):
         k.belt(z, 0.016, parka_dark, grow=-0.004, name=f"Quilt{i}")
     k.belt(0.918, 0.05, fur, grow=0.004, name="FurHem")
@@ -432,23 +437,23 @@ def op_frost_guard():
                decal(k.n("Patch"), rrect(-0.15, 1.255, 0.085, 0.085, 0.02), front, scarf, lift=0.005),
                strip(k.n("PatchH"), line_path((-0.178, 1.255), (-0.122, 1.255), 0.018, steps=2), front, fur, lift=0.009, sink=0.0),
                strip(k.n("PatchV"), line_path((-0.15, 1.227), (-0.15, 1.283), 0.018, steps=2), front, fur, lift=0.009, sink=0.0),
-               strip(k.n("ScarfTail"), [(0.07, 1.37, 0.04), (0.1, 1.3, 0.05), (0.115, 1.22, 0.05), (0.12, 1.15, 0.046)], front, scarf, lift=0.012),
-               strip(k.n("ScarfStripeA"), line_path((0.067, 1.18), (0.167, 1.18), 0.02, steps=2), front, fur, lift=0.016, sink=0.0),
-               strip(k.n("ScarfStripeB"), line_path((0.064, 1.215), (0.164, 1.215), 0.02, steps=2), front, fur, lift=0.016, sink=0.0)])
-    k.add(torus(k.n("ScarfWrap"), 0.12, 0.04, (0, 0.0, 1.385), m=scarf, major_segs=22, minor_segs=8), bone="Chest", tag="scarf")
+               strip(k.n("ScarfTail"), [(0.07, 1.36, 0.036), (0.1, 1.3, 0.044), (0.115, 1.22, 0.044), (0.12, 1.15, 0.04)], front, scarf, lift=0.008),
+               strip(k.n("ScarfStripeA"), line_path((0.072, 1.18), (0.162, 1.18), 0.02, steps=2), front, fur, lift=0.011, sink=0.0),
+               strip(k.n("ScarfStripeB"), line_path((0.069, 1.215), (0.159, 1.215), 0.02, steps=2), front, fur, lift=0.011, sink=0.0)])
+    k.add(torus(k.n("ScarfWrap"), 0.118, 0.034, (0, 0.0, 1.372), m=scarf, major_segs=22, minor_segs=8), bone="Chest", tag="scarf")
 
     def limbs(side, s):
         k.upper_arm(side, parka)
         k.arm_band(side, "UpperArm", 0.44, 0.5, parka_dark, grow=-0.002, name="Quilt")
         k.fore_arm(side, parka)
-        k.arm_band(side, "ForeArm", 0.3, 0.36, parka_dark, grow=-0.002, name="Quilt")
-        k.arm_band(side, "ForeArm", 0.72, 0.95, fur, grow=0.014, name="Cuff")
+        k.arm_band(side, "ForeArm", 0.42, 0.48, parka_dark, grow=-0.002, name="Quilt")
+        k.arm_band(side, "ForeArm", 0.74, 0.95, fur, grow=0.006, name="Cuff")
         k.hand(side, mitt, mitten=True)
         k.thigh(side, pants)
         k.shin(side, pants)
         k.shoe(side, boot, dark, toe_m=boot, style="boot", collar_m=fur, shaft=0.13, shaft_m=boot, lace_m=fur)
     both(limbs)
-    return k, "warm_hands", dict(bend=24, out=0.36, look=0.55, sway=0.8)
+    return k, "warm_hands", dict(bend=24, out=0.36, look=0.55, sway=0.8, run_head=-8.0, aim=BULKY_HOLD)
 
 
 def op_astro_cadet():
@@ -475,9 +480,9 @@ def op_astro_cadet():
     k.add(blob(k.n("Bubble"), 0.315, HEAD_C + Vector((0, 0, 0.035)), glass, segs=28, rings=16), bone="Head", tag="headgear")
 
     k.torso(suit)
-    k.add([loft(k.n("Yoke"), [(1.33, 0.262, 0.17, 0, 0, 2.4), (1.37, 0.24, 0.18, 0, 0, 2.2), (1.41, 0.205, 0.185, 0, 0, 2.0)], suit, segs=24, sub=1,
+    k.add([loft(k.n("Yoke"), [(1.33, 0.262, 0.158, 0, 0, 2.4), (1.37, 0.24, 0.165, 0, 0, 2.2), (1.41, 0.205, 0.17, 0, 0, 2.0)], suit, segs=24, sub=1,
                 caps=("flat", "flat"), sharp=70),
-           torus(k.n("NeckRing"), 0.205, 0.04, (0, 0, 1.418), m=shade, major_segs=30, minor_segs=8)], bone="Chest", tag="shell")
+           torus(k.n("NeckRing"), 0.19, 0.036, (0, 0, 1.418), m=shade, major_segs=30, minor_segs=8)], bone="Chest", tag="shell")
     front = k.on_torso("front")
     detail(k, [decal(k.n("ChestPlate"), rrect(0, 1.195, 0.3, 0.19, 0.035), front, shade, lift=0.006),
                decal(k.n("Display"), rrect(0, 1.155, 0.19, 0.055, 0.012), front, dark, lift=0.011, sink=0.0),
@@ -505,14 +510,14 @@ def op_astro_cadet():
         k.arm_band(side, "UpperArm", 0.1, 0.3, orange, grow=0.01, name="Shoulder")
         k.fore_arm(side, suit)
         k.arm_band(side, "ForeArm", -0.04, 0.12, shade, grow=0.01, name="Elbow")
-        k.arm_band(side, "ForeArm", 0.74, 0.93, orange, grow=0.01, name="Cuff")
+        k.arm_band(side, "ForeArm", 0.74, 0.93, orange, grow=0.006, name="Cuff")
         k.hand(side, suit, plate_m=orange)
         k.thigh(side, suit)
         k.shin(side, suit)
         k.leg_band(side, "Shin", -0.03, 0.14, shade, grow=0.01, name="Knee")
         k.shoe(side, shade, dark, toe_m=suit, style="boot", collar_m=orange, shaft=0.15, shaft_m=suit)
     both(limbs)
-    return k, "salute", dict(bend=18, out=0.33)
+    return k, "salute", dict(bend=18, out=0.33, aim=BULKY_HOLD, run_head=-8.0)
 
 
 def op_midway_maestro():
@@ -582,7 +587,7 @@ def op_midway_maestro():
         k.leg_band(side, "Shin", 0.74, 0.99, spat, grow=0.012, name="Spat")
         k.shoe(side, shoe_m, shoe_m, toe_m=spat, style="shoe")
     both(limbs)
-    return k, "ta_da", dict(bend=22, out=0.3, lean=-2.0)
+    return k, "ta_da", dict(bend=22, out=0.3, lean=-2.0, aim=BULKY_HOLD)
 
 
 def op_glitch():
@@ -628,7 +633,7 @@ def op_glitch():
         k.arm_band(side, "UpperArm", -0.08, 0.16, frame, grow=0.012, name="Shoulder")
         k.fore_arm(side, holo)
         k.arm_band(side, "ForeArm", 0.4, 0.46, holo2, grow=0.004, name="Slice")
-        k.arm_band(side, "ForeArm", 0.76, 0.93, frame, grow=0.009, name="Cuff")
+        k.arm_band(side, "ForeArm", 0.76, 0.93, frame, grow=0.005, name="Cuff")
         k.hand(side, holo2)
         k.thigh(side, holo)
         k.leg_band(side, "Thigh", 0.5, 0.56, holo2, grow=0.004, name="Slice")

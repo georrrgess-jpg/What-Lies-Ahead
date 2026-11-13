@@ -369,9 +369,9 @@ func _build_lodge() -> void:
 	_late(model, "res://scripts/props/frost_lodge.gd", {})
 	# Front wall with the kitchen doorway (X 7.5..9.5) at terrace level.
 	var z := TERRACE_Z0 - 0.35
-	_collider(lodge, "FrontWallWest", Vector3(23.5, 13.0, 0.7), Vector3(-4.25, 6.5, z))
-	_collider(lodge, "FrontWallEast", Vector3(2.5, 13.0, 0.7), Vector3(10.75, 6.5, z))
-	_collider(lodge, "KitchenLintel", Vector3(2.0, 9.0, 0.7), Vector3(8.5, 8.3, z))
+	_collider(lodge, "FrontWallWest", Vector3(23.4, 13.0, 0.7), Vector3(-4.3, 6.5, z))
+	_collider(lodge, "FrontWallEast", Vector3(2.4, 13.0, 0.7), Vector3(10.8, 6.5, z))
+	_collider(lodge, "KitchenLintel", Vector3(2.2, 9.0, 0.7), Vector3(8.5, 8.3, z))
 	# Body of the building behind the wall, leaving the kitchen room open.
 	_collider(lodge, "HallBody", Vector3(22.5, 13.0, 13.4), Vector3(-5.25, 6.5, -31.3))
 	_collider(lodge, "KitchenBack", Vector3(5.5, 6.0, 9.6), Vector3(9.25, 3.0, -33.2))
@@ -409,20 +409,27 @@ func _build_terrace() -> void:
 
 	# Roofed west half: posts and the glass windbreak (roof art is in the lodge model).
 	for x in [-15.6, -11.2, -6.8, -3.2]:
-		_collider(t, "RoofPost%d" % int(absf(x) * 10), Vector3(0.4, 3.6, 0.4), Vector3(x, TERRACE_Y + 1.8, -17.6))
+		_post(t, "RoofPost%d" % int(absf(x) * 10), 0.22, 3.6, Vector3(x, TERRACE_Y, -17.6))
 	_collider(t, "Windbreak", Vector3(0.3, 2.4, 6.4), Vector3(TERRACE_X0 + 0.2, TERRACE_Y + 1.2, -20.8))
+	# The roof itself (art in the lodge model) is off-limits to the player.
+	_player_block(t, "RoofCap", Vector3(TERRACE_X1 - TERRACE_X0 + 1.0, 4.0, TERRACE_Z1 - TERRACE_Z0 + 1.0),
+		Vector3(cx, TERRACE_Y + 3.3 + 2.0, cz))
 
 	# Railings along the front edge (gaps for the ramps and stairs) and the east side.
 	_fence_run(t, "RailFrontW", Vector3(TERRACE_X0 + 3.0, TERRACE_Y, TERRACE_Z1 + 0.15), Vector3(-3.0, TERRACE_Y, TERRACE_Z1 + 0.15))
 	_fence_run(t, "RailFrontE", Vector3(1.0, TERRACE_Y, TERRACE_Z1 + 0.15), Vector3(TERRACE_X1 - 3.0, TERRACE_Y, TERRACE_Z1 + 0.15))
 	_fence_run(t, "RailEast", Vector3(TERRACE_X1 - 0.15, TERRACE_Y, TERRACE_Z0), Vector3(TERRACE_X1 - 0.15, TERRACE_Y, TERRACE_Z1))
+	# West edge: from the end of the windbreak to the head of the west ramp.
+	_fence_run(t, "RailWest", Vector3(TERRACE_X0 + 0.15, TERRACE_Y, -17.5), Vector3(TERRACE_X0 + 0.15, TERRACE_Y, TERRACE_Z1))
 
 	# Terrace furniture (cover up on the deck).
 	var y := TERRACE_Y
 	_solid_prop(t, "frost_table", "PicnicA", Vector3(-12.6, y, -21.2), 90.0, Vector3(1.8, 0.8, 2.4))
 	_solid_prop(t, "frost_table", "PicnicB", Vector3(-8.0, y, -21.2), 90.0, Vector3(1.8, 0.8, 2.4))
-	_solid_prop(t, "frost_heater", "HeaterA", Vector3(-14.8, y, -18.6), 0.0, Vector3(0.5, 2.4, 0.5))
-	_solid_prop(t, "frost_heater", "HeaterB", Vector3(-5.0, y, -18.6), 0.0, Vector3(0.5, 2.4, 0.5))
+	for heater in [["HeaterA", Vector3(-14.8, y, -18.6)], ["HeaterB", Vector3(-5.0, y, -18.6)]]:
+		_prop(t, "frost_heater", heater[0], heater[1], 0.0, Vector3(0.5, 2.4, 0.5))
+		_post(t, heater[0] + "Collision", 0.27, 2.4, heater[1])
+		_player_block(t, heater[0] + "Cap", Vector3(0.9, 1.4, 0.9), heater[1] + Vector3(0, 3.1, 0))
 	_solid_prop(t, "frost_ski_rack", "TerraceRack", Vector3(1.5, y, -23.2), 0.0, Vector3(3.0, 1.6, 0.9))
 	_solid_prop(t, "frost_fire_table", "FireTable", Vector3(5.0, y, -19.4), 0.0, Vector3(2.4, 0.7, 1.4))
 	_fire(t, "FireTableFlame", Vector3(5.0, y + 0.62, -19.4), 0.75, false)
@@ -430,7 +437,8 @@ func _build_terrace() -> void:
 		var a := deg_to_rad(-120.0 + k * 60.0)
 		var p := Vector3(5.0, y, -19.4) + Vector3(sin(a), 0, cos(a)) * Vector3(2.0, 0, 1.6)
 		_prop(dressing, "frost_chair", "LoungeChair%d" % k, p, rad_to_deg(a) + 180.0, Vector3(0.8, 1.0, 0.9))
-	_solid_prop(t, "frost_crates", "KitchenCrates", Vector3(10.6, y, -22.6), 0.0, Vector3(1.6, 1.2, 1.2))
+	# Clear of the kitchen doorway (zombies come out of it and turn east).
+	_solid_prop(t, "frost_crates", "KitchenCrates", Vector3(11.1, y, -21.2), 90.0, Vector3(1.6, 1.2, 1.2))
 
 
 ## A ramp from the terrace edge (z_top, at deck height) down to the ground (z_bottom).
@@ -456,13 +464,38 @@ func _ramp(parent: Node3D, ramp_name: String, x0: float, x1: float, z_top: float
 	mi.name = "Mesh"
 	mi.mesh = _box_mesh(Vector3(x1 - x0, thick, length + 0.3), material)
 	body.add_child(mi)
-	# Side stringers.
+	# Side kerbs (timber), solid: KERB_H above the ramp surface.
 	for side in [x0 + 0.08, x1 - 0.08]:
 		var s := MeshInstance3D.new()
 		s.name = "Stringer%s" % ("L" if side < (x0 + x1) * 0.5 else "R")
-		s.mesh = _box_mesh(Vector3(0.16, thick + 0.12, length + 0.3), _mat("timber_dark", Color(0.33, 0.21, 0.19), 0.7))
-		s.position = Vector3(side - (x0 + x1) * 0.5, 0.06, 0)
+		s.mesh = _box_mesh(Vector3(0.16, thick + KERB_H, length + 0.3), _mat("timber_dark", Color(0.33, 0.21, 0.19), 0.7))
+		s.position = Vector3(side - (x0 + x1) * 0.5, KERB_H * 0.5, 0)
 		body.add_child(s)
+		_kerb(parent, "%sKerb%s" % [ramp_name, "L" if side < (x0 + x1) * 0.5 else "R"], side - 0.08, side + 0.08, z_top, z_bottom)
+
+
+## Height of the solid kerbs along ramps and stairs, above the walking surface.
+const KERB_H := 0.4
+
+
+## Collision for a kerb along a ramp or stair side, from the terrace edge
+## (z_top) down to the ground (z_bottom): a wedge with upright ends.
+func _kerb(parent: Node3D, kerb_name: String, xa: float, xb: float, z_top: float, z_bottom: float) -> void:
+	var body := StaticBody3D.new()
+	body.name = kerb_name
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var wedge := ConvexPolygonShape3D.new()
+	var pts := PackedVector3Array()
+	for x in [xa, xb]:
+		pts.append(Vector3(x, 0.0, z_top))
+		pts.append(Vector3(x, TERRACE_Y + KERB_H, z_top))
+		pts.append(Vector3(x, KERB_H, z_bottom))
+		pts.append(Vector3(x, 0.0, z_bottom))
+	wedge.points = pts
+	shape.shape = wedge
+	body.add_child(shape)
 
 
 ## Visual steps over an invisible ramp (the player and the navmesh use the ramp).
@@ -492,13 +525,15 @@ func _stairs(parent: Node3D, stairs_name: String, x0: float, x1: float, z_top: f
 		mi.mesh = _box_mesh(Vector3(x1 - x0, h + rise, tread + 0.02), material)
 		mi.position = Vector3((x0 + x1) * 0.5, (h + rise) * 0.5, z_top + tread * (k + 0.5))
 		body.add_child(mi)
+	# Stone cheeks, solid: KERB_H above the line of the step edges.
 	for side in [x0 - 0.15, x1 + 0.15]:
 		var s := MeshInstance3D.new()
 		s.name = "Cheek%s" % ("L" if side < x0 else "R")
-		s.mesh = _box_mesh(Vector3(0.3, 0.3, length + 0.2), _textured("stone_wall", "frost_stone", 0.35, 0.9))
-		s.position = top_mid + Vector3(side - (x0 + x1) * 0.5, 0.0, 0)
+		s.mesh = _box_mesh(Vector3(0.3, 0.3 + KERB_H, length + 0.2), _textured("stone_wall", "frost_stone", 0.35, 0.9))
+		s.position = top_mid + Vector3(side - (x0 + x1) * 0.5, KERB_H * 0.5 - 0.1, 0)
 		s.rotation.x = angle
 		body.add_child(s)
+		_kerb(parent, "%sKerb%s" % [stairs_name, "L" if side < x0 else "R"], side - 0.15, side + 0.15, z_top, z_bottom)
 
 
 # ---------------------------------------------------------------------------
@@ -627,11 +662,9 @@ func _build_entrances() -> void:
 	_prop(e, "frost_lift_station", "ChairliftLanding", LANDING, rad_to_deg(yaw), Vector3(8, 7, 10))
 	var k := 0
 	for local in [Vector3(-4.6, 3.0, 3.4), Vector3(4.6, 3.0, 3.4), Vector3(-4.6, 3.0, -3.4), Vector3(4.6, 3.0, -3.4)]:
-		var post := _collider(e, "LandingPost%d" % k, Vector3(0.6, 6.0, 0.6), LANDING + basis * local)
-		post.rotation.y = yaw
+		_post(e, "LandingPost%d" % k, 0.32, 6.0, LANDING + basis * (local * Vector3(1, 0, 1)))
 		k += 1
-	var column := _collider(e, "LandingColumn", Vector3(1.2, 4.0, 1.2), LANDING + basis * Vector3(0, 2.0, -2.0))
-	column.rotation.y = yaw
+	_post(e, "LandingColumn", 0.65, 4.0, LANDING + basis * Vector3(0, 0, -2.0))
 
 
 # ---------------------------------------------------------------------------
@@ -682,8 +715,8 @@ func _build_ski_run() -> void:
 		_prop(dressing, "frost_marker", "RunMarkerW%d" % i, Vector3(RUN_X0 + 1.4, y, z), 0.0, Vector3(0.1, 1.6, 0.1))
 		_prop(dressing, "frost_marker", "RunMarkerE%d" % i, Vector3(RUN_X1 - 1.4, y, z), 0.0, Vector3(0.1, 1.6, 0.1))
 	_prop(run, "frost_run_arch", "FinishArch", Vector3((RUN_X0 + RUN_X1) * 0.5, 0, RUN_Z_BOTTOM + 0.5), 0.0, Vector3(10, 5, 0.6))
-	_collider(run, "ArchPostW", Vector3(0.6, 4.6, 0.6), Vector3(RUN_X0 + 0.6, 2.3, RUN_Z_BOTTOM + 0.5))
-	_collider(run, "ArchPostE", Vector3(0.6, 4.6, 0.6), Vector3(RUN_X1 - 0.6, 2.3, RUN_Z_BOTTOM + 0.5))
+	_post(run, "ArchPostW", 0.32, 4.6, Vector3(RUN_X0 + 0.6, 0, RUN_Z_BOTTOM + 0.5))
+	_post(run, "ArchPostE", 0.32, 4.6, Vector3(RUN_X1 - 0.6, 0, RUN_Z_BOTTOM + 0.5))
 
 
 # ---------------------------------------------------------------------------
@@ -697,7 +730,7 @@ func _build_arena_props() -> void:
 
 	# Snowbanks: chest-high cover, kept off the patrol ring around the station.
 	var banks := [
-		[Vector3(-3.6, 0, -8.6), 15.0, 1.0], [Vector3(-19.2, 0, -11.2), -25.0, 1.1], [Vector3(11.8, 0, -9.6), 55.0, 0.95],
+		[Vector3(-3.6, 0, -8.6), 15.0, 1.0], [Vector3(-19.2, 0, -11.2), -25.0, 1.1], [Vector3(13.3, 0, -9.2), 55.0, 0.95],
 		[Vector3(-16.4, 0, 12.6), 30.0, 1.0], [Vector3(17.6, 0, 19.0), -10.0, 1.1], [Vector3(-21.4, 0, 2.6), 80.0, 0.9],
 		[Vector3(8.6, 0, 18.6), 5.0, 0.85],
 	]
@@ -712,7 +745,7 @@ func _build_arena_props() -> void:
 	# Ski racks: waist-high cover with a see-through top.
 	_solid_prop(props, "frost_ski_rack", "SkiRackEast", Vector3(13.2, 0, -0.4), 90.0, Vector3(3.0, 1.6, 0.9))
 	_solid_prop(props, "frost_ski_rack", "SkiRackSouth", Vector3(-2.4, 0, 13.8), 10.0, Vector3(3.0, 1.6, 0.9))
-	_solid_prop(props, "frost_ski_rack", "SkiRackRamp", Vector3(8.4, 0, -12.6), 0.0, Vector3(3.0, 1.6, 0.9))
+	_solid_prop(props, "frost_ski_rack", "SkiRackRamp", Vector3(6.9, 0, -12.6), 0.0, Vector3(3.0, 1.6, 0.9))
 
 	# Fire-pit lounge (east) with log benches.
 	for entry in [[Vector3(17.6, 0, -6.4), 0], [Vector3(14.6, 0, 15.2), 1]]:
@@ -739,7 +772,8 @@ func _build_arena_props() -> void:
 	for p in pines:
 		var tree := _prop(dressing, "frost_pine", "Pine%d" % i, p[0], i * 53.0, Vector3(3, 8, 3))
 		tree.scale = Vector3.ONE * p[1]
-		_collider(props, "Pine%dTrunk" % i, Vector3(0.7, 4.0, 0.7), p[0] + Vector3(0, 2.0, 0))
+		_post(props, "Pine%dTrunk" % i, 0.38, 4.0, p[0])
+		_player_block(props, "Pine%dCap" % i, Vector3(1.6, 4.0, 1.6), p[0] + Vector3(0, 6.0, 0))
 		i += 1
 
 	# Lantern posts around the plaza and along the edges of the trails.
@@ -751,12 +785,14 @@ func _build_arena_props() -> void:
 	i = 0
 	for p in lamps:
 		_prop(dressing, "frost_lamp", "Lantern%02d" % i, p, i * 37.0, Vector3(0.3, 3.6, 0.3))
-		_collider(props, "Lantern%02dPost" % i, Vector3(0.3, 3.4, 0.3), p + Vector3(0, 1.7, 0))
+		_post(props, "Lantern%02dPost" % i, 0.17, 3.4, p)
+		_player_block(props, "Lantern%02dCap" % i, Vector3(0.5, 2.0, 0.5), p + Vector3(0, 4.4, 0))
 		i += 1
 	_build_string_lights(lamps)
 
 	# Signs.
-	_solid_prop(props, "frost_signpost", "Signpost", Vector3(-0.4, 0, 4.8), 30.0, Vector3(0.3, 2.8, 0.3))
+	_prop(props, "frost_signpost", "Signpost", Vector3(-0.4, 0, 4.8), 30.0, Vector3(0.3, 3.3, 0.3))
+	_post(props, "SignpostCollision", 0.14, 3.3, Vector3(-0.4, 0, 4.8))
 	_prop(dressing, "frost_resort_sign", "ResortSign", Vector3(14.0, 0, 23.0), 200.0, Vector3(5, 3, 0.4))
 	_prop(dressing, "frost_telescope", "Telescope", Vector3(-1.0, 0, 23.2), 180.0, Vector3(0.5, 1.4, 0.5))
 
@@ -791,6 +827,8 @@ func _build_fences() -> void:
 	_player_wall(walls, "South", Vector3(ARENA_X0, 0, ARENA_Z1), Vector3(ARENA_X1, 0, ARENA_Z1), h)
 	_player_wall(walls, "East", Vector3(ARENA_X1, 0, -15.0), Vector3(ARENA_X1, 0, ARENA_Z1), h)
 	_player_wall(walls, "NorthWest", Vector3(ARENA_X0, 0, -15.5), Vector3(TERRACE_X0, 0, -15.5), h)
+	# The terrace's west edge, above its rail and windbreak (nobody hops onto the drift beyond).
+	_player_wall(walls, "TerraceWest", Vector3(TERRACE_X0 - 0.2, 0, TERRACE_Z0 - 0.4), Vector3(TERRACE_X0 - 0.2, 0, -15.5), h + 2.0)
 	_player_wall(walls, "RunEast", Vector3(RUN_X1 - 0.6, 0, -24.0), Vector3(RUN_X1 - 0.6, 0, -15.0), h + 4.0)
 	_player_wall(walls, "RunCorner", Vector3(RUN_X1 - 0.6, 0, -15.0), Vector3(ARENA_X1, 0, -15.0), h)
 	_player_wall(walls, "RunTop", Vector3(RUN_X0, 0, -24.0), Vector3(RUN_X1, 0, -24.0), h + 6.0)
@@ -1037,7 +1075,18 @@ func _build_backdrop() -> void:
 	var snowfall := MultiMeshInstance3D.new()
 	snowfall.name = "Snowfall"
 	level.add_child(snowfall)
-	_late(snowfall, "res://scripts/fx/frost_snowfall.gd", {})
+	# Roofed places the snow must not fall through: the terrace's covered west
+	# half, the kitchen, the gondola bay, the shed, the chairlift landing and
+	# the rental hut.
+	var shelters: Array[AABB] = [
+		AABB(Vector3(TERRACE_X0 - 0.4, TERRACE_Y - 0.2, TERRACE_Z0 - 0.4), Vector3(13.6, 3.7, 7.2)),
+		AABB(Vector3(6.0, TERRACE_Y - 0.2, -28.8), Vector3(5.2, 4.2, 4.6)),
+		AABB(Vector3(-33.2, -0.2, -14.2), Vector3(9.0, 6.4, 12.4)),
+		AABB(Vector3(-32.8, -0.2, 11.4), Vector3(8.6, 4.8, 9.2)),
+		AABB(Vector3(LANDING.x - 4.4, -0.2, LANDING.z - 5.0), Vector3(8.8, 6.0, 9.6)),
+		AABB(Vector3(STATION.x - 2.2, -0.2, STATION.z - 1.9), Vector3(4.4, 3.2, 3.8)),
+	]
+	_late(snowfall, "res://scripts/fx/frost_snowfall.gd", {"shelters": shelters})
 	var weather := Node.new()
 	weather.name = "Weather"
 	level.add_child(weather)
@@ -1159,8 +1208,8 @@ func _build_string_lights(lamps: Array) -> void:
 	var spans := [
 		[lamps[0] + top, lamps[4] + top], [lamps[4] + top, lamps[5] + top], [lamps[5] + top, lamps[3] + top],
 		[lamps[3] + top, lamps[8] + top], [lamps[8] + top, lamps[1] + top], [lamps[1] + top, lamps[2] + top],
-		[lamps[2] + top, lamps[0] + top], [lamps[0] + top, lamps[6] + top], [lamps[2] + top, lamps[10] + top],
-		[lamps[10] + top, lamps[9] + top], [lamps[3] + top, lamps[11] + top], [lamps[6] + top, lamps[7] + top],
+		[lamps[2] + top, lamps[0] + top], [lamps[0] + top, lamps[6] + top], [lamps[10] + top, lamps[7] + top],
+		[lamps[9] + top, lamps[1] + top], [lamps[3] + top, lamps[11] + top], [lamps[6] + top, lamps[7] + top],
 		# Up to the terrace roof edge.
 		[lamps[4] + top, Vector3(-6.8, TERRACE_Y + 3.4, -17.4)], [lamps[5] + top, Vector3(-3.2, TERRACE_Y + 3.4, -17.4)],
 	]
@@ -1349,7 +1398,11 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.cell_size = 0.25
 	mesh.cell_height = 0.25
 	mesh.agent_height = 1.75
-	mesh.agent_radius = 0.5
+	# Paths keep 0.75 m off walls and props: the largest zombies (a Bruiser or a
+	# Yeti is 0.78 m in radius) could not get close enough to a waypoint tucked
+	# 0.5 m (or, after contour simplification, less) from a corner to tick it
+	# off, and stood pushing at the corner until the stall failsafe moved them.
+	mesh.agent_radius = 0.75
 	mesh.agent_max_climb = 0.25
 	mesh.agent_max_slope = 40.0
 	mesh.region_min_size = 14.0
@@ -1358,8 +1411,62 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, region)
 	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
-	region.navigation_mesh = mesh
-	print("build_summit_lodge: navmesh polygons = %d" % mesh.get_polygon_count())
+	var before := mesh.get_polygon_count()
+	region.navigation_mesh = _largest_island(mesh)
+	print("build_summit_lodge: navmesh polygons = %d (dropped %d on islands)" % [region.navigation_mesh.get_polygon_count(),
+		before - region.navigation_mesh.get_polygon_count()])
+
+
+## Keeps only the largest connected set of polygons. The bake leaves small
+## walkable islands inside the rental hut, on the snowdrift and behind the
+## lodge; nothing can reach those, and a path must never end on one.
+func _largest_island(mesh: NavigationMesh) -> NavigationMesh:
+	var count := mesh.get_polygon_count()
+	var parent := PackedInt32Array()
+	parent.resize(count)
+	for i in count:
+		parent[i] = i
+	var owner_of := {}
+	for i in count:
+		for v in mesh.get_polygon(i):
+			if owner_of.has(v):
+				var a := _find(parent, i)
+				var b := _find(parent, owner_of[v])
+				parent[a] = b
+			else:
+				owner_of[v] = i
+	var sizes := {}
+	for i in count:
+		var r := _find(parent, i)
+		sizes[r] = int(sizes.get(r, 0)) + 1
+	var best := -1
+	for r in sizes:
+		if best < 0 or sizes[r] > sizes[best]:
+			best = r
+	var out: NavigationMesh = mesh.duplicate()
+	out.clear_polygons()
+	var verts := mesh.get_vertices()
+	var remap := {}
+	var kept := PackedVector3Array()
+	for i in count:
+		if _find(parent, i) != best:
+			continue
+		var mapped := PackedInt32Array()
+		for v in mesh.get_polygon(i):
+			if not remap.has(v):
+				remap[v] = kept.size()
+				kept.append(verts[v])
+			mapped.append(remap[v])
+		out.add_polygon(mapped)
+	out.vertices = kept
+	return out
+
+
+func _find(parent: PackedInt32Array, i: int) -> int:
+	while parent[i] != i:
+		parent[i] = parent[parent[i]]
+		i = parent[i]
+	return i
 
 
 # ---------------------------------------------------------------------------
@@ -1465,6 +1572,43 @@ func _visual_box(parent: Node3D, box_name: String, size: Vector3, pos: Vector3, 
 
 
 ## Invisible collision box (for props whose art comes from a .glb).
+## Invisible player-only collider (physics layer 5: zombies, bullets and the
+## navmesh ignore it): keeps the player off perches and out of gaps.
+func _player_block(parent: Node3D, block_name: String, size: Vector3, pos: Vector3, yaw := 0.0) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = block_name
+	body.collision_layer = 16
+	body.collision_mask = 0
+	body.position = pos
+	body.rotation.y = yaw
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	return body
+
+
+## Invisible upright cylinder collider for posts, poles and trunks: a zombie
+## pressing on a round post slides off it, where the flat face of a box post
+## can hold one that walks straight into it.
+func _post(parent: Node3D, post_name: String, radius: float, height: float, base: Vector3) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = post_name
+	body.position = base + Vector3(0, height * 0.5, 0)
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var cyl := CylinderShape3D.new()
+	cyl.radius = radius
+	cyl.height = height
+	shape.shape = cyl
+	body.add_child(shape)
+	return body
+
+
 func _collider(parent: Node3D, collider_name: String, size: Vector3, pos: Vector3) -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.name = collider_name

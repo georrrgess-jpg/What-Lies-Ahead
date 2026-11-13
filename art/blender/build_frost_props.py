@@ -435,9 +435,10 @@ def build_signpost():
     """Direction post with arrow signs to the lodge, gondola and chairlift."""
     reset_scene()
     wood = fmat("TimberDark")
-    signs = [("LODGE", 1.95, 0, "#e2343f"), ("GONDOLA", 1.6, 180, "#2f7fc0"), ("CHAIRLIFT", 1.25, 95, "#2c7258")]
-    parts = [box("Post", (0.16, 0.16, 2.6), (0, 0, 1.3), bevel=0.03, m=wood)]
-    parts += snow_cap("PostSnow", (0.2, 0.2, 0.1), (0, 0, 2.6), drips=0)
+    # Boards start above head height (1.8 m): nobody walks through them.
+    signs = [("LODGE", 2.85, 0, "#e2343f"), ("GONDOLA", 2.5, 180, "#2f7fc0"), ("CHAIRLIFT", 2.15, 95, "#2c7258")]
+    parts = [box("Post", (0.16, 0.16, 3.3), (0, 0, 1.65), bevel=0.03, m=wood)]
+    parts += snow_cap("PostSnow", (0.2, 0.2, 0.1), (0, 0, 3.3), drips=0)
     for i, (label, z, yaw, col) in enumerate(signs):
         board = mat(f"FrostSign{i}", col, rough=0.5)
         piece = [

@@ -8,6 +8,10 @@ extends Node
 ##   --shot-level=<id>     level to load (default prize_pier)
 ##   --shot-scene=level|intro|menu|results|defeat|pause|kiosk|kit|<any menu page id: play, settings, locker, arsenal, career, ...>
 ##                         (kit = the UI kit gallery, scripts/ui/kit/kit_gallery.gd)
+##   --shot-keys=a,b,...   on a menu page: press these in turn before the capture and print the
+##                         page and the focused control after each (keyboard-only navigation
+##                         check). Each is an input action (ui_down, ui_accept, ui_cancel) or
+##                         a key as key:<name> (key:E, key:PageDown)
 ##   --shot-locker=<slot>  with --shot-scene=locker: open that tab (avatar, weapon_finish, gloves...)
 ##   --shot-item=<id>      with --shot-scene=locker or shop: select that cosmetic (opens its tab)
 ##   --shot-filter=owned|sale   with --shot-scene=locker: the tray's filter
@@ -20,7 +24,7 @@ extends Node
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
 ##   --shot-pitch=deg
 ##   --shot-fov=deg        vertical field of view
-##   --shot-weapon=id
+##   --shot-weapon=id      (with --shot-scene=arsenal: the weapon shown on the stand)
 ##   --shot-zombies=0|1    stage the four reference zombies
 ##   --shot-hud=0|1
 ##   --shot-frames=n       frames to wait before capturing
@@ -61,6 +65,35 @@ func _wait(frames: int) -> void:
 		await get_tree().process_frame
 
 
+## Presses a sequence of actions or keys on the menu, one at a time, and
+## prints where each left the page and the keyboard focus.
+func _press_keys(menu: Node, keys: String) -> void:
+	await _wait(20)
+	for token in keys.split(",", false):
+		for pressed in [true, false]:
+			Input.parse_input_event(_key_event(token, pressed))
+			await _wait(2)
+		await _wait(24)
+		var focus := menu.get_viewport().gui_get_focus_owner()
+		var what := "none"
+		if focus:
+			what = "%s %s" % [focus.get_class(), focus.get("text") if focus.get("text") else focus.name]
+		print("[keys] %-14s page=%-9s focus=%s" % [token, menu._current_page, what])
+
+
+func _key_event(token: String, pressed: bool) -> InputEvent:
+	if token.begins_with("key:"):
+		var key := InputEventKey.new()
+		key.physical_keycode = OS.find_keycode_from_string(token.trim_prefix("key:"))
+		key.keycode = key.physical_keycode
+		key.pressed = pressed
+		return key
+	var action := InputEventAction.new()
+	action.action = token
+	action.pressed = pressed
+	return action
+
+
 func _run() -> void:
 	var scene_kind := _arg("scene", "level")
 	await _wait(3)
@@ -85,6 +118,10 @@ func _run() -> void:
 			_stage_locker(menu.page("locker"))
 		if scene_kind == "shop" and _arg("item", "") != "":
 			menu.page("shop").select_item(StringName(_arg("item", "")))
+		if scene_kind == "arsenal" and args.has("weapon"):
+			menu.page("arsenal")._select(GameData.weapon(StringName(_arg("weapon", ""))))
+		if args.has("keys"):
+			await _press_keys(menu, _arg("keys", ""))
 		if _arg("run", "") != "":
 			await (load(_arg("run", "")) as GDScript).new().run(self, menu)
 			get_tree().quit()
