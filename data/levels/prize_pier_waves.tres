@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WaveSet" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="WaveSet" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
@@ -14,106 +14,110 @@ max_alive = 4
 speed_scale = 1.0
 late_types_after = 0.0
 banner = ""
+kind = &"standard"
+title = "WARM-UP"
+hint = "Aim for the head. R reloads."
 
 [sub_resource type="Resource" id="wave_2"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 9
+"tourist_shambler": 11,
+"lifeguard_runner": 3
 }
 spawn_interval = 2.0
 burst = 1
 max_alive = 6
 speed_scale = 1.0
-late_types_after = 0.0
+late_types_after = 0.6
 banner = ""
+kind = &"standard"
+title = "THE CROWD GATHERS"
+hint = "A surge is a pack through one entrance: watch for the marker."
+surge_at = 0.5
+surge_count = 4
 
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 9,
-"lifeguard_runner": 3
+"lifeguard_runner": 19,
+"tourist_shambler": 8
 }
-spawn_interval = 1.9
+spawn_interval = 0.89
 burst = 1
-max_alive = 7
+max_alive = 10
 speed_scale = 1.0
-late_types_after = 0.5
-banner = "WAVE 3 — RUNNERS INCOMING"
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "RUNNER RUSH"
+hint = "Fast but fragile: one clean hit each."
 
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 10,
-"lifeguard_runner": 5
+"tourist_shambler": 18,
+"lifeguard_runner": 11
 }
-spawn_interval = 1.7
+spawn_interval = 1.27
 burst = 1
-max_alive = 8
-speed_scale = 1.03
+max_alive = 10
+speed_scale = 1.0
 late_types_after = 0.35
 banner = ""
+kind = &"bounty"
+title = "THE GOLDEN LIFEGUARD"
+hint = "Pop the golden runner before it gets away."
+surge_at = 0.5
+surge_count = 5
+bounty = &"lifeguard_runner"
+bounty_tickets = 150
 
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 12,
-"lifeguard_runner": 6,
-"boardwalk_bruiser": 1
+"boardwalk_bruiser": 3,
+"tourist_shambler": 18,
+"lifeguard_runner": 10
 }
-spawn_interval = 1.5
+spawn_interval = 1.36
 burst = 1
-max_alive = 9
-speed_scale = 1.06
-late_types_after = 0.25
-banner = "WAVE 5 — BRUISER ON THE BOARDWALK"
+max_alive = 11
+speed_scale = 1.04
+late_types_after = 0.12
+banner = ""
+kind = &"siege"
+title = "JACKPOT SIEGE"
+hint = "Double tickets this wave. Sidestep the Bruiser's charge."
+twist = &"jackpot"
+surge_at = 0.55
+surge_count = 5
 
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 13,
-"lifeguard_runner": 8,
-"boardwalk_bruiser": 2
+"lifeguard_runner": 15,
+"tourist_shambler": 16
 }
-spawn_interval = 2.4
+spawn_interval = 1.9
 burst = 2
-max_alive = 10
-speed_scale = 1.1
-late_types_after = 0.2
-banner = ""
-
-[sub_resource type="Resource" id="wave_7"]
-script = ExtResource("2")
-spawns = {
-"tourist_shambler": 13,
-"lifeguard_runner": 9,
-"boardwalk_bruiser": 1
-}
-spawn_interval = 2.2
-burst = 2
-max_alive = 11
-speed_scale = 1.1
-late_types_after = 0.25
-banner = ""
-
-[sub_resource type="Resource" id="wave_8"]
-script = ExtResource("2")
-spawns = {
-"lifeguard_runner": 14,
-"tourist_shambler": 10,
-"boardwalk_bruiser": 2
-}
-spawn_interval = 2.6
-burst = 3
 max_alive = 12
-speed_scale = 1.12
+speed_scale = 1.08
 late_types_after = 0.1
-banner = "FINAL WAVE — LIFEGUARD RUSH"
+banner = ""
+kind = &"finale"
+title = "BIG BRUNO"
+hint = "Back out of the ring when he rears up, or jump the shockwave."
+boss = &"alpha_bruiser"
+boss_at = 0.45
+rest_before = 24.0
 
 [resource]
 script = ExtResource("1")
-waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7"), SubResource("wave_8")])
-prep_seconds = 12.0
-break_seconds = 20.0
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6")])
+prep_seconds = 14.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 350
 break_refill_fraction = 0.25
 ammo_topup_price = 150
 heal_price = 250

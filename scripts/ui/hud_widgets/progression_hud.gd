@@ -7,12 +7,13 @@ extends Control
 ##     a calm moment (never mid-wave), several levels or ranks gained at once
 ##     share one toast, they play one at a time and at most MAX_QUEUED wait
 ##     (the least important is dropped: the results screen lists everything),
-##   - milestone-complete cards on the left (contracts are shown by the
+##   - milestone-complete cards, in the HUD's notice stack (contracts are shown by the
 ##     Sparks widget, scripts/economy/sparks_hud.gd).
 
 const MARGIN := 48.0
 const BADGE_BOTTOM := -128.0
-const TOAST_Y := 336.0
+## Under the HUD's banner zone, so a toast never covers a banner.
+const TOAST_Y := 430.0
 const TOAST_HOLD := 2.1
 const TICK_INTERVAL := 0.07
 ## Toasts allowed to wait for their turn.
@@ -243,6 +244,12 @@ func _next_toast() -> void:
 
 func _on_challenge_completed(ch: Challenge, weapon_id: StringName) -> void:
 	var card := ProgToasts.challenge(ch, weapon_id)
+	Sfx.play(&"prog_challenge", -3.0)
+	# The HUD's notice stack shows it when there is one (it keeps to 3 entries).
+	var hud := get_tree().get_first_node_in_group(&"hud")
+	if hud and hud.has_method("push_card"):
+		hud.push_card(card, 4.6)
+		return
 	_challenges.add_child(card)
 	while _challenges.get_child_count() > 2:
 		_challenges.get_child(0).free()
@@ -252,4 +259,3 @@ func _on_challenge_completed(ch: Challenge, weapon_id: StringName) -> void:
 	tw.tween_interval(4.2)
 	tw.tween_property(card, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(card.queue_free)
-	Sfx.play(&"prog_challenge", -3.0)

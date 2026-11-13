@@ -122,7 +122,9 @@ func finish(result: Dictionary) -> void:
 	victory = bool(result.get("victory", false))
 	abandoned = bool(result.get("abandoned", false))
 	# Waves whose clear event was missed still pay (keys stop double payment).
-	for n in range(1, int(result.get("waves_cleared", 0)) + 1):
+	# A run continued from a checkpoint never played the waves before it.
+	var first_wave := maxi(1, int(result.get("resumed_from", 0)))
+	for n in range(first_wave, int(result.get("waves_cleared", 0)) + 1):
 		_bank("wave:%d" % n, "Wave bonuses", _scaled(Progression.rules.wave_xp(n)))
 	var score := int(result.get("score", 0))
 	_bank_score(score)

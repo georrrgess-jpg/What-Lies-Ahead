@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/aqua_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/aqua_ink_volley.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+
+[sub_resource type="Resource" id="ink"]
+script = ExtResource("4")
+min_range = 6.0
+max_range = 20.0
+cooldown = 7.0
+windup = 0.9
+shots = 5
+spread_degrees = 12.0
+damage = 5.0
+projectile_speed = 11.0
+arc = 0.45
+color = Color(0.6, 0.25, 1, 1)
+
+[sub_resource type="Resource" id="alpha"]
+script = ExtResource("alpha_script")
+color = Color(0.7, 0.35, 1, 1)
+slam_damage = 16.0
+volley_shots = 7
+volley_damage = 5.0
+volley_speed = 8.5
+volley_spread_degrees = 36.0
+volley_min_range = 4.5
+volley_max_range = 13.0
+volley_cooldown = 11.0
+volley_windup = 1.2
+volley_size = 0.34
+
+[resource]
+script = ExtResource("1")
+id = &"alpha_inker"
+display_name = "Inky the Great"
+max_health = 2100.0
+move_speed = 2.3
+speed_variance = 0.0
+turn_speed = 5.0
+tickets = 200
+score = 2500
+xp = 150
+damage = 18.0
+attack_range = 2.3
+attack_reach = 3.1
+attack_windup = 0.9
+attack_recover = 0.9
+lunge_speed = 3.0
+mass = 6.0
+flank_degrees = 10.0
+enrage_radius = 0.0
+model_scene = ExtResource("2")
+outfit = &"Octo"
+body_scale = 1.45
+capsule_radius = 0.5
+capsule_height = 2.1
+head_height = 1.3
+shirt_colors = Array[Color]([Color(0.62, 0.2, 1, 1)])
+skin_colors = Array[Color]([Color(0.62, 0.81, 0.29, 1), Color(0.52, 0.77, 0.4, 1), Color(0.7, 0.78, 0.34, 1)])
+accessory_slots = PackedStringArray("Acc_Octo_InkSac", "Acc_Octo_Lanyard", "Acc_Octo_SailorHat")
+move_animation = &"Walk"
+clip_style = &"Octo"
+animation_reference_speed = 2.25
+avoidance_radius = 1.0
+behaviours = Array[ExtResource("3")]([SubResource("ink"), SubResource("alpha")])
+voice_sounds = Array[StringName]([&"aqua_octo_gurgle_1", &"aqua_octo_gurgle_2"])
+voice_interval = Vector2(3, 6.5)
+voice_pitch = 0.72
+attack_sound = &"zombie_swipe"
+heavy = true

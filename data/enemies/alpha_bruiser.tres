@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+
+[sub_resource type="Resource" id="alpha"]
+script = ExtResource("alpha_script")
+color = Color(1, 0.42, 0.72, 1)
+slam_damage = 20.0
+slam_trigger = 4.8
+slam_radius = 6.2
+slam_cooldown = 7.0
+volley_shots = 3
+volley_damage = 7.0
+volley_speed = 12.0
+volley_spread_degrees = 12.0
+volley_arc = 0.45
+volley_cooldown = 6.5
+volley_size = 0.36
+volley_max_range = 22.0
+
+[resource]
+script = ExtResource("1")
+id = &"alpha_bruiser"
+display_name = "Big Bruno"
+max_health = 2800.0
+move_speed = 2.3
+speed_variance = 0.0
+turn_speed = 3.5
+tickets = 200
+score = 2500
+xp = 150
+damage = 22.0
+attack_range = 2.5
+attack_reach = 3.3
+attack_windup = 1.05
+attack_recover = 1.2
+lunge_speed = 3.5
+mass = 7.0
+flank_degrees = 10.0
+enrage_radius = 0.0
+charge_speed_mult = 2.7
+charge_range = Vector2(6, 18)
+charge_telegraph = 0.8
+charge_duration = 1.3
+charge_cooldown = 6.0
+outfit = &"Bruiser"
+body_scale = 1.5
+capsule_radius = 0.62
+capsule_height = 1.95
+head_height = 1.3
+shirt_colors = Array[Color]([Color(1, 0.78, 0.16, 1)])
+skin_colors = Array[Color]([Color(0.55, 0.76, 0.32, 1), Color(0.45, 0.7, 0.42, 1)])
+accessory_slots = PackedStringArray("Acc_Bruiser_Mohawk+Acc_Bruiser_Headband", "Acc_Bruiser_Shades", "Acc_Bruiser_Chain")
+move_animation = &"Walk"
+clip_style = &"Heavy"
+heavy = true
+animation_reference_speed = 2.1
+avoidance_radius = 1.0
+voice_sounds = Array[StringName]([&"bruiser_roar_1", &"bruiser_roar_2"])
+voice_interval = Vector2(3.5, 6.5)
+voice_pitch = 0.78
+attack_sound = &"bruiser_slam"
+behaviours = Array[Resource]([SubResource("alpha")])

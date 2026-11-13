@@ -167,7 +167,7 @@ func _fly(z: Zombie, delta: float) -> void:
 func _land(z: Zombie) -> void:
 	_flight = -1.0
 	z.global_position = _to + Vector3.UP * 0.05
-	z.reset_stall()
+	z.reset_stall(false)
 	z.play_animation(z.data.move_animation, 0.15)
 	Fx.impact(z.get_parent(), _to + Vector3.UP * 0.1, Vector3.UP, dust_color)
 	Fx.impact(z.get_parent(), _to + Vector3(0.6, 0.1, 0.3), Vector3.UP, dust_color)

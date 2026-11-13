@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"title_ticket_hoarder"
 display_name = "Ticket Hoarder"
-description = "Player title. Reach player level 5."
+description = "Player title."
 slot = &"title"
 rarity = 0
 price = 150

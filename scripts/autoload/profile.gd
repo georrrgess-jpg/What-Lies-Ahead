@@ -223,6 +223,11 @@ func _migrate(raw: Dictionary) -> Dictionary:
 			if raw["settings"].has(key) and typeof(raw["settings"][key]) in _compatible_types(DEFAULT_SETTINGS[key]):
 				var v = raw["settings"][key]
 				out["settings"][key] = float(v) if typeof(DEFAULT_SETTINGS[key]) == TYPE_FLOAT else v
+		# Options newer than DEFAULT_SETTINGS (look sensitivity, aim mode...).
+		for key in Settings.EXTRA_DEFAULTS:
+			if raw["settings"].has(key) and typeof(raw["settings"][key]) in _compatible_types(Settings.EXTRA_DEFAULTS[key]):
+				var e = raw["settings"][key]
+				out["settings"][key] = float(e) if typeof(Settings.EXTRA_DEFAULTS[key]) == TYPE_FLOAT else e
 	out["last_weapon"] = String(raw.get("last_weapon", ""))
 	# version 2 -> 3: the Sparks economy re-gated and priced cosmetics. The save
 	# is flagged here; LegacyGrant (run by the Cosmetics autoload, once the game

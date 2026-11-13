@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WaveSet" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
@@ -6,122 +6,137 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"dune_space_cadet": 4,
-"tourist_shambler": 4
-}
-spawn_interval = 2.4
-burst = 1
-max_alive = 5
-speed_scale = 1.0
-late_types_after = 0.35
-banner = "LAUNCH PAD 9 — HOLD THE APRON"
-
-[sub_resource type="Resource" id="wave_2"]
-script = ExtResource("2")
-spawns = {
-"dune_space_cadet": 6,
+"dune_space_cadet": 7,
 "tourist_shambler": 5
-}
-spawn_interval = 2.1
-burst = 1
-max_alive = 6
-speed_scale = 1.0
-late_types_after = 0.3
-banner = "WAVE 2 — CADETS IN LOW GRAVITY"
-
-[sub_resource type="Resource" id="wave_3"]
-script = ExtResource("2")
-spawns = {
-"dune_jet_mechanic": 5,
-"dune_space_cadet": 4,
-"tourist_shambler": 4
 }
 spawn_interval = 2.0
 burst = 1
 max_alive = 7
 speed_scale = 1.0
-late_types_after = 0.3
-banner = "WAVE 3 — GROUND CREW ON JETPACKS"
+late_types_after = 0.4
+banner = ""
+kind = &"standard"
+title = "HOLD THE APRON"
+hint = "Cadets crouch before they leap: step aside."
+
+[sub_resource type="Resource" id="wave_2"]
+script = ExtResource("2")
+spawns = {
+"dune_space_cadet": 15,
+"lifeguard_runner": 4
+}
+spawn_interval = 1.02
+burst = 1
+max_alive = 10
+speed_scale = 1.05
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "CADET RUSH"
+hint = "Keep moving: they land where you stood."
+
+[sub_resource type="Resource" id="wave_3"]
+script = ExtResource("2")
+spawns = {
+"dune_jet_mechanic": 11,
+"dune_space_cadet": 8,
+"tourist_shambler": 3
+}
+spawn_interval = 3.57
+burst = 5
+max_alive = 12
+speed_scale = 1.04
+late_types_after = 0.0
+banner = ""
+kind = &"ambush"
+title = "JETPACK DROP"
+hint = "Ground crew from every side: listen for the jets."
 
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"dune_space_cadet": 7,
-"dune_jet_mechanic": 5,
-"tourist_shambler": 4
+"dune_space_cadet": 10,
+"dune_jet_mechanic": 9,
+"tourist_shambler": 6
 }
-spawn_interval = 1.8
+spawn_interval = 1.27
 burst = 1
-max_alive = 8
-speed_scale = 1.03
-late_types_after = 0.2
+max_alive = 11
+speed_scale = 1.06
+late_types_after = 0.25
 banner = ""
+kind = &"bounty"
+title = "THE GOLDEN CADET"
+hint = "Pop the golden cadet before it gets away."
+surge_at = 0.5
+surge_count = 5
+bounty = &"dune_space_cadet"
+bounty_tickets = 200
 
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"dune_hazmat_worker": 4,
-"dune_space_cadet": 5,
-"dune_jet_mechanic": 5,
-"tourist_shambler": 4
+"dune_hazmat_worker": 8,
+"dune_jet_mechanic": 8,
+"dune_space_cadet": 9
 }
-spawn_interval = 1.8
+spawn_interval = 1.36
 burst = 1
-max_alive = 10
+max_alive = 12
 speed_scale = 1.08
-late_types_after = 0.15
-banner = "WAVE 5 — RADIATION LEAK: STAY OUT OF THE GLOW"
+late_types_after = 0.25
+banner = ""
+kind = &"siege"
+title = "RADIATION LEAK"
+hint = "Stay out of the glow when a Hazmat pops."
 
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"dune_jet_mechanic": 8,
-"dune_space_cadet": 7,
-"dune_hazmat_worker": 4,
-"tourist_shambler": 4
+"dune_space_cadet": 13,
+"dune_jet_mechanic": 11,
+"dune_hazmat_worker": 3
 }
-spawn_interval = 2.3
-burst = 2
-max_alive = 11
+spawn_interval = 1.19
+burst = 1
+max_alive = 13
 speed_scale = 1.1
-late_types_after = 0.2
+late_types_after = 0.0
 banner = ""
+kind = &"rush"
+title = "ZERO-G SCRAMBLE"
+hint = "Gravity plating is down: you jump high, and they leap more."
+twist = &"low_gravity"
+surge_at = 0.5
+surge_count = 5
 
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"dune_hazmat_worker": 6,
-"dune_space_cadet": 7,
-"dune_jet_mechanic": 9,
-"tourist_shambler": 4
+"dune_jet_mechanic": 14,
+"dune_space_cadet": 12,
+"dune_hazmat_worker": 6
 }
-spawn_interval = 2.2
+spawn_interval = 2.0
 burst = 2
-max_alive = 12
+max_alive = 13
 speed_scale = 1.12
-late_types_after = 0.15
-banner = "WAVE 7 — HEAVY LIFTERS ON THE PAD"
-
-[sub_resource type="Resource" id="wave_8"]
-script = ExtResource("2")
-spawns = {
-"dune_jet_mechanic": 12,
-"dune_space_cadet": 8,
-"dune_hazmat_worker": 8,
-"tourist_shambler": 4
-}
-spawn_interval = 2.1
-burst = 3
-max_alive = 14
-speed_scale = 1.14
-late_types_after = 0.2
-banner = "FINAL WAVE — T-MINUS ZERO: JETPACK SWARM"
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "CHIEF BURNOUT"
+hint = "He lands hard: move when the jets sputter."
+boss = &"alpha_jet"
+boss_at = 0.45
+rest_before = 24.0
 
 [resource]
 script = ExtResource("1")
-waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7"), SubResource("wave_8")])
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
 prep_seconds = 12.0
-break_seconds = 20.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 425
 break_refill_fraction = 0.25
 ammo_topup_price = 180
 heal_price = 280

@@ -9,6 +9,11 @@ extends Resource
 @export var prep_seconds := 12.0
 ## Length of the break between waves (the player can start early).
 @export var break_seconds := 25.0
+## Losing the run on this wave or later lets the player continue from it
+## (0 = no checkpoint). See RunDirector and docs/ROUNDS.md.
+@export var checkpoint_wave := 0
+## Tickets a continued run starts with at the checkpoint.
+@export var checkpoint_tickets := 350
 
 @export_group("Kiosk")
 ## Free reserve ammo granted to the held weapon each break, as a fraction of its reserve_max.
@@ -30,6 +35,8 @@ extends Resource
 @export var damage_boost_scale := 1.2
 ## Score per ticket still unspent when the player steps through the portal.
 @export var ticket_score_rate := 5
+## Tickets paid at a wave clear for the wave grade, best grade first (S, A, B, C).
+@export var grade_tickets := PackedInt32Array([60, 40, 20, 0])
 
 @export_group("Mastery")
 ## Wave-clear XP for each weapon that scored a kill that wave: base + per_wave * wave number.

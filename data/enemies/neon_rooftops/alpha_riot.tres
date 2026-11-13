@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/neon_riot_shield.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/neon_riot.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+
+[sub_resource type="Resource" id="shield"]
+script = ExtResource("2")
+block_fraction = 0.8
+shield_health = 500.0
+
+[sub_resource type="Resource" id="alpha"]
+script = ExtResource("alpha_script")
+color = Color(0.3, 0.92, 1, 1)
+slam_damage = 18.0
+volley_shots = 5
+volley_damage = 5.0
+volley_speed = 13.0
+volley_spread_degrees = 9.0
+volley_cooldown = 8.0
+
+[resource]
+script = ExtResource("1")
+id = &"alpha_riot"
+display_name = "Captain Lockdown"
+max_health = 2200.0
+move_speed = 2.05
+speed_variance = 0.0
+turn_speed = 3.6
+tickets = 200
+score = 2500
+xp = 150
+damage = 20.0
+attack_range = 2.4
+attack_reach = 3.2
+attack_windup = 1.1
+attack_recover = 1.15
+lunge_speed = 3.5
+mass = 7.0
+flank_degrees = 10.0
+enrage_radius = 0.0
+model_scene = ExtResource("3")
+outfit = &"Riot"
+body_scale = 1.42
+capsule_radius = 0.6
+capsule_height = 1.95
+head_height = 1.5
+skin_colors = Array[Color]([Color(0.5, 0.92, 0.48, 1), Color(0.42, 0.88, 0.58, 1), Color(0.62, 0.95, 0.42, 1), Color(0.46, 0.86, 0.66, 1)])
+shirt_colors = Array[Color]([Color(0.1, 0.12, 0.2, 1)])
+accessory_slots = PackedStringArray("Acc_Riot_Shield", "Acc_Riot_Crest", "Acc_Riot_Lamp", "Acc_Riot_Radio+Acc_Riot_Cuffs")
+move_animation = &"Walk"
+heavy = true
+head_guard_mesh = "Acc_Riot_Shield"
+animation_reference_speed = 2.0
+avoidance_radius = 1.0
+behaviours = Array[Resource]([SubResource("shield"), SubResource("alpha")])
+voice_sounds = Array[StringName]([&"neon_riot_bark_1", &"neon_riot_bark_2"])
+voice_interval = Vector2(4, 7)
+voice_pitch = 0.75
+attack_sound = &"neon_riot_bash"
+charge_speed_mult = 2.5
+charge_range = Vector2(6, 16)
+charge_telegraph = 0.85
+charge_duration = 1.2
+charge_cooldown = 8.0

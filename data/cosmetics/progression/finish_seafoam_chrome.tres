@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"finish_seafoam_chrome"
 display_name = "Seafoam Chrome"
-description = "Weapon finish for every weapon. Reach player level 10."
+description = "Weapon finish for every weapon."
 slot = &"weapon_finish"
 rarity = 0
 price = 150

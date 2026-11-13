@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"cell_cherry_bomb"
 display_name = "Cherry Bomb Cell"
-description = "Energy cell for every weapon. Reach player level 36."
+description = "Energy cell for every weapon."
 slot = &"weapon_cell"
 rarity = 2
 price = 900
