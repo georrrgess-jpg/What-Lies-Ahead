@@ -57,6 +57,8 @@ var _warm_closed := false
 var _mat_keys := {}
 var _scan_tick := 0
 var tracking := false
+var _last_kills := 0
+var _quiet := 0
 
 
 func _initialize() -> void:
@@ -220,6 +222,17 @@ func _weapon(director, w) -> void:
 
 
 func _fire_step(director, f: int, w) -> void:
+	# Waves are off, so nothing moves stuck zombies on: when the kills stop for
+	# a few seconds (a crowd wedged out of sight), the crowd is replaced.
+	if director.total_kills != _last_kills:
+		_last_kills = director.total_kills
+		_quiet = 0
+	_quiet += 1
+	if _quiet > 300:
+		_quiet = 0
+		for z in director.alive_enemies():
+			director._alive.erase(z)
+			z.queue_free()
 	_fill_crowd(director, CROWD, [])
 	_aim_at_nearest(director)
 	var weapons = director.player.weapons
@@ -284,9 +297,9 @@ func _soak(director, weapons: Array) -> void:
 		await process_frame
 		s.sample()
 		if f % 1800 == 0:
-			print("[soak] t=%4ds nodes=%d objects=%d orphans=%d alive=%d" % [f / 60, Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
-				Performance.get_monitor(Performance.OBJECT_COUNT), Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT),
-				director.alive_enemies().size()])
+			print("[soak] t=%4ds %-16s nodes=%d objects=%d orphans=%d alive=%d kills=%d" % [f / 60, w.id,
+				Performance.get_monitor(Performance.OBJECT_NODE_COUNT), Performance.get_monitor(Performance.OBJECT_COUNT),
+				Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT), director.alive_enemies().size(), director.total_kills])
 	Input.action_release("fire")
 	rows.append(s.row("soak %.0f min" % minutes))
 
