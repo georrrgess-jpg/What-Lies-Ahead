@@ -94,7 +94,7 @@ Shared rules (`AlphaBossBehaviour`):
 * **Phases** at 66% and 33% health: it roars, gains 10% speed, and calls a
   pack of 5 through the nearest hidden entrances. Forcing a phase pays the
   player 20% of their reserve energy, so the fight never runs dry.
-* While it stands, its escorts are capped at half the wave's crowd, and keep
+* While it stands, its escorts are capped at 40% of the wave's crowd, and keep
   trickling in (2 every 7 s) if the horde runs out.
 * When it falls the horde breaks: nothing else spawns and whoever is left
   sprints in.

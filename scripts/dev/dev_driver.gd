@@ -552,7 +552,11 @@ func _do_fight(delta: float) -> void:
 		_ring_index += 1
 	var nearest := _nearest_distance()
 	var should_move := nearest < 9.0 or target == null
-	if should_move:
+	var escape := _boss_escape()
+	if escape != Vector3.ZERO:
+		# An alpha is rearing up for a slam with the bot inside the ring: back out.
+		_walk_to(_player.global_position + escape * 4.0, delta, false)
+	elif should_move:
 		_walk_to(goal, delta, target == null)
 	else:
 		_stop_moving()
@@ -653,6 +657,20 @@ func _switch_slot(w: WeaponController) -> void:
 		_switch_cancels += 1
 	if _switches % 10 == 1:
 		print("[dev] switch %d: reload cancelled=%s now %s %d/%d" % [_switches, not w.is_reloading(), w.current.id, w.magazine(), w.reserve()])
+
+
+## Direction out of an alpha's slam ring while it winds up (zero when safe),
+## the way a player reads the growing ring and steps back.
+func _boss_escape() -> Vector3:
+	var boss := _director.boss
+	if not is_instance_valid(boss):
+		return Vector3.ZERO
+	for b in boss.behaviours:
+		if b is AlphaBossBehaviour and b._slam_left > 0.0:
+			var away := _flat(_player.global_position - boss.global_position)
+			if away.length() < b.slam_radius + 1.0:
+				return away.normalized() if away.length() > 0.1 else -boss.global_basis.z
+	return Vector3.ZERO
 
 
 func _pick_target() -> Zombie:

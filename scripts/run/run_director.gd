@@ -83,7 +83,7 @@ const BOUNTY_RING_RADIUS := 13.0
 const BOUNTY_TINT := Color(0.55, 0.4, 0.05)
 const BOSS_TINT := Color(0.16, 0.03, 0.14)
 ## Share of the wave's crowd cap that escorts an alpha while it stands.
-const BOSS_ESCORT_CAP := 0.5
+const BOSS_ESCORT_CAP := 0.4
 ## Zombies an alpha calls in when it reaches a new phase, and the share of
 ## reserve energy the player gets back for forcing it.
 const PHASE_PACK := 5
