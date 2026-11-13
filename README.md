@@ -2,9 +2,12 @@
 
 A single-player, first-person arcade zombie survival game made with Godot 4.
 
-Five worlds, each one level: hold the ground around a loadout station through eight
-waves, spend tickets between waves, then follow the exit lights to the portal and step
-through. Clearing a level unlocks the next world.
+Five worlds, each one level: hold the ground around a loadout station through six or
+seven waves (rushes, sieges, ambushes, bounties, a twist and a named alpha boss at the
+end), spend tickets between waves, then follow the exit lights to the portal and step
+through. Clearing a level unlocks the next world. Every zombie carries a stolen **Spark**;
+pop it and you bank it, and Sparks buy the best skins, sights, cells, gloves and more in
+the **Shop**. New players start in **Boot Camp**, a short, skippable tutorial.
 
 | # | World | Level | Setting | New enemies |
 | --- | --- | --- | --- | --- |
@@ -24,6 +27,7 @@ through. Clearing a level unlocks the next world.
 2. Open Godot, choose **Import**, and select `project.godot` in this folder.
    The first open imports the assets, which takes a few minutes.
 3. Press **F5** (Run Project). The game opens with its startup sequence, then the menu.
+   On a fresh save it welcomes you and offers the Boot Camp tutorial.
 
 The project uses the **Compatibility (OpenGL)** renderer, the lightest desktop option.
 
@@ -48,7 +52,7 @@ The Windows build is unsigned, so SmartScreen may ask for confirmation.
 | Mantle / vault | Jump while pushing at a ledge 0.45–1.25 m high to climb onto it; at a run, thin obstacles up to 1.1 m are vaulted |
 | Slide | C or Ctrl while sprinting (or as you land); follows slopes, tires when chained; jump out to keep its speed |
 | Fire | Left mouse button |
-| Aim down sights | Right mouse button (hold) |
+| Aim down sights | Right mouse button (hold, or toggle in Settings) |
 | Reload | R |
 | Switch weapon | 1 / 2, or the mouse wheel |
 | Start the next wave early | F |
@@ -62,13 +66,28 @@ station swap and purchase actions are added at start-up (`scripts/weapons/loadou
 `RunDirector.ensure_station_actions()`) if the project does not define them. Curbs up to
 0.3 m are stepped over without jumping. **Settings** (main menu or pause menu) has look
 sensitivity (1.00 = 34 cm per 360° at 800 DPI, the same at any window size), aim
-sensitivity, invert look Y, field of view (vertical), reticle style and colour, master,
-music, effects and ambience volume, camera motion, camera shake, flashes, a High/Low
-graphics preset and fullscreen.
+sensitivity, hold or toggle aim, invert look Y, field of view (vertical), reticle style and
+colour, optic reticle colour, gameplay tips, master, music, effects and
+ambience volume, camera motion, camera shake, flashes, a High/Low graphics preset and
+fullscreen.
 
 ## How a run works
 
 - **Preparation → Wave → Break → … → Extraction**, with **Defeat** reachable from any wave.
+  Prize Pier has 6 waves, the other worlds 7; a run takes about 6–9 minutes.
+- **Difficulty** (chosen on the Play page): **Casual** (weaker, slower enemies, health
+  back at every wave clear, 80% rewards), **Standard**, or **Hard** (more, faster and
+  angrier, 130% rewards). The score is never scaled.
+- **Rounds with a purpose.** Each wave has a kind and a name on its banner: standard,
+  rush, siege (heavies first), ambush (every entrance at once), ranged, a **bounty**
+  (a golden runner that flees with a ticket prize), a world **twist** (Jackpot double
+  tickets, Blackout, Frenzy, Low Gravity, Whiteout) and a **finale** against the world's
+  named alpha (Big Bruno, Captain Lockdown, Inky the Great, Chief Burnout, Old
+  Frostbite) with its own health bar and slam. Surges announce the entrance a pack is
+  coming from. Each wave is graded S/A/B/C by the health it cost, and the grade pays
+  tickets. Full design: **[docs/ROUNDS.md](docs/ROUNDS.md)**.
+- **Checkpoint.** Clearing wave 3 reaches the checkpoint: lose on wave 4 or later and the
+  results screen offers **Continue** from wave 4 (full health, some tickets, 75% rewards).
 - **Two weapons.** You carry a primary and a secondary (chosen in the **Arsenal**). Each
   keeps its own ammo for the whole run. Switching cancels a reload.
 - **The loadout station** (each world has its own, with a tall beacon; a waypoint points
@@ -110,46 +129,99 @@ graphics preset and fullscreen.
 | Ion Carbine | Sustained fire | Start | Best sustained damage of the starters; fire in bursts or aim past 15 m |
 | Scatter Blaster | Close range | Start | Nine pellets; one shot drops a tourist inside 10 m and staggers |
 | Comet Hand Cannon | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
-| Arc Coil | Crowd control | Player level 3 | Chain lightning locking onto the zombie nearest the crosshair; shock slows |
-| Bumper Lobber | Area damage | Player level 5 | Bouncing gumball bombs with splash; shows its landing ring when aiming |
-| Frostbite Cryo Beam | Lockdown | Player level 7 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
-| Rail Lancer | Anti-heavy | Player level 9 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
+| Arc Coil | Crowd control | Player level 4 | Chain lightning locking onto the zombie nearest the crosshair; shock slows |
+| Bumper Lobber | Area damage | Player level 6 | Bouncing gumball bombs with splash; shows its landing ring when aiming |
+| Frostbite Cryo Beam | Lockdown | Player level 9 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
+| Rail Lancer | Anti-heavy | Player level 12 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
 
 Weapons fire at exactly their data rate. Spread blooms under sustained fire and recovers
 shortly after the trigger rests, so bursts and aiming down sights matter at range.
-Every weapon has its own model, holographic reload animation, sounds, reticle and
-aim-down-sights behaviour. Fire modes are data (`WeaponData` fields for burst, charge,
+Every weapon has its own model, holographic reload animation, sounds and reticle.
+
+**Aiming down sights** brings the weapon's real sight to your eye on every weapon: the
+camera looks along the sight line (each model has a `SightMount` rail point and a
+`SightPoint` eye line), the view zooms by the weapon and optic, spread tightens, and the
+hip reticle gives way to the optic. **Sights** are per-weapon cosmetics (Locker tab
+*Sights*): iron sights, Red Dot, Holo Ring, Chevron, Prism 2x, Lancer Scope and shop
+optics (Bullseye, Sweetheart, Lucky Star, 8-Bit). Optics are 3D models with a collimated
+reticle lens, so the dot stays on target as the weapon sways; the reticle colour can
+be set in Settings. Code: `scripts/weapons/sights/`; check every weapon × sight with
+`tools/ads_audit.gd`. Fire modes are data (`WeaponData` fields for burst, charge,
 beam, projectile and splash, pierce, chain, chill/shock and heat), implemented once in
 `scripts/player/weapon_controller.gd` and `scripts/weapons/`.
 
-## Progression and cosmetics
+## Progression, Sparks and the Shop
 
-- **Player level** (1–50): account XP from kills, waves, clears (worth more in later
-  worlds), first clears and challenges. Levels unlock weapons (the last one at level 9,
-  around the time you reach the later worlds) and cosmetics. Shown on the HUD and the
-  Career page.
+- **Sparks** are the permanent currency. Popping a zombie banks its Spark (you see it fly
+  into the counter), and waves, clears, leftover tickets, every player level, every
+  mastery rank and contracts pay more. Sparks buy **cosmetics only**, never power.
+  Numbers and design: **[docs/ECONOMY.md](docs/ECONOMY.md)**.
+- **Player level** (1–40): every level pays Sparks and gives exactly one thing. Weapons
+  unlock at levels 2, 4, 6, 9 and 12 (all eight in about seven runs); every fifth level is
+  a bigger reward. A first session of three runs reaches about level 7.
+- **Contracts** (Career page): three active goals at a time (kills with a weapon,
+  headshots, waves, bounties…) that pay XP and Sparks and are replaced when done, plus
+  eleven one-time milestones.
 - **Weapon mastery**: 10 ranks per weapon in Bronze, Silver, Gold, Diamond and Prismatic
-  tiers, earned by using that weapon. Ranks unlock mastery camos and badges.
-- **Challenges** (Career page): account goals and per-weapon goals (headshots, long
-  shots, combos, clean clears…) that pay XP and cosmetics.
-- **Locker**: 190 cosmetics in ten categories. Operators (nine characters that also set your
-  first-person arms), weapon finishes (including animated shader skins), energy cells,
-  decals, charms, gloves, kill effects, tracers, banners and titles. Weapon items are
-  equipped per weapon. Everything shows in a live preview; double-click to equip.
-- **Results screen**: score count-up with breakdown, mastery XP per weapon, the Career
-  card (XP bar, level-ups, challenges completed, new rewards) and your player card; after
-  a clear, **NEXT WORLD** goes straight on.
-- Progress is kept whether you win, lose or quit from the pause menu.
+  tiers, earned by using that weapon. Ranks unlock mastery camos and badges and pay Sparks.
+- **Shop**: 65 items plus sights on a price ladder (Common 150, Rare 400, Epic 900,
+  Legendary 1,800 Sparks): the best animated weapon finishes, energy cells, gloves,
+  charms, kill effects, tracers, decals, banners, titles and optics. Four items a day are
+  featured at 25% off. Every item has a 3D preview and a confirm step.
+- **Locker**: 200 cosmetics in eleven categories: operators (nine characters that also
+  set your first-person arms), weapon finishes (including animated shader skins), sights,
+  energy cells, decals, charms, gloves, kill effects, tracers, banners and titles. Weapon
+  items are equipped per weapon. Everything shows in a live preview; double-click to equip.
+  Earned items (level track, world sets for each first clear, mastery camos, milestones)
+  are never sold.
+- **Results screen**: score count-up with breakdown, wave grades, Sparks earned with their
+  sources, mastery XP per weapon, the Career card (XP bar, level-ups, contracts, new
+  rewards) and your player card; after a clear, **NEXT WORLD** goes straight on; after a
+  defeat past the checkpoint, **CONTINUE**.
+- Progress is kept whether you win, lose or quit from the pause menu. Saves from before
+  this update are migrated and get **back pay** in Sparks for the levels, ranks and clears
+  they already earned.
 
-## Main menu
+## First steps: Boot Camp and onboarding
 
-The startup sequence (pulse line, rising synthwave sun, the title dropping in letter by
-letter, then a portal iris into the menu) plays once per session; any key skips it. The
-menu sits over a live, slowly drifting 3D view of the selected world. Pages: **Play**
-(world carousel with key art of each level, level details, best score, loadout, Deploy),
-**Arsenal** (weapon stats, mastery and the two-slot loadout), **Locker**, **Career** and
-**Settings**. Loading screens show the level's key art with a slow pan and a tip. The
-pause menu asks before Restart or Main menu.
+On a fresh save the game welcomes you with three short cards (who you are, the outbreak,
+Sparks), then offers **Boot Camp**: a 4–6 minute hands-on course on a training midway
+behind the pier, run by BOLT, a carnival barker-bot. It teaches one idea at a time with a
+checklist: look, move, sprint, jump, mantle, vault and slide; pop-up targets, aiming down
+sights at a far target, headshots, reload and switching; then live fire against slow
+zombies, a telegraphed attack to dodge, a ranged special, the loadout station with free
+tickets, a mini wave and the portal. There is no fail state. It can be skipped at any
+time (hold to skip at each section, or *Skip tutorial* in the pause menu) and replayed
+from the title screen; finishing pays 200 Sparks and the *Pier Patrol* title once, then
+**Deploy to Prize Pier** starts the first real run with a guided first deployment.
+During the first runs, small one-time hint cards explain the station, low energy, each
+special enemy's tell, the portal and the checkpoint (switch them off with *Gameplay
+tips*); menu pages show a single coach mark the first time they open. Returning players
+get a short welcome-back card instead. Code: `scripts/onboarding/`, level
+`tools/build_boot_camp.gd`, data `data/tutorial/`.
+
+## Main menu and the startup screen
+
+The **startup screen** cuts through quick live vignettes from the game, slams the logo
+in as a marquee sign with chasing bulbs, calls out the game's features with real counts,
+then holds on *PRESS ANY KEY* over the live menu backdrop; any key skips it, and it plays
+once per session. The menu is styled as a **carnival arcade at sunset** (marquee signs,
+riveted teal frames, cream signboards; see **[docs/UI_STYLE.md](docs/UI_STYLE.md)**) over a
+live 3D booth and the selected world. A top bar shows your level, XP and Sparks on every
+page. Pages: **Play** (world track with key art, progress stars, the zombies that wait
+there, difficulty, loadout, Deploy), **Arsenal** (the weapon on a workbench in a booth,
+stats, mastery, sights and the two-slot loadout), **Locker**, **Shop**, **Career**
+(level track, contracts, milestones) and **Settings**. Loading screens show the level's
+key art with a slow pan, the difficulty and a tip. The HUD, pause menu, loadout station
+panel and results use the same kit.
+
+**The trailer.** *WATCH TRAILER* on the title screen (it also plays as an attract mode
+when the menu sits idle) runs a 70-second in-engine short made from the real levels,
+zombies, operators, weapons, skins and kill effects: a cold open on the pier, a world
+tour, the cast, kills, the arsenal with its best skins, the operators, the station and
+progression, and the title card. Any key returns to the menu. A rendered copy is in
+[`media/what-lies-ahead-showreel.mp4`](media/) (`tools/render_showreel.sh` renders it;
+see **[docs/SHOWREEL.md](docs/SHOWREEL.md)**).
 
 ## Editing the game data
 
@@ -201,19 +273,23 @@ scenes/
   ui/                    main_menu, hud, pause_menu, results
 scripts/
   autoload/   profile (save), game_data (folder scan), settings, events, unlocks,
-              progression, mastery, cosmetics, sfx, game (scene flow)
+              progression, mastery, wallet (Sparks), cosmetics, sfx, game (scene flow)
   data/       Resource classes (weapons, enemies, waves, levels, worlds, requirements,
               cosmetics, UI extensions)
   player/     player (movement, ADS, jump, slide), weapon_controller (shared combat),
               weapon_view (viewmodel and reload animations), weapon_cosmetics
   weapons/    loadout, fire-mode helpers, status effects, projectiles, beam/arc/rail
-              visuals, per-weapon reload scripts, Arsenal page
+              visuals, per-weapon reload scripts, Arsenal page; sights/ (ADS rig, optics)
   enemies/    zombie.gd, EnemyBehaviour base, projectiles, behaviours/ per world
-  run/        run_director (run state machine, waves, station economy), score_keeper,
-              level environments
-  progression/  run tracker, challenges, Career page, HUD widget, results card
+  run/        run_director (run state machine, waves, station economy), spawn planner,
+              pacing director, wave twists, difficulty, score_keeper, level environments
+  progression/  run tracker, contracts, Career page, HUD widget, results card
+  economy/    Sparks rules, shop catalog, Spark pickups, results section
+  onboarding/ welcome flow, Boot Camp tutorial, hints, coach marks
+  cinematics/ the in-engine trailer (shots, stage, overlay, render entry point)
   cosmetics/  operators, kill effects, tracers, charms, player card, Locker support
-  ui/         HUD, menus, intro, menu backdrop, loading screen, settings, results
+  ui/         HUD, menus, startup screen, menu backdrop, loading screen, settings,
+              results, Shop; kit/ (the UI component kit), ingame/ (HUD widgets)
   fx/         tracers, particle bursts, effect warm-up
   dev/        automated playtest bot and screenshot tool (inactive in normal play)
 art/
@@ -222,7 +298,9 @@ art/
   textures/   Generated skies and surfaces        shaders/  All game shaders
   fonts/      Lilita One and Baloo 2 (SIL Open Font License, licences included)
 audio/        Synthesised sound effects (.wav) and music/ambience loops (.ogg)
-tools/        Level generators, texture and audio generators, model previewer
+tools/        Level generators, texture/UI/audio generators, audits, previewers
+docs/         Content guide, economy, rounds, UI style, showreel
+media/        The rendered trailer
 references/   Art reference, in-game screenshot and the side-by-side comparison
 builds/       Zipped desktop builds
 ```
@@ -262,7 +340,12 @@ They were written for Blender 5.3 and run here through the `bpy` Python module
 | `zombie_kit.py`, `zombie_anim.py` | Shared zombie body and face kit; all zombie motion (IK gaits with planted feet, attacks, five deaths including a headshot pop, stagger, emerge). Every zombie builder calls `zombie_anim.bake()`, which also writes `art/models/<model>_clips.tres` (each clip's ground speed and event times) |
 | `build_neon_*.py`, `build_aqua_*.py`, `build_dune_*.py`, `build_frost_*.py` | Each world's props, dressing, station, scenery and zombies |
 | `build_world_portals.py` | The themed exit portals of Tidal Tunnels, Launch Pad 9 and Summit Lodge |
-| `build_operators.py`, `build_cosmetics.py` | Operators; charms and sticker decals |
+| `operator_kit.py`, `operator_anim.py`, `build_operators.py` | The nine operators (shared body kit, clips such as Run, AimIdle, Fire, Victory and Wave, a `WeaponSocket` hand) |
+| `weapon_kit.py` | Shared weapon parts and the sight contract (`SightMount`, `SightPoint`, `IronSight*`, `CharmPoint`) used by both weapon builders |
+| `build_sights.py` | The optics (red dot, holo, prism, scope and the shop sights) |
+| `build_cosmetics.py` | Charms and sticker decals |
+| `build_menu_booth.py` | The carnival booth behind the Arsenal and Locker pages |
+| `audit_weapons.py`, `operator_audit.py`, `zombie_audit.py` | Intersection checks (BVH overlap between parts that must not touch, across sampled animation frames) |
 
 In the `.blend` files the *Source* collection holds the parts with live bevel
 modifiers, and *Export* holds the baked meshes written to the `.glb`. Naming contracts
@@ -276,14 +359,19 @@ names) are described at the top of `build_weapons.py` and `build_zombie.py`.
 python tools/gen_textures.py                 # Prize Pier sky and deck
 python tools/gen_textures_neon.py            # likewise _aqua, _dune, _frost
 python tools/gen_audio.py                    # core sounds and music
-python tools/gen_audio.py neon aqua dune frost weapons progression cosmetics movement   # packs
+python tools/gen_audio.py neon aqua dune frost weapons progression cosmetics movement \
+    economy ui rounds onboarding showreel                                         # packs
+python tools/gen_ui_textures.py              # the UI kit's 9-slice frames and icons
 python tools/audio_mix_report.py             # every sound and loop as heard in game
 python tools/audio_mix_report.py --mixdown neon_skyline out.wav   # 20 s listen-proxy
 ```
 
 **Levels.** Each level has a generator in `tools/` (`build_prize_pier.gd`,
 `build_neon_skyline.gd`, `build_tidal_tunnels.gd`, `build_launch_pad.gd`,
-`build_summit_lodge.gd`) that writes its scene and bakes navigation. Run them **with a
+`build_summit_lodge.gd`, and `build_boot_camp.gd` for the tutorial) that writes its scene
+and bakes navigation. `tools/map_audit.gd` flood-fills everywhere the player can reach
+(falls out of the world, stuck spots, wall snags, navmesh a zombie cannot fit) and
+captures views with collision drawn over them. Run them **with a
 renderer**, not `--headless`: the headless renderer keeps no MultiMesh instance data, so
 repeated props (lights, railings, trees) would be saved empty.
 
@@ -326,7 +414,16 @@ godot --headless --fixed-fps 60 --path . -- --autoplay=route                  # 
 godot --path . -- --autoplay=pause                                           # pause menu flow (needs a window)
 godot --path . --resolution 1672x941 -- --shot=out.png                        # reference-angle screenshot
 godot --path . -- --shot=menu.png --shot-scene=locker --shot-locker=avatar     # any menu page
+godot --headless --fixed-fps 60 --path . -- --autoplay=clear --difficulty=hard  # any difficulty
+godot --headless --fixed-fps 60 --path . -- --autoplay=clear --start-wave=4 --continue   # lose, continue from the checkpoint
+godot --headless --fixed-fps 60 --path . -- --autoplay=tutorial --tutorial-runs=2        # Boot Camp twice (pays once)
+GODOT=godot tools/render_showreel.sh                                         # render the trailer to media/
 ```
+
+Other checks: `tools/ads_audit.gd` (every weapon × sight lines up), `tools/economy_probe.gd`
+and `python3 tools/economy_model.py` (Sparks and level pacing), `tools/map_audit.gd`,
+`scripts/dev/meta_pages_probe.gd` (Shop, Locker and Career flows), `tools/weapon_sheet.gd`
+and `tools/weapon_charm_stress.gd` (weapon models and charms).
 
 Add `--profile=/some/file.json` to keep test runs away from your real save. All options are
 listed at the top of `scripts/dev/dev_driver.gd` and `scripts/dev/screenshot.gd`.

@@ -30,6 +30,9 @@ var _tip: Label
 var _tip_index := 0
 var _goal_world := 0
 var _entrance: Array[Control] = []
+## Seconds without input while this page has focus (attract mode).
+var _idle := 0.0
+var _attract: CinePlayer
 
 
 func _ready() -> void:
@@ -43,6 +46,29 @@ func _ready() -> void:
 	timer.autostart = true
 	timer.timeout.connect(_rotate_tip)
 	add_child(timer)
+	set_process(Showreel.available() and DisplayServer.get_name() != "headless")
+
+
+## Attract mode: after Showreel.attract_delay() seconds on the home page with
+## no input, the trailer plays and hands focus back to PLAY when it ends.
+func _process(delta: float) -> void:
+	if is_instance_valid(_attract) or not is_visible_in_tree():
+		_idle = 0.0
+		return
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus == null or not is_ancestor_of(focus):
+		_idle = 0.0
+		return
+	_idle += delta
+	if _idle >= Showreel.attract_delay():
+		_idle = 0.0
+		_attract = Showreel.play(get_tree().current_scene, func(): if is_instance_valid(_play): _play.grab_focus())
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey or event is InputEventMouseButton or event is InputEventJoypadButton \
+			or (event is InputEventMouseMotion and (event as InputEventMouseMotion).relative.length() > 2.0):
+		_idle = 0.0
 
 
 func refresh() -> void:
