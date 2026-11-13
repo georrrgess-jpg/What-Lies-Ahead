@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_kaleidoscope"
+display_name = "Kaleidoscope"
+description = "Candy-glass shards mirrored six ways, slowly turning like the view down a funhouse kaleidoscope. Black mirror trim."
+slot = &"weapon_finish"
+rarity = 2
+price = 1500
+colors = PackedColorArray(1, 0.451, 0.749, 1, 0.051, 0.0314, 0.0784, 1)
+params = {
+"shader": "res://art/shaders/finish_kaleido.gdshader"
+}
+sort_order = 2231

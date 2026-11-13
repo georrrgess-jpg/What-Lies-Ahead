@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_heat_shield"
+display_name = "Heat Shield"
+description = "Black ceramic hex tiles with grey grout, like a shuttle's belly, and white tiles on the trim."
+slot = &"weapon_finish"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.102, 0.102, 0.1176, 1, 0.9098, 0.902, 0.8784, 1)
+params = {
+"shader": "res://art/shaders/finish_graphic.gdshader",
+"shader_params": {
+"pattern": 6,
+"color_d": Color(0.3333, 0.3333, 0.3608, 1),
+"roughness": 0.75,
+"metallic": 0.0
+}
+}
+sort_order = 2140

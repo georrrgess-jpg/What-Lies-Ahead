@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_reef_camo"
+display_name = "Reef Camo"
+description = "Organic blotches of coral orange, sea pink and teal over sand, with deep teal trim."
+slot = &"weapon_finish"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.9098, 0.8118, 0.6039, 1, 0.102, 0.2275, 0.251, 1)
+params = {
+"shader": "res://art/shaders/finish_camo.gdshader",
+"shader_params": {
+"pattern": 2,
+"color_b": Color(1, 0.4784, 0.302, 1),
+"color_c": Color(1, 0.5608, 0.7216, 1),
+"color_d": Color(0.0784, 0.6392, 0.6392, 1),
+"roughness": 0.55
+}
+}
+sort_order = 2138

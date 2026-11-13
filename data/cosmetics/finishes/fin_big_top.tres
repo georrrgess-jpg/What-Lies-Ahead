@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_big_top"
+display_name = "Big Top"
+description = "Broad red and cream circus-tent stripes edged in gold; the trim runs navy and cream with gold pinstripes."
+slot = &"weapon_finish"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.8471, 0.1098, 0.1412, 1, 0.0941, 0.1255, 0.3137, 1)
+params = {
+"shader": "res://art/shaders/finish_graphic.gdshader",
+"shader_params": {
+"pattern": 0,
+"color_b": Color(1, 0.949, 0.851, 1),
+"color_c": Color(1, 0.7608, 0.2392, 1),
+"trim_pin": 1.0,
+"roughness": 0.3
+}
+}
+sort_order = 2131

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_lumberjack"
+display_name = "Lumberjack"
+description = "Red and black buffalo-check flannel, fresh from the woodpile, with green check on the trim."
+slot = &"weapon_finish"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.702, 0.0784, 0.102, 1, 0.1216, 0.2902, 0.1647, 1)
+params = {
+"shader": "res://art/shaders/finish_textile.gdshader",
+"shader_params": {
+"pattern": 0,
+"color_b": Color(0.0784, 0.0627, 0.0706, 1)
+}
+}
+sort_order = 2037

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+amount = 3
+
+[resource]
+script = ExtResource("1")
+id = &"fin_alpine_fleck"
+display_name = "Alpine Fleck"
+description = "Fleck camo for the snowline: clustered pine-green, slate and dark dots over snow white."
+slot = &"weapon_finish"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.9098, 0.9333, 0.949, 1, 0.2275, 0.251, 0.2824, 1)
+params = {
+"shader": "res://art/shaders/finish_camo.gdshader",
+"shader_params": {
+"pattern": 3,
+"color_b": Color(0.1647, 0.3529, 0.2275, 1),
+"color_c": Color(0.4157, 0.4549, 0.502, 1),
+"color_d": Color(0.102, 0.1647, 0.1333, 1),
+"roughness": 0.7
+}
+}
+sort_order = 2145

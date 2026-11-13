@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_lava_lamp"
+display_name = "Groovy Lamp"
+description = "Glowing wax blobs rise, split and merge through violet liquid, on a chrome lamp base."
+slot = &"weapon_finish"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.2196, 0.0353, 0.302, 1, 0.749, 0.7216, 0.8, 1)
+params = {
+"shader": "res://art/shaders/finish_lava_lamp.gdshader",
+"shader_params": {
+"wax_color": Color(1, 0.3608, 0.2, 1),
+"wax_hot": Color(1, 0.8196, 0.302, 1)
+}
+}
+sort_order = 2232

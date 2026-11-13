@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_fair_isle"
+display_name = "Fair Isle"
+description = "A knitted ski sweater, stitch by stitch: bands of zigzags, diamonds and snowflake crosses."
+slot = &"weapon_finish"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.949, 0.9176, 0.8588, 1, 0.5412, 0.102, 0.1333, 1)
+params = {
+"shader": "res://art/shaders/finish_textile.gdshader",
+"shader_params": {
+"pattern": 2,
+"color_b": Color(0.702, 0.1255, 0.1647, 1),
+"color_c": Color(0.102, 0.1647, 0.3529, 1),
+"color_d": Color(0.1647, 0.4784, 0.2902, 1)
+}
+}
+sort_order = 2144

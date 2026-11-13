@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_carbon_neon"
+display_name = "Carbon Neon"
+description = "Carbon-fibre twill under a clear coat, its weave shimmering as it turns, with glowing pink trim."
+slot = &"weapon_finish"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.1098, 0.1098, 0.1333, 1, 0.102, 0.102, 0.1255, 1)
+params = {
+"shader": "res://art/shaders/finish_textile.gdshader",
+"shader_params": {
+"pattern": 3,
+"color_b": Color(0.5412, 0.5412, 0.6275, 1),
+"color_c": Color(1, 0.1804, 0.5765, 1),
+"trim_glow": 1.2
+}
+}
+sort_order = 2136

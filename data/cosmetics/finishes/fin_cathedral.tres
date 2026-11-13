@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_cathedral"
+display_name = "Cathedral Glass"
+description = "Leaded panes of ruby, sapphire, emerald, amber and amethyst. A beam of light slowly passes along them."
+slot = &"weapon_finish"
+rarity = 2
+price = 2800
+colors = PackedColorArray(0.702, 0.051, 0.1216, 1, 0.1804, 0.1804, 0.2, 1)
+params = {
+"shader": "res://art/shaders/finish_stained_glass.gdshader"
+}
+sort_order = 2243

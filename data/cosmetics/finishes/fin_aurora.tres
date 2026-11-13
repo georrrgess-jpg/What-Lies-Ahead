@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_aurora"
+display_name = "Aurora"
+description = "A starry polar night with green and violet aurora curtains rippling along the weapon, seen through frosted glass on the trim."
+slot = &"weapon_finish"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.0118, 0.0196, 0.0706, 1, 0.2902, 0.3529, 0.4706, 1)
+params = {
+"shader": "res://art/shaders/finish_aurora.gdshader"
+}
+sort_order = 2242
