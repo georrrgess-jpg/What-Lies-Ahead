@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+target = &"comet_cannon"
+amount = 8
+
+[resource]
+script = ExtResource("1")
+id = &"op_cosmic_sheriff"
+display_name = "Cosmic Sheriff"
+description = "Keeps the peace from the Launch Pad dunes to the rings of Saturn. Fastest finger-gun in the galaxy."
+slot = &"avatar"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.7882, 0.5412, 0.2902, 1, 0.8392, 0.8588, 0.902, 1, 0.7098, 0.3255, 0.1647, 1, 1, 0.9451, 0.8627, 1)
+params = {
+"model": "res://art/models/operator_cosmic_sheriff.glb",
+"kit": "Bell",
+"roughness": 0.45
+}
+sort_order = 1222

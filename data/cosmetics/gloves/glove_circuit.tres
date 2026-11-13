@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_circuit"
+display_name = "Circuit Breaker"
+description = "A circuit board you can wear: glowing traces, a chip on the back of the hand, LED knuckles and a battery pack."
+slot = &"gloves"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.05882, 0.1647, 0.1412, 1, 0.1098, 0.09412, 0.1882, 1, 0.1686, 0.1569, 0.2118, 1, 0.05882, 0.1647, 0.1412, 1, 0.2235, 1, 0.6118, 1, 1, 0.7882, 0.2902, 1)
+params = {
+"kit": "Circuit",
+"pattern": "circuit",
+"pattern_on": ["Glove", "Sleeve"],
+"glow": 1.4
+}
+sort_order = 6221

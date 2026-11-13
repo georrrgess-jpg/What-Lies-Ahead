@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_title_bout"
+display_name = "Title Bout"
+description = "Hand wraps from the title fight: a padded knuckle roll, tape crossed over the hand and a thick wrist wrap."
+slot = &"gloves"
+rarity = 1
+price = 650
+colors = PackedColorArray(0.9098, 0.149, 0.2275, 1, 0.9686, 0.9569, 0.949, 1, 1, 0.851, 0.2314, 1, 0.1098, 0.09412, 0.1882, 1)
+params = {
+"kit": "Wraps"
+}
+sort_order = 6122

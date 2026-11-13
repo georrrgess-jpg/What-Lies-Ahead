@@ -8,7 +8,8 @@ scripts/player/weapon_cosmetics.gd and scripts/cosmetics/weapon_charm.gd):
 
   Materials   "Shell" (main colour), "Trim" (panels), "Cell" (energy glow),
               "GunDark", "GunSteel", "GunPink", "Holo" (hologram glass,
-              replaced in game), arms "Glove", "GlovePlate", "Cuff", "Sleeve"
+              replaced in game), arms "Glove", "GloveTip" (finger tips),
+              "GlovePlate", "Cuff", "Sleeve"
   Static      Shell
   Animated    Cell, CellHolo and each weapon's own moving parts. Every
               animated part's origin is its pivot (hinge, axle, centre).
@@ -16,7 +17,9 @@ scripts/player/weapon_cosmetics.gd and scripts/cosmetics/weapon_charm.gd):
               nodes so the game can hide them when an optic is fitted.
   Arms        ArmR (firing hand), ArmL (support hand). Origin = centre of
               the grip the hand holds; each has a child empty ElbowR/ElbowL
-              half way down the forearm.
+              half way down the forearm, and one child mesh per glove shape,
+              ArmRKit<Shape> / ArmLKit<Shape> (GLOVE_KITS; shown only by a
+              gloves cosmetic that asks for that shape).
   Decal       emblem, hidden unless a decal is equipped
   Empties     Muzzle (barrel tip), EjectPoint, VentPoint (effect anchors),
               SightPoint  on the eye line of the built-in sights, at the rear
@@ -37,6 +40,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wla_common import *  # noqa: F401,F403
+from wla_common import _finish  # noqa: E402
 from mathutils.bvhtree import BVHTree  # noqa: E402
 
 ## How far the charm lug's eye stands out from the weapon's side (WeaponCharm.STANDOFF).
@@ -64,6 +68,7 @@ def weapon_mats(accent="#33f0ff", holo=None, shell="#f6dfae", trim="#6b35b8", em
         holo=mat("Holo", holo or accent, rough=0.2, emit=1.5),
         decal=mat("Decal", "#ffd93b", rough=0.4),
         glove=mat("Glove", "#2b2836", rough=0.7),
+        tip=mat("GloveTip", "#2b2836", rough=0.7),
         plate=mat("GlovePlate", "#4a4560", rough=0.45, metal=0.3),
         cuff=mat("Cuff", "#ff3f9f", rough=0.5),
         sleeve=mat("Sleeve", "#1d1b26", rough=0.8),
@@ -553,13 +558,13 @@ PALM_THICK = 0.027
 
 def _finger(name, fr, bar, s_list, z, M, radius=FINGER_R, z_end=None, plate=True):
     """One finger curled round the bar at height z (frame coordinates)."""
-    pts = []
+    pts, normals = [], []
     for i, s in enumerate(s_list):
-        (x, y), _n = wrap_point(bar, GAP + radius, s)
+        (x, y), (nx, ny) = wrap_point(bar, GAP + radius, s)
         zz = z if z_end is None else z + (z_end - z) * i / max(1, len(s_list) - 1)
         pts.append(fpt(fr, x, y, zz))
-    parts = [tube(name, pts, radius, m=M["glove"], segs=8, radius_end=radius * 0.86),
-             sphere(name + "Tip", radius * 0.87, pts[-1], m=M["glove"], segs=8, rings=5)]
+        normals.append(fr[1] * nx + fr[2] * ny)
+    parts = _digit(name, pts, radius, M, segs=8, out=normals[-1])
     if plate and len(pts) > 4:
         # Armoured knuckle guard on the first joint.
         k = min(2, len(pts) - 2)
@@ -567,7 +572,22 @@ def _finger(name, fr, bar, s_list, z, M, radius=FINGER_R, z_end=None, plate=True
         centre = fpt(fr, x, y, z)
         tangent = pts[k + 1] - pts[k - 1]
         parts.append(obox(name + "Guard", (0.022, radius * 1.7, 0.006), centre, tangent, fr[3], bevel=0.0025, m=M["plate"]))
-    return parts
+    return parts + _finger_kits(name, pts, normals, fr[3], radius, M)
+
+
+def _digit(name, pts, radius, M, segs=10, out=None):
+    """A finger or thumb tube with a round tip; its last TIP_SHARE is the GloveTip surface.
+    `out` (the side away from what the hand holds) tilts the claw of the Claws shape."""
+    claw = (pts[-1] - pts[-2]).normalized()
+    if out is not None:
+        claw = (claw * 0.55 + Vector(out)).normalized()
+    cut = min(len(pts) - 2, max(1, round((len(pts) - 1) * (1.0 - TIP_SHARE))))
+    r_cut = radius * (1.0 - 0.14 * cut / (len(pts) - 1))
+    return [tube(name, pts[: cut + 1], radius, m=M["glove"], segs=segs, radius_end=r_cut),
+            tube(name + "End", pts[cut:], r_cut, m=M["tip"], segs=segs, radius_end=radius * 0.86),
+            sphere(name + "Tip", radius * 0.87, pts[-1], m=M["tip"], segs=segs, rings=5 if segs < 10 else 6),
+            *_kit("Fingerless", [_ring(name + "Hem", pts[cut], pts[cut + 1] - pts[cut - 1], r_cut + 0.0003, 0.0013, M["glove"], segs=segs + 4)]),
+            *_kit("Claws", [_spike(name + "Claw", pts[-1], claw, radius * 0.62, 0.016 + radius * 0.4, M["plate"])])]
 
 
 def _forearm(prefix, start, toward, M, length=1.4, heel=0.036):
@@ -585,7 +605,197 @@ def _forearm(prefix, start, toward, M, length=1.4, heel=0.036):
         tube(prefix + "Bracer", [c + d * 0.3, c + d * 0.37], 0.0695, m=M["plate"], segs=14, radius_end=0.0735),
         tube(prefix + "BracerLight", [c + d * 0.326, c + d * 0.336], 0.074, m=M["cell"], segs=14),
     ]
-    return parts, tuple(c + d * 0.45)
+    return parts + _forearm_kits(prefix, c, d, heel, M), tuple(c + d * 0.45)
+
+
+# ---------------------------------------------------------------------------
+# Glove shapes
+# ---------------------------------------------------------------------------
+# Every hand carries a few optional glove shapes. Their parts are tagged with
+# the shape's name and finish() merges each shape into a child mesh of the arm,
+# ArmRKit<Shape> / ArmLKit<Shape>, hidden unless a gloves cosmetic asks for it
+# (params.kit, scripts/player/weapon_cosmetics.gd). They only use the arm
+# materials, so the cosmetic's colours paint them: Glove, GlovePlate (plates,
+# studs, claws, tape, crystals, fins), Cuff (bells, frills, fur) and Cell.
+
+GLOVE_KITS = ("Gauntlet", "Fingerless", "Tape", "Mitten", "Circuit", "Wraps", "Fins", "Studs", "Crystal", "Claws", "Bell",
+              "Frill")
+TIP_SHARE = 0.42       # the share of each finger that is GloveTip (bare on fingerless gloves)
+
+
+def _kit(shape, parts):
+    for ob in parts:
+        ob["glove_kit"] = shape
+    return parts
+
+
+def _aim(ob, origin, z_axis, x_hint=(0.0, 0.0, 1.0)):
+    """Places a part built round its own origin: local Z along z_axis, local X towards x_hint."""
+    z = Vector(z_axis).normalized()
+    x = Vector(x_hint)
+    x = x - z * x.dot(z)
+    if x.length < 1e-6:
+        x = z.orthogonal()
+    x.normalize()
+    y = z.cross(x)
+    o = Vector(origin)
+    ob.matrix_world = Matrix(((x.x, y.x, z.x, o.x), (x.y, y.y, z.y, o.y), (x.z, y.z, z.z, o.z), (0, 0, 0, 1)))
+    return ob
+
+
+def _spike(name, base, axis, radius, length, m, segs=8, x_hint=(0.0, 0.0, 1.0)):
+    """A cone standing on `base`, pointing along `axis`."""
+    a = Vector(axis).normalized()
+    return _aim(cyl(name, radius, length, segs=segs, bevel=radius * 0.25, m=m, radius_top=radius * 0.16), Vector(base) + a * (length * 0.5), a, x_hint)
+
+
+def _ring(name, centre, axis, major, minor, m, segs=16, minor_segs=6):
+    return _aim(torus(name, major, minor, m=m, major_segs=segs, minor_segs=minor_segs), centre, axis)
+
+
+def _fin(name, outline, depth, origin, x_axis, up_axis, m):
+    """A flat blade: outline (x along x_axis, z along up_axis) extruded `depth` across."""
+    ob = prism(name, outline, depth, m=m, bevel=min(0.002, depth * 0.4))
+    x = Vector(x_axis).normalized()
+    z = Vector(up_axis)
+    z = (z - x * z.dot(x)).normalized()
+    y = z.cross(x)
+    o = Vector(origin)
+    ob.matrix_world = Matrix(((x.x, y.x, z.x, o.x), (x.y, y.y, z.y, o.y), (x.z, y.z, z.z, o.z), (0, 0, 0, 1)))
+    return ob
+
+
+def _frill(name, centre, axis, r0, r1, length, lobes, m, thick=0.0035, segs=72):
+    """A ruffled collar: a flaring ring from radius r0 to r1 over `length`
+    along `axis`, its outer edge waving in `lobes` scallops."""
+    d = Vector(axis).normalized()
+    u = d.orthogonal().normalized()
+    v = d.cross(u)
+    bm = bmesh.new()
+    rows = []
+    for i in range(segs):
+        a = math.tau * i / segs
+        radial = u * math.cos(a) + v * math.sin(a)
+        wave = math.sin(a * lobes)
+        inner = Vector(centre) + radial * r0
+        outer = Vector(centre) + radial * (r1 + 0.006 * wave) + d * (length + 0.012 * wave)
+        n = (outer - inner).cross(d.cross(radial)).normalized()
+        rows.append([bm.verts.new(p) for p in (inner + n * thick * 0.5, outer + n * thick * 0.5, outer - n * thick * 0.5, inner - n * thick * 0.5)])
+    for i in range(segs):
+        a, b = rows[i], rows[(i + 1) % segs]
+        for j in range(4):
+            bm.faces.new((a[j], b[j], b[(j + 1) % 4], a[(j + 1) % 4]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return _finish(name, bm, m, (0, 0, 0), (0, 0, 0))
+
+
+def _finger_kits(name, pts, normals, lateral, radius, M):
+    """Glove shapes on one finger (pts / outward normals along it)."""
+    n = len(pts)
+    if n < 4:
+        return []
+
+    def tangent(k):
+        return (pts[min(k + 1, n - 1)] - pts[max(k - 1, 0)]).normalized()
+    parts = []
+    # Gauntlet: a plate on every other joint past the knuckle guard.
+    for k in range(4, n - 1, 2):
+        parts += _kit("Gauntlet", [obox(f"{name}Plate{k}", (0.0135, radius * 1.55, 0.0045), pts[k] + normals[k] * (radius + 0.0022), tangent(k), lateral,
+                                        bevel=0.0018, m=M["plate"])])
+    k = min(2, n - 2)
+    top = pts[k] + normals[k] * (radius + 0.0043)
+    parts += _kit("Studs", [_spike(name + "Stud", top - normals[k] * 0.001, normals[k], 0.0062, 0.009, M["plate"], segs=4, x_hint=lateral)])
+    parts += _kit("Circuit", [sphere(name + "Led", 0.0032, top + normals[k] * 0.0004, m=M["cell"], segs=8, rings=5)])
+    t = min(3, n - 2)
+    parts += _kit("Tape", [_ring(f"{name}Tape{j}", pts[t] + tangent(t) * 0.0032 * j, tangent(t), radius * (1.0 - 0.14 * t / (n - 1)) + 0.0002, 0.0014,
+                                 M["plate"], segs=12, minor_segs=4) for j in (-1, 1)])
+    return parts
+
+
+def _back_kits(prefix, P, N, T, Z, arc, span, M):
+    """Glove shapes on the back of the hand: P is the top of the back plate,
+    N its outward normal, T runs towards the fingers, Z across the hand."""
+    parts = []
+    parts += _kit("Gauntlet", [obox(prefix + "BackArmour", (arc * 1.2, span * 1.35, 0.007), P + N * 0.0015, T, Z, bevel=0.003, m=M["plate"]),
+                               obox(prefix + "BackRidge", (arc * 1.1, 0.008, 0.006), P + N * 0.006, T, Z, bevel=0.0025, m=M["plate"])])
+    parts += _kit("Studs", [_spike(f"{prefix}BackStud{i}{j}", P + T * (arc * 0.34 * i) + Z * (span * 0.26 * j) - N * 0.001, N, 0.0068, 0.011, M["plate"],
+                                   segs=4, x_hint=T + Z) for i in (-1, 0, 1) for j in (-1, 1)])
+    parts += _kit("Circuit", [obox(prefix + "Chip", (0.028, 0.024, 0.006), P + N * 0.0015, T, Z, bevel=0.002, m=M["plate"]),
+                              obox(prefix + "ChipCore", (0.014, 0.012, 0.003), P + N * 0.0055, T, Z, bevel=0.001, m=M["cell"])]
+                  + [obox(f"{prefix}ChipPin{i}{j}", (0.0035, 0.006, 0.002), P + N * 0.0005 + T * (0.0085 * i) + Z * (0.0145 * j), T, Z, bevel=0.0008, m=M["cell"])
+                     for i in (-1, 0, 1) for j in (-1, 1)])
+    parts += _kit("Crystal", [_spike(f"{prefix}Shard{i}", P - N * 0.004 + T * dt + Z * dz, N + T * tt + Z * tz, rr, ll, M["plate"], segs=6)
+                              for i, (dt, dz, tt, tz, rr, ll) in enumerate(((-0.006, 0.0, -0.35, 0.1, 0.0095, 0.052), (0.008, 0.012, 0.3, 0.55, 0.008, 0.04),
+                                                                            (0.006, -0.012, 0.25, -0.6, 0.0075, 0.034)))])
+    parts += _kit("Fins", [_fin(prefix + "BackFin", [(-arc * 0.6, -0.003), (arc * 0.55, -0.003), (arc * 0.2, 0.012), (-arc * 0.85, 0.022)], 0.004,
+                                P, T, N, M["plate"])])
+    parts += _kit("Mitten", [obox(prefix + "MittFlap", (arc * 1.05 + 0.012, span * 1.55, 0.013), P + N * 0.0045 + T * 0.004, T, Z, bevel=0.006, m=M["glove"]),
+                             tube(prefix + "MittRoll", [P + N * 0.009 + T * (arc * 0.5 + 0.006) + Z * (span * 0.62 * j) for j in (-1, 0, 1)], 0.0085,
+                                  m=M["cuff"], segs=10),
+                             sphere(prefix + "MittButton", 0.0055, P + N * 0.0125 - T * 0.006, m=M["plate"], segs=10, rings=6)])
+    for j, sign in enumerate((1, -1)):
+        diag = T * arc + Z * span * sign
+        parts += _kit("Wraps", [obox(f"{prefix}CrossTape{j}", (diag.length * 1.05, 0.011, 0.003), P + N * 0.0008 * (j + 1), diag, N.cross(diag),
+                                     bevel=0.001, m=M["plate"])])
+    return parts
+
+
+def _knuckle_kits(prefix, knuckles, M):
+    """Glove shapes across the knuckles: knuckles = [(point on the finger axis, outward normal)]."""
+    if len(knuckles) < 2:
+        return []
+    pts = [p + nrm * (FINGER_R + 0.0062) for p, nrm in knuckles]
+    lead = pts[0] + (pts[0] - pts[1]) * 0.35
+    tail = pts[-1] + (pts[-1] - pts[-2]) * 0.35
+    return _kit("Wraps", [tube(prefix + "KnuckleRoll", [lead] + pts + [tail], 0.0072, m=M["plate"], segs=10)])
+
+
+def _forearm_kits(prefix, c, d, heel, M):
+    """Glove shapes on the wrist, cuff and forearm (c = wrist centre, d towards the elbow)."""
+    up = Vector((0, 0, 1)) - d * d.z
+    up = up.normalized() if up.length > 1e-4 else d.orthogonal().normalized()
+    side = d.cross(up)
+
+    def at(f):
+        return c + d * f
+
+    def around(count, f, radius, lean=0.0, phase=0.0):
+        """(point, outward direction) round the arm at fraction f."""
+        out = []
+        for i in range(count):
+            a = math.tau * (i + phase) / count
+            radial = up * math.cos(a) + side * math.sin(a)
+            out.append((at(f) + radial * radius, (radial + d * lean).normalized()))
+        return out
+    parts = []
+    parts += _kit("Gauntlet", [tube(prefix + "Vambrace", [at(0.075), at(0.17), at(0.29)], 0.077, m=M["plate"], segs=16, radius_end=0.092),
+                               _ring(prefix + "VambraceLip", at(0.29), d, 0.091, 0.0045, M["plate"], segs=20)]
+                  + [sphere(f"{prefix}Rivet{i}", 0.0055, p + o * 0.0005, m=M["cuff"], segs=8, rings=5) for i, (p, o) in enumerate(around(6, 0.12, 0.081))])
+    parts += _kit("Studs", [_spike(f"{prefix}CuffStud{i}", p - o * 0.002, o, 0.0085, 0.013, M["plate"], segs=4, x_hint=d)
+                            for i, (p, o) in enumerate(around(10, 0.115, 0.0675) + around(10, 0.17, 0.072, phase=0.5))]
+                  + [_spike(f"{prefix}BracerStud{i}", p - o * 0.002, o, 0.0075, 0.012, M["plate"], segs=4, x_hint=d)
+                     for i, (p, o) in enumerate(around(9, 0.335, 0.0715, phase=0.5))])
+    parts += _kit("Crystal", [_spike(f"{prefix}CuffShard{i}", p - o * 0.006, o, 0.011 - (i % 2) * 0.003, 0.065 - (i % 3) * 0.014, M["plate"], segs=6)
+                              for i, (p, o) in enumerate(around(7, 0.2, 0.066, lean=0.8, phase=0.2))])
+    parts += _kit("Claws", [_spike(f"{prefix}Fur{i}", p - o * 0.006, o, 0.013, 0.03 - (i % 2) * 0.008, M["cuff"], segs=6)
+                            for i, (p, o) in enumerate(around(14, 0.205, 0.07, lean=1.3))])
+    parts += _kit("Fins", [_fin(prefix + "ArmFin", [(0.2, -0.004), (0.58, -0.004), (0.5, 0.012), (0.3, 0.05), (0.24, 0.046)], 0.005, c + up * 0.058, d, up,
+                                M["plate"])])
+    parts += _kit("Bell", [tube(prefix + "Bell", [at(0.07), at(0.18), at(0.3)], 0.074, m=M["cuff"], segs=20, radius_end=0.112),
+                           _ring(prefix + "BellLip", at(0.3), d, 0.111, 0.006, M["plate"], segs=24),
+                           _ring(prefix + "BellBand", at(0.1), d, 0.0775, 0.005, M["plate"], segs=20),
+                           _aim(star(prefix + "BellStar", 0.03, 0.006, m=M["plate"], bevel=0.0015), at(0.2) + up * 0.1, up.lerp(-d, 0.2), d)])
+    parts += _kit("Frill", [_frill(prefix + "Frill", at(0.19), d, 0.071, 0.105, 0.07, 9, M["cuff"]),
+                            _frill(prefix + "FrillUnder", at(0.15), d, 0.069, 0.09, 0.05, 7, M["plate"]),
+                            _aim(star(prefix + "Cufflink", 0.0145, 0.006, m=M["plate"], bevel=0.0015), at(0.11) + up * 0.0705, up, d)])
+    parts += _kit("Wraps", [_ring(f"{prefix}Wrap{i}", at(f), d + up * tilt, r, 0.0062, M["plate"], segs=18)
+                            for i, (f, r, tilt) in enumerate(((0.0, heel + 0.003, 0.18), (0.035, heel * 0.97 + 0.004, -0.18), (0.07, 0.044, 0.2),
+                                                              (0.1, 0.049, -0.15)))])
+    parts += _kit("Tape", [_ring(f"{prefix}WristTape{i}", at(f), d, r, 0.004, M["plate"], segs=18)
+                           for i, (f, r) in enumerate(((0.03, heel * 0.96 + 0.002), (0.06, 0.0425)))])
+    parts += _kit("Circuit", [obox(prefix + "Battery", (0.06, 0.03, 0.014), at(0.265) + up * 0.066, d, side, bevel=0.004, m=M["plate"]),
+                              obox(prefix + "BatteryGlow", (0.044, 0.012, 0.004), at(0.265) + up * 0.0735, d, side, bevel=0.0015, m=M["cell"])])
+    return parts
 
 
 def hand(prefix, fr, bar, M, toward, finger_z, band_z, s_web, palm_len, finger_len, thumb=None,
@@ -617,18 +827,26 @@ def hand(prefix, fr, bar, M, toward, finger_z, band_z, s_web, palm_len, finger_l
         top = z1(mx, my) if callable(z1) else z1
         lo, hi = z0 + (top - z0) * 0.22, top - (top - z0) * 0.22
         parts.append(band(prefix + "BackPlate", fr, bar, GAP + PALM_THICK - 0.002, GAP + PALM_THICK + 0.006, mid, lo, hi, M["plate"], bevel=0.003))
-        (lx, ly), _n = wrap_point(bar, GAP + PALM_THICK + 0.0065, mid[len(mid) // 2])
+        (lx, ly), (nx, ny) = wrap_point(bar, GAP + PALM_THICK + 0.0065, mid[len(mid) // 2])
         parts.append(sphere(prefix + "PlateLight", 0.006, fpt(fr, lx, ly, (lo + hi) / 2), m=M["cell"], segs=8, rings=5))
+        (ax, ay), _n = wrap_point(bar, GAP + PALM_THICK + 0.006, mid[len(mid) // 2] - 0.02)
+        (bx, by), _n = wrap_point(bar, GAP + PALM_THICK + 0.006, mid[len(mid) // 2] + 0.02)
+        (px, py), _n = wrap_point(bar, GAP + PALM_THICK + 0.006, mid[len(mid) // 2])
+        parts += _back_kits(prefix, fpt(fr, px, py, (lo + hi) / 2), fr[1] * nx + fr[2] * ny, (fr[1] * (bx - ax) + fr[2] * (by - ay)).normalized(),
+                            fr[3], len(mid) * 0.007, hi - lo, M)
     fbar = finger_bar or bar
     start = finger_s if finger_s is not None else palm_s[-1] - 0.06
     fs = wrap_s(fbar, GAP + finger_r, start, finger_len + 0.012, direction=finger_dir)
+    knuckles = []
+    (kx, ky), (knx, kny) = wrap_point(fbar, GAP + finger_r, fs[min(2, len(fs) - 1)])
     for i, z in enumerate(finger_z):
         # Outer fingers are a touch shorter.
         cut = 0 if i in (0, 1) else (1 if i == 2 else 2)
         parts += _finger(f"{prefix}Finger{i}", fr, fbar, fs[: len(fs) - cut], z, M, radius=finger_r)
+        knuckles.append((fpt(fr, kx, ky, z), fr[1] * knx + fr[2] * kny))
+    parts += _knuckle_kits(prefix, knuckles, M)
     for name, pts, radius in extra_fingers:
-        parts += [tube(prefix + name, [Vector(p) for p in pts], radius, m=M["glove"], segs=10, radius_end=radius * 0.88),
-                  sphere(prefix + name + "Tip", radius * 0.89, pts[-1], m=M["glove"], segs=10, rings=6)]
+        parts += _digit(prefix + name, [Vector(p) for p in pts], radius, M)
     if thumb:
         tr = thumb.get("radius", 0.0145)
         if "points" in thumb:
@@ -640,9 +858,7 @@ def hand(prefix, fr, bar, M, toward, finger_z, band_z, s_web, palm_len, finger_l
                 (x, y), _n = wrap_point(bar, GAP + tr, s)
                 tz = thumb["z"](x, y) if callable(thumb["z"]) else thumb["z"]
                 tpts.append(fpt(fr, x, y, tz + thumb.get("lean", 0.0) * i / max(1, len(ts) - 1)))
-        parts += [tube(prefix + "Thumb", tpts, tr, m=M["glove"], segs=10, radius_end=tr * 0.84),
-                  sphere(prefix + "ThumbTip", tr * 0.85, tpts[-1], m=M["glove"], segs=10, rings=6),
-                  sphere(prefix + "ThumbBase", tr * 1.02, tpts[0], m=M["glove"], segs=10, rings=6)]
+        parts += _digit(prefix + "Thumb", tpts, tr, M) + [sphere(prefix + "ThumbBase", tr * 1.02, tpts[0], m=M["glove"], segs=10, rings=6)]
     ws = wrist_s if wrist_s is not None else s_web + 0.75
     (wx, wy), _n = wrap_point(bar, GAP + wrist_out, ws)
     if wrist_z is None:
@@ -813,7 +1029,11 @@ def finish(name, groups, empties, shading=True):
         if not parts:
             continue
         parent = exports.get(parent_name) if parent_name else None
-        exports[key] = merge(key, parts, pivot=pivot, parent=parent)
+        exports[key] = merge(key, [p for p in parts if "glove_kit" not in p], pivot=pivot, parent=parent)
+        for shape in GLOVE_KITS:
+            kit = [p for p in parts if p.get("glove_kit") == shape]
+            if kit:
+                exports[f"{key}Kit{shape}"] = merge(f"{key}Kit{shape}", kit, pivot=pivot, parent=exports[key])
     for key, (loc, parent_name) in empties.items():
         exports[key] = empty(key, loc, parent=exports.get(parent_name) if parent_name else None)
     bpy.context.view_layer.update()
@@ -821,9 +1041,12 @@ def finish(name, groups, empties, shading=True):
         meshes = {k: ob for k, ob in exports.items() if ob.type == "MESH" and not k.endswith("Holo") and k != "Decal"}
         body = [ob for k, ob in meshes.items() if not k.startswith("Arm")]
         bake_shading(body, body)
-        arms = [ob for k, ob in meshes.items() if k.startswith("Arm")]
+        arms = [ob for k, ob in meshes.items() if k.startswith("Arm") and "Kit" not in k]
         if arms:
             bake_shading(arms, body + arms, strength=0.42, gradient=0.0)
+        for k, ob in meshes.items():
+            if k.startswith("Arm") and "Kit" in k:
+                bake_shading([ob], body + arms + [ob], strength=0.42, gradient=0.0)
     _save(name, list(exports.values()))
     return exports
 

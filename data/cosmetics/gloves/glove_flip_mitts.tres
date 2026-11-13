@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 1200
+
+[resource]
+script = ExtResource("1")
+id = &"glove_flip_mitts"
+display_name = "Flip-Top Mitts"
+description = "Knitted mitts with the mitten top folded back and buttoned, so the trigger finger stays free."
+slot = &"gloves"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.7137, 0.1804, 1, 0.4784, 0.2902, 0.1725, 1, 0.9686, 0.9569, 0.949, 1, 0.07843, 0.6392, 0.6275, 1, 0.9098, 0.149, 0.2275, 1, 0.9686, 0.9569, 0.949, 1)
+params = {
+"kit": ["Fingerless", "Mitten"],
+"fingerless": true,
+"pattern": "knit",
+"pattern_on": ["Glove", "Sleeve"]
+}
+sort_order = 6121

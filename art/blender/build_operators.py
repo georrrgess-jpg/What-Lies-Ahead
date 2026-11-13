@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from operator_kit import *  # noqa: F401,F403
 from operator_kit import HEAD_C, SHOULDER, ELBOW, WRIST, HIP, KNEE, Kit, sx
 from operator_anim import Rig, build_clips, bake_clips, curve
+from operators_more import OPERATORS_MORE
 
 
 # Operators in bulky costumes hold the weapon a little further out to the
@@ -736,6 +737,7 @@ OPERATORS = {
     "midway_maestro": op_midway_maestro,
     "glitch": op_glitch,
     "arcade_champion": op_arcade_champion,
+    **OPERATORS_MORE,
 }
 
 

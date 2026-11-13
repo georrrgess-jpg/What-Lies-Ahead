@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_iron_knuckle"
+display_name = "Iron Knuckles"
+description = "Riveted steel plates over every knuckle and finger, a domed back plate and a flared vambrace. Knock knock."
+slot = &"gloves"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.2275, 0.1804, 0.1647, 1, 0.7255, 0.7529, 0.8314, 1, 0.6902, 0.09412, 0.1647, 1, 0.1647, 0.1412, 0.2, 1)
+params = {
+"kit": "Gauntlet",
+"metallic": 0.55,
+"roughness": 0.35
+}
+sort_order = 6220

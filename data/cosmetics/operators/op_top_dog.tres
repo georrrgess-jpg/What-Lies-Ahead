@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"op_top_dog"
+display_name = "Top Dog"
+description = "Runs the bravest hot-dog stand on Prize Pier. Ketchup on the right hip, mustard on the left, apron always on."
+slot = &"avatar"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.9686, 0.9569, 0.949, 1, 0.9098, 0.149, 0.2275, 1, 0.9098, 0.149, 0.2275, 1, 0.9686, 0.9569, 0.949, 1, 0.9098, 0.149, 0.2275, 1)
+params = {
+"model": "res://art/models/operator_top_dog.glb",
+"pattern": "stripes",
+"pattern_on": ["Sleeve"]
+}
+sort_order = 1020

@@ -473,6 +473,88 @@ def pose_keys(style, idle0):
         c = _merge(body(idle0, shift=(0, 0, 0.01), chest=(-6, 0, 0), head=(-8, 0, 0)),
                    arm(1, 0.7, 0.2, 0.85, bend=30, twist=-60, curl="open"), arm(-1, 0.7, 0.2, 0.85, bend=30, twist=-60, curl="open"))
         return [(0.0, idle0), (0.14, a), (0.5, a), (0.6, b), (0.96, b), (1.06, c), (1.5, c), (1.62, idle0), (1.9, idle0)], 1.9
+    if style == "bunny_hop":          # Pixel Pal: paws up at the chest, three little hops with a head tilt
+        def paws(tilt, dz):
+            return _merge(body(idle0, shift=(0, 0, dz), spine=(-2, 0, 0), chest=(-3, 0, 0), head=(-4, tilt, tilt * 0.6)),
+                          arm(1, 0.36, 0.62, -0.5, bend=88, twist=38, wrist=(0, 0, 28), curl=(46, 60), thumb=(14, 0)),
+                          arm(-1, 0.36, 0.62, -0.5, bend=88, twist=38, wrist=(0, 0, 28), curl=(46, 60), thumb=(14, 0)))
+        return [(0.0, idle0), (0.3, paws(0, -0.05)), (0.48, paws(12, 0.0)), (0.66, paws(0, -0.05)), (0.84, paws(-12, 0.0)),
+                (1.02, paws(0, -0.05)), (1.22, paws(10, 0.006)), (1.6, paws(10, 0.0)), (2.1, idle0)], 2.1
+    if style == "robot":              # Wind-Up Wally: stiff clockwork arm swings, a run-down slump, then rewound
+        a = _merge(body(idle0, chest=(0, 0, 8), head=(0, 0, 22)), arm(-1, 0.12, 1.0, 0.0, bend=4, twist=0, curl="flat"),
+                   arm(1, 0.14, -0.3, -1.0, bend=6, twist=10, curl="flat"))
+        b = _merge(body(idle0, chest=(0, 0, -8), head=(0, 0, -22)), arm(1, 0.12, 1.0, 0.0, bend=4, twist=0, curl="flat"),
+                   arm(-1, 0.14, -0.3, -1.0, bend=6, twist=10, curl="flat"))
+        slump = _merge(body(idle0, shift=(0, 0.02, -0.06), hips=(6, 0, 0), spine=(10, 0, 0), chest=(12, 0, 0), head=(16, 0, 6)),
+                       arm(1, 0.2, 0.2, -1.0, bend=10, twist=10, curl="relaxed"), arm(-1, 0.2, 0.2, -1.0, bend=10, twist=10, curl="relaxed"))
+        up = _merge(body(idle0, shift=(0, 0, 0.004), spine=(-2, 0, 0), chest=(-4, 0, 0), head=(-6, 0, 0)),
+                    arm(1, 0.62, 0.1, 0.3, bend=90, twist=-80, curl="flat"), arm(-1, 0.62, 0.1, 0.3, bend=90, twist=-80, curl="flat"))
+        return [(0.0, idle0), (0.16, a), (0.42, a), (0.5, b), (0.76, b), (0.84, a), (1.1, a), (1.5, slump), (1.75, slump), (1.86, up),
+                (2.2, up), (2.6, idle0)], 2.6
+    if style == "rev_up":             # Stunt Ace: grips invisible handlebars, twists the throttle, fist to the sky
+        def bars(roll):
+            return _merge(body(idle0, shift=(0, -0.01, -0.05), hips=(6, 0, 0), spine=(6, 0, 0), chest=(6, 0, 0), head=(-8, 0, 0)),
+                          arm(1, 0.36, 0.95, -0.42, bend=58, twist=36, curl="fist", thumb=(30, 0)),
+                          arm(-1, 0.36, 0.95, -0.42, bend=58, twist=36, wrist=(roll, 0, 0), curl="fist", thumb=(30, 0)))
+        sky = _merge(body(idle0, shift=(0, 0, 0.01), spine=(-3, 0, 3), chest=(-6, 2, 6), head=(-14, -4, 6)),
+                     arm(-1, 0.3, 0.12, 1.0, bend=8, twist=-30, curl="fist", thumb=(30, 0)), arm(1, 0.9, -0.3, -0.62, bend=104, twist=50, curl="fist",
+                                                                                                 thumb=(20, 0)))
+        return [(0.0, idle0), (0.32, bars(0)), (0.5, bars(-30)), (0.66, bars(0)), (0.82, bars(-30)), (0.98, bars(0)), (1.32, sky), (1.8, sky),
+                (2.3, idle0)], 2.3
+    if style == "head_bob":           # Halfpipe: nodding to the beat with a shaka in each hand, one raised high
+        def ear():
+            return arm(-1, 0.7, 0.45, 0.55, bend=58, twist=-40, wrist=(0, 0, -16), curl="fist", thumb=(-30, 46))
+        shaka = arm(1, 0.5, 0.75, -0.4, bend=62, twist=40, wrist=(0, 0, 20), curl="fist", thumb=(-30, 46))
+
+        def nod(dip):
+            return _merge(body(idle0, shift=(0, 0, -0.02 * dip), spine=(2 * dip, 0, 0), chest=(2 * dip, 0, -4), head=(-4 + 14 * dip, 4, -6)), ear(), shaka)
+        return [(0.0, idle0), (0.36, nod(0)), (0.56, nod(1)), (0.76, nod(0)), (0.96, nod(1)), (1.16, nod(0)), (1.36, nod(1)), (1.56, nod(0)),
+                (2.1, idle0)], 2.1
+    if style == "chef_kiss":          # Top Dog: kisses the fingertips and flings the kiss, other hand on the hip
+        hip = arm(1, 0.9, -0.3, -0.62, bend=104, twist=50, curl="fist", thumb=(20, 0))
+        kiss = _merge({"hand.R": hand_goal(-1, (-0.05, -0.39, 1.53), (0.25, -0.2, 0.95), (0.2, 0.95, 0.0), anchor=(-0.02, 0.0, -0.17),
+                                           pole=(-0.8, -0.2, -0.6))}, fingers(-1, "cup", thumb=(30, 0)))
+        lean = body(idle0, spine=(0, 0, -3), chest=(-2, 0, -6), head=(-4, 6, -4))
+        fling = _merge(body(idle0, spine=(0, 0, -3), chest=(-6, 0, 4), head=(-12, -4, 6)),
+                       arm(-1, 0.55, 0.8, 0.5, bend=12, twist=-30, curl="open", thumb=(-14, 8)), hip)
+        return [(0.0, idle0), (0.4, _merge(lean, kiss, hip)), (0.8, _merge(lean, kiss, hip)), (1.05, fling), (1.55, fling), (2.1, idle0)], 2.1
+    if style == "toss":               # Tide Keeper: two underarm tosses of fish food, then hands on the hips
+        back = _merge(body(idle0, chest=(2, 0, -8), head=(4, 0, -6)), arm(-1, 0.32, -0.75, -0.6, bend=20, twist=10, curl="cup", thumb=(20, 0)),
+                      arm(1, 0.3, 0.05, -1.0, bend=24, twist=14))
+        out = _merge(body(idle0, shift=(0, -0.02, 0), chest=(-3, 0, 6), head=(-10, 0, 4)),
+                     arm(-1, 0.3, 1.0, 0.25, bend=8, twist=-20, curl="open", thumb=(-14, 8)), arm(1, 0.3, 0.05, -1.0, bend=24, twist=14))
+        hips = _merge(body(idle0, spine=(-2, 0, 0), chest=(-4, 0, 0), head=(-8, 0, 0)),
+                      arm(1, 0.9, -0.3, -0.62, bend=104, twist=50, curl="fist", thumb=(20, 0)), arm(-1, 0.9, -0.3, -0.62, bend=104, twist=50, curl="fist",
+                                                                                                    thumb=(20, 0)))
+        return [(0.0, idle0), (0.36, back), (0.62, out), (0.92, back), (1.18, out), (1.6, hips), (2.1, hips), (2.6, idle0)], 2.6
+    if style == "go_signal":          # Mech Jockey: thumbs up, then sends the squad forward with a chop of the arm
+        thumb = _merge(body(idle0, chest=(-2, 0, -4), head=(-4, 0, -4)), arm(-1, 0.3, 0.6, -0.1, bend=96, twist=30, curl="fist", thumb=(-30, 46)),
+                       arm(1, 0.3, 0.02, -1.0, bend=24, twist=14))
+        up = _merge(body(idle0, chest=(-4, 0, 4), head=(-8, 0, 6)), arm(-1, 0.4, 0.3, 1.0, bend=40, twist=-40, curl="flat", thumb=(20, 0)),
+                    arm(1, 0.6, -0.1, -0.7, bend=96, twist=40, curl="fist", thumb=(20, 0)))
+        go = _merge(body(idle0, shift=(0, -0.03, -0.02), hips=(4, 0, 0), spine=(6, 0, 0), chest=(6, 0, 6), head=(-6, 0, 6)),
+                    arm(-1, 0.25, 1.0, 0.05, bend=6, twist=-10, curl="flat", thumb=(20, 0)), arm(1, 0.6, -0.1, -0.7, bend=96, twist=40, curl="fist",
+                                                                                               thumb=(20, 0)))
+        return [(0.0, idle0), (0.3, thumb), (0.8, thumb), (1.1, up), (1.3, go), (1.8, go), (2.3, idle0)], 2.3
+    if style == "quick_draw":         # Cosmic Sheriff: hand hovers by the holster, draws a finger-gun, blows the smoke away
+        hover = _merge(body(idle0, shift=(0, 0, -0.03), spine=(2, 0, -4), chest=(2, 0, -6), head=(-2, 0, 8)),
+                       arm(-1, 0.62, -0.12, -1.0, bend=24, twist=20, curl=(40, 40), thumb=(10, 0)), arm(1, 0.3, 0.05, -1.0, bend=22, twist=14))
+        draw = _merge(body(idle0, shift=(0, -0.01, -0.02), spine=(0, 0, -6), chest=(0, 0, -10), head=(-2, 0, 4)),
+                      arm(-1, 0.18, 1.0, 0.02, bend=4, twist=-6, curl="fist", thumb=(-30, 46)), arm(1, 0.3, 0.05, -1.0, bend=22, twist=14))
+        blow = _merge(body(idle0, chest=(-2, 0, 0), head=(-4, -2, 0)),
+                      {"hand.R": hand_goal(-1, (-0.1, -0.42, 1.56), (0.0, -0.05, 1.0), (1.0, 0.0, 0.0), anchor=(-0.02, 0.0, -0.15),
+                                           pole=(-0.8, -0.1, -0.6))}, fingers(-1, "fist", thumb=(-30, 46)), arm(1, 0.3, 0.05, -1.0, bend=22, twist=14))
+        return [(0.0, idle0), (0.4, hover), (0.7, hover), (0.82, draw), (1.25, draw), (1.55, blow), (1.95, blow), (2.5, idle0)], 2.5
+    if style == "chop":               # Timber Jack: two big overhead chops, then a proud chest-out stretch
+        def grip(out, fwd, up, bend, twist):
+            return _merge(arm(1, out, fwd, up, bend=bend, twist=twist, curl="fist", thumb=(30, 0)),
+                          arm(-1, out, fwd, up, bend=bend, twist=twist, curl="fist", thumb=(30, 0)))
+        lift = _merge(body(idle0, shift=(0, 0.01, 0.0), hips=(-2, 0, 0), spine=(-4, 0, 0), chest=(-6, 0, 0), head=(-10, 0, 0)), grip(0.3, 0.35, 1.0, 34, -30))
+        hit = _merge(body(idle0, shift=(0, -0.02, -0.08), hips=(12, 0, 0), spine=(10, 0, 0), chest=(8, 0, 0), head=(4, 0, 0)), grip(0.3, 1.0, -0.45, 12, 10))
+        proud = _merge(body(idle0, spine=(-4, 0, 0), chest=(-8, 0, 0), head=(-10, 0, 0)),
+                       arm(1, 0.9, -0.3, -0.62, bend=92, twist=50, curl="fist", thumb=(20, 0)), arm(-1, 0.9, -0.3, -0.62, bend=92, twist=50, curl="fist",
+                                                                                                     thumb=(20, 0)))
+        return [(0.0, idle0), (0.4, lift), (0.62, hit), (0.95, lift), (1.17, hit), (1.6, proud), (2.1, proud), (2.6, idle0)], 2.6
     # "flex": Arcade Champion's double biceps, chin up
     flex = dict(out=1.0, fwd=0.05, up=0.2, twist=-90, curl="fist", thumb=(30, 0))
     a = _merge(body(idle0, shift=(0, 0, 0.004), spine=(-4, 0, 0), chest=(-8, 0, 0), head=(-12, 0, 0)), arm(1, bend=112, **flex),

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_prism"
+display_name = "Prism Shards"
+description = "Holographic crystals grow out of the back of the hand and the cuff of a starry violet glove."
+slot = &"gloves"
+rarity = 3
+price = 5600
+colors = PackedColorArray(0.1647, 0.1137, 0.2902, 1, 0.7216, 0.9569, 1, 1, 1, 0.4784, 0.851, 1, 0.102, 0.07843, 0.2118, 1, 0.9843, 0.9804, 1, 1, 0.7216, 0.9569, 1, 1)
+params = {
+"kit": "Crystal",
+"shader": "res://art/shaders/skin_hologram.gdshader",
+"shader_on": ["GlovePlate"],
+"pattern": "stars",
+"pattern_on": ["Glove", "Sleeve"],
+"scale": 0.8
+}
+sort_order = 6320
