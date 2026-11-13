@@ -10,8 +10,12 @@ extends RefCounted
 ##   begin() / step()   then drive the body through the move, one physics tick
 ##               at a time, with move_and_slide (so a zombie in the way blocks it).
 ##
-## Every move is swept with the capsule itself before it starts (test_move with
-## the player's own collision mask): up, across, then down onto the landing.
+## What lies ahead is first looked for with a thin-margin sweep (_look): with
+## the body's own margin, a wall the capsule is brushing would answer every
+## sweep (at several times the cost) instead of the step or ledge ahead.
+## Every move is then swept with the capsule itself before it starts (test_move
+## with the player's own collision mask and margin): up, across, then down onto
+## the landing.
 ## So a move never ends inside geometry or under a low ceiling, and it never
 ## crosses the invisible player-only walls (physics layer 5), which stop the
 ## sweep like any other wall.
@@ -55,6 +59,8 @@ const VAULT_RISE_TIME := Vector2(0.06, 0.06)
 const FLOOR_NORMAL := 0.7
 const TOP_NORMAL := 0.85
 const MASK_WORLD := 1
+## Margin of the look-ahead sweeps (_look).
+const LOOK_MARGIN := 0.001
 const MASK_ENEMIES := 4
 
 ## The move in progress (NONE when idle).
@@ -70,6 +76,11 @@ var _plan_dir := Vector3.ZERO
 var _plan_ledge := 0.0
 var _plan_gap := 0.0
 var _plan_forward := 0.0
+# The last ledge that failed the full check (see _missed_before): feet x,
+# ledge height, feet z, and the run-up and vault classes; and the feet's height.
+var _miss := Vector4(INF, INF, INF, -1.0)
+var _miss_feet_y := INF
+var _miss_dir := Vector3.ZERO
 # The move in progress.
 var _dir := Vector3.ZERO
 var _start := Vector3.ZERO
@@ -120,7 +131,7 @@ func step_up(motion: Vector3) -> float:
 	var dir := motion / travel
 	# Look a little further than this tick: move_and_slide would wedge the
 	# capsule against the edge before a sweep of this tick's travel sees it.
-	if not _sweep(xf, dir * (travel + STEP_LOOKAHEAD)):
+	if not _look(xf, dir * (travel + STEP_LOOKAHEAD)):
 		return -1.0
 	# A step touches the capsule's round bottom, no higher than the step
 	# itself: a contact above that is a wall (and needs no ray to say so).
@@ -156,7 +167,7 @@ func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float, min_height
 	_plan_kind = Kind.NONE
 	var xf := _body.global_transform
 	var feet := xf.origin
-	if not _sweep(xf, dir * REACH):
+	if not _look(xf, dir * REACH):
 		return Kind.NONE
 	var normal := _hit.get_normal()
 	if normal.y > FLOOR_NORMAL or normal.dot(dir) > -0.5 or _is_enemy(_hit.get_collider()):
@@ -165,26 +176,42 @@ func plan(dir: Vector3, floor_y: float, airborne: bool, speed: float, min_height
 	var ledge := _find_top(feet, dir, face, floor_y, airborne)
 	if is_nan(ledge) or ledge - feet.y < min_height:
 		return Kind.NONE
-	var rise := ledge + CLEARANCE - feet.y
-	if _sweep(xf, Vector3.UP * rise):
+	var classes := (1.0 if speed >= VAULT_PREFER_SPEED else 0.0) + (2.0 if ledge - feet.y <= VAULT_MAX_HEIGHT else 0.0)
+	var miss := Vector4(feet.x, ledge, feet.z, classes)
+	if _missed_before(miss, feet.y, dir):
 		return Kind.NONE
+	var rise := ledge + CLEARANCE - feet.y
 	var raised := xf.translated(Vector3.UP * rise)
-	var can_mantle := _check_mantle(raised, feet, dir, face, ledge)
+	var clear := not _sweep(xf, Vector3.UP * rise)
+	var can_mantle := clear and _check_mantle(raised, feet, dir, face, ledge)
 	var mantle_forward := _plan_forward
 	# The vault only matters at a run, or where no mantle fits.
 	var wants_vault := speed >= VAULT_PREFER_SPEED or not can_mantle
-	var can_vault := wants_vault and ledge - feet.y <= VAULT_MAX_HEIGHT and _check_vault(raised, feet, dir, face, ledge)
+	var can_vault := clear and wants_vault and ledge - feet.y <= VAULT_MAX_HEIGHT and _check_vault(raised, feet, dir, face, ledge)
 	if can_vault:
 		_plan_kind = Kind.VAULT
 	elif can_mantle:
 		_plan_kind = Kind.MANTLE
 		_plan_forward = mantle_forward
 	else:
+		_miss = miss
+		_miss_feet_y = feet.y
+		_miss_dir = dir
 		return Kind.NONE
 	_plan_dir = dir
 	_plan_ledge = ledge
 	_plan_gap = face - _radius
 	return _plan_kind
+
+
+## True when the same ledge, seen from the same spot along the same direction
+## (and with the same run-up and vault height classes, in `miss.w`), failed
+## the full check last time from feet no higher than now. Rising cannot help:
+## the mantle check does not depend on the feet's height, and the climb and
+## the vault's drop only get shorter. So a jump pushing at a ledge it cannot
+## use re-checks it only once it falls or moves.
+func _missed_before(miss: Vector4, feet_y: float, dir: Vector3) -> bool:
+	return feet_y >= _miss_feet_y and dir.dot(_miss_dir) > 0.9999 and miss.distance_squared_to(_miss) < 1e-4
 
 
 ## Top of the obstacle just past its face, within the allowed heights; NAN if none.
@@ -247,6 +274,15 @@ func _check_vault(raised: Transform3D, feet: Vector3, dir: Vector3, face: float,
 ## (as move_and_slide does); true if it hits something (details in _hit).
 func _sweep(from: Transform3D, motion: Vector3) -> bool:
 	return _body.test_move(from, motion, _hit, _body.safe_margin)
+
+
+## A look-ahead sweep: reaches as far as _sweep would (the motion plus the
+## body's margin) but with a thin margin, so it reports what is ahead rather
+## than a wall alongside. True if it hits something (details in _hit).
+func _look(from: Transform3D, motion: Vector3) -> bool:
+	var length := motion.length()
+	var reach := motion * ((length + _body.safe_margin - LOOK_MARGIN) / length) if length > 0.0 else motion
+	return _body.test_move(from, reach, _hit, LOOK_MARGIN)
 
 
 func _cast(from: Vector3, to: Vector3) -> Dictionary:

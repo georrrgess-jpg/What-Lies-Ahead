@@ -5,6 +5,11 @@ extends SceneTree
 ##
 ##   godot --headless --audio-driver Dummy --path . --fixed-fps 60 --script res://tools/move_probe.gd -- \
 ##       [--level=prize_pier] [--profile=<file>] [--repeat=3]
+##   Frame sequences of the moves instead (needs a renderer):
+##     xvfb-run -a godot --audio-driver Dummy --rendering-driver opengl3 --path . --fixed-fps 60 \
+##         --resolution 960x540 --script res://tools/move_probe.gd -- --frames=<dir>
+##     saves <dir>/<move>_<tick>.png for a slide, a dash to the right, a mantle
+##     onto the planter and a long drop.
 ##
 ## Each scenario drives the player with InputMap actions and calls its
 ## _physics_process itself (the body's own physics processing is off), timing
@@ -65,6 +70,10 @@ func _run() -> void:
 	player.controls_enabled = true
 	player.set_physics_process(false)
 	print("[move] level %s, dash action: %s" % [_opt("level", "prize_pier"), InputMap.has_action("dash")])
+	if _opt("frames", "") != "":
+		await _film(_opt("frames", ""))
+		quit(0)
+		return
 	for r in int(_opt("repeat", "3")):
 		rows.clear()
 		await _scenarios()
@@ -93,6 +102,13 @@ func _place(at: Vector3, yaw_degrees: float) -> void:
 	player.velocity = Vector3.ZERO
 	player.set_look(deg_to_rad(yaw_degrees), 0.0)
 	for i in 20:
+		await _step([])
+
+
+## Places the player and waits out every cooldown (dash, slide boost).
+func _rest(at: Vector3) -> void:
+	await _place(at, 0.0)
+	for i in 120:
 		await _step([])
 
 
@@ -144,6 +160,34 @@ func _print_rows() -> void:
 	print("[move] %-18s %5s %8s %8s %8s %8s" % ["scenario", "ticks", "mean_us", "p50_us", "p95_us", "max_us"])
 	for r in rows:
 		print("[move] %-18s %5d %8.1f %8d %8d %8d" % r)
+
+
+# --- frame sequences --------------------------------------------------------------
+
+func _film(dir: String) -> void:
+	DirAccess.make_dir_recursive_absolute(dir)
+	await _rest(OPEN)
+	await _shoot(dir, "slide", 40, [16, 20, 26, 36], func(i): return ["move_forward", "sprint"] + (["slide"] if i == 14 else []))
+	await _rest(OPEN + Vector3(-3, 0, 0))
+	await _shoot(dir, "dash", 24, [2, 5, 8, 18], func(i): return ["move_right"] + (["dash"] if i == 1 else []))
+	await _place(PLANTER, 0.0)
+	await _shoot(dir, "mantle", 40, [13, 17, 21, 26], func(i): return ["move_forward"] + (["jump"] if i >= 10 and i < 13 else []))
+	# A long drop: off the planter's back edge is too short, so lift the player.
+	await _place(OPEN, 0.0)
+	player.global_position = OPEN + Vector3.UP * 4.0
+	await _shoot(dir, "drop", 40, [20, 24, 28, 34], func(_i): return ["move_left"])
+
+
+## Runs `ticks` ticks with `step.call(i)` held, saving the frame after each tick in `at`.
+func _shoot(dir: String, name: String, ticks: int, at: Array, step: Callable) -> void:
+	for i in ticks:
+		await _step(step.call(i))
+		if at.has(i):
+			await RenderingServer.frame_post_draw
+			var file := "%s/%s_%02d.png" % [dir, name, i]
+			root.get_texture().get_image().save_png(file)
+			print("[move] saved %s" % file)
+	_hold([])
 
 
 # --- the parts ------------------------------------------------------------------
@@ -200,10 +244,8 @@ func _numbers() -> void:
 		top = maxf(top, player.global_position.y)
 	numbers.append("jump height %.2f m" % (top - y0))
 	# Sprint, then a rested slide: peak speed and the distance it covers.
-	await _place(OPEN, 0.0)
-	for i in 120:
-		await _step([])
-	for i in 50:
+	await _rest(OPEN)
+	for i in 20:
 		await _step(["move_forward", "sprint"])
 	var sprint: float = player.horizontal_speed()
 	var from: Vector3 = player.global_position
@@ -218,10 +260,8 @@ func _numbers() -> void:
 			break
 	numbers.append("sprint %.2f m/s; slide peak %.2f m/s, %.2f s, %.2f m" % [sprint, peak, ticks * TICK, Vector2(player.global_position.x - from.x, player.global_position.z - from.z).length()])
 	# A slide-jump straight out of a rested slide.
-	await _place(OPEN, 0.0)
-	for i in 120:
-		await _step([])
-	for i in 50:
+	await _rest(OPEN)
+	for i in 20:
 		await _step(["move_forward", "sprint"])
 	var take_off := 0.0
 	for i in 40:
@@ -236,17 +276,19 @@ func _numbers() -> void:
 
 
 func _dash_numbers() -> void:
-	await _place(OPEN + Vector3(-2, 0, 0), 0.0)
-	var from: Vector3 = player.global_position
+	var moved := []
 	var peak := 0.0
 	var moving := 0
-	for i in 60:
-		await _step(["move_right"] + (["dash"] if i == 0 else []))
-		peak = maxf(peak, player.horizontal_speed())
-		if player.is_dashing():
-			moving = i + 1
-	var moved: Vector3 = player.global_position - from
-	numbers.append("dash peak %.2f m/s, burst %.2f s, %.2f m sideways in 1 s (walking alone: %.2f m)" % [peak, moving * TICK, moved.x, 5.2 * (1.0 - 0.05)])
+	for dash in [false, true]:
+		await _rest(OPEN + Vector3(-3, 0, 0))
+		var from: Vector3 = player.global_position
+		for i in 30:
+			await _step(["move_right"] + (["dash"] if dash and i == 0 else []))
+			peak = maxf(peak, player.horizontal_speed())
+			if player.is_dashing():
+				moving = i + 1
+		moved.append(player.global_position.x - from.x)
+	numbers.append("dash peak %.2f m/s, burst %.2f s; sideways in 0.5 s: %.2f m with a dash, %.2f m walking" % [peak, moving * TICK, moved[1], moved[0]])
 	# The cooldown: press every tick and count the dashes in 6 s.
 	await _place(OPEN, 0.0)
 	var count := 0
@@ -260,7 +302,7 @@ func _dash_numbers() -> void:
 			player.global_position = OPEN
 	numbers.append("dashes in 6 s of mashing: %d" % count)
 	# Dash-jump take-off speed.
-	await _place(OPEN, 0.0)
+	await _rest(OPEN)
 	var take_off := 0.0
 	for i in 20:
 		await _step(["move_forward", "sprint"] + (["dash"] if i == 0 else []) + (["jump"] if i >= 3 and i < 6 else []))
