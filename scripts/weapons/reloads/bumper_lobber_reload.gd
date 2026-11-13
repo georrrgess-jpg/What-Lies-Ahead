@@ -31,9 +31,9 @@ func play(v: WeaponView, d: float) -> void:
 	v.at(0.74, d, func(): Sfx.play(&"reload_spin", -6.0, 1.05))
 	# The free hand slaps the lid shut.
 	# It drops off the foregrip, comes up beside the hopper, pats it and goes back.
-	v.track("ArmL", d, [[0.14, Vector3(0, -0.09, 0.02), Vector3.ZERO], [0.34, Vector3(-0.17, -0.04, 0.16), Vector3(0, 0, -10)],
+	v.track("ArmL", d, [[0.14, Vector3(0, -0.13, 0.02), Vector3.ZERO], [0.34, Vector3(-0.17, -0.06, 0.16), Vector3(0, 0, -10)],
 		[0.78, Vector3(-0.21, 0.19, 0.27), Vector3(-10, 0, -20)], [0.84, Vector3(-0.19, 0.17, 0.27), Vector3(-6, 0, -20)],
-		[0.9, Vector3(-0.17, -0.04, 0.16), Vector3(0, 0, -10)], [0.96, Vector3(0, -0.09, 0.02), Vector3.ZERO],
+		[0.9, Vector3(-0.17, -0.06, 0.16), Vector3(0, 0, -10)], [0.96, Vector3(0, -0.13, 0.02), Vector3.ZERO],
 		[1.0, Vector3.ZERO, Vector3.ZERO]])
 	v.at(0.88, d, func(): Sfx.play(&"reload_clunk", -2.0, 1.1); var p := v.owner as Player; if p: p.add_shake(0.1))
 	v.burst(0.89, d, "VentPoint", "steam")

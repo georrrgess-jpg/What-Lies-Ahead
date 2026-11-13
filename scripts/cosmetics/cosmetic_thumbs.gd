@@ -211,4 +211,8 @@ func _frame(root: Node3D, item: CosmeticItem) -> void:
 	var centre := box.get_center()
 	var radius := maxf(box.size.x, maxf(box.size.y, box.size.z)) * 0.5
 	var dist := radius / tan(deg_to_rad(_camera.fov * 0.5)) * (1.05 if item.slot == &"avatar" else 1.15)
+	if item.slot == &"weapon_finish" and box.size.y >= box.size.x * 0.9:
+		# A weapon as tall as it is long (a pistol) has its near side closer to
+		# the camera than its outline suggests: step back so nothing is cropped.
+		dist += box.size.z * 0.5
 	_camera.look_at_from_position(centre + Vector3(0, radius * 0.15, dist), centre)

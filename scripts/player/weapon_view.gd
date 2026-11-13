@@ -41,7 +41,7 @@ const BOB_ROLL := 1.0
 ## Initial spring velocity per unit of wanted peak (for the pose springs).
 const KICK_GAIN := 30.0
 const HOLO_SHADER := "res://art/shaders/holo.gdshader"
-## Parts the reload animations may move (see art/blender/build_weapons.py).
+## Parts the reload animations may move (see art/blender/weapon_kit.py).
 const ANIMATED_PARTS := ["Cell", "CellHolo", "Slide", "Hammer", "Panel", "Vents", "Barrels", "Pump",
 	"Drum", "Capsules", "CapsulesHolo", "ArmL", "ArmR"]
 
@@ -557,8 +557,8 @@ func _reload_holo_print(d: float) -> void:
 	_solidify("CellHolo", "Cell", 0.76, d)
 	_burst(0.84, d, "VentPoint", "steam")
 	# The support hand slides forward off the firing hand, drops away, and comes back the same way.
-	_track("ArmL", d, [[0.1, Vector3(-0.03, -0.012, -0.085), Vector3.ZERO], [0.22, Vector3(-0.15, -0.16, 0.0), Vector3(0, 0, -12)],
-		[0.72, Vector3(-0.15, -0.16, 0.0), Vector3(0, 0, -12)], [0.84, Vector3(-0.03, -0.012, -0.085), Vector3.ZERO],
+	_track("ArmL", d, [[0.1, Vector3(-0.03, -0.012, -0.085), Vector3.ZERO], [0.24, Vector3(-0.12, -0.32, 0.04), Vector3(0, 0, -12)],
+		[0.7, Vector3(-0.12, -0.32, 0.04), Vector3(0, 0, -12)], [0.84, Vector3(-0.03, -0.012, -0.085), Vector3.ZERO],
 		[0.94, Vector3.ZERO, Vector3.ZERO]])
 
 

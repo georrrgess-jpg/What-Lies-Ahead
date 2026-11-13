@@ -109,7 +109,7 @@ def build_comet_cannon():
         cylinder.append(box(f"Flute{k}", (0.013, 0.07, 0.01), (math.cos(b) * 0.057, cyl_c[1], cyl_c[2] + math.sin(b) * 0.057),
                             rot=(0, -b + math.pi / 2, 0), bevel=0.003, m=M["cell"]))
         rounds.append(ycyl(f"Round{k}", 0.0135, 0.108, cyl_c[1], z=cz, x=cx, m=M["cell"], segs=10, bevel=0.003))
-        rounds.append(ycyl(f"RoundRim{k}", 0.016, 0.008, cyl_c[1] - 0.054, z=cz, x=cx, m=M["steel"], segs=10, bevel=0.002))
+        rounds.append(ycyl(f"RoundRim{k}", 0.016, 0.008, cyl_c[1] - 0.052, z=cz, x=cx, m=M["steel"], segs=10, bevel=0.002))
     rounds_holo = holo_copy(rounds)
     rounds_holo.append(torus("LoaderRing", 0.046, 0.006, (0, cyl_c[1] - 0.064, cyl_c[2]), rot=rad(90, 0, 0), m=mat("Holo"), major_segs=20, minor_segs=5))
 

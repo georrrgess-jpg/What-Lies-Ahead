@@ -570,8 +570,9 @@ def _finger(name, fr, bar, s_list, z, M, radius=FINGER_R, z_end=None, plate=True
     return parts
 
 
-def _forearm(prefix, start, toward, M, length=0.95, heel=0.036):
-    """Wrist, cuff with a light band, armour band and sleeve leading off-screen."""
+def _forearm(prefix, start, toward, M, length=1.4, heel=0.036):
+    """Wrist, cuff with a light band, armour band and a sleeve long enough to
+    leave the screen in every pose and reload."""
     c = Vector(start)
     d = (Vector(toward) - c).normalized()
     parts = [
@@ -580,7 +581,7 @@ def _forearm(prefix, start, toward, M, length=0.95, heel=0.036):
         tube(prefix + "Cuff", [c + d * 0.085, c + d * 0.125, c + d * 0.2], 0.064, m=M["cuff"], segs=16, radius_end=0.074),
         tube(prefix + "CuffRim", [c + d * 0.193, c + d * 0.215], 0.069, m=M["glove"], segs=16),
         tube(prefix + "CuffLight", [c + d * 0.13, c + d * 0.147], 0.0725, m=M["cell"], segs=16),
-        tube(prefix + "Forearm", [c + d * 0.21, c + d * length], 0.06, m=M["sleeve"], segs=14, radius_end=0.09),
+        tube(prefix + "Forearm", [c + d * 0.21, c + d * 0.95, c + d * length], 0.06, m=M["sleeve"], segs=14, radius_end=0.09),
         tube(prefix + "Bracer", [c + d * 0.3, c + d * 0.37], 0.0695, m=M["plate"], segs=14, radius_end=0.0735),
         tube(prefix + "BracerLight", [c + d * 0.326, c + d * 0.336], 0.074, m=M["cell"], segs=14),
     ]
