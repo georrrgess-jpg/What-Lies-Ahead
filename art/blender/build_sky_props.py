@@ -17,7 +17,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sky_common import *  # noqa: F401,F403
 
-BRIDGE_LEN = 8.0
+BRIDGE_LEN = 6.0
 BRIDGE_W = 4.6
 
 
@@ -41,7 +41,7 @@ def build_rail():
 
 
 def build_bridge():
-    """Plank bridge, 8 m along -Y (Godot +Z) by 4.6 m, deck top at z 0: planks on
+    """Plank bridge, 6 m along -Y (Godot +Z) by 4.6 m, deck top at z 0: planks on
     navy stringers, post-and-rope railings with diamond netting, pennants on the
     handropes and a bulb arch over each end."""
     reset_scene()
@@ -49,7 +49,7 @@ def build_bridge():
     navy, rope, gold = smat("Navy"), smat("Rope", rough=0.9), smat("Gold", rough=0.4)
     hw = BRIDGE_W / 2
     p = []
-    n = 20
+    n = 15
     for i in range(n):
         y = -BRIDGE_LEN / 2 + (i + 0.5) * BRIDGE_LEN / n
         p.append(box(f"Plank{i}", (BRIDGE_W - 0.1, BRIDGE_LEN / n - 0.04, 0.16), (0, y, -0.08), bevel=0.02, m=wood if i % 3 else light))

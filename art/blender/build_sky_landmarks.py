@@ -57,7 +57,7 @@ def build_airship():
         p.append(torus(f"Band{k}", r, 0.18, (0, y, 0), rot=rad(90, 0, 0), m=m, major_segs=28, minor_segs=5))
     p.append(sphere("NoseCap", 0.9, (0, -half + 0.2, 0), m=gold, segs=12, rings=6))
     for s in (-1, 1):
-        t = text(f"Name{s}", "CUMULUS", 3.2, 0.12, (s * (AIRSHIP_R + 0.05), -2.0, 0.6), rot=(math.pi / 2, 0, s * math.pi / 2), m=navy)
+        t = text(f"Name{s}", "CUMULUS", 3.0, 0.2, (s * (AIRSHIP_R + 0.45), -2.0, 0.2), rot=(math.pi / 2, 0, s * math.pi / 2), m=navy)
         p.append(t)
     # Tail fins: four, red with navy edges.
     for k in range(4):
@@ -297,11 +297,13 @@ def build_ride_station():
         p += [box(f"Pier{s}", (0.6, 0.6, H), (s * (W / 2 - 0.15), -D / 2 + 0.3, H / 2), bevel=0.06, m=red),
               box(f"Stripe{s}", (0.64, 0.64, 0.3), (s * (W / 2 - 0.15), -D / 2 + 0.3, 1.2), bevel=0.04, m=white)]
     # Bullwheel and the cable mast on the roof.
-    p += [cyl("WheelMast", 0.3, 2.4, (0, 0.6, H + 1.4), segs=10, bevel=0.03, m=navy),
-          torus("Bullwheel", 2.4, 0.16, (0, 0.6, H + 2.6), rot=(0, 0, 0), m=gold, major_segs=32, minor_segs=6)]
+    wy = D / 2 + 1.5
+    p += [cyl("WheelMast", 0.35, H + 2.6, (0, wy, (H + 2.6) / 2), segs=10, bevel=0.03, m=navy),
+          box("WheelBrace", (0.3, 1.6, 0.3), (0, D / 2 + 0.7, H - 0.4), bevel=0.03, m=navy),
+          torus("Bullwheel", 2.4, 0.16, (0, wy, H + 2.6), rot=(0, 0, 0), m=gold, major_segs=32, minor_segs=6)]
     for k in range(6):
         a = math.pi * k / 6
-        p.append(box(f"WheelSpoke{k}", (4.8, 0.1, 0.1), (0, 0.6, H + 2.6), rot=(0, 0, a), bevel=0.0, m=navy))
+        p.append(box(f"WheelSpoke{k}", (4.8, 0.1, 0.1), (0, wy, H + 2.6), rot=(0, 0, a), bevel=0.0, m=navy))
     p += pennants("Pen", (-W / 2 - 0.3, -D / 2 - 0.55, H + 0.3), (W / 2 + 0.3, -D / 2 - 0.55, H + 0.3), 14, 0.25, [red, gold, teal], size=0.3)
     # Queue rails inside.
     for x in (-1.6, 1.6):

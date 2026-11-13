@@ -1,0 +1,159 @@
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
+
+[sub_resource type="Resource" id="wave_1"]
+script = ExtResource("2")
+spawns = {
+"sky_balloon_vendor": 3,
+"tourist_shambler": 9,
+"sky_diver": 4
+}
+spawn_interval = 1.75
+burst = 1
+max_alive = 8
+speed_scale = 1.0
+late_types_after = 0.35
+banner = ""
+kind = &"standard"
+title = "BOARDING CALL"
+hint = "Divers land where the ring glows: step out of it."
+
+[sub_resource type="Resource" id="wave_2"]
+script = ExtResource("2")
+spawns = {
+"sky_diver": 14,
+"lifeguard_runner": 5,
+"tourist_shambler": 3
+}
+spawn_interval = 1.0
+burst = 1
+max_alive = 11
+speed_scale = 1.0
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "FREEFALL"
+hint = "Divers drop in from every side: keep moving between the rings."
+surge_at = 0.5
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_3"]
+script = ExtResource("2")
+spawns = {
+"sky_balloon_vendor": 7,
+"tourist_shambler": 10,
+"lava_tiki_bartender": 2,
+"sky_diver": 4
+}
+spawn_interval = 1.25
+burst = 1
+max_alive = 12
+speed_scale = 1.0
+late_types_after = 0.15
+banner = ""
+kind = &"ranged"
+title = "BALLOON BARRAGE"
+hint = "Vendors lob water balloons from every side: a headshot pops the throw."
+surge_at = 0.55
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_4"]
+script = ExtResource("2")
+spawns = {
+"sky_diver": 10,
+"tourist_shambler": 9,
+"sky_balloon_vendor": 4,
+"boardwalk_bruiser": 1
+}
+spawn_interval = 1.2
+burst = 1
+max_alive = 12
+speed_scale = 1.05
+late_types_after = 0.2
+banner = ""
+kind = &"bounty"
+title = "THE GOLDEN DIVER"
+hint = "Pop the golden diver before it bails out."
+bounty = &"sky_diver"
+bounty_tickets = 225
+
+[sub_resource type="Resource" id="wave_5"]
+script = ExtResource("2")
+spawns = {
+"boardwalk_bruiser": 2,
+"frost_yeti": 1,
+"tourist_shambler": 10,
+"sky_diver": 6,
+"sky_balloon_vendor": 4
+}
+spawn_interval = 1.35
+burst = 1
+max_alive = 13
+speed_scale = 1.06
+late_types_after = 0.25
+banner = ""
+kind = &"siege"
+title = "HEAVY WEATHER"
+hint = "The heavies cross one bridge at a time: hold the far end."
+
+[sub_resource type="Resource" id="wave_6"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 11,
+"sky_diver": 9,
+"sky_balloon_vendor": 5,
+"lava_fire_dancer": 3
+}
+spawn_interval = 1.25
+burst = 1
+max_alive = 13
+speed_scale = 1.08
+late_types_after = 0.15
+banner = ""
+kind = &"standard"
+title = "GALE FORCE"
+hint = "The wind leans on you: the railings hold, keep your aim."
+surge_at = 0.5
+surge_count = 6
+twist = &"gale"
+
+[sub_resource type="Resource" id="wave_7"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 13,
+"sky_diver": 7,
+"sky_balloon_vendor": 3,
+"lava_fire_dancer": 2
+}
+spawn_interval = 1.9
+burst = 2
+max_alive = 13
+speed_scale = 1.1
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "CAPTAIN CUMULUS"
+hint = "Out of his landing ring, through his ballast, back from the slam."
+boss = &"alpha_captain"
+boss_at = 0.45
+rest_before = 24.0
+
+[resource]
+script = ExtResource("1")
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
+prep_seconds = 12.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 470
+break_refill_fraction = 0.3
+ammo_topup_price = 210
+heal_price = 330
+heal_amount = 60.0
+heals_per_break = 1
+wave_bonus_base = 20
+wave_bonus_per_wave = 5
+overshield_price = 660
+overshield_amount = 25.0
+damage_boost_price = 660

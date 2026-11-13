@@ -125,7 +125,8 @@ def rock_cone(name, radius, depth, seed=1, rings=6, segs=14, lip=True):
         for i in range(segs):
             a = math.tau * i / segs + rng.uniform(-0.08, 0.08)
             rr = r * rng.uniform(0.86, 1.08)
-            ring.append(bm.verts.new((math.cos(a) * rr, math.sin(a) * rr, z + rng.uniform(-0.04, 0.04) * depth)))
+            dz = rng.uniform(-0.04, 0.04) * depth if k > 0 else 0.0
+            ring.append(bm.verts.new((math.cos(a) * rr, math.sin(a) * rr, z + dz)))
         layers.append(ring)
     for k in range(rings):
         for i in range(segs):
