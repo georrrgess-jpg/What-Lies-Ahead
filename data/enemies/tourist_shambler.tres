@@ -13,7 +13,7 @@ world = &"neon_rooftops"
 model_scene = ExtResource("model_neon")
 shirt_colors = Array[Color]([Color(0.48, 0.24, 1, 1), Color(0.1, 0.62, 0.72, 1), Color(0.95, 0.25, 0.6, 1), Color(0.25, 0.27, 0.42, 1), Color(1, 0.55, 0.15, 1)])
 skin_colors = Array[Color]([Color(0.5, 0.92, 0.48, 1), Color(0.42, 0.88, 0.58, 1), Color(0.62, 0.95, 0.42, 1), Color(0.46, 0.86, 0.66, 1)])
-accessory_slots = PackedStringArray("Acc_Tourist_LedCap|Acc_Tourist_HoodUp||", "Acc_Tourist_GlowNecklace||", "Acc_Tourist_Phone||", "Acc_Tourist_Backpack||")
+accessory_slots = PackedStringArray("Acc_Tourist_LedCap|Acc_Tourist_HoodUp|Acc_Tourist_HoodUp+Acc_Tourist_GlowNecklace|Acc_Tourist_LedCap+Acc_Tourist_GlowNecklace|Acc_Tourist_LedCap+Acc_Tourist_Backpack|Acc_Tourist_Backpack+Acc_Tourist_TopHair|Acc_Tourist_GlowNecklace+Acc_Tourist_TopHair|Acc_Tourist_TopHair", "Acc_Tourist_Phone||")
 
 [sub_resource type="Resource" id="look_aqua"]
 script = ExtResource("look")
@@ -21,7 +21,7 @@ world = &"abyss_aquarium"
 model_scene = ExtResource("model_aqua")
 shirt_colors = Array[Color]([Color(0.18, 0.65, 0.91, 1), Color(1, 0.45, 0.42, 1), Color(1, 0.78, 0.22, 1), Color(0.6, 0.4, 0.95, 1), Color(0.1, 0.7, 0.65, 1)])
 skin_colors = Array[Color]([Color(0.62, 0.81, 0.29, 1), Color(0.52, 0.77, 0.4, 1), Color(0.7, 0.78, 0.34, 1), Color(0.5, 0.8, 0.5, 1)])
-accessory_slots = PackedStringArray("Acc_Tourist_SharkHat|||", "Acc_Tourist_Lanyard||", "Acc_Tourist_Plush|Acc_Tourist_Camera||")
+accessory_slots = PackedStringArray("Acc_Tourist_SharkHat|||", "Acc_Tourist_Lanyard|Acc_Tourist_Camera||", "Acc_Tourist_Plush||")
 
 [sub_resource type="Resource" id="look_dune"]
 script = ExtResource("look")
@@ -29,7 +29,7 @@ world = &"dune_spaceport"
 model_scene = ExtResource("model_dune")
 shirt_colors = Array[Color]([Color(1, 0.48, 0.16, 1), Color(0.13, 0.66, 0.62, 1), Color(0.88, 0.25, 0.2, 1), Color(0.55, 0.3, 0.85, 1), Color(0.2, 0.3, 0.55, 1)])
 skin_colors = Array[Color]([Color(0.64, 0.82, 0.29, 1), Color(0.5, 0.78, 0.38, 1), Color(0.72, 0.8, 0.33, 1), Color(0.48, 0.74, 0.5, 1)])
-accessory_slots = PackedStringArray("Acc_Tourist_Antennae|Acc_Tourist_SpaceCap||", "Acc_Tourist_Balloon|||", "Acc_Tourist_FannyPack||")
+accessory_slots = PackedStringArray("Acc_Tourist_Antennae|Acc_Tourist_SpaceCap|Acc_Tourist_TopHair|Acc_Tourist_TopHair", "Acc_Tourist_Balloon|||", "Acc_Tourist_FannyPack||")
 
 [sub_resource type="Resource" id="look_frost"]
 script = ExtResource("look")
@@ -37,7 +37,7 @@ world = &"frostpeak_resort"
 model_scene = ExtResource("model_frost")
 shirt_colors = Array[Color]([Color(0.78, 0.19, 0.29, 1), Color(0.15, 0.5, 0.35, 1), Color(0.2, 0.35, 0.72, 1), Color(0.85, 0.6, 0.15, 1), Color(0.5, 0.3, 0.72, 1)])
 skin_colors = Array[Color]([Color(0.56, 0.78, 0.69, 1), Color(0.6, 0.78, 0.85, 1), Color(0.65, 0.82, 0.76, 1), Color(0.52, 0.76, 0.62, 1)])
-accessory_slots = PackedStringArray("Acc_Tourist_Bobble|Acc_Tourist_Trapper|Acc_Tourist_Bobble|", "Acc_Tourist_Scarf||", "Acc_Tourist_Mug||")
+accessory_slots = PackedStringArray("Acc_Tourist_Bobble|Acc_Tourist_Trapper|Acc_Tourist_Bobble|Acc_Tourist_TopHair", "Acc_Tourist_Scarf||", "Acc_Tourist_Mug||")
 
 [resource]
 script = ExtResource("1")
@@ -63,7 +63,7 @@ capsule_radius = 0.5
 capsule_height = 1.9
 head_height = 1.2
 shirt_colors = Array[Color]([Color(1, 0.33, 0.62, 1), Color(1, 0.76, 0.18, 1), Color(0.62, 0.3, 0.86, 1), Color(0.16, 0.72, 0.74, 1)])
-accessory_slots = PackedStringArray("Acc_Tourist_Cap|Acc_Tourist_Bucket|Acc_Tourist_Hair+Acc_Tourist_Shades|Acc_Tourist_Hair|", "Acc_Tourist_Camera||Acc_Tourist_Lei|", "Acc_Tourist_Floatie|||")
+accessory_slots = PackedStringArray("Acc_Tourist_Cap|Acc_Tourist_Bucket|Acc_Tourist_Hair+Acc_Tourist_Shades|Acc_Tourist_Hair|", "Acc_Tourist_Camera|Acc_Tourist_Lei|Acc_Tourist_Floatie|Acc_Tourist_Lei+Acc_Tourist_Floatie||")
 skin_colors = Array[Color]([Color(0.64, 0.82, 0.29, 1), Color(0.5, 0.78, 0.38, 1), Color(0.72, 0.8, 0.33, 1), Color(0.48, 0.74, 0.5, 1)])
 move_animation = &"Walk"
 animation_reference_speed = 2.25

@@ -31,9 +31,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dune_kit import *  # noqa: F401,F403
-from build_zombie import FPS, bind, build_armature, skin  # noqa: E402
+from build_zombie import FPS, bind, build_armature, save_zombie, skin  # noqa: E402
 import zombie_anim  # noqa: E402
-from zombie_kit import (HEAD_Y, arm, band, base_materials, blob, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
+from zombie_kit import (HEAD_Y, cap_crown, head_band, arm, band, base_materials, blob, faces, glass, hair, head, hips, leg, neck,  # noqa: E402
                         patch, skull, tear_fn, torso)
 
 
@@ -139,11 +139,13 @@ def mechanic(m):
     coverall, vest, white, dark, rust = m["shirt"], m["hivis"], m["white"], m["dark"], m["rust"]
     parts = head(p, m, w, ears=False)
     parts += hair(p, w, dark, "fringe", 14)
-    parts += bind("Head", [band(p + "EarBand", (0, HEAD_Y, 1.93), (0, HEAD_Y, 1.87), w * 0.53 + 0.02, 0.2, dark, n=2.6, thick=0.02, segs=22)])
+    # The ear defenders' band arches over the head, clear of a cap.
+    parts += bind("Head", [tube(p + "EarBand", [(-w * 0.5 - 0.07, HEAD_Y, 1.9), (-w * 0.5 - 0.02, HEAD_Y, 2.0), (0, HEAD_Y, 2.045),
+                                                (w * 0.5 + 0.02, HEAD_Y, 2.0), (w * 0.5 + 0.07, HEAD_Y, 1.9)], 0.024, m=dark, segs=6)])
     for side in (-1, 1):
         parts += bind("Head", [
             cyl(f"{p}EarCup{side}", 0.14, 0.12, (side * (w * 0.5 + 0.05), HEAD_Y, 1.6), rot=(0, math.pi / 2, 0), segs=16, bevel=0.04, m=rust),
-            box(f"{p}EarArm{side}", (0.05, 0.08, 0.28), (side * (w * 0.5 + 0.04), HEAD_Y, 1.78), bevel=0.02, m=dark),
+            box(f"{p}EarArm{side}", (0.045, 0.08, 0.3), (side * (w * 0.5 + 0.07), HEAD_Y, 1.79), bevel=0.02, m=dark),
         ])
     tor, body = torso(p, coverall, w=0.7, d=0.47, z0=0.9, belly=0.05, hunch=0.05)
     parts += tor
@@ -188,22 +190,22 @@ def mechanic_accessories(m):
     w = 0.6
     acc = {
         "Acc_Mechanic_Cap": bind("Head", [
-            sphere(p + "Cap", 0.33, (0, HEAD_Y, 1.8), scale=(1.0, 0.95, 0.6), m=m["rust"], segs=16, rings=8),
-            box(p + "CapBrim", (0.36, 0.26, 0.045), (0, HEAD_Y - 0.37, 1.77), rot=rad(10, 0, 0), bevel=0.02, m=m["rust"]),
+            cap_crown(p + "Cap", w, m["rust"], top=1.99),
+            box(p + "CapBrim", (0.36, 0.26, 0.045), (0, HEAD_Y - 0.41, 1.765), rot=rad(10, 0, 0), bevel=0.02, m=m["rust"]),
             box(p + "CapPatch", (0.18, 0.04, 0.1), (0, HEAD_Y - 0.28, 1.86), rot=rad(-18, 0, 0), bevel=0.015, m=m["white"]),
         ]),
         "Acc_Mechanic_Goggles": bind("Head", [
-            band(p + "GoggleBand", (0, HEAD_Y, 1.85), (0, HEAD_Y, 1.79), w * 0.53, 0.28, m["dark"], n=3.3, thick=0.02, segs=24),
-            cyl(p + "GoggleL", 0.09, 0.08, (-0.12, HEAD_Y - 0.28, 1.83), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
-            cyl(p + "GoggleR", 0.09, 0.08, (0.12, HEAD_Y - 0.28, 1.83), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
+            head_band(p + "GoggleBand", w, 1.875, 1.815, m["dark"], off=0.03, thick=0.022),
+            cyl(p + "GoggleL", 0.085, 0.08, (-0.12, HEAD_Y - 0.29, 1.865), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
+            cyl(p + "GoggleR", 0.085, 0.08, (0.12, HEAD_Y - 0.29, 1.865), rot=(math.pi / 2, 0, 0), segs=14, bevel=0.02, m=m["lens"]),
         ]),
         "Acc_Mechanic_Wrench": bind("ForeArm.R", [
             box(p + "WrenchShaft", (0.06, 0.05, 0.5), (-0.44, -0.12, 0.36), rot=rad(-20, 0, 0), bevel=0.015, m=m["steel"]),
             box(p + "WrenchJaw", (0.14, 0.06, 0.12), (-0.44, -0.2, 0.12), rot=rad(-20, 0, 0), bevel=0.02, m=m["steel"]),
         ]),
         "Acc_Mechanic_Rag": bind("Head", [
-            sphere(p + "Bandana", 0.32, (0, HEAD_Y + 0.01, 1.76), scale=(1.0, 0.94, 0.62), m=m["rust"], segs=16, rings=8),
-            box(p + "Knot", (0.1, 0.08, 0.08), (0, HEAD_Y + 0.29, 1.68), bevel=0.025, m=m["rust"]),
+            cap_crown(p + "Bandana", w, m["rust"], rim=1.725, top=1.95, off=0.032),
+            box(p + "Knot", (0.1, 0.08, 0.08), (0, HEAD_Y + 0.3, 1.75), bevel=0.025, m=m["rust"]),
         ]),
     }
     acc.update(faces("Mechanic", m, 0.6, ("Grin", "Snarl", "Clench", "Derp")))
@@ -329,7 +331,7 @@ def build():
     for name, parts in acc.items():
         meshes.append(skin(name, parts, armature))
     zombie_anim.bake(armature, zombie_anim.dune_clips, "dune_zombies")
-    save("dune_zombies", [armature] + meshes, animations=True)
+    save_zombie("dune_zombies", [armature] + meshes)
 
 
 if __name__ == "__main__":
