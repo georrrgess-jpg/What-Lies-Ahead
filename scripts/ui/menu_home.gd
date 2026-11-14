@@ -25,6 +25,8 @@ const GOAL_ART := Vector2(208, 117)
 const NEWS_CARD := Vector2(336, 104)
 ## Accent of the Prizes page's hook.
 const PRIZES_ACCENT := Color(0.62, 0.55, 1.0)
+## Seconds between the glints of light across PLAY (the eye's resting place).
+const GLINT_EVERY := 5.5
 
 ## Page ids the shell has (news cards only link to pages that exist).
 var known_pages: Array[String] = []
@@ -65,6 +67,11 @@ func _ready() -> void:
 	timer.autostart = true
 	timer.timeout.connect(_rotate_tip)
 	add_child(timer)
+	var glint := Timer.new()
+	glint.wait_time = GLINT_EVERY
+	glint.autostart = true
+	glint.timeout.connect(_glint)
+	add_child(glint)
 	set_process(Showreel.available() and DisplayServer.get_name() != "headless")
 
 
@@ -349,9 +356,10 @@ func _refresh_today() -> void:
 	_today.visible = not picks.is_empty()
 	if picks.is_empty():
 		return
-	var pick: CosmeticItem = picks[0]
+	var pool := _today_pool(picks)
+	var pick: CosmeticItem = pool[0]
 	var art: Control = null
-	for it in picks:
+	for it in pool:
 		art = _pick_art(it)
 		if art:
 			pick = it
@@ -373,6 +381,22 @@ func _refresh_today() -> void:
 	else:
 		var price := ShopCatalog.price(pick)
 		_today_price.add_child(UiKit.price_tag(price, UiKit.SIZE_LABEL, Wallet.can_afford(price)))
+
+
+## The picks worth showing first: the ones the player can buy now, else the
+## ones still for sale (cheapest first), else all of them.
+static func _today_pool(picks: Array[CosmeticItem]) -> Array[CosmeticItem]:
+	var sale := picks.filter(func(it: CosmeticItem) -> bool: return Cosmetics.is_for_sale(it))
+	var now := sale.filter(func(it: CosmeticItem) -> bool: return Wallet.can_afford(ShopCatalog.price(it)))
+	var out: Array[CosmeticItem] = []
+	if not now.is_empty():
+		out.assign(now)
+	elif not sale.is_empty():
+		out.assign(sale)
+		out.sort_custom(func(a: CosmeticItem, b: CosmeticItem) -> bool: return ShopCatalog.price(a) < ShopCatalog.price(b))
+	else:
+		out.assign(picks)
+	return out
 
 
 ## A picture of `it` that costs nothing to show, or null.
@@ -468,6 +492,15 @@ func _news_card(icon_name: Variant, caption: String, text: String, accent: Color
 	line.add_theme_constant_override("line_spacing", -6)
 	col.add_child(line)
 	return b
+
+
+## A band of light crosses PLAY now and then while the home screen is up.
+func _glint() -> void:
+	if not is_visible_in_tree() or _play.shine >= 0.0:
+		return
+	var tw := _play.create_tween()
+	tw.tween_property(_play, "shine", 1.0, 0.5).from(0.0).set_trans(Tween.TRANS_SINE)
+	tw.tween_callback(func(): _play.shine = -1.0)
 
 
 func _rotate_tip() -> void:

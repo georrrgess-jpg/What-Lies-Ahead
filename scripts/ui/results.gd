@@ -99,7 +99,7 @@ func _summary(result: Dictionary, victory: bool) -> Control:
 	var stats := HBoxContainer.new()
 	stats.add_theme_constant_override("separation", UiKit.GAP_S)
 	col.add_child(stats)
-	stats.add_child(_stat("WAVES", "%d / %d" % [int(result["waves_cleared"]), int(result["total_waves"])], UiKit.CYAN))
+	stats.add_child(_stat("WAVES", "%d / %d" % [mini(int(result["waves_cleared"]), int(result["total_waves"])), int(result["total_waves"])], UiKit.CYAN))
 	stats.add_child(_stat("KILLS", Wallet.format(int(result["kills"])), UiKit.GREEN))
 	stats.add_child(_stat("HEADSHOTS", Wallet.format(int(result.get("headshots", 0))), UiKit.PINK_LIGHT))
 	stats.add_child(_stat("BEST COMBO", "x%d" % int(result.get("best_combo", 0)), UiKit.AMBER))

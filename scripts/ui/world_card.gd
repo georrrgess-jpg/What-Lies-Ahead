@@ -89,7 +89,6 @@ func _ready() -> void:
 	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_frame.draw.connect(_draw_frame)
 	add_child(_frame)
-	_bulbs = _bulb_points()
 	var v := VBoxContainer.new()
 	v.position = Vector2(26, 20)
 	# A locked card keeps its title clear of the padlock in the corner.
@@ -205,6 +204,8 @@ func _on_selected_changed() -> void:
 		if _art:
 			_art_mat.set_shader_parameter("sweep", -1.0)
 		return
+	if _bulbs.is_empty():
+		_bulbs = _bulb_points()
 	_bulb_timer.start()
 	if _art and is_visible_in_tree():
 		_sweep = create_tween()
@@ -279,7 +280,7 @@ func _draw_frame() -> void:
 	_border.set_border_width_all(6 if selected else 3)
 	_border.anti_aliasing = true
 	_frame.draw_style_box(_border, r)
-	if selected:
+	if selected and not _bulbs.is_empty():
 		_draw_bulbs()
 	if not _unlocked:
 		var at := Vector2(size.x - 50, 48)

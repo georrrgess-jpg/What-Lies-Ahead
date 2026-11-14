@@ -69,7 +69,7 @@ func open(director: RunDirector) -> void:
 func _actions() -> Control:
 	var tray := UiKit.metal_frame()
 	tray.set_padding(30, 30)
-	tray.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tray.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", UiKit.GAP_M)
 	tray.add_child(col)
