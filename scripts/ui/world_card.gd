@@ -2,15 +2,23 @@ class_name WorldCard
 extends Control
 ## One world in the Play page carousel: the world's key art cropped to the
 ## rounded card, with the world number and name, tagline, progress stars and
-## best score over it, and for a locked world a padlock with the unlock
-## requirement. The selected card wears a cream sign trim and glows in the
-## world's accent. Without key art the card shows the world's colours.
-## Click to select. It only redraws when its state changes.
-
-signal pressed
+## best score over it. A locked world is greyed under hazard stripes, with a
+## padlock and what opens it. The selected card wears a cream trim with a
+## chase of marquee bulbs, glows in the world's accent, and a band of light
+## sweeps across it when it is picked. The carousel feeds `set_depth()` so the
+## art slides behind the frame (parallax). Without key art the card shows the
+## world's colours. Mouse input is left to the carousel (click and drag).
+## It only redraws when its state changes, and while selected at the bulbs'
+## step rate.
 
 const SIZE := Vector2(460, 248)
 const RADIUS := 22
+## How far the art reaches past each side of the card for the parallax slide.
+const ART_PAD := 34.0
+## Bulbs of the marquee chase around the selected card.
+const BULB_SPACING := 30.0
+const BULB_STEP := 0.14
+const CHASE := 3
 
 var world: WorldData
 var index := 0
@@ -18,13 +26,12 @@ var selected := false:
 	set(v):
 		if selected != v:
 			selected = v
-			queue_redraw()
-			if _frame:
-				_frame.queue_redraw()
+			_on_selected_changed()
 var _hover := false
 var _title: Label
 var _art: TextureRect
-## Drawn over the art: lock veil, accent bar, trim and padlock.
+var _art_mat: ShaderMaterial
+## Drawn over the art: lock veil, accent bar, trim, bulbs and padlock.
 var _frame: Control
 var _status: Label
 var _stars: HBoxContainer
@@ -33,6 +40,10 @@ var _bar := StyleBoxFlat.new()
 var _border := StyleBoxFlat.new()
 var _shade := StyleBoxFlat.new()
 var _unlocked := true
+var _bulbs := PackedVector2Array()
+var _phase := 0
+var _bulb_timer: Timer
+var _sweep: Tween
 
 
 ## Progress stars of a level, 0-3: a third of the waves, two thirds, cleared.
@@ -45,6 +56,14 @@ static func stars(level: LevelData) -> int:
 	if waves <= 0:
 		return 0
 	return clampi(Profile.best_wave(level.id) * 3 / waves, 0, 2)
+
+
+## Most stars over the levels of `w`.
+static func world_stars(w: WorldData) -> int:
+	var most := 0
+	for l in w.levels:
+		most = maxi(most, stars(l))
+	return most
 
 
 ## A row of three star icons with `count` of them gold.
@@ -61,7 +80,8 @@ func _ready() -> void:
 	custom_minimum_size = SIZE
 	size = SIZE
 	pivot_offset = SIZE * 0.5
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	# Hover is the card's; clicks and drags go on to the carousel.
+	mouse_filter = Control.MOUSE_FILTER_PASS
 	_unlocked = GameData.is_world_unlocked(world)
 	_add_art()
 	_frame = Control.new()
@@ -69,6 +89,7 @@ func _ready() -> void:
 	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_frame.draw.connect(_draw_frame)
 	add_child(_frame)
+	_bulbs = _bulb_points()
 	var v := VBoxContainer.new()
 	v.position = Vector2(26, 20)
 	# A locked card keeps its title clear of the padlock in the corner.
@@ -100,10 +121,15 @@ func _ready() -> void:
 		l.add_theme_constant_override("outline_size", 6)
 	mouse_entered.connect(_set_hover.bind(true))
 	mouse_exited.connect(_set_hover.bind(false))
+	_bulb_timer = Timer.new()
+	_bulb_timer.wait_time = BULB_STEP
+	_bulb_timer.timeout.connect(_step_bulbs)
+	add_child(_bulb_timer)
 	refresh()
 
 
-## The first level's key art, rounded and shaded so the text reads over it.
+## The first level's key art, wider than the card (for the parallax slide),
+## rounded and shaded so the text reads over it.
 func _add_art() -> void:
 	var texture := KeyArt.texture(world.levels[0]) if not world.levels.is_empty() else null
 	if texture == null:
@@ -113,26 +139,36 @@ func _add_art() -> void:
 	_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	_art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	_art.size = SIZE
+	_art.size = SIZE + Vector2(ART_PAD * 2.0, 0.0)
+	_art.position.x = -ART_PAD
 	_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var m := ShaderMaterial.new()
-	m.shader = load(KeyArt.CARD_SHADER)
-	m.set_shader_parameter("rect_size", SIZE)
-	m.set_shader_parameter("radius", float(RADIUS))
-	m.set_shader_parameter("shade", world.backdrop_color.darkened(0.35))
-	m.set_shader_parameter("saturation", 1.0 if _unlocked else 0.2)
-	_art.material = m
+	_art_mat = ShaderMaterial.new()
+	_art_mat.shader = load(KeyArt.CARD_SHADER)
+	_art_mat.set_shader_parameter("rect_size", SIZE)
+	_art_mat.set_shader_parameter("inset", Vector2(ART_PAD, 0.0))
+	_art_mat.set_shader_parameter("radius", float(RADIUS))
+	_art_mat.set_shader_parameter("shade", world.backdrop_color.darkened(0.35))
+	_art.material = _art_mat
 	add_child(_art)
+
+
+## Where the card sits in the carousel (signed distance from the selected
+## slot, in cards): the art slides against the motion for depth.
+func set_depth(distance: float) -> void:
+	if _art == null:
+		return
+	var shift := clampf(distance, -1.5, 1.5) / 1.5 * ART_PAD
+	_art.position.x = -ART_PAD + shift
+	_art_mat.set_shader_parameter("inset", Vector2(ART_PAD - shift, 0.0))
 
 
 ## Re-reads progress (stars, best score, lock state).
 func refresh() -> void:
 	_unlocked = GameData.is_world_unlocked(world)
 	var best := 0
-	var most := 0
 	for l in world.levels:
 		best = maxi(best, Profile.best_score(l.id))
-		most = maxi(most, stars(l))
+	var most := world_stars(world)
 	_stars.visible = _unlocked
 	for i in _stars.get_child_count():
 		(_stars.get_child(i) as TextureRect).texture = KitTex.tex(&"icon_star" if i < most else &"icon_star_empty")
@@ -140,18 +176,13 @@ func refresh() -> void:
 		_status.text = "BEST %s" % ScorePanel._fmt(best) if best > 0 else ("CLEARED" if most >= 3 else "NOT PLAYED YET")
 		_status.add_theme_color_override("font_color", Color.WHITE)
 	else:
-		_status.text = "LOCKED  ·  " + world.requirement.describe()
+		_status.text = world.requirement.describe().to_upper()
 		_status.add_theme_color_override("font_color", UiKit.AMBER)
 	if _art:
-		(_art.material as ShaderMaterial).set_shader_parameter("saturation", 1.0 if _unlocked else 0.2)
+		_art_mat.set_shader_parameter("saturation", 1.0 if _unlocked else 0.15)
+		_art_mat.set_shader_parameter("stripes", 0.0 if _unlocked else 1.0)
 	queue_redraw()
 	_frame.queue_redraw()
-
-
-func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		pressed.emit()
-		accept_event()
 
 
 func _set_hover(on: bool) -> void:
@@ -161,24 +192,84 @@ func _set_hover(on: bool) -> void:
 		UiSound.hover()
 
 
+## Picked: the bulbs start chasing and a band of light sweeps across the art.
+func _on_selected_changed() -> void:
+	queue_redraw()
+	if _frame == null:
+		return
+	_frame.queue_redraw()
+	if _sweep and _sweep.is_valid():
+		_sweep.kill()
+	if not selected:
+		_bulb_timer.stop()
+		if _art:
+			_art_mat.set_shader_parameter("sweep", -1.0)
+		return
+	_bulb_timer.start()
+	if _art and is_visible_in_tree():
+		_sweep = create_tween()
+		_sweep.tween_method(func(t: float): _art_mat.set_shader_parameter("sweep", t), 0.0, 1.0, 0.7) \
+				.set_delay(0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_sweep.tween_callback(func(): _art_mat.set_shader_parameter("sweep", -1.0))
+
+
+func _step_bulbs() -> void:
+	if not is_visible_in_tree():
+		return
+	_phase = (_phase + 1) % CHASE
+	_frame.queue_redraw()
+
+
+## Bulb centres, evenly spaced along the middle of the selected trim.
+func _bulb_points() -> PackedVector2Array:
+	var points := PackedVector2Array()
+	var box := SIZE - Vector2(6, 6)
+	var r := float(RADIUS) - 3.0
+	var arc := PI * 0.5 * r
+	var lengths: Array[float] = [box.x - r * 2.0, box.y - r * 2.0]
+	var length: float = (lengths[0] + lengths[1]) * 2.0 + arc * 4.0
+	var count := int(length / BULB_SPACING)
+	for i in count:
+		points.append(Vector2(3, 3) + _outline_point(length * i / count, box, r, lengths, arc))
+	return points
+
+
+## The point `t` pixels along a rounded `box` outline, clockwise from the end
+## of its top-left corner.
+static func _outline_point(t: float, box: Vector2, r: float, lengths: Array[float], arc: float) -> Vector2:
+	var corners := [Vector2(box.x - r, r), Vector2(box.x - r, box.y - r), Vector2(r, box.y - r), Vector2(r, r)]
+	var starts := [Vector2(r, 0), Vector2(box.x, r), Vector2(box.x - r, box.y), Vector2(0, box.y - r)]
+	var dirs := [Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT, Vector2.UP]
+	for side in 4:
+		var straight: float = lengths[side % 2]
+		if t <= straight:
+			return starts[side] + dirs[side] * t
+		t -= straight
+		if t <= arc:
+			var a: float = -PI * 0.5 + side * PI * 0.5 + t / r
+			return corners[side] + Vector2(cos(a), sin(a)) * r
+		t -= arc
+	return starts[0]
+
+
 ## Backing fill and the selection glow (under the art).
 func _draw() -> void:
 	_bg.bg_color = world.backdrop_color.darkened(0.2)
 	_bg.set_corner_radius_all(RADIUS)
-	_bg.shadow_color = Color(world.accent_color, 0.5 if selected else 0.0)
-	_bg.shadow_size = 20 if selected else 0
+	_bg.shadow_color = Color(world.accent_color, 0.55 if selected else 0.0)
+	_bg.shadow_size = 26 if selected else 0
 	draw_style_box(_bg, Rect2(Vector2.ZERO, size))
 
 
-## Everything over the art: the lock veil, the accent bar, the trim and the padlock.
+## Everything over the art: the lock veil, the accent bar, the trim, the bulbs and the padlock.
 func _draw_frame() -> void:
 	var accent := world.accent_color
 	var r := Rect2(Vector2.ZERO, size)
 	if not _unlocked:
-		_shade.bg_color = Color(0.02, 0.0, 0.06, 0.45)
+		_shade.bg_color = Color(0.02, 0.0, 0.06, 0.4)
 		_shade.set_corner_radius_all(RADIUS)
 		_frame.draw_style_box(_shade, r)
-	_bar.bg_color = accent
+	_bar.bg_color = accent if _unlocked else UiKit.AMBER.darkened(0.25)
 	_bar.corner_radius_bottom_left = RADIUS
 	_bar.corner_radius_bottom_right = RADIUS
 	_frame.draw_style_box(_bar, Rect2(0, size.y - 10, size.x, 10))
@@ -188,5 +279,21 @@ func _draw_frame() -> void:
 	_border.set_border_width_all(6 if selected else 3)
 	_border.anti_aliasing = true
 	_frame.draw_style_box(_border, r)
+	if selected:
+		_draw_bulbs()
 	if not _unlocked:
-		_frame.draw_texture_rect(KitTex.tex(&"icon_lock"), Rect2(size.x - 86, 16, 64, 64), false)
+		var at := Vector2(size.x - 50, 48)
+		_frame.draw_circle(at, 34.0, Color(UiKit.INK, 0.85))
+		_frame.draw_circle(at, 34.0, UiKit.AMBER, false, 3.0, true)
+		_frame.draw_texture_rect(KitTex.tex(&"icon_lock"), Rect2(at - Vector2(24, 24), Vector2(48, 48)), false)
+
+
+func _draw_bulbs() -> void:
+	var warm := Color(1.0, 0.86, 0.55)
+	for i in _bulbs.size():
+		var lit := i % CHASE == _phase
+		if lit:
+			_frame.draw_circle(_bulbs[i], 8.0, Color(warm, 0.28))
+			_frame.draw_circle(_bulbs[i], 4.0, Color(1.0, 0.97, 0.86))
+		else:
+			_frame.draw_circle(_bulbs[i], 3.2, Color(0.72, 0.5, 0.3, 0.9))

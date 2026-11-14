@@ -47,6 +47,15 @@ func _press(action: StringName) -> void:
 		await _frames(2)
 
 
+## Waits (up to a second of frames) for the dialog's fade-out to end: without
+## --fixed-fps a headless frame is far shorter than the fade.
+func _until_closed() -> void:
+	for i in 60:
+		if _dialog() == null:
+			return
+		await _frames(1)
+
+
 func _focus() -> Control:
 	return _tree.root.gui_get_focus_owner()
 
@@ -96,7 +105,7 @@ func _locker() -> void:
 	await _frames(4)
 	_check(_dialog() != null, "locker: Enter on %s opens the confirm dialog" % sale.id)
 	await _press(&"ui_cancel")
-	await _frames(12)
+	await _until_closed()
 	_check(_dialog() == null and Cosmetics.is_for_sale(sale) and _focus() is LockerCard, "locker: Esc cancels and focus returns to the card")
 	await _press(&"ui_accept")
 	await _frames(4)

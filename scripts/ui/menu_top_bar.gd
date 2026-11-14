@@ -2,7 +2,8 @@ class_name MenuTopBar
 extends Control
 ## The menu shell's top bar, always on screen: home and the game's name, one
 ## tab per section, then the player (level, title, XP), the Sparks balance,
-## settings and quit. Drawn as a dark strip on a riveted teal rail.
+## settings and quit. Drawn as a dark strip on a riveted teal rail. The name
+## steps aside when the tabs need its room (many sections, a narrow window).
 
 signal home_pressed
 signal tab_pressed(id: String)
@@ -13,8 +14,11 @@ signal quit_pressed
 const RAIL := 10.0
 
 var _tabs: KitTabs
+var _row: HBoxContainer
 var _home: SignButton
 var _wordmark: Label
+## The open page wants the name shown (every page but home).
+var _wants_wordmark := false
 var _title: Label
 var _xp: ProgressBar
 var _settings: SignButton
@@ -26,6 +30,7 @@ func _init() -> void:
 	offset_bottom = MenuPage.TOP_BAR
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_row = row
 	row.offset_left = 26
 	row.offset_right = -26
 	row.offset_top = 6
@@ -66,7 +71,21 @@ func select(id: String) -> void:
 		_tabs.select(StringName(id))
 	else:
 		_tabs.clear_selection()
-	_wordmark.visible = id != "title"
+	_wants_wordmark = id != "title"
+	_fit_wordmark()
+
+
+## Shows the name only where it fits beside everything else in the row.
+func _fit_wordmark() -> void:
+	var used := 0.0
+	var shown := 0
+	for c: Control in _row.get_children():
+		if c != _wordmark and c.visible:
+			used += c.get_combined_minimum_size().x
+			shown += 1
+	var sep := float(_row.get_theme_constant("separation"))
+	var room := _row.size.x - used - sep * shown
+	_wordmark.visible = _wants_wordmark and room >= _wordmark.get_combined_minimum_size().x
 
 
 ## The ids of the tabs, left to right.
@@ -112,6 +131,7 @@ func _ready() -> void:
 	Cosmetics.equipped_changed.connect(func(_slot: StringName, _weapon: StringName): refresh())
 	Progression.xp_changed.connect(func(_xp_now: int): refresh())
 	resized.connect(queue_redraw)
+	resized.connect(_fit_wordmark, CONNECT_DEFERRED)
 	refresh()
 
 

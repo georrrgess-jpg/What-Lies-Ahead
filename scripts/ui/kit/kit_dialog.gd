@@ -18,6 +18,8 @@ var _panel: KitPanel
 var _dim: ColorRect
 var _safe: Button
 var _closing := false
+## Counted in open_count (until it closes, not until its fade-out ends).
+var _counted := false
 
 
 ## A yes/no question; `on_yes` runs when the player confirms. See UiKit.confirm.
@@ -94,6 +96,7 @@ func _trap(b: Control, other: Control) -> void:
 
 func _ready() -> void:
 	open_count += 1
+	_counted = true
 	UiSound.open()
 	UiFx.fade_in(_dim, 0.15)
 	UiFx.pop_in.call_deferred(_panel)
@@ -101,7 +104,17 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	open_count -= 1
+	_release()
+
+
+## The screen behind gets its input back (the fade-out no longer blocks it).
+func _release() -> void:
+	if _counted:
+		_counted = false
+		open_count -= 1
+	set_process_input(false)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func _input(event: InputEvent) -> void:
@@ -114,6 +127,7 @@ func _close(yes: bool) -> void:
 	if _closing:
 		return
 	_closing = true
+	_release()
 	if yes:
 		UiSound.confirm()
 		confirmed.emit()
