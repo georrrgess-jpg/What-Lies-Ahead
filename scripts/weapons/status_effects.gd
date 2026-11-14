@@ -9,6 +9,7 @@ extends Node3D
 ##           weapon's status_duration. Frozen zombies take extra damage, and a
 ##           kill while frozen shatters them into shards that hurt neighbours.
 ##   shock   a short jolt that slows the zombie for a moment.
+##   fizz    burning firework sparks, handled by FizzBurn (damage over time).
 ##
 ## Heavy zombies resist: chill builds slower, freezes thaw sooner and shocks
 ## slow them less (all scaled by EnemyData.mass).
@@ -90,6 +91,8 @@ func apply(weapon: WeaponData, amount: float) -> void:
 		&"shock":
 			shock_left = maxf(shock_left, weapon.status_duration)
 			WeaponFx.shock_crackle(zombie)
+		&"fizz":
+			FizzBurn.of(zombie).add(weapon, amount)
 
 
 func _freeze(weapon: WeaponData) -> void:
