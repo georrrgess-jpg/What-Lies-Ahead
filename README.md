@@ -150,10 +150,12 @@ fullscreen.
 
 `python3 tools/balance_report.py` prints each weapon's time-to-kill, sustained DPS and
 ammo economy from data. The latest balance pass (about 150 bot runs) evened the worlds
-out: alphas get tougher world by world (Big Bruno 1,800 hp up to Old Frostbite 2,200),
+out: alphas get tougher world by world (Big Bruno 1,800 hp up to Captain Cumulus 2,500
+in world 10),
 finale spikes and projectile volleys were eased, and the weaker weapons (Ion Carbine,
 Cryo Beam, Bumper Lobber, Rail Lancer) were buffed; the bot now clears 50 of 55 Standard
-runs and 11 of 17 Hard runs. Details in [docs/ROUNDS.md](docs/ROUNDS.md).
+runs and 11 of 17 Hard runs on worlds 1-5, and 11 of 12 Standard runs on worlds 6-10.
+Details in [docs/ROUNDS.md](docs/ROUNDS.md).
 
 Weapons fire at exactly their data rate. Spread blooms under sustained fire and recovers
 shortly after the trigger rests, so bursts and aiming down sights matter at range.
@@ -187,12 +189,13 @@ beam, projectile and splash, pierce, chain, chill/shock and heat), implemented o
   eleven one-time milestones.
 - **Weapon mastery**: 10 ranks per weapon in Bronze, Silver, Gold, Diamond and Prismatic
   tiers, earned by using that weapon. Ranks unlock mastery camos and badges and pay Sparks.
-- **Shop**: 194 items on a price ladder (Common 250, Rare 650, Epic 1,500, Legendary 3,000
-  Sparks), with one to three showpieces per section at 1,250 / 2,800 / 5,600: the best
-  animated weapon finishes, energy cells, gloves, charms, kill effects, tracers, decals,
-  banners, titles and optics. A common or rare is affordable after a run, a legendary
-  after about four. Four items a day are featured at 25% off. Every item has a 3D preview
-  and a confirm step.
+- **Shop**: 194 items, every price a multiple of 250: Common 250, Rare 750, Epic 1,500,
+  Legendary 3,000, and the best items each on their own price up to Wind-Up Wally at
+  10,000 (operators, then animated finishes, gloves and kill effects). A common or rare is
+  affordable after a run, a legendary after about four, the most expensive item after
+  about nine. Four items a day are featured at 20% off (always a round number). Every item
+  has a 3D preview and a confirm step. Station prices in tickets are multiples of 25 and
+  rise world by world.
 - **Locker**: 398 cosmetics in eleven categories: 18 operators (characters that also set
   your first-person arms), 82 weapon finishes (including 15 new animated shaders: marquee
   bulbs, data rain, lightning, aurora, warp speed, liquid mercury, stained glass…),
@@ -241,18 +244,25 @@ live 3D booth and the selected world. A top bar shows your level, XP and Sparks 
 page. Pages: **Play** (world track with key art, progress stars, the zombies that wait
 there, difficulty, loadout, Deploy), **Arsenal** (the weapon on a workbench in a booth,
 stats, mastery, sights and the two-slot loadout), **Locker**, **Shop**, **Career**
-(level track, contracts, milestones) and **Settings**. Loading screens show the level's
+(level track, contracts, milestones) and **Settings**. The live backdrop loads worlds on
+a background thread and is trimmed for the menu (no gameplay nodes, hidden props it
+cannot see, short shadows), and pages are built lazily, so the menu stays smooth
+(`tools/menu_probe.gd` lists every slow frame with its cause). Loading screens show the level's
 key art with a slow pan, the difficulty and a tip. The HUD, pause menu, loadout station
 panel and results use the same kit.
 
 **The trailer.** *WATCH TRAILER* on the title screen (it also plays as an attract mode
-when the menu sits idle) runs a 72-second in-engine short made from the real levels,
+when the menu sits idle) runs an 88-second in-engine short made from the real levels,
 zombies, operators, weapons, skins and kill effects. It opens on the Prize Pier at dusk
-with no words, on a low, warm score, then whip-pans through the five worlds, the cast and
-the kills, and shows the new animated finishes, charms, sights and all 18 operators,
-graded per act with in-engine rack focus, lens flares and speed ramps into slow motion. Any key returns to the menu. A rendered copy is in
+with no words, on a low, warm score, then tours all ten worlds and their alphas, the cast
+of 35 zombies, the kills, aiming down sights, Boot Camp moves, bounties and Sparks, the
+arsenal and the Shop, and all 18 operators, graded per act with in-engine rack focus,
+lens flares, spline cameras and speed ramps into slow motion. Heavy shots are built ahead
+and every set's materials are warmed before its cut, so playback never hitches at a cut.
+Any key returns to the menu. A rendered copy is in
 [`media/what-lies-ahead-showreel.mp4`](media/) (`tools/render_showreel.sh` renders it;
-see **[docs/SHOWREEL.md](docs/SHOWREEL.md)**).
+see **[docs/SHOWREEL.md](docs/SHOWREEL.md)**; `tools/video_motion_report.py` flags
+repeated frames, hitches and speed jumps in a render).
 
 ## Editing the game data
 
@@ -427,6 +437,13 @@ xvfb-run -a godot --audio-driver Dummy --rendering-driver opengl3 --path . --res
 gain and a bus, plus optional per-sound trims; `Sfx` applies it to every sound and a Master
 limiter catches peaks. Music loops are mastered to one loudness, and each level
 cross-fades in time to a more driving final-wave loop.
+
+**Impact marks.** Shots leave marks on static scenery: scorched holes that cool from the
+weapon's colour, pellet clusters, rail gouges, blast scorches, frost patches and arc
+burns. They fade after 24 s (10 s on Low graphics) and are drawn in one draw call from a
+pool of 128 (48 on Low); scenery is never changed. A collider opts out with the group
+`no_impact_marks`; stand-in boxes, railings, glass, stairs, water and lava are skipped by
+name (`ImpactMarks.SKIP_NAMES`).
 
 **Performance.** Effects and one-shot sounds are reused from pools, and the level-start
 warm-up draws every effect, projectile, muzzle-flash and status-effect material behind the
