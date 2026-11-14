@@ -120,7 +120,7 @@ def neon_spray_rattle():
 def neon_spray_hiss():
     """Short aerosol burst."""
     d = 0.3
-    hiss = filt(noise(d), high=3500, low=12000) * env(d, 0.005, 0.28, power=0.9, release=0.05)
+    hiss = filt(noise(d), high=2800, low=6500) * env(d, 0.005, 0.28, power=0.9, release=0.05)
     spit = filt(noise(0.04), high=1500) * env(0.04, 0.001, power=2.0)
     out = hiss * 0.9
     place(out, spit, 0.0, 0.5)

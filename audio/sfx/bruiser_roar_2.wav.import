@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/bruiser_roar_2.wav-7b1648328abf96a557677a8ff5
 
 force/8_bit=false
 force/mono=false
-force/max_rate=false
-force/max_rate_hz=44100
+force/max_rate=true
+force/max_rate_hz=22050
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

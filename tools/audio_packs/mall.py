@@ -228,7 +228,7 @@ def mall_soda_shake():
     for _ in range(18):
         at = rng.uniform(0.0, 0.6)
         place(out, band(noise(0.03), rng.uniform(2500, 4500), 800) * env(0.03, 0.0005, power=2.0), at, rng.uniform(0.3, 0.6))
-    fizz = filt(noise(d), high=5000) * env(d, 0.3, d * 1.2, power=0.6, release=0.1)
+    fizz = filt(noise(d), high=2500, low=6000) * env(d, 0.3, d * 1.2, power=0.6, release=0.1)
     return out + fizz * 0.35
 
 
@@ -244,7 +244,7 @@ def mall_soda_splash():
     """The cup bursts: a wet slap and a fizzing hiss."""
     d = 0.8
     slap = band(noise(0.12), 900, 700) * env(0.12, 0.001, 0.1, power=1.5)
-    fizz = filt(noise(d), high=4200) * env(d, 0.01, d, power=1.2)
+    fizz = filt(noise(d), high=2200, low=6500) * env(d, 0.01, d, power=1.2)
     bubbles = sum(tone(rng.uniform(900, 2200), 0.05, "sine") * env(0.05, 0.002, power=2.0) for _ in range(1))
     out = fizz * 0.6
     place(out, slap, 0.0, 1.2)

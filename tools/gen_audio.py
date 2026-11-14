@@ -2,7 +2,8 @@
 
     audio/sfx/*.wav      one-shots: weapons, zombies, arcade cues, UI
     audio/music/*.ogg    music loops (each level's loop and its final-wave
-                         variant, the menu theme) and ambience beds
+                         variant; the menu theme is tools/audio_packs/menu.py)
+                         and ambience beds
 
     python tools/gen_audio.py        (needs numpy; ffmpeg with libvorbis for the .ogg loops)
 
@@ -17,6 +18,7 @@ every loop leaves here at the same loudness and the game sets its level
 """
 import math
 import os
+import re
 import subprocess
 import sys
 import wave
@@ -54,13 +56,22 @@ def tone(freq, seconds, shape="sine", vibrato=0.0, vib_rate=5.0):
     return osc(2 * np.pi * np.cumsum(f) / SR, shape)
 
 
+# While a music loop renders, osc() draws its saws band-limited (polyBLEP),
+# so sustained high notes do not alias into fizz (see render_music()).
+BANDLIMIT = False
+
+
 def osc(phase, shape):
     if shape == "sine":
         return np.sin(phase)
     if shape == "square":
         return np.tanh(np.sin(phase) * 6.0)
     if shape == "saw":
-        return 2.0 * ((phase / (2 * np.pi)) % 1.0) - 1.0
+        t = (phase / (2 * np.pi)) % 1.0
+        if BANDLIMIT and len(t) > 1:
+            dt = np.abs(np.diff(phase, prepend=2 * phase[0] - phase[1])) / (2 * np.pi)
+            return 2.0 * t - 1.0 - _blep(t, np.clip(dt, 1e-7, 0.45))
+        return 2.0 * t - 1.0
     if shape == "tri":
         return 2.0 * np.abs(2.0 * ((phase / (2 * np.pi)) % 1.0) - 1.0) - 1.0
     raise ValueError(shape)
@@ -141,18 +152,41 @@ def write_wav(name, x, peak=0.85):
         w.setsampwidth(2)
         w.setframerate(SR)
         w.writeframes((x * 32767).astype("<i2").tobytes())
+    set_import_rate(path, x)
     return path
 
 
-def write_ogg(name, stereo, peak=0.8, quality=3):
-    """stereo: array shaped (n, 2). Encoded with ffmpeg/libvorbis. peak=None
-    writes the samples as they are (already mastered)."""
+def set_import_rate(path, x):
+    """A sound with nothing above 10 kHz (under -50 dB of its energy: voices,
+    thuds, round chimes) imports at 22.05 kHz, half the size and sounding the
+    same. Only touches an existing .import (Godot writes it on first import;
+    the next run of this script sets the rate)."""
+    imp = path + ".import"
+    if not os.path.exists(imp):
+        return
+    spec = np.abs(np.fft.rfft(x)) ** 2
+    top = spec[np.fft.rfftfreq(len(x), 1.0 / SR) > 10000].sum() / max(spec.sum(), 1e-20)
+    text = open(imp).read()
+    new = text.replace("force/max_rate=%s" % ("false" if top < 1e-5 else "true"),
+                       "force/max_rate=%s" % ("true" if top < 1e-5 else "false"))
+    new = re.sub(r"force/max_rate_hz=\d+", "force/max_rate_hz=22050", new) if top < 1e-5 else new
+    if new != text:
+        with open(imp, "w") as f:
+            f.write(new)
+
+
+def write_ogg(name, stereo, peak=0.8, quality=3, mono=False):
+    """stereo: array shaped (n, 2). Encoded with ffmpeg/libvorbis at `quality`
+    (-q:a); mono=True folds it to one channel. peak=None writes the samples
+    as they are (already mastered)."""
     if peak is not None:
         stereo = stereo * (peak / max(1e-9, np.max(np.abs(stereo))))
+    if mono:
+        stereo = stereo.mean(axis=1, keepdims=True)
     stereo = np.clip(stereo, -1.0, 32767 / 32768)
     tmp = os.path.join(MUSIC, name + ".tmp.wav")
     with wave.open(tmp, "wb") as w:
-        w.setnchannels(2)
+        w.setnchannels(stereo.shape[1])
         w.setsampwidth(2)
         w.setframerate(SR)
         w.writeframes((stereo * 32767).astype("<i2").tobytes())
@@ -176,6 +210,8 @@ CEILING_DB = -2.0      # sample-peak ceiling (Vorbis encoding overshoots by up t
 # 60-180 Hz build-up, and lift 1-5 kHz (melody, hats) and the air above 8 kHz.
 MUSIC_EQ = {"hp": 50.0, "bells": ((100.0, -5.0, 0.7), (2500.0, 3.5, 0.55)), "shelf": (8000.0, 1.5)}
 BED_EQ = {"hp": 40.0}
+# Vorbis quality per kind of loop (see write_music).
+MUSIC_Q, FINAL_Q, AMBIENCE_Q = 2, 1.5, 0
 
 
 def _eq_gain(n, hp=None, bells=(), shelf=None):
@@ -267,17 +303,31 @@ def master(x, target_lufs, voicing):
 
 
 def write_music(name, stereo):
-    """Masters and writes a loop. Names ending in _ambience are beds, _final the
-    final-wave variants; anything else is a music loop."""
+    """Masters and writes a loop. Names ending in _ambience are beds (mono,
+    Vorbis q0: a wash needs no width or detail), _final the final-wave
+    variants (q1.5: dense and heard under a fight); anything else is a music
+    loop (q2). Together these keep the shipped music small."""
     if name.endswith("_ambience"):
-        x = master(stereo, BED_LUFS, BED_EQ)
-    else:
-        x = master(stereo, FINAL_LUFS if name.endswith("_final") else MUSIC_LUFS, MUSIC_EQ)
-    return write_ogg(name, x, peak=None)
+        return write_ogg(name, master(stereo, BED_LUFS, BED_EQ), peak=None, quality=AMBIENCE_Q, mono=True)
+    final = name.endswith("_final")
+    x = master(stereo, FINAL_LUFS if final else MUSIC_LUFS, MUSIC_EQ)
+    return write_ogg(name, x, peak=None, quality=FINAL_Q if final else MUSIC_Q)
+
+
+def render_music(name, fn, *modules):
+    """Renders a loop with its own seeded generator and band-limited saws."""
+    global BANDLIMIT
+    seed_for(name, *modules)
+    BANDLIMIT = True
+    try:
+        return fn()
+    finally:
+        BANDLIMIT = False
 
 
 def seed_for(name, *modules):
-    """Gives each loop its own seeded generator, so editing one never re-rolls another."""
+    """Gives each loop (and each core sound) its own seeded generator, so editing
+    one never re-rolls another."""
     r = np.random.default_rng(zlib.crc32(name.encode()))
     for m in modules:
         m.rng = r
@@ -326,25 +376,27 @@ def _shimmer(d, decay, centre=6500):
 
 
 def pistol_fire():
-    """Pulse Pistol: crisp snap, mid 'pew', tight sub punch and a sparkly tail."""
+    """Pulse Pistol: crisp snap, mid 'pew', tight sub punch and a sparkly tail
+    (band-limited to ~10 kHz, so the snap cracks without hissing)."""
     d = 0.32
-    snap = filt(noise(d), high=3000) * env(d, 0.0003, 0.02, power=2.0) * 1.1
+    snap = filt(noise(d), high=2600, low=9500) * env(d, 0.0003, 0.02, power=2.0) * 1.1
     pew = _laser_layer(2400, 380, d, 0.45) * env(d, 0.0008, 0.16, power=2.0) * 0.5
     body = sweep(620, 150, d, "square", 0.5) * env(d, 0.0008, 0.09, power=2.2) * 0.4
     sub = _sub_thump(170, 48, d, 0.12) * 1.1
-    tail = _shimmer(d, 0.28) * 0.25
-    return crush(filt(snap + pew + body + sub + tail, low=12000), 1.3)
+    tail = _shimmer(d, 0.22, 5500) * 0.15
+    return crush(filt(snap + pew + body + sub + tail, low=10000), 1.3)
 
 
 def carbine_fire():
-    """Ion Carbine: fast, bright ion crack with a short electric buzz."""
+    """Ion Carbine: fast ion crack with a short electric buzz. The crack is
+    band-limited (no fizz above ~10 kHz): it fires many times a second."""
     d = 0.16
-    snap = filt(noise(d), high=4200) * env(d, 0.0003, 0.012, power=2.0)
-    pew = _laser_layer(3400, 900, d, 0.4) * env(d, 0.0006, 0.08, power=1.8) * 0.45
-    buzz = tone(110, d, "square") * env(d, 0.001, 0.07, power=1.5) * 0.18
-    sub = _sub_thump(210, 70, d, 0.06) * 0.8
-    tail = _shimmer(d, 0.12, 7500) * 0.2
-    return crush(filt(snap + pew + buzz + sub + tail, low=13000), 1.25)
+    snap = filt(noise(d), high=2600, low=9000) * env(d, 0.0003, 0.012, power=2.0)
+    pew = _laser_layer(3000, 800, d, 0.4) * env(d, 0.0006, 0.08, power=1.8) * 0.4
+    buzz = tone(110, d, "square") * env(d, 0.001, 0.07, power=1.5) * 0.2
+    sub = _sub_thump(210, 70, d, 0.06) * 0.9
+    tail = _shimmer(d, 0.1, 5200) * 0.12
+    return crush(filt(snap + pew + buzz + sub + tail, low=10000), 1.25)
 
 
 def scatter_fire():
@@ -411,11 +463,15 @@ def hit_body():
 
 
 def hit_head():
+    """World-side head hit: the body thwack plus a dry woody 'tok' (the 2D
+    headshot_ping carries the ring, so the two never clash)."""
     d = 0.2
-    ding = tone(1320, d, "sine") * env(d, 0.001, 0.18, power=2.0) + tone(1980, d, "sine") * env(d, 0.001, 0.1, power=2.0) * 0.5
+    tok = sweep(980, 760, 0.04) * adsr(0.04, 0.0006, 0.014, 0.0, 0.008)
     body = hit_body()
     body = np.pad(body, (0, max(0, int(SR * d) - len(body))))[: int(SR * d)]
-    return ding * 0.7 + body * 0.7
+    out = body * 0.75
+    place(out, tok, 0.0, 0.55)
+    return out
 
 
 def zombie_pop():
@@ -485,11 +541,19 @@ def player_hurt():
 # Arcade cues and UI
 # ---------------------------------------------------------------------------
 
+def _soft_note(freq, length, shape="square"):
+    """The arcade cues' voice: a band-limited square or saw, low-passed, with
+    a sine under it and a quiet sine octave above. Bright enough to read,
+    never buzzy."""
+    body = bl_osc(freq, length, shape) * 0.55 + bl_osc(freq, length, "sine") * 0.6
+    out = filt(body, low=2600) * adsr(length, 0.004, length * 0.45, 0.0, 0.02)
+    return out + bl_osc(freq * 2, length, "sine") * adsr(length, 0.004, length * 0.18, 0.0, 0.02) * 0.22
+
+
 def jingle(notes, step, length, shape="square", gain=1.0, tail=0.25):
     out = silence(step * len(notes) + tail)
     for i, n in enumerate(notes):
-        place(out, blip(note(n), length, shape), i * step, gain)
-        place(out, blip(note(n + 12), length * 0.7, "sine"), i * step, gain * 0.3)
+        place(out, _soft_note(note(n), length, shape), i * step, gain)
     return out
 
 
@@ -500,7 +564,7 @@ def wave_start():
 def final_wave():
     out = silence(1.6)
     for i in range(3):
-        place(out, sweep(880, 520, 0.26, "square", 0.8) * env(0.26, 0.004, power=0.8, release=0.05), i * 0.3, 0.5)
+        place(out, filt(sweep(880, 520, 0.26, "square", 0.8), low=2400) * env(0.26, 0.004, power=0.8, release=0.05), i * 0.3, 0.5)
     place(out, jingle([-12, -9, -5, 0], 0.11, 0.3, "saw"), 0.9, 0.7)
     place(out, sweep(110, 40, 0.6, "sine") * env(0.6, 0.002, power=1.5), 0.9, 0.9)
     return out
@@ -511,11 +575,13 @@ def wave_clear():
 
 
 def purchase():
+    """Bought: a soft register 'ka-ching': a woody knock, then two round bell
+    notes a fourth apart with a faint shimmer."""
     out = silence(0.5)
-    place(out, blip(note(19), 0.09, "square"), 0.0, 0.7)
-    place(out, blip(note(24), 0.3, "square", 0.28), 0.08, 0.7)
-    place(out, blip(note(31), 0.3, "sine", 0.28), 0.08, 0.35)
-    place(out, filt(noise(0.2), high=6000) * env(0.2, 0.001, power=2.0), 0.08, 0.2)
+    place(out, clunk(260, 0.06), 0.0, 0.35)
+    place(out, _bell(note(19), 0.3, 0.12), 0.05, 0.5)
+    place(out, _bell(note(24), 0.42, 0.2), 0.12, 0.55)
+    place(out, filt(noise(0.2), low=7000, high=3500) * adsr(0.2, 0.01, 0.06, 0.0, 0.05), 0.12, 0.05)
     return out
 
 
@@ -567,10 +633,10 @@ def level_clear():
     out = silence(2.0)
     melody = [(0, 0.0), (4, 0.14), (7, 0.28), (12, 0.42), (7, 0.62), (12, 0.76), (16, 0.9)]
     for n, at in melody:
-        place(out, blip(note(n), 0.3, "square", 0.26), at, 0.55)
-        place(out, blip(note(n - 12), 0.3, "tri", 0.26), at, 0.5)
+        place(out, _soft_note(note(n), 0.3), at, 0.6)
+        place(out, _soft_note(note(n - 12), 0.3, "saw"), at, 0.4)
     for n in (0, 4, 7, 12):
-        place(out, tone(note(n), 0.9, "square") * env(0.9, 0.01, 0.9, power=1.2), 1.05, 0.25)
+        place(out, filt(bl_osc(note(n), 0.9, "square"), low=2400) * adsr(0.9, 0.01, 0.4, 0.3, 0.3), 1.05, 0.25)
     return out
 
 
@@ -587,59 +653,66 @@ def ui_hover():
 
 
 def ui_click():
-    out = silence(0.12)
-    place(out, blip(note(12), 0.05, "square"), 0.0, 0.8)
-    place(out, blip(note(19), 0.08, "square"), 0.035, 0.8)
+    """A soft wooden tock with a short rounded pip: confirms a press without a buzz."""
+    out = silence(0.1)
+    place(out, sweep(900, 620, 0.03) * adsr(0.03, 0.001, 0.012, 0.0, 0.005), 0.0, 0.7)
+    place(out, _bell(note(14), 0.08, 0.035), 0.012, 0.45)
     return out
 
 
+def _bell(freq, seconds, decay):
+    """A round chime: fundamental, a quieter octave and a faint third
+    harmonic that fade fast, so it rings soft rather than shrill."""
+    partials = [(1, 1.0, decay), (2, 0.28, decay * 0.45), (3, 0.08, decay * 0.25)]
+    return additive(freq, seconds, partials) * adsr(seconds, 0.0015, seconds, 1.0, min(0.02, seconds * 0.3))
+
+
 def hitmarker():
-    """Bright 2D tick confirming a hit: a glassy 3-5 kHz 'tink' over a crisp
-    click and a small 1.2 kHz knock. No low end, so it cuts through sustained
-    fire without masking it. (Exactly one click() call: the noise it draws keeps
-    every later core sound unchanged.)"""
-    out = silence(0.12)
-    place(out, click(0.015, 4400), 0.0, 0.25)
-    place(out, tone(3150, 0.11) * env(0.11, 0.001, 0.1, power=1.2), 0.0, 0.5)
-    place(out, tone(4700, 0.09) * env(0.09, 0.001, 0.08, power=1.4), 0.0, 0.25)
-    place(out, blip(note(31), 0.07, "square", 0.06), 0.0, 0.2)
-    place(out, sweep(1400, 1000, 0.05, "tri") * env(0.05, 0.0005, power=1.3), 0.0, 0.25)
+    """Soft 2D tick confirming a body hit: a short rounded 'tik' near 2 kHz on
+    a muted knock. Mid-high, so it reads over sustained fire, but no glassy
+    4-5 kHz ring: it plays several times a second."""
+    out = silence(0.08)
+    place(out, sweep(1300, 900, 0.025) * adsr(0.025, 0.0008, 0.01, 0.0, 0.005), 0.0, 0.5)
+    place(out, _bell(rng.uniform(1950, 2050), 0.06, 0.02), 0.0, 0.55)
+    place(out, filt(noise(0.01), low=5000, high=1500) * adsr(0.01, 0.0005, 0.003, 0.0, 0.003), 0.0, 0.25)
     return out
 
 
 def kill_confirm():
-    """Punchy arcade kill: thump, glassy 'shatter' and a bright two-note chime.
-    The game raises its pitch with the kill combo."""
-    out = silence(0.55)
+    """Punchy arcade kill: a sub thump and a pop, then a round two-note chime
+    (a fifth) with a soft sparkle. The game raises its pitch with the kill
+    combo, so it starts low (~1 kHz) and stays sweet as it climbs."""
+    out = silence(0.42)
     place(out, _sub_thump(160, 55, 0.18, 0.12), 0.0, 1.1)
-    place(out, sweep(300, 1400, 0.05, "sine", 2.0) * env(0.05, 0.001, power=1.0), 0.0, 0.6)
-    glass = band(noise(0.3), 5200, 2400) * env(0.3, 0.001, 0.22, power=2.5)
-    for k in range(6):
-        place(out, blip(rng.uniform(2800, 5200), 0.07, "sine", 0.05) * 0.4, 0.01 + k * 0.022, 0.4)
-    place(out, glass, 0.0, 0.5)
-    place(out, blip(note(28), 0.22, "sine", 0.2), 0.04, 0.6)
-    place(out, blip(note(35), 0.3, "sine", 0.28), 0.1, 0.5)
-    place(out, blip(note(35), 0.1, "square", 0.08), 0.1, 0.14)
-    return crush(out, 1.2)
+    place(out, sweep(260, 900, 0.04, "sine", 2.0) * adsr(0.04, 0.001, 0.02, 0.0, 0.01), 0.0, 0.45)
+    place(out, _bell(note(14), 0.22, 0.09), 0.03, 0.42)
+    place(out, _bell(note(21), 0.36, 0.16), 0.085, 0.5)
+    for k in range(3):
+        place(out, _bell(note(28 + 3 * k) * rng.uniform(0.99, 1.01), 0.08, 0.025), 0.1 + 0.03 * k, 0.07)
+    return crush(out, 1.15)
 
 
 def headshot_ping():
-    """Bright metallic 'ting' with a crunchy transient: unmistakably a headshot."""
-    d = 0.5
+    """The headshot: a crisp knock and a bright, round 'ting' (a harmonic bell
+    near 1.3 kHz with one slightly inharmonic glint) that is gone in a third
+    of a second. Unmistakable, satisfying, and soft enough to hear twice a
+    second without wearing."""
+    d = 0.34
     out = silence(d)
-    partials = [(2350, 1.0, 0.35), (3720, 0.6, 0.22), (5310, 0.4, 0.15), (6980, 0.25, 0.1)]
-    for f, g, dec in partials:
-        place(out, tone(f, d, "sine") * env(d, 0.0005, dec, power=1.6) * g, 0.0, 0.5)
-    place(out, filt(noise(0.03), high=2500) * env(0.03, 0.0003, power=2.0), 0.0, 0.9)
-    place(out, _sub_thump(320, 120, 0.08, 0.06), 0.0, 0.6)
+    glint = rng.uniform(2.71, 2.79)
+    partials = [(1, 1.0, 0.12), (2, 0.35, 0.05), (glint, 0.18, 0.03), (3, 0.06, 0.02)]
+    place(out, additive(note(19), d, partials) * adsr(d, 0.001, d, 1.0, 0.03), 0.004, 0.55)
+    place(out, sweep(520, 300, 0.05) * adsr(0.05, 0.0008, 0.018, 0.0, 0.01), 0.0, 0.6)
+    place(out, filt(noise(0.012), low=4500, high=1800) * adsr(0.012, 0.0005, 0.004, 0.0, 0.004), 0.0, 0.35)
+    place(out, _sub_thump(240, 110, 0.07, 0.05), 0.0, 0.45)
     return out
 
 
 def combo_up():
-    """Short rising blip played on combo milestones."""
-    out = silence(0.25)
-    for i, n in enumerate((24, 28, 31)):
-        place(out, blip(note(n), 0.08, "square", 0.07), i * 0.04, 0.45)
+    """Combo milestone: three quick rounded notes rising (a major triad)."""
+    out = silence(0.3)
+    for i, n in enumerate((19, 23, 26)):
+        place(out, _bell(note(n), 0.14, 0.06), i * 0.045, 0.45)
     return out
 
 
@@ -664,24 +737,31 @@ def slide():
 
 
 def reload_vent():
-    d = 0.6
-    hiss = filt(noise(d), high=2500) * env(d, 0.01, 0.55, power=1.2)
-    pop = sweep(900, 300, 0.05, "sine") * env(0.05, 0.001, power=1.5)
-    out = hiss * 0.8
-    place(out, pop, 0.0, 0.6)
+    """A soft pressure 'pfff': air through a band that slides down, darker
+    than a hiss, with a small pop."""
+    d = 0.45
+    t = t_axis(d)
+    n = noise(d)
+    lo, hi = band(n, 900, 500), band(n, 2400, 1100)
+    k = np.clip(1.0 - t / (d * 0.7), 0.0, 1.0)
+    air = (hi * k + lo * (1.0 - k)) * adsr(d, 0.012, 0.16, 0.25, 0.12)
+    out = air * 1.4
+    place(out, sweep(700, 260, 0.05, "sine") * adsr(0.05, 0.001, 0.02, 0.0, 0.01), 0.0, 0.5)
     return out
 
 
 def reload_materialize():
-    """Digital 'print' shimmer rising into a bright lock-in chime."""
+    """Digital 'print' shimmer rising into a lock-in chime: soft sine glints
+    on a pentatonic scale, a rounded rising sweep and a two-note bell."""
     d = 0.5
-    sweep_up = sweep(400, 2400, d * 0.7, "saw", 1.5) * env(d * 0.7, 0.02, d, power=0.6) * 0.25
+    up = sweep(300, 1400, d * 0.7, "sine", 1.5) * adsr(d * 0.7, 0.02, d, 1.0, 0.08) * 0.3
     out = silence(d)
-    place(out, filt(sweep_up, low=5000), 0.0, 1.0)
-    for i in range(10):
-        place(out, blip(rng.uniform(1800, 4200), 0.03, "square", 0.025) * 0.3, i * 0.03, 0.5)
-    place(out, blip(note(31), 0.18, "sine", 0.16), 0.33, 0.7)
-    place(out, blip(note(38), 0.18, "sine", 0.16), 0.36, 0.4)
+    place(out, up, 0.0, 1.0)
+    scale = (12, 14, 16, 19, 21, 24, 26)
+    for i in range(8):
+        place(out, _bell(note(scale[int(rng.integers(len(scale)))]), 0.06, 0.02), i * 0.035, 0.18)
+    place(out, _bell(note(19), 0.18, 0.08), 0.31, 0.55)
+    place(out, _bell(note(26), 0.18, 0.08), 0.34, 0.3)
     return out
 
 
@@ -750,42 +830,6 @@ def _variant(fn, pitch, seed):
     rng = old
     idx = np.arange(0, len(x) - 1, pitch)
     return np.interp(idx, np.arange(len(x)), x)
-
-
-def intro_boot():
-    """Startup: a CRT-style power-on blip with a rising whine."""
-    out = silence(0.6)
-    place(out, click(0.02, 3000), 0.0, 0.8)
-    place(out, sweep(60, 2400, 0.45, "sine", 2.5) * env(0.45, 0.01, 0.6, power=0.7) * 0.25, 0.02, 1.0)
-    place(out, filt(noise(0.3), high=5000) * env(0.3, 0.005, 0.25, power=1.5) * 0.3, 0.0, 1.0)
-    return out
-
-
-def intro_swell():
-    """A big synth swell under the sunrise, resolving into a chord."""
-    d = 2.2
-    out = silence(d)
-    for n, g in ((-24, 0.5), (-12, 0.35), (-5, 0.25), (0, 0.22), (4, 0.18)):
-        x = tone(note(n), d, "saw", 0.004, 5.0) * env(d, 1.2, d * 1.6, power=0.5, release=0.4)
-        place(out, filt(x, low=900 + 300 * (n + 24) / 28), 0.0, g)
-    place(out, sweep(200, 3000, 1.6, "sine", 2.0) * env(1.6, 0.8, 2.0, power=0.5) * 0.08, 0.0, 1.0)
-    return out
-
-
-def title_hit():
-    """The title lands: deep boom, bright stab and a shimmering tail."""
-    d = 1.6
-    out = silence(d)
-    place(out, sweep(110, 32, 0.9, "sine", 0.4) * env(0.9, 0.002, 0.7, power=1.6), 0.0, 1.3)
-    place(out, filt(noise(0.4), low=2500) * env(0.4, 0.001, 0.25, power=2.0), 0.0, 0.6)
-    for n in (0, 7, 12, 16, 19):
-        place(out, tone(note(n), 1.2, "square") * env(1.2, 0.003, 1.0, power=1.6) * 0.12, 0.0, 1.0)
-    place(out, _shimmer(1.4, 1.2, 6000) * 0.3, 0.05, 1.0)
-    return crush(out, 1.2)
-
-
-def title_tick():
-    return blip(note(28), 0.06, "square", 0.05) * 0.6 + np.pad(click(0.02, 4200), (0, int(SR * 0.04)))
 
 
 def ui_whoosh():
@@ -894,54 +938,167 @@ def fold_loop(left, right, seconds):
     return np.stack([left[:n], right[:n]], axis=1)
 
 
-def menu_theme():
-    """Menu music: a moody, wide synthwave loop (64 s at 100 BPM), slow
-    arpeggios over a pulsing bass, with a brighter B section."""
-    bpm = 100.0
-    beat = 60.0 / bpm
-    bars = 26
-    d = bars * 4 * beat
-    left, right = silence(d), silence(d)
+# ---------------------------------------------------------------------------
+# Band-limited synthesis and loop effects. The oscillators are polyBLEP or
+# additive, so high notes do not alias into fizz; the envelopes have no steps
+# (no clicks); every effect works circularly on a whole loop, so reverb and
+# echo tails wrap round to the start and the loop point is inaudible.
+# ---------------------------------------------------------------------------
 
-    def both(x, at, gain, pan=0.5):
-        place(left, x, at, gain * (1 - pan) * 2)
-        place(right, x, at, gain * pan * 2)
+def _blep(t, dt):
+    """PolyBLEP residual of a unit step at phase 0 (t and dt in cycles)."""
+    r = np.zeros_like(t)
+    m = t < dt
+    x = t[m] / dt[m]
+    r[m] = x + x - x * x - 1.0
+    m = t > 1.0 - dt
+    x = (t[m] - 1.0) / dt[m]
+    r[m] = x * x + x + x + 1.0
+    return r
 
-    prog = [(-15, (0, 3, 7)), (-19, (0, 4, 7)), (-12, (0, 4, 7)), (-17, (0, 4, 7))]   # F#m D A C# -> roots from A4
-    kick = sweep(120, 40, 0.3, "sine", 0.5) * env(0.3, 0.001, power=2.0)
-    place(kick, kick_click(0.3), 0.0)
-    snare = (filt(noise(0.3), high=1200) * 0.7 + tone(180, 0.3) * 0.2) * env(0.3, 0.001, 0.25, power=1.8)
-    for bar in range(bars):
-        root, triad = prog[(bar // 2) % 4]
-        t0 = bar * 4 * beat
-        section_b = 12 <= bar < 24
-        drums = bar >= 2
-        for b in range(4):
-            if drums:
-                both(kick, t0 + b * beat, 0.5 if b in (0, 2) else 0.25)
-                if b in (1, 3):
-                    both(snare, t0 + b * beat, 0.22)
-            for h in range(2):
-                both(filt(noise(0.04), high=7500) * env(0.04, 0.0005, power=2.5), t0 + (b + h * 0.5) * beat, 0.11 if h else 0.07, 0.65)
-        # Pulsing eighth-note bass.
-        for e in range(8):
-            x = tone(note(root - 12), beat * 0.45, "saw") * env(beat * 0.45, 0.004, beat * 0.5, power=1.2)
-            both(filt(x, low=600), t0 + e * beat * 0.5, 0.35)
-        # Pad.
-        pad = sum(tone(note(root + s2), 4 * beat, "saw", 0.003, 4.0) for s2 in triad)
-        both(filt(pad, low=1400 if section_b else 900) * env(4 * beat, 0.6, 8 * beat, power=0.4, release=0.5), t0, 0.06)
-        # Arpeggio (sixteenths in B, eighths in A).
-        steps = 16 if section_b else 8
-        for e in range(steps):
-            n = triad[e % 3] + (12 if (e // 3) % 2 else 0)
-            x = tone(note(root + 12 + n), beat * 4 / steps * 0.8, "square") * env(beat * 4 / steps * 0.8, 0.003, beat * 0.4, power=1.4)
-            both(filt(x, low=4500), t0 + e * beat * 4 / steps, 0.07, 0.25 + 0.5 * (e % 2))
-        if section_b and bar % 2 == 0:
-            for k, (n, at, ln) in enumerate([(19, 0, 1.5), (16, 1.5, 0.5), (14, 2, 2)]):
-                x = tone(note(root + n), ln * beat * 0.95, "saw", 0.006, 5.5) * env(ln * beat * 0.95, 0.02, ln * beat * 1.3, power=0.7, release=0.05)
-                both(filt(x, low=3000), t0 + at * beat, 0.1, 0.55)
-    stereo = np.stack([left, right], axis=1)
-    return loopable(stereo, 1.0)
+
+def _freq_curve(freq, seconds):
+    if np.ndim(freq) == 0:
+        return np.full(int(SR * seconds), float(freq))
+    return np.asarray(freq, dtype=np.float64)
+
+
+def bl_osc(freq, seconds=None, shape="saw", width=0.5, phase=0.0):
+    """Band-limited (polyBLEP) oscillator. `freq` is in Hz: a number, or a
+    per-sample curve (glides, vibrato) whose length sets the duration.
+    Shapes: saw, square (a pulse of `width`) and sine."""
+    f = _freq_curve(freq, seconds)
+    dt = np.clip(f / SR, 1e-7, 0.45)
+    t = (phase + np.cumsum(dt) - dt) % 1.0
+    if shape == "sine":
+        return np.sin(2 * np.pi * t)
+    if shape == "saw":
+        return 2.0 * t - 1.0 - _blep(t, dt)
+    if shape == "square":
+        return np.where(t < width, 1.0, -1.0) - (2.0 * width - 1.0) + _blep(t, dt) - _blep((t - width) % 1.0, dt)
+    raise ValueError(shape)
+
+
+def supersaw(freq, seconds, voices=3, detune=0.12):
+    """`voices` band-limited saws spread over +-`detune` semitones, free phases."""
+    f = _freq_curve(freq, seconds)
+    out = np.zeros(len(f))
+    for k in range(voices):
+        offset = detune * (2.0 * k / (voices - 1) - 1.0) if voices > 1 else 0.0
+        out += bl_osc(f * 2 ** (offset / 12.0), None, "saw", phase=rng.uniform())
+    return out / voices
+
+
+def additive(freq, seconds, partials):
+    """Sum of sine partials [(ratio, gain, decay seconds or None)]; partials
+    above 0.45 x the sample rate are left out (no aliasing)."""
+    f = _freq_curve(freq, seconds)
+    t = np.arange(len(f)) / SR
+    phase = 2 * np.pi * np.cumsum(f) / SR
+    out = np.zeros(len(f))
+    for ratio, gain, decay in partials:
+        if np.max(f) * ratio >= 0.45 * SR:
+            continue
+        p = np.sin(phase * ratio + rng.uniform(0, 2 * np.pi)) * gain
+        out += p * np.exp(-t / decay) if decay else p
+    return out
+
+
+def adsr(seconds, attack=0.01, decay=0.1, sustain=0.7, release=0.05, gate=None):
+    """Click-free ADSR: raised-cosine attack, exponential decay to `sustain`
+    and a raised-cosine release that starts at `gate` (default: so it ends
+    with the buffer)."""
+    t = t_axis(seconds)
+    gate = seconds - release if gate is None else gate
+    rise = 0.5 - 0.5 * np.cos(np.pi * np.clip(t / max(attack, 1e-5), 0.0, 1.0))
+    body = sustain + (1.0 - sustain) * np.exp(-np.maximum(t - attack, 0.0) / max(decay, 1e-5))
+    fall = 0.5 + 0.5 * np.cos(np.pi * np.clip((t - gate) / max(release, 1e-5), 0.0, 1.0))
+    return rise * body * fall
+
+
+def pluck(freq, seconds, harmonics=12, decay=0.4, tilt=1.0, attack=0.002):
+    """Soft pluck: harmonics fall as 1/k^tilt and die faster the higher they
+    are, so the note darkens as it rings (band-limited, no filter needed)."""
+    partials = [(k, k ** -tilt, decay / k ** 0.7) for k in range(1, harmonics + 1)]
+    return additive(freq, seconds, partials) * adsr(seconds, attack, seconds, 1.0, min(0.02, seconds * 0.3))
+
+
+def circ_conv(x, ir):
+    """Circular convolution of a mono loop with an impulse response (the tail wraps)."""
+    n = len(x)
+    h = np.zeros(n)
+    for start in range(0, len(ir), n):
+        seg = ir[start:start + n]
+        h[:len(seg)] += seg
+    return np.fft.irfft(np.fft.rfft(x) * np.fft.rfft(h), n)
+
+
+def reverb(send_l, send_r=None, seconds=2.4, predelay=0.025, dark=3500.0, low_cut=250.0, seed=11):
+    """Stereo reverb return (n, 2) of a loop's send, circular. The impulse
+    response is decorrelated noise per side whose highs die faster than its
+    lows (a warm hall); the send is high-passed so the low end stays dry."""
+    r = np.random.default_rng(seed)
+    t = t_axis(seconds)
+    out = []
+    for send in (send_l, send_l if send_r is None else send_r):
+        w = r.standard_normal(len(t))
+        lo = filt(w, low=dark)
+        x = lo * np.exp(-6.9 * t / seconds) + (w - lo) * np.exp(-6.9 * t / (seconds * 0.3)) * 0.6
+        x = np.concatenate([np.zeros(int(SR * predelay)), x * (1.0 - np.exp(-t / 0.012))])
+        out.append(circ_conv(filt(send, high=low_cut), x / np.sqrt(np.sum(x * x))))
+    return np.stack(out, axis=1)
+
+
+def echo(send, delay, feedback=0.35, taps=5, low=3200.0):
+    """Ping-pong delay return (n, 2) of a mono loop send, circular; every
+    repeat is darker than the last."""
+    out = np.zeros((len(send), 2))
+    y = send
+    for k in range(taps):
+        y = filt(np.roll(y, int(SR * delay)), low=low) * (feedback if k else 1.0)
+        out[:, k % 2] += y
+    return out
+
+
+def chorus(x, depth_ms=1.6, base_ms=9.0, cycles=(23, 29)):
+    """Stereo chorus (n, 2) of a mono loop: one modulated delay per side. The
+    LFOs make whole cycles over the loop, so it stays seamless."""
+    n = len(x)
+    idx = np.arange(n, dtype=np.float64)
+    sides = []
+    for c, ph in zip(cycles, (0.0, 1.9)):
+        delay = SR * (base_ms + depth_ms * np.sin(2 * np.pi * c * idx / n + ph)) / 1000.0
+        sides.append(np.interp(idx - delay, idx, x, period=n))
+    return np.stack(sides, axis=1)
+
+
+def pump(n, hits, depth=0.4, release=0.22, attack=0.005):
+    """Sidechain-style gain curve (circular): dips by `depth` at each hit
+    time (seconds) and swells back over `release`."""
+    t = np.arange(int(SR * (attack + release))) / SR
+    dip = depth * np.clip(t / attack, 0.0, 1.0) * (1.0 - np.clip((t - attack) / release, 0.0, 1.0)) ** 2
+    worst = np.zeros(n)
+    for at in hits:
+        idx = (int(SR * at) + np.arange(len(dip))) % n
+        np.maximum.at(worst, idx, dip)
+    return 1.0 - worst
+
+
+class Bus:
+    """A stereo mix bus: place sounds with equal-power panning, then fold
+    the overhang onto the start to make a seamless loop."""
+
+    def __init__(self, seconds, tail=4.0):
+        self.seconds = seconds
+        self.left = silence(seconds + tail)
+        self.right = silence(seconds + tail)
+
+    def add(self, x, at, gain=1.0, pan=0.5):
+        place(self.left, x, at, gain * math.cos(pan * math.pi / 2) * math.sqrt(2))
+        place(self.right, x, at, gain * math.sin(pan * math.pi / 2) * math.sqrt(2))
+
+    def loop(self):
+        return fold_loop(self.left.copy(), self.right.copy(), self.seconds)
 
 
 def boardwalk_loop(intense=False):
@@ -967,11 +1124,11 @@ def boardwalk_loop(intense=False):
 
     kick = sweep(150, 45, 0.16, "sine", 0.5) * env(0.16, 0.001, power=2.0)
     place(kick, kick_click(0.35), 0.0)
-    hat = filt(noise(0.05), high=7000) * env(0.05, 0.0005, power=2.5)
-    open_hat = filt(noise(0.22), high=6500) * env(0.22, 0.001, power=1.5)
+    hat = filt(noise(0.05), high=6500, low=11000) * env(0.05, 0.0005, power=2.5)
+    open_hat = filt(noise(0.22), high=6000, low=10000) * env(0.22, 0.001, power=1.5)
     snare = (filt(noise(0.14), high=1500) * 0.8 + tone(190, 0.14) * 0.4) * env(0.14, 0.001, power=2.2)
     hand_clap, crash = clap(), cymbal()
-    hat_gains = (0.17, 0.09, 0.26, 0.1) if intense else (0.17, 0.26)
+    hat_gains = (0.11, 0.06, 0.17, 0.07) if intense else (0.11, 0.17)
     bass_steps = 16 if intense else 8
     for bar in range(bars):
         section_b = bar >= 16
@@ -1012,7 +1169,7 @@ def boardwalk_loop(intense=False):
             both(filt(x, low=5000), t0 + e * beat * 0.25, 0.12, pan)
             if intense:
                 hi = tone(note(root + 24 + step), beat * 0.2, "square") * env(beat * 0.2, 0.002, beat * 0.25, power=1.5)
-                both(filt(hi, low=7000), t0 + e * beat * 0.25, 0.04, 1.0 - pan)
+                both(filt(hi, low=4500), t0 + e * beat * 0.25, 0.035, 1.0 - pan)
         # Soft pad, and off-beat chord stabs when intense.
         pad = sum(tone(note(root + s), 4 * beat, "sine", 0.003, 5.0) for s in triad) * env(4 * beat, 0.25, 8 * beat, power=0.5, release=0.3)
         both(pad, t0, 0.07)
@@ -1047,7 +1204,7 @@ SFX_SOUNDS = [
     purchase, deny, swap, unlock, portal_open, level_clear, defeat, ui_hover, ui_click,
     hitmarker, kill_confirm, footstep_1, footstep_2, heartbeat, bruiser_roar_1, bruiser_roar_2, bruiser_slam,
     headshot_ping, combo_up, jump, land, slide, reload_vent, reload_materialize, reload_clunk, reload_spin,
-    intro_boot, intro_swell, title_hit, title_tick, ui_whoosh, deploy,
+    ui_whoosh, deploy,
 ]
 
 # Extra takes of the most repeated sounds; the game picks one at random (name_b, name_c).
@@ -1074,21 +1231,20 @@ CORE_MUSIC = {
     "pier_ambience": pier_ambience,
     "boardwalk_loop": boardwalk_loop,
     "boardwalk_final": lambda: boardwalk_loop(intense=True),
-    "menu_theme": menu_theme,
 }
 
 
 def run_core(music_only=False):
     if not music_only:
         for fn in SFX_SOUNDS:
+            seed_for(fn.__name__, sys.modules[__name__])
             write_wav(fn.__name__, fn())
         for fn, pitches in VARIANTS:
             for suffix, pitch, seed in zip(("_b", "_c"), pitches, (101, 202)):
                 write_wav(fn.__name__ + suffix, _variant(fn, pitch, seed))
         write_loop_wav("portal_hum", portal_hum())
     for name, fn in CORE_MUSIC.items():
-        seed_for(name, sys.modules[__name__])
-        write_music(name, fn())
+        write_music(name, render_music(name, fn, sys.modules[__name__]))
     print("core: %s%s" % ("" if music_only else "%d sfx + portal_hum, " % len(SFX_SOUNDS), ", ".join(CORE_MUSIC)))
 
 
@@ -1130,8 +1286,7 @@ def run_pack(name, music_only=False):
         for loop_name, fn in own("LOOPS", {}).items():
             write_loop_wav(loop_name, fn())
     for music_name, fn in own("MUSIC", {}).items():
-        seed_for(music_name, core, mod)
-        write_music(music_name, fn())
+        write_music(music_name, core.render_music(music_name, fn, core, mod))
     print("pack %s: %d sfx, %d loops, %d music" % (name, count, len(own("LOOPS", {})), len(own("MUSIC", {}))))
 
 
