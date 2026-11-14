@@ -40,8 +40,8 @@ func start_level(level_id: StringName, starter_weapon: StringName) -> bool:
 		return false
 	level = data
 	tutorial_active = false
-	# The given weapon becomes the primary (the dev tools may pick a locked
-	# one); an empty id starts with the saved Loadout.
+	# The given weapon goes in its own class's slot and starts in hand (the
+	# dev tools may pick a locked one); an empty id starts with the saved Loadout.
 	var starter := GameData.weapon(starter_weapon)
 	weapon_id = starter_weapon if starter and (dev or GameData.is_weapon_unlocked(starter)) else Loadout.primary()
 	Profile.data["last_weapon"] = String(weapon_id)

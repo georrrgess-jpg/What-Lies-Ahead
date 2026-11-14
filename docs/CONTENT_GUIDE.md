@@ -7,7 +7,7 @@ discovered by scanning folders at startup (`scripts/autoload/game_data.gd`).
 
 | Folder | Type | Notes |
 | --- | --- | --- |
-| `data/weapons/*.tres` | `WeaponData` | Sorted by `sort_order`. `unlock` (Requirement) gates it. |
+| `data/weapons/*.tres` | `WeaponData` | Sorted by `sort_order`. `unlock` (Requirement) gates it. `slot_class` picks its loadout slot. |
 | `data/enemies/**/*.tres` | `EnemyData` | Use a subfolder per world, e.g. `data/enemies/neon_rooftops/`. |
 | `data/worlds/*.tres` | `WorldData` | Sorted by `sort_order`; lists its `LevelData`s. `requirement` gates the world. |
 | `data/cosmetics/**/*.tres` | `CosmeticItem` | Skins, finishes, gloves, kill effects, banners, titles... |
@@ -115,6 +115,14 @@ UI style lives in `UiKit` (`scripts/ui/ui_kit.gd`): palette constants,
 
 * `WeaponData` holds all tuning, aiming (`ads_*`), reticle style, recoil,
   viewmodel placement and `reload_style` / `reload_script`.
+* `slot_class` is `"primary"` (rifles, shotguns, launchers, beams: loadout slot 1)
+  or `"secondary"` (pistols and other sidearms: slot 2). A slot only takes its own
+  class (`Loadout.set_slot`), the Arsenal lists each class in its own section
+  (PRIMARIES / SECONDARIES), the loadout station cycles only the held slot's
+  class, and `--weapon=<id>` puts the weapon in its class's slot and starts with
+  it in hand. A new weapon file needs nothing else; the starters are
+  `Loadout.STARTERS` (Ion Carbine + Pulse Pistol). Saves with a weapon in the
+  wrong slot are repaired when the loadout is read (`Loadout.resolve`).
 * A viewmodel `.glb` follows the node contract documented at the top of
   `art/blender/build_weapons.py` and `art/blender/weapon_kit.py` (Shell, Cell,
   CellHolo, ArmL/ArmR, Muzzle, SightPoint, EjectPoint, VentPoint...). For aiming:
@@ -165,7 +173,8 @@ Check levels with `python3 tools/audio_mix_report.py`.
 ## Verification tools
 
 * `godot --headless --path . --fixed-fps 60 -- --autoplay=clear --weapon=<id>`:
-  bot plays the first level. Add `--level=<level_id>` for other levels.
+  bot plays the first level with that weapon in hand (a secondary rides in slot 2
+  and is drawn at the start). Add `--level=<level_id>` for other levels.
 * `godot --path . -- --shot=out.png [--shot-level=<id>] [--shot-pos=x,y,z --shot-yaw=deg ...]`:
   staged screenshots (see `scripts/dev/screenshot.gd`).
 * `godot --path . --script res://tools/preview_model.gd -- out.png <model>`:

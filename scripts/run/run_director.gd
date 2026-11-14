@@ -217,8 +217,10 @@ func _begin() -> void:
 	player.shield_changed.connect(_on_shield_changed)
 	player.damaged.connect(_on_player_damaged)
 	player.weapons.begin_run()
+	# The weapon the run was started with goes in its own class's slot and is
+	# the one in hand (the saved primary unless the dev tools picked one).
 	var carried := Loadout.run_slots(Game.weapon_id)
-	player.weapons.set_loadout(carried[0], carried[1])
+	player.weapons.set_loadout(carried[0], carried[1], maxi(0, carried.find(Game.weapon_id)))
 	if resumed_from > 0:
 		player.weapons.refill_fraction(CONTINUE_ENERGY)
 
@@ -994,10 +996,11 @@ func _spend(price: int) -> bool:
 	return true
 
 
-## Free at the loadout station during breaks: puts `weapon_id` in the held
-## slot. Each weapon keeps its own ammo for the run.
+## Free at the loadout station during breaks: puts `weapon_id` (a weapon of
+## the held slot's class) in the held slot. Each weapon keeps its own ammo for the run.
 func swap_weapon(weapon_id: StringName) -> bool:
-	if not kiosk_available() or not GameData.is_weapon_unlocked(GameData.weapon(weapon_id)):
+	var w := GameData.weapon(weapon_id)
+	if not kiosk_available() or not GameData.is_weapon_unlocked(w) or Loadout.slot_for(w) != player.weapons.active_slot:
 		return false
 	if player.weapons.equip(weapon_id):
 		Sfx.play(&"swap", -3.0)
@@ -1005,15 +1008,11 @@ func swap_weapon(weapon_id: StringName) -> bool:
 	return false
 
 
-## Weapons the held slot can be swapped to at the station (every unlocked
-## weapon except the one in the other slot), in menu order.
+## Weapons the held slot can be swapped to at the station: every unlocked
+## weapon of its class (primaries for slot 1, secondaries for slot 2), in menu
+## order.
 func station_weapons() -> Array[WeaponData]:
-	var other := player.weapons.slots[1 - player.weapons.active_slot]
-	var out: Array[WeaponData] = []
-	for w in Loadout.available():
-		if w.id != other:
-			out.append(w)
-	return out
+	return Loadout.available(player.weapons.active_slot)
 
 
 ## Loadout station: swaps the held slot to the next (step 1) or previous
