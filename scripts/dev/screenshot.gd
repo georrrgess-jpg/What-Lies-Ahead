@@ -14,7 +14,7 @@ extends Node
 ##                         a key as key:<name> (key:E, key:PageDown)
 ##   --shot-locker=<slot>  with --shot-scene=locker: open that tab (avatar, weapon_finish, gloves...)
 ##   --shot-item=<id>      with --shot-scene=locker or shop: select that cosmetic (opens its tab)
-##   --shot-filter=owned|sale   with --shot-scene=locker: the tray's filter
+##   --shot-filter=owned|locked|sale   with --shot-scene=locker: the tray's SHOW filter
 ##   --shot-sparks=n       menu scenes: set the Sparks balance first
 ##   --shot-tour=all|buy   with --shot-scene=locker: several stills in one run, saved as <shot>_<name>.png:
 ##                         all = every category; buy = --shot-item before, in the confirm dialog, bought, equipped
@@ -360,7 +360,7 @@ func _stage_locker(page: Node) -> void:
 	if _arg("item", "") != "":
 		page.select_item(StringName(_arg("item", "")))
 	if _arg("filter", "") != "":
-		page._filters.select(StringName(_arg("filter", "")), true)
+		page.set_show_filter(StringName(_arg("filter", "")))
 
 
 ## --shot-sparks: the balance the menu pages see.
@@ -387,9 +387,9 @@ func _tour_locker(page: Node, tour: String) -> void:
 		page._activate(item)
 		await _snap("4_equipped", 30)
 		return
-	for cat in LockerCatalog.CATEGORIES:
-		page.show_category(cat["slot"])
-		await _snap(String(cat["slot"]), frames)
+	for slot in LockerFilters.all_tabs():
+		page.show_category(slot)
+		await _snap(String(slot), frames)
 
 
 ## Saves a still next to the --shot path, as <shot>_<suffix>.png, and carries on.

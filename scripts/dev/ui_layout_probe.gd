@@ -14,6 +14,11 @@ extends RefCounted
 ##
 ## Prints "[layout] FAIL <where> <size>: ..." per problem and a summary line
 ## "[layout] DONE <screens> screens, <n> problems".
+##
+## Overlays drawn above the page (a raised z_index, such as the coach marks'
+## callout, which goes away by itself) are not counted as overlapping the
+## buttons under them; controls faded out (alpha under 5%, counting their
+## parents) are not checked.
 
 ## Window sizes in pixels (the canvas follows with canvas_items / expand).
 const SIZES: Array[Vector2i] = [
@@ -78,8 +83,7 @@ func _check_all_sizes(where: String) -> void:
 	var start := _tree.root.size
 	for s in SIZES:
 		_tree.root.size = s
-		for i in 4:
-			await _tree.process_frame
+		await _tree.create_timer(0.15, true, false, true).timeout
 		_check(where, s)
 	_tree.root.size = start
 	await _tree.process_frame
@@ -97,7 +101,7 @@ func _check(where: String, window: Vector2i) -> void:
 		if not clip.intersects(rect):
 			continue
 		if c is BaseButton and rect.get_area() > 1.0:
-			buttons.append([c, rect.intersection(clip)])
+			buttons.append([c, rect.intersection(clip), _layer(c)])
 		if _covers(rect, view):
 			continue
 		if not view.grow(SLACK).encloses(rect) and clip == view:
@@ -108,13 +112,15 @@ func _check(where: String, window: Vector2i) -> void:
 			if content and content.size.x > scroll.size.x + SLACK:
 				_fail(where, window, "%s is wider than its scroll box %s (%d > %d)" % [_name(content), _name(scroll), content.size.x, scroll.size.x])
 		var parent := c.get_parent() as Container
-		if parent and not (parent is ScrollContainer) and parent.is_visible_in_tree() and not _rect(parent).grow(SLACK).encloses(rect):
-			_fail(where, window, "%s sticks out of %s (%s in %s)" % [_name(c), _name(parent), _r(rect), _r(_rect(parent))])
+		# Laid-out rectangles: a control's own scale and nudge (hover, pulse) are motion, not layout.
+		var laid := Rect2(c.position, c.size)
+		if parent and not (parent is ScrollContainer) and parent.is_visible_in_tree() and not Rect2(Vector2.ZERO, parent.size).grow(SLACK).encloses(laid):
+			_fail(where, window, "%s sticks out of %s (%s in %s)" % [_name(c), _name(parent), _r(laid), _r(Rect2(Vector2.ZERO, parent.size))])
 	for i in buttons.size():
 		for j in range(i + 1, buttons.size()):
 			var a: Control = buttons[i][0]
 			var b: Control = buttons[j][0]
-			if a.is_ancestor_of(b) or b.is_ancestor_of(a):
+			if a.is_ancestor_of(b) or b.is_ancestor_of(a) or buttons[i][2] != buttons[j][2]:
 				continue
 			var overlap: Rect2 = (buttons[i][1] as Rect2).intersection(buttons[j][1])
 			if overlap.size.x > SLACK and overlap.size.y > SLACK:
@@ -141,12 +147,35 @@ func _visible_controls(node: Node) -> Array[Control]:
 			continue
 		var c := child as Control
 		if c:
-			if not c.visible or c.modulate.a < 0.05 or c.self_modulate.a < 0.0:
+			if not c.visible or c.modulate.a < 0.05:
 				continue
-			if c.size.x >= 1.0 and c.size.y >= 1.0:
+			if c.size.x >= 1.0 and c.size.y >= 1.0 and _alpha(c) >= 0.05:
 				out.append(c)
 		out.append_array(_visible_controls(child))
 	return out
+
+
+## The alpha `c` is drawn with (its own modulate times its parents').
+func _alpha(c: Node) -> float:
+	var a := 1.0
+	while c:
+		var item := c as CanvasItem
+		if item:
+			a *= item.modulate.a
+		c = c.get_parent()
+	return a
+
+
+## The overlay a control is drawn in: the CanvasLayer and the nearest raised z_index.
+func _layer(c: Node) -> String:
+	var z := 0
+	var n := c
+	while n and not (n is CanvasLayer) and n != _tree.root:
+		var item := n as CanvasItem
+		if item and item.z_index > 0 and z == 0:
+			z = item.z_index
+		n = n.get_parent()
+	return "%s:%d" % [n.get_instance_id() if n else 0, z]
 
 
 func _rect(c: Control) -> Rect2:

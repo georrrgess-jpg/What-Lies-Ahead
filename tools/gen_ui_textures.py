@@ -318,34 +318,66 @@ def shadow():
 
 # --- buttons -----------------------------------------------------------------
 
+def vgrad(w, h, y0, y1, a0, a1):
+    """Vertical ramp from alpha a0 at y0 to a1 at y1 (canvas px), full width."""
+    ys = (np.arange(h * SS) / SS)[:, None]
+    t = np.clip((ys - y0) / max(1e-6, y1 - y0), 0, 1)
+    return np.broadcast_to(a0 + (a1 - a0) * t, (h * SS, w * SS)).copy()
+
+
+def candy_face(a, w, h, face, box, r, col, state, seed, flat=False):
+    """The painted face of a button: lit paint, a glossy upper band, a bright
+    rim along the top edge and a soft shade along the bottom, like a candy
+    enamel sign. `box` is the face rectangle, `flat` (disabled) keeps it matt."""
+    x0, y0, x1, y1 = box
+    paint = lit(face, col, depth=5.0, hi=0.5, lo=0.32, gloss=0.0 if flat else 0.1)
+    worn = wear_mask(face.shape, seed, 0.35) * corner_only(face.shape, 34)
+    paint[..., :3] = paint[..., :3] * (1 - worn[..., None] * 0.22)
+    over(a, paint, face)
+    if flat:
+        return
+    # Bottom shade: the face curves away from the light.
+    over(a, hexc("#12051c", 0.28), face * vgrad(w, h, y1 - 16, y1, 0.0, 1.0))
+    # Gloss band over the upper half, strongest on hover, gone when pressed.
+    strength = {"normal": 0.30, "hover": 0.42, "pressed": 0.12}[state]
+    band = rrect(w, h, (x0 + 5, y0 + 3, x1 - 5, y0 + (y1 - y0) * 0.5), max(4, r - 6))
+    over(a, hexc("#ffffff", 1.0), band * face * vgrad(w, h, y0 + 3, y0 + (y1 - y0) * 0.5, strength, 0.02))
+    # Rim light along the top edge.
+    rim = np.clip(face - shift(face, 0, 2.2), 0, 1)
+    over(a, hexc("#ffffff", 0.55 if state != "pressed" else 0.2), rim * vgrad(w, h, y0, y0 + 14, 1.0, 0.0))
+
+
 def sign_button(name, base, lip, state):
     """Rounded sign button. Margin (38, 34), pad 10; the lip is 8 px."""
     w, h = 128, 104
     pad, lip_h = 10, 8
     a = blank(w, h)
     drop = 5 if state == "pressed" else 0
+    flat = name.startswith("btn_grey")
     full = rrect(w, h, (pad, pad, w - pad, h - pad), 20)
-    face = rrect(w, h, (pad, pad + drop, w - pad, h - pad - lip_h + drop), 20)
+    face_box = (pad, pad + drop, w - pad, h - pad - lip_h + drop)
+    face = rrect(w, h, face_box, 20)
     if state == "hover":
-        over(a, hexc("#ffffff", 0.5), blur(full, 6))
+        glow = hexc(base)
+        glow[:3] = glow[:3] * 0.5 + 0.5
+        glow[3] = 0.6
+        over(a, glow, blur(full, 6))
     else:
-        over(a, hexc("#000000", 0.45), blur(shift(full, 0, 4), 4))
+        over(a, hexc("#000000", 0.5 if state == "normal" else 0.3), blur(shift(full, 0, 5 if state == "normal" else 2), 4))
     out_box = (pad - 3, pad - 3 + drop, w - pad + 3, h - pad + 3)
     over(a, hexc("#1a0b22"), rrect(w, h, out_box, 23))
     lip_m = rrect(w, h, (pad, pad + 14, w - pad, h - pad), 20)
-    over(a, hexc(lip), lip_m)
-    bright = {"normal": 0.0, "hover": 0.16, "pressed": -0.12}[state]
+    lip_paint = lit(lip_m, lip, depth=3.0, hi=0.25, lo=0.45)
+    over(a, lip_paint, lip_m)
+    bright = {"normal": 0.0, "hover": 0.14, "pressed": -0.12}[state]
     c = hexc(base)
     c[:3] = np.clip(c[:3] + bright if bright > 0 else c[:3] * (1.0 + bright), 0, 1)
     col = "#%02x%02x%02x" % tuple(int(v * 255) for v in c[:3])
-    paint = lit(face, col, depth=5.0, hi=0.5, lo=0.3, gloss=0.16)
-    worn = wear_mask(face.shape, 31, 0.35) * corner_only(face.shape, 34)
-    paint[..., :3] = paint[..., :3] * (1 - worn[..., None] * 0.25)
-    over(a, paint, face)
-    # Inner cream pin-stripe and a bolt at each end, like a fairground sign.
+    candy_face(a, w, h, face, face_box, 20, col, state, 31, flat)
+    # Inner cream pin-stripe, like a fairground sign.
     s_out = rrect(w, h, (pad + 6, pad + 6 + drop, w - pad - 6, h - pad - lip_h - 6 + drop), 14)
     s_in = rrect(w, h, (pad + 8, pad + 8 + drop, w - pad - 8, h - pad - lip_h - 8 + drop), 12)
-    over(a, hexc("#fff3dc", 0.38), np.clip(s_out - s_in, 0, 1))
+    over(a, hexc("#fff3dc", 0.22 if flat else 0.34), np.clip(s_out - s_in, 0, 1))
     save(a, name, w, h)
 
 
@@ -403,7 +435,7 @@ def icon_button(name, base, lip, state):
     c = hexc(base)
     c[:3] = np.clip(c[:3] + bright if bright > 0 else c[:3] * (1.0 + bright), 0, 1)
     col = "#%02x%02x%02x" % tuple(int(v * 255) for v in c[:3])
-    over(a, lit(face, col, depth=4.0, hi=0.5, lo=0.3, gloss=0.14), face)
+    candy_face(a, w, h, face, (pad, pad + drop, w - pad, h - pad - lip_h + drop), 18, col, state, 23)
     save(a, name, w, h)
 
 
@@ -552,6 +584,7 @@ def icons():
     white_icon("icon_power", np.maximum(np.clip(ring - gap, 0, 1), stroke(w, h, [(32, 9), (32, 31)], 8)))
     white_icon("icon_arrow_left", stroke(w, h, [(40, 12), (20, 32), (40, 52)], 11))
     white_icon("icon_arrow_right", stroke(w, h, [(24, 12), (44, 32), (24, 52)], 11))
+    white_icon("icon_search", np.maximum(np.clip(circle(w, h, 27, 27, 17) - circle(w, h, 27, 27, 10), 0, 1), stroke(w, h, [(40, 40), (52, 52)], 10)))
     white_icon("icon_check", stroke(w, h, [(12, 34), (26, 48), (52, 17)], 10))
     white_icon("icon_close", np.maximum(stroke(w, h, [(16, 16), (48, 48)], 10), stroke(w, h, [(48, 16), (16, 48)], 10)))
     white_icon("icon_play", blur((blur(poly(w, h, [(18, 9), (56, 32), (18, 55)]), 2.5) > 0.5).astype(np.float64), 0.5))
