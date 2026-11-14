@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/prz_rattle.wav-083523e432baaedf55ea3ee9856be5
 
 force/8_bit=false
 force/mono=false
-force/max_rate=false
-force/max_rate_hz=44100
+force/max_rate=true
+force/max_rate_hz=22050
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0
