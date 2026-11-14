@@ -164,15 +164,25 @@ func _draw_capsules(c: Vector2, r: float) -> void:
 		_capsule(p, cr, CAPSULE_COLORS[i % CAPSULE_COLORS.size()], s.y * TAU * 0.3 + spin + sin(_time + s.x * 5.0) * 0.1)
 
 
+## The top half of a unit circle, built once (drawn scaled per capsule, so
+## the per-frame redraw allocates nothing).
+static var _half: PackedVector2Array
+
+
+static func _half_disc() -> PackedVector2Array:
+	if _half.is_empty():
+		for k in 17:
+			var a := PI + PI * k / 16.0
+			_half.append(Vector2(cos(a), sin(a)))
+	return _half
+
+
 ## One two-tone capsule: a coloured top half, a cream bottom, a seam and a shine.
 func _capsule(p: Vector2, radius: float, top: Color, angle: float) -> void:
+	draw_set_transform(p, angle, Vector2(radius, radius))
+	draw_circle(Vector2.ZERO, 1.0, CREAM)
+	draw_colored_polygon(_half_disc(), top)
 	draw_set_transform(p, angle, Vector2.ONE)
-	draw_circle(Vector2.ZERO, radius, CREAM)
-	var pts := PackedVector2Array()
-	for k in 17:
-		var a := PI + PI * k / 16.0
-		pts.append(Vector2(cos(a), sin(a)) * radius)
-	draw_colored_polygon(pts, top)
 	draw_line(Vector2(-radius, 0), Vector2(radius, 0), top.darkened(0.35), 2.0, true)
 	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 32, top.darkened(0.45), 2.0, true)
 	draw_circle(Vector2(-radius * 0.35, -radius * 0.45), radius * 0.18, Color(1, 1, 1, 0.7))
