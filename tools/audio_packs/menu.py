@@ -32,13 +32,13 @@ LENGTH = BARS * BAR
 # Pad voicings (semitones from A4) and the bass root under them.
 CHORDS = {
     "D": ((-7, -3, 0, 5), -31), "Dmaj7": ((-7, -3, 0, 4), -31), "Bm7": ((-10, -7, -3, 0), -22),
-    "Gmaj7": ((-14, -10, -7, -3), -26), "A": ((-12, -8, -5, 0), -24), "Asus": ((-12, -7, -5, 0), -24),
+    "Gmaj7": ((-14, -10, -7, -3), -26), "A": ((-12, -8, -5, 0), -24),
     "F#m7": ((-15, -12, -8, -5), -27), "Em7": ((-17, -14, -10, -7), -29), "G": ((-14, -10, -7, -2), -26),
     "F#m": ((-15, -12, -8, -3), -27), "Bm": ((-10, -7, -3, 2), -22), "F#": ((-15, -11, -8, -3), -27),
     "Bb": ((-11, -7, -4, 1), -23), "C": ((-9, -5, -2, 3), -21),
 }
 PROGRESSION = (
-    ["D", "Bm7", "Gmaj7", "Asus"]                                    # intro
+    ["D", "Bm7", "Gmaj7", "A"]                                       # intro
     + ["Dmaj7", "F#m7", "Gmaj7", "A", "Dmaj7", "Bm7", "Em7", "A"]    # verse
     + ["G", "A", "F#m", "Bm", "G", "A", "D", "D"]                    # chorus
     + ["Bm", "G", "Em7", "F#", "Bm", "G", "Bb", "C"]                 # bridge
@@ -124,13 +124,12 @@ def _lead(notes):
     for s, at, ln in notes:
         a = int(SR * (at * BEAT - start))
         b = min(n, int(SR * ((at + ln) * BEAT - start)))
-        target = s
         glide = 0.045 if prev_end is not None and abs(a - prev_end) < SR * 0.02 else 0.0
         seg = np.arange(n - a) / SR
         if glide:
-            semis[a:] = target + (semis[a] - target) * np.exp(-seg / (glide / 3))
+            semis[a:] = s + (semis[a] - s) * np.exp(-seg / (glide / 3))
         else:
-            semis[a:] = target
+            semis[a:] = s
         vib_age[a:] = seg
         note_env = adsr((b - a) / SR + 0.12, 0.012 if glide == 0 else 0.03, 0.25, 0.8, 0.12)
         note_env = note_env[: n - a] if len(note_env) > n - a else np.pad(note_env, (0, n - a - len(note_env)))

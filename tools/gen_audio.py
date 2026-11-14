@@ -308,7 +308,10 @@ def write_music(name, stereo):
     variants (q1.5: dense and heard under a fight); anything else is a music
     loop (q2). Together these keep the shipped music small."""
     if name.endswith("_ambience"):
-        return write_ogg(name, master(stereo, BED_LUFS, BED_EQ), peak=None, quality=AMBIENCE_Q, mono=True)
+        # Folded to mono first, so the bed is normalised as it plays (the game
+        # sends a mono stream to both speakers at full level).
+        folded = np.repeat(np.asarray(stereo).mean(axis=1, keepdims=True), 2, axis=1)
+        return write_ogg(name, master(folded, BED_LUFS, BED_EQ), peak=None, quality=AMBIENCE_Q, mono=True)
     final = name.endswith("_final")
     x = master(stereo, FINAL_LUFS if final else MUSIC_LUFS, MUSIC_EQ)
     return write_ogg(name, x, peak=None, quality=FINAL_Q if final else MUSIC_Q)

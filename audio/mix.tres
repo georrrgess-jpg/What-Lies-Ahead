@@ -202,8 +202,8 @@ sound_trim_db = Dictionary[StringName, float]({
 &"weap_lobber_boom": -4.0,
 &"empty_click": 3.0,
 &"weap_switch": 3.0,
-&"hitmarker": 5.0,
-&"headshot_ping": 3.0,
+&"hitmarker": 6.5,
+&"headshot_ping": 4.0,
 &"kill_confirm": -1.0,
 &"combo_up": -2.0,
 &"weap_cryo_freeze": -2.0,
@@ -231,9 +231,12 @@ sound_trim_db = Dictionary[StringName, float]({
 &"frost_ice_shatter": 5.0,
 &"frost_cloud_burst": 5.0,
 &"player_hurt": 2.0,
-&"final_wave": 2.0,
+&"final_wave": -1.0,
 &"purchase": -1.5,
 &"deny": -2.0,
 &"swap": 4.0,
-&"menu_theme": 3.0
+&"menu_theme": 3.0,
+&"ui_click": 3.0,
+&"rounds_surge_siren": -4.0,
+&"onb_ding": -4.0
 })
