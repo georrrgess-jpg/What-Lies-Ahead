@@ -22,6 +22,7 @@ spark_ledger.gd, contract_board.gd); the numbers all come from the data.
 import glob
 import math
 import os
+import random
 import re
 import subprocess
 import sys
@@ -39,6 +40,8 @@ TICKETS_KEPT = 0.5         # share of the run's tickets still unspent at the por
 MAIN_SHARE = 0.65          # kills taken by the main weapon
 DEFEAT_WAVE = 5            # a defeat dies half-way through this wave
 SESSION = (True, True, False)   # clear, clear, defeat
+BOUNTIES_CLAIMED = 0.8     # share of bounty targets popped before they get away
+OPENERS = 4000             # simulated players for the Prize Capsule odds
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REV = None
@@ -109,10 +112,13 @@ def load():
             wf = re.search(r'path="res://(data/levels/[^"]+_waves\.tres)"', ltext).group(1)
             ws, subs, _ = resource(wf)
             waves = []
+            bounties = []
             for sid in sorted(subs, key=lambda s: int(re.sub(r'\D', '', s) or 0)):
                 spawn = re.search(r'spawns = \{(.*?)\}', subs[sid], re.S)
                 waves.append({k: int(v) for k, v in re.findall(r'"(\w+)": (\d+)', spawn.group(1))})
-            worlds.append((w.get('sort_order', 0), {'id': lv['id'], 'name': lv['display_name'], 'waves': waves, 'set': ws}))
+                if re.search(r'^bounty = &"\w', subs[sid], re.M):
+                    bounties.append(len(waves))
+            worlds.append((w.get('sort_order', 0), {'id': lv['id'], 'name': lv['display_name'], 'waves': waves, 'set': ws, 'bounties': bounties}))
     d['levels'] = [lv for _, lv in sorted(worlds, key=lambda x: x[0])]
     d['weapons'] = []
     for f in listing('data/weapons'):
@@ -130,6 +136,7 @@ def load():
                                'multi': sum(1 for s in subs if s.startswith('req')) > 1})
     d['milestones'] = [resource(f)[0] for f in listing('data/progression/challenges')]
     d['contracts'] = sorted((resource(f)[0] for f in listing('data/progression/contracts')), key=lambda c: c.get('sort_order', 0))
+    d['prints'] = resource('data/prints/series_1.tres')[0]
     return d
 
 
@@ -232,6 +239,8 @@ class Player:
         self.done = set()
         self.contracts = []
         self.contract_cursor = 0
+        self.contracts_done = 0
+        self.contract_capsules = 0
         self.main_cursor = 0
         self.runs = self.clears = 0
         self.spent = 0
@@ -263,6 +272,24 @@ class Player:
                 break
             self.contracts.append([c, 0.0])
 
+    def capsules(self, r, victory, milestones_now):
+        """Prize Capsules this run earns (PrizePrints.settle and its contract / milestone hooks)."""
+        s = self.d['prints']
+        if not s:
+            return 0
+        reached = len(r['level']['waves']) if victory else DEFEAT_WAVE - 1
+        bounties = sum(1 for n in r['level']['bounties'] if n <= reached) * BOUNTIES_CLAIMED
+        n = bounties * s.get('capsules_per_bounty', 1)
+        if victory:
+            n += s.get('capsules_per_alpha', 1)
+            if self.runs % len(SESSION) == SESSION.index(True):   # the day's first clear (a session a day)
+                n += s.get('capsules_daily_clear', 1)
+        every = s.get('contracts_per_capsule', 2)
+        n += self.contracts_done // every - self.contract_capsules
+        self.contract_capsules = self.contracts_done // every
+        n += milestones_now * s.get('capsules_per_milestone', 2)
+        return n
+
     def run(self, level_index, victory):
         d, eco, curve = self.d, self.d['eco'], self.d['curve']
         r = play(d, level_index, victory)
@@ -292,6 +319,7 @@ class Player:
             sample = r['stats'].get(c['stat'], 0) * (MAIN_SHARE if c.get('scope') == 1 else 1.0)
             entry[1] = max(entry[1], sample) if c.get('mode') == 1 else entry[1] + sample
             if entry[1] >= c['goal']:
+                self.contracts_done += 1
                 xp['Contracts'] = xp.get('Contracts', 0) + c['xp']
                 self.earn('Contracts', c.get('sparks', 0))
                 contract_mastery += c.get('mastery_xp', 0) if c.get('scope') == 1 else 0
@@ -301,6 +329,7 @@ class Player:
         self.mastery[main['id']] += pool * MAIN_SHARE + r['wave_mastery'] + contract_mastery
         if second is not main:
             self.mastery[second['id']] += pool * (1 - MAIN_SHARE) + r['wave_mastery']
+        milestones_now = 0
         for m in d['milestones']:
             key = m['id']
             if key in self.done:
@@ -319,6 +348,7 @@ class Player:
             self.totals[key] = v
             if v >= m['goal']:
                 self.done.add(key)
+                milestones_now += 1 if m.get('scope', 0) == 0 else 0
                 xp['Milestones'] = xp.get('Milestones', 0) + m['xp']
                 self.earn('Milestones', m.get('sparks', 0))
                 if m.get('scope') == 1:
@@ -341,6 +371,7 @@ class Player:
             self.earn('Level-ups', level_sparks(eco, lvl))
             row['unlocks'] += [w['name'] for w in d['weapons'] if w['level'] == lvl]
             row['unlocks'] += [c['name'] for c in d['cosmetics'] if c['kind'] == 1 and c['amount'] == lvl and not c['price']]
+        row['capsules'] = self.capsules(r, victory, milestones_now)
         self.runs += 1
         self.clears += 1 if victory else 0
         row.update(xp=int(sum(xp.values())), lvl=after, lvl_ups=after - before_level, ranks=ranks,
@@ -420,6 +451,7 @@ def main():
     plan = schedule(d, 400)
     rows, cap_run, cap_clear, all_weapons = [], None, None, None
     history, at_cap = [], {}
+    capsule_history = []
     shop = [c for c in d['cosmetics'] if c['price']]
     shop_total = sum(c['price'] for c in shop)
     shop_run = shop_clear = None
@@ -444,6 +476,7 @@ def main():
         if shop and shop_run is None and p.wallet >= shop_total:
             shop_run, shop_clear = i, p.clears
         history.append((victory, row['sparks']))
+        capsule_history.append(row.get('capsules', 0))
     print('== %s: %s ==' % ('Data at ' + REV if REV else 'Current data', 'no currency' if not eco else 'Sparks economy'))
     print()
     table(rows, ['Run', 'Level', 'Result', 'XP', 'Player level', 'Sparks', 'Saved (if unspent)', 'The run buys', 'Unlocks'], markdown)
@@ -491,6 +524,83 @@ def main():
             what = [w['name'] + ' (weapon)' for w in d['weapons'] if w['level'] == lvl] + [c['name'] for c in d['cosmetics'] if c['kind'] == 1 and c['amount'] == lvl and not c['price']]
             track.append([lvl, '{:,}'.format(p.table[lvl]), level_sparks(eco, lvl), ', '.join(what) or '(nothing!)'])
         table(track, ['Level', 'Total XP', 'Sparks', 'Reward'], markdown)
+    if d['prints']:
+        print()
+        prize_capsules(d, capsule_history, history, markdown)
+
+
+def prize_capsules(d, capsule_history, history, markdown):
+    """Capsules earned per run and session, and what opening them gives a player
+    (Monte Carlo over OPENERS players opening every earned capsule as it comes)."""
+    s = d['prints']
+    by_rarity = {}
+    for fid in re.findall(r'&"(\w+)"', read('data/prints/series_1.tres').split('finishes =')[1].split('\n')[0]):
+        c = next(c for c in d['cosmetics'] if c['id'] == fid)
+        by_rarity.setdefault(min(c['rarity'], 3), []).append(fid)
+    odds = s['odds']
+    rng = random.Random(7)
+    first_leg, first_holo, first_mint_holo, tokens_at, legend_counter = [], [], [], [], []
+    for _ in range(OPENERS):
+        since_e = since_l = 0
+        held = {}
+        tokens = 0
+        found = {}
+        opened = 0
+        for run, n in enumerate(capsule_history[:400], 1):
+            for _ in range(int(n) + (1 if rng.random() < n - int(n) else 0)):
+                opened += 1
+                if since_l + 1 >= s['legendary_pity']:
+                    r = 3
+                else:
+                    x, r, acc = rng.random(), 3, 0.0
+                    for i, o in enumerate(odds):
+                        acc += o
+                        if x < acc:
+                            r = i
+                            break
+                    if r < 2 and since_e + 1 >= s['epic_pity']:
+                        r = 3 if rng.random() * (odds[2] + odds[3]) < odds[3] else 2
+                since_e = 0 if r >= 2 else since_e + 1
+                since_l = 0 if r == 3 else since_l + 1
+                fid = rng.choice(by_rarity[r])
+                v = rng.random()
+                variant = 'misprint' if v < s['misprint_chance'] else 'holo' if v < s['misprint_chance'] + s['holo_chance'] else \
+                    'glitter' if v < s['misprint_chance'] + s['holo_chance'] + s['glitter_chance'] else ''
+                shine = rng.random()
+                notable = variant or shine >= s['mint_at']
+                if held.get(fid) and not notable:
+                    tokens += s['token_value'][r]
+                held[fid] = held.get(fid, 0) + 1
+                if r == 3:
+                    found.setdefault('leg', run)
+                if variant == 'holo':
+                    found.setdefault('holo', run)
+                    if shine >= s['mint_at']:
+                        found.setdefault('mint_holo', run)
+                if tokens >= s['counter_price'][3]:
+                    found.setdefault('counter_leg', run)
+        first_leg.append(found.get('leg', 999))
+        first_holo.append(found.get('holo', 999))
+        first_mint_holo.append(found.get('mint_holo', 999))
+        legend_counter.append(found.get('counter_leg', 999))
+        tokens_at.append(opened)
+    def q(xs, f):
+        xs = sorted(xs)
+        v = xs[min(len(xs) - 1, int(len(xs) * f))]
+        return '%d' % v if v < 999 else '400+'
+    per_run = capsule_history[:15]
+    first_sessions = sum(per_run) / 5.0
+    later = capsule_history[60:90]
+    rows = [['Capsules per run: first 15 runs / runs 61-90', '%.1f / %.1f' % (sum(per_run) / 15.0, sum(later) / 30.0)],
+            ['Capsules per session of 3 runs: first five sessions / later', '%.1f / %.1f' % (first_sessions, sum(later) / 10.0)],
+            ['Capsule price', '%s Sparks (a run pays %d-%d, so one run buys about two)' % ('{:,}'.format(s['capsule_price']),
+                min(x for _, x in history[:15]), max(x for _, x in history[:15]))],
+            ['Runs to the first Legendary print (median / 90%)', '%s / %s' % (q(first_leg, 0.5), q(first_leg, 0.9))],
+            ['Runs to the first Holo (median / 90%)', '%s / %s' % (q(first_holo, 0.5), q(first_holo, 0.9))],
+            ['Runs to the first Mint Holo (median / 90%)', '%s / %s' % (q(first_mint_holo, 0.5), q(first_mint_holo, 0.9))],
+            ['Runs to %d Prize Tokens (a Legendary at the Token Counter), auto-recycle on' % s['counter_price'][3], '%s / %s' % (q(legend_counter, 0.5), q(legend_counter, 0.9))],
+            ['Series 1 by rarity', ', '.join('%s %d' % (n, len(by_rarity.get(i, []))) for i, n in enumerate(['Common', 'Rare', 'Epic', 'Legendary']))]]
+    table(rows, ['Prize Capsules (earned only, every capsule opened)', ''], markdown)
 
 
 if __name__ == '__main__':

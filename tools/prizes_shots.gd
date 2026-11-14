@@ -40,6 +40,15 @@ func run(shot: Node, menu: Node) -> void:
 	page._show_view(&"odds")
 	await _frames(20)
 	await _save("odds")
+	# A print worn on the Ion Carbine, seen from the Locker.
+	var worn: Dictionary = PrizePrints.held()[0]
+	PrizePrints.equip(worn, &"ion_carbine")
+	menu._show("locker")
+	var locker := menu.page("locker") as LockerPage
+	locker.select_weapon(&"ion_carbine")
+	locker.select_item(StringName(String(worn["f"])))
+	await _frames(90)
+	await _save("locker")
 
 
 ## A collection of 40 prints with every rare print in it, and capsules to open.

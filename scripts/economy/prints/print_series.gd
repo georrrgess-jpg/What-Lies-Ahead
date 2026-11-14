@@ -39,5 +39,5 @@ extends Resource
 @export var capsules_per_bounty := 1
 @export var capsules_daily_clear := 1
 ## One capsule for every this many contracts completed.
-@export var contracts_per_capsule := 2
+@export var contracts_per_capsule := 3
 @export var capsules_per_milestone := 2

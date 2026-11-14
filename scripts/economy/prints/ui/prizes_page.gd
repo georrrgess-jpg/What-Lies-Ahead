@@ -209,7 +209,7 @@ func _build_machine_side() -> Control:
 	_buy.icon = UiKit.spark_icon(30).texture
 	_buy.pressed.connect(_buy_capsule)
 	buttons.add_child(_buy)
-	_capsule_note = UiKit.label("", UiKit.SIZE_SMALL, UiKit.MUTED)
+	_capsule_note = UiKit.body("", LEFT_WIDTH, UiKit.SIZE_SMALL, UiKit.MUTED)
 	_capsule_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	side.add_child(_capsule_note)
 	var luck := UiKit.card_panel(14)
@@ -244,7 +244,7 @@ func _refresh_machine() -> void:
 	_open.disabled = n <= 0 or _busy
 	_buy.text = "BUY 1  %s" % Wallet.format(s.capsule_price)
 	_buy.disabled = _busy or not PrizePrints.can_buy_capsule()
-	_capsule_note.text = "%d capsule%s to open  ·  earn them by beating alphas, claiming bounties and the day's first clear" % [n, "" if n == 1 else "s"]
+	_capsule_note.text = "%d capsule%s to open  ·  earned from alphas, bounties, the day's first clear" % [n, "" if n == 1 else "s"]
 	var luck := PrizePrints.luck()
 	_luck_epic_text.text = "Epic or better guaranteed within %d capsule%s" % [luck.x, "" if luck.x == 1 else "s"]
 	_luck_epic.value = 1.0 - float(luck.x - 1) / s.epic_pity

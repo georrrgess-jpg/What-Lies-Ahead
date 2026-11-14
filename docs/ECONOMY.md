@@ -321,6 +321,118 @@ aim, 82 headshots, every wave flawless, which a person will not match) paid 1,62
 and 9,862 XP and ended on level 5; the model's typical player gets 1,143 Sparks, 7,628 XP
 and level 4 from the same run. A bot defeat on wave 7 of Tidal Tunnels paid 584 Sparks.
 
+## Prize Prints
+
+A **print** is one numbered, rolled copy of a weapon finish that drops from a **Prize
+Capsule**. Two prints of one finish are never the same, and a print is its own
+collectible: it neither grants nor removes the plain finish (the Shop still sells it,
+the reward tracks still give it), and owning the plain finish never stops it dropping.
+Code: `scripts/economy/prints/`; data: `data/prints/series_1.tres` (`PrintSeries`); page:
+the **Prizes** tab (`data/ui/prizes.tres`, order 52, between the Locker and the Shop).
+
+**What a print rolls** (`PrintRoll`, all independent):
+
+| Roll | Values | Odds | On the weapon |
+| --- | --- | --- | --- |
+| Pattern seed | 0-9,999 | uniform | where stripes, spots, camo and tiles fall: an offset, a small turn and a 0.86-1.16 scale of the pattern space; designs anchored to the model (racing stripes, stencil bands, candy paint) restyle by the seed instead |
+| Shine | 0.000-1.000 | uniform | **Factory** below 0.60 (60%): faded paint, rubbed-through patches, scratches; **Polished** 0.60-0.90 (30%): glossier; **Mint** 0.90 and up (10%): a clear coat |
+| Rare print | Glitter, Holo, Gold-ink Misprint | 1/20, 1/50, 1/100 (exclusive) | Glitter: metallic flecks that wink; Holo: an animated rainbow foil with a light sweep; Misprint: the pattern flipped and offset, shell and trim inks swapped, bands of inverted ink edged in gold leaf and gold splatter |
+| Serial | per finish, counting up | - | every print of that finish ever minted on the profile (never reused); #001 First Edition, #002-#010 Low Serial, #007 / #077 / #777 Lucky 7s |
+| Minted | the date | - | |
+
+The print layer lives in `art/shaders/finish_common.gdshaderinc` (uniforms `print_on`,
+`print_offset`, `print_angle`, `print_scale`, `print_seed`, `print_shine`,
+`print_variant`): every `finish_*` shader runs `lp = print_xform(VERTEX)` and ends with
+`PRINT_LAYER`. It is one pass; a plain finish pays one uniform branch.
+`WeaponCosmetics.print_material()` makes one material per print and surface.
+
+**Prize Capsules.** Earned: 1 per alpha defeated, 1 per bounty claimed, 1 for the day's
+first clear, 1 for every third contract, 2 per milestone (`PrizePrints.settle(result)`
+pays the run once, on `Events.run_finished` or the results section, whichever is first;
+contracts and milestones pay as they happen). Bought: 500 Sparks each (on the price rule;
+no real money). Published odds per capsule: **Common 62%, Rare 27%, Epic 9%,
+Legendary 2%**. The **luck meter** guarantees an Epic or better within 10 capsules and a
+Legendary within 40 (a forced Epic keeps Legendary's share of the top two); with it the
+real rates are about 58 / 26 / 12.5 / 4%. Series 1 "Boardwalk" holds 36 finishes, all
+`finish_*` shader finishes: 7 Common, 14 Rare, 11 Epic, 4 Legendary (Marquee Lights,
+Quicksilver, Solar Flare, Thunderhead); level-track showpieces and mastery camos are left
+out.
+
+**Repeats, Prize Tokens, the Token Counter.** A drop of a finish already held is a
+repeat. With *auto-recycle repeats* on (the default, a toggle on the collection), a plain
+repeat (Factory or Polished, no rare print, serial above #010) becomes Prize Tokens at
+once and the reveal says so; a notable repeat is always kept. Any print can be recycled by
+hand; favourites and worn prints never. Tokens: Common 1, Rare 3, Epic 8, Legendary 25.
+The **Token Counter** shelves one finish per rarity a day (the same all day, new at local
+midnight) as a fresh print: Common 6, Rare 18, Epic 60, Legendary 200 tokens, each once a
+day.
+
+**Trade-up.** Five prints of one rarity (not favourites, not worn) become one random
+print of the next rarity with fresh rolls; Legendary is the top. A confirmation lists the
+five.
+
+**Wearing a print.** `PrizePrints.equip(print, weapon_id)` makes it that weapon's finish
+everywhere `Cosmetics.weapon_loadout()` is read (first person, the Arsenal, the Locker
+case, the player card): the loadout gains `"print"` and its `"finish"` is the print's
+finish. Equipping a plain finish in the Locker takes the print off (the plain one shows
+again). In the Locker a finish with prints shows a stack chip ("x3 PRINTS") and a button
+over the case that opens those prints on the Prizes page.
+
+**The opening.** The crank turns (six ratchet clicks), the capsule rattles down the chute,
+flies out, wobbles in its rarity's glow (2 to 4 times, the rarer the more), pops in a
+burst of rays, and the print turns on a stand while its rolls count up: the shine meter
+sweeps through Factory, Polished, Mint; the rare print stamps in; the serial rolls to its
+number. A click, Enter or Esc skips to the end. Sounds: `prz_*`
+(`tools/audio_packs/prints.py`).
+
+### API
+
+| `PrizePrints` (static) | |
+| --- | --- |
+| `capsules()`, `tokens()`, `opened()`, `luck()` | `luck()`: `Vector2i(capsules to a guaranteed Epic, to a Legendary)` |
+| `add_capsules(n)`, `can_buy_capsule()`, `buy_capsule()` | |
+| `open_capsule()` | `{}` without a capsule, else `{ print, repeat, recycled, tokens, rarity, lucky }` |
+| `held()`, `get_print(id)`, `prints_of(finish_id)`, `holds(finish_id)`, `finish_of(p)`, `rarity(p)`, `grade(p)`, `is_notable(p)` | |
+| `equip(p, weapon_id)`, `take_off(weapon_id)`, `equipped(weapon_id)`, `worn_on(p)`, `fits(p, weapon_id)` | |
+| `set_favourite(p, on)`, `mark_seen(p)`, `new_count()`, `recycle(p)`, `can_recycle(p)`, `token_value(p)` | |
+| `trade_up_problem(picked)`, `trade_up(picked)`, `trade_up_candidates(rarity)` | |
+| `counter_shelf()`, `counter_price(fid)`, `counter_sold(fid)`, `buy_at_counter(fid)` | |
+| `settle(result)` | `{ total, lines: [[label, n]], capsules }`, once per run |
+| `set_auto_recycle(on)`, `series()`, `by_rarity()` | |
+
+`PrintLook`: `grade_name / grade_color / variant_name / variant_color / variant_odds /
+serial_text ("#007") / serial_tag / minted_text / title / score / uniforms(p)`.
+Signal: `Cosmetics.prints_changed`. Every change saves the profile.
+
+**Save.** `Profile.section("prints")`, schema `v: 1`: `next_id, serials {finish: last},
+list [prints], equipped {weapon: print id}, capsules, tokens, since_epic, since_legendary,
+opened, minted, contracts, daily, auto_recycle, counter {day, sold}, earned`.
+`PrizePrints._migrate` fills what is missing, so a save from before prints loads with
+none (checked by the probe).
+
+**Checks.** `godot --headless --path . --script res://tools/print_probe.gd`: 10,000
+capsules against the published odds, the luck meter (longest runs without an Epic 9 and
+without a Legendary 39), 10,000 rolls of rare prints and grades, 10,000 capsules minted
+into a profile (serials in order per finish, ids unique, only plain repeats recycled),
+the save round trip and an old save, and every action (equip, favourites, recycle,
+trade-up, counter, buying, the run settlement). Stills: `tools/print_sheet.gd` (prints on
+weapons), `tools/prizes_shots.gd` (the page and the opening, frame by frame).
+
+**The numbers** (`tools/economy_model.py`, the typical player, earned capsules only,
+4,000 simulated players opening every capsule as it comes):
+
+| | |
+| --- | --- |
+| Capsules per run: first 15 runs / runs 61-90 | 3.3 / 2.1 |
+| Capsules per session of three runs: first five sessions / later | 9.9 / 6.3 |
+| One capsule | 500 Sparks (a run pays 430-1,790: about two capsules) |
+| Runs to the first Legendary print (median / 90%) | 7 / 11 |
+| Runs to the first Holo (median / 90%) | 9 / 44 |
+| Runs to the first Mint Holo (median / 90%) | 155 / 400+ |
+| Runs to 200 Prize Tokens (a Legendary at the counter) | 53 / 60 |
+
+The first sessions run high because the early milestones pay 2 each.
+
 ## Tuning
 
 | To change | Edit |
@@ -331,6 +443,7 @@ and level 4 from the same run. A bot defeat on wave 7 of Tidal Tunnels paid 584 
 | A contract or milestone | `data/progression/contracts/`, `data/progression/challenges/` |
 | What a level gives | the `PLAYER_LEVEL` requirement of a cosmetic (price 0), or a weapon's `unlock` |
 | Whether an item is sold | its `price` (0 = earned through its `requirement`) |
+| Prize Capsules: odds, luck meter, rare prints, grades, capsule price and earnings, tokens, the counter, the series | `data/prints/series_1.tres` |
 
 After a change run the model, and the probe (`tools/economy_probe.gd`) for the rules it
 checks. Do not edit `scripts/economy/legacy_unlocks.gd`: it records the rules old saves

@@ -24,5 +24,5 @@ trade_up_count = 5
 capsules_per_alpha = 1
 capsules_per_bounty = 1
 capsules_daily_clear = 1
-contracts_per_capsule = 2
+contracts_per_capsule = 3
 capsules_per_milestone = 2
