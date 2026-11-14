@@ -26,9 +26,10 @@ enum Style { BOLT, PELLET, RAIL, BLAST, FROST, ARC, SCUFF }
 const SHADER := "res://art/shaders/impact_mark.gdshader"
 const NO_MARKS_GROUP := &"no_impact_marks"
 ## Body names that never take marks: stand-in boxes around props ("...Collision",
-## "...Col", "...Guard", gates), glass shop fronts and doors, stair and
-## escalator ramps, water, lava and glass.
-const SKIP_NAMES := "Collision|Collider|Col$|Col[A-Z0-9]|Guard|Stair|Wedge|Escalator|Water|Lava|Glass|Window|Skylight|^Front\\d|Door|Gate\\d"
+## "...Col", "...Guard", gates, ropes) and see-through railings and fences,
+## invisible walls, stair and escalator ramps, glass shop fronts, doors,
+## windows and tanks, and water, lava, rivers and pools.
+const SKIP_NAMES := "Collision|Collider|Col$|Col[A-Z0-9]|Guard|Gate\\d|Rope|Rail|Fence|Grille|Windbreak|NoClimb|PlayerWall|Stair|Wedge|Escalator|^Front\\d|Door|Glass|Window|Skylight|Tank|Water|Lava|River|Pool|Basin"
 const MASK_WORLD := 1
 ## Marks kept at once on the High and Low graphics presets.
 const CAP_HIGH := 128
@@ -236,7 +237,7 @@ func _place(at: Vector3, normal: Vector3, collider: Object, dir: Vector3, style:
 	var t := along.normalized()
 	var b := n.cross(t)
 	for k in SHRINK:
-		if _fits(at, n, t * half_l * k, b * half_w * k, half_w > 0.25):
+		if _fits(at, n, t * half_l * k, b * half_w * k, half_w > 0.45):
 			_add(Transform3D(Basis(t * half_l * k * 2.0, b * half_w * k * 2.0, n), at + n * LIFT), style, color)
 			_last_at = at
 			_last_time = _now
