@@ -6,9 +6,9 @@ extends WeaponMode
 ## bites up to MAX_TARGETS zombies within REACH in front of the player
 ## (WeaponController.melee_hit): SAW_DPS to the rank and file, HEAVY_SCALE of it
 ## to heavies and ALPHA_SCALE to alphas and bosses, so it saws through a pack of
-## tourists but barely scratches a Bruno. The first bite on a zombie kicks it
-## out of its swing (BITE_PUSH staggers a standard zombie); after that a light
-## push holds it on the bar. Sawing slows the player (SAW_MOVE) and cannot be
+## tourists but barely scratches a Bruno. The first bite on a standard zombie
+## knocks it out of its swing and staggers it where it stands (heavies and
+## alphas keep coming); a light push holds whatever is on the bar. Sawing slows the player (SAW_MOVE) and cannot be
 ## combined with the shotgun. Fuel: a full rack saws for FUEL_TIME seconds,
 ## refills over REFILL_TIME once the saw rests for REFILL_DELAY, and a reload
 ## swaps in a full rack. Run it dry and it floods: it will not restart until
@@ -26,7 +26,7 @@ const ALPHA_SCALE := 0.3
 const ALPHA_MASS := 5.0
 ## Reach from the player's centre to a zombie's surface (metres), and the
 ## widest angle off the aim a zombie can be bitten at (cosine).
-const REACH := 1.3
+const REACH := 1.4
 const CONE_COS := 0.55
 const MAX_TARGETS := 2
 const TICK := 0.1
@@ -39,9 +39,8 @@ const REFILL_TIME := 7.0
 const REFILL_DELAY := 0.8
 const RESTART_FUEL := 0.35
 const SAW_MOVE := 0.78
-## Push per tick holding a zombie on the bar, and the kick of a first bite.
+## Push per tick holding a zombie on the bar.
 const HOLD_PUSH := 0.9
-const BITE_PUSH := 3.6
 ## Seconds before a zombie that left the bar is kicked again by a new bite.
 const BITE_MEMORY := 1.5
 const PUDDLE_MIN_DAMAGE := 20.0
@@ -211,7 +210,9 @@ func _bite(z: Zombie, chest: Vector3, dir: Vector3) -> void:
 	var scale := ALPHA_SCALE if z.rank == Zombie.RANK_BOSS or z.data.mass >= ALPHA_MASS else (HEAVY_SCALE if z.data.heavy else 1.0)
 	var point := chest - Vector3(dir.x, 0.0, dir.z).normalized() * z.data.capsule_radius * z.data.body_scale
 	biting = true
-	controller.melee_hit(data, z, point, dir, SAW_DPS * TICK * scale, BITE_PUSH if fresh else HOLD_PUSH)
+	if fresh and scale >= 1.0:
+		z.interrupt()
+	controller.melee_hit(data, z, point, dir, SAW_DPS * TICK * scale, HOLD_PUSH)
 	WeaponFx.burst(_level(), point, -dir, SLIME_COLORS, 4, 3.0, 0.3, 0.04, 80.0)
 	controller.player.add_shake(0.07)
 	if fresh or _bite_sound <= 0.0:
@@ -221,6 +222,8 @@ func _bite(z: Zombie, chest: Vector3, dir: Vector3) -> void:
 
 func _age_bites(delta: float) -> void:
 	_bite_sound -= delta
+	if _bitten.is_empty():
+		return
 	for key in _bitten.keys():
 		_bitten[key] = float(_bitten[key]) + delta
 		if float(_bitten[key]) > BITE_MEMORY:

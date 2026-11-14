@@ -4,6 +4,8 @@ extends RefCounted
 ##   chain     the 22 teeth run round the bar (the path built by
 ##             art/blender/build_weapons_ripsaw.py: CHAIN_* below), wrapping
 ##             round inside the receiver; the nose sprocket turns with them
+##   lunge     revving swings the bar out in front (lifted, turned in and
+##             canted) so the saw is pressed into what is ahead
 ##   shake     the whole weapon buzzes with the rev and judders while biting
 ##   gauge     the needle swings up with the rev and flutters
 ##   slime     each canister holds a quarter of the saw's fuel and drains in
@@ -22,6 +24,10 @@ const SPROCKET_R := 0.043
 ## Model-space buzz of the weapon at full rev, and the extra judder while biting.
 const BUZZ := 0.0016
 const JUDDER := 0.0045
+## The sawing pose (model-space offset and degrees) and how fast it is taken (1/s).
+const LUNGE_POS := Vector3(-0.05, 0.06, -0.07)
+const LUNGE_ROT := Vector3(4.0, 16.0, -16.0)
+const LUNGE_RATE := 9.0
 const CANISTERS := 4
 const BUBBLES_PER := 2
 ## Height of the slime in a full canister (model space).
@@ -58,6 +64,7 @@ var _pump := 10.0
 var _levels: PackedFloat32Array = [1.0, 1.0, 1.0, 1.0]
 var _bubble_phase: PackedFloat32Array = []
 var _needle := 0.0
+var _lunge := 0.0
 
 
 func setup(v: WeaponView) -> void:
@@ -117,6 +124,7 @@ func update(v: WeaponView, delta: float) -> void:
 			fuel = 1.0
 	else:
 		_update_pump(v, delta)
+		_lunge = lerpf(_lunge, 1.0 if rev > 0.05 else 0.0, 1.0 - exp(-LUNGE_RATE * delta))
 		_shake(v, rev, biting)
 	_update_slime(fuel, rev, delta)
 
@@ -159,7 +167,8 @@ func _place_chain(v: WeaponView) -> void:
 
 # --- body ----------------------------------------------------------------------
 
-## The weapon buzzes with the engine (fast sines: the same at any frame rate).
+## The sawing pose, and the weapon buzzing with the engine (fast sines: the
+## same at any frame rate).
 func _shake(v: WeaponView, rev: float, biting: bool) -> void:
 	var root := v.part("Root")
 	if root == null:
@@ -168,7 +177,8 @@ func _shake(v: WeaponView, rev: float, biting: bool) -> void:
 	var k := rev * BUZZ + (JUDDER if biting else 0.0)
 	var jitter := Vector3(sin(_time * 83.0) * k * 0.6, sin(_time * 97.0 + 1.3) * k, sin(_time * 71.0 + 0.4) * k * 0.4)
 	var roll := sin(_time * 61.0) * k * 2.5
-	root.transform = Transform3D(rest.basis * Basis(Vector3.BACK, roll), rest.origin + jitter)
+	var turn := Basis.from_euler(LUNGE_ROT * (PI / 180.0) * _lunge)
+	root.transform = Transform3D(rest.basis * turn * Basis(Vector3.BACK, roll), rest.origin + LUNGE_POS * _lunge + jitter)
 
 
 func _update_needle(v: WeaponView, rev: float, delta: float) -> void:

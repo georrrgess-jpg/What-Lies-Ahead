@@ -503,6 +503,7 @@ func _pause_test() -> void:
 
 func _do_break(delta: float) -> void:
 	_release("fire")
+	_release(WeaponController.MELEE_ACTION)
 	if mode == Mode.DEFEAT:
 		_stop_moving()
 		_tap("start_wave")
@@ -575,6 +576,7 @@ func _do_fight(delta: float) -> void:
 	if target == null:
 		_release("fire")
 		_release("aim")
+		_release(WeaponController.MELEE_ACTION)
 		return
 
 	# Aim with a slowly wandering error, like a human hand.
@@ -615,6 +617,10 @@ func _do_fight(delta: float) -> void:
 				_release("fire")
 	else:
 		_release("fire")
+	# A weapon with a melee (the Ripsaw's saw) uses it on whatever reaches the player.
+	var flat := Vector2(target.global_position.x - _player.global_position.x, target.global_position.z - _player.global_position.z)
+	var reach := w.mode.melee_reach() if w.mode else 0.0
+	_set_held(WeaponController.MELEE_ACTION, reach > 0.0 and flat.length() - target.data.capsule_radius * target.data.body_scale < reach)
 	if w.magazine() == 0 and w.reserve() > 0 and not w.is_reloading() and not w.current.uses_heat():
 		_tap("reload")
 	if switch_on_reload and w.is_reloading() and w.reload_progress() < 0.5:
