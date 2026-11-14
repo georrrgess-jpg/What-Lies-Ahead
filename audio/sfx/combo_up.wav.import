@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/combo_up.wav-3827fa7b338145128a4cd80145cd5332
 
 force/8_bit=false
 force/mono=false
-force/max_rate=true
-force/max_rate_hz=22050
+force/max_rate=false
+force/max_rate_hz=44100
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

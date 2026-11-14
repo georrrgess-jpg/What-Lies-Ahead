@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/frost_stone_normal.png-b9c6ca28a52a80532cac4f
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0

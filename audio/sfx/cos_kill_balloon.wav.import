@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/cos_kill_balloon.wav-9ca27d85f818f7c17d011b1f
 
 force/8_bit=false
 force/mono=false
-force/max_rate=true
-force/max_rate_hz=22050
+force/max_rate=false
+force/max_rate_hz=44100
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

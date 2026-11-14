@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/sky_deck_normal.png-2170071b8608faea67a1e051b
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0

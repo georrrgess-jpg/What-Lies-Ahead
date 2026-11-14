@@ -29,16 +29,16 @@ from weapon_kit import GAP, PALM_THICK  # noqa: E402
 
 FUSE_SEGMENTS = 8
 STACK_RINGS = 4
-## Share of faces the hidden glove shapes keep (each weapon ships both arms
-## with every GLOVE_KITS shape; thinning them keeps a sidearm near 0.5 MiB).
-KIT_DETAIL = 0.55
+## Share of faces the hidden glove shapes keep. 1.0 = full detail, like every
+## other weapon (builds ship as GitHub Releases, so there is no size budget).
+KIT_DETAIL = 1.0
 
 
 def lean_arm(parts, ratio=KIT_DETAIL):
     """Thins the glove-shape parts of an arm (weapon_kit hand()) with a
     collapse decimation, applied when finish() merges them."""
     for p in parts:
-        if p.get("glove_kit"):
+        if p.get("glove_kit") and ratio < 1.0:
             mod = p.modifiers.new("Lean", "DECIMATE")
             mod.ratio = ratio
     return parts
