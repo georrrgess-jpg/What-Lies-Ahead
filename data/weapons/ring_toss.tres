@@ -1,0 +1,77 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/ring_toss.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/ring_toss_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/ring_toss_view.gd" id="5"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 26
+
+[resource]
+script = ExtResource("1")
+id = &"ring_toss"
+sort_order = 98
+category = "Hoop Launcher"
+slot_class = "secondary"
+display_name = "Ring Toss"
+role = "Throws a glowing hoop that ricochets on to three more zombies (or glances off walls) and flies back to the gun. Two body hits drop a tourist; land a headshot for a Ringer: double damage, and the hoop comes home loaded."
+unlock = SubResource("unlock")
+magazine_size = 6
+reserve_start = 36
+reserve_max = 60
+reload_time = 1.9
+emergency_recharge_interval = 1.2
+automatic = false
+fire_interval = 0.46
+damage = 75.0
+pellets = 1
+spread_degrees = 0.2
+spread_bloom = 0.3
+spread_bloom_max = 1.2
+spread_recovery = 4.0
+max_range = 32.0
+falloff_start = 32.0
+falloff_end = 40.0
+falloff_min_scale = 1.0
+headshot_multiplier = 2.0
+knockback = 2.2
+ads_fov_scale = 0.8
+ads_time = 0.15
+ads_spread_scale = 0.3
+ads_depth = 0.08
+first_shot_accurate = true
+reticle_style = "chevron"
+recoil_kick = 1.0
+recoil_yaw = 0.3
+view_kick = 0.05
+shake = 0.1
+tracer_color = Color(1, 0.4, 0.82, 1)
+tracer_width = 0.05
+viewmodel = ExtResource("3")
+view_position = Vector3(0.22, -0.21, -0.56)
+view_rotation_degrees = Vector3(0, 0, -2.5)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"gn2_ring_fire"
+reload_sound = &"gn2_ring_reload"
+empty_sound = &"empty_click"
+equip_sound = &"gn2_ring_equip"
+fire_pitch_variance = 0.04
+move_speed_scale = 1.0
+equip_time = 0.28
+projectile_speed = 30.0
+projectile_bounces = 2
+projectile_size = 0.2
+bounce_sound = &"gn2_ring_bounce"
+ricochet_count = 3
+ricochet_range = 9.0
+ricochet_falloff = 0.8
+ringer_refund = true
+ricochet_sound = &"gn2_ring_ricochet"
+catch_sound = &"gn2_ring_catch"
+tracer_style = &"none"
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

@@ -12,6 +12,7 @@ extends Node
 ##                      full charge pierces)
 ##   beam               continuous damage ticks while held, drawn as a beam
 ##   projectile         launches WeaponProjectile (gravity, bounces, splash)
+##   ricochet           throws a RingShot that bounces between zombies and returns
 ## and on top of any of them: pierce, chain lightning, seeking, status
 ## effects (chill/freeze, shock) and heat (a magazine that cools on its own).
 ##
@@ -551,6 +552,9 @@ func _fire_shot(scale: float, power: float) -> void:
 	var hits := {}
 	for i in data.pellets:
 		var dir := _spread_dir(aim, spread)
+		if data.ricochet_count > 0:
+			RingShot.launch(_level(), muzzle, dir * data.projectile_speed, data, self)
+			continue
 		if data.projectile_speed > 0.0:
 			WeaponProjectile.launch(_level(), muzzle, launch_velocity(dir, data), data, self)
 			continue
@@ -767,6 +771,26 @@ func projectile_detonated(data: WeaponData, at: Vector3, direct: Zombie, dir: Ve
 		away = away.normalized() if away.length() > 0.05 else dir
 		_record(hits, z, _facing_point(z, at), away, data.damage * lerpf(data.splash_edge_scale, 1.0, k), data.splash_push * (0.4 + 0.6 * k), false)
 	_confirm(_apply_hits(hits, data))
+
+
+## A thrown ring (RingShot) struck `z` for `dmg`: dealt like any shot, with
+## statuses and hit confirms. Returns true if it was the finishing blow.
+func ring_hit(data: WeaponData, z: Zombie, point: Vector3, dir: Vector3, dmg: float, head: bool) -> bool:
+	var hits := {}
+	_record(hits, z, point, dir, dmg, data.knockback, head)
+	var result := _apply_hits(hits, data)
+	_confirm(result)
+	return result[1]
+
+
+## A ring came home loaded (a ringer): its round goes back in the magazine.
+func return_round(data: WeaponData) -> void:
+	var state: Dictionary = _ammo.get(data.id, {})
+	if state.is_empty() or int(state["mag"]) >= data.magazine_size:
+		return
+	state["mag"] = int(state["mag"]) + 1
+	if data == current:
+		_emit_ammo()
 
 
 ## Hit-confirm feedback: reticle marker plus non-positional sounds, so

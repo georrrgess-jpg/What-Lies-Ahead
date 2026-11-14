@@ -109,6 +109,7 @@ var _holo_mats := {}                               # part name -> ShaderMaterial
 var _rest := {}            # node -> rest Transform3D, for reload animations
 var _pending: WeaponData   # weapon to show once the old one is lowered
 var _reload_player: Object # the running custom reload (WeaponData.reload_script)
+var _view_driver: Object   # the weapon's own part motion (WeaponData.view_script)
 var _lowering := false
 var _time := 0.0
 ## The fitted sight, and where the eye sits in model space when aiming down it.
@@ -216,6 +217,9 @@ func _build_model(weapon: WeaponData) -> void:
 	_build_flash()
 	WeaponCosmetics.apply(model, weapon, Cosmetics.weapon_loadout(weapon.id))
 	_setup_reload_materials()
+	_view_driver = weapon.view_script.new() if weapon.view_script else null
+	if _view_driver:
+		_view_driver.setup(self)
 	_fit_sight()
 	_raise = 1.0
 	_kick_goal = Vector2.ZERO
@@ -361,6 +365,8 @@ func muzzle_position() -> Vector3:
 func on_fired(weapon: WeaponData) -> void:
 	_kick_goal.x = minf(_kick_goal.x + weapon.view_kick, weapon.view_kick * 2.2)
 	_kick_goal.y = minf(_kick_goal.y + weapon.recoil_kick * 1.6, 14.0)
+	if _view_driver and weapon == data:
+		_view_driver.fired(self)
 	if weapon.beam:
 		return
 	_flash_time = 0.05
@@ -387,6 +393,8 @@ func _process(delta: float) -> void:
 	else:
 		_raise = move_toward(_raise, 0.0, delta / maxf(0.05, data.equip_time))
 	_update_kick(delta)
+	if _view_driver:
+		_view_driver.update(self, delta)
 	var ease_raise := _raise * _raise
 	# Aim down sights: square the weapon up and bring its sight line onto the
 	# eye. Motion and kick are damped so the sight picture holds.
@@ -715,6 +723,34 @@ func hide_part(t: float, d: float, part: String) -> void:
 
 func has_part(part: String) -> bool:
 	return _rest.has(part)
+
+
+## A registered part's node (null if the model has none).
+func part(part_name: String) -> Node3D:
+	return _part(part_name)
+
+
+## A registered part's rest transform (in its parent's space).
+func rest_transform(part_name: String) -> Transform3D:
+	return _rest[part_name]["transform"] if _rest.has(part_name) else Transform3D.IDENTITY
+
+
+## True while a reload animation is playing (view scripts leave the parts to it).
+func is_reloading() -> bool:
+	return _reload_tween != null and _reload_tween.is_valid() and _reload_tween.is_running()
+
+
+## A moment of the weapon's own (a thrown ring caught...), for its view_script.
+func weapon_event(weapon: WeaponData, event_name: StringName) -> void:
+	if _view_driver and weapon == data:
+		_view_driver.event(self, event_name)
+
+
+## A pinch of sparks (or confetti) at `origin` in the model's space, now
+## rather than on the reload timeline (view scripts).
+func spark_burst(origin: Vector3, direction: Vector3, colors: Array, amount: int, speed: float, life: float, size: float) -> void:
+	if model:
+		FxBurst.spawn(model, origin, direction, colors, amount, speed, life, size, 70.0, Vector3(0, -1.5, 0), _burst_mesh())
 
 
 ## Register extra animated parts (beyond ANIMATED_PARTS) for a custom model.

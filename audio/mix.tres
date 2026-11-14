@@ -191,7 +191,12 @@ sound_category = Dictionary[StringName, StringName]({
 &"sky_gale_gust": &"cue",
 &"sky_harbor_loop": &"music",
 &"sky_harbor_final": &"music",
-&"sky_ambience": &"ambience"
+&"sky_ambience": &"ambience",
+&"gn2_": &"handling",
+&"gn2_sparkler_fire": &"weapon",
+&"gn2_ring_fire": &"weapon",
+&"gn2_ring_ricochet": &"impact",
+&"gn2_ring_bounce": &"impact"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,

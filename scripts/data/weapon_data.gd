@@ -93,6 +93,11 @@ extends Resource
 ## Optional custom reload: a script with `func play(view: WeaponView, duration: float)`
 ## (see WeaponView's public reload API). Overrides reload_style when set.
 @export var reload_script: Script
+## Optional viewmodel motion outside reloads: a script with `func setup(view)`,
+## `func fired(view)`, `func update(view, delta)` and `func event(view, name)`
+## (see WeaponView.weapon_event) that moves the model's own parts: a wheel
+## that spins with the trigger, a fuse that burns down with the magazine.
+@export var view_script: Script
 @export var fire_sound: StringName
 @export var reload_sound: StringName
 @export var empty_sound: StringName
@@ -184,7 +189,9 @@ extends Resource
 @export var chain_sound: StringName
 
 @export_group("Status")
-## Effect applied on hit: "" (none), "chill" (slows, then freezes) or "shock" (brief slow).
+## Effect applied on hit: "" (none), "chill" (slows, then freezes), "shock"
+## (brief slow) or "fizz" (burning sparks: each hit adds a stack that burns
+## status_amount damage a second, for status_duration after the last hit; FizzBurn).
 @export var status_effect: StringName
 ## Status build-up per hit (chill: 1.0 = frozen).
 @export var status_amount := 0.0
@@ -203,8 +210,23 @@ extends Resource
 @export var regen_rate := 0.0
 @export var regen_delay := 0.4
 
+@export_group("Ricochet")
+## > 0: shots are thrown rings (RingShot, flying at projectile_speed) that
+## ricochet on to up to this many more zombies, glance off scenery
+## projectile_bounces times and then fly back to the gun.
+@export var ricochet_count := 0
+## Farthest jump (m) from one struck zombie to the next.
+@export var ricochet_range := 9.0
+## Damage multiplier for each zombie the ring has already struck.
+@export var ricochet_falloff := 0.8
+## A headshot ("ringer") sends the ring home loaded: it goes back in the magazine.
+@export var ringer_refund := false
+@export var ricochet_sound: StringName
+@export var catch_sound: StringName
+
 @export_group("Effects")
-## Shot streak: "bolt" (default tracer), "rail", "lightning", "beam" or "none".
+## Shot streak: "bolt" (default tracer), "rail", "lightning", "beam", "spark"
+## (fizzing firework sparks; an equipped tracer cosmetic draws instead) or "none".
 @export var tracer_style: StringName = &"bolt"
 ## Impact on scenery: "spark", "frost", "arc" or "rail".
 @export var impact_style: StringName = &"spark"
