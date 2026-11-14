@@ -29,7 +29,8 @@ from mathutils.bvhtree import BVHTree  # noqa: E402
 from weapon_kit import CHARM_STANDOFF, RAIL_FLAT  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-WEAPONS = ["pulse_pistol", "ion_carbine", "scatter_blaster", "comet_cannon", "arc_coil", "bumper_lobber", "cryo_beam", "rail_lancer"]
+WEAPONS = ["pulse_pistol", "ion_carbine", "scatter_blaster", "comet_cannon", "arc_coil", "bumper_lobber", "cryo_beam", "rail_lancer",
+           "sparkler", "ring_toss"]
 REQUIRED = ["Shell", "ArmL", "ArmR", "Decal", "IronSightRear", "IronSightFront",
             "Muzzle", "SightPoint", "SightMount", "EjectPoint", "VentPoint", "CharmPoint", "ElbowL", "ElbowR"]
 # The energy cell and its hologram copy (the Scatter Blaster loads two capsules instead).
@@ -49,6 +50,9 @@ JOINTS = {
     "bumper_lobber": [("Lid", "Shell"), ("Crank", "Shell"), ("Cell", "Shell")],
     "cryo_beam": [("Panel", "Shell"), ("Fins", "Shell"), ("Needle", "Shell"), ("Cell", "Shell"), ("Cell", "Panel")],
     "rail_lancer": [("Rails", "Shell"), ("Cell", "Shell")],
+    "sparkler": [("Cell", "Shell"), ("Pinwheel", "Shell"), ("Flint", "Shell")] + [(f"FuseSeg{i}", p) for i in range(8) for p in ("Cell", "Shell")],
+    "ring_toss": [("Ring", "Shell"), ("Ring", "Hooks"), ("Ring", "Flipper"), ("Flipper", "Shell"), ("Hooks", "Shell"), ("Cell", "Shell")]
+                 + [(f"Stack{i}", p) for i in range(4) for p in ("Cell", "Shell")],
 }
 
 

@@ -51,15 +51,20 @@ func play(v: WeaponView, d: float) -> void:
 	v.glow_ramp(0.95, 1.0, d, 3.0, 1.0)
 
 
+## The new stack, less its top hoop (it rises into the cradle; the spring
+## pushes the rest up once the toss lands).
 func _stack_full(v: WeaponView) -> void:
 	for i in STACK:
 		var s := v.part("Stack%d" % i)
 		if s:
-			s.visible = true
+			s.visible = i > 0
 
 
 func _landed(v: WeaponView) -> void:
 	Sfx.play(&"gn2_ring_catch", -3.0)
+	var top := v.part("Stack0")
+	if top:
+		top.visible = true
 	var muzzle := v.model.find_child("VentPoint", true, false) as Node3D if v.model else null
 	if muzzle:
 		v.spark_burst(v.model.global_transform.affine_inverse() * muzzle.global_position, Vector3.UP, PINK, 12, 0.9, 0.3, 0.009)

@@ -81,10 +81,10 @@ def build_sparkler():
     rail_top = 0.112
     z_line = rail_top + SIGHT_HEIGHT
     bore_z = 0.058
-    can_c = (-0.07, 0.1, 0.063)          # fuse canister: centre (x, y, z), along the barrel
+    can_c = (-0.072, 0.1, 0.07)           # fuse canister: centre (x, y, z), along the barrel
     can_r = 0.019
     can_len = 0.13
-    wheel_c = (-0.05, 0.205, 0.063)      # pinwheel on the left of the nose
+    wheel_c = (-0.05, 0.205, 0.066)      # pinwheel on the left of the nose
     flint_c = (0, -0.064, 0.072)         # lighter wheel at the back
 
     shell = grip_parts + [
@@ -238,10 +238,10 @@ def build_ring_toss():
     grip_parts, G = grip("", grip_loc, M, tilt=-17, size=(0.072, 0.094, 0.185), body_bottom=-0.028)
     rail_top = 0.124
     z_line = rail_top + SIGHT_HEIGHT
-    mag_c = (0, 0.298, 0.0)               # magazine cage axis (vertical) and cradle centre
-    cradle_z = 0.088
+    mag_c = (0, 0.298, 0.03)              # magazine cage axis (vertical) and cradle centre
+    cradle_z = 0.118
     hoop_r = 0.04
-    stack_top = 0.052
+    stack_top = cradle_z - 0.036
     pitch = 0.019
 
     shell = grip_parts + [
@@ -259,18 +259,21 @@ def build_ring_toss():
         torus("CradleLip", hoop_r + 0.012, 0.004, (0, mag_c[1], cradle_z - 0.006), m=M["pink"], major_segs=28, minor_segs=6),
         cyl("CradlePeg", 0.009, 0.016, (0, mag_c[1], cradle_z - 0.002), segs=12, bevel=0.003, m=M["steel"]),
         # Magazine cage below the cradle: four posts and two bands round the stack.
-        cyl("CageFoot", hoop_r + 0.012, 0.012, (0, mag_c[1], -0.04), segs=28, bevel=0.004, m=M["trim"]),
-        torus("CageBand", hoop_r + 0.013, 0.0035, (0, mag_c[1], 0.012), m=M["steel"], major_segs=28, minor_segs=6),
+        cyl("CageFoot", hoop_r + 0.012, 0.012, (0, mag_c[1], -0.012), segs=28, bevel=0.004, m=M["trim"]),
+        torus("CageBand", hoop_r + 0.013, 0.0035, (0, mag_c[1], 0.044), m=M["steel"], major_segs=28, minor_segs=6),
+        # Bridge from the frame to the cage foot, and the neck up to the cradle.
+        box("Bridge", (0.036, 0.11, 0.02), (0, 0.205, -0.012), bevel=0.007, m=M["trim"]),
+        box("NeckPost", (0.034, 0.03, 0.05), (0, 0.24, 0.088), bevel=0.008, m=M["trim"]),
     ]
-    for i, a in enumerate((45, 135, 225, 315)):
+    for i, a in enumerate((60, 120, 240, 300)):
         r = math.radians(a)
         px, py = math.cos(r) * (hoop_r + 0.012), mag_c[1] + math.sin(r) * (hoop_r + 0.012)
-        shell.append(cyl(f"CagePost{i}", 0.0045, 0.11, (px, py, 0.023), segs=8, bevel=0.0015, m=M["dark"]))
+        shell.append(cyl(f"CagePost{i}", 0.0045, 0.11, (px, py, 0.053), segs=8, bevel=0.0015, m=M["dark"]))
     for i in range(3):
         shell.append(box(f"Pip{i}", (0.011, 0.008, 0.011), (-0.015 + i * 0.015, -0.079, 0.06), bevel=0.002, m=M["cell"]))
         shell.append(box(f"SideSlit{i}", (0.004, 0.024, 0.012), (-0.0355, 0.06 + i * 0.04, 0.072), rot=rad(16, 0, 0), bevel=0.0, m=M["cell"]))
     shell += top_rail("TopRail", 0.02, 0.19, rail_top, M, width=0.032)
-    shell += bolts("Pin", [(-0.0355, -0.04, 0.03), (0.0355, -0.04, 0.03), (-0.0355, 0.16, 0.0), (0.0355, 0.16, 0.0)], M["steel"], radius=0.006, height=0.007)
+    shell += bolts("Pin", [(-0.0355, -0.04, 0.03), (0.0355, -0.04, 0.03), (0.0355, 0.16, 0.0)], M["steel"], radius=0.006, height=0.007)
     lug, charm_point = charm_lug(-0.035, 0.19, 0.03, M)
     shell += lug
     sight_rear, sight_front = sights_ghost_ring(0.0, -0.03, 0.212, 0.106, 0.106, z_line, M, radius=0.015)
@@ -293,8 +296,8 @@ def build_ring_toss():
         hooks.append(sphere(f"HookTip{i}", 0.0045, (side * (hoop_r + 0.003), mag_c[1] + 0.034, cradle_z + 0.014), m=M["cell"], segs=8, rings=5))
 
     # The ring stack in the cage (each ring its own node, shown by the magazine count).
-    spine = [cyl("StackSpine", 0.006, 0.1, (0, mag_c[1], 0.0), segs=8, bevel=0.002, m=M["steel"]),
-             cyl("StackFloor", hoop_r + 0.004, 0.008, (0, mag_c[1], -0.03), segs=24, bevel=0.003, m=M["steel"])]
+    spine = [cyl("StackSpine", 0.006, 0.1, (0, mag_c[1], 0.035), segs=8, bevel=0.002, m=M["steel"]),
+             cyl("StackFloor", hoop_r + 0.004, 0.008, (0, mag_c[1], 0.002), segs=24, bevel=0.003, m=M["steel"])]
     stack = {}
     for k in range(STACK_RINGS):
         z = stack_top - k * pitch
@@ -307,7 +310,7 @@ def build_ring_toss():
     arm_l, elbow_l = cup_hand(G, M, (-0.55, -0.32, -0.32))
     lean_arm(arm_r)
     lean_arm(arm_l)
-    stack_c = (0, mag_c[1], 0.0)
+    stack_c = (0, mag_c[1], 0.035)
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "IronSightRear": (sight_rear, (0, -0.03, 0.106), None),
@@ -327,7 +330,7 @@ def build_ring_toss():
         "Muzzle": ((0, mag_c[1] + hoop_r + 0.02, cradle_z + 0.004), None),
         "SightPoint": ((0, -0.03, z_line), None),
         "SightMount": ((0, 0.105, rail_top), None),
-        "EjectPoint": ((0, mag_c[1], -0.05), None),
+        "EjectPoint": ((0, mag_c[1], -0.025), None),
         "VentPoint": ((0, mag_c[1], cradle_z + 0.02), None),
         "CharmPoint": (charm_point, None),
         "ElbowR": (elbow_r, "ArmR"),
