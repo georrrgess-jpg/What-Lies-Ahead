@@ -15,6 +15,14 @@ func play(v: WeaponView, d: float) -> void:
 		v.register_part(part)
 	for i in STACK:
 		v.register_part("Stack%d" % i)
+	# Starting a reload resets every part: put back only the hoops still stacked.
+	var mag := v.data.magazine_size
+	if v.player and v.player.weapons:
+		mag = v.player.weapons.magazine()
+	for i in STACK:
+		var s := v.part("Stack%d" % i)
+		if s:
+			s.visible = i < mag - 1
 	v.track("Root", d, [[0.12, Vector3(-0.01, 0.03, 0.0), Vector3(6, 6, 22)], [0.66, Vector3(-0.01, 0.03, 0.0), Vector3(6, 6, 22)],
 		[0.74, Vector3(0.0, 0.0, 0.0), Vector3(-4, 0, 0)], [0.8, Vector3(0.0, 0.035, 0.0), Vector3(-12, 0, -4)],
 		[0.9, Vector3.ZERO, Vector3.ZERO]])

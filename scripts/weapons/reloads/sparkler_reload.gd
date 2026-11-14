@@ -42,9 +42,9 @@ func play(v: WeaponView, d: float) -> void:
 	v.glow_ramp(0.56, 0.6, d, 3.2, 0.3)
 	# The support hand slides off, drops out of view for a match and comes back up with it.
 	v.track("ArmL", d, [[0.06, Vector3(-0.03, -0.012, -0.085), Vector3.ZERO], [0.18, Vector3(-0.12, -0.32, 0.04), Vector3(0, 0, -12)],
-		[0.36, Vector3(-0.12, -0.32, 0.04), Vector3(0, 0, -12)], [0.5, Vector3(-0.16, -0.035, -0.045), Vector3(0, 0, -12)],
-		[0.56, Vector3(-0.15, -0.015, -0.055), Vector3(10, 0, 8)], [0.6, Vector3(-0.16, -0.035, -0.045), Vector3(0, 0, -12)],
-		[0.82, Vector3(-0.16, -0.035, -0.045), Vector3(0, 0, -12)], [0.87, Vector3(-0.15, -0.06, -0.03), Vector3(0, 0, -24)],
+		[0.36, Vector3(-0.12, -0.32, 0.04), Vector3(0, 0, -12)], [0.5, Vector3(-0.11, -0.01, -0.07), Vector3(0, 0, 32)],
+		[0.56, Vector3(-0.1, 0.01, -0.08), Vector3(12, 0, 44)], [0.6, Vector3(-0.11, -0.01, -0.07), Vector3(0, 0, 32)],
+		[0.82, Vector3(-0.11, -0.01, -0.07), Vector3(0, 0, 32)], [0.87, Vector3(-0.12, -0.05, -0.05), Vector3(0, 0, 14)],
 		[0.94, Vector3(-0.03, -0.012, -0.085), Vector3.ZERO], [1.0, Vector3.ZERO, Vector3.ZERO]])
 	v.at(0.3, d, func(): _show(v, "MatchHolo", true); _show(v, "MatchFlame", false))
 	# Flick: the match flares.

@@ -56,16 +56,16 @@ def match_parts(G, M):
     z = web(x_thumb, y) - 0.0165 - 0.0145 - 0.0025 - 0.0125
     base = fpt(fr, x_thumb - 0.004, y, z)
     up = Vector((-0.12, 0.3, 1.0)).normalized()
-    head = base + up * 0.075
+    head = base + up * 0.1
     wood = mat("MatchWood", "#e2b07a", rough=0.7)
     red = mat("MatchHead", "#e8304a", rough=0.5)
     flame_m = mat("Flame", "#ffb43a", rough=0.4, emit=3.0)
     core_m = mat("FlameCore", "#fff3c0", rough=0.4, emit=4.0)
-    stick = tube("MatchStick", [tuple(base - up * 0.012), tuple(head)], 0.0032, m=wood, segs=6)
-    knob = sphere("MatchKnob", 0.0058, tuple(head + up * 0.002), scale=(1, 1, 1.25), m=red, segs=10, rings=6)
-    tip = head + up * 0.016
-    flame = [sphere("FlameOuter", 0.009, tuple(tip + up * 0.004), scale=(1, 1, 1.9), m=flame_m, segs=10, rings=7),
-             sphere("FlameInner", 0.005, tuple(tip), scale=(1, 1, 1.6), m=core_m, segs=8, rings=5)]
+    stick = tube("MatchStick", [tuple(base - up * 0.012), tuple(head)], 0.0036, m=wood, segs=6)
+    knob = sphere("MatchKnob", 0.007, tuple(head + up * 0.002), scale=(1, 1, 1.25), m=red, segs=10, rings=6)
+    tip = head + up * 0.02
+    flame = [sphere("FlameOuter", 0.013, tuple(tip + up * 0.006), scale=(1, 1, 1.9), m=flame_m, segs=10, rings=7),
+             sphere("FlameInner", 0.0075, tuple(tip), scale=(1, 1, 1.6), m=core_m, segs=8, rings=5)]
     return [stick, knob], flame, tuple(tip), tuple(base)
 
 
