@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/whirligig.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/whirligig_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/whirligig_mode.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/views/whirligig_view.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 22
+
+[resource]
+script = ExtResource("1")
+id = &"whirligig"
+sort_order = 100
+category = "Minigun"
+display_name = "Whirligig"
+role = "Prize-wheel minigun. Hold fire and the wheel spins up for a moment, then it shreds crowds at 18 rounds a second, each round punching through a second zombie. Heavy: you slow down while it spins. The barrels heat up; ease off before they overheat and vent."
+unlock = SubResource("unlock")
+slot_class = "primary"
+magazine_size = 80
+reserve_start = 480
+reserve_max = 800
+reload_time = 2.4
+emergency_recharge_interval = 0.5
+automatic = true
+fire_interval = 0.055
+damage = 12.5
+pellets = 1
+spread_degrees = 1.4
+spread_bloom = 0.06
+spread_bloom_max = 1.6
+spread_recovery = 5.0
+max_range = 55.0
+falloff_start = 16.0
+falloff_end = 40.0
+falloff_min_scale = 0.55
+headshot_multiplier = 1.4
+knockback = 0.35
+ads_fov_scale = 0.85
+ads_time = 0.24
+ads_spread_scale = 0.55
+ads_depth = 0.12
+first_shot_accurate = false
+reticle_style = "bracket"
+recoil_kick = 0.32
+recoil_yaw = 0.22
+view_kick = 0.018
+shake = 0.06
+tracer_color = Color(1, 0.78, 0.25, 1)
+tracer_width = 0.03
+view_position = Vector3(0.27, -0.29, -0.64)
+view_rotation_degrees = Vector3(0, 0, -2.5)
+fire_sound = &"weap_whirl_fire"
+reload_sound = &"weap_whirl_reload"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.06
+move_speed_scale = 0.88
+equip_time = 0.48
+pierce = 1
+pierce_falloff = 0.6
+regen_rate = 22.0
+regen_delay = 0.5
+viewmodel = ExtResource("3")
+reload_script = ExtResource("4")
+view_script = ExtResource("6")
+mode_script = ExtResource("5")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

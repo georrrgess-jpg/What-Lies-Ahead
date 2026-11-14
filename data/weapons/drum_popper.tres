@@ -1,0 +1,75 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/drum_popper.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/drum_popper_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/drum_popper_mode.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/views/drum_popper_view.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 15
+
+[resource]
+script = ExtResource("1")
+id = &"drum_popper"
+sort_order = 90
+category = "Popper"
+display_name = "Gumball Drum Popper"
+role = "Semi-auto, drum-fed bouncy gumballs. Each round ricochets off walls and floors up to twice and bends toward a zombie on the way, so bank shots around corners land, and every ricochet adds 25% damage. Small, fast rounds with no splash: aim for the head."
+unlock = SubResource("unlock")
+slot_class = "primary"
+magazine_size = 24
+reserve_start = 120
+reserve_max = 192
+reload_time = 2.1
+emergency_recharge_interval = 1.2
+automatic = false
+fire_interval = 0.15
+damage = 36.0
+pellets = 1
+spread_degrees = 0.5
+spread_bloom = 0.3
+spread_bloom_max = 2.4
+spread_recovery = 7.0
+max_range = 60.0
+falloff_start = 25.0
+falloff_end = 55.0
+falloff_min_scale = 0.7
+headshot_multiplier = 1.7
+knockback = 0.9
+ads_fov_scale = 0.8
+ads_time = 0.17
+ads_spread_scale = 0.35
+ads_depth = 0.12
+first_shot_accurate = true
+reticle_style = "circle"
+recoil_kick = 1.3
+recoil_yaw = 0.25
+view_kick = 0.05
+shake = 0.12
+tracer_color = Color(1, 0.4, 0.72, 1)
+tracer_width = 0.04
+view_position = Vector3(0.25, -0.235, -0.66)
+view_rotation_degrees = Vector3(0, 0, -3)
+fire_sound = &"weap_popper_fire"
+reload_sound = &"weap_popper_reload"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.06
+move_speed_scale = 0.97
+equip_time = 0.36
+projectile_speed = 62.0
+projectile_bounces = 2
+projectile_bounciness = 0.85
+projectile_fuse = 1.1
+projectile_size = 0.05
+bounce_sound = &"weap_popper_bounce"
+explosion_sound = &"weap_popper_pop"
+tracer_style = &"none"
+viewmodel = ExtResource("3")
+reload_script = ExtResource("4")
+view_script = ExtResource("6")
+mode_script = ExtResource("5")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

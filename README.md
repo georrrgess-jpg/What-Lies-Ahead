@@ -147,6 +147,9 @@ fullscreen.
 | Bumper Lobber | Area damage | Player level 6 | Bouncing gumball bombs with splash; shows its landing ring when aiming |
 | Frostbite Cryo Beam | Lockdown | Player level 9 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
 | Rail Lancer | Anti-heavy | Player level 12 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
+| Gumball Drum Popper | Trick shots | Player level 15 | Semi-auto drum of bouncy gumballs: each ricochets up to twice (+25% per bounce) and bends toward a zombie, so bank shots round corners land; no splash |
+| Whirligig | Crowd shredder | Player level 22 | Prize-wheel minigun: spins up for 0.4 s, then 18 rounds a second that pass through a second zombie; slows you while it spins; overheats |
+| Riptide Harpoon | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
 
 `python3 tools/balance_report.py` prints each weapon's time-to-kill, sustained DPS and
 ammo economy from data. The latest balance pass (about 150 bot runs) evened the worlds
@@ -173,7 +176,9 @@ reticle lens, so the dot stays on target as the weapon sways; the reticle colour
 be set in Settings. Code: `scripts/weapons/sights/`; check every weapon × sight with
 `tools/ads_audit.gd`. Fire modes are data (`WeaponData` fields for burst, charge,
 beam, projectile and splash, pierce, chain, chill/shock and heat), implemented once in
-`scripts/player/weapon_controller.gd` and `scripts/weapons/`.
+`scripts/player/weapon_controller.gd` and `scripts/weapons/`. A weapon can add its own behaviour with a `WeaponMode` script
+(`WeaponData.mode_script`, `scripts/weapons/modes/`): the Whirligig's spin-up, the Drum
+Popper's ricochet rounds (`RicochetRound`) and the Riptide's reel (`HarpoonLine`).
 
 ## Progression, Sparks and the Shop
 
