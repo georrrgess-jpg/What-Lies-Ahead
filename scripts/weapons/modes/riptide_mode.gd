@@ -8,9 +8,9 @@ extends WeaponMode
 ## on the viewmodel move in scripts/weapons/views/riptide_view.gd.
 
 ## Pull on a 1-mass zombie at full charge (m/s of knockback toward the player).
-const REEL_PULL := 7.0
+const REEL_PULL := 6.5
 ## No pull inside MIN_GAP metres, full pull from MIN_GAP + PULL_RAMP on.
-const MIN_GAP := 3.5
+const MIN_GAP := 5.0
 const PULL_RAMP := 4.0
 const HEAVY_BONUS := 1.3
 const REEL_SOUND := &"weap_rip_reel"
