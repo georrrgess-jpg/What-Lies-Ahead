@@ -13,7 +13,7 @@ uniform float churn = 0.25;
 varying vec3 lp;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 }
 
 void fragment() {
@@ -46,4 +46,5 @@ void fragment() {
 		ROUGHNESS = 0.5;
 		EMISSION = col * (1.1 + flare) + hot_color * pow(fres, 2.0) * 0.3;
 	}
+	PRINT_LAYER
 }

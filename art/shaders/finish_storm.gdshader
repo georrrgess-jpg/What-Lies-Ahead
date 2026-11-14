@@ -14,7 +14,7 @@ varying vec3 lp;
 varying vec3 ln;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 	ln = NORMAL;
 }
 
@@ -56,4 +56,5 @@ void fragment() {
 	ROUGHNESS = is_trim ? 0.3 : 0.55;
 	EMISSION = base * 0.25 + bolt_color * cloud * flash * 0.9 + mix(bolt_color, vec3(1.0), 0.7) * b.x * 4.0 + bolt_color * b.y * 1.2
 		+ (is_trim ? fstudio(r, trim_color * 2.0) * (0.2 + flash * 0.5) : vec3(0.0));
+	PRINT_LAYER
 }

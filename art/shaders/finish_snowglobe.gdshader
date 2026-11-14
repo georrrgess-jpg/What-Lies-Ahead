@@ -14,7 +14,7 @@ uniform float fall = 0.035;
 varying vec3 lp;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 }
 
 // Snow in 3D cells of size `s` falling at `spd`: returns coverage.
@@ -51,4 +51,5 @@ void fragment() {
 		EMISSION = glass * 0.3 + vec3(0.9, 0.95, 1.0) * flake * 0.6 + glow_color * glow * 0.4
 			+ fstudio(r, vec3(0.5, 0.6, 0.8)) * (0.1 + 0.5 * pow(fres, 2.0));
 	}
+	PRINT_LAYER
 }

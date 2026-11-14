@@ -14,7 +14,7 @@ uniform float drift = 0.12;
 varying vec3 lp;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 }
 
 vec3 ironbow(float t) {
@@ -40,4 +40,5 @@ void fragment() {
 	METALLIC = 0.0;
 	ROUGHNESS = 0.6;
 	EMISSION = col * (is_trim ? 0.8 : 1.1);
+	PRINT_LAYER
 }

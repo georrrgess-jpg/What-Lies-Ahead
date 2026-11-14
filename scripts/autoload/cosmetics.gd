@@ -18,6 +18,9 @@ signal unlocked(item: CosmeticItem)
 signal equipped_changed(slot: StringName, weapon_id: StringName)
 ## The player bought `item` with Sparks.
 signal purchased(item: CosmeticItem)
+## Prize Prints changed: capsules, tokens, prints, favourites or what is worn
+## (PrizePrints, scripts/economy/prints/).
+signal prints_changed
 
 var _by_id := {}
 var _owned_at_run_start := {}
@@ -27,6 +30,7 @@ func _ready() -> void:
 	Events.run_started.connect(func(_director): _owned_at_run_start = _owned_snapshot())
 	# A save from before the Sparks economy keeps everything it owned.
 	LegacyGrant.apply_if_pending()
+	PrizePrints.connect_hooks()
 	# Items already owned when the game starts are not news: only unlocks
 	# earned from here on are reported by check_new_unlocks() (HUD toasts).
 	check_new_unlocks()
@@ -168,10 +172,13 @@ func equipped_or_default(slot: StringName, weapon_id: StringName = &"") -> Cosme
 
 ## Weapon cosmetics in the shape WeaponCosmetics.apply expects. "arms" is the
 ## first-person arm look: the gloves skin, else the operator's arm scheme.
+## A Prize Print worn on the weapon is its finish ("print": the print, or {}).
 func weapon_loadout(weapon_id: StringName) -> Dictionary:
 	var arms := equipped(&"gloves")
+	var worn_print := PrizePrints.equipped(weapon_id)
 	return {
-		"finish": equipped(&"weapon_finish", weapon_id),
+		"finish": PrizePrints.finish_of(worn_print) if not worn_print.is_empty() else equipped(&"weapon_finish", weapon_id),
+		"print": worn_print,
 		"cell": equipped(&"weapon_cell", weapon_id),
 		"decal": equipped(&"weapon_decal", weapon_id),
 		"charm": equipped(&"weapon_charm", weapon_id),
