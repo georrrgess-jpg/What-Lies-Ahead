@@ -72,6 +72,14 @@ func _wait(frames: int) -> void:
 		await get_tree().process_frame
 
 
+## The menu's live world loads in the background: wait (up to 30 s) until it is up.
+func _wait_backdrop(menu: Node) -> void:
+	var backdrop = menu.get("_backdrop")
+	var since := Time.get_ticks_msec()
+	while backdrop and not backdrop.is_settled() and Time.get_ticks_msec() - since < 30000:
+		await get_tree().process_frame
+
+
 ## Presses a sequence of actions or keys on the menu, one at a time, and
 ## prints where each left the page and the keyboard focus.
 func _press_keys(menu: Node, keys: String) -> void:
@@ -109,6 +117,7 @@ func _run() -> void:
 		await _wait(10)
 		var intro := IntroOverlay.new()
 		var menu := get_tree().current_scene
+		await _wait_backdrop(menu)
 		# As on a real start: the home page and top bar wait for the intro.
 		menu._pages["title"].visible = false
 		menu._top_bar.modulate.a = 0.0
@@ -134,6 +143,7 @@ func _run() -> void:
 	if not scene_kind in ["level", "results", "defeat", "pause", "kiosk"]:
 		await _wait(10)
 		var menu := get_tree().current_scene
+		await _wait_backdrop(menu)
 		if scene_kind == "kit":
 			# The UI kit's gallery: every component on one screen.
 			menu.add_child(KitGallery.new())

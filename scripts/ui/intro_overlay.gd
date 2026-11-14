@@ -16,11 +16,15 @@ extends Control
 ## frame never waits on a load.
 
 signal finished
+## The intro reached its held title ("PRESS ANY KEY"): the screen is quiet.
+signal holding
 
 const HOLD_AT := 7.2
 const MONTAGE_AT := 1.4
 const LOGO_AT := 4.6
 const CUT := 0.8
+## Longest the montage waits for its models before taking them as they are.
+const MONTAGE_WAIT := 0.6
 const ZOMBIE_SCENE := "res://scenes/enemies/zombie.tscn"
 const SPARK_TEX := &"icon_spark"
 ## The montage's featured items (by id).
@@ -180,9 +184,16 @@ func _start_loads() -> void:
 	]
 
 
-func _ensure_montage() -> void:
+## Builds the montage's stage once its models have loaded. False while they
+## are still loading (the spark holds the screen a moment longer); past
+## MONTAGE_WAIT it stops waiting and takes them as they are.
+func _ensure_montage() -> bool:
 	if _viewport:
-		return
+		return true
+	if _time < MONTAGE_AT + MONTAGE_WAIT:
+		for path in _preload:
+			if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+				return false
 	for path in _preload:
 		if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 			ResourceLoader.load_threaded_get(path)
@@ -194,6 +205,7 @@ func _ensure_montage() -> void:
 	_camera = Camera3D.new()
 	_viewport.add_child(_camera)
 	_camera.make_current()
+	return true
 
 
 func _cut_to(i: int) -> void:
@@ -309,7 +321,10 @@ func _skip_to_end() -> void:
 
 
 func _reach_hold() -> void:
+	if _at_end:
+		return
 	_at_end = true
+	holding.emit()
 	_score.stop()
 	_resume_menu_music()
 
@@ -344,7 +359,8 @@ func _process(delta: float) -> void:
 
 func _run_timeline() -> void:
 	if _time >= MONTAGE_AT and _time < LOGO_AT:
-		_ensure_montage()
+		if not _ensure_montage():
+			return
 		_view.visible = true
 		var i := clampi(int((_time - MONTAGE_AT) / CUT), 0, _shots.size() - 1)
 		if i != _shot:

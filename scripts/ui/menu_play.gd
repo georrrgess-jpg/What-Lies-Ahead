@@ -11,6 +11,12 @@ signal world_changed(level: LevelData)
 const ENEMY_CHIPS := 7
 ## Size of the level's key art on the details board.
 const ART_SIZE := Vector2(448, 252)
+## The row of position pips sits this far above the cards (in the gap
+## between the boards and the carousel).
+const PIPS_ABOVE := 8.0
+## Cards further than this from the selected one are faded out, so the
+## carousel shows the world, its neighbours and nothing under the arrows.
+const CARDS_AROUND := 1
 
 var selected_level: LevelData
 ## Starter weapon for dev runs (the saved Loadout is used otherwise).
@@ -37,6 +43,19 @@ func _init() -> void:
 	if GameData.weapon(selected_weapon) == null:
 		selected_weapon = GameData.default_weapon_id()
 	world_index = clampi(int(Profile.section("menu").get("world", 0)), 0, maxi(0, GameData.worlds().size() - 1))
+
+
+## The level the Play page opens on: the world browsed last, its first
+## unlocked level (the shell shows it behind the menu before the page exists).
+static func remembered_level() -> LevelData:
+	var worlds := GameData.worlds()
+	if worlds.is_empty():
+		return null
+	var world := worlds[clampi(int(Profile.section("menu").get("world", 0)), 0, worlds.size() - 1)]
+	for l in world.levels:
+		if GameData.is_level_unlocked(l):
+			return l
+	return world.levels[0] if not world.levels.is_empty() else null
 
 
 func uses_shell_header() -> bool:
@@ -198,6 +217,7 @@ func _build_carousel() -> Control:
 	_carousel = Control.new()
 	_carousel.custom_minimum_size.y = WorldCard.SIZE.y + 14
 	_carousel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_carousel.draw.connect(_draw_pips)
 	for i in GameData.worlds().size():
 		var card := WorldCard.new()
 		card.world = GameData.worlds()[i]
@@ -322,7 +342,7 @@ func _fill_stats(world: WorldData, level: LevelData, unlocked: bool) -> void:
 	var waves := level.wave_set.waves.size() if level.wave_set else 0
 	_stats.add_child(_stat_tile("WAVES", str(waves), world.accent_color))
 	_stats.add_child(_stat_tile("BEST SCORE", ScorePanel._fmt(Profile.best_score(level.id)), world.accent_color))
-	_stats.add_child(_stat_tile("BEST WAVE", "%d / %d" % [Profile.best_wave(level.id), waves], world.accent_color))
+	_stats.add_child(_stat_tile("BEST WAVE", "%d / %d" % [mini(Profile.best_wave(level.id), waves), waves], world.accent_color))
 	var status := "CLEARED" if Profile.is_level_completed(level.id) else ("OPEN" if unlocked else "LOCKED")
 	var tile := _stat_tile(status, "", world.secondary_color)
 	tile.get_child(0).add_child(WorldCard.star_row(WorldCard.stars(level), 38.0))
@@ -365,6 +385,7 @@ func _stat_tile(caption: String, value: String, accent: Color) -> PanelContainer
 
 ## Lays the world cards out as a carousel centred on the selected world.
 func _layout_cards(animate: bool) -> void:
+	_carousel.queue_redraw()
 	var width := _carousel.size.x if _carousel.size.x > 0.0 else 1824.0
 	var gap := 30.0
 	for card in _cards:
@@ -373,7 +394,8 @@ func _layout_cards(animate: bool) -> void:
 		card.selected = is_selected
 		var target := Vector2(width * 0.5 - WorldCard.SIZE.x * 0.5 + offset * (WorldCard.SIZE.x + gap), 0.0 if is_selected else 12.0)
 		var target_scale := Vector2.ONE * (1.0 if is_selected else 0.9)
-		var tint := Color.WHITE if is_selected else Color(0.72, 0.72, 0.82, 0.9)
+		var tint := Color.WHITE if is_selected else Color(0.72, 0.72, 0.82, 0.9 if absi(offset) <= CARDS_AROUND else 0.0)
+		card.mouse_filter = Control.MOUSE_FILTER_STOP if absi(offset) <= CARDS_AROUND else Control.MOUSE_FILTER_IGNORE
 		if not animate:
 			card.position = target
 			card.scale = target_scale
@@ -383,6 +405,21 @@ func _layout_cards(animate: bool) -> void:
 		tw.tween_property(card, "position", target, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tw.tween_property(card, "scale", target_scale, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tw.tween_property(card, "modulate", tint, 0.2)
+
+
+## One pip per world over the cards: where the selected world sits among them.
+func _draw_pips() -> void:
+	var worlds := GameData.worlds()
+	var step := 30.0
+	var y := -PIPS_ABOVE
+	var x0 := _carousel.size.x * 0.5 - step * (worlds.size() - 1) * 0.5
+	for i in worlds.size():
+		var at := Vector2(x0 + i * step, y)
+		if i == world_index:
+			_carousel.draw_circle(at, 8.0, worlds[i].accent_color)
+			_carousel.draw_circle(at, 8.0, UiKit.CREAM, false, 3.0, true)
+		else:
+			_carousel.draw_circle(at, 6.0, Color(UiKit.CREAM, 0.85 if GameData.is_world_unlocked(worlds[i]) else 0.4), true, -1.0, true)
 
 
 static func _clear(node: Node) -> void:
