@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/neon_courier_chirp_1_b.wav-8f8c699255c18ddaef
 
 force/8_bit=false
 force/mono=false
-force/max_rate=false
-force/max_rate_hz=44100
+force/max_rate=true
+force/max_rate_hz=22050
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

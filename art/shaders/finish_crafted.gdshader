@@ -21,7 +21,7 @@ varying vec3 lp;
 varying vec3 ln;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 	ln = NORMAL;
 }
 
@@ -146,6 +146,8 @@ void fragment() {
 	} else {
 		glint = flake_glint(lp, r);
 		col = ground + color_b * glint * 0.5;
+		// A print pools the candy deeper in soft clouds (they move with the seed).
+		col *= print_on ? mix(1.0, 0.5, smoothstep(0.42, 0.72, ffbm3(lp * 5.0))) : 1.0;
 		rough = 0.15;
 		metal = 0.2;
 		refl = 0.35;
@@ -157,4 +159,5 @@ void fragment() {
 	vec3 tint = metal > 0.4 ? col : vec3(0.6);
 	EMISSION = fstudio(r, tint) * refl * (0.7 + 0.6 * fres) + color_b * glint * 2.5
 		+ (pattern == 5 ? ground * 0.12 : vec3(0.0));
+	PRINT_LAYER
 }

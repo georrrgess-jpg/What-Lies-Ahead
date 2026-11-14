@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/weap_rip_charge.wav-5f7ba215ef139885bc9b7e202
 
 force/8_bit=false
 force/mono=false
-force/max_rate=false
-force/max_rate_hz=44100
+force/max_rate=true
+force/max_rate_hz=22050
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

@@ -15,7 +15,7 @@ varying vec3 lp;
 varying vec3 ln;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 	ln = NORMAL;
 }
 
@@ -46,4 +46,5 @@ void fragment() {
 	METALLIC = 0.2;
 	ROUGHNESS = 0.1;
 	EMISSION = (col * energy * 2.2 + rain_color * pix * 0.06) * k + fstudio(r, vec3(0.25)) * 0.12 * (1.0 + fres);
+	PRINT_LAYER
 }

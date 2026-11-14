@@ -196,7 +196,12 @@ sound_category = Dictionary[StringName, StringName]({
 &"sky_gale_gust": &"cue",
 &"sky_harbor_loop": &"music",
 &"sky_harbor_final": &"music",
-&"sky_ambience": &"ambience"
+&"sky_ambience": &"ambience",
+&"gn2_": &"handling",
+&"gn2_sparkler_fire": &"weapon",
+&"gn2_ring_fire": &"weapon",
+&"gn2_ring_ricochet": &"impact",
+&"gn2_ring_bounce": &"impact"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -212,8 +217,8 @@ sound_trim_db = Dictionary[StringName, float]({
 &"weap_rip_reel": 3.0,
 &"empty_click": 3.0,
 &"weap_switch": 3.0,
-&"hitmarker": 5.0,
-&"headshot_ping": 3.0,
+&"hitmarker": 6.5,
+&"headshot_ping": 4.0,
 &"kill_confirm": -1.0,
 &"combo_up": -2.0,
 &"weap_cryo_freeze": -2.0,
@@ -241,9 +246,12 @@ sound_trim_db = Dictionary[StringName, float]({
 &"frost_ice_shatter": 5.0,
 &"frost_cloud_burst": 5.0,
 &"player_hurt": 2.0,
-&"final_wave": 2.0,
+&"final_wave": -1.0,
 &"purchase": -1.5,
 &"deny": -2.0,
 &"swap": 4.0,
-&"menu_theme": 3.0
+&"menu_theme": 3.0,
+&"ui_click": 3.0,
+&"rounds_surge_siren": -4.0,
+&"onb_ding": -4.0
 })

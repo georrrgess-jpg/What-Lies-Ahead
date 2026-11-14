@@ -23,7 +23,7 @@ varying vec3 lp;
 varying vec3 ln;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 	ln = NORMAL;
 }
 
@@ -134,4 +134,5 @@ void fragment() {
 	// Clear coat on the carbon; a soft fabric sheen on the rest.
 	EMISSION = (pattern == 3 ? fstudio(r, vec3(0.4)) * (0.08 + 0.3 * fres) : col * pow(fres, 2.0) * 0.15)
 		+ color_c * pin * trim_glow;
+	PRINT_LAYER
 }

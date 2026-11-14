@@ -21,11 +21,22 @@ even empty: the star import also brings in gen_audio's `MUSIC` folder path.
 Music is mastered by `write_music()`: EQ for small speakers (high-pass at 50 Hz, less
 60-180 Hz, more 1-5 kHz), a look-ahead limiter and loudness normalisation, so return
 the raw mix. The name picks the target: `*_ambience` is a bed (-18 LUFS, 40 Hz
-high-pass only), `*_final` a level's final-wave variant (-14 LUFS: keep its tempo and
-length equal to the main loop so the game cross-fades in time), anything else a music
-loop (-15 LUFS). Each loop draws noise from its own seeded generator, so editing one
-loop never changes another. Shared instruments: `kick_click`, `audible_bass`, `clap`,
-`cymbal`, `riser`, `fold_loop`.
+high-pass only, written mono at Vorbis q0), `*_final` a level's final-wave variant
+(-14 LUFS, q1.5: keep its tempo and length equal to the main loop so the game
+cross-fades in time), anything else a music loop (-15 LUFS, q2). Each loop (and each
+core sound) draws noise from its own seeded generator, so editing one never changes
+another, and loops render with band-limited saws (`osc()` switches to polyBLEP).
+Shared instruments: `kick_click`, `audible_bass`, `clap`, `cymbal`, `riser`, `fold_loop`.
+
+Band-limited synthesis for new work (see `menu.py`): `bl_osc` (polyBLEP saw/square,
+takes a frequency curve for glides and vibrato), `supersaw`, `additive` and `pluck`
+(sine partials, nothing above Nyquist), `adsr` (click-free), and circular loop
+effects `reverb`, `echo`, `chorus`, `pump` with a `Bus` that folds the overhang into
+a seamless loop.
+
+`write_wav()` also sets a sound's import rate: one with nothing above 10 kHz (under
+-50 dB) imports at 22.05 kHz, half the size and sounding the same. A brand-new sound
+gets this on the first run after Godot has imported it.
 
 Generate one pack: `python tools/gen_audio.py <pack_name>`. All: `python tools/gen_audio.py`.
 Only the loops: add `--music`. Check levels afterwards with `python3 tools/audio_mix_report.py`.

@@ -81,6 +81,24 @@ func request(item: CosmeticItem, done: Callable, weapon: WeaponData = null) -> v
 	set_process(true)
 
 
+## Like request(), for a Prize Print (its finish worn with the print's rolls)
+## on `weapon`. Cached per print and weapon.
+func request_print(p: Dictionary, done: Callable, weapon: WeaponData = null) -> void:
+	var fin := PrizePrints.finish_of(p)
+	if fin == null:
+		return
+	var k := "print:%s@%s" % [p.get("id", ""), weapon.id if weapon else &""]
+	if _cache.has(k):
+		done.call(_cache[k])
+		return
+	_queue.append([fin, done, weapon, k, p])
+	set_process(true)
+
+
+static func cached_print(p: Dictionary, weapon: WeaponData = null) -> Texture2D:
+	return _cache.get("print:%s@%s" % [p.get("id", ""), weapon.id if weapon else &""])
+
+
 # One bake at a time: build the scene, render it once, read it back two
 # frames later (polled, so a freed Locker never leaves a coroutine behind).
 func _process(_delta: float) -> void:
@@ -108,7 +126,7 @@ func _start_next() -> void:
 		if _cache.has(job[3]):
 			_deliver(job)
 			continue
-		_stage = _build(item, job[2])
+		_stage = _build(item, job[2]) if job.size() < 5 else _weapon({"finish": item, "print": job[4]}, false, job[2])
 		if _stage == null:
 			continue
 		add_child(_stage)

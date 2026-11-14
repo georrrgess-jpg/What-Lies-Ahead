@@ -14,7 +14,7 @@ uniform float ripple = 1.0;
 varying vec3 lp;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 }
 
 void fragment() {
@@ -39,4 +39,5 @@ void fragment() {
 	ROUGHNESS = is_trim ? 0.14 : 0.06;
 	SPECULAR = 0.8;
 	EMISSION = refl * (is_trim ? 0.5 : 0.75) + tint * 0.12 + oil;
+	PRINT_LAYER
 }

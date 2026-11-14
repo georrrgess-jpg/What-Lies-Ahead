@@ -130,8 +130,9 @@ UI style lives in `UiKit` (`scripts/ui/ui_kit.gd`): palette constants,
 * Own behaviour: `mode_script`, a script extending `WeaponMode`
   (`scripts/weapons/modes/weapon_mode.gd`): hold the trigger back (spin-up), fly
   its own rounds (`launch`, damage through `WeaponController.strike`), reshape a
-  shot's hits (`shape_hits`), slow the player (`move_scale`) and move the
-  viewmodel's parts every frame (`animate`).
+  shot's hits (`shape_hits`) and slow the player (`move_scale`). The viewmodel's
+  own parts move in its `view_script` (`scripts/weapons/views/`), which can read
+  the held weapon's mode (`WeaponController.mode`).
 
 ## Levels
 

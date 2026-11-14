@@ -11,7 +11,10 @@ extends RefCounted
 ## Menu previews show the bare weapon: prepare_preview() hides the arms and
 ## hologram parts wherever they sit in the model.
 ## `loadout` is Cosmetics.weapon_loadout(weapon_id):
-##   {finish, cell, decal, charm, sight, arms} (any may be null or missing).
+##   {finish, cell, decal, charm, sight, arms, print} (any may be null or missing).
+## A Prize Print ("print", a PrizePrints dictionary) restyles the finish when it
+## is a print of that finish: its uniforms drive the print layer of the finish
+## shaders (pattern seed, shine grade, rare print; see print_material()).
 ##
 ## Finishes: flat colours ([shell, trim], params metallic/roughness), or a
 ## shader: params = {"shader": "res://art/shaders/x.gdshader", "shader_params": {...}}.
@@ -73,7 +76,7 @@ static var _surface_boxes := {}
 static func apply(model: Node3D, _weapon: WeaponData, loadout: Dictionary) -> void:
 	var finish: CosmeticItem = loadout.get("finish")
 	var cell: CosmeticItem = loadout.get("cell")
-	_walk(model, finish, cell, loadout.get("arms"))
+	_walk(model, finish, cell, loadout.get("arms"), _print_for(finish, loadout.get("print", {})))
 	_apply_glove_kit(model, loadout.get("arms"))
 	_apply_decal(model, loadout.get("decal"))
 	_apply_charm(model, loadout.get("charm"))
@@ -148,7 +151,7 @@ static func finish_material(finish: CosmeticItem, base: StandardMaterial3D, is_t
 	return out
 
 
-static func _walk(node: Node, finish: CosmeticItem, cell: CosmeticItem, arms: CosmeticItem) -> void:
+static func _walk(node: Node, finish: CosmeticItem, cell: CosmeticItem, arms: CosmeticItem, worn_print := {}) -> void:
 	if node is MeshInstance3D and node.mesh and not String(node.name).begins_with("Decal"):
 		var mi: MeshInstance3D = node
 		for i in mi.mesh.get_surface_count():
@@ -158,7 +161,10 @@ static func _walk(node: Node, finish: CosmeticItem, cell: CosmeticItem, arms: Co
 			var mat_name := String(base.resource_name)
 			var replacement: Material = null
 			if (mat_name == "Shell" or mat_name == "Trim") and finish:
-				replacement = finish_material(finish, base, mat_name == "Trim")
+				if worn_print.is_empty():
+					replacement = finish_material(finish, base, mat_name == "Trim")
+				else:
+					replacement = print_material(finish, worn_print, base, mat_name == "Trim")
 			elif mat_name == "Cell" and cell:
 				var c: StandardMaterial3D = base.duplicate()
 				c.emission_enabled = true
@@ -171,7 +177,37 @@ static func _walk(node: Node, finish: CosmeticItem, cell: CosmeticItem, arms: Co
 				replacement = arm_material(arms, mat_name, base)
 			mi.set_surface_override_material(i, replacement)
 	for child in node.get_children():
-		_walk(child, finish, cell, arms)
+		_walk(child, finish, cell, arms, worn_print)
+
+
+# --- Prize Prints ------------------------------------------------------------------
+
+## The print to wear: `p` when it is a print of `finish` and that finish has a
+## print layer (a shader finish), else {}.
+static func _print_for(finish: CosmeticItem, p: Variant) -> Dictionary:
+	if finish == null or not p is Dictionary or (p as Dictionary).is_empty():
+		return {}
+	if StringName(String(p.get("f", ""))) != finish.id or not finish.params.has("shader"):
+		return {}
+	return p
+
+
+## The material a print of `finish` puts on a Shell (or Trim) surface: the
+## finish's shader with the print layer switched on. A gold-ink misprint also
+## swaps the shell and trim inks. One material per print and surface (cached).
+static func print_material(finish: CosmeticItem, p: Dictionary, base: StandardMaterial3D, is_trim: bool) -> Material:
+	var key := "print|%s|%s|%s|%s" % [p.get("id", ""), finish.id, is_trim, base.albedo_color.to_html()]
+	if _materials.has(key):
+		return _materials[key]
+	var m := (finish_material(finish, base, is_trim) as ShaderMaterial).duplicate() as ShaderMaterial
+	var u := PrintLook.uniforms(p)
+	for k in u:
+		m.set_shader_parameter(k, u[k])
+	if String(p.get("var", "")) == PrintRoll.MISPRINT:
+		m.set_shader_parameter("shell_color", finish.color(1, base.albedo_color))
+		m.set_shader_parameter("trim_color", finish.color(0, base.albedo_color))
+	_materials[key] = m
+	return m
 
 
 ## Colours a "Cell" material for the item colour `c` (CellGlow calls this every frame).

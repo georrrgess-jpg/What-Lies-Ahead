@@ -77,6 +77,7 @@ func _ready() -> void:
 	col.add_child(body)
 	body.add_child(_build_tray())
 	body.add_child(_build_side())
+	_build_print_button()
 	visibility_changed.connect(_on_visibility_changed)
 	Wallet.balance_changed.connect(_on_balance_changed)
 
@@ -384,6 +385,7 @@ func _select(it: CosmeticItem, by_player: bool) -> void:
 	_selected = it
 	_panel.show_item(it, _weapon_id)
 	_showcase.visible = it != null
+	_refresh_print_button()
 	var card := _card_of(it)
 	if card == null:
 		return
@@ -560,3 +562,37 @@ func _on_balance_changed(_balance: int) -> void:
 func _on_visibility_changed() -> void:
 	if not is_visible_in_tree() and _built:
 		Profile.save_profile()
+
+
+# --- Prize Prints ------------------------------------------------------------------
+
+## A button over the display case, shown for a finish the player holds Prize
+## Prints of: it opens the Prizes page's collection on that finish.
+var _print_button: SignButton
+
+
+func _build_print_button() -> void:
+	_print_button = UiKit.sign_button("", SignButton.Kind.SECONDARY, 22)
+	_print_button.visible = false
+	_print_button.pressed.connect(_open_prints)
+	_showcase.add_child(_print_button)
+	_print_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_print_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_print_button.position += Vector2(-22.0, 20.0)
+
+
+func _refresh_print_button() -> void:
+	var count := PrizePrints.prints_of(_selected.id).size() if _selected and _selected.slot == &"weapon_finish" else 0
+	_print_button.visible = count > 0
+	var worn := PrizePrints.equipped(_weapon_id)
+	var wearing := not worn.is_empty() and _selected and StringName(String(worn["f"])) == _selected.id
+	_print_button.text = ("WEARING PRINT %s" % PrintLook.serial_text(int(worn["serial"]))) if wearing else "YOUR PRINTS  x%d" % count
+
+
+func _open_prints() -> void:
+	var finish := _selected
+	open_page.emit(&"prizes")
+	var menu := get_tree().current_scene
+	var prizes := menu.page("prizes") as PrizesPage if menu.has_method("page") else null
+	if prizes and finish:
+		prizes.show_finish(finish.id)

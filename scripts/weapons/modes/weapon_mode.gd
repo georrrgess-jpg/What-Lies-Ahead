@@ -1,12 +1,12 @@
 class_name WeaponMode
 extends RefCounted
-## Optional behaviour a weapon adds on top of the data-driven fire modes
+## Optional gameplay a weapon adds on top of the data-driven fire modes
 ## (WeaponData.mode_script): a minigun that spins up before it fires, rounds
-## that fly and ricochet on their own, a harpoon that reels in what it hits.
-## The WeaponController makes one for the held weapon and calls the hooks
-## below; the WeaponView calls animate() every frame so the weapon's own
-## parts can move with it (a drum that turns per shot, spinning barrels).
-## Every hook defaults to "nothing special".
+## that fly and ricochet off scenery on their own, a harpoon that reels in
+## what it hits. The WeaponController makes one for the held weapon and
+## calls the hooks below; every hook defaults to "nothing special". The
+## viewmodel's own moving parts belong in WeaponData.view_script, which can
+## read the held weapon's mode (WeaponController.mode).
 
 var controller: WeaponController
 var data: WeaponData
@@ -53,18 +53,6 @@ func move_scale() -> float:
 	return 1.0
 
 
-## Moves the weapon's own parts in `model` (its viewmodel), every frame.
-func animate(_model: Node3D, _delta: float) -> void:
-	pass
-
-
 ## The weapon is put away: free anything the mode made.
 func dispose() -> void:
 	pass
-
-
-## A part of the viewmodel and its rest transform, for animate(): returns
-## [node, transform], or [] when the model has no such part.
-static func find_part(model: Node3D, part: String) -> Array:
-	var node := model.find_child(part, true, false) as Node3D
-	return [node, node.transform] if node else []

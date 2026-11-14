@@ -1,10 +1,11 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
 [ext_resource type="PackedScene" path="res://art/models/whirligig.glb" id="3"]
 [ext_resource type="Script" path="res://scripts/weapons/reloads/whirligig_reload.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/weapons/modes/whirligig_mode.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/views/whirligig_view.gd" id="6"]
 
 [sub_resource type="Resource" id="unlock"]
 script = ExtResource("2")
@@ -65,5 +66,6 @@ regen_rate = 22.0
 regen_delay = 0.5
 viewmodel = ExtResource("3")
 reload_script = ExtResource("4")
+view_script = ExtResource("6")
 mode_script = ExtResource("5")
 rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

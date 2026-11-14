@@ -15,7 +15,7 @@ varying vec3 lp;
 varying vec3 ln;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 	ln = NORMAL;
 }
 
@@ -53,4 +53,5 @@ void fragment() {
 	ROUGHNESS = 0.15;
 	EMISSION = ping_color * (grid * 0.08 + major * 0.18 + p.x * 1.8 + p.y * 3.0) * k
 		+ fstudio(r, vec3(0.2, 0.35, 0.35)) * 0.12;
+	PRINT_LAYER
 }

@@ -100,6 +100,8 @@ static func shot(parent: Node, from: Vector3, to: Vector3, w: WeaponData, power 
 			RailTrail.spawn(parent, from, to, w.tracer_color, w.tracer_width, power)
 		&"lightning":
 			LightningBolt.spawn(parent, from, to, w.tracer_color, w.tracer_width, 0.14, 0.3)
+		&"spark":
+			SparkTracer.draw(parent, from, to, w)
 		&"none", &"beam":
 			pass
 		_:
