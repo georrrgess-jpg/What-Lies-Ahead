@@ -15,6 +15,7 @@ script = ExtResource("1")
 id = &"comet_cannon"
 sort_order = 40
 category = "Hand Cannon"
+slot_class = "secondary"
 display_name = "Comet Hand Cannon"
 role = "Three-round burst revolver. One clean burst drops a tourist out to 30 m, and its heavy kick knocks standard zombies out of their swing. Bursts climb: aim down sights to land all three."
 unlock = SubResource("unlock")

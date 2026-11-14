@@ -15,6 +15,10 @@ extends Resource
 @export var category := ""
 ## Unlock condition (null = available from the start).
 @export var unlock: Requirement
+## Which loadout slot this weapon belongs to: &"primary" (rifles, shotguns,
+## launchers, beams) or &"secondary" (pistols and other sidearms). The Arsenal
+## lists the two classes separately and each slot only takes its own class.
+@export_enum("primary", "secondary") var slot_class: String = "primary"
 
 @export_group("Ammo")
 @export var magazine_size := 12

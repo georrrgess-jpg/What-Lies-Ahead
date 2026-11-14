@@ -8,6 +8,7 @@ script = ExtResource("1")
 id = &"pulse_pistol"
 sort_order = 10
 category = "Pistol"
+slot_class = "secondary"
 display_name = "Pulse Pistol"
 role = "Deliberate semi-auto sidearm. Three body shots or two headshots drop a tourist, and one headshot drops any light zombie. Pace your shots: a rested shot flies dead centre, spamming spreads them."
 magazine_size = 12
