@@ -175,12 +175,16 @@ func _build_mastery() -> Control:
 	col.add_theme_constant_override("separation", UiKit.GAP_S)
 	tray.add_child(col)
 	col.add_child(UiKit.section("WEAPON MASTERY", "Ten ranks per weapon, a reward at each"))
+	# More weapons than rows fit: the tiles scroll inside the tray.
+	var scroll := UiKit.scroll()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(scroll)
 	_mastery = GridContainer.new()
 	_mastery.columns = MASTERY_COLUMNS
-	_mastery.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_mastery.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_mastery.add_theme_constant_override("h_separation", UiKit.GAP_S)
 	_mastery.add_theme_constant_override("v_separation", UiKit.GAP_S)
-	col.add_child(_mastery)
+	scroll.add_child(_mastery)
 	_mastery_detail = _detail_line()
 	col.add_child(_mastery_detail)
 	return tray

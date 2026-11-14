@@ -38,6 +38,13 @@ const LAMP_AT := Vector3(-0.42, 0.57, -0.3)
 const FIT := Vector2(0.92, 0.38)
 ## Width of the signboard.
 const BOARD_WIDTH := 640.0
+## The weapon's lowest point rests this far above the turntable (just touching).
+const REST_GAP := 0.002
+## A fork needs this much height over the turntable for its yoke and collar;
+## where the weapon is lower it sits on the turntable instead.
+const FORK_MIN := 0.075
+## Tags for weapon mode scripts that do not declare `const TRAIT`, by a word in the file name.
+const MODE_TRAITS := {"whirligig": "SPIN-UP", "riptide": "REELS IN", "saw": "CHAINSAW", "drum_popper": "BANK SHOTS"}
 ## Half size of a cradle pad: along the weapon, across it.
 const PAD := Vector2(0.035, 0.055)
 ## Stats on the signboard, three per column: [label, getter].
@@ -62,7 +69,7 @@ var _thumb_textures := {}
 var _name: Label
 var _chip: KitChip
 var _role: Label
-var _traits: HBoxContainer
+var _traits: HFlowContainer
 var _stat_rows: Array[StatRow] = []
 var _rank_label: Label
 var _rank_bar: ProgressBar
@@ -259,9 +266,10 @@ func _build_board() -> Control:
 	_role.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_role.mouse_filter = Control.MOUSE_FILTER_STOP
 	v.add_child(_role)
-	_traits = HBoxContainer.new()
-	_traits.alignment = BoxContainer.ALIGNMENT_CENTER
-	_traits.add_theme_constant_override("separation", UiKit.GAP_S)
+	_traits = HFlowContainer.new()
+	_traits.alignment = FlowContainer.ALIGNMENT_CENTER
+	_traits.add_theme_constant_override("h_separation", UiKit.GAP_S)
+	_traits.add_theme_constant_override("v_separation", UiKit.GAP_XS)
 	v.add_child(_traits)
 	v.add_child(_rule())
 	v.add_child(_build_stats())
@@ -858,14 +866,38 @@ func _trait_tags(w: WeaponData) -> Array[String]:
 		tags.append("BLAST %.1f m" % w.splash_radius)
 	if w.projectile_speed > 0.0 and w.projectile_gravity > 0.0:
 		tags.append("LOBBED")
+	if w.ricochet_count > 0:
+		tags.append("RICOCHET ×%d" % w.ricochet_count)
+	elif w.projectile_bounces > 0 and w.projectile_gravity <= 0.0:
+		tags.append("BOUNCES ×%d" % w.projectile_bounces)
 	match w.status_effect:
 		&"chill":
 			tags.append("FREEZES")
 		&"shock":
 			tags.append("SHOCKS")
+		&"fizz":
+			tags.append("FIZZ BURN")
+	var special := _mode_trait(w)
+	if special != "":
+		tags.insert(mini(1, tags.size()), special)
 	if w.uses_heat():
 		tags.append("HEAT")
 	return tags
+
+
+## The mechanic a weapon's mode script adds, as a tag: the script's own
+## `const TRAIT := "..."` if it has one, else known modes by file name.
+func _mode_trait(w: WeaponData) -> String:
+	if w.mode_script == null:
+		return ""
+	var own: Dictionary = w.mode_script.get_script_constant_map()
+	if own.has("TRAIT"):
+		return String(own["TRAIT"])
+	var file := w.mode_script.resource_path.get_file()
+	for key in MODE_TRAITS:
+		if file.contains(key):
+			return MODE_TRAITS[key]
+	return ""
 
 
 ## The tags after the first (which is on the chip) as small pills.
@@ -874,7 +906,7 @@ func _fill_traits(tags: Array[String], w: WeaponData) -> void:
 		_traits.remove_child(c)
 		c.queue_free()
 	_traits.visible = tags.size() > 1
-	for i in range(1, mini(tags.size(), 4)):
+	for i in range(1, mini(tags.size(), 5)):
 		_traits.add_child(UiKit.chip(tags[i], w.tracer_color.lerp(UiKit.INK, 0.72), 18, false))
 
 
@@ -980,17 +1012,7 @@ func _measure_seat() -> Dictionary:
 	var along := (_pivot.basis * _model.basis * Vector3.FORWARD)
 	along.y = 0.0
 	along = along.normalized() if along.length() > 0.001 else Vector3.RIGHT
-	var across := Vector3(-along.z, 0.0, along.x)
-	# Every triangle corner as (along, across, height).
-	var corners := PackedVector3Array()
-	for mi in _model.find_children("*", "MeshInstance3D", true, false):
-		var m := mi as MeshInstance3D
-		if m.mesh == null or not _shown(m):
-			continue
-		var xf := _pivot.transform * _relative(_pivot, m)
-		for v in m.mesh.get_faces():
-			var p := xf * v
-			corners.append(Vector3(p.dot(along), p.dot(across), p.y))
+	var corners := _corners(along)
 	var low := INF
 	var near := INF
 	var far := -INF
@@ -1000,14 +1022,30 @@ func _measure_seat() -> Dictionary:
 		far = maxf(far, c.x)
 	var stations := [lerpf(near, far, 0.27), lerpf(near, far, 0.73)]
 	var pads := [_underside(corners, stations[0]), _underside(corners, stations[1])]
-	# Clear the turntable, and leave the forks room for their yokes and collars.
-	var lift := TURNTABLE_TOP + 0.04 - low
-	for pad: float in pads:
-		if pad < INF:
-			lift = maxf(lift, TURNTABLE_TOP + 0.09 - pad)
+	# The weapon stands on the turntable on its lowest point (the grip, a
+	# drum, a stock); a fork props it wherever its underside is high enough
+	# for one. Where it is lower, the weapon sits on the turntable there.
+	var lift := TURNTABLE_TOP + REST_GAP - low
 	for i in 2:
-		pads[i] = pads[i] + lift if pads[i] < INF else -INF
+		var height: float = pads[i] + lift if pads[i] < INF else -INF
+		pads[i] = height if height - TURNTABLE_TOP >= FORK_MIN else -INF
 	return {"lift": lift, "along": along, "stations": stations, "pads": pads}
+
+
+## Every triangle corner of the shown model as (along, across, height) in
+## turntable space, `along` being the weapon's long axis.
+func _corners(along: Vector3) -> PackedVector3Array:
+	var across := Vector3(-along.z, 0.0, along.x)
+	var corners := PackedVector3Array()
+	for mi in _model.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.mesh == null or not _shown(m):
+			continue
+		var xf := _pivot.transform * _relative(_pivot, m)
+		for v in m.mesh.get_faces():
+			var p := xf * v
+			corners.append(Vector3(p.dot(along), p.dot(across), p.y))
+	return corners
 
 
 ## The lowest point of the model over a cradle pad centred at `station`
