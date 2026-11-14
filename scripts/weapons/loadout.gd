@@ -74,7 +74,7 @@ static func slot(slot_index: int) -> StringName:
 static func slots() -> Array[StringName]:
 	var section := Profile.section(SECTION)
 	var saved: Array[StringName] = [_saved_id(section, PRIMARY), _saved_id(section, SECONDARY)]
-	var out := resolve(saved, StringName(String(Profile.data.get("last_weapon", ""))))
+	var out := resolve(saved, StringName(str(Profile.data.get("last_weapon", ""))))
 	for i in 2:
 		if out[i] != saved[i] and out[i] != &"":
 			section[SLOT_KEYS[i]] = String(out[i])
@@ -164,7 +164,7 @@ static func key_hint(action: StringName) -> String:
 
 
 static func _saved_id(section: Dictionary, slot_index: int) -> StringName:
-	return StringName(String(section.get(SLOT_KEYS[slot_index], "")))
+	return StringName(str(section.get(SLOT_KEYS[slot_index], "")))
 
 
 static func _usable(weapon_id: StringName) -> bool:
