@@ -54,7 +54,9 @@ func _menu(menu: Node) -> void:
 		menu._show(id, false)
 		await _settle()
 		await _check_all_sizes(id)
-		await _walk_tabs(menu.page(id), id, {})
+		# The page's frame: its content and the header row the shell draws for it.
+		var page: Node = menu.page(id)
+		await _walk_tabs(page.get_parent() if page else null, id, {})
 
 
 ## Every tab of every tab row on the page, and the rows those tabs reveal
