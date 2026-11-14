@@ -367,9 +367,17 @@ The **Token Counter** shelves one finish per rarity a day (the same all day, new
 midnight) as a fresh print: Common 6, Rare 18, Epic 60, Legendary 200 tokens, each once a
 day.
 
-**Trade-up.** Five prints of one rarity (not favourites, not worn) become one random
-print of the next rarity with fresh rolls; Legendary is the top. A confirmation lists the
-five.
+**Trade-up (Prize Fusion).** Five prints of one rarity (not favourites, not worn) become
+one random print of the next rarity with fresh rolls; Legendary is the top. On the
+TRADE-UP tab the picked prints sit in the five pods of the fusion machine
+(`FusionChamber`; click a pod to take one out, AUTO-FILL picks the least special); FUSE
+confirms with the five listed. The fusion plays full screen (`FusionReveal`), on purpose
+nothing like a capsule: on a dark hologram grid the prints lock into the pods, the
+holographic rings spin up and beams charge the core, the prints break up into slices
+and streams of light that pour into it, the core flashes in the new rarity's colour and
+a hologram scans the new print in from the bottom up; then its traits stamp in as below.
+Sounds: `prz_fuse_slot`, `prz_fuse_charge`, `prz_fuse_stream`, `prz_fuse_form` and its
+own sting, `prz_fuse_sting`.
 
 **Wearing a print.** `PrizePrints.equip(print, weapon_id)` makes it that weapon's finish
 everywhere `Cosmetics.weapon_loadout()` is read (first person, the Arsenal, the Locker
@@ -378,12 +386,33 @@ finish. Equipping a plain finish in the Locker takes the print off (the plain on
 again). In the Locker a finish with prints shows a stack chip ("x3 PRINTS") and a button
 over the case that opens those prints on the Prizes page.
 
-**The opening.** The crank turns (six ratchet clicks), the capsule rattles down the chute,
-flies out, wobbles in its rarity's glow (2 to 4 times, the rarer the more), pops in a
-burst of rays, and the print turns on a stand while its rolls count up: the shine meter
-sweeps through Factory, Polished, Mint; the rare print stamps in; the serial rolls to its
-number. A click, Enter or Esc skips to the end. Sounds: `prz_*`
-(`tools/audio_packs/prints.py`).
+**The page.** Five tabs: **CAPSULES** (the machine alone, big under a spotlight: the luck
+meter and what earns capsules on its left; the capsules held, OPEN CAPSULE, OPEN 5, BUY
+and the odds on its right), **COLLECTION** (every print in a wide grid, filtered by
+rarity, grade and rare prints, five sorts, auto-recycle, and the inspect view
+`PrintInspect`: wear, keep, recycle), **TRADE-UP**, **TOKEN COUNTER** and **ODDS & INFO**.
+Code: `ui/prizes_page.gd` (tabs, the overlays, opening) and one `ui/prizes_*_view.gd`
+per tab. The openings play full screen on a CanvasLayer above the menu.
+
+**The opening** (`CapsuleReveal`). The machine fills the screen; the crank winds back and
+makes one heavy turn (ratchet clicks) while the capsules churn, one rattles into the
+lit chute and the camera pushes in on it. The capsule wobbles in the middle of the screen,
+rocking harder and faster with light of its rarity leaking from the seam: 1.0 / 1.5 /
+2.1 / 2.9 s from Common to Legendary, over the build cue `prz_build` (started part-way
+in so its peak lands on the burst). It bursts (`RevealFx`: confetti, streamers, rings
+and turning rays, by rarity; a banner COMMON / RARE! / EPIC! / LEGENDARY!; Legendary
+turns the rays gold under a rain of gold) and the cue resolves, `prz_reveal_<rarity>`
+(Common a light chord, Legendary a soft-brass fanfare over timpani). Then the hero card
+(`PrintHero`): the print drops onto a 3D turntable (`PrintStage`, the Locker's stage) and
+spins up while the camera eases in, a band of light sweeps its silhouette to show the
+grade (dull for Factory, bright for Polished, twice for Mint), and the traits stamp in
+one by one: GRADE with the shine meter, PRINT (a rare print gets its own flourish:
+sparkles, a sweep in its colour, `prz_variant`), SERIAL rolling to its number (a low or
+lucky one bursts in gold, `prz_serial`); then what became of a repeat and OPEN ANOTHER /
+EQUIP / DONE. **OPEN 5** turns the crank once and drops five capsules in a row that
+wobble and pop one after another, the rarest last, into their cards (click one for its
+hero card). The first click, Enter or Esc jumps to the result; Esc closes. Sounds:
+`prz_*` (`tools/audio_packs/prints.py`).
 
 ### API
 
@@ -416,7 +445,8 @@ without a Legendary 39), 10,000 rolls of rare prints and grades, 10,000 capsules
 into a profile (serials in order per finish, ids unique, only plain repeats recycled),
 the save round trip and an old save, and every action (equip, favourites, recycle,
 trade-up, counter, buying, the run settlement). Stills: `tools/print_sheet.gd` (prints on
-weapons), `tools/prizes_shots.gd` (the page and the opening, frame by frame).
+weapons), `tools/prizes_shots.gd` (every tab; the opening of each rarity, OPEN 5 and
+Prize Fusion, frame by frame; `--shot-only=tabs` for other window sizes).
 
 **The numbers** (`tools/economy_model.py`, the typical player, earned capsules only,
 4,000 simulated players opening every capsule as it comes):

@@ -61,7 +61,7 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	_dim = ColorRect.new()
-	_dim.color = Color(UiKit.INK, 0.94)
+	_dim.color = Color(UiKit.INK, 0.97)
 	_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_dim)
@@ -150,6 +150,7 @@ func play(res: Dictionary, weapon: WeaponData, can_open_more: bool) -> void:
 	_hero.setup(res, weapon, PrintHero.Style.CARNIVAL, _fx, can_open_more)
 	_wobble_time = WOBBLE[clampi(rarity, 0, 3)]
 	_capsule.color = col
+	_fx.color = col
 	_seq = create_tween()
 	_machine_in(_seq)
 	_seq.tween_callback(_machine.turn.bind(col, true))
@@ -203,7 +204,7 @@ func _push_in() -> void:
 	var radius := _machine.chute_capsule_radius()
 	_machine.take_capsule()
 	_capsule.visible = true
-	_capsule.size = Vector2(300, 300)
+	_capsule.size = Vector2(440, 440)
 	_capsule.pivot_offset = _capsule.size * 0.5
 	_capsule.position = start - _capsule.size * 0.5
 	_capsule.scale = Vector2.ONE * (radius / (_capsule.size.x * 0.36))
@@ -286,6 +287,7 @@ func _land() -> void:
 	_hint.visible = true
 	_fx.centre = _hero_centre()
 	_hero.play()
+	create_tween().tween_property(_fx, "rays", 0.55, 1.2)
 
 
 func _hero_centre() -> Vector2:
@@ -511,32 +513,40 @@ class BigCapsule extends Control:
 		var r := size.x * 0.36
 		for k in 5:
 			draw_circle(c, r * (1.2 + k * 0.16 + glow * 0.35), Color(color, (0.05 + glow * 0.09) * (1.0 - open)))
-		if leak > 0.0 and open < 0.5:
-			_draw_leaks(c, r)
 		var gap := open * r * 1.7
 		var fade := 1.0 - open
 		_draw_half(c + Vector2(-gap * 0.3, -gap), r, color, true, -open * 0.9, fade)
 		_draw_half(c + Vector2(gap * 0.3, gap), r, UiKit.CREAM, false, open * 0.7, fade)
 		if leak > 0.0 and open <= 0.0:
-			draw_line(c - Vector2(r, 0), c + Vector2(r, 0), Color(color.lerp(Color.WHITE, 0.6), leak), 4.0 + 6.0 * leak, true)
+			_draw_leaks(c, r)
 
-	## Thin beams of light fanning out of the seam.
+	## Light of the rarity escaping the seam: the crack glows hot, beams
+	## fan out from it over the shell, and two long flares leave its ends.
 	func _draw_leaks(c: Vector2, r: float) -> void:
-		var bright := color.lerp(Color.WHITE, 0.4)
+		var hot := color.lerp(Color.WHITE, 0.7)
+		for w in 3:
+			draw_line(c - Vector2(r, 0), c + Vector2(r, 0), Color(color.lerp(Color.WHITE, 0.3 * w), leak * (0.25 + 0.3 * w)), (3.0 - w) * (6.0 + 14.0 * leak), true)
 		for i in LEAKS:
-			var x := (float(i) / (LEAKS - 1) - 0.5) * 1.8 * r
+			var x := (float(i) / (LEAKS - 1) - 0.5) * 1.9 * r
 			var up := -1.0 if i % 2 == 0 else 1.0
-			var length := r * (0.8 + 1.6 * leak) * (0.6 + 0.4 * sin(i * 2.3 + leak * 9.0))
-			var spread := 0.08 + 0.05 * (i % 3)
-			var dir := Vector2(x * 0.004, up).normalized()
-			var base := c + Vector2(x * (1.0 - absf(x) / (r * 4.0)), 0)
-			_tri[0] = base
-			_tri[1] = base + dir.rotated(-spread) * length
-			_tri[2] = base + dir.rotated(spread) * length
-			_tri_cols[0] = Color(bright, 0.55 * leak)
-			_tri_cols[1] = Color(color, 0.0)
-			_tri_cols[2] = Color(color, 0.0)
-			draw_polygon(_tri, _tri_cols)
+			var length := r * (0.5 + 1.5 * leak) * (0.6 + 0.4 * sin(i * 2.3 + leak * 9.0))
+			var dir := Vector2(x / r * 0.6, up).normalized()
+			_beam(c + Vector2(x, 0), dir, length, 0.07 + 0.04 * (i % 3), Color(hot, 0.5 * leak))
+		for k in 2:
+			var side := -1.0 if k == 0 else 1.0
+			var dir := Vector2(side, 0)
+			_beam(c + Vector2(side * r * 0.9, 0), dir, r * (0.6 + 2.6 * leak), 0.12, Color(hot, 0.8 * leak))
+			_beam(c + Vector2(side * r * 0.9, 0), dir.rotated(0.35 * side), r * (0.4 + 1.4 * leak), 0.08, Color(hot, 0.45 * leak))
+			_beam(c + Vector2(side * r * 0.9, 0), dir.rotated(-0.35 * side), r * (0.4 + 1.4 * leak), 0.08, Color(hot, 0.45 * leak))
+
+	func _beam(from: Vector2, dir: Vector2, length: float, spread: float, col: Color) -> void:
+		_tri[0] = from
+		_tri[1] = from + dir.rotated(-spread) * length
+		_tri[2] = from + dir.rotated(spread) * length
+		_tri_cols[0] = col
+		_tri_cols[1] = Color(color, 0.0)
+		_tri_cols[2] = Color(color, 0.0)
+		draw_polygon(_tri, _tri_cols)
 
 	func _draw_half(at: Vector2, r: float, col: Color, top: bool, turn: float, alpha: float) -> void:
 		if alpha <= 0.01:

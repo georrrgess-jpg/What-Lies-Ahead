@@ -75,7 +75,8 @@ func reset() -> void:
 	core = 0.0
 
 
-func set_dissolve(i: int, v: float) -> void:
+## (Value first: tween_method passes it before the bound pod index.)
+func set_dissolve(v: float, i: int) -> void:
 	dissolve[i] = v
 
 
