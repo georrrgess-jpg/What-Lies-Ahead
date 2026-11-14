@@ -18,8 +18,12 @@ extends Node
 ##   --shot-sparks=n       menu scenes: set the Sparks balance first
 ##   --shot-tour=all|buy   with --shot-scene=locker: several stills in one run, saved as <shot>_<name>.png:
 ##                         all = every category; buy = --shot-item before, in the confirm dialog, bought, equipped
-##   --shot-run=<file.gd>  menu scenes: instead of a still, run that script's `run(shot, menu)` (headless
-##                         probes; see scripts/dev/meta_pages_probe.gd), then quit
+##   --shot-run=<file.gd>  instead of a still, run that script's `run(shot, menu)` (headless
+##                         probes; see scripts/dev/meta_pages_probe.gd), then quit. In a level
+##                         scene (results, defeat, pause, kiosk) it runs `run(shot, director)` once
+##                         the scene is staged (scripts/dev/ui_layout_probe.gd)
+##   --shot-stress=1       with --shot-scene=results or defeat: every weapon used, an alpha and two
+##                         bounties (capsules), a big score: the fullest results screen
 ##   --shot-pos=x,y,z      player feet position
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
 ##   --shot-pitch=deg
@@ -215,6 +219,12 @@ func _run() -> void:
 	elif scene_kind in ["results", "defeat"]:
 		director._grant(&"ion_carbine", 880, 61)
 		director._grant(&"pulse_pistol", 420, 30)
+		if _arg("stress", "0") == "1":
+			for w in GameData.weapons().slice(2, 6):
+				director._grant(w.id, 2600, 48)
+			director._bosses_defeated = 1
+			director._bounties_claimed = 2
+			director.score.score = 78090
 		director.total_kills = 91
 		director.elapsed = 412.0
 		director.wave_number = 8 if scene_kind == "results" else 6
@@ -309,6 +319,10 @@ func _run() -> void:
 	if _arg("hurt", "0") == "1":
 		await _wait(5)
 		player.take_damage(20.0, player.global_position - player.global_transform.basis.x * 4.0)
+	if _arg("run", "") != "":
+		await (load(_arg("run", "")) as GDScript).new().run(self, director)
+		get_tree().quit()
+		return
 	await _capture(int(_arg("frames", "45")))
 
 
