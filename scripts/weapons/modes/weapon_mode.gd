@@ -3,7 +3,7 @@ extends RefCounted
 ## Optional gameplay a weapon adds on top of the data-driven fire modes
 ## (WeaponData.mode_script): a minigun that spins up before it fires, rounds
 ## that fly and ricochet off scenery on their own, a harpoon that reels in
-## what it hits. The WeaponController makes one for the held weapon and
+## what it hits, a chain saw on the melee action. The WeaponController makes one for the held weapon and
 ## calls the hooks below; every hook defaults to "nothing special". The
 ## viewmodel's own moving parts belong in WeaponData.view_script, which can
 ## read the held weapon's mode (WeaponController.mode).
@@ -51,6 +51,31 @@ func shape_hits(_hits: Dictionary, _from: Vector3, _end: Vector3, _power: float)
 ## Extra move speed multiplier on top of WeaponData.move_speed_scale.
 func move_scale() -> float:
 	return 1.0
+
+
+## Every physics frame while the weapon can be used: `held` is true while the
+## melee action (WeaponController.MELEE_ACTION) is held and nothing stops the
+## weapon. A mode with a melee attack (the Ripsaw's chain saw) runs it here;
+## its hits go through WeaponController.melee_hit.
+func melee(_held: bool, _delta: float) -> void:
+	pass
+
+
+## How close (metres) a zombie must be for the melee to reach it right now
+## (0 = no melee, or not ready). The playtest bot reads it.
+func melee_reach() -> float:
+	return 0.0
+
+
+## 0-1 fill of the mode's own gauge (a saw's fuel), drawn by the HUD beside
+## the ammo counter; negative for none.
+func gauge() -> float:
+	return -1.0
+
+
+## A reload finished (the magazine is full again).
+func reloaded() -> void:
+	pass
 
 
 ## The weapon is put away: free anything the mode made.

@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/toxic_ripsaw.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/ripsaw_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/ripsaw_mode.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/views/ripsaw_view.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 20
+
+[resource]
+script = ExtResource("1")
+id = &"toxic_ripsaw"
+sort_order = 95
+category = "Saw Shotgun"
+display_name = "Toxic Ripsaw"
+role = "Semi-auto slime shotgun with a chain saw. Blasts splat a slowing slime puddle under the zombie hit hardest. Hold MELEE (T or middle mouse) to rev the saw and press into zombies: it saws through the rank and file but barely scratches heavies and alphas, slows you, and runs on the slime rack (it refills while resting, and a reload swaps in a full rack)."
+unlock = SubResource("unlock")
+slot_class = "primary"
+magazine_size = 6
+reserve_start = 36
+reserve_max = 60
+reload_time = 2.2
+emergency_recharge_interval = 3.0
+automatic = false
+fire_interval = 0.62
+damage = 11.0
+pellets = 8
+spread_degrees = 4.0
+spread_bloom = 0.0
+spread_bloom_max = 0.0
+max_range = 30.0
+falloff_start = 8.0
+falloff_end = 20.0
+falloff_min_scale = 0.3
+headshot_multiplier = 1.25
+knockback = 0.5
+ads_fov_scale = 0.86
+ads_time = 0.22
+ads_spread_scale = 0.55
+ads_depth = 0.08
+first_shot_accurate = false
+reticle_style = "bracket"
+recoil_kick = 3.2
+recoil_yaw = 0.5
+view_kick = 0.1
+shake = 0.35
+tracer_color = Color(0.62, 1, 0.2, 1)
+tracer_width = 0.05
+viewmodel = ExtResource("3")
+view_position = Vector3(0.27, -0.27, -0.66)
+view_rotation_degrees = Vector3(0, 0, -3)
+reload_script = ExtResource("4")
+view_script = ExtResource("6")
+fire_sound = &"weap_ripsaw_fire"
+reload_sound = &"weap_ripsaw_reload"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.05
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
+move_speed_scale = 0.95
+equip_time = 0.5
+equip_sound = &"weap_ripsaw_start"
+mode_script = ExtResource("5")
