@@ -141,21 +141,21 @@ def build_drum_popper():
     # Carry handle: the rear sight (hidden when an optic is fitted).
     rear = []
     for i, side in enumerate((-1, 1)):
-        x = side * 0.019
+        x = side * 0.026
         rear.append(tube(f"HandleSide{i}", [(x, rear_y - 0.008, 0.066), (x, rear_y - 0.003, 0.124), (x, rear_y + 0.006, 0.131), (x, 0.016, 0.131),
                                             (x, 0.025, 0.124), (x, 0.032, 0.066)], 0.0075, m=M["steel"], segs=8))
     rear += [
-        box("HandleTop", (0.046, 0.014, 0.01), (0, rear_y, 0.131), bevel=0.004, m=M["steel"]),
+        box("HandleTop", (0.06, 0.014, 0.01), (0, rear_y, 0.131), bevel=0.004, m=M["steel"]),
         # The grip bar covers only the rear half, so the view over the front sight stays open.
         tube("HandleGrip", [(0, rear_y, 0.134), (0, -0.035, 0.134)], 0.0085, m=M["steel"], segs=10),
-        torus("RearRing", 0.0125, 0.0035, (0, rear_y, z_line), rot=rad(90, 0, 0), m=M["steel"], major_segs=20, minor_segs=6),
-        box("RearStem", (0.01, 0.01, z_line - 0.0125 - 0.067), (0, rear_y, (z_line - 0.0125 + 0.067) / 2), bevel=0.003, m=M["steel"]),
-        sphere("RearDotL", 0.0035, (-0.0125, rear_y - 0.004, z_line), m=M["cell"], segs=8, rings=5),
-        sphere("RearDotR", 0.0035, (0.0125, rear_y - 0.004, z_line), m=M["cell"], segs=8, rings=5),
+        torus("RearRing", 0.0175, 0.003, (0, rear_y, z_line), rot=rad(90, 0, 0), m=M["steel"], major_segs=24, minor_segs=6),
+        box("RearStem", (0.01, 0.01, z_line - 0.0175 - 0.067), (0, rear_y, (z_line - 0.0175 + 0.067) / 2), bevel=0.003, m=M["steel"]),
+        sphere("RearDotL", 0.0035, (-0.0175, rear_y - 0.004, z_line), m=M["cell"], segs=8, rings=5),
+        sphere("RearDotR", 0.0035, (0.0175, rear_y - 0.004, z_line), m=M["cell"], segs=8, rings=5),
     ]
     front = [
-        side_profile("FrontFin", [(0.352, 0.066), (0.394, 0.066), (0.383, z_line - 0.008), (0.371, z_line - 0.008)], 0.012, (0, 0, 0), M["trim"], bevel=0.003),
-        sphere("FrontDot", 0.0045, (0, 0.375, z_line - 0.0045), m=M["cell"], segs=10, rings=6),
+        side_profile("FrontFin", [(0.352, 0.066), (0.394, 0.066), (0.383, z_line - 0.012), (0.371, z_line - 0.012)], 0.012, (0, 0, 0), M["trim"], bevel=0.003),
+        sphere("FrontDot", 0.0045, (0, 0.375, z_line - 0.007), m=M["cell"], segs=10, rings=6),
     ]
 
     # The drum: orange tyre with bumps, open windows each side, navy back plate, gold hub.
