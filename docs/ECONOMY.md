@@ -347,7 +347,7 @@ The print layer lives in `art/shaders/finish_common.gdshaderinc` (uniforms `prin
 `WeaponCosmetics.print_material()` makes one material per print and surface.
 
 **Prize Capsules.** Earned: 1 per alpha defeated, 1 per bounty claimed, 1 for the day's
-first clear, 1 for every third contract, 2 per milestone (`PrizePrints.settle(result)`
+first clear, 1 for every third contract, 1 per milestone (`PrizePrints.settle(result)`
 pays the run once, on `Events.run_finished` or the results section, whichever is first;
 contracts and milestones pay as they happen). Bought: 500 Sparks each (on the price rule;
 no real money). Published odds per capsule: **Common 62%, Rare 27%, Epic 9%,
