@@ -95,13 +95,15 @@ fullscreen.
   tickets. Full design: **[docs/ROUNDS.md](docs/ROUNDS.md)**.
 - **Checkpoint.** Clearing wave 3 reaches the checkpoint: lose on wave 4 or later and the
   results screen offers **Continue** from wave 4 (full health, some tickets, 75% rewards).
-- **Two weapons.** You carry a primary and a secondary (chosen in the **Arsenal**). Each
+- **Two weapons.** You carry a primary and a secondary, each picked from its own section
+  in the **Arsenal** (8 primaries, 4 secondaries; a slot only takes its own class). Each
   keeps its own ammo for the whole run. Switching cancels a reload.
 - **The loadout station** (each world has its own, with a tall beacon; a waypoint points
   to it during breaks) sells an energy top-up for both weapons, one heal per break (a
   boardwalk snack, a noodle cup, fish & chips, space rations or hot cocoa), an
   **overshield** (cells on the health bar that soak damage first) and a **damage boost**
-  (+20% for the next wave), and swaps the held weapon for any unlocked one for free.
+  (+20% for the next wave), and swaps the held weapon for any unlocked weapon of its class
+  (primaries in slot 1, secondaries in slot 2) for free.
   Runs start with 100 tickets, prices rise from world to world, and tickets left over at
   the portal turn into score. Every break also gives a small free refill, and a weapon
   that runs completely dry slowly recharges, so you are never left helpless.
@@ -137,19 +139,21 @@ fullscreen.
 
 ## Weapons
 
-| Weapon | Niche | Unlock | Notes |
-| --- | --- | --- | --- |
-| Pulse Pistol | Precision | Start | Three body shots or two headshots drop a tourist; a rested shot flies dead centre |
-| Ion Carbine | Sustained fire | Start | Best sustained damage of the starters; fire in bursts or aim past 15 m |
-| Scatter Blaster | Close range | Start | Nine pellets; one shot drops a tourist inside 10 m and staggers |
-| Comet Hand Cannon | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
-| Arc Coil | Crowd control | Player level 4 | Chain lightning locking onto the zombie nearest the crosshair; shock slows |
-| Bumper Lobber | Area damage | Player level 6 | Bouncing gumball bombs with splash; shows its landing ring when aiming |
-| Frostbite Cryo Beam | Lockdown | Player level 9 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
-| Rail Lancer | Anti-heavy | Player level 12 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
-| Gumball Drum Popper | Trick shots | Player level 15 | Semi-auto drum of bouncy gumballs: each ricochets up to twice (+25% per bounce) and bends toward a zombie, so bank shots round corners land; no splash |
-| Whirligig | Crowd shredder | Player level 22 | Prize-wheel minigun: spins up for 0.4 s, then 18 rounds a second that pass through a second zombie; slows you while it spins; overheats |
-| Riptide Harpoon | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
+| Weapon | Slot | Niche | Unlock | Notes |
+| --- | --- | --- | --- | --- |
+| Pulse Pistol | Secondary | Precision | Start | Three body shots or two headshots drop a tourist; a rested shot flies dead centre |
+| Ion Carbine | Primary | Sustained fire | Start | Best sustained damage of the starters; fire in bursts or aim past 15 m |
+| Scatter Blaster | Primary | Close range | Start | Nine pellets; one shot drops a tourist inside 10 m and staggers |
+| Comet Hand Cannon | Secondary | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
+| Arc Coil | Primary | Crowd control | Player level 4 | Chain lightning locking onto the zombie nearest the crosshair; shock slows |
+| Bumper Lobber | Primary | Area damage | Player level 6 | Bouncing gumball bombs with splash; shows its landing ring when aiming |
+| Frostbite Cryo Beam | Primary | Lockdown | Player level 9 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
+| Rail Lancer | Primary | Anti-heavy | Player level 12 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
+| Gumball Drum Popper | Primary | Trick shots | Player level 15 | Semi-auto drum of bouncy gumballs: each ricochets up to twice (+25% per bounce) and bends toward a zombie, so bank shots round corners land; no splash |
+| Whirligig | Primary | Crowd shredder | Player level 22 | Prize-wheel minigun: spins up for 0.4 s, then 18 rounds a second that pass through a second zombie; slows you while it spins; overheats |
+| Riptide Harpoon | Primary | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
+| Sparkler | Secondary | Spray and burn | Player level 18 | Full-auto firework machine pistol; every hit adds a fizz burn stack (up to six) that keeps burning; the fuse burns down with the magazine |
+| Ring Toss | Secondary | Ricochet | Player level 26 | Throws a glowing hoop that ricochets through up to four zombies and flies back to be caught; a headshot "Ringer" does double damage and refunds the hoop |
 
 `python3 tools/balance_report.py` prints each weapon's time-to-kill, sustained DPS and
 ammo economy from data. The latest balance pass (about 150 bot runs) evened the worlds
@@ -181,6 +185,18 @@ beam, projectile and splash, pierce, chain, chill/shock and heat), implemented o
 Popper's ricochet rounds (`RicochetRound`) and the Riptide's reel (`HarpoonLine`).
 
 ## Progression, Sparks and the Shop
+
+- **Prize Prints.** The **Prizes** tab holds a capsule machine. Every Prize Capsule drops
+  a unique *print* of a weapon finish with rolled traits: a pattern seed (where the
+  stripes, spots and camo fall), a shine grade (Factory, Polished or Mint), sometimes a
+  rare print (Glitter 1 in 20, Holo 1 in 50, Gold-ink Misprint 1 in 100) and a serial
+  number per finish (#001 First Edition, #002-#010 Low Serial, #007/#077/#777 Lucky 7s).
+  Odds are published (62 / 27 / 9 / 2%) and a luck meter guarantees an Epic within 10
+  capsules and a Legendary within 40. Capsules come from alphas, bounties, the day's first
+  clear, contracts and milestones, or 500 Sparks each (never real money). Prints are
+  collected, inspected, favourited and equipped per weapon; five prints trade up into one
+  of the next rarity, and repeats recycle into Prize Tokens for the Token Counter.
+  `tools/print_probe.gd` simulates 10,000 capsules against the published odds.
 
 - **Sparks** are the permanent currency. Popping a zombie banks its Spark (you see it fly
   into the counter), and waves, clears, leftover tickets, every player level, every
@@ -247,7 +263,7 @@ once per session. The menu is styled as a **carnival arcade at sunset** (marquee
 riveted teal frames, cream signboards; see **[docs/UI_STYLE.md](docs/UI_STYLE.md)**) over a
 live 3D booth and the selected world. A top bar shows your level, XP and Sparks on every
 page. Pages: **Play** (world track with key art, progress stars, the zombies that wait
-there, difficulty, loadout, Deploy), **Arsenal** (the weapon on a workbench in a booth,
+there, difficulty, loadout, Deploy), **Arsenal** (the weapon on a workbench in a booth, PRIMARIES and SECONDARIES sections,
 stats, mastery, sights and the two-slot loadout), **Locker**, **Shop**, **Career**
 (level track, contracts, milestones) and **Settings**. The live backdrop loads worlds on
 a background thread and is trimmed for the menu (no gameplay nodes, hidden props it
@@ -455,7 +471,8 @@ warm-up draws every effect, projectile, muzzle-flash and status-effect material 
 loading fade, so nothing compiles mid-fight. `tools/perf_probe.gd` measures frame time,
 node and audio-player churn, draw calls and the warm-up (`--materials=1`); usage is at the
 top of the file. Builds stay lean: no shadow meshes (the import default), no LODs on
-first-person and menu models, lossy WebP world textures and Vorbis q3 music.
+first-person and menu models, lossy WebP world textures, Vorbis q2 music (final waves q1.5, ambience mono q0) and
+sounds with nothing above 10 kHz imported at 22.05 kHz.
 
 **Checking assets.** `tools/preview_model.gd` prints a model's node tree, bounds and clips
 and renders a contact sheet; see the comment at the top of the file.
