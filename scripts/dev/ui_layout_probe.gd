@@ -18,7 +18,8 @@ extends RefCounted
 ## Overlays drawn above the page (a raised z_index, such as the coach marks'
 ## callout, which goes away by itself) are not counted as overlapping the
 ## buttons under them; controls faded out (alpha under 5%, counting their
-## parents) are not checked.
+## parents) are not checked, nor a control marked with the meta
+## `layout_overhang` (its rect is wider than what its shader draws).
 
 ## Window sizes in pixels (the canvas follows with canvas_items / expand).
 const SIZES: Array[Vector2i] = [
@@ -53,14 +54,24 @@ func _menu(menu: Node) -> void:
 		menu._show(id, false)
 		await _settle()
 		await _check_all_sizes(id)
-		var page: Node = menu.page(id)
-		for tabs in _tab_rows(page):
-			for tab_id in tabs.ids().duplicate():
-				if not tabs.is_visible_in_tree():
-					break
-				tabs.select(tab_id, true)
-				await _settle()
-				await _check_all_sizes("%s/%s" % [id, tab_id])
+		await _walk_tabs(menu.page(id), id, {})
+
+
+## Every tab of every tab row on the page, and the rows those tabs reveal
+## (the Locker's groups show their own category rows).
+func _walk_tabs(page: Node, where: String, visited: Dictionary) -> void:
+	for tabs in _tab_rows(page):
+		if visited.has(tabs):
+			continue
+		visited[tabs] = true
+		for tab_id in tabs.ids().duplicate():
+			if not tabs.is_visible_in_tree():
+				break
+			tabs.select(tab_id, true)
+			await _settle()
+			print("[layout] screen %s/%s" % [where, tab_id])
+			await _check_all_sizes("%s/%s" % [where, tab_id])
+			await _walk_tabs(page, "%s/%s" % [where, tab_id], visited)
 
 
 ## The tab rows a page shows (KitTabs that are in the tree and visible).
@@ -102,7 +113,7 @@ func _check(where: String, window: Vector2i) -> void:
 			continue
 		if c is BaseButton and rect.get_area() > 1.0:
 			buttons.append([c, rect.intersection(clip), _layer(c)])
-		if _covers(rect, view):
+		if _covers(rect, view) or c.has_meta(&"layout_overhang"):
 			continue
 		if not view.grow(SLACK).encloses(rect) and clip == view:
 			_fail(where, window, "%s is outside the window (%s in %s)" % [_name(c), _r(rect), _r(view)])
