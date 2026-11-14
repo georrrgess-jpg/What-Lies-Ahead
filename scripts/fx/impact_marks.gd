@@ -113,13 +113,15 @@ static func scuff(level: Node, hit: Dictionary, dir: Vector3, w: WeaponData) -> 
 ## of each style on a throwaway node under `holder` so the shader compiles
 ## behind the fade-in.
 static func warm_up(level: Node, holder: Node3D, at: Vector3, facing: Vector3) -> void:
-	_in(level)
+	var marks := _in(level)
+	if marks == null:
+		return
 	var mm := _new_multimesh(Style.size())
 	var basis := Basis.looking_at(-facing, Vector3.UP if absf(facing.y) < 0.99 else Vector3.RIGHT).scaled(Vector3.ONE * 0.3)
 	for i in Style.size():
 		mm.set_instance_transform(i, Transform3D(basis, at))
 		mm.set_instance_color(i, Color(0.3, 0.95, 1.0))
-		mm.set_instance_custom_data(i, Color(_current._now, i, 0.5, 1.0))
+		mm.set_instance_custom_data(i, Color(marks._now, i, 0.5, 1.0))
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
 	mmi.material_override = _material
@@ -136,7 +138,7 @@ static func clear(level: Node) -> void:
 
 # --- the pool --------------------------------------------------------------------
 
-## This level's marks node (made on first use), or null when marks are off.
+## This level's marks node (made on first use), or null outside the tree.
 static func _in(level: Node) -> ImpactMarks:
 	if level == null or not level.is_inside_tree():
 		return null
