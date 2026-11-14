@@ -12,6 +12,8 @@ const CARD_SIZE := Vector2(206, 196)
 const THUMB_SIZE := Vector2i(252, 104)
 const BOOTH_SCENE := "res://art/models/menu_booth.glb"
 const WHEEL_SCENE := "res://art/models/ferris_wheel.glb"
+## Loaded on a thread before the shell builds this page (see MenuPage).
+const HEAVY_RESOURCES := [BOOTH_SCENE, WHEEL_SCENE]
 const BLUEPRINT_SHADER := "res://art/shaders/ui_blueprint.gdshader"
 ## Height of the stand's turntable above the bench (see build_menu_booth.py).
 const TURNTABLE_TOP := 0.085
@@ -37,7 +39,10 @@ const STATS := [
 
 var _weapon: WeaponData
 var _cards := {}
-var _thumbs: Array[SubViewport] = []
+## Weapon id -> what its card's thumbnail was last rendered with.
+var _thumb_state := {}
+## Thumbnails and far scenery are made a few per frame, after the page itself.
+var _build: BuildQueue
 ## Card thumbnail pivots by weapon id (rebuilt when cosmetics change).
 var _thumb_pivots := {}
 var _thumb_textures := {}
@@ -86,6 +91,8 @@ func backdrop() -> Control:
 
 
 func _ready() -> void:
+	_build = BuildQueue.new()
+	add_child(_build)
 	_build_stage()
 	_build_plates()
 	var col := VBoxContainer.new()
@@ -102,7 +109,9 @@ func _ready() -> void:
 	col.add_child(_build_tray())
 	visibility_changed.connect(func(): set_process(is_visible_in_tree()))
 	set_process(false)
-	_select(GameData.weapon(Loadout.primary()))
+	# The weapon on the stand comes a frame later (refresh() selects at once
+	# when the page opens first).
+	_build.add(func(): if _weapon == null: _select(GameData.weapon(Loadout.primary())))
 
 
 func _process(delta: float) -> void:
@@ -116,9 +125,7 @@ func _process(delta: float) -> void:
 func refresh() -> void:
 	# Skins may have changed in the Locker since the cards were drawn.
 	for id in _thumb_pivots:
-		_fill_thumb(_thumb_pivots[id], GameData.weapon(id))
-	for t in _thumbs:
-		t.render_target_update_mode = SubViewport.UPDATE_ONCE
+		_build.add(_redo_thumb.bind(id))
 	_select(_weapon if _weapon else GameData.weapon(Loadout.primary()))
 	UiFx.stagger_in(_cards.values())
 	UiFx.pop_in(_board, 0.05, 0.94)
@@ -292,13 +299,24 @@ func _thumbnail(w: WeaponData, holder: Node) -> Texture2D:
 	var pivot := Node3D.new()
 	vp.add_child(pivot)
 	_thumb_pivots[w.id] = pivot
-	_fill_thumb(pivot, w)
+	vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	_build.add(_redo_thumb.bind(w.id))
 	var cam := Camera3D.new()
 	cam.position = Vector3(0, 0.02, 1.25)
 	cam.fov = 26.0
 	vp.add_child(cam)
-	_thumbs.append(vp)
 	return vp.get_texture()
+
+
+## Re-renders a card's thumbnail if the weapon's look changed since the last one.
+func _redo_thumb(id: StringName) -> void:
+	var state := hash([Cosmetics.weapon_loadout(id), GameData.is_weapon_unlocked(GameData.weapon(id))])
+	if _thumb_state.get(id) == state:
+		return
+	_thumb_state[id] = state
+	var pivot: Node3D = _thumb_pivots[id]
+	_fill_thumb(pivot, GameData.weapon(id))
+	(pivot.get_parent() as SubViewport).render_target_update_mode = SubViewport.UPDATE_ONCE
 
 
 ## Puts a fresh model of `w` (with its equipped cosmetics) in a card's pivot.
@@ -357,7 +375,7 @@ func _build_stage() -> void:
 	if booth:
 		_viewport.add_child(booth)
 		_take_stand_parts(booth)
-	_add_scenery()
+	_build.add(_add_scenery)
 	var cam := Camera3D.new()
 	cam.fov = 30.0
 	cam.far = 400.0

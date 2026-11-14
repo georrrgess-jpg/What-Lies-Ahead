@@ -45,6 +45,19 @@ func _init() -> void:
 	world_index = clampi(int(Profile.section("menu").get("world", 0)), 0, maxi(0, GameData.worlds().size() - 1))
 
 
+## The level the Play page opens on: the world browsed last, its first
+## unlocked level (the shell shows it behind the menu before the page exists).
+static func remembered_level() -> LevelData:
+	var worlds := GameData.worlds()
+	if worlds.is_empty():
+		return null
+	var world := worlds[clampi(int(Profile.section("menu").get("world", 0)), 0, worlds.size() - 1)]
+	for l in world.levels:
+		if GameData.is_level_unlocked(l):
+			return l
+	return world.levels[0] if not world.levels.is_empty() else null
+
+
 func uses_shell_header() -> bool:
 	return true
 

@@ -78,6 +78,30 @@ func _ready() -> void:
 	Wallet.balance_changed.connect(_on_balance_changed)
 
 
+## Makes the picks and the first shelf's cards ahead of the first visit,
+## a few per frame (they stay hidden until refresh() fills them).
+func prewarm(queue: BuildQueue) -> void:
+	if _tabs.ids().is_empty():
+		return
+	var shelf := ShopCatalog.items(_tabs.ids()[0]).size()
+	var picks := ShopCatalog.featured().size()
+	for i in range(0, maxi(shelf, picks), 3):
+		queue.add(_prewarm_cards.bind(mini(i + 3, shelf), mini(i + 3, picks)))
+
+
+func _prewarm_cards(shelf: int, picks: int) -> void:
+	while _cards.size() < shelf:
+		var card := _new_card(SHELF_CARD)
+		card.visible = false
+		_grid.add_child(card)
+		_cards.append(card)
+	while _featured_cards.size() < picks:
+		var card := _new_card(FEATURED_CARD)
+		card.visible = false
+		_featured_row.add_child(card)
+		_featured_cards.append(card)
+
+
 func refresh() -> void:
 	_built = true
 	_refresh_countdown()

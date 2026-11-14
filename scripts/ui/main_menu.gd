@@ -10,6 +10,9 @@ extends Control
 ##   - Navigation: BACK / Esc returns to where the page was opened from, Q / E
 ##     (PageUp / PageDown, the shoulder buttons) step through the sections.
 ## The startup intro (once per session) opens into the home screen.
+## Only home is built when the menu opens; the other pages are built one per
+## frame in the background once the startup screen holds (or the home screen
+## is up), and any page opened before that is built on the spot.
 
 const MENU_MUSIC := &"menu_theme"
 ## How a page sits in the shell.
@@ -28,6 +31,13 @@ const LEGACY_HEIGHT := 1080.0
 var _pages := {}
 ## Page id -> the page itself.
 var _nodes := {}
+## Page id -> [page factory, marquee title, Frame] for pages not built yet.
+var _later := {}
+## Builds the pages not opened yet, a page per frame.
+var _build: BuildQueue
+var _prebuild_started := false
+## Resources loaded ahead for pages (kept so they stay in the cache).
+var _held: Array[Resource] = []
 ## Page id -> the page's own full-screen backdrop, for pages that have one.
 var _own_backdrops := {}
 var _current_page := ""
@@ -41,13 +51,14 @@ var _backdrop_host: Control
 var _page_host: Control
 var _top_bar: MenuTopBar
 var _home: MenuHome
+## The Play page (built on first use: see _play_page()).
 var _play: MenuPlay
 ## The level DEPLOY starts (the dev driver sets it).
 var _selected_level: LevelData:
 	get:
-		return _play.selected_level
+		return _play_page().selected_level
 	set(v):
-		_play.selected_level = v
+		_play_page().selected_level = v
 
 
 func _ready() -> void:
@@ -57,7 +68,7 @@ func _ready() -> void:
 	Game.capture_mouse(false)
 	_build_layers()
 	_build_pages()
-	_show_world_backdrop(_play.selected_level, true)
+	_show_world_backdrop(MenuPlay.remembered_level(), true)
 	Sfx.play_music(MENU_MUSIC, -9.0)
 
 	var dev := Game.has_node("DevDriver")
@@ -70,8 +81,11 @@ func _ready() -> void:
 		var intro := IntroOverlay.new()
 		add_child(intro)
 		intro.finished.connect(_on_intro_finished)
+		intro.holding.connect(_prebuild)
 	else:
-		_show(Game.menu_page if _pages.has(Game.menu_page) else "title", false)
+		_show(Game.menu_page if _has_page(Game.menu_page) else "title", false)
+		# A moment for the home screen to come up before the rest is built.
+		get_tree().create_timer(0.3).timeout.connect(_prebuild)
 	Game.menu_page = ""
 
 	if Profile.recovered_from_bad_save:
@@ -112,25 +126,92 @@ func _layer() -> Control:
 
 
 func _build_pages() -> void:
+	_build = BuildQueue.new()
+	add_child(_build)
 	_home = MenuHome.new()
 	_home.play_requested.connect(_on_play_requested)
 	_register("title", _home, "", Frame.FULL)
-	_play = MenuPlay.new()
-	_play.world_changed.connect(_show_world_backdrop.bind(false))
-	_register("play", _play, "SELECT WORLD", Frame.SHELL)
+	_later["play"] = [_new_play, "SELECT WORLD", Frame.SHELL]
 	_top_bar.add_tab("play", "PLAY")
 	var extensions := GameData.ui_extensions(UiExtension.Kind.MENU_PAGE)
 	extensions.sort_custom(func(a: UiExtension, b: UiExtension): return a.order < b.order)
 	for ext in extensions:
 		if ext.script_ref == null:
 			continue
-		var page: Control = ext.script_ref.new()
-		var shell_page := page is MenuPage and (page as MenuPage).uses_shell_header()
-		_register(String(ext.id), page, ext.title.to_upper(), Frame.SHELL if shell_page else Frame.LEGACY)
+		_later[String(ext.id)] = [ext.script_ref.new, ext.title.to_upper(), null]
 		if ext.show_on_title:
 			_top_bar.add_tab(String(ext.id), ext.title)
-	_register("settings", MenuSettings.new(), "SETTINGS", Frame.SHELL)
-	_home.known_pages.assign(_pages.keys())
+	_later["settings"] = [MenuSettings.new, "SETTINGS", Frame.SHELL]
+	_home.known_pages.assign(["title"] + _later.keys())
+
+
+func _new_play() -> MenuPlay:
+	_play = MenuPlay.new()
+	_play.world_changed.connect(_show_world_backdrop.bind(false))
+	return _play
+
+
+func _has_page(id: String) -> bool:
+	return _pages.has(id) or _later.has(id)
+
+
+## Builds page `id` now if it has not been built yet.
+func _ensure(id: String) -> void:
+	if not _later.has(id):
+		return
+	var entry: Array = _later[id]
+	_later.erase(id)
+	var page: Control = (entry[0] as Callable).call()
+	var frame_kind = entry[2]
+	if frame_kind == null:
+		var shell_page := page is MenuPage and (page as MenuPage).uses_shell_header()
+		frame_kind = Frame.SHELL if shell_page else Frame.LEGACY
+	_register(id, page, entry[1], frame_kind)
+
+
+func _play_page() -> MenuPlay:
+	_ensure("play")
+	return _play
+
+
+## Queues every page not built yet, one per frame, each followed by its warm-up
+## (cards made ahead, see MenuPage.prewarm()). Play waits for its key art.
+func _prebuild() -> void:
+	if _prebuild_started or not is_inside_tree():
+		return
+	_prebuild_started = true
+	KeyArt.prefetch()
+	for id in _later.keys():
+		for path in _heavy(id):
+			ResourceLoader.load_threaded_request(path)
+		_build.add(_prebuild_page.bind(id))
+
+
+## The resources page `id` loads when built (MenuPage.heavy_resources()).
+func _heavy(id: String) -> PackedStringArray:
+	var entry: Array = _later.get(id, [])
+	if entry.is_empty():
+		return PackedStringArray()
+	var script := (entry[0] as Callable).get_object() as Script
+	if script == null or not script.get_script_constant_map().has("HEAVY_RESOURCES"):
+		return PackedStringArray()
+	return PackedStringArray(script.get_script_constant_map()["HEAVY_RESOURCES"])
+
+
+func _prebuild_page(id: String) -> void:
+	var waiting := id == "play" and not KeyArt.prefetched()
+	for path in _heavy(id):
+		waiting = waiting or ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS
+	if waiting:
+		get_tree().create_timer(0.1).timeout.connect(func(): _build.add(_prebuild_page.bind(id)))
+		return
+	for path in _heavy(id):
+		if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_LOADED:
+			_held.append(ResourceLoader.load_threaded_get(path))
+	_ensure(id)
+	var page := _nodes.get(id) as MenuPage
+	if page:
+		page.prewarm(_build)
 
 
 ## Adds `page` to the shell under `id`, in the frame its kind needs.
@@ -209,8 +290,9 @@ func _fit_legacy(frame: Control, page: Control) -> void:
 	page.size = Vector2(frame.size.x, room) / k
 
 
-## The page registered as `id` (null if there is none).
+## The page registered as `id` (null if there is none), built if need be.
 func page(id: String) -> Control:
+	_ensure(id)
 	return _nodes.get(id)
 
 
@@ -284,6 +366,7 @@ func _open_from_here(page_id: String) -> void:
 
 ## Switches page with a quick slide and fade. `animate` false = instant.
 func _show(page_id: String, animate := true) -> void:
+	_ensure(page_id)
 	if not _pages.has(page_id) or (page_id == _current_page and animate):
 		return
 	var old: Control = _pages.get(_current_page)
@@ -374,7 +457,7 @@ func _on_intro_finished() -> void:
 
 
 func _on_play_requested(world_index: int) -> void:
-	_play.select_world(world_index)
+	_play_page().select_world(world_index)
 	_show("play")
 
 
@@ -388,8 +471,8 @@ func _show_world_backdrop(level: LevelData, instant: bool) -> void:
 
 ## Dev driver entry points (scripts/dev/dev_driver.gd).
 func _select_weapon(weapon_id: StringName) -> void:
-	_play.selected_weapon = weapon_id
+	_play_page().selected_weapon = weapon_id
 
 
 func _start() -> void:
-	_play.start()
+	_play_page().start()

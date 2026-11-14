@@ -13,6 +13,8 @@ extends MenuPage
 ## Claimed levels kept in view to the left of the next one.
 const ROAD_LEAD := 2
 const MASTERY_COLUMNS := 4
+## Road levels built per frame.
+const ROAD_CHUNK := 4
 
 var _header: HBoxContainer
 var _level_slot: MarginContainer
@@ -30,6 +32,7 @@ var _thumbs: CosmeticThumbs
 var _next_card: Control
 ## Hash of what the cards were last built from.
 var _state := 0
+var _build: BuildQueue
 
 
 func uses_shell_header() -> bool:
@@ -43,6 +46,8 @@ func header_extra() -> Control:
 func _ready() -> void:
 	_thumbs = CosmeticThumbs.new()
 	add_child(_thumbs)
+	_build = BuildQueue.new()
+	add_child(_build)
 	_header = HBoxContainer.new()
 	_header.alignment = BoxContainer.ALIGNMENT_END
 	_header.add_theme_constant_override("separation", UiKit.GAP_S)
@@ -62,22 +67,39 @@ func _ready() -> void:
 func refresh() -> void:
 	if _road == null:
 		return
-	# Rebuilding every card takes a few frames' worth of time: only when the
-	# profile (or the day, which rotates contracts) changed since last time.
-	var state := hash([Profile.data, Time.get_date_string_from_system()])
+	# Rebuilding every card costs several frames: only when what the page
+	# shows changed (progress, mastery, level records, the day's contracts).
+	var state := _content_state()
 	if state == _state:
 		UiFx.stagger_in(_mastery.get_children())
 		_show_next_level.call_deferred()
 		return
 	_state = state
-	_fill_header()
-	_clear(_level_slot)
-	_level_slot.add_child(CareerCards.level_block())
-	_fill_road()
-	_fill_goals()
-	_fill_mastery()
-	UiFx.stagger_in(_mastery.get_children())
-	_show_next_level.call_deferred()
+	# Built a few cards per frame while the page slides in.
+	_build.clear()
+	_build.add(_fill_header)
+	_build.add(func():
+		_clear(_level_slot)
+		_level_slot.add_child(CareerCards.level_block()))
+	_build.add(_fill_goals)
+	_build.add(func():
+		_fill_mastery()
+		UiFx.stagger_in(_mastery.get_children()))
+	_build.add(_start_road)
+	for lvl in range(2, Progression.MAX_LEVEL + 1, ROAD_CHUNK):
+		_build.add(_add_road.bind(lvl, mini(lvl + ROAD_CHUNK - 1, Progression.MAX_LEVEL)))
+	_build.add(_road_done)
+
+
+## Builds the cards ahead of the first visit (refresh() queues them).
+func prewarm(queue: BuildQueue) -> void:
+	queue.add(refresh)
+
+
+## A hash of everything the cards are built from.
+func _content_state() -> int:
+	return hash([Profile.data.get("progression"), Profile.data.get("mastery"), Profile.data.get("levels"),
+		Wallet.lifetime_earned(), Time.get_date_string_from_system()])
 
 
 func first_focus() -> Control:
@@ -187,11 +209,15 @@ func _fill_header() -> void:
 	_header.add_child(CareerCards.stat_tile("SPARKS EARNED", Wallet.format(Wallet.lifetime_earned()), Wallet.COLOR))
 
 
-func _fill_road() -> void:
+func _start_road() -> void:
 	_clear(_road)
 	_next_card = null
+
+
+## Road cards for levels `from`..`to` (and the links before them).
+func _add_road(from: int, to: int) -> void:
 	var current := Progression.level()
-	for lvl in range(2, Progression.MAX_LEVEL + 1):
+	for lvl in range(from, to + 1):
 		if lvl > 2:
 			_road.add_child(CareerCards.road_link(lvl <= current + 1))
 		var card := CareerCards.road_card(lvl, current, _thumbs)
@@ -201,8 +227,18 @@ func _fill_road() -> void:
 		_road.add_child(card)
 		if lvl == mini(current + 1, Progression.MAX_LEVEL):
 			_next_card = card
-	if _next_card:
-		_show_road_detail(_next_card)
+
+
+## The road is complete: scroll to the next level and give it the focus if
+## the page is open and nothing in it has the focus yet.
+func _road_done() -> void:
+	if _next_card == null:
+		return
+	_show_road_detail(_next_card)
+	_show_next_level.call_deferred()
+	var focus := get_viewport().gui_get_focus_owner()
+	if is_visible_in_tree() and (focus == null or not is_ancestor_of(focus)):
+		_next_card.grab_focus()
 
 
 func _fill_goals() -> void:

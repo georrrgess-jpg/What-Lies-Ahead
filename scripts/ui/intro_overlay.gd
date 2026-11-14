@@ -16,6 +16,8 @@ extends Control
 ## frame never waits on a load.
 
 signal finished
+## The intro reached its held title ("PRESS ANY KEY"): the screen is quiet.
+signal holding
 
 const HOLD_AT := 7.2
 const MONTAGE_AT := 1.4
@@ -319,7 +321,10 @@ func _skip_to_end() -> void:
 
 
 func _reach_hold() -> void:
+	if _at_end:
+		return
 	_at_end = true
+	holding.emit()
 	_score.stop()
 	_resume_menu_music()
 

@@ -54,6 +54,17 @@ func refresh() -> void:
 	pass
 
 
+## A page may also declare `const HEAVY_RESOURCES: PackedStringArray`, the
+## files it loads when built: the shell loads them on the loader thread before
+## it builds the page in the background.
+
+## Optional: work to do ahead of the first visit, while the menu idles (make
+## the card pool, say). Queue it on `queue` in small jobs; no side effects a
+## player would notice (nothing marked seen, no sounds).
+func prewarm(_queue: BuildQueue) -> void:
+	pass
+
+
 ## BACK or Esc was pressed. Return true if the page used it (closed a
 ## sub-view, cancelled something); false lets the shell leave the page.
 func handle_back() -> bool:

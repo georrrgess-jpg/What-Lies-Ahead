@@ -81,6 +81,21 @@ func _ready() -> void:
 	Wallet.balance_changed.connect(_on_balance_changed)
 
 
+## Makes the first category's cards ahead of the first visit, a few per
+## frame (they stay hidden until refresh() fills them).
+func prewarm(queue: BuildQueue) -> void:
+	var count := LockerCatalog.items(_slot, _weapon_id, _filter).size()
+	for i in range(0, count, 3):
+		queue.add(_prewarm_cards.bind(mini(i + 3, count)))
+
+
+func _prewarm_cards(count: int) -> void:
+	while _cards.size() < count:
+		var card := _new_card()
+		card.visible = false
+		_cards.append(card)
+
+
 func refresh() -> void:
 	_built = true
 	_refresh_collection()
@@ -167,9 +182,12 @@ func _build_tabs() -> Control:
 	var strip := UiKit.card_panel(6)
 	_tabs = KitTabs.make(24, true)
 	_tabs.add_theme_constant_override("separation", UiKit.GAP_XS)
+	var slots := {}
+	for it in GameData.cosmetics():
+		slots[it.slot] = true
 	for cat in LockerCatalog.CATEGORIES:
 		# A category the game has no items for (yet) gets no tab.
-		if LockerCatalog.collection(cat["slot"]).y == 0:
+		if not slots.has(cat["slot"]):
 			continue
 		var tab := _tabs.add_tab(cat["slot"], String(cat["tab"]))
 		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
