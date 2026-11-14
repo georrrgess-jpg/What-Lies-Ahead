@@ -25,7 +25,7 @@ varying vec3 lp;
 varying vec3 ln;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 	ln = NORMAL;
 }
 
@@ -88,11 +88,18 @@ vec3 rings(vec3 g, vec2 uv) {
 vec3 racing(vec3 g, vec3 p, vec3 n) {
 	vec3 col = g;
 	float side = fside(n);
+	// Stripes are anchored to the spine: a print restyles them by its seed
+	// (stripe width, gap and body-line height) instead of moving them.
+	float k = print_on ? print_seed : 0.5;
+	p = print_on ? p - print_offset : p;
+	float half_w = mix(0.014, 0.026, k);
+	float gap = print_on ? mix(0.009, 0.002, fract(k * 7.0)) : 0.005;
+	float line_y = print_on ? mix(-0.03, 0.012, fract(k * 13.0)) : -0.01;
 	// Twin stripes down the spine on top, one body-line stripe on the sides.
-	float top = (1.0 - side) * step(abs(p.x), 0.02) * step(0.005, abs(p.x));
-	float topin = (1.0 - side) * step(abs(abs(p.x) - 0.0235), 0.0015);
-	float body = side * step(abs(p.y + 0.01), 0.011);
-	float bodypin = side * step(abs(abs(p.y + 0.01) - 0.016), 0.0016);
+	float top = (1.0 - side) * step(abs(p.x), half_w) * step(gap, abs(p.x));
+	float topin = (1.0 - side) * step(abs(abs(p.x) - half_w - 0.0035), 0.0015);
+	float body = side * step(abs(p.y - line_y), 0.011);
+	float bodypin = side * step(abs(abs(p.y - line_y) - 0.016), 0.0016);
 	col = mix(col, color_b, max(top, body));
 	return mix(col, color_c, max(topin, bodypin));
 }
@@ -125,11 +132,13 @@ vec3 hextiles(vec3 g, vec2 uv) {
 }
 
 vec3 stencil(vec3 g, vec3 p, vec3 n) {
-	float z = mod(p.z + 0.4, 0.3);
+	// A print spaces its bands by its seed (they also slide with the offset).
+	float pitch = print_on ? mix(0.16, 0.3, print_seed) : 0.3;
+	float z = mod(p.z + 0.4, pitch);
 	float bands = step(z, 0.02) + step(0.035, z) * step(z, 0.045);
 	// Two stencil chevrons on the sides, pointing at the muzzle.
 	vec2 uv = fplane(p, n);
-	vec2 a = vec2(mod(uv.x + 0.4, 0.3) - 0.15, uv.y - 0.02);
+	vec2 a = vec2(mod(uv.x + 0.4, pitch) - pitch * 0.5, uv.y - 0.02);
 	float chev = 0.0;
 	for (int k = 0; k < 2; k++) {
 		float x = a.x - float(k) * 0.014 - abs(a.y) * 0.8;
@@ -234,4 +243,5 @@ void fragment() {
 	METALLIC = metallic + pin * 0.4;
 	ROUGHNESS = roughness;
 	EMISSION = fstudio(r, col) * (0.07 + pin * 0.2) + vec3(1.0) * pow(fres, 4.0) * 0.08 * (1.0 - roughness);
+	PRINT_LAYER
 }

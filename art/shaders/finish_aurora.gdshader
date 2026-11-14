@@ -16,7 +16,7 @@ varying vec3 lp;
 varying vec3 ln;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 	ln = NORMAL;
 }
 
@@ -58,4 +58,5 @@ void fragment() {
 		ROUGHNESS = 0.25;
 		EMISSION = sky * 0.5 + light + vec3(0.9, 0.95, 1.0) * star * 1.5;
 	}
+	PRINT_LAYER
 }

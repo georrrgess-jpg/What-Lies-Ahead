@@ -16,6 +16,8 @@ var state := LockerCatalog.State.LOCKED
 var shop_mode := false
 ## Art that is not a thumbnail texture (banner, title plate, drawn icon).
 var _art: Control
+## The Prize Print stack chip of a finish the player holds prints of.
+var _prints: KitChip
 
 
 static func create(card_size := CARD_SIZE) -> LockerCard:
@@ -61,6 +63,24 @@ func refresh_state() -> void:
 	# A locked title is all lettering: keep it readable under the lock tint.
 	if item.slot == &"title" and _holder.modulate != Color.WHITE:
 		_holder.modulate = Color(0.62, 0.6, 0.74)
+	_refresh_print_stack()
+
+
+## Prize Prints: a finish the player holds prints of shows the stack ("x3 PRINTS").
+func _refresh_print_stack() -> void:
+	var count := PrizePrints.prints_of(item.id).size() if item.slot == &"weapon_finish" else 0
+	if _prints == null:
+		if count == 0:
+			return
+		_prints = KitChip.make("", Color("9f8bff"), 15, false)
+		_prints.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_prints)
+		_prints.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+		_prints.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_prints.position.y = 36
+		_prints.offset_right = -8
+	_prints.visible = count > 0
+	_prints.set_text("x%d PRINT%s" % [count, "" if count == 1 else "S"])
 
 
 func _show_art(thumbs: CosmeticThumbs) -> void:

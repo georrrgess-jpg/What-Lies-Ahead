@@ -15,7 +15,7 @@ varying vec3 lp;
 varying vec3 ln;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 	ln = NORMAL;
 }
 
@@ -71,4 +71,5 @@ void fragment() {
 	ROUGHNESS = mix(0.45, 0.08, came);
 	EMISSION = (glass * came * pane_lit * 1.5 + vec3(1.0, 0.95, 0.8) * came * beam * 0.25) * k
 		+ fstudio(r, vec3(0.6)) * came * pow(fres, 2.0) * 0.4 + fstudio(r, trim_color * 2.0) * (1.0 - came) * 0.2;
+	PRINT_LAYER
 }

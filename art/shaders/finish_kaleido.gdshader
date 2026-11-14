@@ -15,7 +15,7 @@ varying vec3 lp;
 varying vec3 ln;
 
 void vertex() {
-	lp = VERTEX;
+	lp = print_xform(VERTEX);
 	ln = NORMAL;
 }
 
@@ -57,4 +57,5 @@ void fragment() {
 		ROUGHNESS = 0.15;
 		EMISSION = glass * (0.45 + 0.2 * fres) * (1.0 - seam) + vec3(1.0) * smoothstep(0.08, 0.0, rad) * 0.6;
 	}
+	PRINT_LAYER
 }
