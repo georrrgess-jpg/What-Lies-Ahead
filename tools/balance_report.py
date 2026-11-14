@@ -11,7 +11,8 @@ head 30% of the time), damage falloff at `--dist` metres, shotgun pellets
 sampled in their cone against the target's capsule (Monte Carlo), burst,
 charge, beam heat and frozen bonus included. Splash and chain hit one target
 here; their crowd value is in the "crowd" column (damage one trigger pull
-spreads over a pack of four). Armour behaviours (helmets, shields, ice
+spreads over a pack of four; ricochets count like chain jumps). Fizz burn
+(the Sparkler) adds its average burn over each pull's time. Armour behaviours (helmets, shields, ice
 shells) are approximated as extra health. Numbers are for comparison
 between weapons, not exact in-game times.
 """
@@ -34,7 +35,12 @@ WEAPON_DEFAULTS = {
 	"direct_hit_bonus": 0.0, "pierce": 0, "pierce_falloff": 0.85, "chain_count": 0,
 	"chain_falloff": 0.75, "status_effect": "", "status_amount": 0.0,
 	"frozen_damage_scale": 1.0, "shatter_damage": 0.0, "regen_rate": 0.0, "regen_delay": 0.4,
+	"ricochet_count": 0, "ricochet_falloff": 0.8, "status_duration": 1.5,
 }
+# Fizz (FizzBurn): stacks per target, and the share of the full burn a target
+# carries on average while it is being sprayed (the stacks build up).
+FIZZ_MAX_STACKS = 6
+FIZZ_RAMP = 0.75
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
 	"capsule_height": 1.9, "mass": 1.0, "move_speed": 2.0}
 # Extra effective health from armour behaviours (helmet, riot shield, ice shell).
@@ -116,6 +122,9 @@ def pull_damage(w, e, d, head):
 	"""Average damage of one trigger pull to one target, and the pull's duration."""
 	scale = falloff(w, d)
 	head_mix = 1.0 + head * (w["headshot_multiplier"] - 1.0)
+	if w["ricochet_count"] > 0:
+		# A thrown ring (RingShot) flies straight at its first target and can headshot.
+		return w["damage"] * head_mix, w["fire_interval"]
 	if w["projectile_speed"] > 0.0:
 		dmg = w["damage"] + w["direct_hit_bonus"]
 		return dmg, w["fire_interval"]
@@ -123,7 +132,15 @@ def pull_damage(w, e, d, head):
 		# Full charge, as a player would against anything slower than a runner.
 		return w["damage"] * scale * head_mix, w["fire_interval"] + w["charge_time"]
 	dmg = w["damage"] * w["pellets"] * pellet_fraction(w, e, d) * scale * head_mix
-	return dmg * w["burst_count"], w["fire_interval"] + (w["burst_count"] - 1) * w["burst_interval"]
+	cycle = w["fire_interval"] + (w["burst_count"] - 1) * w["burst_interval"]
+	return dmg * w["burst_count"] + fizz_per_pull(w, cycle), cycle
+
+
+def fizz_per_pull(w, cycle):
+	"""Burn damage a fizzing target takes over one pull's time while sprayed."""
+	if w["status_effect"] != "fizz":
+		return 0.0
+	return w["status_amount"] * FIZZ_MAX_STACKS * FIZZ_RAMP * cycle
 
 
 def ttk(w, e, d, head):
@@ -168,6 +185,9 @@ def crowd_damage(w, d=8.0):
 	if w["chain_count"] > 0:
 		jumps = sum(w["chain_falloff"] ** (k + 1) for k in range(int(min(3, w["chain_count"]))))
 		return dmg + w["damage"] * jumps
+	if w["ricochet_count"] > 0:
+		hops = sum(w["ricochet_falloff"] ** (k + 1) for k in range(int(min(3, w["ricochet_count"]))))
+		return dmg + w["damage"] * hops
 	if w["splash_radius"] > 0.0:
 		return dmg + 3 * w["damage"] * (1 + w["splash_edge_scale"]) / 2
 	if w["pierce"] > 0:
