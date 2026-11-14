@@ -1,0 +1,73 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/riptide.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/riptide_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/riptide_mode.gd" id="5"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 30
+
+[resource]
+script = ExtResource("1")
+id = &"riptide"
+sort_order = 110
+category = "Harpoon"
+display_name = "Riptide Harpoon"
+role = "Hold to charge, release to fire a harpoon on a line. A full charge skewers up to four zombies in a row; everything it hits is reeled toward you and staggered out of its swing, heavies too (they also take +30%). Best at mid range: zombies already close are barely pulled."
+unlock = SubResource("unlock")
+slot_class = "primary"
+magazine_size = 5
+reserve_start = 30
+reserve_max = 50
+reload_time = 2.3
+emergency_recharge_interval = 5.0
+automatic = false
+fire_interval = 0.3
+damage = 185.0
+pellets = 1
+spread_degrees = 0.0
+spread_bloom = 0.0
+spread_bloom_max = 0.0
+max_range = 60.0
+falloff_start = 25.0
+falloff_end = 50.0
+falloff_min_scale = 0.6
+headshot_multiplier = 1.5
+knockback = 0.0
+ads_fov_scale = 0.7
+ads_time = 0.2
+ads_spread_scale = 0.0
+ads_depth = 0.07
+first_shot_accurate = true
+reticle_style = "circle"
+recoil_kick = 3.4
+recoil_yaw = 0.35
+view_kick = 0.11
+shake = 0.28
+tracer_color = Color(0.38, 0.96, 1, 1)
+tracer_width = 0.05
+view_position = Vector3(0.27, -0.27, -0.68)
+view_rotation_degrees = Vector3(0, 0, -3)
+fire_sound = &"weap_rip_fire"
+reload_sound = &"weap_rip_reload"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.04
+move_speed_scale = 0.94
+equip_time = 0.4
+charge_time = 0.6
+charge_min_fraction = 0.3
+charge_min_damage_scale = 0.3
+charge_move_scale = 0.7
+charge_sound = &"weap_rip_charge"
+charge_ready_sound = &"weap_rip_ready"
+pierce = 3
+pierce_falloff = 0.85
+tracer_style = &"none"
+viewmodel = ExtResource("3")
+reload_script = ExtResource("4")
+mode_script = ExtResource("5")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

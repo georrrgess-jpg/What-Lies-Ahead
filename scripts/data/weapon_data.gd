@@ -209,6 +209,11 @@ extends Resource
 ## Impact on scenery: "spark", "frost", "arc" or "rail".
 @export var impact_style: StringName = &"spark"
 
+@export_group("Mode")
+## Optional behaviour on top of the fire modes above: a script extending
+## WeaponMode (scripts/weapons/modes/), e.g. spin-up barrels, ricochet rounds.
+@export var mode_script: Script
+
 
 func max_rank() -> int:
 	return rank_xp.size()

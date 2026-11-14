@@ -48,6 +48,8 @@ var enabled := true
 var damage_multiplier := 1.0
 ## Zombie a seeking weapon would hit right now (for the HUD lock marker).
 var lock_target: Zombie
+## The held weapon's own behaviour (WeaponData.mode_script), or null.
+var mode: WeaponMode
 
 var _ammo := {}            # weapon id -> { "mag": int, "reserve": int }
 ## Seconds until the next shot. Runs below zero by up to one frame so the
@@ -147,6 +149,9 @@ func slot_weapon(index: int) -> WeaponData:
 
 func _take(data: WeaponData, animate: bool) -> void:
 	_end_trigger()
+	if mode:
+		mode.dispose()
+	mode = WeaponMode.create(data, self)
 	current = data
 	if not _ammo.has(data.id):
 		_ammo[data.id] = {"mag": data.magazine_size, "reserve": data.reserve_start}
@@ -230,7 +235,7 @@ func is_beaming() -> bool:
 func move_scale() -> float:
 	if current == null:
 		return 1.0
-	return current.move_speed_scale * (current.charge_move_scale if _charging else 1.0)
+	return current.move_speed_scale * (current.charge_move_scale if _charging else 1.0) * (mode.move_scale() if mode else 1.0)
 
 
 ## Spread cone half-angle (degrees) the next shot will use, including bloom
@@ -404,6 +409,9 @@ func _handle_trigger(delta: float) -> void:
 	var wants := held if (current.automatic or current.beam) else _fire_buffer > 0.0
 	# The beam stays on between damage ticks (they are paced by the cooldown).
 	_set_beam(current.beam and held and not _reloading and _switch_left <= 0.0 and magazine() > 0 and player.weapon_ready())
+	# The weapon's mode can hold the shot back (barrels spinning up).
+	if mode and not mode.trigger(held and not _reloading and _switch_left <= 0.0 and player.weapon_ready(), delta):
+		return
 	if not wants or not can_shoot:
 		return
 	if magazine() > 0:
@@ -473,6 +481,8 @@ func _set_beam(on: bool) -> void:
 ## Stops whatever the trigger was doing (switching, reloading, disabled).
 func _end_trigger() -> void:
 	_burst_left = 0
+	if mode:
+		mode.end_trigger()
 	if _charging:
 		_set_charging(false)
 	_set_beam(false)
@@ -549,12 +559,16 @@ func _fire_shot(scale: float, power: float) -> void:
 	# Hits are gathered per zombie so a scatter blast is one solid hit
 	# (one flash, one sound, summed damage and knockback), not nine tiny ones.
 	var hits := {}
+	var last_end := muzzle
 	for i in data.pellets:
 		var dir := _spread_dir(aim, spread)
+		if mode and mode.launch(muzzle, dir, scale):
+			continue
 		if data.projectile_speed > 0.0:
 			WeaponProjectile.launch(_level(), muzzle, launch_velocity(dir, data), data, self)
 			continue
 		var end := _trace(origin, dir, data, scale, data.pierce if power >= 1.0 else 0, hits)
+		last_end = end
 		if data.beam:
 			_beam_end = end
 			_beam_linger = data.fire_interval * 1.5
@@ -563,6 +577,8 @@ func _fire_shot(scale: float, power: float) -> void:
 			WeaponFx.shot(_level(), muzzle, end, data, power)
 	if data.chain_count > 0 and not hits.is_empty():
 		_chain(hits, data, scale)
+	if mode:
+		mode.shape_hits(hits, muzzle, last_end, power)
 	var result := _apply_hits(hits, data)
 
 	_bloom = minf(data.spread_bloom_max, _bloom + data.spread_bloom)
@@ -735,6 +751,19 @@ func _apply_hits(hits: Dictionary, data: WeaponData) -> Array:
 		any_kill = any_kill or killed
 		any_head = any_head or bool(entry["head"])
 	return [any_hit, any_kill, any_head]
+
+
+## One ray-style hit of `data` on `z` for a shot a weapon mode flies itself
+## (a ricochet round): damage falloff over `distance`, headshots, statuses
+## and hit confirms as for any shot. Returns true if it killed.
+func strike(data: WeaponData, z: Zombie, point: Vector3, dir: Vector3, distance: float, scale: float) -> bool:
+	if not is_instance_valid(z) or z.is_dead():
+		return false
+	var hits := {}
+	_record_ray_hit(hits, z, point, dir, data, distance, scale)
+	var result := _apply_hits(hits, data)
+	_confirm(result)
+	return result[1]
 
 
 ## A projectile went off at `at` (`direct` = the zombie it struck, if any).

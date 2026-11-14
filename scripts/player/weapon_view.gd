@@ -75,7 +75,7 @@ const KICK_FOLLOW := Vector2(48.0, 0.55)
 const HOLO_SHADER := "res://art/shaders/holo.gdshader"
 ## Parts the reload animations may move (see art/blender/weapon_kit.py).
 const ANIMATED_PARTS := ["Cell", "CellHolo", "Slide", "Hammer", "Panel", "Vents", "Barrels", "Pump",
-	"Drum", "Capsules", "CapsulesHolo", "ArmL", "ArmR"]
+	"Drum", "Capsules", "CapsulesHolo", "ArmL", "ArmR", "Ticker", "Harpoon", "Reel"]
 
 var data: WeaponData
 var model: Node3D
@@ -475,6 +475,8 @@ func _weapon_state(delta: float) -> Vector3:
 	var w := player.weapons if player else null
 	if w == null or w.current != data:
 		return Vector3.ZERO
+	if w.mode:
+		w.mode.animate(model, delta)
 	var charge := w.shown_charge()
 	_charge_pull = maxf(charge * 0.035, lerpf(_charge_pull, 0.0, 1.0 - exp(-20.0 * delta)))
 	var reloading := _reload_tween != null and _reload_tween.is_valid()
