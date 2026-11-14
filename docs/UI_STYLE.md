@@ -217,6 +217,12 @@ All motion comes from `UiFx`; it is tween based and nothing runs once it has fin
 | `UiFx.count_up(label, from, to)` | Numbers: scores, Sparks, XP |
 | `UiFx.fill_to(bar, value)` | Bars |
 
+The Play page's world carousel (`MenuPlay`, `WorldCard`) is the model for a browsable
+row: one tweened scroll position places every card (scale, drop, fan, fade and an art
+parallax from the distance to the middle); only the selected card animates (its bulbs step
+at 7 Hz, one light sweep when picked); held arrows step at most every 0.09 s; the wheel,
+a drag and the pips browse too.
+
 Rules: a page change takes `UiFx.PAGE` (0.24 s) or less; hover and focus react within
 `UiFx.FAST` (0.1 s); a staggered list starts its last item within 0.3 s; animate only
 scale, alpha and position of non-container children, never layout. No `_process` that
