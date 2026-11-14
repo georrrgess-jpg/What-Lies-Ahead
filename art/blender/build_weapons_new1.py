@@ -87,14 +87,14 @@ def build_drum_popper():
     rail_top = 0.084
     z_line = rail_top + SIGHT_HEIGHT
     rear_y = -0.088
-    drum_c = (0, 0.185, -0.122)
-    pump_c = (0, 0.345, -0.056)
+    drum_c = (0, 0.21, -0.122)
+    pump_c = (0, 0.385, -0.07)
     grip_loc = (0, 0.0, -0.105)
-    grip_parts, G = grip("", grip_loc, dict(M, dark=M["trim"]), tilt=-14, size=(0.068, 0.088, 0.17), body_bottom=-0.03, guard_len=0.06)
+    grip_parts, G = grip("", grip_loc, dict(M, dark=M["trim"]), tilt=-14, size=(0.068, 0.088, 0.17), body_bottom=-0.03)
     shell = grip_parts + [
         # Blue receiver with a navy riser under the rail, orange end blocks.
         box("Receiver", (0.084, 0.44, 0.097), (0, 0.11, 0.0185), bevel=0.022, m=M["shell"]),
-        box("Belly", (0.07, 0.4, 0.01), (0, 0.11, -0.031), bevel=0.004, m=M["dark"]),
+        box("Belly", (0.07, 0.25, 0.01), (0, 0.185, -0.031), bevel=0.004, m=M["dark"]),
         box("RailRiser", (0.042, 0.33, 0.008), (0, 0.165, 0.069), bevel=0.003, m=M["dark"]),
         box("RearBlock", (0.094, 0.078, 0.11), (0, -0.142, 0.012), bevel=0.024, m=M["trim"]),
         box("FrontBlock", (0.096, 0.104, 0.1), (0, 0.372, 0.02), bevel=0.022, m=M["trim"]),
@@ -106,7 +106,8 @@ def build_drum_popper():
         ycyl("Bore", 0.025, 0.006, 0.503, z=bore_z, m=mat("Bore", "#120c22", rough=0.9), segs=16, bevel=0.0),
         sphere("BoreDot", 0.008, (0, 0.503, bore_z), m=M["pink"], segs=10, rings=6),
         # Fore-pump guide rod and the neck the drum hangs from.
-        ycyl("PumpRod", 0.007, 0.15, 0.345, z=-0.045, m=M["steel"], segs=10),
+        ycyl("PumpRod", 0.007, 0.16, 0.38, z=-0.045, m=M["steel"], segs=10),
+        box("PumpHanger", (0.016, 0.03, 0.016), (0, 0.44, -0.038), bevel=0.004, m=M["dark"]),
         box("DrumNeck", (0.03, 0.05, 0.02), (0, drum_c[1], -0.04), bevel=0.005, m=M["dark"]),
         # Grey L stock off the rear block, with a rubber butt.
         tube("Stock", [(0, -0.17, -0.012), (0, -0.24, -0.012), (0, -0.258, -0.03), (0, -0.258, -0.095)], 0.016, m=M["steel"], segs=12),
@@ -131,10 +132,10 @@ def build_drum_popper():
             shell.append(box(f"VentTip{s}{i}", (0.0045, 0.011, 0.008), (x, y + 0.0065, 0.033), rot=rad(-22, 0, 0), bevel=0.0, m=M["cell"]))
         # Grooves across the orange blocks.
         for i, z in enumerate((0.047, 0.027, 0.007, -0.013)):
-            shell.append(box(f"RearGroove{s}{i}", (0.003, 0.05, 0.004), (side * 0.047, -0.142, z), bevel=0.0, m=M["dark"]))
+            shell.append(box(f"RearGroove{s}{i}", (0.003, 0.05, 0.004), (side * 0.0468, -0.142, z), bevel=0.0, m=M["dark"]))
         for i, z in enumerate((0.048, 0.026, 0.004)):
             shell.append(box(f"FrontGroove{s}{i}", (0.003, 0.064, 0.004), (side * 0.048, 0.372, z), bevel=0.0, m=M["dark"]))
-    lug, charm_point = charm_lug(-0.047, -0.15, 0.04, M)
+    lug, charm_point = charm_lug(-0.0485, -0.15, 0.04, M)
     shell += lug
 
     # Carry handle: the rear sight (hidden when an optic is fitted).
@@ -145,8 +146,8 @@ def build_drum_popper():
                                             (x, 0.025, 0.124), (x, 0.032, 0.066)], 0.0075, m=M["steel"], segs=8))
     rear += [
         box("HandleTop", (0.046, 0.014, 0.01), (0, rear_y, 0.131), bevel=0.004, m=M["steel"]),
-        box("HandleTopF", (0.046, 0.014, 0.01), (0, 0.022, 0.131), bevel=0.004, m=M["steel"]),
-        tube("HandleGrip", [(0, rear_y, 0.134), (0, 0.022, 0.134)], 0.0085, m=M["steel"], segs=10),
+        # The grip bar covers only the rear half, so the view over the front sight stays open.
+        tube("HandleGrip", [(0, rear_y, 0.134), (0, -0.035, 0.134)], 0.0085, m=M["steel"], segs=10),
         torus("RearRing", 0.0125, 0.0035, (0, rear_y, z_line), rot=rad(90, 0, 0), m=M["steel"], major_segs=20, minor_segs=6),
         box("RearStem", (0.01, 0.01, z_line - 0.0125 - 0.067), (0, rear_y, (z_line - 0.0125 + 0.067) / 2), bevel=0.003, m=M["steel"]),
         sphere("RearDotL", 0.0035, (-0.0125, rear_y - 0.004, z_line), m=M["cell"], segs=8, rings=5),
@@ -190,14 +191,15 @@ def build_drum_popper():
     drum_holo += [sphere(f"HoloGum{j}", 0.0105, (-0.0135, cy + math.cos(a) * r, cz + math.sin(a) * r), m=holo, segs=6, rings=4)
                   for j, (r, a) in enumerate(spots) if r > 0.04]
 
-    pump = [box("PumpBody", (0.068, 0.13, 0.048), pump_c, bevel=0.016, m=M["trim"])]
-    for i in range(7):
-        pump.append(box(f"PumpRib{i}", (0.074, 0.008, 0.054), (0, pump_c[1] - 0.054 + i * 0.018, pump_c[2]), bevel=0.003, segs=1, m=M["trim"]))
+    pump = [box("PumpBody", (0.064, 0.13, 0.04), pump_c, bevel=0.014, m=M["trim"])]
+    # Ribs at both ends, clear of the hand.
+    for i, dy in enumerate((-0.062, -0.053, 0.055, 0.064)):
+        pump.append(box(f"PumpRib{i}", (0.07, 0.006, 0.046), (0, pump_c[1] + dy, pump_c[2]), bevel=0.0025, segs=1, m=M["trim"]))
     star = [(math.cos(math.radians(90 + 36 * i)) * (0.022 if i % 2 == 0 else 0.009), math.sin(math.radians(90 + 36 * i)) * (0.022 if i % 2 == 0 else 0.009))
             for i in range(10)]
     decal = [side_emblem("Emblem", star, -0.0425, 0.066, 0.022, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
-    arm_l, elbow_l = support_hand(pump_c, 0.037, 0.027, M, (-0.52, -0.12, -0.46), corner=0.016, finger_len=0.05, thumb_len=0.05)
+    arm_l, elbow_l = support_hand(pump_c, 0.035, 0.023, M, (-0.6, 0.25, -0.45), corner=0.014, finger_len=0.025, thumb_len=0.03)
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "IronSightRear": (rear, (0, rear_y, rail_top), None),
@@ -237,7 +239,7 @@ def build_whirligig():
     wheel_y = 0.3
     wheel_r = 0.104
     spin_c = (0, 0.2, 0.0)
-    fore = (0, 0.085, -0.075)
+    fore = (0, 0.18, -0.1)
     grip_loc = (0, -0.03, -0.125)
     grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.074, 0.094, 0.18), body_bottom=-0.048)
     shell = grip_parts + [
@@ -252,8 +254,9 @@ def build_whirligig():
         box("TickerArm", (0.014, 0.17, 0.01), (0, 0.19, 0.118), bevel=0.003, m=M["dark"]),
         box("TickerFoot", (0.03, 0.03, 0.04), (0, 0.11, 0.101), bevel=0.005, m=M["dark"]),
         # Handguard under the front of the receiver.
-        box("Handguard", (0.05, 0.11, 0.044), fore, bevel=0.014, m=M["trim"]),
-        box("HandguardCap", (0.056, 0.012, 0.05), (0, fore[1] + 0.06, fore[2]), bevel=0.005, m=M["dark"]),
+        box("Handguard", (0.07, 0.11, 0.046), fore, bevel=0.014, m=M["trim"]),
+        box("HandguardNeck", (0.014, 0.05, 0.04), (0, fore[1], -0.06), bevel=0.004, m=M["dark"]),
+        box("HandguardCap", (0.074, 0.012, 0.05), (0, fore[1] + 0.06, fore[2]), bevel=0.005, m=M["dark"]),
         # Heat canister clamps on the right flank, the side wheel's axle boss on the left.
         box("CanClampR", (0.03, 0.012, 0.04), (0.07, -0.055, 0.005), bevel=0.004, m=M["dark"]),
         box("CanClampF", (0.03, 0.012, 0.04), (0.07, 0.055, 0.005), bevel=0.004, m=M["dark"]),
@@ -264,8 +267,10 @@ def build_whirligig():
         shell.append(box(f"Stripe{i}", (0.1135, 0.025, 0.1335), (0, -0.12 + i * 0.05, 0.017), bevel=0.034, m=M["trim"]))
     for side in (-1, 1):
         for i in range(9):
+            if side < 0 and i < 2:
+                continue   # the charm lug sits there
             shell.append(sphere(f"Marquee{side}{i}", 0.0068, (side * 0.05, -0.125 + i * 0.03, 0.08), m=M["cell"], segs=8, rings=4))
-    lug, charm_point = charm_lug(-0.0567, -0.125, 0.058, M)
+    lug, charm_point = charm_lug(-0.0567, -0.11, 0.075, M)
     shell += lug
     sight_rear, sight_front = sights_bead(0.0, -0.08, 0.215, rail_top, 0.123, z_line, M)
 
@@ -318,7 +323,7 @@ def build_whirligig():
                                  m=M["cell"], segs=8, rings=4))
     decal = [side_emblem("Emblem", star_outline(0.018, 0.008), -0.057, -0.1, 0.0, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
-    arm_l, elbow_l = support_hand(fore, 0.025, 0.022, M, (-0.52, -0.12, -0.46), corner=0.012, finger_len=0.045, thumb_len=0.045)
+    arm_l, elbow_l = support_hand(fore, 0.035, 0.023, M, (-0.6, 0.25, -0.45), corner=0.014, finger_len=0.025, thumb_len=0.03)
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "IronSightRear": (sight_rear, (0, -0.08, rail_top), None),
@@ -360,15 +365,15 @@ def build_riptide():
     bore_z = 0.045
     rail_top = 0.1
     z_line = rail_top + SIGHT_HEIGHT
-    fore = (0, 0.42, 0.0)
+    fore = (0, 0.46, -0.036)
     reel_c = (-0.065, 0.03, 0.03)
-    tank_c = (0, 0.3, -0.012)
+    tank_c = (0, 0.285, -0.012)
     grip_loc = (0, -0.05, -0.12)
     grip_parts, G = grip("", grip_loc, M, tilt=-15, size=(0.07, 0.09, 0.18), body_bottom=-0.03)
     shell = grip_parts + [
         # Teal receiver over a navy keel, a long barrel with brass bands.
         box("Receiver", (0.08, 0.25, 0.11), (0, 0.0, 0.025), bevel=0.03, m=M["shell"]),
-        box("Keel", (0.082, 0.2, 0.034), (0, 0.0, -0.012), bevel=0.012, m=M["trim"]),
+        box("Keel", (0.078, 0.2, 0.034), (0, 0.0, -0.012), bevel=0.012, m=M["trim"]),
         box("RailRiser", (0.04, 0.2, 0.012), (0, 0.0, 0.084), bevel=0.004, m=M["dark"]),
         ycyl("Barrel", 0.03, 0.42, 0.33, z=bore_z, m=M["shell"], segs=22),
         ring("BandA", 0.031, 0.005, 0.14, z=bore_z, m=M["steel"], segs=22),
@@ -377,19 +382,19 @@ def build_riptide():
         ring("CrownGlow", 0.026, 0.0035, 0.545, z=bore_z, m=M["cell"], segs=20),
         ycyl("Bore", 0.022, 0.006, 0.543, z=bore_z, m=mat("Bore", "#0e1424", rough=0.9), segs=16, bevel=0.0),
         # Tank straps and the wooden foregrip (boardwalk planks).
-        box("StrapR", (0.012, 0.016, 0.07), (0, 0.24, 0.016), bevel=0.003, m=M["steel"]),
-        box("StrapF", (0.012, 0.016, 0.07), (0, 0.36, 0.016), bevel=0.003, m=M["steel"]),
-        box("Foregrip", (0.05, 0.11, 0.048), fore, bevel=0.012, m=wood),
+        box("StrapR", (0.012, 0.016, 0.07), (0, 0.225, 0.016), bevel=0.003, m=M["steel"]),
+        box("StrapF", (0.012, 0.016, 0.07), (0, 0.345, 0.016), bevel=0.003, m=M["steel"]),
+        box("Foregrip", (0.07, 0.11, 0.046), fore, bevel=0.014, m=wood),
+        box("ForegripNeck", (0.01, 0.05, 0.036), (0, fore[1], 0.004), bevel=0.003, m=M["steel"]),
         # Plank stock with a brass butt and a coral fin.
         box("Stock", (0.05, 0.15, 0.07), (0, -0.19, 0.0), bevel=0.014, m=wood),
-        box("Butt", (0.056, 0.016, 0.08), (0, -0.27, 0.0), bevel=0.006, m=M["steel"]),
+        box("Butt", (0.052, 0.016, 0.08), (0, -0.27, 0.0), bevel=0.006, m=M["steel"]),
         side_profile("TailFin", [(-0.24, 0.032), (-0.15, 0.032), (-0.2, 0.06), (-0.25, 0.064)], 0.008, (0, 0, 0), M["pink"], bevel=0.003),
         # Reel axle boss on the left wall.
         xcyl("ReelBoss", 0.016, 0.02, (-0.045, reel_c[1], reel_c[2]), m=M["dark"], segs=12),
     ]
     for i in range(3):
         shell.append(box(f"Plank{i}", (0.052, 0.15, 0.003), (0, -0.19, -0.022 + i * 0.022), bevel=0.0, m=M["dark"]))
-        shell.append(box(f"GripPlank{i}", (0.052, 0.11, 0.003), (0, fore[1], fore[2] - 0.016 + i * 0.016), bevel=0.0, m=M["dark"]))
     # Life ring round the barrel, coral and white quarters.
     for k in range(8):
         shell.append(torus(f"LifeRing{k}", 0.045, 0.012, (0, 0.17, bore_z), rot=rad(90, 0, 0), m=M["pink"] if k % 2 == 0 else white,
@@ -397,7 +402,7 @@ def build_riptide():
     shell += top_rail("TopRail", -0.09, 0.11, rail_top, M, width=0.034, pitch=0.04)
     for i in range(4):
         shell.append(box(f"Porthole{i}", (0.004, 0.016, 0.016), (0.041, -0.06 + i * 0.04, 0.045), rot=rad(45, 0, 0), bevel=0.0, m=M["cell"]))
-    lug, charm_point = charm_lug(-0.04, -0.1, 0.058, M)
+    lug, charm_point = charm_lug(-0.027, -0.2, 0.022, M)
     shell += lug
     sight_rear, sight_front = sights_globe(0.0, -0.08, 0.5, rail_top, bore_z + 0.03, z_line, M)
 
@@ -426,9 +431,9 @@ def build_riptide():
     ]
     tank_holo = holo_copy(tank[:3])
     anchor = [(-0.003, 0.02), (0.003, 0.02), (0.003, -0.006), (0.014, -0.002), (0.004, -0.016), (-0.004, -0.016), (-0.014, -0.002), (-0.003, -0.006)]
-    decal = [side_emblem("Emblem", anchor, -0.0255, -0.19, 0.004, M["decal"])]
+    decal = [side_emblem("Emblem", anchor, -0.0405, -0.07, 0.03, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
-    arm_l, elbow_l = support_hand(fore, 0.025, 0.024, M, (-0.52, -0.1, -0.46), corner=0.012, finger_len=0.045, thumb_len=0.045)
+    arm_l, elbow_l = support_hand(fore, 0.035, 0.023, M, (-0.6, 0.25, -0.45), corner=0.014, finger_len=0.025, thumb_len=0.03)
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "IronSightRear": (sight_rear, (0, -0.08, rail_top), None),

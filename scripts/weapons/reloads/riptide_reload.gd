@@ -22,9 +22,9 @@ func play(v: WeaponView, d: float) -> void:
 	v.holo_build("CellHolo", 0.46, 0.64, d)
 	v.solidify("CellHolo", "Cell", 0.67, d)
 	# The support hand fetches a spear and slides it into the muzzle.
-	v.track("ArmL", d, [[0.1, Vector3(0, -0.07, 0), Vector3.ZERO], [0.24, Vector3(-0.07, -0.1, 0.05), Vector3(0, 0, -12)],
-		[0.46, Vector3(-0.05, -0.02, -0.17), Vector3(0, 0, -12)], [0.62, Vector3(-0.05, -0.02, -0.17), Vector3(0, 0, -12)],
-		[0.78, Vector3(-0.05, -0.04, -0.02), Vector3(0, 0, -6)], [0.86, Vector3.ZERO, Vector3.ZERO]])
+	v.track("ArmL", d, [[0.1, Vector3(0, -0.07, 0), Vector3(0, 0, -14)], [0.24, Vector3(-0.07, -0.1, 0.05), Vector3(0, 0, -12)],
+		[0.46, Vector3(-0.08, -0.04, -0.17), Vector3(0, 0, -12)], [0.62, Vector3(-0.08, -0.04, -0.17), Vector3(0, 0, -12)],
+		[0.74, Vector3(-0.06, -0.09, -0.02), Vector3(0, 0, -6)], [0.8, Vector3(0, -0.08, 0), Vector3(0, 0, -14)], [0.86, Vector3.ZERO, Vector3.ZERO]])
 	v.at(0.46, d, func(): var spear := v.model.find_child("Harpoon", true, false) as Node3D; if spear: spear.visible = true)
 	v.track("Harpoon", d, [[0.46, Vector3(0, 0, -0.17), Vector3.ZERO, 1.0, "hold"], [0.62, Vector3(0, 0, -0.17), Vector3.ZERO],
 		[0.78, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_CUBIC, Tween.EASE_IN_OUT)

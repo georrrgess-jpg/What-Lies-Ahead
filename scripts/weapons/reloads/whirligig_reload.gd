@@ -23,9 +23,9 @@ func play(v: WeaponView, d: float) -> void:
 	v.holo_build("CellHolo", 0.46, 0.6, d)
 	v.solidify("CellHolo", "Cell", 0.62, d)
 	# The support hand comes up beside the wheel and flicks it down.
-	v.track("ArmL", d, [[0.6, Vector3.ZERO, Vector3.ZERO], [0.66, Vector3(0, -0.05, 0.02), Vector3.ZERO],
-		[0.74, Vector3(-0.14, 0.09, -0.19), Vector3(0, 0, -20)], [0.78, Vector3(-0.14, -0.03, -0.2), Vector3(0, 0, -35)],
-		[0.86, Vector3(0, -0.05, 0.02), Vector3.ZERO], [0.92, Vector3.ZERO, Vector3.ZERO]])
+	v.track("ArmL", d, [[0.6, Vector3.ZERO, Vector3.ZERO], [0.65, Vector3(0, -0.07, 0.0), Vector3(0, 0, 12)], [0.7, Vector3(-0.17, -0.02, 0.02), Vector3(0, 0, -10)],
+		[0.74, Vector3(-0.17, 0.1, -0.11), Vector3(0, 0, -20)], [0.78, Vector3(-0.17, -0.03, -0.12), Vector3(0, 0, -35)],
+		[0.84, Vector3(-0.12, -0.04, 0.0), Vector3(0, 0, -10)], [0.88, Vector3(0, -0.07, 0.0), Vector3(0, 0, 12)], [0.93, Vector3.ZERO, Vector3.ZERO]])
 	v.track("Barrels", d, ReloadKeys.spin(0.77, 1.0, Vector3.BACK, -1440.0, Vector3.ZERO, Vector3.ZERO, 1.0), Tween.TRANS_LINEAR)
 	v.track("Wheel", d, ReloadKeys.spin(0.77, 1.0, Vector3.RIGHT, 2160.0, Vector3.ZERO, Vector3.ZERO, 1.0), Tween.TRANS_LINEAR)
 	v.at(0.77, d, func(): Sfx.play(&"weap_whirl_jackpot", -3.0))

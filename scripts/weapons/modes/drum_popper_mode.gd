@@ -2,14 +2,14 @@ extends WeaponMode
 ## Gumball Drum Popper: every shot is a bouncy gumball (RicochetRound) aimed
 ## from the muzzle at the point under the crosshair, so it lands where the
 ## player aims. On the viewmodel the drum turns one chamber per shot and the
-## fore-pump kicks back (the support hand rides it).
+## fore-pump bumps forward (the support hand rides it).
 
 ## Chambers per turn of the drum.
 const CHAMBERS := 8
 ## How fast the shown drum catches up with the next chamber (1/s).
 const TURN_RATE := 26.0
-## Pump kick per shot (metres, toward the player) and how fast it returns (1/s).
-const PUMP_KICK := 0.016
+## Pump bump per shot (metres, forward) and how fast it returns (1/s).
+const PUMP_KICK := 0.012
 const PUMP_RETURN := 10.0
 
 var _shots := 0
@@ -52,4 +52,4 @@ func animate(model: Node3D, delta: float) -> void:
 	if not _pump_part.is_empty():
 		var rest: Transform3D = _pump_part[1]
 		var k := sin(_pump * PI) * PUMP_KICK
-		_pump_part[0].transform = Transform3D(rest.basis, rest.origin + Vector3(0.0, 0.0, k))
+		_pump_part[0].transform = Transform3D(rest.basis, rest.origin + Vector3(0.0, 0.0, -k))
