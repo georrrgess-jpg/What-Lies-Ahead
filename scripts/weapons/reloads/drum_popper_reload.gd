@@ -6,7 +6,8 @@ extends RefCounted
 
 
 func play(v: WeaponView, d: float) -> void:
-	v.track("Root", d, [[0.12, Vector3(0.0, 0.03, 0.0), Vector3(10, -8, 24)], [0.86, Vector3(0.0, 0.03, 0.0), Vector3(10, -8, 24)],
+	# Lifted and turned so the drum swap plays out in view.
+	v.track("Root", d, [[0.12, Vector3(-0.04, 0.09, 0.0), Vector3(6, 30, -10)], [0.86, Vector3(-0.04, 0.09, 0.0), Vector3(6, 30, -10)],
 		[1.0, Vector3.ZERO, Vector3.ZERO]])
 	v.glow_ramp(0.06, 0.18, d, 1.0, 0.2)
 	# The release: two quick turns, then the drum drops away.

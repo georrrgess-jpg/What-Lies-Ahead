@@ -13,6 +13,8 @@ const SPIN_DOWN := 1.0
 const FIRING_MOVE := 0.8
 ## Wheel turns per second at full spin.
 const MAX_TURNS := 3.2
+## Side wheel turns per barrel turn.
+const SIDE_GEAR := 1.5
 ## Pegs round the wheel (one ticker clack each).
 const PEGS := 12
 const TICKER_SWING := 32.0
@@ -25,6 +27,7 @@ var _angle := 0.0
 var _model_id := 0
 var _spinner: Array = []
 var _ticker: Array = []
+var _wheel: Array = []
 var _hum: AudioStreamPlayer
 
 
@@ -78,6 +81,7 @@ func animate(model: Node3D, delta: float) -> void:
 		_model_id = model.get_instance_id()
 		_spinner = find_part(model, "Barrels")
 		_ticker = find_part(model, "Ticker")
+		_wheel = find_part(model, "Wheel")
 	if controller.is_reloading():
 		# The reload spins the wheel by hand; it ends at rest.
 		_angle = 0.0
@@ -86,6 +90,10 @@ func animate(model: Node3D, delta: float) -> void:
 	if not _spinner.is_empty():
 		var rest: Transform3D = _spinner[1]
 		_spinner[0].transform = Transform3D(rest.basis * Basis(Vector3.BACK, _angle), rest.origin)
+	if not _wheel.is_empty():
+		# The side wheel is geared to the barrels and turns the other way.
+		var rest: Transform3D = _wheel[1]
+		_wheel[0].transform = Transform3D(rest.basis * Basis(Vector3.RIGHT, -_angle * SIDE_GEAR), rest.origin)
 	if not _ticker.is_empty():
 		# The flapper is lifted by each peg and snaps back past it.
 		var peg := fmod(_angle * PEGS / TAU, 1.0)

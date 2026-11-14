@@ -71,6 +71,6 @@ func animate(model: Node3D, delta: float) -> void:
 	var spear: Node3D = _spear[0]
 	spear.visible = _since_shot >= SPEAR_OUT and controller.magazine() > 0
 	# A new spear slides in from the muzzle, then draws back as the shot charges.
-	var load := 1.0 - smoothstep(SPEAR_OUT, SPEAR_OUT + SPEAR_LOAD, _since_shot)
+	var slide := 1.0 - smoothstep(SPEAR_OUT, SPEAR_OUT + SPEAR_LOAD, _since_shot)
 	var rest: Transform3D = _spear[1]
-	spear.transform = Transform3D(rest.basis, rest.origin + Vector3(0.0, 0.0, -0.12 * load + DRAW * controller.shown_charge()))
+	spear.transform = Transform3D(rest.basis, rest.origin + Vector3(0.0, 0.0, -0.12 * slide + DRAW * controller.shown_charge()))

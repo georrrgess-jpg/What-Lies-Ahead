@@ -13,7 +13,8 @@ and moving parts that its mode (scripts/weapons/modes/) and reload script
                (gumballs), CellHolo, Pump > ArmL (fore-pump, kicks per shot),
                carry handle = IronSightRear
   whirligig    Whirligig prize-wheel minigun: Barrels (wheel and six barrels,
-               spin up), Ticker (flapper on the wheel's pegs), Cell (heat
+               spin up), Ticker (flapper on the wheel's pegs), Wheel (side prize
+               wheel geared to the barrels), Cell (heat
                canister), CellHolo
   riptide      Riptide Harpoon: Harpoon (spear in the muzzle), Reel (line
                spool), Cell (air tank), CellHolo
@@ -60,6 +61,14 @@ def sector(name, r_in, r_out, a0, a1, depth, y, z, m, steps=4):
     inner = [(math.cos(a0 + (a1 - a0) * i / steps) * r_in, math.sin(a0 + (a1 - a0) * i / steps) * r_in) for i in range(steps + 1)]
     outer = [(math.cos(a1 - (a1 - a0) * i / steps) * r_out, math.sin(a1 - (a1 - a0) * i / steps) * r_out) for i in range(steps + 1)]
     return prism(name, inner + outer, depth, (0, y, z), m=m)
+
+
+def side_sector(name, r_in, r_out, a0, a1, depth, loc, m, steps=4):
+    """A wedge of a wheel facing the side (axis X), `depth` thick."""
+    ob = sector(name, r_in, r_out, a0, a1, depth, 0.0, 0.0, m, steps)
+    ob.rotation_euler = (0.0, 0.0, math.pi / 2)
+    ob.location = loc
+    return ob
 
 
 # ---------------------------------------------------------------------------
@@ -245,9 +254,10 @@ def build_whirligig():
         # Handguard under the front of the receiver.
         box("Handguard", (0.05, 0.11, 0.044), fore, bevel=0.014, m=M["trim"]),
         box("HandguardCap", (0.056, 0.012, 0.05), (0, fore[1] + 0.06, fore[2]), bevel=0.005, m=M["dark"]),
-        # Heat canister clamps on the left flank.
-        box("CanClampR", (0.03, 0.012, 0.04), (-0.07, -0.035, 0.005), bevel=0.004, m=M["dark"]),
-        box("CanClampF", (0.03, 0.012, 0.04), (-0.07, 0.075, 0.005), bevel=0.004, m=M["dark"]),
+        # Heat canister clamps on the right flank, the side wheel's axle boss on the left.
+        box("CanClampR", (0.03, 0.012, 0.04), (0.07, -0.055, 0.005), bevel=0.004, m=M["dark"]),
+        box("CanClampF", (0.03, 0.012, 0.04), (0.07, 0.055, 0.005), bevel=0.004, m=M["dark"]),
+        xcyl("WheelBoss", 0.014, 0.012, (-0.06, 0.03, 0.025), m=M["dark"], segs=12),
     ]
     shell += top_rail("TopRail", -0.09, 0.11, rail_top, M, width=0.034, pitch=0.04)
     for i in range(5):
@@ -255,7 +265,6 @@ def build_whirligig():
     for side in (-1, 1):
         for i in range(9):
             shell.append(sphere(f"Marquee{side}{i}", 0.0068, (side * 0.05, -0.125 + i * 0.03, 0.08), m=M["cell"], segs=8, rings=4))
-    shell += vent_slots("Vent", 0.0565, -0.1, -0.03, 0.0, 3, M["dark"], M["cell"], side=1)
     lug, charm_point = charm_lug(-0.0567, -0.125, 0.058, M)
     shell += lug
     sight_rear, sight_front = sights_bead(0.0, -0.08, 0.215, rail_top, 0.123, z_line, M)
@@ -289,7 +298,7 @@ def build_whirligig():
         box("TickerFlap", (0.012, 0.005, 0.026), (0, 0.276, 0.105), rot=rad(-14, 0, 0), bevel=0.002, m=M["pink"]),
         sphere("TickerTip", 0.0042, (0, 0.279, 0.093), m=M["pink"], segs=8, rings=5),
     ]
-    can_c = (-0.075, 0.02, 0.005)
+    can_c = (0.075, 0.0, 0.005)
     canister = [
         ycyl("CanCore", 0.022, 0.12, can_c[1], z=can_c[2], x=can_c[0], m=M["cell"], segs=16),
         ycyl("CanCapR", 0.025, 0.016, can_c[1] - 0.064, z=can_c[2], x=can_c[0], m=M["steel"], segs=16),
@@ -298,7 +307,16 @@ def build_whirligig():
     for i in range(3):
         canister.append(ycyl(f"CanBand{i}", 0.0235, 0.006, can_c[1] - 0.03 + i * 0.03, z=can_c[2], x=can_c[0], m=M["dark"], segs=16, bevel=0.0))
     canister_holo = holo_copy(canister[:3])
-    decal = [side_emblem("Emblem", star_outline(0.018, 0.008), -0.057, -0.045, 0.0, M["decal"])]
+    # A small prize wheel on the left flank, geared to the barrels (the side the player sees).
+    wheel_c = (-0.069, 0.03, 0.025)
+    side_wheel = [xcyl("SideHub", 0.016, 0.018, wheel_c, m=M["cell"], segs=12),
+                  torus("SideRim", 0.058, 0.004, wheel_c, rot=rad(0, 90, 0), m=M["steel"], major_segs=32, minor_segs=4)]
+    for k in range(10):
+        a0 = math.tau * k / 10
+        side_wheel.append(side_sector(f"SideWedge{k}", 0.016, 0.056, a0, a0 + math.tau / 10, 0.008, wheel_c, wheel_mats[k % 4]))
+        side_wheel.append(sphere(f"SideBulb{k}", 0.005, (wheel_c[0] - 0.003, wheel_c[1] + math.cos(a0) * 0.058, wheel_c[2] + math.sin(a0) * 0.058),
+                                 m=M["cell"], segs=8, rings=4))
+    decal = [side_emblem("Emblem", star_outline(0.018, 0.008), -0.057, -0.1, 0.0, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
     arm_l, elbow_l = support_hand(fore, 0.025, 0.022, M, (-0.52, -0.12, -0.46), corner=0.012, finger_len=0.045, thumb_len=0.045)
     groups = {
@@ -307,6 +325,7 @@ def build_whirligig():
         "IronSightFront": (sight_front, (0, 0.215, 0.123), None),
         "Barrels": (spinner, spin_c, None),
         "Ticker": (ticker, ticker_pivot, None),
+        "Wheel": (side_wheel, wheel_c, None),
         "Cell": (canister, can_c, None),
         "CellHolo": (canister_holo, can_c, None),
         "Decal": (decal, (0, 0, 0), None),
@@ -317,7 +336,7 @@ def build_whirligig():
         "Muzzle": ((0, 0.525, 0.0), None),
         "SightPoint": ((0, -0.08, z_line), None),
         "SightMount": ((0, 0.01, rail_top), None),
-        "EjectPoint": ((-0.105, 0.02, 0.005), None),
+        "EjectPoint": ((0.105, 0.0, 0.005), None),
         "VentPoint": ((0, 0.145, 0.06), None),
         "CharmPoint": (charm_point, None),
         "ElbowR": (elbow_r, "ArmR"),

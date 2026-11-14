@@ -14,6 +14,9 @@ extends Node
 ##   projectile         launches WeaponProjectile (gravity, bounces, splash)
 ## and on top of any of them: pierce, chain lightning, seeking, status
 ## effects (chill/freeze, shock) and heat (a magazine that cools on its own).
+## A weapon can add its own behaviour through a WeaponMode
+## (WeaponData.mode_script, scripts/weapons/modes/): spin-up barrels, rounds
+## it flies itself (strike() deals their hits), or hits it reshapes.
 ##
 ## Ammo is tracked per weapon for the whole run, so switching slots or
 ## swapping at the loadout station and back returns exactly the ammo that

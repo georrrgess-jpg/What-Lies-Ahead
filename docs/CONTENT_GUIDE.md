@@ -125,6 +125,13 @@ UI style lives in `UiKit` (`scripts/ui/ui_kit.gd`): palette constants,
 * Custom reloads: `reload_script` with `func play(view: WeaponView, d: float)`
   using `view.track / at / glow_ramp / holo_build / solidify / burst /
   hide_part / register_part` (see `weapon_view.gd`).
+  A track interpolates transforms the short way round: turn a part a full turn or
+  more with `ReloadKeys.spin()` (`scripts/weapons/reloads/reload_keys.gd`).
+* Own behaviour: `mode_script`, a script extending `WeaponMode`
+  (`scripts/weapons/modes/weapon_mode.gd`): hold the trigger back (spin-up), fly
+  its own rounds (`launch`, damage through `WeaponController.strike`), reshape a
+  shot's hits (`shape_hits`), slow the player (`move_scale`) and move the
+  viewmodel's parts every frame (`animate`).
 
 ## Levels
 

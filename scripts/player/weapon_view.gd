@@ -75,7 +75,7 @@ const KICK_FOLLOW := Vector2(48.0, 0.55)
 const HOLO_SHADER := "res://art/shaders/holo.gdshader"
 ## Parts the reload animations may move (see art/blender/weapon_kit.py).
 const ANIMATED_PARTS := ["Cell", "CellHolo", "Slide", "Hammer", "Panel", "Vents", "Barrels", "Pump",
-	"Drum", "Capsules", "CapsulesHolo", "ArmL", "ArmR", "Ticker", "Harpoon", "Reel"]
+	"Drum", "Capsules", "CapsulesHolo", "ArmL", "ArmR", "Ticker", "Wheel", "Harpoon", "Reel"]
 
 var data: WeaponData
 var model: Node3D
