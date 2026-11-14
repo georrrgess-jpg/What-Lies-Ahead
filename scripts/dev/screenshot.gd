@@ -31,8 +31,12 @@ extends Node
 ##   --shot-reload=1       start a reload just before the wait (to check reload animations)
 ##   --shot-portal=1       open the portal and light the exit route
 ##   --shot-fire=n         fire n shots at the nearest staged zombie, then wait --shot-frames
+##   --shot-spray=n[,deg]  fire n shots from the pose at walls and floors (the aim wanders up to
+##                         deg degrees, default 6; impact marks check), then wait --shot-frames
+##   --shot-marks=0        clear the impact marks just before the capture (a "before" still)
 ##   --shot-hurt=1         hit the player from the left (damage feedback check)
 ##   --shot-cam=x,y,z>tx,ty,tz   free camera from x,y,z looking at tx,ty,tz (hides the viewmodel)
+##   --shot-cam=eye        free camera at the player's eye (no viewmodel; zoom with --shot-fov)
 ##   --shot-anim=Clip:t    pose every staged zombie at time t (seconds) of Clip
 ##   --shot-near=1         stage one zombie of each kind close to the player instead of four
 ##   --shot-fx=confetti|pop|burst|tracer|muzzle   spawn one effect 3 m in front of the camera
@@ -247,7 +251,10 @@ func _run() -> void:
 		var cam := Camera3D.new()
 		cam.fov = float(_arg("fov", "50"))
 		director.get_parent().add_child(cam)
-		cam.look_at_from_position(_vec(parts[0]), _vec(parts[1]))
+		if parts[0] == "eye":
+			cam.global_transform = player.aim_transform()
+		else:
+			cam.look_at_from_position(_vec(parts[0]), _vec(parts[1]))
 		cam.make_current()
 		player.view.visible = false
 	if _arg("move", "0") == "1":
@@ -272,6 +279,10 @@ func _run() -> void:
 					hp.append("%s %.0f%s" % [z.data.id, z.health, " dead" if z.is_dead() else ""])
 			print("[shot] after shot %d: %s  look_pitch=%.2f head_pitch=%.2f" % [i + 1, hp, player.look_pitch(), player.head.rotation.x])
 		player.set_physics_process(false)
+	if _arg("spray", "") != "":
+		await _spray(player, _arg("spray", ""))
+	if _arg("marks", "1") == "0":
+		ImpactMarks.clear(director.get_parent())
 	var fx := _arg("fx", "")
 	if fx != "":
 		var at := player.camera.global_position - player.camera.global_transform.basis.z * 3.0
@@ -472,6 +483,23 @@ func _stutter_test(director: RunDirector, player: Player) -> void:
 		print("[stutter] kill %d: median %.1f ms, worst %.1f ms (%.1fx), shots %d  frames>%.0fms: %s" % [round_i + 1, median / 1000.0, worst / 1000.0, float(worst) / maxf(1.0, median), shots,
 			median * 2.0 / 1000.0, times.map(func(t): return int(t / 1000)).filter(func(t): return t > median * 2.0 / 1000.0)])
 	get_tree().quit(0)
+
+
+## --shot-spray: fires from the staged pose, the aim wandering around it.
+func _spray(player: Player, spec: String) -> void:
+	var parts := spec.split(",")
+	var wander := deg_to_rad(float(parts[1]) if parts.size() > 1 else 6.0)
+	var yaw := player.rotation.y
+	var pitch := player.look_pitch()
+	await _wait(10)
+	player.controls_enabled = true
+	for i in int(parts[0]):
+		player.set_look(yaw + randf_range(-wander, wander), pitch + randf_range(-wander, wander) * 0.6)
+		player.weapons._cooldown = 0.0
+		player.weapons._ammo[player.weapons.current.id]["mag"] = 99
+		player.weapons._fire()
+		await _wait(3)
+	player.set_look(yaw, pitch)
 
 
 func _aim_at_nearest(director: RunDirector, player: Player) -> void:

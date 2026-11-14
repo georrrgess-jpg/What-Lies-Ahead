@@ -31,6 +31,8 @@ func run(camera: Camera3D, enemies: Array, weapons: Array) -> void:
 	Fx.confetti(parent, at)
 	Fx.ticket_popup(parent, at, 1234567890)
 	Fx.tracer(parent, at - fwd, at + fwd * 6.0, Color(0.3, 0.95, 1.0), 0.05)
+	# The level's impact marks (made now, not on the first shot) and their shader.
+	ImpactMarks.warm_up(get_parent(), parent, at, -fwd)
 	# Every cosmetic kill effect and tracer style (their meshes and materials).
 	for it in Cosmetics.items_for(&"kill_effect"):
 		KillEffects.play(parent, at, it, false)

@@ -625,6 +625,7 @@ func _trace(origin: Vector3, dir: Vector3, data: WeaponData, scale: float, pierc
 			exclude.append(z.get_rid())
 			continue
 		WeaponFx.impact(_level(), end, hit["normal"], data)
+		ImpactMarks.shot(_level(), hit, dir, data)
 		break
 	if not hit_any and data.seek_cone_degrees > 0.0:
 		var target := seek(origin, dir, data)

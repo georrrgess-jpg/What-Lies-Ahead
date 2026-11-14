@@ -139,9 +139,10 @@ func _physics_process(delta: float) -> void:
 			_detonate(hit["position"], collider)
 			return
 		if _bounces <= 0:
-			_detonate(hit["position"] + hit["normal"] * 0.1, null)
+			_detonate(hit["position"] + hit["normal"] * 0.1, null, hit)
 			return
 		_bounces -= 1
+		ImpactMarks.scuff(get_parent(), hit, velocity.normalized(), weapon)
 		var n: Vector3 = hit["normal"]
 		velocity = velocity.bounce(n) * weapon.projectile_bounciness
 		global_position = hit["position"] + n * 0.05
@@ -178,8 +179,10 @@ func _update_trail() -> void:
 		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * s), p))
 
 
-func _detonate(at: Vector3, direct: Zombie) -> void:
+## `surface`: the scenery ray hit it went off on, if any (for its scorch mark).
+func _detonate(at: Vector3, direct: Zombie, surface := {}) -> void:
 	_done = true
+	ImpactMarks.blast(get_parent(), at, weapon, surface)
 	if is_instance_valid(controller):
 		controller.projectile_detonated(weapon, at, direct, velocity.normalized())
 	else:
