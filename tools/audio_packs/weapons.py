@@ -82,7 +82,7 @@ def weap_arc_chain():
     d = 0.12
     snap = _arc(d, 0.06, 5200) * env(d, 0.0005, 0.08, power=2.0)
     tick = sweep(3800, 1600, d, "square", 0.5) * env(d, 0.0005, 0.03, power=2.0) * 0.25
-    return crush(snap * 0.5 + tick, 1.3)
+    return filt(crush(snap * 0.5 + tick, 1.3), low=7000)
 
 
 def weap_arc_reload():

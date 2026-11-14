@@ -20,26 +20,29 @@ from gen_audio import *  # noqa: F401,F403
 # ---------------------------------------------------------------------------
 
 def sleigh_bell(seconds=0.35, bright=1.0):
-    """A shake of small bells: several detuned metallic pings jittered in time."""
+    """A shake of small bells: several detuned pings jittered in time. Kept
+    round (pings near 2 kHz, the upper partials short, a soft rattle) because
+    they shake on every offbeat."""
     out = silence(seconds)
     for k in range(5):
         at = rng.uniform(0.0, 0.035)
         d = seconds - at
-        base = rng.uniform(2600, 3400) * bright
+        base = rng.uniform(1900, 2500) * bright
         ping = sum(tone(base * r, d, "sine") * env(d, 0.0008, d * g, power=2.2) * a
-                   for r, g, a in ((1.0, 0.5, 1.0), (1.47, 0.35, 0.6), (2.09, 0.25, 0.45), (2.76, 0.18, 0.3)))
+                   for r, g, a in ((1.0, 0.45, 1.0), (1.47, 0.25, 0.45), (2.09, 0.15, 0.25)))
         place(out, ping, at, 0.22)
-    place(out, band(noise(seconds), 7000, 2500) * env(seconds, 0.001, 0.08, power=2.0), 0.0, 0.5)
+    place(out, band(noise(seconds), 4800, 1800) * env(seconds, 0.001, 0.06, power=2.0), 0.0, 0.3)
     return out
 
 
 def celesta(freq, seconds, gain=1.0):
-    """FM bell: bright attack that mellows as the modulation index decays."""
+    """FM bell: a bright attack that mellows as the modulation index decays
+    (harmonic 4:1 ratio and a modest index, so it chimes without clang)."""
     t = t_axis(seconds)
-    index = 2.6 * np.exp(-t * 7.0) + 0.3
-    mod = np.sin(2 * np.pi * freq * 3.5 * t) * index
+    index = 1.5 * np.exp(-t * 9.0) + 0.15
+    mod = np.sin(2 * np.pi * freq * 4.0 * t) * index
     car = np.sin(2 * np.pi * freq * t + mod)
-    return car * env(seconds, 0.002, seconds * 0.9, power=1.8) * gain
+    return filt(car, low=5000) * env(seconds, 0.002, seconds * 0.9, power=1.8) * gain
 
 
 def pluck_bass(freq, seconds):
@@ -81,7 +84,7 @@ def summit_lodge_loop(intense=False):
     kick = sweep(140, 42, 0.2, "sine", 0.45) * env(0.2, 0.001, power=2.2)
     place(kick, kick_click(0.3), 0.0)
     snare = (band(noise(0.18), 1900, 1000) * 0.8 + tone(205, 0.18) * 0.5) * env(0.18, 0.001, power=2.4)
-    hat = filt(noise(0.04), high=8000) * env(0.04, 0.0005, power=2.8)
+    hat = filt(noise(0.04), high=7000, low=11000) * env(0.04, 0.0005, power=2.8)
     bells = [sleigh_bell(0.3, rng.uniform(0.95, 1.06)) for _ in range(6)]
     hand_clap, crash = clap(), cymbal()
     chords_a = [(-7, (0, 3, 7)), (-11, (0, 4, 7)), (-16, (0, 4, 7)), (-9, (0, 4, 7))]      # Dm Bb F C (roots from A4)
@@ -104,11 +107,11 @@ def summit_lodge_loop(intense=False):
                     both(hand_clap, t0 + b * beat, 0.16, 0.45)
             for h in range(4 if busy else 2):
                 step = b + h / (4 if busy else 2)
-                both(hat, t0 + step * beat, 0.07 if h % 2 == 0 else 0.1, 0.65)
+                both(hat, t0 + step * beat, 0.05 if h % 2 == 0 else 0.07, 0.65)
             # Sleigh bells shake on the offbeats (every eighth in section B).
-            both(bells[(bar + b) % len(bells)], t0 + (b + 0.5) * beat, 0.2, 0.35)
+            both(bells[(bar + b) % len(bells)], t0 + (b + 0.5) * beat, 0.15, 0.35)
             if busy:
-                both(bells[(bar + b + 3) % len(bells)], t0 + b * beat, 0.11, 0.6)
+                both(bells[(bar + b + 3) % len(bells)], t0 + b * beat, 0.08, 0.6)
             if fill and b >= 2:
                 for s in range(4):
                     both(snare, t0 + (b + s * 0.25) * beat, 0.16 + 0.04 * s)
@@ -139,7 +142,7 @@ def summit_lodge_loop(intense=False):
                 [(17, 0.0, 1.0), (16, 1.0, 1.0), (13, 2.0, 2.0)],
             ]
             for semis, at, length in phrases[bar % 4]:
-                x = celesta(note(semis - 7 + 12), length * beat * 1.2, 1.0) + celesta(note(semis - 7 + 24), length * beat * 1.2, 0.25)
+                x = celesta(note(semis - 7 + 12), length * beat * 1.2, 1.0) + celesta(note(semis - 7 + 24), length * beat * 1.2, 0.12)
                 both(x, t0 + at * beat, 0.24, 0.55)
         elif bar % 4 == 3:
             # A little bell turn at the end of each phrase in section A.
@@ -217,7 +220,7 @@ def frost_ski_rush():
     """The rush: a fast hiss of skis on snow with a doppler whoosh."""
     d = 1.4
     t = t_axis(d)
-    hiss = filt(noise(d), high=2500) * env(d, 0.03, d * 1.2, power=0.8, release=0.2)
+    hiss = filt(noise(d), high=2000, low=6000) * env(d, 0.03, d * 1.2, power=0.8, release=0.2)
     whoosh = sum(band(noise(d), c, 500) * np.exp(-((t - at) / 0.2) ** 2) for c, at in ((900, 0.25), (1800, 0.45), (1100, 0.65)))
     rumble = filt(sweep(160, 60, d, "sine") * env(d, 0.02, d, power=1.2), low=400)
     return hiss * 0.7 + whoosh * 1.4 + rumble * 0.3

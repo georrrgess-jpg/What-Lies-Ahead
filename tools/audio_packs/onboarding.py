@@ -25,7 +25,7 @@ def onb_blip():
 def onb_pop():
     """A balloon popping: a bright crack with a rubbery tail."""
     d = 0.22
-    crack = filt(noise(d), high=1800) * env(d, 0.001, 0.05, power=1.5)
+    crack = filt(noise(d), high=1800, low=6000) * env(d, 0.001, 0.05, power=1.5)
     snap = sweep(900, 260, 0.08, "tri") * env(0.08, 0.001, 0.07)
     out = silence(d)
     place(out, crack, 0.0, 0.9)

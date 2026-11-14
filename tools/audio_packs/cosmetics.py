@@ -241,7 +241,7 @@ def cos_kill_firework_pop():
     place(out, sweep(160, 40, 0.3, "sine", 0.4) * env(0.3, 0.001, 0.25) * 0.9, 0.0)
     place(out, filt(noise(0.2), low=2500) * env(0.2, 0.001, 0.12) * 0.7, 0.0)
     crackle = (rand(0, 1, int(SR * 0.7)) > 0.997).astype(float) * rand(-1, 1, int(SR * 0.7))
-    place(out, filt(crackle, high=1500) * env(0.7, 0.05, 0.7, power=1.0) * 2.5, 0.15)
+    place(out, filt(crackle, high=1500, low=6000) * env(0.7, 0.05, 0.7, power=1.0) * 2.5, 0.15)
     return out
 
 

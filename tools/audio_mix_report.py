@@ -73,7 +73,11 @@ def load(path):
             raw = w.readframes(w.getnframes())
         assert width == 2 and rate == SR, path
         return np.frombuffer(raw, "<i2").astype(np.float64).reshape(-1, ch) / 32768.0
-    out = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-f", "s16le", "-ac", "2", "-ar", str(SR), "-"],
+    channels = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=channels", "-of", "csv=p=0", path],
+                              check=True, capture_output=True, text=True).stdout.split()[0]
+    # A mono loop plays at full level on both speakers (ffmpeg's own upmix is 3 dB down).
+    upmix = ["-af", "pan=stereo|c0=c0|c1=c0"] if channels == "1" else ["-ac", "2"]
+    out = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-f", "s16le"] + upmix + ["-ar", str(SR), "-"],
                          check=True, capture_output=True).stdout
     return np.frombuffer(out, "<i2").astype(np.float64).reshape(-1, 2) / 32768.0
 

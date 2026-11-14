@@ -265,7 +265,7 @@ def tidal_tunnels_loop(intense=False):
 
     kick = sweep(110, 42, 0.32, "sine", 0.45) * env(0.32, 0.002, 0.3, power=2.0)
     place(kick, kick_click(0.3, 2600), 0.0)
-    hat = filt(noise(0.06), high=6500) * env(0.06, 0.0008, 0.05, power=2.5)
+    hat = filt(noise(0.06), high=6500, low=11000) * env(0.06, 0.0008, 0.05, power=2.5)
     shaker = band(noise(0.08), 7000, 2500) * env(0.08, 0.01, 0.08, power=1.5)
     rim = band(noise(0.05), 2200, 600) * env(0.05, 0.0005, 0.04, power=2.0) + tone(820, 0.05) * env(0.05, 0.0005, 0.03) * 0.3
 

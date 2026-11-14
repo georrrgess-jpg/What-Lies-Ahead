@@ -120,7 +120,7 @@ def neon_spray_rattle():
 def neon_spray_hiss():
     """Short aerosol burst."""
     d = 0.3
-    hiss = filt(noise(d), high=3500, low=12000) * env(d, 0.005, 0.28, power=0.9, release=0.05)
+    hiss = filt(noise(d), high=2800, low=6500) * env(d, 0.005, 0.28, power=0.9, release=0.05)
     spit = filt(noise(0.04), high=1500) * env(0.04, 0.001, power=2.0)
     out = hiss * 0.9
     place(out, spit, 0.0, 0.5)
@@ -251,8 +251,8 @@ def neon_skyline_loop(intense=False):
     sn_len = 0.34
     snare = (band(noise(sn_len), 1800, 1400) * 0.9 + tone(185, sn_len) * 0.35) * env(sn_len, 0.001, sn_len * 1.05, power=0.35, release=0.03)
     snare_tail = filt(noise(0.7), low=5000, high=600) * env(0.7, 0.01, 0.7, power=2.0) * 0.35
-    hat = filt(noise(0.05), high=7500) * env(0.05, 0.0005, power=2.5)
-    open_hat = filt(noise(0.22), high=6500) * env(0.22, 0.001, power=1.5)
+    hat = filt(noise(0.05), high=7000, low=11000) * env(0.05, 0.0005, power=2.5)
+    open_hat = filt(noise(0.22), high=6000, low=10000) * env(0.22, 0.001, power=1.5)
     tom = lambda f: sweep(f, f * 0.55, 0.3, "sine", 0.5) * env(0.3, 0.001, 0.28, power=1.4)
 
     # Sidechain envelope: everything melodic ducks under the kick.
@@ -288,7 +288,7 @@ def neon_skyline_loop(intense=False):
                 both(snare_tail, t0 + b * beat + 0.09, 0.12, 0.7)
                 if intense:
                     both(hand_clap, t0 + b * beat, 0.18, 0.55)
-            both(hat, t0 + (b + 0.5) * beat, 0.2, 0.65)
+            both(hat, t0 + (b + 0.5) * beat, 0.14, 0.65)
             if section_b or intense:
                 both(hat, t0 + (b + 0.25) * beat, 0.09, 0.35)
                 both(hat, t0 + (b + 0.75) * beat, 0.09, 0.35)
@@ -325,7 +325,7 @@ def neon_skyline_loop(intense=False):
             melodic(x, at + beat * 1.5, 0.03, 0.15)
             if intense:
                 hi = tone(note(root + 24 + step), ln, "square") * env(ln, 0.002, ln, power=1.5)
-                melodic(filt(hi, low=6000), at, 0.035, 0.7)
+                melodic(filt(hi, low=4500), at, 0.035, 0.7)
         # Saw lead in section B (and an answer phrase at the end of A); when
         # intense, section A gets an anthem line on the chord tones.
         phrases = {

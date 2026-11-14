@@ -22,11 +22,14 @@ shot list in docs/SHOWREEL.md. Every cut lands on a bar or a beat:
     82     HIT        "PLAY NOW", decaying to silence at 88
 
 cine_startup: the 8.5 s startup screen (scripts/ui/intro_overlay.gd), in the
-same voice: a pad and the distant organ rise from silence, four soft low
-pulses under the montage cuts (1.4 / 2.2 / 3.0 / 3.8), the low boom and a warm
-chord for the logo at 4.6, three soft plucks as the feature chips land.
+menu theme's key (D major, see menu.py): a pad (Bm, then A) and the theme's
+hook on a distant calliope rise from silence, four soft low pulses under the
+montage cuts (1.4 / 2.2 / 3.0 / 3.8), the low boom and a D chord for the logo
+at 4.6, three soft plucks (the hook's first notes) as the feature chips land,
+so the menu theme starts on the chord the startup ends on.
 """
 from gen_audio import *  # noqa: F401,F403
+import menu
 
 BPM = 120.0
 BEAT = 60.0 / BPM
@@ -310,25 +313,30 @@ def showreel_trailer():
 
 
 def cine_startup():
-    """The startup screen's score (mono one-shot): warm, low, building."""
+    """The startup screen's score (mono one-shot): warm, low, building, and in
+    the menu theme's key, so the menu music picks up where it ends."""
     d = 8.5
     out = silence(d)
     t = t_axis(d)
     place(out, _sea(d) * np.clip(t / 1.5, 0, 1), 0.0, 0.12)
-    place(out, _organ(4.8) * np.clip(t_axis(4.8) / 1.0, 0, 1) * np.clip((4.8 - t_axis(4.8)) / 0.4, 0, 1), 0.0, 0.22)
-    place(out, _pad(*AM, 3.2, cutoff=700, attack=1.0), 0.0, 0.5)
-    place(out, _pad(*E, 1.6, cutoff=1000, attack=1.2, release=0.1), 3.0, 0.55)
+    # The theme's hook on the distant calliope, as if from the far end of the pier.
+    hook = silence(4.8)
+    for bar, notes in enumerate(menu.VERSE[:2]):
+        for s, at, ln in notes:
+            place(hook, menu.calliope(s, ln * menu.BEAT * 0.96), 0.25 + bar * menu.BAR + at * menu.BEAT, 0.5)
+    place(out, _distant(hook * np.clip((4.8 - t_axis(4.8)) / 0.5, 0, 1)), 0.0, 0.5)
+    place(out, _pad(-10, (0, 3, 7), 3.2, cutoff=700, attack=1.0), 0.0, 0.5)           # Bm
+    place(out, _pad(-12, (0, 4, 7), 1.6, cutoff=1000, attack=1.2, release=0.1), 3.0, 0.55)   # A
     for i, at in enumerate((1.4, 2.2, 3.0, 3.8)):
         place(out, _heartbeat(), at, 0.45 + 0.1 * i)
         place(out, _tom(90 - 6 * i, 0.5), at, 0.35)
     place(out, _low_boom(3.9), 4.6, 1.0)
-    place(out, _brass(-24, (0, 7, 12), 2.4, cutoff=1000, attack=0.06), 4.6, 0.35)
+    place(out, _brass(-31, (0, 7, 12), 2.4, cutoff=1000, attack=0.06), 4.6, 0.35)     # D
     for i, at in enumerate((5.6, 6.1, 6.6)):
-        f = note(-12 + (0, 3, 7)[i])
-        pluck = (tone(f, 0.5, "sine") + tone(f * 2, 0.5, "sine") * 0.3) * env(0.5, 0.004, 0.45, power=2.0)
-        place(out, pluck, at, 0.25)
-    chord = _pad(-12, (0, 7, 12, 15), 2.4, cutoff=1400, attack=0.4, release=0.8)
-    place(out, chord, 6.1, 0.5)
+        f = note(menu.HOOK[i][0] - 12)                                                 # the hook's first notes
+        pluck_ = (tone(f, 0.5, "sine") + tone(f * 2, 0.5, "sine") * 0.3) * env(0.5, 0.004, 0.45, power=2.0)
+        place(out, pluck_, at, 0.25)
+    place(out, _pad(-7, (0, 7, 12, 16), 2.4, cutoff=1400, attack=0.4, release=0.8), 6.1, 0.5)   # D (open)
     return out
 
 

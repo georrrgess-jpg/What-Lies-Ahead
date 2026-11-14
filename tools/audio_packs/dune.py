@@ -234,7 +234,7 @@ def launch_pad_loop(intense=False):
     rim = (band(noise(0.04), 2200, 600) * 3 + tone(820, 0.04) * 0.5) * env(0.04, 0.0005, power=2.5)
     snare = (filt(noise(0.18), high=1200) * 0.7 + tone(180, 0.18) * 0.3) * env(0.18, 0.001, power=2.0)
     brush = band(noise(0.07), 3200, 1800) * env(0.07, 0.004, power=1.6)
-    shaker = filt(noise(0.06), high=6000) * env(0.06, 0.01, power=1.5)
+    shaker = filt(noise(0.06), high=5500, low=10000) * env(0.06, 0.01, power=1.5)
     crash = cymbal(2.0)
     for bar in range(bars):
         section_b = bar >= 16
@@ -292,7 +292,7 @@ def launch_pad_loop(intense=False):
             for e in range(16):
                 step = chord[e % len(chord)] + 24 + (12 if e % 8 >= 4 else 0)
                 x = tone(note(root + step), beat * 0.2, "square") * env(beat * 0.2, 0.002, beat * 0.25, power=1.5)
-                put(filt(x, low=5000), t0 + e * beat * 0.25, 0.045, 0.2 + 0.6 * ((e % 4) / 3.0), 0.3)
+                put(filt(x, low=4000), t0 + e * beat * 0.25, 0.045, 0.2 + 0.6 * ((e % 4) / 3.0), 0.3)
     # Melodies: a whistled tune in A (bars 8-15), the theremin in B (bars 16-31).
     whistle = [(7, 0.0, 1.5), (5, 1.5, 0.5), (3, 2.0, 1.0), (0, 3.0, 1.0), (-2, 4.0, 1.5), (0, 5.5, 0.5), (3, 6.0, 2.0),
                (7, 8.0, 1.5), (10, 9.5, 0.5), (8, 10.0, 1.0), (7, 11.0, 1.0), (5, 12.0, 2.0), (3, 14.0, 2.0),
