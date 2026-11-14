@@ -28,7 +28,7 @@ func _init() -> void:
 	add_theme_constant_override("separation", UiKit.GAP_S)
 	var frame := UiKit.metal_frame(10)
 	frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	frame.custom_minimum_size.y = 250
+	frame.custom_minimum_size.y = 180
 	add_child(frame)
 	var case := Control.new()
 	case.clip_contents = true

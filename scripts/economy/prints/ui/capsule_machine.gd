@@ -53,10 +53,10 @@ func turn(color: Color) -> void:
 	_drop_color = color
 	_clicks = 0
 	var tw := create_tween()
-	tw.tween_method(_set_crank, 0.0, TAU, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_method(_set_crank, 0.0, TAU, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.parallel().tween_property(self, "_churn", 1.0, 0.3)
 	tw.tween_callback(func(): Sfx.play(&"prz_rattle", -4.0))
-	tw.tween_property(self, "_drop", 1.0, 0.55).from(0.0).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "_drop", 1.0, 0.45).from(0.0).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(self, "_churn", 0.0, 0.6)
 	tw.tween_callback(func(): _crank = 0.0)
 	tw.tween_callback(turned.emit)

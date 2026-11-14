@@ -200,12 +200,12 @@ func _build_machine_side() -> Control:
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", UiKit.GAP_S)
 	side.add_child(buttons)
-	_open = UiKit.sign_button("OPEN", SignButton.Kind.PRIMARY, 34)
+	_open = UiKit.sign_button("OPEN", SignButton.Kind.PRIMARY, 30)
 	_open.name = "FirstFocus"
 	_open.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_open.pressed.connect(_open_capsule)
 	buttons.add_child(_open)
-	_buy = UiKit.sign_button("", SignButton.Kind.GOLD, 28)
+	_buy = UiKit.sign_button("", SignButton.Kind.GOLD, 24)
 	_buy.icon = UiKit.spark_icon(30).texture
 	_buy.pressed.connect(_buy_capsule)
 	buttons.add_child(_buy)
@@ -367,7 +367,7 @@ func _build_collection() -> Control:
 	var filters := HBoxContainer.new()
 	filters.add_theme_constant_override("separation", UiKit.GAP_S)
 	col.add_child(filters)
-	_rarity_tabs = UiKit.tabs(20)
+	_rarity_tabs = UiKit.tabs(18)
 	for t in [[&"all", "ALL"], [&"0", "COMMON"], [&"1", "RARE"], [&"2", "EPIC"], [&"3", "LEGENDARY"]]:
 		_rarity_tabs.add_tab(t[0], t[1])
 	_rarity_tabs.tab_changed.connect(func(id: StringName):
@@ -414,7 +414,7 @@ func _build_collection() -> Control:
 		_refresh_auto())
 	toggles.add_child(_auto_button)
 	_inspect = PrintInspect.new()
-	_inspect.custom_minimum_size.x = 460
+	_inspect.custom_minimum_size.x = 440
 	_inspect.changed.connect(_on_inspect_changed)
 	row.add_child(_inspect)
 	return row
@@ -494,7 +494,7 @@ func _fill_cards(grid: GridContainer, cards: Array[PrintCard], list: Array, chos
 
 
 func _refresh_auto() -> void:
-	_auto_button.text = "AUTO-RECYCLE REPEATS: " + ("ON" if PrizePrints.auto_recycle() else "OFF")
+	_auto_button.text = "AUTO-RECYCLE: " + ("ON" if PrizePrints.auto_recycle() else "OFF")
 
 
 func _on_card_chosen(card: PrintCard) -> void:
