@@ -13,8 +13,8 @@ extends Control
 const HOLD := 14.0
 ## page id -> [seen id, text, anchor candidates]
 const MARKS := {
-	"arsenal": [&"coach_arsenal", "Pick a weapon, then EQUIP it as your primary or secondary.",
-		["CoachAnchor", "EquipPrimary", "text:EQUIP", "text:SWAP"]],
+	"arsenal": [&"coach_arsenal", "Primaries and secondaries each have a section. Pick a weapon, then EQUIP it.",
+		["CoachAnchor", "text:EQUIP"]],
 	"locker": [&"coach_locker", "Pick a tab, then a card to try it on. Looks only, never power.",
 		["CoachAnchor", "LockerTabs", "class:KitTabs"]],
 	"shop": [&"coach_shop", "Sparks buy cosmetics here. The featured row is on sale today.",

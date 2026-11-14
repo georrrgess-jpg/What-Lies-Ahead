@@ -99,12 +99,13 @@ func begin_run() -> void:
 	_warm_up.call_deferred()
 
 
-## Carries `primary` and `secondary` and holds the primary (no switch animation).
-func set_loadout(primary: StringName, secondary: StringName) -> void:
+## Carries `primary` and `secondary` and holds the one in slot `hold` (0 =
+## the primary; no switch animation).
+func set_loadout(primary: StringName, secondary: StringName, hold := 0) -> void:
 	slots = [primary, secondary] as Array[StringName]
-	active_slot = 0
+	active_slot = clampi(hold, 0, 1)
 	current = null
-	var data := GameData.weapon(primary)
+	var data := GameData.weapon(slots[active_slot])
 	if data:
 		_take(data, false)
 	slots_changed.emit(slots, active_slot)

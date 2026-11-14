@@ -8,10 +8,11 @@ extends Node
 ##   --autoplay=route     crowd test: do zombies use both lanes around the kiosk?
 ##   --autoplay=tutorial  play Boot Camp end to end from the menu (options in
 ##                        scripts/onboarding/tutorial_bot.gd: --tutorial-runs, --tutorial-skip)
-##   --weapon=<id>        starter weapon for the bot (default: pulse_pistol)
+##   --weapon=<id>        weapon the bot starts with in hand (default: pulse_pistol); it goes in
+##                        its own class's slot (a sidearm in slot 2) next to the saved other one
 ##   --level=<id>         level to play (default: the first one); locks are ignored
 ##   --ring=<m>           radius of the bot's patrol ring around the loadout station
-##   --swap               bot swaps the held weapon at the kiosk every break
+##   --swap               bot swaps the held weapon at the kiosk every break (next of its class)
 ##   --switch             bot switches to its other slot whenever it starts a reload
 ##   --boost              bot buys the damage boost whenever it can afford it (before
 ##                        the overshield, which it always buys when it can)
@@ -220,9 +221,10 @@ func _physics_process(delta: float) -> void:
 		_break_done = false
 		_ring_index = 0
 		_min_health = 100.0
-		print("[dev] run %d started: state=%s tickets=%d wave=%d health=%d weapon=%s mag=%d difficulty=%s resumed_from=%d" % [
+		print("[dev] run %d started: state=%s tickets=%d wave=%d health=%d weapon=%s slots=%s/%s mag=%d difficulty=%s resumed_from=%d" % [
 			_runs, RunDirector.State.keys()[_director.state], _director.tickets, _director.wave_number,
-			int(_player.health), _player.weapons.current.id, _player.weapons.magazine(), _director.difficulty,
+			int(_player.health), _player.weapons.current.id, _player.weapons.slots[0], _player.weapons.slots[1],
+			_player.weapons.magazine(), _director.difficulty,
 			_director.resumed_from])
 		if continue_test and _runs == 2:
 			var waves := _director.waves

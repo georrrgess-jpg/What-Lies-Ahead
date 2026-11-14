@@ -4,11 +4,24 @@ extends MenuPage
 ## booth (a 3D diorama with Prize Pier's Ferris wheel at sunset behind it;
 ## drag to turn the weapon). Over it: the loadout's two slot plates in the
 ## header, a signboard with the weapon's name, firing mode and mastery rank,
-## its role, six stats computed from WeaponData and the buttons that put it in
-## the primary or secondary slot, and a metal tray with every weapon as a
-## card (locked ones show what unlocks them).
+## its role, six stats computed from WeaponData and the button that equips it,
+## and a metal tray split into two sections, PRIMARIES and SECONDARIES (one
+## per loadout slot, by WeaponData.slot_class), with every weapon of the class
+## as a card (locked ones show what unlocks them). A weapon only goes in its
+## own class's slot. The section tabs, the slot plates, the 1 / 2 keys and the
+## gamepad triggers switch sections; the cards slide across.
 
-const CARD_SIZE := Vector2(206, 196)
+## Minimum card size; cards share the tray's width (the longer section fills it).
+const CARD_SIZE := Vector2(150, 196)
+const SECTION_NAMES := ["PRIMARIES", "SECONDARIES"]
+## Shown in the empty part of a section's row when the other has more weapons.
+const SECTION_NOTES := [
+	"Primaries ride in slot 1: the weapon you fight with.",
+	"Secondaries ride in slot 2: press 2 or roll the wheel to draw one while the primary reloads.",
+]
+const SECTION_TAB_WIDTH := 236.0
+## How far the cards slide when the section changes (px).
+const SECTION_SLIDE := 90.0
 const THUMB_SIZE := Vector2i(252, 104)
 const BOOTH_SCENE := "res://art/models/menu_booth.glb"
 const WHEEL_SCENE := "res://art/models/ferris_wheel.glb"
@@ -53,10 +66,20 @@ var _traits: HBoxContainer
 var _stat_rows: Array[StatRow] = []
 var _rank_label: Label
 var _rank_bar: ProgressBar
-var _lock_note: Label
-var _swap: SignButton
-var _equip_row: HBoxContainer
-var _equip: Array[SignButton] = []
+## Under the stats: the EQUIP button, or a banner saying the weapon is
+## equipped or locked (the coach mark's anchor).
+var _action: VBoxContainer
+var _equip: SignButton
+var _banner: KitPanel
+var _banner_icon: TextureRect
+var _banner_text: Label
+## The tray's sections: the shown one (a Loadout slot), its tab buttons and card rows.
+var _section := Loadout.PRIMARY
+var _section_tabs: Array[SignButton] = []
+var _section_counts: Array[Label] = []
+var _rows: Array[HBoxContainer] = []
+var _section_tween: Tween
+var _trigger_held := 0
 var _plates: Array[SlotPlate] = []
 var _plate_row: HBoxContainer
 var _board: KitPanel
@@ -127,7 +150,8 @@ func refresh() -> void:
 	for id in _thumb_pivots:
 		_build.add(_redo_thumb.bind(id))
 	_select(_weapon if _weapon else GameData.weapon(Loadout.primary()))
-	UiFx.stagger_in(_cards.values())
+	_refresh_counts()
+	UiFx.stagger_in(_rows[_section].get_children())
 	UiFx.pop_in(_board, 0.05, 0.94)
 
 
@@ -138,10 +162,35 @@ func first_focus() -> Control:
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or KitDialog.open_count > 0:
 		return
-	for slot in 2:
-		if event.is_action_pressed("weapon_%d" % (slot + 1)):
-			_equip_slot(slot)
-			get_viewport().set_input_as_handled()
+	var slot := -1
+	if event.is_action_pressed("weapon_1"):
+		slot = Loadout.PRIMARY
+	elif event.is_action_pressed("weapon_2"):
+		slot = Loadout.SECONDARY
+	elif event is InputEventJoypadMotion:
+		var step := _trigger_step(event as InputEventJoypadMotion)
+		if step != 0:
+			slot = Loadout.SECONDARY if step > 0 else Loadout.PRIMARY
+	if slot >= 0:
+		_use_slot(slot)
+		get_viewport().set_input_as_handled()
+
+
+## -1 / 1 once per pull of the left / right trigger.
+func _trigger_step(event: InputEventJoypadMotion) -> int:
+	var side := 0
+	if event.axis == JOY_AXIS_TRIGGER_LEFT:
+		side = -1
+	elif event.axis == JOY_AXIS_TRIGGER_RIGHT:
+		side = 1
+	if side == 0:
+		return 0
+	if event.axis_value < 0.3 and _trigger_held == side:
+		_trigger_held = 0
+	elif event.axis_value > 0.6 and _trigger_held != side:
+		_trigger_held = side
+		return side
+	return 0
 
 
 # --- layout ----------------------------------------------------------------------
@@ -154,8 +203,20 @@ func _build_plates() -> void:
 	for slot in 2:
 		var plate := UiKit.slot_plate("%s  [%d]" % [String(Loadout.SLOT_NAMES[slot]).to_upper(), slot + 1], "")
 		plate.custom_minimum_size.x = 430
+		# A click opens the slot's section (and equips the weapon picked there).
+		plate.mouse_filter = Control.MOUSE_FILTER_STOP
+		plate.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		plate.tooltip_text = "Show the %s" % String(SECTION_NAMES[slot]).to_lower()
+		plate.gui_input.connect(_on_plate_input.bind(slot))
 		_plate_row.add_child(plate)
 		_plates.append(plate)
+
+
+func _on_plate_input(event: InputEvent, slot: int) -> void:
+	var click := event as InputEventMouseButton
+	if click and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
+		UiSound.click()
+		_use_slot(slot)
 
 
 ## The open area over the diorama: dragging it turns the weapon.
@@ -206,24 +267,37 @@ func _build_board() -> Control:
 	v.add_child(_build_stats())
 	v.add_child(_rule())
 	v.add_child(_build_mastery())
-	_lock_note = UiKit.label("", UiKit.SIZE_LABEL, UiKit.AMBER, true)
-	_lock_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(_lock_note)
-	_swap = UiKit.sign_button("SWAP SLOTS", SignButton.Kind.PRIMARY, 44)
-	_swap.custom_minimum_size.y = 78
-	_swap.pressed.connect(_swap_slots)
-	v.add_child(_swap)
-	_equip_row = HBoxContainer.new()
-	_equip_row.add_theme_constant_override("separation", UiKit.GAP_M)
-	v.add_child(_equip_row)
-	for slot in 2:
-		var b := UiKit.sign_button("EQUIP %s" % String(Loadout.SLOT_NAMES[slot]).to_upper(), SignButton.Kind.PRIMARY if slot == 0 else SignButton.Kind.SECONDARY, 25)
-		b.custom_minimum_size.y = 78
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.pressed.connect(_equip_slot.bind(slot))
-		_equip_row.add_child(b)
-		_equip.append(b)
+	v.add_child(_build_action())
 	return _board
+
+
+## The EQUIP button and, in its place when there is nothing to equip, a
+## banner: EQUIPPED (cyan) or LOCKED with what unlocks it (amber).
+func _build_action() -> Control:
+	_action = VBoxContainer.new()
+	_action.name = "CoachAnchor"
+	_action.custom_minimum_size.y = 78
+	_equip = UiKit.sign_button("EQUIP", SignButton.Kind.PRIMARY, 40)
+	_equip.name = "EquipButton"
+	_equip.custom_minimum_size.y = 78
+	_equip.pressed.connect(_equip_selected)
+	_action.add_child(_equip)
+	_banner = UiKit.neon_panel(UiKit.CYAN)
+	_banner.set_padding(20, 8)
+	_banner.custom_minimum_size.y = 78
+	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_action.add_child(_banner)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", UiKit.GAP_M)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_banner.add_child(row)
+	_banner_icon = UiKit.icon(&"icon_check", 34.0)
+	row.add_child(_banner_icon)
+	_banner_text = UiKit.label("", UiKit.SIZE_LABEL, UiKit.CYAN, true)
+	_banner_text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(_banner_text)
+	return _action
 
 
 func _rule() -> ColorRect:
@@ -266,24 +340,92 @@ func _build_mastery() -> Control:
 	return row
 
 
-## The riveted tray along the bottom with every weapon as a card.
+## The riveted tray along the bottom: the two section tabs, then the shown
+## section's weapons as cards. Both sections' rows sit on one deck; only the
+## shown one is visible.
 func _build_tray() -> Control:
 	var tray := UiKit.metal_frame()
 	tray.set_padding(36, 32)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiKit.GAP_S)
+	row.add_theme_constant_override("separation", UiKit.GAP_M)
 	tray.add_child(row)
+	row.add_child(_build_section_tabs())
+	var deck := Control.new()
+	deck.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	deck.custom_minimum_size.y = CARD_SIZE.y
+	deck.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(deck)
+	var columns := maxi(Loadout.weapons_for(Loadout.PRIMARY).size(), Loadout.weapons_for(Loadout.SECONDARY).size())
 	var group := ButtonGroup.new()
-	for w in GameData.weapons():
-		var card := UiKit.item_card(w.display_name.to_upper(), CARD_SIZE)
-		card.button_group = group
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.pressed.connect(_select.bind(w))
-		_thumb_textures[w.id] = _thumbnail(w, card)
-		card.set_image(_thumb_textures[w.id])
-		row.add_child(card)
-		_cards[w.id] = card
+	for slot in 2:
+		var cards := HBoxContainer.new()
+		cards.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		cards.add_theme_constant_override("separation", UiKit.GAP_S)
+		cards.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cards.visible = slot == _section
+		deck.add_child(cards)
+		_rows.append(cards)
+		var weapons := Loadout.weapons_for(slot)
+		for w in weapons:
+			cards.add_child(_new_card(w, group))
+		if weapons.size() < columns:
+			cards.add_child(_row_note(slot, columns - weapons.size()))
 	return tray
+
+
+func _new_card(w: WeaponData, group: ButtonGroup) -> ItemCard:
+	var card := UiKit.item_card(w.display_name.to_upper(), CARD_SIZE)
+	card.button_group = group
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.pressed.connect(_select.bind(w))
+	_thumb_textures[w.id] = _thumbnail(w, card)
+	card.set_image(_thumb_textures[w.id])
+	_cards[w.id] = card
+	return card
+
+
+## A line about the section, in the room `columns` cards would take.
+func _row_note(slot: int, columns: int) -> Control:
+	var note := UiKit.body(SECTION_NOTES[slot], 0.0, UiKit.SIZE_SMALL, UiKit.MUTED)
+	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	note.size_flags_stretch_ratio = columns
+	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	note.custom_minimum_size.x = CARD_SIZE.x
+	return note
+
+
+## The two section tabs stacked at the tray's left end, each with how many
+## of its weapons are unlocked.
+func _build_section_tabs() -> Control:
+	var col := VBoxContainer.new()
+	col.custom_minimum_size.x = SECTION_TAB_WIDTH
+	col.add_theme_constant_override("separation", 0)
+	var group := ButtonGroup.new()
+	for slot in 2:
+		var tab := SignButton.make_tab(SECTION_NAMES[slot], group, 28)
+		tab.name = "Section%s" % String(Loadout.SLOT_NAMES[slot])
+		tab.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		tab.set_pressed_no_signal(slot == _section)
+		tab.pressed.connect(_on_section_tab.bind(slot))
+		col.add_child(tab)
+		_section_tabs.append(tab)
+		var count := UiKit.label("", UiKit.SIZE_SMALL, UiKit.MUTED)
+		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(count)
+		_section_counts.append(count)
+	return col
+
+
+func _on_section_tab(slot: int) -> void:
+	UiSound.tab()
+	_show_section(slot, true)
+
+
+## "[1]  5 / 8 unlocked" under each tab.
+func _refresh_counts() -> void:
+	for slot in 2:
+		_section_counts[slot].text = "[%d]   %d / %d unlocked" % [slot + 1, Loadout.available(slot).size(), Loadout.weapons_for(slot).size()]
 
 
 ## A small one-shot render of the weapon for its card.
@@ -511,7 +653,8 @@ func _select(w: WeaponData) -> void:
 		return
 	var changed := w != _weapon
 	_weapon = w
-	var unlocked := GameData.is_weapon_unlocked(w)
+	if Loadout.slot_for(w) != _section:
+		_show_section(Loadout.slot_for(w), is_visible_in_tree(), false)
 	(_cards[w.id] as ItemCard).selected = true
 	_fit_name(w.display_name.to_upper())
 	var rank := Mastery.rank(w.id)
@@ -525,12 +668,7 @@ func _select(w: WeaponData) -> void:
 		_stat_rows[i].set_value(String(call(STATS[i][1], w)[1]))
 	_rank_label.text = "MASTERY  %d / %d" % [rank, w.max_rank()]
 	_rank_bar.value = Mastery.rank_progress(w.id) if rank < w.max_rank() else 1.0
-	_lock_note.visible = not unlocked
-	if not unlocked:
-		_lock_note.text = "LOCKED  ·  %s" % (w.unlock.describe() if w.unlock else "")
-	var slot := Loadout.slot_of(w.id)
-	_swap.visible = unlocked and slot >= 0
-	_equip_row.visible = unlocked and slot < 0
+	_refresh_action()
 	_refresh_cards()
 	_refresh_loadout()
 	_link_focus()
@@ -542,16 +680,44 @@ func _select(w: WeaponData) -> void:
 		UiFx.pop_in(_name, 0.0, 0.9)
 
 
-## Up from any card in the tray reaches the signboard's action, and down
-## from it returns to the selected card.
+## Up from any card in the tray reaches EQUIP (when shown) and down from it
+## returns to the selected card; left of a section's first card is its tab,
+## right of its last card is nothing, and right of a tab is the selected card.
 func _link_focus() -> void:
-	var action: Control = _swap if _swap.visible else (_equip[0] if _equip_row.visible else null)
 	var card: Control = _cards[_weapon.id]
+	if not card.is_inside_tree():
+		return
 	for id in _cards:
 		var c: Control = _cards[id]
-		c.focus_neighbor_top = c.get_path_to(action) if action and c.is_inside_tree() else NodePath()
-	for b: Control in [_swap, _equip[0], _equip[1]]:
-		b.focus_neighbor_bottom = b.get_path_to(card) if b.is_inside_tree() else NodePath()
+		c.focus_neighbor_top = c.get_path_to(_equip) if _equip.visible else NodePath()
+	_equip.focus_neighbor_bottom = _equip.get_path_to(card)
+	for slot in 2:
+		var row := _rows[slot].get_children().filter(func(c: Node): return c is ItemCard)
+		if not row.is_empty():
+			row[0].focus_neighbor_left = row[0].get_path_to(_section_tabs[slot])
+			row[-1].focus_neighbor_right = NodePath(".")
+		_section_tabs[slot].focus_neighbor_right = _section_tabs[slot].get_path_to(card)
+	_section_tabs[0].focus_neighbor_bottom = _section_tabs[0].get_path_to(_section_tabs[1])
+	_section_tabs[1].focus_neighbor_top = _section_tabs[1].get_path_to(_section_tabs[0])
+
+
+## Shows EQUIP for an unlocked weapon that is not equipped, else the banner.
+func _refresh_action() -> void:
+	var unlocked := GameData.is_weapon_unlocked(_weapon)
+	var slot := Loadout.slot_for(_weapon)
+	var slot_text := "%s [%d]" % [String(Loadout.SLOT_NAMES[slot]).to_upper(), slot + 1]
+	var was_equip := _equip.visible
+	_equip.visible = unlocked and Loadout.slot_of(_weapon.id) < 0
+	_equip.text = "EQUIP AS %s" % slot_text
+	_banner.visible = not _equip.visible
+	var color := UiKit.CYAN if unlocked else UiKit.AMBER
+	_banner.accent = color
+	_banner_icon.texture = KitTex.tex(&"icon_check" if unlocked else &"icon_lock")
+	_banner_icon.modulate = color
+	_banner_text.add_theme_color_override("font_color", color)
+	_banner_text.text = "EQUIPPED AS %s" % slot_text if unlocked else "LOCKED  ·  %s" % (_weapon.unlock.describe() if _weapon.unlock else "")
+	if not was_equip and _equip.visible and is_visible_in_tree():
+		UiFx.pop_in(_equip, 0.0, 0.94)
 
 
 ## The name in the biggest size that fits the board.
@@ -564,25 +730,80 @@ func _fit_name(text: String) -> void:
 	_name.add_theme_font_size_override("font_size", font_size)
 
 
-func _equip_slot(slot: int) -> void:
-	if _weapon == null or Loadout.slot_of(_weapon.id) == slot:
+## Puts the selected weapon in the slot of its class.
+func _equip_selected() -> void:
+	if _weapon == null or Loadout.slot_of(_weapon.id) >= 0:
 		return
-	if Loadout.set_slot(slot, _weapon.id):
+	var had_focus := _equip.has_focus()
+	if Loadout.equip(_weapon.id):
 		UiSound.equip()
 		_select(_weapon)
+		var slot := Loadout.slot_for(_weapon)
 		UiFx.pulse(_plates[slot], 1.06)
-		# The EQUIP buttons just gave way to SWAP SLOTS: keep the focus on the board.
-		if _swap.is_visible_in_tree():
-			_swap.grab_focus()
+		UiFx.pop_in(_banner, 0.0, 0.9)
+		# EQUIP just gave way to the banner: the focus goes back to the card.
+		if had_focus:
+			(_cards[_weapon.id] as Control).grab_focus()
 	else:
 		UiFx.deny(_board)
 
 
-## The selected weapon changes places with the one in the other slot.
-func _swap_slots() -> void:
-	var slot := Loadout.slot_of(_weapon.id) if _weapon else -1
-	if slot >= 0:
-		_equip_slot(1 - slot)
+## The 1 / 2 keys, the gamepad triggers and a click on a slot plate: show
+## that slot's section, or, when it is already shown, equip the weapon picked in it.
+func _use_slot(slot: int) -> void:
+	if slot != _section:
+		UiSound.tab()
+		_show_section(slot, true)
+	elif _weapon and GameData.is_weapon_unlocked(_weapon) and Loadout.slot_of(_weapon.id) < 0:
+		_equip_selected()
+
+
+## Shows the tray section of `slot` (sliding the cards across when
+## `animate`); `pick` also selects the weapon equipped in that slot.
+func _show_section(slot: int, animate: bool, pick := true) -> void:
+	var from := _section
+	_section = slot
+	for i in 2:
+		_section_tabs[i].set_pressed_no_signal(i == slot)
+	if from != slot:
+		_slide_rows(from, slot, animate)
+	if pick:
+		var focus := get_viewport().gui_get_focus_owner()
+		var focus_in_tray := focus != null and _rows[from].is_ancestor_of(focus)
+		_select(GameData.weapon(Loadout.slot(slot)))
+		if focus_in_tray:
+			(_cards[_weapon.id] as Control).grab_focus()
+	_refresh_loadout()
+
+
+## The old section's cards slide out and fade, the new one's slide in from
+## the side they are on (secondaries to the right) and pop in one by one.
+func _slide_rows(from: int, to: int, animate: bool) -> void:
+	if _section_tween:
+		_section_tween.kill()
+	var out_row := _rows[from]
+	var in_row := _rows[to]
+	for r in _rows:
+		r.position.x = 0.0
+		r.modulate.a = 1.0
+	in_row.visible = true
+	if not animate:
+		out_row.visible = false
+		return
+	var dir := 1.0 if to > from else -1.0
+	in_row.position.x = dir * SECTION_SLIDE
+	in_row.modulate.a = 0.0
+	_section_tween = create_tween().set_parallel(true)
+	_section_tween.tween_property(out_row, "position:x", -dir * SECTION_SLIDE, 0.16).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_section_tween.tween_property(out_row, "modulate:a", 0.0, 0.14)
+	_section_tween.tween_property(in_row, "position:x", 0.0, 0.24).set_delay(0.08).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_section_tween.tween_property(in_row, "modulate:a", 1.0, 0.16).set_delay(0.08)
+	_section_tween.chain().tween_callback(func():
+		out_row.visible = false
+		out_row.position.x = 0.0
+		out_row.modulate.a = 1.0)
+	UiFx.stagger_in(in_row.get_children(), 0.08)
+	UiFx.pulse(_section_tabs[to], 1.06)
 
 
 func _refresh_cards() -> void:
@@ -593,8 +814,7 @@ func _refresh_cards() -> void:
 			card.set_status("")
 		else:
 			card.set_locked(_short_lock(w))
-		var slot := Loadout.slot_of(w.id)
-		card.set_tag("" if slot < 0 else ("1ST" if slot == Loadout.PRIMARY else "2ND"), UiKit.CYAN if slot == Loadout.PRIMARY else UiKit.CREAM)
+		card.set_tag("EQUIPPED" if Loadout.slot_of(w.id) >= 0 else "")
 
 
 ## "Lv 5" for a player-level lock, else the requirement's own text.
@@ -606,12 +826,13 @@ func _short_lock(w: WeaponData) -> String:
 	return w.unlock.describe()
 
 
+## The slot plates: what each slot holds; the shown section's plate glows.
 func _refresh_loadout() -> void:
-	var selected_slot := Loadout.slot_of(_weapon.id) if _weapon else -1
+	var held := Loadout.slots()
 	for slot in 2:
-		var w := GameData.weapon(Loadout.slot(slot))
+		var w := GameData.weapon(held[slot])
 		_plates[slot].set_value(w.display_name.to_upper() if w else "EMPTY")
-		_plates[slot].active = slot == selected_slot
+		_plates[slot].active = slot == _section
 
 
 ## Short tags for how the weapon fires and what its shots do.
