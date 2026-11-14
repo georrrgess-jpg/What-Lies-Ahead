@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/neon_roof.png-72dcb05f054e088c0fea1b28492684b
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0
