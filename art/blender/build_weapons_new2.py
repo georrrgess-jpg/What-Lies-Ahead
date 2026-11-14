@@ -31,7 +31,7 @@ FUSE_SEGMENTS = 8
 STACK_RINGS = 4
 ## Share of faces the hidden glove shapes keep (each weapon ships both arms
 ## with every GLOVE_KITS shape; thinning them keeps a sidearm near 0.5 MiB).
-KIT_DETAIL = 0.4
+KIT_DETAIL = 0.55
 
 
 def lean_arm(parts, ratio=KIT_DETAIL):

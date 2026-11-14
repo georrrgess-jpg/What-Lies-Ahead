@@ -29,6 +29,9 @@ const CATCH_DISTANCE := 0.7
 const BACK_TIME := 2.0
 const TRAIL := 14
 const RINGER_COLOR := Color(1.0, 0.85, 0.25)
+## Near the camera (leaving the muzzle, coming home) the ring is drawn smaller
+## and without its trail, so it never fills the view.
+const NEAR_EYE := 2.2
 
 enum Phase { OUT, HOP, BACK }
 
@@ -135,9 +138,11 @@ func _process(delta: float) -> void:
 	var dir := velocity.normalized() if velocity.length() > 0.1 else Vector3.FORWARD
 	var side := dir.cross(Vector3.UP)
 	var up := Vector3.UP.rotated(side.normalized(), 0.45) if side.length() > 0.01 else Vector3.UP
+	var cam := get_viewport().get_camera_3d()
+	var near := clampf(cam.global_position.distance_to(global_position) / NEAR_EYE, 0.3, 1.0) if cam else 1.0
 	_ring.global_basis = Basis(Quaternion(Vector3.UP, up)) * Basis(Vector3.UP, _spin)
-	_ring.scale = Vector3.ONE * weapon.projectile_size
-	_draw_trail()
+	_ring.scale = Vector3.ONE * weapon.projectile_size * near
+	_draw_trail(cam, near < 1.0)
 
 
 # --- flight -------------------------------------------------------------------
@@ -306,15 +311,16 @@ func _zombie_near(at: Vector3) -> Zombie:
 	return null
 
 
-func _draw_trail() -> void:
-	if _history.is_empty():
+func _draw_trail(cam: Camera3D, hidden: bool) -> void:
+	if _history.is_empty() or hidden:
+		# Starts (again) once the ring is clear of the camera.
 		_history.resize(TRAIL)
 		_history.fill(global_position)
 	for i in range(TRAIL - 1, 0, -1):
 		_history[i] = _history[i - 1]
 	_history[0] = global_position
-	var cam := get_viewport().get_camera_3d()
-	if cam == null:
+	if cam == null or hidden:
+		_trail_mesh.clear_surfaces()
 		return
 	var color := RINGER_COLOR if ringer else weapon.tracer_color
 	WeaponFx.begin_ribbons(_trail_mesh, WeaponFx.ribbon_material())

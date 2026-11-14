@@ -48,7 +48,7 @@ func play(v: WeaponView, d: float) -> void:
 	v.at(0.6, d, func(): Sfx.play(&"reload_clunk", -3.0); var p := v.owner as Player; if p: p.add_shake(0.06))
 	# The flourish: up into the cradle, tossed, spinning flat, and back over the peg.
 	v.track("Ring", d, [[0.66, Vector3(0, -0.036, 0), Vector3.ZERO, 1.0, "hold"], [0.72, Vector3.ZERO, Vector3.ZERO],
-		[0.8, Vector3(0, 0.12, 0.01), Vector3(14, 360, 0)], [0.9, Vector3.ZERO, Vector3(0, 720, 0)]], Tween.TRANS_SINE, Tween.EASE_IN_OUT)
+		[0.8, Vector3(-0.1, 0.2, 0.06), Vector3(30, 360, 0), 1.25], [0.9, Vector3.ZERO, Vector3(0, 720, 0)]], Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 	v.at(0.66, d, func(): var r := v.part("Ring"); if r: r.visible = true)
 	v.track("Flipper", d, [[0.7, Vector3.ZERO, Vector3(-40, 0, 0)], [0.76, Vector3.ZERO, Vector3(-60, 0, 0)], [0.84, Vector3.ZERO, Vector3.ZERO]],
 		Tween.TRANS_BACK, Tween.EASE_OUT)
