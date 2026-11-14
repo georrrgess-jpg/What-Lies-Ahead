@@ -3,7 +3,11 @@ extends MenuPage
 ## The Play page: pick a world from the carousel of key-art cards (locked
 ## ones show what opens them), read the level's details, best results,
 ## progress stars and the zombies that wait there, choose the difficulty,
-## check the loadout and DEPLOY. Left/right (or A/D) browse the worlds.
+## check the loadout and DEPLOY. Left/right (or A/D, held to run through
+## them), the mouse wheel, a drag or a pip browse the worlds; the carousel
+## glides between them with depth (cards shrink, fan out and fade with
+## distance, their art slides behind the frame), and the picked world's
+## accent pools under it.
 
 ## The world in the carousel changed: the shell cross-fades the backdrop.
 signal world_changed(level: LevelData)
@@ -11,26 +15,51 @@ signal world_changed(level: LevelData)
 const ENEMY_CHIPS := 7
 ## Size of the level's key art on the details board.
 const ART_SIZE := Vector2(448, 252)
-## The row of position pips sits this far above the cards (in the gap
-## between the boards and the carousel).
-const PIPS_ABOVE := 8.0
-## Cards further than this from the selected one are faded out, so the
-## carousel shows the world, its neighbours and nothing under the arrows.
-const CARDS_AROUND := 1
+## The row of position pips (clickable) sits in the gap over the cards.
+const PIP_ROW := 26.0
+const PIP_STEP := 36.0
+## Cards further than this (in cards) from the selected one are hidden.
+const CARDS_AROUND := 2.6
+## Seconds the carousel glides to a newly picked world (a little longer for a long jump).
+const GLIDE := 0.42
+## While an arrow is held, the worlds go by at most this often (seconds).
+const HOLD_STEP := 0.09
+## Gap between the selected card and its neighbours (canvas px).
+const CARD_GAP := 30.0
 
 var selected_level: LevelData
 ## Starter weapon for dev runs (the saved Loadout is used otherwise).
 var selected_weapon: StringName
 var world_index := 0
+## The soft disc under the selected card (shared by every Play page).
+static var _glow_tex: GradientTexture2D
+
 var _cards: Array[WorldCard] = []
 var _carousel: Control
+var _pips: Control
+var _pip_box := StyleBoxFlat.new()
+## The carousel's position in worlds: fractional while it glides or is dragged.
+var _scroll := 0.0
+var _glide: Tween
+var _glow_color := Color.TRANSPARENT
+var _glow_tween: Tween
+## Mouse drag on the carousel: where it started, the position then, and
+## whether it moved far enough to be a drag rather than a click.
+var _dragging := false
+var _drag_x := 0.0
+var _drag_scroll := 0.0
+var _drag_moved := false
+var _last_step_ms := 0
+var _best_value: Label
+var _star_row: HBoxContainer
+var _lock_text: Label
 var _world_caption: Label
 var _level_name: Label
 var _blurb: Label
 var _level_tabs: HBoxContainer
 var _stats: HBoxContainer
 var _enemies: HFlowContainer
-var _lock: Label
+var _lock: Control
 var _art: TextureRect
 var _plates: Array[SlotPlate] = []
 var _difficulty: KitTabs
@@ -107,9 +136,9 @@ func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or KitDialog.open_count > 0:
 		return
 	var step := 0
-	if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
+	if event.is_action_pressed("ui_left", true) or event.is_action_pressed("move_left", true):
 		step = -1
-	elif event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
+	elif event.is_action_pressed("ui_right", true) or event.is_action_pressed("move_right", true):
 		step = 1
 	if step == 0:
 		return
@@ -117,8 +146,15 @@ func _input(event: InputEvent) -> void:
 	var focus := get_viewport().gui_get_focus_owner()
 	if focus and _difficulty.is_ancestor_of(focus) and not (event is InputEventKey and (event as InputEventKey).physical_keycode in [KEY_A, KEY_D]):
 		return
-	step_world(step)
 	get_viewport().set_input_as_handled()
+	if event.is_echo():
+		# Held: run through the worlds at a steady pace, stopping at either end.
+		if Time.get_ticks_msec() - _last_step_ms < HOLD_STEP * 1000.0:
+			return
+		select_world(clampi(world_index + step, 0, GameData.worlds().size() - 1))
+	else:
+		step_world(step)
+	_last_step_ms = Time.get_ticks_msec()
 
 
 # --- layout -------------------------------------------------------------------------
@@ -145,6 +181,7 @@ func _build_info() -> Control:
 	text.add_child(_level_name)
 	_blurb = UiKit.body("", 420)
 	text.add_child(_blurb)
+	text.add_child(_build_lock())
 	_level_tabs = HBoxContainer.new()
 	_level_tabs.add_theme_constant_override("separation", UiKit.GAP_S)
 	v.add_child(_level_tabs)
@@ -159,9 +196,20 @@ func _build_info() -> Control:
 	_enemies.add_theme_constant_override("v_separation", UiKit.GAP_S)
 	v.add_child(_enemies)
 	v.add_child(UiKit.filler())
-	_lock = UiKit.sign_label("", 30, UiKit.AMBER)
-	v.add_child(_lock)
 	return board
+
+
+## The amber callout of a locked world: padlock and what opens it.
+func _build_lock() -> Control:
+	_lock = UiKit.neon_panel(UiKit.AMBER)
+	_lock.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiKit.GAP_M)
+	_lock.add_child(row)
+	row.add_child(UiKit.icon(&"icon_lock", 40.0))
+	_lock_text = UiKit.sign_label("", 30, UiKit.AMBER)
+	row.add_child(_lock_text)
+	return _lock
 
 
 ## The level's key art in a rounded frame (hidden for a level without one).
@@ -216,23 +264,35 @@ func _build_side() -> Control:
 func _build_carousel() -> Control:
 	_carousel = Control.new()
 	_carousel.custom_minimum_size.y = WorldCard.SIZE.y + 14
-	_carousel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_carousel.draw.connect(_draw_pips)
+	# Clicks, drags and the wheel; the cards only take hover.
+	_carousel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_carousel.draw.connect(_draw_carousel)
+	_carousel.gui_input.connect(_on_carousel_input)
 	for i in GameData.worlds().size():
 		var card := WorldCard.new()
 		card.world = GameData.worlds()[i]
 		card.index = i
-		card.pressed.connect(select_world.bind(i))
 		_carousel.add_child(card)
 		_cards.append(card)
 	for side in [-1, 1]:
 		var arrow := UiKit.icon_button(&"icon_arrow_left" if side < 0 else &"icon_arrow_right", "Previous world" if side < 0 else "Next world")
 		arrow.custom_minimum_size = Vector2(64, 110)
+		arrow.z_index = 20
 		arrow.pressed.connect(step_world.bind(side))
 		_carousel.add_child(arrow)
 		arrow.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT if side < 0 else Control.PRESET_CENTER_RIGHT)
 		arrow.grow_horizontal = Control.GROW_DIRECTION_END if side < 0 else Control.GROW_DIRECTION_BEGIN
 		arrow.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_pips = Control.new()
+	_pips.z_index = 20
+	_pips.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_pips.offset_top = -PIP_ROW + 6.0
+	_pips.offset_bottom = 6.0
+	_pips.mouse_filter = Control.MOUSE_FILTER_STOP
+	_pips.draw.connect(_draw_pips)
+	_pips.gui_input.connect(_on_pips_input)
+	_carousel.add_child(_pips)
+	_scroll = world_index
 	return _carousel
 
 
@@ -248,6 +308,7 @@ func select_world(i: int) -> void:
 	selected_level = null
 	_refresh_details()
 	_layout_cards(true)
+	_animate_details()
 	world_changed.emit(selected_level)
 
 
@@ -312,8 +373,8 @@ func _refresh_details() -> void:
 	_fill_level_tabs(world, level)
 	_fill_stats(world, level, unlocked)
 	_fill_enemies(level)
-	_lock.text = "" if unlocked or level == null else "LOCKED  ·  " + GameData.lock_reason(level)
-	_lock.visible = _lock.text != ""
+	_lock_text.text = "" if unlocked or level == null else GameData.lock_reason(level).to_upper()
+	_lock.visible = _lock_text.text != ""
 	_deploy.disabled = not unlocked
 	_deploy.text = "DEPLOY" if unlocked else "LOCKED"
 	for slot in 2:
@@ -337,33 +398,82 @@ func _fill_level_tabs(world: WorldData, level: LevelData) -> void:
 
 func _fill_stats(world: WorldData, level: LevelData, unlocked: bool) -> void:
 	_clear(_stats)
+	_best_value = null
+	_star_row = null
 	if level == null:
 		return
 	var waves := level.wave_set.waves.size() if level.wave_set else 0
 	_stats.add_child(_stat_tile("WAVES", str(waves), world.accent_color))
-	_stats.add_child(_stat_tile("BEST SCORE", ScorePanel._fmt(Profile.best_score(level.id)), world.accent_color))
+	var best := _stat_tile("BEST SCORE", ScorePanel._fmt(Profile.best_score(level.id)), world.accent_color)
+	_best_value = best.get_child(0).get_child(1) as Label
+	_stats.add_child(best)
 	_stats.add_child(_stat_tile("BEST WAVE", "%d / %d" % [mini(Profile.best_wave(level.id), waves), waves], world.accent_color))
 	var status := "CLEARED" if Profile.is_level_completed(level.id) else ("OPEN" if unlocked else "LOCKED")
 	var tile := _stat_tile(status, "", world.secondary_color)
-	tile.get_child(0).add_child(WorldCard.star_row(WorldCard.stars(level), 38.0))
+	_star_row = WorldCard.star_row(WorldCard.stars(level), 38.0)
+	tile.get_child(0).add_child(_star_row)
 	_stats.add_child(tile)
 
 
-## The enemy kinds of the level's waves, in order of first appearance.
+## A new world was picked: its art and name fade up, the best score counts
+## up and the stars pop in one after another.
+func _animate_details() -> void:
+	if not is_visible_in_tree():
+		return
+	UiFx.fade_in(_art, 0.25)
+	UiFx.fade_in(_level_name, 0.2)
+	if _best_value and selected_level:
+		UiFx.count_up(_best_value, 0, Profile.best_score(selected_level.id), 0.6, func(n: int) -> String: return ScorePanel._fmt(n))
+	if _star_row:
+		for i in _star_row.get_child_count():
+			var star := _star_row.get_child(i) as Control
+			star.pivot_offset = star.custom_minimum_size * 0.5
+			UiFx.pop_in(star, 0.12 + i * 0.09, 0.3)
+
+
+## The enemy kinds of the level's waves, in order of first appearance, with
+## how many of each come, then its boss.
 func _fill_enemies(level: LevelData) -> void:
 	_clear(_enemies)
 	if level == null or level.wave_set == null:
 		return
-	var seen: Array[StringName] = []
+	var counts := {}
+	var bosses: Array[StringName] = []
 	for wave in level.wave_set.waves:
 		for id in wave.spawns:
-			if not StringName(id) in seen:
-				seen.append(StringName(id))
-	for i in mini(seen.size(), ENEMY_CHIPS):
-		var enemy := GameData.enemy(seen[i])
-		_enemies.add_child(UiKit.chip(enemy.display_name.to_upper() if enemy else String(seen[i]).to_upper(), Color("3a2d6b"), 22, false))
-	if seen.size() > ENEMY_CHIPS:
-		_enemies.add_child(UiKit.chip("+%d MORE" % (seen.size() - ENEMY_CHIPS), UiKit.AMBER, 22, false))
+			counts[StringName(id)] = int(counts.get(StringName(id), 0)) + int(wave.spawns[id])
+		if wave.boss != &"" and not wave.boss in bosses:
+			bosses.append(wave.boss)
+	var ids := counts.keys()
+	for i in mini(ids.size(), ENEMY_CHIPS):
+		_enemies.add_child(_enemy_chip(ids[i], "×%d" % counts[ids[i]], false))
+	if ids.size() > ENEMY_CHIPS:
+		_enemies.add_child(UiKit.chip("+%d MORE" % (ids.size() - ENEMY_CHIPS), UiKit.AMBER, 22, false))
+	for id in bosses:
+		_enemies.add_child(_enemy_chip(id, "BOSS", true))
+
+
+## A pill with a zombie in the enemy's shirt colour, its name and a note.
+func _enemy_chip(id: StringName, note: String, boss: bool) -> Control:
+	var enemy := GameData.enemy(id)
+	var pill := PanelContainer.new()
+	var box := UiKit.box(Color("2c2257"), UiKit.AMBER if boss else Color(1, 1, 1, 0.14), 22, 2, 0)
+	box.content_margin_left = 8
+	box.content_margin_right = 14
+	box.content_margin_top = 2
+	box.content_margin_bottom = 2
+	pill.add_theme_stylebox_override("panel", box)
+	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	pill.add_child(row)
+	var tint := UiKit.AMBER if boss else (enemy.shirt_colors[0] if enemy and not enemy.shirt_colors.is_empty() else UiKit.CREAM)
+	var icon := HudIcon.make(&"zombie", 28.0, tint.lightened(0.2))
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(icon)
+	row.add_child(UiKit.label(enemy.display_name.to_upper() if enemy else String(id).to_upper(), 20, UiKit.CREAM, true))
+	row.add_child(UiKit.label(note, 20, UiKit.AMBER if boss else UiKit.MUTED, true))
+	return pill
 
 
 func _stat_tile(caption: String, value: String, accent: Color) -> PanelContainer:
@@ -383,43 +493,187 @@ func _stat_tile(caption: String, value: String, accent: Color) -> PanelContainer
 	return box
 
 
-## Lays the world cards out as a carousel centred on the selected world.
+## Points the carousel at the selected world: the cards glide there (or jump,
+## when not animated) and the accent pool under them changes colour.
 func _layout_cards(animate: bool) -> void:
-	_carousel.queue_redraw()
-	var width := _carousel.size.x if _carousel.size.x > 0.0 else 1824.0
-	var gap := 30.0
 	for card in _cards:
-		var offset := card.index - world_index
-		var is_selected := offset == 0
-		card.selected = is_selected
-		var target := Vector2(width * 0.5 - WorldCard.SIZE.x * 0.5 + offset * (WorldCard.SIZE.x + gap), 0.0 if is_selected else 12.0)
-		var target_scale := Vector2.ONE * (1.0 if is_selected else 0.9)
-		var tint := Color.WHITE if is_selected else Color(0.72, 0.72, 0.82, 0.9 if absi(offset) <= CARDS_AROUND else 0.0)
-		card.mouse_filter = Control.MOUSE_FILTER_STOP if absi(offset) <= CARDS_AROUND else Control.MOUSE_FILTER_IGNORE
-		if not animate:
-			card.position = target
-			card.scale = target_scale
-			card.modulate = tint
+		card.selected = card.index == world_index
+	_pips.queue_redraw()
+	if _glide and _glide.is_valid():
+		_glide.kill()
+	_tint_glow(animate)
+	if not animate or not is_visible_in_tree():
+		_place_cards(world_index)
+		return
+	var seconds := clampf(GLIDE + absf(world_index - _scroll) * 0.03, GLIDE, 0.7)
+	_glide = create_tween()
+	_glide.tween_method(_place_cards, _scroll, float(world_index), seconds).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+
+
+## Places every card for carousel position `at` (in worlds): the nearest is
+## full size, the others shrink, drop, fan out and fade with distance, and
+## their art slides behind the frame.
+func _place_cards(at: float) -> void:
+	_scroll = at
+	var width := _carousel.size.x if _carousel.size.x > 0.0 else 1824.0
+	var half := WorldCard.SIZE.x * 0.5
+	var near := half + half * 0.82 + CARD_GAP
+	var far := half * 0.82 + half * 0.68 + CARD_GAP * 0.7
+	# Narrow screens pull the outer cards in so they stay on screen.
+	var fit := minf(1.0, (width * 0.5 + 24.0) / (near + far + half * 0.68))
+	for card in _cards:
+		var d := card.index - at
+		var ad := absf(d)
+		card.visible = ad < CARDS_AROUND
+		if not card.visible:
 			continue
-		var tw := card.create_tween().set_parallel(true)
-		tw.tween_property(card, "position", target, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		tw.tween_property(card, "scale", target_scale, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		tw.tween_property(card, "modulate", tint, 0.2)
+		var k := 1.0 - 0.18 * minf(ad, 1.0) - 0.14 * clampf(ad - 1.0, 0.0, 1.6)
+		var x := signf(d) * (minf(ad, 1.0) * near + maxf(ad - 1.0, 0.0) * far) * fit
+		card.scale = Vector2(k, k)
+		card.position = Vector2(width * 0.5 + x - half, 2.0 + 10.0 * minf(ad, 1.0) + 8.0 * clampf(ad - 1.0, 0.0, 1.6))
+		card.rotation = clampf(d, -2.0, 2.0) * deg_to_rad(2.2)
+		card.z_index = 10 - roundi(ad * 3.0)
+		var shade := lerpf(1.0, 0.7, minf(ad, 1.0)) - 0.12 * clampf(ad - 1.0, 0.0, 1.0)
+		card.modulate = Color(shade, shade, shade + 0.08 * minf(ad, 1.0), 1.0 - 0.8 * smoothstep(1.2, 2.2, ad) - 0.2 * smoothstep(2.2, CARDS_AROUND, ad))
+		card.mouse_filter = Control.MOUSE_FILTER_PASS if ad < 2.1 else Control.MOUSE_FILTER_IGNORE
+		card.set_depth(d)
 
 
-## One pip per world over the cards: where the selected world sits among them.
+func _world_accent() -> Color:
+	var worlds := GameData.worlds()
+	return worlds[world_index].accent_color if world_index < worlds.size() else UiKit.CYAN
+
+
+## The pool of the selected world's accent under the cards fades to its
+## colour (amber while the world is locked).
+func _tint_glow(animate: bool) -> void:
+	var target := _world_accent()
+	if world_index < GameData.worlds().size() and not GameData.is_world_unlocked(GameData.worlds()[world_index]):
+		target = UiKit.AMBER.darkened(0.3)
+	if _glow_tween and _glow_tween.is_valid():
+		_glow_tween.kill()
+	if not animate or not is_visible_in_tree():
+		_glow_color = target
+		_carousel.queue_redraw()
+		return
+	_glow_tween = create_tween()
+	_glow_tween.tween_method(_set_glow, _glow_color, target, 0.35)
+
+
+func _set_glow(c: Color) -> void:
+	_glow_color = c
+	_carousel.queue_redraw()
+
+
+# --- carousel input -----------------------------------------------------------------
+
+## The wheel steps, a drag scrubs (and snaps to the nearest world on
+## release), a click picks the card or pip under it.
+func _on_carousel_input(event: InputEvent) -> void:
+	var mb := event as InputEventMouseButton
+	if mb and mb.pressed and mb.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_LEFT]:
+		step_world(-1)
+	elif mb and mb.pressed and mb.button_index in [MOUSE_BUTTON_WHEEL_DOWN, MOUSE_BUTTON_WHEEL_RIGHT]:
+		step_world(1)
+	elif mb and mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+		_dragging = true
+		_drag_moved = false
+		_drag_x = mb.position.x
+		_drag_scroll = _scroll
+	elif mb and mb.button_index == MOUSE_BUTTON_LEFT and _dragging:
+		_dragging = false
+		if _drag_moved:
+			select_world(clampi(roundi(_scroll), 0, _cards.size() - 1))
+		else:
+			_click(mb.position)
+	elif event is InputEventMouseMotion and _dragging:
+		_drag_to((event as InputEventMouseMotion).position.x - _drag_x)
+	else:
+		return
+	_carousel.accept_event()
+
+
+## Follows a drag `dx` pixels long (past a small dead zone).
+func _drag_to(dx: float) -> void:
+	if absf(dx) > 10.0:
+		_drag_moved = true
+	if not _drag_moved:
+		return
+	if _glide and _glide.is_valid():
+		_glide.kill()
+	_place_cards(clampf(_drag_scroll - dx / (WorldCard.SIZE.x * 0.95), -0.45, _cards.size() - 0.55))
+
+
+func _on_pips_input(event: InputEvent) -> void:
+	var mb := event as InputEventMouseButton
+	if mb and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+		var x0 := _pips.size.x * 0.5 - PIP_STEP * (_cards.size() - 1) * 0.5
+		var i := roundi((mb.position.x - x0) / PIP_STEP)
+		if i >= 0 and i < _cards.size():
+			select_world(i)
+		_pips.accept_event()
+
+
+func _click(at: Vector2) -> void:
+	# The card nearest the middle wins where they overlap.
+	var order := _cards.filter(func(c: WorldCard) -> bool: return c.visible and c.mouse_filter != Control.MOUSE_FILTER_IGNORE)
+	order.sort_custom(func(a: WorldCard, b: WorldCard) -> bool: return absf(a.index - _scroll) < absf(b.index - _scroll))
+	for card: WorldCard in order:
+		var local := card.get_transform().affine_inverse() * at
+		if Rect2(Vector2.ZERO, WorldCard.SIZE).has_point(local):
+			select_world(card.index)
+			return
+
+
+# --- drawing ------------------------------------------------------------------------
+
+## The pool of the selected world's accent under the cards.
+func _draw_carousel() -> void:
+	var mid := Vector2(_carousel.size.x * 0.5, WorldCard.SIZE.y * 0.55)
+	var pool := Vector2(WorldCard.SIZE.x * 2.6, WorldCard.SIZE.y * 1.5)
+	_carousel.draw_texture_rect(_glow_texture(), Rect2(mid - pool * 0.5, pool), false, Color(_glow_color, 0.55))
+
+
+## One pip per world on a dark pill (gold once cleared, dim with an amber
+## ring while locked), the selected one large in its accent.
 func _draw_pips() -> void:
 	var worlds := GameData.worlds()
-	var step := 30.0
-	var y := -PIPS_ABOVE
-	var x0 := _carousel.size.x * 0.5 - step * (worlds.size() - 1) * 0.5
+	var x0 := _pips.size.x * 0.5 - PIP_STEP * (worlds.size() - 1) * 0.5
+	var y := _pips.size.y * 0.5
+	var pill := Rect2(x0 - 20.0, y - 11.0, PIP_STEP * (worlds.size() - 1) + 40.0, 22.0)
+	_pip_box.bg_color = Color(UiKit.INK, 0.75)
+	_pip_box.set_corner_radius_all(11)
+	_pips.draw_style_box(_pip_box, pill)
 	for i in worlds.size():
-		var at := Vector2(x0 + i * step, y)
+		var at := Vector2(x0 + i * PIP_STEP, y)
 		if i == world_index:
-			_carousel.draw_circle(at, 8.0, worlds[i].accent_color)
-			_carousel.draw_circle(at, 8.0, UiKit.CREAM, false, 3.0, true)
+			_pips.draw_circle(at, 14.0, Color(worlds[i].accent_color, 0.35), true, -1.0, true)
+			_pips.draw_circle(at, 9.0, worlds[i].accent_color, true, -1.0, true)
+			_pips.draw_circle(at, 9.0, UiKit.CREAM, false, 3.0, true)
+		elif not GameData.is_world_unlocked(worlds[i]):
+			_pips.draw_circle(at, 6.0, Color(UiKit.AMBER, 0.55), false, 2.0, true)
 		else:
-			_carousel.draw_circle(at, 6.0, Color(UiKit.CREAM, 0.85 if GameData.is_world_unlocked(worlds[i]) else 0.4), true, -1.0, true)
+			var cleared := WorldCard.world_stars(worlds[i]) >= 3
+			_pips.draw_circle(at, 7.0, Wallet.COLOR if cleared else UiKit.CREAM, true, -1.0, true)
+
+
+
+
+## A soft white disc fading to nothing at its rim (tinted when drawn).
+static func _glow_texture() -> GradientTexture2D:
+	if _glow_tex == null:
+		var g := Gradient.new()
+		g.set_color(0, Color(1, 1, 1, 1))
+		g.set_color(1, Color(1, 1, 1, 0))
+		g.add_point(0.45, Color(1, 1, 1, 0.45))
+		_glow_tex = GradientTexture2D.new()
+		_glow_tex.gradient = g
+		_glow_tex.fill = GradientTexture2D.FILL_RADIAL
+		_glow_tex.fill_from = Vector2(0.5, 0.5)
+		_glow_tex.fill_to = Vector2(1.0, 0.5)
+		_glow_tex.width = 128
+		_glow_tex.height = 128
+	return _glow_tex
 
 
 static func _clear(node: Node) -> void:

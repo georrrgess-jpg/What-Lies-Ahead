@@ -242,9 +242,9 @@ func _refresh_machine() -> void:
 	_machine.capsule_count = n
 	_open.text = "OPEN CAPSULE" if n > 0 else "NO CAPSULES"
 	_open.disabled = n <= 0 or _busy
-	_buy.text = "BUY 1  %s" % Wallet.format(s.capsule_price)
+	_buy.text = "BUY  %s" % Wallet.format(s.capsule_price)
 	_buy.disabled = _busy or not PrizePrints.can_buy_capsule()
-	_capsule_note.text = "%d capsule%s to open  ·  earned from alphas, bounties, the day's first clear" % [n, "" if n == 1 else "s"]
+	_capsule_note.text = "%d to open  ·  from alphas, bounties, first clears" % n
 	var luck := PrizePrints.luck()
 	_luck_epic_text.text = "Epic or better guaranteed within %d capsule%s" % [luck.x, "" if luck.x == 1 else "s"]
 	_luck_epic.value = 1.0 - float(luck.x - 1) / s.epic_pity

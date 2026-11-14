@@ -11,6 +11,8 @@ extends VBoxContainer
 signal changed
 
 var print_data: Dictionary = {}
+## The details under the case (dimmed while there is no print).
+var _info: VBoxContainer
 var _weapon_id: StringName
 var _glow: ColorRect
 var _stage: LockerStage
@@ -45,9 +47,15 @@ func _init() -> void:
 	_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	case.add_child(_empty)
+	# The details sit on a signboard so they read over the live world.
+	var board := UiKit.signboard(14)
+	add_child(board)
+	_info = VBoxContainer.new()
+	_info.add_theme_constant_override("separation", UiKit.GAP_S)
+	board.add_child(_info)
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", UiKit.GAP_M)
-	add_child(head)
+	_info.add_child(head)
 	_title = UiKit.sign_label("", 38)
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_title.clip_text = true
@@ -59,7 +67,7 @@ func _init() -> void:
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", UiKit.GAP_M)
 	grid.add_theme_constant_override("v_separation", 0)
-	add_child(grid)
+	_info.add_child(grid)
 	for key in ["SHINE", "PRINT", "SERIAL", "PATTERN", "MINTED", "FROM"]:
 		grid.add_child(UiKit.label(key, UiKit.SIZE_SMALL, UiKit.CYAN, true))
 		var value := UiKit.label("", UiKit.SIZE_BODY, UiKit.CREAM)
@@ -67,7 +75,7 @@ func _init() -> void:
 		_rows[key] = value
 	var wear := HBoxContainer.new()
 	wear.add_theme_constant_override("separation", UiKit.GAP_S)
-	add_child(wear)
+	_info.add_child(wear)
 	var prev := UiKit.icon_button(&"icon_arrow_left", "Previous weapon")
 	prev.pressed.connect(_step_weapon.bind(-1))
 	wear.add_child(prev)
@@ -79,7 +87,7 @@ func _init() -> void:
 	wear.add_child(next)
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", UiKit.GAP_S)
-	add_child(actions)
+	_info.add_child(actions)
 	_equip = UiKit.sign_button("EQUIP", SignButton.Kind.PRIMARY, 24)
 	_equip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_equip.pressed.connect(_on_equip)
@@ -117,7 +125,7 @@ func show_print(p: Dictionary, weapon_id: StringName = &"") -> void:
 		_weapon_id = GameData.default_weapon_id()
 	var has := not p.is_empty()
 	_empty.visible = not has
-	for c in get_children().slice(1):
+	for c in _info.get_children():
 		(c as CanvasItem).modulate.a = 1.0 if has else 0.35
 	if not has:
 		if _stage.is_node_ready():

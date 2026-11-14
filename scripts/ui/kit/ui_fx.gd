@@ -126,6 +126,8 @@ static func count_up(label: Label, from: int, to: int, seconds := 0.5, format :=
 		label.text = format.call(n) if format.is_valid() else Wallet.format(n)
 	if from == to:
 		show.call(float(to))
+		# A tween with nothing to do is an error: give it an empty step.
+		tw.tween_interval(0.0)
 		return tw
 	tw.tween_method(show, float(from), float(to), seconds).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	return tw

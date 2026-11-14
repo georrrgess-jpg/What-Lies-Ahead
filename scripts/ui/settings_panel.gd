@@ -162,7 +162,8 @@ func _slider(key: String, text: String, min_v: float, max_v: float, step: float,
 	slider.custom_minimum_size = Vector2(360, 36)
 	row.add_child(slider)
 	var value := UiKit.label(format.call(slider.value), 26, Color.WHITE, true)
-	value.custom_minimum_size = Vector2(150, 0)
+	# Wide enough for the longest value ("72° (105° wide)") so every slider ends at the same place.
+	value.custom_minimum_size = Vector2(215, 0)
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(value)
 	slider.value_changed.connect(func(v: float):

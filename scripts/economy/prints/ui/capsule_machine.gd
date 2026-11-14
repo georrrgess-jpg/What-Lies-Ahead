@@ -33,7 +33,7 @@ var _clicks := 0
 
 
 func _init() -> void:
-	custom_minimum_size = Vector2(440, 470)
+	custom_minimum_size = Vector2(440, 420)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 4
