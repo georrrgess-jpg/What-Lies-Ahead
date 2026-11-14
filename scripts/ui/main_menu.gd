@@ -138,10 +138,11 @@ func _build_pages() -> void:
 	for ext in extensions:
 		if ext.script_ref == null:
 			continue
-		_later[String(ext.id)] = [ext.script_ref.new, ext.title.to_upper(), null]
+		var script: Script = ext.script_ref
+		_later[String(ext.id)] = [func() -> Control: return script.new(), ext.title.to_upper(), null]
 		if ext.show_on_title:
 			_top_bar.add_tab(String(ext.id), ext.title)
-	_later["settings"] = [MenuSettings.new, "SETTINGS", Frame.SHELL]
+	_later["settings"] = [func() -> Control: return MenuSettings.new(), "SETTINGS", Frame.SHELL]
 	_home.known_pages.assign(["title"] + _later.keys())
 
 
