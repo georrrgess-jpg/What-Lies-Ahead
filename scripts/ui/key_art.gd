@@ -49,3 +49,25 @@ static func texture(level: LevelData) -> Texture2D:
 		else:
 			_cache[level.id] = load(path) if ResourceLoader.exists(path) else null
 	return _cache[level.id]
+
+
+## Calls `done(texture)` with the still for `level` (null if it has none):
+## at once when it is loaded, else once the loader thread has read it, so a
+## screen that opens with key art does not wait on the disk.
+static func request(level: LevelData, done: Callable) -> void:
+	if level == null or _cache.has(level.id):
+		done.call(texture(level))
+		return
+	var path := DIR + String(level.id) + ".jpg"
+	if not ResourceLoader.exists(path):
+		done.call(null)
+		return
+	if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+		ResourceLoader.load_threaded_request(path)
+	var tree := Engine.get_main_loop() as SceneTree
+	var poll := func(again: Callable) -> void:
+		if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			tree.process_frame.connect(again.bind(again), CONNECT_ONE_SHOT)
+		elif done.is_valid():
+			done.call(texture(level))
+	tree.process_frame.connect(poll.bind(poll), CONNECT_ONE_SHOT)

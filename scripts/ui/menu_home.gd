@@ -290,12 +290,16 @@ func _refresh_goal() -> void:
 	_goal_panel.accent = world.accent_color
 	_goal_world_label.text = "WORLD %d  ·  %s" % [_goal_world + 1, world.display_name.to_upper()]
 	_goal.text = (level.display_name if level else world.display_name).to_upper()
-	_goal_art.texture = KeyArt.texture(level)
-	_goal_art.visible = _goal_art.texture != null
+	KeyArt.request(level, _show_goal_art)
 	var count := WorldCard.world_stars(world)
 	for i in _goal_stars.get_child_count():
 		(_goal_stars.get_child(i) as TextureRect).texture = KitTex.tex(&"icon_star" if i < count else &"icon_star_empty")
 	_goal_note.text = _goal_progress(level)
+
+
+func _show_goal_art(art: Texture2D) -> void:
+	_goal_art.texture = art
+	_goal_art.visible = art != null
 
 
 ## "Best wave 3 / 8", "Cleared  ·  best 48,210" or "Not played yet".
