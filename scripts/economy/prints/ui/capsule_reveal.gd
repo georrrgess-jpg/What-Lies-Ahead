@@ -254,7 +254,7 @@ func _burst(rarity: int, col: Color) -> void:
 	_capsule.shake = Vector2.ZERO
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(_capsule, "open", 1.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_flash, "color", Color(col.lerp(Color.WHITE, 0.6), 0.0), 0.55).from(Color(col.lerp(Color.WHITE, 0.6), 0.9))
+	tw.tween_property(_flash, "color", Color(col.lerp(Color.WHITE, 0.6), 0.0), 0.55).from(Color(col.lerp(Color.WHITE, 0.6), 0.45 + 0.15 * rarity))
 	tw.tween_property(_fx, "rays", 1.0, 0.4)
 	_show_banner(rarity, col)
 	if rarity >= 3:
@@ -305,6 +305,7 @@ func play_multi(results: Array, weapons: Array, can_open_five: bool) -> void:
 	_weapons = weapons
 	_can_more = can_open_five
 	_begin()
+	_fx.color = PrizesPage.rarity_color(2)
 	_multi_panel.get_parent().visible = true
 	_multi_summary.modulate.a = 0.0
 	_multi_more.get_parent().modulate.a = 0.0
