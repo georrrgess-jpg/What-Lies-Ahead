@@ -73,7 +73,6 @@ JOINTS = {
     "t_minus_six": [("Dish", "Shell"), ("Bulb", "Dish"), ("Trigger", "Shell")]
                    + [(f"{p}{i}", "Shell") for i in range(6) for p in ("Rocket", "Arm")] + [(f"Arm{i}", f"Rocket{i}") for i in range(6)],
 }
-WEAPONS.append("lava_lampoon")
 JOINTS["lava_lampoon"] = [("Lamp", "Shell"), ("LampGlass", "Lamp"), ("LampCap", "LampGlass"), ("LampCap", "Lamp"), ("LampWax", "LampGlass"),
                           ("LampWax", "Lamp"), ("LampGlass", "Shell"), ("Cell", "Shell"), ("Cell", "Lamp")] + [(f"Pip{i}", "Shell") for i in range(10)]
 
