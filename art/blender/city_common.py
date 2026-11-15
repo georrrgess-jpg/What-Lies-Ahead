@@ -273,13 +273,15 @@ def shards(prefix, w, h, loc, m=None, seed=1, rot_z=0.0):
     return place(out, loc, rot_z)
 
 
-def graffiti(prefix, body, size, loc, color, rot_z=0.0, outline="#1d1a1d", depth=0.02):
-    """Spray-painted lettering facing -Y with a dark outline behind it."""
+def graffiti(prefix, body, size, loc, color, rot_z=0.0, outline=None, depth=0.02):
+    """Spray-painted lettering facing -Y (bright paint, so neon-like colours read at
+    dusk), optionally with a dark outline behind it."""
     face = mat("CityPaint_" + color.lstrip("#"), color, rough=0.6)
-    back = mat("CityPaint_" + outline.lstrip("#"), outline, rough=0.6)
-    a = text(prefix + "Ink", body, size, depth, (0, -depth * 0.6, 0), m=face)
-    b = text(prefix + "Rim", body, size * 1.08, depth * 0.5, (0, 0, -size * 0.03), m=back)
-    return place([a, b], loc, rot_z)
+    parts = [text(prefix + "Ink", body, size, depth, (0, -depth * 0.6, 0), m=face)]
+    if outline:
+        back = mat("CityPaint_" + outline.lstrip("#"), outline, rough=0.6)
+        parts.append(text(prefix + "Rim", body, size * 1.08, depth * 0.5, (0, 0, -size * 0.03), m=back))
+    return place(parts, loc, rot_z)
 
 
 def tyre(name, radius, width, loc, rot=(0, 0, math.pi / 2), m=None, segs=12):

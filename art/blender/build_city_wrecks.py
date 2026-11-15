@@ -262,7 +262,7 @@ def build_truck_jackknifed():
     rust = cm("Rust", rough=0.85)
     # Trailer along X, rear at -X.
     T = 8.5
-    p = [box("K_Trailer", (T, 2.5, 2.7), (-1.5, 0, 2.05), bevel=0.06, segs=1, m=cm("ConcreteLight", rough=0.6)),
+    p = [box("K_Trailer", (T, 2.5, 2.7), (-1.5, 0, 2.05), bevel=0.06, segs=1, m=cm("Cream", rough=0.6)),
          box("K_Chassis", (T, 1.6, 0.3), (-1.5, 0, 0.6), bevel=0.0, m=steel)]
     for s in (-1, 1):
         for k in range(9):
@@ -271,8 +271,8 @@ def build_truck_jackknifed():
         p.append(text(f"K_Txt{s}", "RUBY FREIGHT", 0.5, 0.03, (-1.5, s * 1.3, 2.3), rot=(0, 0, 0 if s < 0 else math.pi), m=red))
     # Rear doors burst open.
     p += [box("K_Inside", (0.1, 2.3, 2.5), (-1.5 - T / 2 + 0.1, 0, 2.05), bevel=0.0, m=cm("Interior")),
-          box("K_DoorA", (0.08, 1.2, 2.6), (-1.5 - T / 2 - 0.55, 1.6, 2.05), rot=(0, 0, math.radians(70)), bevel=0.02, segs=1, m=cm("ConcreteLight", rough=0.6)),
-          box("K_DoorB", (0.08, 1.2, 2.6), (-1.5 - T / 2 - 0.3, -1.6, 2.05), rot=(0, 0, math.radians(-95)), bevel=0.02, segs=1, m=cm("ConcreteLight", rough=0.6))]
+          box("K_DoorA", (0.08, 1.2, 2.6), (-1.5 - T / 2 - 0.55, 1.6, 2.05), rot=(0, 0, math.radians(70)), bevel=0.02, segs=1, m=cm("Cream", rough=0.6)),
+          box("K_DoorB", (0.08, 1.2, 2.6), (-1.5 - T / 2 - 0.3, -1.6, 2.05), rot=(0, 0, math.radians(-95)), bevel=0.02, segs=1, m=cm("Cream", rough=0.6))]
     for i, x in enumerate((-4.6, -5.6)):
         for s in (-1, 1):
             p.append(tyre(f"K_Tyre{i}{s}", 0.5, 0.4, (x, s * 0.9, 0.5)))
@@ -286,7 +286,8 @@ def build_truck_jackknifed():
     for s in (-1, 1):
         cab.append(tyre(f"K_CabTyre{s}", 0.52, 0.4, (1.7, s * 1.0, 0.5)))
         cab.append(box(f"K_Lamp{s}", (0.06, 0.35, 0.2), (2.5, s * 0.9, 1.0), bevel=0.02, segs=1, m=cm("White", rough=0.2)))
-    place(cab, (3.0, 0.1, 0), rot_z=math.radians(55))
+    xform(cab, (-0.3, 0, 0))
+    place(cab, (2.75, 0.5, 0), rot_z=math.radians(68))
     p += cab
     # Spilled cargo.
     rng = random.Random(4)
@@ -298,7 +299,7 @@ def build_truck_jackknifed():
         x, y = -6.4 + k * 0.6, -2.4 + rng.uniform(-0.3, 0.3)
         p.append(cyl(f"K_Barrel{k}", 0.3, 0.9, (x, y, 0.3), rot=(math.pi / 2, 0, rng.uniform(0, 3)), segs=10, bevel=0.03, m=cm("Hazard" if k != 1 else "Blue", rough=0.5)))
     p.append(ground_blob("K_Spill", 1.4, (-6.0, -2.8, 0.0), cm("Soot", rough=0.3), seed=6, squash=(1.3, 0.8)))
-    csave("city_truck_jackknifed", [merge("TruckJackknifed", p), socket("Fire", (3.6, 1.0, 2.2)), socket("Fire2", (-6.0, -2.6, 0.2))])
+    csave("city_truck_jackknifed", [merge("TruckJackknifed", p), socket("Fire", (3.5, 2.6, 2.2)), socket("Fire2", (-6.0, -2.6, 0.2))])
 
 
 BUILDERS = {
