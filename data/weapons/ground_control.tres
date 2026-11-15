@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/ground_control.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/ground_control_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/ground_control_view.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/ground_control_mode.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 28
+
+[resource]
+script = ExtResource("1")
+id = &"ground_control"
+sort_order = 107
+category = "Radar Dish"
+slot_class = "primary"
+display_name = "Ground Control"
+role = "Hold to charge, release to send a radar ping ring: a tap is a small, fast ping; holding grows it in three steps up to a huge, slow ring that knocks zombies back. Rings pass through every zombie in them and bounce once off a wall, so they can hit the crowd again on the way back. Every zombie a ring touches is outlined through walls for 4 s and takes +15% damage from every weapon. Hold a full charge until the dish turns pink and release for a wide feedback blast; hold it too long and the gun stalls."
+unlock = SubResource("unlock")
+magazine_size = 8
+reserve_start = 40
+reserve_max = 72
+reload_time = 2.0
+emergency_recharge_interval = 4.0
+automatic = false
+fire_interval = 0.3
+damage = 170.0
+pellets = 1
+spread_degrees = 0.0
+spread_bloom = 0.0
+spread_bloom_max = 0.0
+max_range = 40.0
+falloff_start = 40.0
+falloff_end = 40.0
+falloff_min_scale = 1.0
+headshot_multiplier = 1.0
+knockback = 0.0
+ads_fov_scale = 0.8
+ads_time = 0.2
+ads_spread_scale = 0.0
+ads_depth = 0.07
+first_shot_accurate = true
+reticle_style = "circle"
+recoil_kick = 2.6
+recoil_yaw = 0.3
+view_kick = 0.1
+shake = 0.22
+tracer_color = Color(0.66, 0.9, 0.24, 1)
+tracer_width = 0.05
+viewmodel = ExtResource("3")
+view_position = Vector3(0.27, -0.28, -0.7)
+view_rotation_degrees = Vector3(0, 0, -2.5)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"gc_fire"
+reload_sound = &"gc_reload"
+empty_sound = &"empty_click"
+equip_sound = &"gc_equip"
+fire_pitch_variance = 0.04
+move_speed_scale = 0.94
+equip_time = 0.38
+charge_time = 0.8
+charge_min_fraction = 0.0
+charge_min_damage_scale = 0.0
+charge_move_scale = 0.8
+charge_sound = &"gc_charge"
+charge_ready_sound = &"gc_ready"
+projectile_speed = 22.0
+projectile_fuse = 2.5
+projectile_size = 0.3
+tracer_style = &"none"
+impact_style = &"spark"
+mode_script = ExtResource("6")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

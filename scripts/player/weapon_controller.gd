@@ -449,6 +449,10 @@ func _handle_charge(held: bool, can_shoot: bool, delta: float) -> void:
 		if not _charge_ready and _charge >= current.charge_time:
 			_charge_ready = true
 			Sfx.play(current.charge_ready_sound, -4.0)
+		var stall := mode.charging(charge_progress(), delta) if mode else 0.0
+		if stall > 0.0:
+			_set_charging(false)
+			_cooldown = stall
 		return
 	if not held or not can_shoot:
 		return
