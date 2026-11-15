@@ -12,7 +12,10 @@ sampled in their cone against the target's capsule (Monte Carlo), burst,
 charge, beam heat and frozen bonus included. Splash and chain hit one target
 here; their crowd value is in the "crowd" column (damage one trigger pull
 spreads over a pack of four; ricochets count like chain jumps). Fizz burn
-(the Sparkler) adds its average burn over each pull's time. Armour behaviours (helmets, shields, ice
+(the Sparkler) adds its average burn over each pull's time. The Shutterbug's flash (its mode's
+reach and far-end falloff, no headshots) hits every zombie of the pack; the Balloon Darter's
+darts are simulated with their balloon pops (BalloonBunch fuse, balloons per zombie, pop
+damage and splash, read from the scripts). Armour behaviours (helmets, shields, ice
 shells) are approximated as extra health. Numbers are for comparison
 between weapons, not exact in-game times.
 """
@@ -41,6 +44,8 @@ WEAPON_DEFAULTS = {
 # carries on average while it is being sprayed (the stacks build up).
 FIZZ_MAX_STACKS = 6
 FIZZ_RAMP = 0.75
+# Constants of the weapons whose behaviour lives in a script (WeaponData.mode_script).
+SCRIPT_CONSTS = {"flash": "scripts/weapons/modes/shutterbug_mode.gd", "balloon": "scripts/weapons/balloon_bunch.gd"}
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
 	"capsule_height": 1.9, "mass": 1.0, "move_speed": 2.0}
 # Extra effective health from armour behaviours (helmet, riot shield, ice shell).
@@ -72,11 +77,22 @@ def parse(path):
 	return out
 
 
+def mode_script_path(path):
+	"""res:// path of the weapon's mode_script, or ''."""
+	text = open(path, encoding="utf-8").read()
+	m = re.search(r'^mode_script = ExtResource\("(\w+)"\)', text, re.M)
+	if not m:
+		return ""
+	r = re.search(r'path="([^"]+)" id="%s"' % m.group(1), text)
+	return r.group(1) if r else ""
+
+
 def weapons():
 	out = {}
 	for path in sorted(glob.glob(os.path.join(ROOT, "data/weapons/*.tres"))):
 		w = dict(WEAPON_DEFAULTS)
 		w.update(parse(path))
+		w["mode_script_path"] = mode_script_path(path)
 		out[w["id"]] = w
 	return dict(sorted(out.items(), key=lambda kv: kv[1].get("sort_order", 0)))
 
@@ -91,6 +107,64 @@ def enemies():
 			e["armour"] += e["max_health"] * (1.0 / e["body_damage_scale"] - 1.0) * 0.5
 		out[e["id"]] = e
 	return out
+
+
+def script_consts(key):
+	"""`const NAME := number` lines of a mode's script."""
+	out = {}
+	for line in open(os.path.join(ROOT, SCRIPT_CONSTS[key]), encoding="utf-8"):
+		m = re.match(r'^const (\w+) := (-?[\d.]+)$', line.strip())
+		if m:
+			out[m.group(1)] = float(m.group(2))
+	return out
+
+
+def mode_kind(w):
+	"""'flash' (Shutterbug), 'balloon' (Balloon Darter) or ''."""
+	mode = w.get("mode_script_path", "")
+	if mode.endswith("shutterbug_mode.gd"):
+		return "flash"
+	if mode.endswith("balloon_darter_mode.gd"):
+		return "balloon"
+	return ""
+
+
+def flash_scale(d):
+	"""Share of a hip flash's damage at d metres (0 beyond its reach)."""
+	c = script_consts("flash")
+	reach, full = c["HIP_REACH"], c["FULL_RANGE"]
+	if d > reach:
+		return 0.0
+	t = min(1.0, max(0.0, (d - full) / (reach - full)))
+	return 1.0 + (c["FAR_SCALE"] - 1.0) * t
+
+
+def balloon_sim(w, hp, d, head):
+	"""Balloon Darter on one target: darts at the fire rate (reloads included),
+	each tying a balloon until the bunch pops. Returns (seconds, darts) to deal hp."""
+	c = script_consts("balloon")
+	dart = w["damage"] * falloff(w, d) * (1.0 + head * (w["headshot_multiplier"] - 1.0))
+	t, dealt, darts, mag = 0.0, 0.0, 0, int(w["magazine_size"])
+	fuse_at, balloons = None, 0
+	while t < 60.0:
+		darts += 1
+		mag -= 1
+		dealt += dart
+		if dealt >= hp:
+			return t, darts
+		if fuse_at is None:
+			fuse_at = t + c["FUSE"]
+		balloons = min(int(c["MAX_BALLOONS"]), balloons + 1)
+		t_next = t + (w["fire_interval"] if mag > 0 else w["reload_time"])
+		if mag <= 0:
+			mag = int(w["magazine_size"])
+		if fuse_at <= t_next:
+			dealt += c["POP_DAMAGE"] * balloons
+			if dealt >= hp:
+				return fuse_at, darts
+			fuse_at, balloons = None, 0
+		t = t_next
+	return math.inf, darts
 
 
 def falloff(w, d):
@@ -122,6 +196,14 @@ def pull_damage(w, e, d, head):
 	"""Average damage of one trigger pull to one target, and the pull's duration."""
 	scale = falloff(w, d)
 	head_mix = 1.0 + head * (w["headshot_multiplier"] - 1.0)
+	if mode_kind(w) == "flash":
+		return w["damage"] * flash_scale(d), w["fire_interval"]
+	if mode_kind(w) == "balloon":
+		# Per dart, its share of a bunch: MAX_BALLOONS of the darts fired in one fuse pop.
+		c = script_consts("balloon")
+		per_fuse = math.floor(c["FUSE"] / w["fire_interval"]) + 1
+		share = min(1.0, c["MAX_BALLOONS"] / per_fuse)
+		return w["damage"] * falloff(w, d) * head_mix + c["POP_DAMAGE"] * share, w["fire_interval"]
 	if w["ricochet_count"] > 0:
 		# A thrown ring (RingShot) flies straight at its first target and can headshot.
 		return w["damage"] * head_mix, w["fire_interval"]
@@ -146,6 +228,8 @@ def fizz_per_pull(w, cycle):
 def ttk(w, e, d, head):
 	"""Seconds from the first shot to the kill, reloads included (starting on a full mag)."""
 	hp = e["max_health"] + e["armour"]
+	if mode_kind(w) == "balloon":
+		return balloon_sim(w, hp, d, head)
 	dmg, cycle = pull_damage(w, e, d, head)
 	if dmg <= 0.0:
 		return math.inf, math.inf
@@ -182,6 +266,14 @@ def crowd_damage(w, d=8.0):
 	"""Damage one trigger pull spreads over a pack of four standing close together."""
 	e = {"capsule_radius": 0.5, "body_scale": 1.0, "capsule_height": 1.9}
 	dmg, _ = pull_damage(w, e, d, 0.0)
+	if mode_kind(w) == "flash":
+		# All four in the cone, between its centre line and its rim.
+		rim = script_consts("flash")["RIM_SCALE"]
+		return 4 * dmg * (1.0 + rim) / 2
+	if mode_kind(w) == "balloon":
+		# One dart into one of the pack: its balloon pops and splashes the other three.
+		c = script_consts("balloon")
+		return w["damage"] + c["POP_DAMAGE"] * (1.0 + 3 * c["SPLASH_SCALE"])
 	if w["chain_count"] > 0:
 		jumps = sum(w["chain_falloff"] ** (k + 1) for k in range(int(min(3, w["chain_count"]))))
 		return dmg + w["damage"] * jumps
