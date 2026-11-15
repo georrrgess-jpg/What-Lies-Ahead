@@ -13,8 +13,8 @@ func play(v: WeaponView, d: float) -> void:
 		[0.86, Vector3(-0.01, 0.03, 0.0), Vector3(-6, 10, -8)], [1.0, Vector3.ZERO, Vector3.ZERO]])
 	v.glow_ramp(0.1, 0.2, d, 1.0, 0.25)
 	# The support hand drops off the pump while the rack is swapped.
-	v.track("ArmL", d, [[0.1, Vector3(0, -0.04, 0.0), Vector3.ZERO], [0.22, Vector3(-0.12, -0.11, 0.02), Vector3(0, 0, -14)],
-		[0.66, Vector3(-0.12, -0.11, 0.02), Vector3(0, 0, -14)], [0.76, Vector3(0, -0.04, 0.0), Vector3.ZERO], [0.8, Vector3.ZERO, Vector3.ZERO]])
+	v.track("ArmL", d, [[0.1, Vector3(0, -0.05, 0.0), Vector3.ZERO], [0.22, Vector3(-0.12, -0.11, 0.02), Vector3(0, 0, -14)],
+		[0.66, Vector3(-0.12, -0.11, 0.02), Vector3(0, 0, -14)], [0.76, Vector3(0, -0.05, 0.0), Vector3.ZERO], [0.82, Vector3.ZERO, Vector3.ZERO]])
 	# The spent rack pops off the flank and tumbles away.
 	v.at(0.2, d, func(): Sfx.play(&"weap_ripsaw_glug", -4.0, 0.9))
 	v.track("Cell", d, [[0.2, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [0.27, Vector3(-0.035, 0.008, 0.0), Vector3(0, 0, 8)],
@@ -31,7 +31,7 @@ func play(v: WeaponView, d: float) -> void:
 	v.at(0.64, d, func(): v.spark_burst(_eject(v), Vector3(-1, 0.6, 0), [Color(0.75, 1.0, 0.2), Color(0.95, 1.0, 0.6), Color(0.45, 0.9, 0.15)],
 		12, 0.6, 0.4, 0.012))
 	# The pump racks it home: back, then forward.
-	v.track("Pump", d, [[0.82, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [0.87, Vector3(0, 0, 0.04), Vector3.ZERO], [0.93, Vector3.ZERO, Vector3.ZERO]],
+	v.track("Pump", d, [[0.82, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [0.87, Vector3(0, 0, 0.025), Vector3.ZERO], [0.93, Vector3.ZERO, Vector3.ZERO]],
 		Tween.TRANS_QUAD, Tween.EASE_OUT)
 	v.at(0.85, d, func(): Sfx.play(&"weap_ripsaw_pump", -3.0, 1.0))
 	v.glow_ramp(0.88, 0.94, d, 0.8, 2.6)

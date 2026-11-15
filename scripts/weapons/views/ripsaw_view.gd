@@ -35,7 +35,7 @@ const SLIME_HEIGHT := 0.044
 ## Gauge needle: angle at rest and at full rev (degrees).
 const NEEDLE_REST := -55.0
 const NEEDLE_FULL := 95.0
-const PUMP_KICK := 0.026
+const PUMP_KICK := 0.02
 const PUMP_TIME := 0.32
 ## Equip flourish (seconds from the weapon being raised).
 const PULL_START := 0.06

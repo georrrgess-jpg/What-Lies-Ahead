@@ -121,7 +121,7 @@ def build_ripsaw():
     rail_top = 0.2595
     z_line = rail_top + SIGHT_HEIGHT
     grip_loc = (0.0, 0.0, -0.1)
-    pump_c = (0.0, 0.2, -0.062)
+    pump_c = (0.0, 0.225, -0.062)
     rack_y = 0.172
     rack_z = 0.08
     cyl_c = (0.0, -0.1, 0.092)         # rear engine cylinder
@@ -150,9 +150,9 @@ def build_ripsaw():
         # Orange fin sight on the nose (decorative, below the eye line) with pink dots.
         side_profile("NoseFin", [(0.272, 0.138), (0.31, 0.138), (0.302, 0.163), (0.28, 0.163)], 0.016, (0, 0, 0), M["trim"], bevel=0.003),
         # Bar mount under the nose and the slime barrel under the receiver.
-        box("BarMount", (0.06, 0.09, 0.03), (0, 0.33, -0.02), bevel=0.008, m=M["trim"]),
+        box("BarMount", (0.096, 0.11, 0.03), (0, 0.337, -0.02), bevel=0.008, m=M["trim"]),
         box("BarHanger", (0.014, 0.022, 0.03), (0, 0.345, -0.045), bevel=0.004, m=M["dark"]),
-        ycyl("SlimeBarrel", 0.0115, 0.28, 0.244, z=pump_c[2], m=M["steel"], segs=16),
+        ycyl("SlimeBarrel", 0.0115, 0.25, 0.265, z=pump_c[2], m=M["steel"], segs=16),
         ycyl("Nozzle", 0.0165, 0.024, 0.39, z=pump_c[2], m=M["trim"], segs=18, bevel=0.005),
         ring("NozzleGlow", 0.0135, 0.0032, 0.4, z=pump_c[2], m=M["cell"]),
         ycyl("NozzleBore", 0.0095, 0.006, 0.4, z=pump_c[2], m=bore, segs=12, bevel=0.0),
@@ -160,9 +160,9 @@ def build_ripsaw():
         side_profile("Bar", [(y, BAR_Z + z) for y, z in stadium(CHAIN_R, 0.31, NOSE_Y, 12)], 0.026, (0, 0, 0), M["trim"], bevel=0.004),
         side_profile("BarPanel", [(y, BAR_Z + z) for y, z in stadium(0.036, 0.33, NOSE_Y - 0.01, 10)], 0.032, (0, 0, 0), M["dark"], bevel=0.003),
         # Stock: a grey hook curving down off the engine, with a rubber end.
-        tube("Stock", [(0, -0.115, 0.07), (0, -0.152, 0.056), (0, -0.177, 0.03), (0, -0.19, -0.005), (0, -0.187, -0.04),
-                       (0, -0.172, -0.068), (0, -0.148, -0.086), (0, -0.124, -0.094)], 0.015, m=M["steel"], segs=12),
-        ycyl("StockCap", 0.0175, 0.016, -0.12, z=-0.094, m=M["trim"], segs=16, bevel=0.005),
+        tube("Stock", [(0, -0.115, 0.07), (0, -0.155, 0.056), (0, -0.182, 0.03), (0, -0.196, -0.005), (0, -0.194, -0.035),
+                       (0, -0.184, -0.054), (0, -0.168, -0.064)], 0.015, m=M["steel"], segs=12),
+        ycyl("StockCap", 0.0175, 0.016, -0.164, z=-0.065, m=M["trim"], segs=16, bevel=0.005),
     ]
     for i in range(5):
         shell.append(torus(f"EngineRib{i}", 0.0482, 0.0028, (0, cyl_c[1] - 0.034 + i * 0.017, cyl_c[2]), rot=rad(90, 0, 0), m=M["dark"],
@@ -183,7 +183,7 @@ def build_ripsaw():
         for i, (y, z) in enumerate(((-0.07, 0.04), (0.052, 0.108), (0.338, 0.104), (0.338, 0.03))):
             shell.append(cyl(f"Rivet{k}{i}", 0.0045, 0.004, (side * (RW + 0.0005), y, z), rot=rad(0, 90, 0), segs=10, bevel=0.0012, m=M["dark"]))
         # Stock rivets.
-        for i, (y, z) in enumerate(((-0.171, 0.04), (-0.189, -0.006), (-0.17, -0.066))):
+        for i, (y, z) in enumerate(((-0.176, 0.04), (-0.195, -0.008), (-0.188, -0.048))):
             shell.append(sphere(f"StockRivet{k}{i}", 0.003, (side * 0.0138, y, z), m=M["dark"], segs=6, rings=4))
     # The D-handle: a grey loop over the receiver whose flat top carries the rail.
     corner = 0.024
@@ -198,7 +198,7 @@ def build_ripsaw():
     for i, y in enumerate((0.04, 0.214)):
         shell.append(cyl(f"DHandleFoot{i}", 0.019, 0.01, (0, y, 0.142), segs=16, bevel=0.003, m=M["dark"]))
     shell += top_rail("TopRail", 0.072, 0.183, rail_top, dict(M, dark=M["steel"]), width=0.026, pitch=0.02)
-    lug, charm_point = charm_lug(-(RW + 0.0015), 0.33, 0.03, M)
+    lug, charm_point = charm_lug(-0.048, 0.368, -0.02, M)
     shell += lug
     sight_rear, sight_front = sights_bead(0.0, 0.052, 0.203, 0.247, 0.247, z_line, M)
 
@@ -258,9 +258,9 @@ def build_ripsaw():
                                 rot=(a - math.pi / 2, 0, 0), bevel=0.0, m=M["dark"]))
 
     # Under-pump (lime, ribbed at both ends) on the slime barrel.
-    pump = [box("PumpBody", (0.07, 0.13, 0.046), pump_c, bevel=0.016, m=M["shell"])]
-    for i, dy in enumerate((-0.062, -0.054, -0.046, 0.046, 0.054, 0.062)):
-        pump.append(box(f"PumpRib{i}", (0.074, 0.0045, 0.05), (0, pump_c[1] + dy, pump_c[2]), bevel=0.002, segs=1, m=deep))
+    pump = [box("PumpBody", (0.064, 0.13, 0.04), pump_c, bevel=0.014, m=M["shell"])]
+    for i, dy in enumerate((-0.0625, -0.057, 0.057, 0.0625)):
+        pump.append(box(f"PumpRib{i}", (0.067, 0.0045, 0.043), (0, pump_c[1] + dy, pump_c[2]), bevel=0.002, segs=1, m=deep))
 
     # Gauge needle and the pull-start handle with its cord.
     needle = [box("Needle", (0.002, 0.0032, 0.019), (-(RW + 0.0062), gauge_c[1], gauge_c[2] + 0.009), bevel=0.0006, m=M["pink"])]
