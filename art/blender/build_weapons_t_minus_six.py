@@ -118,9 +118,9 @@ def build_t_minus_six():
     # Hazard stripes slanted round the band.
     for i in range(12):
         a = math.tau * i / 12
-        shell.append(obox(f"HazardStripe{i}", (0.006, 0.026, 0.0016),
+        shell.append(obox(f"HazardStripe{i}", (0.026, 0.006, 0.0016),
                           (math.cos(a) * (pod_r + 0.0035), 0.228, pod_c[2] + math.sin(a) * (pod_r + 0.0035)),
-                          (-math.sin(a), 0.6, math.cos(a)), (math.cos(a), 0, math.sin(a)), bevel=0.0, m=M["dark"]))
+                          (-math.sin(a), 0.6, math.cos(a)), (0, 1, 0), bevel=0.0, m=M["dark"]))
     # Tube bores round each rocket at the pod's face, and a centre hub.
     for i in range(ROCKETS):
         a = math.radians(90 + 60 * i)
@@ -128,8 +128,9 @@ def build_t_minus_six():
     shell.append(ycyl("PodHub", 0.009, 0.01, pod_y1 + 0.008, z=pod_c[2], m=M["steel"], segs=14, bevel=0.002))
     shell += top_rail("TopRail", -0.045, 0.075, rail_top, M, width=0.03)
     shell += bolts("Pin", [(-0.034, -0.03, 0.0), (0.034, -0.03, 0.0), (0.034, 0.12, 0.02)], M["steel"], radius=0.005, height=0.006)
-    lug, charm_point = charm_lug(pod_r + 0.003, 0.185, pod_c[2], M, out=1.0)
+    lug, charm_point = charm_lug(pod_r + 0.005, 0.185, pod_c[2], M, out=1.0)
     shell += lug
+    shell.append(box("CharmLugFoot", (0.012, 0.03, 0.022), (pod_r + 0.002, 0.185, pod_c[2] + 0.004), bevel=0.003, m=M["steel"]))
     sight_rear, sight_front = sights_notch(0.0, -0.058, 0.25, 0.102, pod_c[2] + pod_r + 0.001, z_line, M, gap=0.016)
 
     # The six rockets, top one first, round the pod.
