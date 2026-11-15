@@ -1299,6 +1299,19 @@ func play_animation(clip: StringName, blend := 0.1) -> void:
 		_play(clip, blend)
 
 
+## Walks backwards for a behaviour that backs the zombie away: plays its move
+## clip in reverse at the rate that keeps the planted feet still at
+## `ground_speed` (m/s). play_animation(data.move_animation) hands the legs
+## back to the locomotion driver.
+func play_backpedal(ground_speed: float, blend := 0.2) -> void:
+	if _anim == null or not _has_clip(_move_clip):
+		return
+	var ref := _clip_speed(_move_clip)
+	_loco_clip = &""
+	_anim.play(_move_clip, blend)
+	_anim.speed_scale = -clampf(ground_speed / ref, GAIT_RATE_MIN, GAIT_RATE_MAX) if ref > 0.0 else -_tempo
+
+
 func knockback(impulse: Vector3) -> void:
 	_knock = (_knock + impulse).limit_length(KNOCK_MAX)
 

@@ -28,7 +28,8 @@ extends SceneTree
 ##     east colonnade on the ground floor.
 ##   - Zombie entrances: main entrance vestibule (S), staff corridor (W),
 ##     department store under its half-raised shutter (N), food-court kitchen
-##     (E), and the Starplex cinema lobby upstairs (S).
+##     (E), and upstairs the Starplex cinema lobby (S) and Retro Records (NW),
+##     its shutter torn open by zombies coming up the service stairs.
 ##   - The exit portal waits on the north balcony; lights chase up the east
 ##     escalator to it.
 
@@ -66,6 +67,10 @@ const ESC_WALK := 1.25    # half-width of the walkway between the balustrades
 const ESC_TOP_E := -2.5
 const ESC_TOP_W := 7.5
 const PORTAL := Vector3(10.0, UP, -22.4)
+## Retro Records (upper north-west): the shutter is still down north of
+## REC_OPEN (z) and torn open south of it; REC_SPAWN is its spawn (x, z).
+const REC_OPEN := -18.6
+const REC_SPAWN := Vector2(-20.8, -15.8)
 ## Light-sized batching cells (the Compatibility renderer lights an object with
 ## at most 8 omni lights, so merged geometry is split into 12 m cells).
 const CELL := 12.0
@@ -892,7 +897,7 @@ const SLOTS := [
 	["S", 4.0, 18.0, 0, "window", "PLUSH PLANET", "mint", "toys"],
 	["E", -24.0, -15.5, 0, "window", "BYTE BAZAAR", "teal", "tech"],
 	["E", 15.5, 24.0, 0, "half", "SWEET ORBIT", "pink", "shelf"],
-	["W", -24.0, -12.0, 1, "shutter", "RETRO RECORDS", "violet", ""],
+	["W", -24.0, -12.0, 1, "open", "RETRO RECORDS", "violet", ""],
 	["W", -12.0, 0.0, 1, "window", "ROCKET ARCADE", "pink", "tech"],
 	["W", 0.0, 12.0, 1, "half", "MOON BOOKS", "amber", "shelf"],
 	["W", 12.0, 24.0, 1, "shutter", "COMET CAMERAS", "teal", ""],
@@ -1148,7 +1153,8 @@ func _build_department_store() -> void:
 
 
 # ---------------------------------------------------------------------------
-# Entrances: main vestibule (S), staff corridor (W), kitchen (E), cinema (S, up)
+# Entrances: main vestibule (S), staff corridor (W), kitchen (E), cinema (S, up),
+# Retro Records (W, up)
 # ---------------------------------------------------------------------------
 
 func _build_entrances() -> void:
@@ -1238,6 +1244,7 @@ func _build_back_rooms(e: Node3D) -> void:
 	_build_staff_corridor(e)
 	_build_kitchen(e)
 	_build_ticket_kiosks()
+	_build_record_store(e)
 	# Department store back wall: shelving either side, the logo above.
 	for x in [-5.0, 5.0]:
 		_prop(dressing, "mall_shelf", "DeptShelf%d" % int(x), Vector3(x, 0, Z0 + 0.36), 0.0)
@@ -1316,6 +1323,100 @@ func _build_kitchen(e: Node3D) -> void:
 	_bbox("hazard", Vector3(0.04, 0.15, 1.1), Vector3(X1 - 0.11, 0.25, 2.75))
 	_bbox("neon_teal", Vector3(0.04, 0.22, 0.7), Vector3(X1 - 0.1, 2.5, 2.75))
 	_label(signs, "FireExit", "FIRE EXIT", Vector3(X1 - 0.14, 2.5, 2.75), -PI * 0.5, 0.0014, Color(0.05, 0.2, 0.2))
+
+
+## Retro Records (W, upper floor, x -24..-18, z -24..-12): the second zombie
+## entrance upstairs, in the quiet north-west corner. The north half of the
+## shutter is still down behind the counter (a sealed corner, no pocket); the
+## south half is torn up, its slats hanging from the roll and lying on the
+## balcony. Zombies come up the service stairs through the door in the back
+## wall, past spilled crates of records, under a violet light that spills out
+## onto the balcony and marks the doorway.
+func _build_record_store(e: Node3D) -> void:
+	var y := UP
+	var front := -HX
+	var shut := Vector2(-23.4, REC_OPEN)      # z of the shutter still down
+	var open_mid := (REC_OPEN + -12.6) * 0.5
+	var half_pi := PI * 0.5
+	# The part still down, with a hand-written notice.
+	_bbox("shutter", Vector3(0.12, OPEN_H, shut.y - shut.x), Vector3(front - 0.05, y + OPEN_H * 0.5, (shut.x + shut.y) * 0.5))
+	_bbox("chrome", Vector3(0.2, 0.12, shut.y - shut.x), Vector3(front - 0.05, y + 0.06, (shut.x + shut.y) * 0.5))
+	_collider(e, "RecordsShutter", Vector3(0.3, CEIL - UP, shut.y - shut.x), Vector3(front, y + (CEIL - UP) * 0.5, (shut.x + shut.y) * 0.5))
+	_bbox("cream", Vector3(0.03, 0.8, 1.3), Vector3(front + 0.02, y + 1.7, -21.0))
+	_label(signs, "RecordsNotice", "CLOSED FOR\nSTOCKTAKE", Vector3(front + 0.04, y + 1.72, -21.0), half_pi, 0.0018, Color(0.75, 0.1, 0.35))
+	# The torn half: the roll at the top, slats hanging off it, the bottom bar
+	# and a buckled sheet on the balcony floor.
+	_bbox("shutter", Vector3(0.36, 0.34, -12.6 - REC_OPEN), Vector3(front - 0.12, y + OPEN_H - 0.17, open_mid))
+	_bbox("shutter", Vector3(2.8, 0.95, 0.1), Vector3(front + 0.22, y + OPEN_H - 0.62, REC_OPEN + 1.6), half_pi, -0.55)
+	_bbox("shutter", Vector3(2.2, 0.5, 0.1), Vector3(front + 0.06, y + OPEN_H - 0.48, -14.0), half_pi + 0.12, -0.18)
+	_bbox("chrome", Vector3(3.4, 0.1, 0.18), Vector3(front + 1.3, y + 0.05, -15.2), half_pi + 0.42)
+	_bbox("shutter", Vector3(2.4, 0.05, 1.5), Vector3(front + 1.7, y + 0.04, -13.6), -0.3, 0.06)
+	# Shop: violet floor and walls, one ceiling panel still lit, one hanging.
+	_bbox("interior_pink", Vector3(5.8, 0.04, 11.6), Vector3(-21.1, y + 0.02, -18.0))
+	_bbox("interior_pink", Vector3(0.1, CEIL - UP, 11.6), Vector3(X0 + 0.05, y + (CEIL - UP) * 0.5, -18.0))
+	_bbox("panel_light", Vector3(2.0, 0.06, 3.0), Vector3(-21.0, CEIL - 0.08, -15.0))
+	_bbox("ceiling", Vector3(1.2, 0.05, 1.2), Vector3(-22.6, CEIL - 0.55, -20.4), 0.3, 0.75)
+	_bbox("navy", Vector3(1.4, 0.4, 1.4), Vector3(-22.6, CEIL - 0.2, -20.4))
+	# The counter seals the corner behind the shutter; crates of records behind it.
+	var counter := Vector3(-21.07, y, REC_OPEN - 0.45)
+	_bbox("pink", Vector3(5.86, 1.05, 0.8), counter + Vector3(0, 0.525, 0))
+	_bbox("chrome", Vector3(5.9, 0.08, 0.9), counter + Vector3(0, 1.09, 0))
+	_bbox("neon_violet", Vector3(5.86, 0.06, 0.04), counter + Vector3(0, 0.75, 0.42))
+	_collider(e, "RecordsCounter", Vector3(5.86, 1.15, 0.8), counter + Vector3(0, 0.575, 0))
+	_bbox("navy", Vector3(0.5, 0.3, 0.4), counter + Vector3(1.6, 1.28, 0))
+	var deck := MeshInstance3D.new()
+	deck.name = "RecordsTurntable"
+	deck.mesh = _cylinder_mesh(0.22, 0.05, "navy")
+	deck.position = counter + Vector3(-1.2, 1.16, 0)
+	dressing.add_child(deck)
+	var sleeves := ["pink", "teal", "hazard", "cream", "violet"]
+	for i in 3:
+		var c := Vector3(-22.6 + i * 1.5, y, -22.6)
+		_bbox("navy", Vector3(1.2, 0.8, 0.9), c + Vector3(0, 0.4, 0))
+		for j in 5:
+			_bbox(sleeves[(i + j) % sleeves.size()], Vector3(0.05, 0.34, 0.34), c + Vector3(-0.45 + j * 0.22, 0.95, 0))
+	_collider(e, "RecordsCrates", Vector3(4.2, 0.8, 0.9), Vector3(-21.1, y + 0.4, -22.6))
+	# The service stairs: a steel door in the back wall, one leaf ajar onto
+	# the dark stairwell, a lit sign and an exit box above.
+	var door_z := REC_SPAWN.y
+	_bbox("violet", Vector3(0.1, 2.75, 2.6), Vector3(X0 + 0.08, y + 1.375, door_z))
+	_bbox("outside", Vector3(0.04, 2.5, 2.2), Vector3(X0 + 0.12, y + 1.25, door_z))
+	_bbox("steel", Vector3(0.08, 2.5, 1.06), Vector3(X0 + 0.16, y + 1.25, door_z - 0.56))
+	_bbox("chrome", Vector3(0.1, 0.07, 0.8), Vector3(X0 + 0.24, y + 1.05, door_z - 0.56))
+	_bbox("steel", Vector3(1.06, 2.5, 0.08), Vector3(X0 + 0.48, y + 1.25, door_z + 0.66), 0.96)
+	_bbox("hazard", Vector3(0.04, 0.2, 2.2), Vector3(X0 + 0.19, y + 0.3, door_z))
+	_bbox("neon_teal", Vector3(0.05, 0.3, 1.5), Vector3(X0 + 0.12, y + 2.95, door_z))
+	_label(signs, "RecordsStairs", "SERVICE STAIRS", Vector3(X0 + 0.16, y + 2.95, door_z), half_pi, 0.0017, Color(0.05, 0.2, 0.2))
+	_prop(dressing, "mall_exit_sign", "RecordsExitBox", Vector3(X0 + 0.3, y + 3.45, door_z), 90.0)
+	# A new-releases bin fills the corner between the party wall and the
+	# south pilaster, so a crowd leaving the shop slides past it instead of
+	# wedging there.
+	var bin := [Vector2(-18.3, -12.15), Vector2(-19.2, -12.15), Vector2(-18.3, -13.05)]
+	_bprism("teal", bin, y, y + 0.95)
+	_bprism("neon_teal", bin, y + 0.95, y + 0.99)
+	_prism_collider(e, "RecordsBin", bin, y, y + 1.0)
+	_bbox("hazard", Vector3(0.05, 0.34, 0.34), Vector3(-18.62, y + 1.15, -12.5), PI * 0.25)
+	_bbox("pink", Vector3(0.05, 0.34, 0.34), Vector3(-18.5, y + 1.15, -12.66), PI * 0.25)
+	# Sleeves pinned up either side of the door.
+	var k := 0
+	for z in [-17.9, -17.2, -13.6, -12.9]:
+		for v in [1.7, 2.35]:
+			_bbox(sleeves[k % sleeves.size()], Vector3(0.04, 0.52, 0.52), Vector3(X0 + 0.12, y + v, z))
+			k += 1
+	# Records spilled across the floor, a neon sign on the party wall.
+	var r := RandomNumberGenerator.new()
+	r.seed = 4471
+	for i in 7:
+		var at := Vector3(r.randf_range(-23.2, -18.8), y + 0.045, r.randf_range(-17.8, -12.9))
+		_bbox(sleeves[i % sleeves.size()], Vector3(0.32, 0.012, 0.32), at, r.randf_range(0.0, PI))
+		if i % 2 == 0:
+			var disc := MeshInstance3D.new()
+			disc.name = "Record%d" % i
+			disc.mesh = _cylinder_mesh(0.15, 0.012, "navy")
+			disc.position = at + Vector3(r.randf_range(-0.25, 0.25), 0.012, r.randf_range(-0.25, 0.25))
+			dressing.add_child(disc)
+	_label(signs, "RecordsNeon", "SPIN IT!", Vector3(-21.2, y + 2.7, -12.2), PI, 0.006, PINK * 1.8)
+	_omni(lights, "Records", Vector3(-20.8, y + 3.2, -15.2), VIOLET.lerp(PINK, 0.3), 1.5, 8.0).add_to_group("mall_mains", true)
 
 
 ## Ticket machines and film posters on the aisle faces of the cinema blocks.
@@ -1565,6 +1666,8 @@ func _build_markers() -> void:
 		"SpawnKitchen": [Vector3(21.4, 0.1, 0.0), 90.0],
 		# Mid-aisle between the ticket machines: the spawn spread stays clear of the concession stand.
 		"SpawnCinema": [Vector3(0.0, UP + 0.1, 26.2), 0.0],
+		# Mid-shop in front of the stair door: the spread stays inside the torn-open bay.
+		"SpawnRetroRecords": [Vector3(REC_SPAWN.x, UP + 0.1, REC_SPAWN.y), -90.0],
 	}
 	for point_name in points:
 		var m := Marker3D.new()
@@ -1592,7 +1695,10 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.agent_max_slope = 40.0
 	mesh.region_min_size = 14.0
 	# Both floors; the roof and the tops of counters stay out (largest island).
-	mesh.filter_baking_aabb = AABB(Vector3(X0 - 1.0, -1.0, Z0 - 1.0), Vector3(X1 - X0 + 2.0, UP + 1.5, Z1 - Z0 + 2.0))
+	# The box reaches a body height over the upper floor: cut lower, the shop
+	# fronts and party walls up there were only stubs the bake walked over,
+	# and upstairs routes ran through the walls into the shops.
+	mesh.filter_baking_aabb = AABB(Vector3(X0 - 1.0, -1.0, Z0 - 1.0), Vector3(X1 - X0 + 2.0, UP + 3.0, Z1 - Z0 + 2.0))
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, region)
 	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
