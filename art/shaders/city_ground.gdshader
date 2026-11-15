@@ -109,7 +109,7 @@ void fragment() {
 	float wet = mix(0.12, 1.0, puddle);
 	ALBEDO = col;
 	NORMAL_MAP = n_tan * 0.5 + 0.5;
-	ROUGHNESS = mix(0.78 - dirt * 0.25, 0.12, puddle);
-	SPECULAR = mix(0.4, 0.5, puddle);
+	ROUGHNESS = mix(0.78 - dirt * 0.25, 0.2, puddle);
+	SPECULAR = mix(0.4, 0.3, puddle);
 	EMISSION = refl * wet;
 }

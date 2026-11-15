@@ -656,7 +656,7 @@ func _neon_sign(parent: Node3D, model: String, sign_name: String, pos: Vector3, 
 		var l := _omni(fx, sign_name + "Light", pos + forward * 1.4 + Vector3(0, 2.6, 0), color, 1.4, 7.0)
 		l.add_to_group("city_neon_flicker", true)
 	else:
-		_reflectors.append([pos + forward * 0.4 + Vector3(0, 1.0, 0), color, 0.6, 0.8])
+		_reflectors.append([pos + forward * 0.4 + Vector3(0, 1.0, 0), color, 0.45, 0.65])
 
 
 # ---------------------------------------------------------------------------
@@ -995,7 +995,11 @@ func _build_tower() -> void:
 	# The radio mast's fenced base in the middle of the plaza (the boss arena's pillar).
 	var mast := Vector3(cx + 4.0, 0, -48.0)
 	_kit(dressing, "city_radio_tower", "RadioMast", mast, 15.0, Vector3(3.0, 40.0, 3.0))
-	_box(t, "MastBase", Vector3(6.0, 1.2, 6.0), mast + Vector3(0, 0.6, 0), _surface("precinct_wall", ["city_concrete", "dune_concrete"], Color(0.6, 0.62, 0.72), 0.2, 0.9))
+	_box(t, "MastBase", Vector3(6.0, 1.2, 6.0), mast + Vector3(0, 0.6, 0), _surface("mast_base", ["city_concrete"], Color(0.7, 0.68, 0.66), 0.3, 0.9))
+	var hazard := _surface("hazard", ["dune_hazard"], Color.WHITE, 1.0, 0.7)
+	for k in 4:
+		var trim := _visual_box(dressing, "MastBaseTrim%d" % k, Vector3(6.1, 0.25, 0.08), mast + Basis(Vector3.UP, k * PI * 0.5) * Vector3(0, 0.95, 3.02), hazard)
+		trim.rotation.y = k * PI * 0.5
 	_player_block(t, "MastCap", Vector3(6.0, 30.0, 6.0), mast + Vector3(0, 16.2, 0))
 	var beacon := _omni(fx, "MastBeacon", mast + Vector3(0, 38.0, 0), Color(1.0, 0.15, 0.1), 3.0, 30.0)
 	beacon.add_to_group("city_beacon", true)
@@ -1100,6 +1104,9 @@ func _block(parent: Node3D, block_name: String, r: Rect2, height: float, facing:
 	# Roof parapet (breaks the box's top edge against the sky).
 	var cap := _mat("parapet", Color(0.3, 0.27, 0.28), 0.9)
 	_visual_box(dressing, block_name + "Parapet", Vector3(look_size.x + 0.4, 0.6, look_size.z + 0.4), Vector3(look_centre.x, height + 0.3, look_centre.z), cap)
+	# Tar and gravel inside the parapet (the roofs show from the high views).
+	var roof := _surface("roof_tar", ["city_asphalt"], Color(0.95, 0.85, 0.8), 0.15, 0.95)
+	_visual_box(dressing, block_name + "Roof", Vector3(look_size.x - 0.2, 0.1, look_size.z - 0.2), Vector3(look_centre.x, height + 0.65, look_centre.z), roof).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_player_block(parent, block_name + "Cap", Vector3(r.size.x, 12.0, r.size.y), Vector3(centre.x, height + 6.0, centre.z))
 
 
@@ -1451,6 +1458,48 @@ func _build_skyline() -> void:
 	_smoke(fx, "SmokeFarS", Vector3(40.0, 20.0, 170.0), 2.6)
 	_smoke(fx, "SmokeFarN", Vector3(-40.0, 25.0, -190.0), 3.4)
 	_omni(fx, "SkyscraperFire", Vector3(64.0, 60.0, -88.0), Color(1.0, 0.45, 0.15), 4.0, 60.0)
+	# Searchlights on the roofs round the districts sweeping the smoke (the
+	# environment script swings them).
+	_searchlight("SearchlightW", Vector3(-81.0, 16.6, -14.0), 30.0, 70.0, 0.0)
+	_searchlight("SearchlightS", Vector3(0.0, 20.6, 50.0), 26.0, 180.0, 2.1)
+	_searchlight("SearchlightE", Vector3(90.0, 30.6, -93.0), 34.0, -20.0, 4.2)
+
+
+## A searchlight's beam: a pivot at the lamp (tilted `tilt` degrees off
+## vertical, facing `yaw`), swung by the environment script (meta "yaw",
+## "phase").
+func _searchlight(light_name: String, base: Vector3, tilt: float, yaw: float, phase: float) -> void:
+	var pivot := Node3D.new()
+	pivot.name = light_name
+	pivot.position = base
+	pivot.rotation = Vector3(deg_to_rad(tilt), deg_to_rad(yaw), 0.0)
+	pivot.set_meta("yaw", deg_to_rad(yaw))
+	pivot.set_meta("phase", phase)
+	pivot.add_to_group("city_searchlight", true)
+	pivot.add_to_group("city_surface", true)
+	fx.add_child(pivot)
+	var cone := CylinderMesh.new()
+	cone.top_radius = 10.0
+	cone.bottom_radius = 0.5
+	cone.height = 130.0
+	cone.radial_segments = 16
+	cone.rings = 1
+	cone.cap_top = false
+	cone.cap_bottom = false
+	var m := ShaderMaterial.new()
+	m.shader = load(SHADERS + "city_beam.gdshader")
+	cone.material = m
+	var beam := MeshInstance3D.new()
+	beam.name = "Beam"
+	beam.mesh = cone
+	beam.position.y = 65.0
+	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	pivot.add_child(beam)
+	# The lamp on its stand (it stays put while the beam swings).
+	var stand := _visual_box(dressing, light_name + "Stand", Vector3(0.6, 1.0, 0.6), base + Vector3(0, -0.5, 0), _mat("flood_stand", Color(0.12, 0.12, 0.13), 0.6))
+	stand.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var lens := _visual_box(dressing, light_name + "Lens", Vector3(1.3, 0.5, 1.3), base + Vector3(0, 0.2, 0), _mat("searchlight_lens", Color(0.9, 0.95, 1.0), 0.3, Color(0.85, 0.92, 1.0), 6.0))
+	lens.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 ## The kit's drifting ash round the camera (it follows the camera itself).
@@ -2453,7 +2502,7 @@ func _omni(parent: Node3D, light_name: String, pos: Vector3, color: Color, energ
 	l.shadow_enabled = false
 	parent.add_child(l)
 	_light_count += 1
-	_reflectors.append([pos, color, 0.5, clampf(energy * 0.3, 0.3, 0.9)])
+	_reflectors.append([pos, color, 0.45, clampf(energy * 0.25, 0.25, 0.75)])
 	return l
 
 
