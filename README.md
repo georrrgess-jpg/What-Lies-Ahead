@@ -153,6 +153,7 @@ fullscreen.
 | Ion Carbine | Primary | Sustained fire | Start | Best sustained damage of the starters; fire in bursts or aim past 15 m |
 | Scatter Blaster | Primary | Close range | Start | Nine pellets; one shot drops a tourist inside 10 m and staggers |
 | Comet Hand Cannon | Secondary | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
+| Dunk Tank | Secondary | Soak and push | Player level 7 | Full-auto water jet (under 24 m) that pierces one zombie and pushes; soaked zombies are slowed and take +25% damage from every weapon for 3 s |
 | Arc Coil | Primary | Crowd control | Player level 4 | Chain lightning locking onto the zombie nearest the crosshair; shock slows |
 | Bumper Lobber | Primary | Area damage | Player level 6 | Bouncing gumball bombs with splash; shows its landing ring when aiming |
 | Frostbite Cryo Beam | Primary | Lockdown | Player level 9 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
@@ -161,6 +162,7 @@ fullscreen.
 | Toxic Ripsaw | Primary | Saw shotgun | Player level 20 | Semi-auto slime shotgun whose hits splat a slowing puddle; hold MELEE (T or middle mouse) to rev the chain saw, which saws through the rank and file (heavies and alphas take a third to a half) on a fuel rack that refills while resting or on reload; slows you while sawing |
 | Whirligig | Primary | Crowd shredder | Player level 22 | Prize-wheel minigun: spins up for 0.4 s, then 18 rounds a second that pass through a second zombie; slows you while it spins; overheats |
 | Riptide Harpoon | Primary | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
+| Teacup Twister | Primary | Crowd gathering | Player level 34 | Lobs a spinning teacup that opens a whirl where it lands: zombies within 7 m are dragged into a spinning cluster (no attacks while they spin), take spin damage, then the cup pops and flings them out; Bruisers are pulled slowly, alphas and bosses only slowed |
 | Sparkler | Secondary | Spray and burn | Player level 18 | Full-auto firework machine pistol; every hit adds a fizz burn stack (up to six) that keeps burning; the fuse burns down with the magazine |
 | Ring Toss | Secondary | Ricochet | Player level 26 | Throws a glowing hoop that ricochets through up to four zombies and flies back to be caught; a headshot "Ringer" does double damage and refunds the hoop |
 | Shutterbug | Secondary | Crowd stun | Player level 13 | Flash camera: each shot hits every zombie in a 12 m cone (no headshots, weaker toward the rim and far end) and dazzles it: knocked out of its swing, staggered (each zombie once per 2.5 s; heavies and alphas are only slowed) and seeing stars; aiming zooms the flash (narrower, longer, x1.3) |

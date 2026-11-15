@@ -31,7 +31,7 @@ from weapon_kit import CHARM_STANDOFF, RAIL_FLAT  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 WEAPONS = ["pulse_pistol", "ion_carbine", "scatter_blaster", "comet_cannon", "arc_coil", "bumper_lobber", "cryo_beam", "rail_lancer",
            "sparkler", "ring_toss", "drum_popper", "whirligig", "riptide", "toxic_ripsaw",
-           "shutterbug", "balloon_darter"]
+           "shutterbug", "balloon_darter", "teacup_twister", "dunk_tank"]
 REQUIRED = ["Shell", "ArmL", "ArmR", "Decal", "IronSightRear", "IronSightFront",
             "Muzzle", "SightPoint", "SightMount", "EjectPoint", "VentPoint", "CharmPoint", "ElbowL", "ElbowR"]
 # The energy cell and its hologram copy (the Scatter Blaster loads two capsules instead).
@@ -63,6 +63,9 @@ JOINTS = {
     "shutterbug": [("Cell", "Shell"), ("Focus", "Shell"), ("Iris", "Shell"), ("Winder", "Shell")] + [(f"Bulb{i}", p) for i in range(8) for p in ("Cell", "Shell")],
     "balloon_darter": [("Cell", "Shell"), ("Dart", "Shell"), ("Plunger", "Shell"), ("Needle", "Shell"), ("BalloonHolo", "Shell")]
                       + [(f"Tail{i}", p) for i in range(6) for p in ("Cell", "Shell")],
+    "teacup_twister": [("Drum", "Shell"), ("Cell", "Drum"), ("Cell", "Shell"), ("Saucer", "Shell"), ("Swirl", "Shell")]
+                      + [(f"Cup{i}", p) for i in range(4) for p in ("Drum", "Shell", "Cell")],
+    "dunk_tank": [("Cell", "Shell"), ("Water", "Cell"), ("Water", "Shell"), ("Pump", "Shell"), ("Needle", "Shell"), ("Target", "Shell")],
 }
 
 

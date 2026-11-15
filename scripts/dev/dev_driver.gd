@@ -659,10 +659,11 @@ func _bot_range(data: WeaponData) -> float:
 		return minf(data.max_range * 0.85, 17.0)
 	if data.projectile_speed > 0.0:
 		return 21.0
-	# Short-reach weapons (the Shutterbug's flash) close in first.
+	# Short-reach weapons (the Shutterbug's flash, the Dunk Tank's jet) close in
+	# until the target is well inside their reach.
 	if data.max_range < 30.0:
 		return data.max_range * 0.75
-	return 26.0
+	return minf(26.0, data.max_range * 0.85)
 
 
 ## Charge weapons: hold to charge, release once charged enough and on target.
