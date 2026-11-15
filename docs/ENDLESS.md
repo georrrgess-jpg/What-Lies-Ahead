@@ -138,3 +138,22 @@ buys a gate in a break when it can keep 150 tickets (and the overshield whenever
 crates and logs `[dev] ENDLESS wave=..` per wave and `[dev] ENDLESS RESULT wave=..` at the end;
 `--scene=<path>` plays another scene for the endless level (the testbed), and `--god`,
 `--difficulty`, `--start-wave` work as usual.
+
+## Balance (bot, Ashfall City, ion carbine, max profile)
+
+`--autoplay=endless --weapon=ion_carbine`, one run each (the bot keeps 150 tickets, buys gates
+first, then the overshield; it does not use traps from the square). Tickets are what it held at
+the wave start.
+
+| Difficulty, aim error | Wave reached | Time | Districts opened on waves | Tickets at waves 5 / 10 / 15 / 20 |
+| --- | --- | --- | --- | --- |
+| Casual, 1.2 | 35 | 33:31 | 5, 8, 11, 16 | 426 / 822 / 789 / 1856 |
+| Standard, 1.2 | 20 | 15:28 | 6, 9, 14, 19 | 388 / 218 / 273 / 352 |
+| Hard, 1.2 | 14 | 10:06 | 6, 10 | 278 / 628 / - / - |
+| Standard, 3.5 (human-like) | 10 (the Wrecker at 41%) | 6:01 | 6 | 388 / 518 / - / - |
+| Hard, 3.5 | 12 | 9:13 | 6, 10 | 278 / 928 / - / - |
+
+Deaths come from crowds (shamblers and runners) and the boss, not from long fights with single
+zombies. The bot with a 3.5 degree aim error stands in the Wrecker's telegraphed moves (it only
+steps out of slams), so its wall is wave 10; a player who sidesteps the bulldoze and debris goes
+on.
