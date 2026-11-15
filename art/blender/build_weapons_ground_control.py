@@ -76,7 +76,7 @@ def build_ground_control():
     z_line = rail_top + SIGHT_HEIGHT
     axis_z = 0.035                       # the barrel line through the dish
     dish_neck = (0, 0.215, axis_z)
-    fore = (0, 0.16, -0.07)
+    fore = (0, 0.2, -0.07)
     screen_c = (-0.047, 0.035, 0.048)
     bars_c = (-0.043, -0.075, 0.022)
     hinge_x = 0.04
