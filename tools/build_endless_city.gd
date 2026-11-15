@@ -1762,7 +1762,8 @@ var _instanced := {}
 
 
 func _instance(kind: String, xf: Transform3D, color := Color.WHITE) -> void:
-	var key := kind + ("Metro" if xf.origin.y < UNDERGROUND_Y else "")
+	# Anything below the street (the hall's ceiling included) belongs to the Metro.
+	var key := kind + ("Metro" if xf.origin.y < -0.2 else "")
 	if not _instanced.has(key):
 		_instanced[key] = [kind, [], []]
 	_instanced[key][1].append(xf)
