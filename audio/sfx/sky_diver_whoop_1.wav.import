@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/sky_diver_whoop_1.wav-95a670582c128a0b68c01dd
 
 force/8_bit=false
 force/mono=false
-force/max_rate=true
-force/max_rate_hz=22050
+force/max_rate=false
+force/max_rate_hz=44100
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

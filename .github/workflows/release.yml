@@ -1,0 +1,98 @@
+# Builds the game for Linux and Windows on GitHub's servers and publishes the
+# zips as a GitHub Release (assets may be up to 2 GB each, so builds have no
+# size budget). Run it from the Actions tab ("Release builds" -> Run workflow)
+# or by pushing a tag such as v1.2.0.
+name: Release builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.2.0). Leave empty for build-<run number>."
+        required: false
+        default: ""
+      prerelease:
+        description: "Mark as a pre-release"
+        type: boolean
+        default: false
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-builds
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: "4.7.1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot and export templates
+        run: |
+          base="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable"
+          curl -fsSL --retry 3 -o godot.zip "$base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          curl -fsSL --retry 3 -o templates.tpz "$base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          dest="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$dest"
+          unzip -q templates.tpz -d tpl
+          mv tpl/templates/* "$dest/"
+          rm -rf godot.zip templates.tpz tpl
+          godot --version
+
+      - name: Import the project
+        run: |
+          godot --headless --audio-driver Dummy --path . --import 2>&1 | tee import.log || true
+          if grep -E "SCRIPT ERROR|Parse Error" import.log; then
+            echo "::error::The project has script errors"; exit 1
+          fi
+
+      - name: Export Linux and Windows
+        run: |
+          mkdir -p build/linux build/windows dist
+          godot --headless --path . --export-release "Linux" build/linux/WhatLiesAhead.x86_64 2>&1 | tee export_linux.log || true
+          godot --headless --path . --export-release "Windows Desktop" build/windows/WhatLiesAhead.exe 2>&1 | tee export_windows.log || true
+          test -s build/linux/WhatLiesAhead.x86_64
+          test -s build/windows/WhatLiesAhead.exe
+          chmod +x build/linux/WhatLiesAhead.x86_64
+          (cd build/linux && zip -q -9 ../../dist/WhatLiesAhead-linux-x86_64.zip WhatLiesAhead.x86_64)
+          (cd build/windows && zip -q -9 ../../dist/WhatLiesAhead-windows-x86_64.zip WhatLiesAhead.exe)
+          ls -la dist
+
+      - name: Smoke test the Linux build (bot plays two waves, back to the menu)
+        run: |
+          rm -f /tmp/profile.json
+          timeout 900 build/linux/WhatLiesAhead.x86_64 --headless --audio-driver Dummy --fixed-fps 60 -- \
+            --autoplay=clear --level=prize_pier --start-wave=5 --god --then=menu \
+            --profile=/tmp/profile.json --max-seconds=600 2>&1 | tee smoke.log || true
+          grep -q "victory=true" smoke.log || { echo "::error::Smoke test failed"; exit 1; }
+          if grep -E "SCRIPT ERROR|Parse Error" smoke.log; then echo "::error::Script errors in the build"; exit 1; fi
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ github.event.inputs.tag }}"
+          if [ "${{ github.event_name }}" = "push" ]; then tag="${GITHUB_REF_NAME}"; fi
+          if [ -z "$tag" ]; then tag="build-${GITHUB_RUN_NUMBER}"; fi
+          flags=""
+          if [ "${{ github.event.inputs.prerelease }}" = "true" ]; then flags="--prerelease"; fi
+          notes="Download the zip for your platform, unzip it and run the executable.
+          Windows: SmartScreen may ask for confirmation (the build is unsigned).
+          Linux: you may need \`chmod +x WhatLiesAhead.x86_64\`.
+
+          Built from ${GITHUB_SHA::7} with Godot ${GODOT_VERSION}."
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/*.zip --clobber
+          else
+            gh release create "$tag" dist/*.zip --target "$GITHUB_SHA" --title "What Lies Ahead $tag" --notes "$notes" $flags
+          fi

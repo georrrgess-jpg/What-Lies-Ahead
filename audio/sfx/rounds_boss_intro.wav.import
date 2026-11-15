@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/rounds_boss_intro.wav-d7a17f5cd8ac17e6b455a88
 
 force/8_bit=false
 force/mono=false
-force/max_rate=true
-force/max_rate_hz=22050
+force/max_rate=false
+force/max_rate_hz=44100
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

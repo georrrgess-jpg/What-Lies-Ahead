@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/frost_yeti_grunt_1_b.wav-c66e7234f642f31af187
 
 force/8_bit=false
 force/mono=false
-force/max_rate=true
-force/max_rate_hz=22050
+force/max_rate=false
+force/max_rate_hz=44100
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

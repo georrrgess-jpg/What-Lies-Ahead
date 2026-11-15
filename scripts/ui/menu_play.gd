@@ -519,8 +519,9 @@ func _place_cards(at: float) -> void:
 	var half := WorldCard.SIZE.x * 0.5
 	var near := half + half * 0.82 + CARD_GAP
 	var far := half * 0.82 + half * 0.68 + CARD_GAP * 0.7
-	# Narrow screens pull the outer cards in so they stay on screen.
-	var fit := minf(1.0, (width * 0.5 + 24.0) / (near + far + half * 0.68))
+	# Narrow screens pull the outer cards in so they stay on screen (with
+	# room for their tilt).
+	var fit := minf(1.0, (width * 0.5 - 40.0) / (near + far + half * 0.68))
 	for card in _cards:
 		var d := card.index - at
 		var ad := absf(d)

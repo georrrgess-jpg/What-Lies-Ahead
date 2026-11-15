@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/candy_sky.png-856d0e26d2cdeb4cfe207a67d17cd65
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0

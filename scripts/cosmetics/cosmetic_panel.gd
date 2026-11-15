@@ -241,12 +241,15 @@ func pulse_action() -> void:
 		UiFx.pulse(b, 1.12)
 
 
+## "WEAPON SKIN  ·  ION CARBINE ONLY  ·  MASTERY REWARD": what it is, what it
+## fits and where it comes from.
 func _category_text(it: CosmeticItem) -> String:
-	var text := LockerCatalog.category_label(it).to_upper()
-	if not it.is_weapon_slot():
-		return text
-	var w := GameData.weapon(it.weapon_id)
-	return "%s  ·  %s" % [text, (w.display_name.to_upper() + " ONLY") if w else "FITS EVERY WEAPON"]
+	var parts := [LockerCatalog.category_label(it).to_upper()]
+	if it.is_weapon_slot():
+		var w := GameData.weapon(it.weapon_id)
+		parts.append((w.display_name.to_upper() + " ONLY") if w else "FITS EVERY WEAPON")
+	parts.append(LockerFilters.source_text(it).to_upper())
+	return "  ·  ".join(parts)
 
 
 func _owned_text_for(it: CosmeticItem) -> String:
