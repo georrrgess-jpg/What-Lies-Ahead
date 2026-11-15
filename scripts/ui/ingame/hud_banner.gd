@@ -30,6 +30,11 @@ const TITLE_MIN_SIZE := 56
 const BAND_TOP := 46.0
 const BAND_HEIGHT := 122.0
 const SUB_TOP := 176.0
+## The subtitle stays in a centred column clear of the notices on the right;
+## a long one (an Endless district's blurb) wraps onto two smaller lines.
+const SUB_INSET := 520.0
+const SUB_SIZE := 38
+const SUB_SMALL_SIZE := 28
 
 static var _fade_texture: GradientTexture2D
 
@@ -56,8 +61,14 @@ func _init() -> void:
 		_lines.append(line)
 	_kicker = _line_label(34, 0.0, 44.0)
 	_title = _line_label(TITLE_SIZE, BAND_TOP, BAND_HEIGHT)
-	_sub = _line_label(38, SUB_TOP, 50.0)
+	_sub = _line_label(SUB_SIZE, SUB_TOP, 50.0)
 	_sub.add_theme_color_override("font_color", UiKit.CREAM)
+	_sub.offset_left = SUB_INSET
+	_sub.offset_right = -SUB_INSET
+	_sub.offset_bottom = SUB_TOP + 84.0
+	_sub.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_sub.max_lines_visible = 2
 
 
 func _strip(top: float, height: float) -> TextureRect:
@@ -139,6 +150,7 @@ func show_banner(title: String, sub := "", kicker := "", style: StringName = &"w
 	_kicker.text = kicker.to_upper()
 	_kicker.add_theme_color_override("font_color", accent)
 	_sub.text = sub.to_upper()
+	_sub.add_theme_font_size_override("font_size", _fit_sub(_sub.text))
 	for line in _lines:
 		line.self_modulate = accent
 	_play(hold, style == &"boss" or style == &"final")
@@ -155,6 +167,14 @@ func clear() -> void:
 
 
 ## Largest title size at which `text` fits the band.
+## SUB_SIZE when the subtitle fits on one line of its column, else the size
+## that wraps it onto two.
+func _fit_sub(text: String) -> int:
+	var room := maxf(400.0, size.x - SUB_INSET * 2.0)
+	var width := UiKit.display_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, SUB_SIZE).x
+	return SUB_SIZE if width <= room else SUB_SMALL_SIZE
+
+
 func _fit(text: String) -> int:
 	var room := maxf(400.0, size.x - 520.0)
 	var width := UiKit.display_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_SIZE).x
