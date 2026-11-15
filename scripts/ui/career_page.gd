@@ -282,6 +282,11 @@ func _fill_mastery() -> void:
 func _show_next_level() -> void:
 	if _next_card == null:
 		return
+	# The last chunk of the road is laid out a frame later; without the wait
+	# the scroll stops short of it and the top level's card stays hidden.
+	await get_tree().process_frame
+	if not is_instance_valid(_next_card):
+		return
 	var step := CareerCards.ROAD_CARD.x + 20.0
 	_road_scroll.scroll_horizontal = int(maxf(0.0, _next_card.position.x - step * ROAD_LEAD))
 

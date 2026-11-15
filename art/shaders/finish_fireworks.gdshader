@@ -11,7 +11,7 @@ uniform bool is_trim = false;
 uniform vec3 spark_a : source_color = vec3(1.0, 0.8, 0.3);
 uniform vec3 spark_b : source_color = vec3(1.0, 0.35, 0.7);
 uniform vec3 spark_c : source_color = vec3(0.35, 0.92, 1.0);
-uniform float tile = 0.16;
+uniform float tile = 0.17;
 uniform float rate = 0.45;
 
 varying vec3 lp;
@@ -27,11 +27,11 @@ float burst(vec2 f, float seed, float t) {
 	float rays = 14.0;
 	float a = atan(q.y, q.x) / 6.2831853 * rays + seed * 7.0;
 	float arc = abs(fract(a) - 0.5) * 6.2831853 / rays * d;
-	float spoke = smoothstep(0.016, 0.004, arc);
-	float head = smoothstep(0.03, 0.0, abs(d - r)) * spoke;
-	float trail = smoothstep(r, r * 0.4, d) * step(0.001, d) * spoke * 0.35;
+	float spoke = smoothstep(0.028, 0.008, arc);
+	float head = smoothstep(0.05, 0.0, abs(d - r)) * spoke;
+	float trail = smoothstep(r, r * 0.4, d) * step(0.001, d) * spoke * 0.55;
 	float flash = smoothstep(0.12, 0.0, d) * smoothstep(0.15, 0.0, t);
-	return (head + trail) * pow(1.0 - t, 1.6) + flash;
+	return (head + trail) * pow(1.0 - t, 0.8) + flash;
 }
 
 void vertex() {
@@ -56,7 +56,7 @@ void fragment() {
 	vec2 sg = p * 90.0;
 	float star = smoothstep(0.08, 0.0, length(fract(sg) - 0.5)) * step(0.93, fh21(floor(sg)));
 	star *= 0.5 + 0.5 * sin(TIME * 3.0 + fh21(floor(sg) + 3.1) * 40.0);
-	vec3 col = sky + vec3(star) * 0.6;
+	vec3 col = sky + vec3(star) * 0.9;
 	col = mix(col, spark, clamp(b, 0.0, 1.0));
 	vec3 glow = spark * b * 1.6;
 	if (is_trim) {
@@ -69,7 +69,7 @@ void fragment() {
 		ALBEDO = col;
 		METALLIC = 0.1;
 		ROUGHNESS = 0.3;
-		EMISSION = col * 0.15 + glow + vec3(star) * 0.8;
+		EMISSION = col * 0.35 + glow + vec3(star) * 0.8;
 	}
 	PRINT_LAYER
 }

@@ -12,12 +12,12 @@ amount = 48
 script = ExtResource("1")
 id = &"decal_hall_of_fame"
 display_name = "Hall of Fame"
-description = "The high score sticker, in gold, for a name that stays on the board."
+description = "A pink star from the boardwalk walk of fame, rimmed in gold."
 slot = &"weapon_decal"
 rarity = 2
 requirement = SubResource("req")
-colors = PackedColorArray(1.000, 0.780, 0.240, 1, 0.165, 0.063, 0.255, 1, 1.000, 0.960, 0.860, 1)
+colors = PackedColorArray(1.000, 0.420, 0.720, 1, 1.000, 0.780, 0.240, 1, 0.165, 0.063, 0.255, 1)
 params = {
-"emblem": "HiScore"
+"emblem": "Star"
 }
 sort_order = 4211

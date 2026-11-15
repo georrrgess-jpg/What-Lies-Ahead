@@ -2,17 +2,17 @@ shader_type spatial;
 // Weapon finish "Teacup Ride": a grid of turntables, each carrying three
 // pastel teacups that ride round its hub while every cup spins on its own
 // saucer, swirl-striped with a gold rim. Chasing bulbs ring each platter
-// over deep plum. On the trim the ride glows through smoked glass.
+// over a teal deck. On the trim the ride glows through smoked glass.
 #include "res://art/shaders/finish_common.gdshaderinc"
 
 uniform vec3 shell_color : source_color = vec3(1.0, 0.42, 0.72);
 uniform vec3 trim_color : source_color = vec3(0.12, 0.05, 0.16);
 uniform bool is_trim = false;
-uniform vec3 cup_b : source_color = vec3(0.42, 0.95, 0.82);
+uniform vec3 cup_b : source_color = vec3(0.74, 0.52, 1.0);
 uniform vec3 cup_c : source_color = vec3(1.0, 0.86, 0.36);
-uniform vec3 floor_color : source_color = vec3(0.2, 0.07, 0.24);
+uniform vec3 floor_color : source_color = vec3(0.16, 0.52, 0.6);
 uniform vec3 gold : source_color = vec3(1.0, 0.78, 0.3);
-uniform float tile = 0.11;
+uniform float tile = 0.2;
 uniform float ride_speed = 0.6;
 uniform float spin_speed = 2.4;
 
@@ -23,6 +23,7 @@ varying vec3 ln;
 vec4 cup(vec2 q, float spin, vec3 col) {
 	float d = length(q);
 	float body = smoothstep(0.155, 0.145, d);
+	float ink = smoothstep(0.175, 0.16, d);
 	float rim = smoothstep(0.02, 0.0, abs(d - 0.14)) * body;
 	float inner = smoothstep(0.1, 0.09, d);
 	// Swirl stripes winding into the cup, turning with it.
@@ -35,7 +36,8 @@ vec4 cup(vec2 q, float spin, vec3 col) {
 	vec2 h = vec2(cos(spin), sin(spin)) * 0.17;
 	float handle = smoothstep(0.035, 0.025, length(q - h));
 	c = mix(c, col, handle * (1.0 - body));
-	return vec4(c, max(body, handle));
+	c = mix(vec3(0.1, 0.04, 0.14), c, max(body, handle));
+	return vec4(c, max(ink, handle));
 }
 
 void vertex() {
@@ -86,7 +88,7 @@ void fragment() {
 		ALBEDO = col;
 		METALLIC = 0.12;
 		ROUGHNESS = mix(0.4, 0.16, covered);
-		EMISSION = col * (0.18 + 0.22 * covered) + glow + gold * fres * 0.12;
+		EMISSION = col * (0.2 + 0.35 * covered) + glow + gold * fres * 0.12;
 	}
 	PRINT_LAYER
 }
