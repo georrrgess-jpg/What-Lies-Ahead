@@ -151,6 +151,8 @@ fullscreen.
   glowing ring and a whistle; Sky Divers mark their landing with a ring and float down
   under a canopy (step out of the ring), and Sky Harbor's gale leans on you (the
   railings hold).
+- **Midnight Mall** also breaks in upstairs through Retro Records, its shutter torn open
+  from the service stairs, and upstairs zombies route round the shops.
 - **Finished maps.** Every map was audited for unfinished or illogical spots: Tidal
   Tunnels' passages behind the fish-tank pillars and the tank shells facing the halls are
   finished walls and the touch pool shows its sea life; Midnight Mall's back rooms (loading
@@ -175,6 +177,17 @@ charge, falling concrete) comes every 10th wave. Waves never end and scale up (e
 5th is a horde); pay to arm **fire and shock traps** in the districts, and a **supply
 crate** parachutes in every 5th break. The run ends when you fall; your best wave,
 score and districts are kept. Choose it with **ENDLESS MODE** on the Play page.
+
+Spend tickets at the **Upgrade Bench** (Ashfall Square and the Broadcast Tower) to take the
+weapon in hand to Mk I (+30% damage), Mk II (bigger magazine, faster reload) and Mk III
+(x1.7 damage, a violet glow) for the run, and grab the **power-ups** fallen zombies
+sometimes drop: Double Tickets, Max Ammo, Blast Wave and Rapid Fire. Spawns are fair:
+never in view or within 14 m, each wave pushes down two or three streets, and a surge is
+announced with where it comes from ("PRECINCT 9, BEHIND YOU"). After every Wrecker comes a
+breather wave. The city lives: ash storms come and go, lightning flickers behind the
+skyline, a police helicopter sweeps the streets, and sirens, radios, alarms, buzzing neon
+and dripping tunnels play where they are. Every district is a loop (Precinct 9 has a
+second gate), with 21 entrances in all.
 
 Rewards: eight **Ashfall City camos** (waves 5-25 and opening each district), the
 **Road Rager** (reach wave 10) and the **Mythic** finish **Last Light** (reach wave 30),
