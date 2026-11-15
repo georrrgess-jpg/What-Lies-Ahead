@@ -16,6 +16,13 @@ extends Control
 
 const WIDTH := 700.0
 const SLIDE := 60.0
+## Weapon names on the swap cards: the held one and its neighbours, at full
+## size and at the smallest a one-line name may shrink to (a longer name
+## takes two lines instead).
+const NAME_SIZE := 22
+const NAME_MIN_SIZE := 17
+const NEIGHBOUR_NAME_SIZE := 16
+const NEIGHBOUR_NAME_MIN_SIZE := 13
 
 var _board: KitPanel
 var _tickets: Label
@@ -105,7 +112,7 @@ func _build_swap(col: VBoxContainer) -> void:
 		picture.custom_minimum_size = Vector2(176, 84) if held else Vector2(136, 58)
 		picture.modulate = Color.WHITE if held else Color(0.75, 0.72, 0.88)
 		v.add_child(picture)
-		var name_label := UiKit.label("", 22 if held else 16, UiKit.CREAM if held else UiKit.MUTED, true)
+		var name_label := UiKit.label("", NAME_SIZE if held else NEIGHBOUR_NAME_SIZE, UiKit.CREAM if held else UiKit.MUTED, true)
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		name_label.clip_text = true
@@ -198,7 +205,9 @@ func set_swap(slot_name: String, weapons: Array[WeaponData], index: int, prev_ke
 		_swap_cards[i].visible = w != null
 		if w:
 			_swap_pictures[i].texture = WeaponThumbs.texture(w)
-			_swap_names[i].text = w.display_name.to_upper()
+			var held_card := i == 1
+			_fit_name(_swap_names[i], w.display_name.to_upper(), _swap_pictures[i].custom_minimum_size.x,
+				NAME_SIZE if held_card else NEIGHBOUR_NAME_SIZE, NAME_MIN_SIZE if held_card else NEIGHBOUR_NAME_MIN_SIZE)
 	for key in _swap_keys:
 		(key.get_parent() as Control).modulate.a = 1.0 if count > 1 else 0.35
 	if held == null:
@@ -209,6 +218,31 @@ func set_swap(slot_name: String, weapons: Array[WeaponData], index: int, prev_ke
 		_swap_note.text = "%s  ·  %d of %d  ·  1 / 2 picks the slot" % [held.category, index + 1, count]
 	if not first and is_visible_in_tree():
 		UiFx.pulse(_swap_cards[1], 1.06)
+
+
+## Puts a weapon's name on its card whole: on one line, shrunk down to
+## `min_size` if need be; a name still too long ("GUMBALL DRUM POPPER") takes
+## two lines, breaking only between words, at the biggest size that fits.
+static func _fit_name(label: Label, text: String, width: float, size: int, min_size: int) -> void:
+	var font := label.get_theme_font(&"font")
+	# A little slack for the outline, which draws outside the glyphs.
+	width -= 6.0
+	var font_size := size
+	while font_size > min_size and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > width:
+		font_size -= 1
+	var lines := 1
+	if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > width:
+		lines = 2
+		font_size = size
+		var words := text.split(" ", false)
+		while font_size > min_size and ItemCard._line_count(font, words, font_size, width) > 2:
+			font_size -= 1
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD if lines == 2 else TextServer.AUTOWRAP_OFF
+	# A clipped label asks for no height, which would hide a wrapped one.
+	label.clip_text = lines == 1
+	label.max_lines_visible = lines
+	label.add_theme_font_size_override(&"font_size", font_size)
+	label.text = text
 
 
 ## The footer: what the start key does and the seconds left in the break.
