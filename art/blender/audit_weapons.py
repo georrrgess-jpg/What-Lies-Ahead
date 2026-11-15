@@ -31,7 +31,7 @@ from weapon_kit import CHARM_STANDOFF, RAIL_FLAT  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 WEAPONS = ["pulse_pistol", "ion_carbine", "scatter_blaster", "comet_cannon", "arc_coil", "bumper_lobber", "cryo_beam", "rail_lancer",
            "sparkler", "ring_toss", "drum_popper", "whirligig", "riptide", "toxic_ripsaw",
-           "shutterbug", "balloon_darter", "teacup_twister", "dunk_tank"]
+           "shutterbug", "balloon_darter", "teacup_twister", "dunk_tank", "t_minus_six"]
 REQUIRED = ["Shell", "ArmL", "ArmR", "Decal", "IronSightRear", "IronSightFront",
             "Muzzle", "SightPoint", "SightMount", "EjectPoint", "VentPoint", "CharmPoint", "ElbowL", "ElbowR"]
 # The energy cell and its hologram copy (the Scatter Blaster loads two capsules instead).
@@ -66,6 +66,9 @@ JOINTS = {
     "teacup_twister": [("Drum", "Shell"), ("Cell", "Drum"), ("Cell", "Shell"), ("Saucer", "Shell"), ("Swirl", "Shell")]
                       + [(f"Cup{i}", p) for i in range(4) for p in ("Drum", "Shell", "Cell")],
     "dunk_tank": [("Cell", "Shell"), ("Water", "Cell"), ("Water", "Shell"), ("Pump", "Shell"), ("Needle", "Shell"), ("Target", "Shell")],
+    # Rockets slide into their tubes, the dish turns on its mast.
+    "t_minus_six": [("Dish", "Shell"), ("Bulb", "Dish"), ("Trigger", "Shell")]
+                   + [(f"{p}{i}", "Shell") for i in range(6) for p in ("Rocket", "Arm")] + [(f"Arm{i}", f"Rocket{i}") for i in range(6)],
 }
 
 

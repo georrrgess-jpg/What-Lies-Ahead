@@ -20,7 +20,10 @@ to the pop and gathers the pack into the cup (scripts/weapons/twister_vortex.gd)
 Tank's soak multiplies its own hits (scripts/weapons/soak.gd), the Road Rager's hubcap
 (scripts/weapons/hubcap_shot.gd) hits its target on the way out and back, is paced by its
 round trips (catches refill it, so it never reloads or runs dry) and slices through the
-whole pack, a pile-up hitting harder; the "amp" column is the
+whole pack, a pile-up hitting harder; the T-Minus Six dumb-fires from the hip (its rockets pop
+with a small splash, scripts/weapons/t_minus_rocket.gd), and its aimed swarm (one lock
+per LOCK_TIME, rockets seeking heads, less of the bonus on heavies) is printed below
+the tables; the "amp" column is the
 damage bonus a status lends every other weapon. Armour behaviours (helmets, shields, ice
 shells) are approximated as extra health. Numbers are for comparison
 between weapons, not exact in-game times.
@@ -71,6 +74,10 @@ def gd_consts(rel_path):
 VORTEX = gd_consts("scripts/weapons/twister_vortex.gd")
 SOAK = gd_consts("scripts/weapons/soak.gd")
 HUBCAP = gd_consts("scripts/weapons/hubcap_shot.gd")
+TMINUS = gd_consts("scripts/weapons/modes/t_minus_six_mode.gd")
+TMINUS.update(gd_consts("scripts/weapons/t_minus_rocket.gd"))
+# Share of a painted swarm's rockets that land on the head they seek.
+TMINUS_SEEK_HEAD = 0.85
 MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
 # Share of the pop a gathered zombie takes (they spin near the cup's centre).
 VORTEX_POP_SHARE = 0.8
@@ -156,6 +163,8 @@ def mode_kind(w):
 		return "flash"
 	if mode.endswith("balloon_darter_mode.gd"):
 		return "balloon"
+	if mode.endswith("t_minus_six_mode.gd"):
+		return "tminus"
 	return ""
 
 
@@ -338,6 +347,9 @@ def crowd_damage(w, d=8.0):
 		strikes = 6
 		pile = int(HUBCAP["PILEUP"])
 		return w["damage"] * (min(strikes, pile) + max(0, strikes - pile) * HUBCAP["PILEUP_BONUS"])
+	if mode_kind(w) == "tminus":
+		# A dumb rocket into one of the pack: its pop splashes the other three.
+		return dmg + 3 * TMINUS["SPLASH_DAMAGE"]
 	if mode_kind(w) == "balloon":
 		# One dart into one of the pack: its balloon pops and splashes the other three.
 		c = script_consts("balloon")
@@ -363,6 +375,19 @@ def ammo_damage(w, head):
 		return math.inf
 	dmg, _ = pull_damage(w, {"capsule_radius": 0.5, "body_scale": 1.0, "capsule_height": 1.9}, 8.0, head)
 	return dmg * (w["magazine_size"] + w["reserve_max"]) / w["burst_count"]
+
+
+def tminus_swarm(w, heavy=False):
+	"""T-Minus Six aimed: (single-target DPS of full paints, damage of one full
+	swarm spread over a pack of four standing close, seconds per volley)."""
+	n = int(min(TMINUS["MAX_LOCKS"], w["magazine_size"]))
+	bonus = (w["headshot_multiplier"] - 1.0) * (TMINUS["HEAVY_HEAD_SHARE"] if heavy else 1.0)
+	rocket = w["damage"] * (1.0 + TMINUS_SEEK_HEAD * bonus)
+	volley = n * TMINUS["LOCK_TIME"] + n * TMINUS["RIPPLE"] + 0.35
+	single = rocket * n / (volley + w["reload_time"])
+	# Each pop splashes about one and a half of the pack's other zombies.
+	crowd = n * (rocket + 1.5 * TMINUS["SPLASH_DAMAGE"])
+	return single, crowd, volley
 
 
 def main():
@@ -394,6 +419,13 @@ def main():
 		t20, _ = ttk(w, es["tourist_shambler"], 20.0, head)
 		print(f"| {w['display_name']} | {w.get('slot_class', 'primary')} | {sustained_dps(w, head):.0f} | {sustained_dps(w, head, 20.0):.0f} | "
 			f"{crowd_damage(w):.0f} | {ammo_damage(w, head):.0f} | {eff:.0f} m | {t20:.2f} | {amp(w) * 100:+.0f}% |")
+	for w in ws.values():
+		if mode_kind(w) == "tminus":
+			single, crowd, volley = tminus_swarm(w)
+			boss, _, _ = tminus_swarm(w, heavy=True)
+			n = int(min(TMINUS["MAX_LOCKS"], w["magazine_size"]))
+			print(f"\n{w['display_name']} aimed: a full paint of {n} in {volley:.2f} s, {int(TMINUS_SEEK_HEAD * 100)}% of the rockets "
+				f"on the head: {single:.0f} DPS on one light zombie, {boss:.0f} on a heavy or boss; one swarm over a pack of four {crowd:.0f}")
 
 
 if __name__ == "__main__":
