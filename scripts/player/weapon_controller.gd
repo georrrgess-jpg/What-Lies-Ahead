@@ -866,6 +866,31 @@ func return_round(data: WeaponData) -> void:
 		_emit_ammo()
 
 
+## A thrown round came home and was caught (the Road Rager's hubcap): it
+## goes back in the magazine, or into the reserve while a reload is running
+## or the magazine is full.
+func catch_round(data: WeaponData) -> void:
+	var state: Dictionary = _ammo.get(data.id, {})
+	if state.is_empty():
+		return
+	if int(state["mag"]) < data.magazine_size and not (_reloading and data == current):
+		state["mag"] = int(state["mag"]) + 1
+	else:
+		state["reserve"] = mini(data.reserve_max, int(state["reserve"]) + 1)
+	if data == current:
+		_emit_ammo()
+
+
+## Takes up to `seconds` off the reload of `data` in progress (a catch
+## mid-reload). Returns false when `data` is not being reloaded.
+func hurry_reload(data: WeaponData, seconds: float) -> bool:
+	if not _reloading or data != current:
+		return false
+	_reload_left = maxf(0.0, _reload_left - seconds)
+	player.view.retime_reload(_reload_left)
+	return true
+
+
 ## Hit-confirm feedback: reticle marker plus non-positional sounds, so
 ## far-away hits still register. The kill sound climbs with the combo.
 func _confirm(result: Array) -> void:
