@@ -131,7 +131,7 @@ func is_world_unlocked(world: WorldData) -> bool:
 
 ## A level is playable when it has a scene and its requirements are met.
 func is_level_unlocked(level_data: LevelData) -> bool:
-	if level_data.scene_path.is_empty() or level_data.wave_set == null:
+	if level_data.scene_path.is_empty() or (level_data.wave_set == null and not level_data.is_endless()):
 		return false
 	if level_data.world and not is_world_unlocked(level_data.world):
 		return false
@@ -143,7 +143,7 @@ func is_level_unlocked(level_data: LevelData) -> bool:
 
 
 func lock_reason(level_data: LevelData) -> String:
-	if level_data.scene_path.is_empty() or level_data.wave_set == null:
+	if level_data.scene_path.is_empty() or (level_data.wave_set == null and not level_data.is_endless()):
 		return "Coming soon"
 	if level_data.world and level_data.world.requirement and not level_data.world.requirement.is_met():
 		return level_data.world.requirement.describe()

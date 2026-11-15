@@ -99,7 +99,7 @@ func _header(result: Dictionary, victory: bool, level: LevelData, next: LevelDat
 	sign.flash.call_deferred()
 	var secs := int(result["seconds"])
 	var outcome := "You escaped %s through the portal in %d:%02d." % [level.display_name, secs / 60, secs % 60] if victory \
-		else "The zombies got you on wave %d of %d in %s." % [int(result["wave_reached"]), int(result["total_waves"]), level.display_name]
+		else _defeat_line(result, level)
 	if next:
 		outcome += "  Next up: World %d, %s." % [GameData.worlds().find(next.world) + 1, next.world.display_name]
 	var sub := UiKit.label(outcome, UiKit.SIZE_LABEL, UiKit.CREAM)
@@ -107,6 +107,14 @@ func _header(result: Dictionary, victory: bool, level: LevelData, next: LevelDat
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(sub)
 	return col
+
+
+## "The zombies got you on wave 4 of 7 in ..." (an endless run has no total).
+static func _defeat_line(result: Dictionary, level: LevelData) -> String:
+	var total := int(result["total_waves"])
+	if total <= 0:
+		return "The city got you on wave %d of Endless in %s." % [int(result["wave_reached"]), level.display_name]
+	return "The zombies got you on wave %d of %d in %s." % [int(result["wave_reached"]), total, level.display_name]
 
 
 # --- run summary --------------------------------------------------------------------
@@ -123,7 +131,11 @@ func _summary(result: Dictionary, victory: bool) -> Control:
 	var stats := HBoxContainer.new()
 	stats.add_theme_constant_override("separation", UiKit.GAP_S)
 	col.add_child(stats)
-	stats.add_child(_stat("WAVES", "%d / %d" % [mini(int(result["waves_cleared"]), int(result["total_waves"])), int(result["total_waves"])], UiKit.CYAN))
+	var total := int(result["total_waves"])
+	if total > 0:
+		stats.add_child(_stat("WAVES", "%d / %d" % [mini(int(result["waves_cleared"]), total), total], UiKit.CYAN))
+	else:
+		stats.add_child(_stat("WAVE", str(int(result["wave_reached"])), UiKit.CYAN))
 	stats.add_child(_stat("KILLS", Wallet.format(int(result["kills"])), UiKit.GREEN))
 	stats.add_child(_stat("HEADSHOTS", Wallet.format(int(result.get("headshots", 0))), UiKit.PINK_LIGHT))
 	stats.add_child(_stat("BEST COMBO", "x%d" % int(result.get("best_combo", 0)), UiKit.AMBER))

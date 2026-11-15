@@ -22,6 +22,8 @@ const CHASE := 3
 
 var world: WorldData
 var index := 0
+## The line over the name ("" = "WORLD n"; the Endless card says ENDLESS).
+var caption := ""
 var selected := false:
 	set(v):
 		if selected != v:
@@ -96,7 +98,7 @@ func _ready() -> void:
 	v.add_theme_constant_override("separation", 0)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(v)
-	v.add_child(UiKit.label("WORLD %d" % (index + 1), 22, world.secondary_color, true))
+	v.add_child(UiKit.label(caption if caption != "" else "WORLD %d" % (index + 1), 22, world.secondary_color, true))
 	_title = UiKit.arcade_label(world.display_name.to_upper(), 40, Color.WHITE)
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_title.add_theme_constant_override("line_spacing", -10)
