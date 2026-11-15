@@ -147,6 +147,7 @@ func _initialize() -> void:
 	_build_market_glow()
 	_build_metro_life()
 	_build_rooftops()
+	_build_ambience()
 	_build_instanced()
 	_build_pools()
 	_finish_ground()
@@ -660,6 +661,7 @@ func _neon_sign(parent: Node3D, model: String, sign_name: String, pos: Vector3, 
 	if with_light:
 		var l := _omni(fx, sign_name + "Light", pos + forward * 1.4 + Vector3(0, 2.6, 0), color, 1.4, 7.0)
 		l.add_to_group("city_neon_flicker", true)
+		_ambient(sign_name + "Buzz", pos + forward * 0.4 + Vector3(0, 1.0, 0), &"city_buzz_loop", 8.0)
 	else:
 		_reflectors.append([pos + forward * 0.4 + Vector3(0, 1.0, 0), color, 0.45, 0.65])
 
@@ -1549,6 +1551,144 @@ func _build_ashfall() -> void:
 
 
 # ---------------------------------------------------------------------------
+# Ambience: positional sound emitters, the police helicopter, the Broadcast
+# Tower's aircraft-warning lights (the environment script runs them all)
+# ---------------------------------------------------------------------------
+
+## A positional ambient loop (Marker3D in group "city_ambient"): the
+## environment script plays the nearest few, `sound` heard out to `reach`
+## metres, `db` louder or quieter than its mix.
+func _ambient(emitter_name: String, pos: Vector3, sound: StringName, reach: float, db := 0.0) -> void:
+	var holder := fx.get_node_or_null("Ambience") as Node3D
+	if holder == null:
+		holder = Node3D.new()
+		holder.name = "Ambience"
+		fx.add_child(holder)
+	var m := Marker3D.new()
+	m.name = emitter_name
+	m.position = pos
+	m.set_meta("sound", sound)
+	m.set_meta("reach", reach)
+	m.set_meta("db", db)
+	m.add_to_group("city_ambient", true)
+	holder.add_child(m)
+
+
+func _build_ambience() -> void:
+	# Sirens wailing over the Precinct and beyond the tower, police radios
+	# left on in the vans, a shop alarm in the Market, drips in the Metro.
+	_ambient("SirenPrecinct", Vector3(-84.0, 18.0, -12.0), &"city_siren_loop", 75.0, -3.0)
+	_ambient("SirenTower", Vector3(104.0, 26.0, -84.0), &"city_siren_loop", 70.0, -5.0)
+	for v in [Vector3(-46.0, 1.6, -12.0), Vector3(-61.0, 1.6, 14.0), Vector3(8.5, 1.6, 16.4), Vector3(62.0, 1.6, -27.5)]:
+		_ambient("Radio%d" % int(v.x), v, &"city_radio_loop", 13.0)
+	_ambient("AlarmMarket", Vector3(66.0, 3.2, 8.3), &"city_alarm_loop", 26.0)
+	_ambient("AlarmSquare", Vector3(-21.8, 3.0, -12.0), &"city_alarm_loop", 18.0, -4.0)
+	for x in [-14.0, 6.0, 30.0]:
+		_ambient("Drip%d" % int(x), Vector3(x, METRO_Y + 2.0, -34.0), &"city_drip_loop", 16.0)
+	_ambient("TubeBuzz", Vector3(9.0, HALL_CEILING - 0.8, -34.5), &"city_buzz_loop", 9.0, 2.0)
+	_build_helicopter()
+	_build_warning_lights()
+
+
+## The police helicopter circling the city (group "city_helicopter"; the
+## environment script flies it round meta "centre" at "radius", "speed"
+## rad/s): a dark body, a rotor, blinking navigation lights and a searchlight
+## sweeping the streets (hidden underground, like the skyline).
+func _build_helicopter() -> void:
+	var heli := Node3D.new()
+	heli.name = "Helicopter"
+	var centre := Vector3(14.0, 44.0, -26.0)
+	heli.position = centre + Vector3(80.0, 0, 0)
+	heli.set_meta("centre", centre)
+	heli.set_meta("radius", 80.0)
+	heli.set_meta("speed", 0.055)
+	heli.add_to_group("city_helicopter", true)
+	heli.add_to_group("city_surface", true)
+	fx.add_child(heli)
+	var body := _mat("heli_body", Color(0.16, 0.18, 0.24), 0.45)
+	var stripe := _mat("heli_stripe", Color(0.9, 0.9, 0.95), 0.4)
+	var glass := _mat("heli_glass", Color(0.5, 0.75, 1.0), 0.2, Color(0.4, 0.65, 1.0), 0.8)
+	var parts := [
+		[_box_mesh(Vector3(2.0, 1.8, 4.4), body), Transform3D(Basis(), Vector3(0, 0, 0))],
+		[_box_mesh(Vector3(1.7, 1.1, 1.4), glass), Transform3D(Basis(), Vector3(0, 0.15, -2.4))],
+		[_box_mesh(Vector3(2.05, 0.3, 4.0), stripe), Transform3D(Basis(), Vector3(0, -0.2, 0.1))],
+		[_box_mesh(Vector3(0.45, 0.5, 4.6), body), Transform3D(Basis(), Vector3(0, 0.4, 4.4))],
+		[_box_mesh(Vector3(0.15, 1.5, 0.9), body), Transform3D(Basis(), Vector3(0, 1.0, 6.5))],
+		[_box_mesh(Vector3(0.12, 0.12, 3.6), body), Transform3D(Basis(), Vector3(-0.9, -1.2, 0))],
+		[_box_mesh(Vector3(0.12, 0.12, 3.6), body), Transform3D(Basis(), Vector3(0.9, -1.2, 0))],
+	]
+	var hull := MeshInstance3D.new()
+	hull.name = "Hull"
+	hull.mesh = Batch.compound(parts)
+	hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	heli.add_child(hull)
+	var rotor := MeshInstance3D.new()
+	rotor.name = "Rotor"
+	var blade := _box_mesh(Vector3(10.0, 0.06, 0.32), _mat("heli_blade", Color(0.1, 0.1, 0.12), 0.5))
+	rotor.mesh = Batch.compound([[blade, Transform3D()], [blade, Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3.ZERO)]])
+	rotor.position = Vector3(0, 1.1, 0)
+	rotor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	heli.add_child(rotor)
+	# Navigation lights: red port, green starboard, a white strobe on the tail.
+	var lights := [[Vector3(-1.1, -0.3, 0), Color(1.0, 0.1, 0.1)], [Vector3(1.1, -0.3, 0), Color(0.1, 1.0, 0.3)],
+		[Vector3(0, 1.8, 6.6), Color(1.0, 1.0, 1.0)]]
+	var k := 0
+	for l in lights:
+		var c: Color = l[1]
+		var lamp := _visual_box(heli, "NavLight%d" % k, Vector3(0.3, 0.3, 0.3), l[0], _mat("nav_" + c.to_html(false), c, 0.3, c, 8.0))
+		lamp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if k == 2:
+			lamp.add_to_group("city_beacon", true)
+		k += 1
+	# The searchlight: a cone from under the nose, down and ahead.
+	var pivot := Node3D.new()
+	pivot.name = "Beam"
+	pivot.position = Vector3(0, -1.0, -2.0)
+	heli.add_child(pivot)
+	var aim := Node3D.new()
+	aim.name = "Aim"
+	aim.rotation = Vector3(deg_to_rad(155.0), 0, 0)
+	pivot.add_child(aim)
+	var cone := CylinderMesh.new()
+	cone.top_radius = 5.5
+	cone.bottom_radius = 0.35
+	cone.height = 56.0
+	cone.radial_segments = 16
+	cone.rings = 1
+	cone.cap_top = false
+	cone.cap_bottom = false
+	var m := ShaderMaterial.new()
+	m.shader = load(SHADERS + "city_beam.gdshader")
+	m.set_shader_parameter("strength", 0.5)
+	m.set_shader_parameter("beam_color", Color(0.85, 0.92, 1.0))
+	cone.material = m
+	var beam := MeshInstance3D.new()
+	beam.name = "Cone"
+	beam.mesh = cone
+	beam.position.y = 28.0
+	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	aim.add_child(beam)
+
+
+## Aircraft-warning lamps on the roof corners round the Broadcast Tower and
+## on the skyscraper (one MultiMesh, blinking with the mast's beacon).
+func _build_warning_lights() -> void:
+	var xforms: Array[Transform3D] = []
+	for roof in _roofs:
+		var r: Rect2 = roof[0]
+		var h: float = roof[1]
+		if r.get_center().x < 34.0 or r.get_center().y > -8.0 or h < 12.0:
+			continue
+		for corner in [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]:
+			xforms.append(Transform3D(Basis(), Vector3(corner.x, h + 1.0, corner.y)))
+	var red := Color(1.0, 0.08, 0.05)
+	var lamps := _multimesh("WarningLights", _box_mesh(Vector3(0.45, 0.45, 0.45), _mat("warning_lamp", red, 0.3, red, 12.0)), xforms)
+	lamps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	lamps.add_to_group("city_beacon", true)
+	fx.add_child(lamps)
+
+
+# ---------------------------------------------------------------------------
 # Markers: the player's spawn, the zombies' entrances
 # ---------------------------------------------------------------------------
 
@@ -1792,6 +1932,7 @@ func _sparks(parent: Node3D, sparks_name: String, pos: Vector3, interval: float)
 	parent.add_child(s)
 	s.position = pos
 	s.set("interval", interval)
+	_ambient(sparks_name + "Hum", pos, &"city_sparks_loop", 12.0, -3.0)
 
 
 # ---------------------------------------------------------------------------
@@ -2182,7 +2323,7 @@ func _build_streets() -> void:
 	_litter(Rect2(-32.0, -3.5, 12.0, 7.0), 0.0, 20, 10)
 	# Bins and bags against the facades.
 	_bins(Vector3(-21.2, 0, -12.0), Vector3(-21.2, 0, -6.0), 2)
-	_bins(Vector3(21.2, 0, 13.0), Vector3(21.2, 0, 19.0), 2)
+	_bins(Vector3(21.2, 0, 5.5), Vector3(21.2, 0, 9.5), 2)
 	_bins(Vector3(-36.0, 0, -23.2), Vector3(-30.0, 0, -23.2), 2)
 	_bins(Vector3(-73.0, 0, -14.0), Vector3(-73.0, 0, -8.0), 2)
 	_bins(Vector3(36.0, 0, 7.2), Vector3(44.0, 0, 7.2), 2)
@@ -2202,8 +2343,8 @@ func _build_streets() -> void:
 	# A snapped line hanging off a facade, spitting sparks.
 	_cable(Vector3(22.0, 8.0, -14.0), Vector3(20.5, 2.6, -14.6), 0.4, 8)
 	_sparks(fx, "SnappedSquare", Vector3(20.5, 2.6, -14.6), 1.8)
-	_cable(Vector3(-34.0, 9.0, 18.0), Vector3(-35.6, 3.2, 17.0), 0.3, 8)
-	_sparks(fx, "SnappedPrecinct", Vector3(-35.6, 3.2, 17.0), 2.2)
+	_cable(Vector3(-34.0, 9.0, 21.0), Vector3(-35.4, 3.2, 20.4), 0.3, 8)
+	_sparks(fx, "SnappedPrecinct", Vector3(-35.4, 3.2, 20.4), 2.2)
 	_cable(Vector3(94.0, 9.0, -55.0), Vector3(92.0, 2.8, -55.5), 0.4, 8)
 	_sparks(fx, "SnappedTower", Vector3(92.0, 2.8, -55.5), 2.0)
 

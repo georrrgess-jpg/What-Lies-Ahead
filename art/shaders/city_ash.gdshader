@@ -5,9 +5,11 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabl
 // scripts/props/city_ashfall.gd). Each instance origin is a random seed in the
 // volume; the flake falls slowly, flutters, drifts with the wind and wraps
 // around a box that follows the camera. A few flakes are still-glowing embers.
+// The script integrates the wind and the fall (`drift`, `fall`: metres so
+// far), so a gust or the ash storm changes their speed, never their place.
 uniform vec3 box_size = vec3(44.0, 24.0, 44.0);
-uniform float fall_speed = 0.55;
-uniform vec2 wind = vec2(0.8, 0.3);
+uniform float fall = 0.0;
+uniform vec2 drift = vec2(0.0);
 uniform float flake_size = 0.04;
 uniform vec4 ash_color : source_color = vec4(0.44, 0.41, 0.4, 0.7);
 uniform vec3 ember_color : source_color = vec3(1.0, 0.45, 0.12);
@@ -23,8 +25,8 @@ void vertex() {
 	float r2 = fract(r * 17.31 + 0.13);
 	float t = TIME;
 	vec3 p = seed;
-	p.y -= t * fall_speed * (0.6 + 0.8 * r);
-	p.xz += wind * t * (0.7 + 0.6 * r);
+	p.y -= fall * (0.6 + 0.8 * r);
+	p.xz += drift * (0.7 + 0.6 * r);
 	p.x += sin(t * (0.5 + r) + seed.z) * 0.7;
 	p.z += cos(t * (0.4 + r * 0.6) + seed.x) * 0.7;
 	vec3 base = CAMERA_POSITION_WORLD - box_size * 0.5;
