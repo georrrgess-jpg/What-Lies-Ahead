@@ -34,6 +34,13 @@ const MODELS := "res://art/models/"
 const TEXTURES := "res://art/textures/"
 const SHADERS := "res://art/shaders/"
 const PROPS := "res://scenes/props/"
+const Batch := preload("res://scripts/props/city_map_batch.gd")
+## Kit models placed as their own scenes (scripts animate their parts).
+const KIT_SCENES := ["city_gate_barricade_door", "city_gate_fence_door", "city_gate_shutter_door"]
+## Small kit props: no shadows, culled beyond SMALL_RANGE.
+const KIT_SMALL := ["city_hydrant", "city_debris", "city_neon_sign", "city_streetlight", "city_traffic_light",
+	"city_police_barrier", "city_newsstand", "city_bus_stop", "city_market_stall"]
+const SMALL_RANGE := 75.0
 
 const SQ := 22.0                       # Ashfall Square half size
 const STATION := Vector3(0.0, 0.0, 8.5)
@@ -54,6 +61,8 @@ const TOWER := Rect2(46.0, -72.0, 48.0, 50.0)
 const TOWER_ALLEY := Rect2(62.0, -22.0, 8.0, 14.0)
 const SUN_DIRECTION := Vector3(0.75, 0.16, 0.62)     # toward the setting sun (low, SE)
 const WALL_H := 14.0
+const UNDERGROUND_Y := -1.6
+const GROUND_TILE := 16.0
 
 ## Every district's gates: district, position, yaw (degrees; local X spans the
 ## opening), opening width, style, kit model prefix, the floor heights on the
@@ -74,10 +83,26 @@ var _materials := {}
 var _boxes := {}
 var _late_scripts: Array = []
 var _light_count := 0
-var _mesh_cache := {}
+var _empty_cache := {}
+## Kit nodes placed by _kit -> their model name.
+var _kit_models := {}
 var _aabb_cache := {}
 var _rng := RandomNumberGenerator.new()
 var _spawn_points: Array[Vector3] = []
+## Ground tiles: [MeshInstance3D, base ShaderMaterial]; their lights and
+## scorches are filled in at the end (nearest first).
+var _tiles: Array = []
+var _ground_materials := {}
+## Lights mirrored in the puddles: [position, colour, streak width, intensity].
+var _reflectors: Array = []
+## Scorched patches: (x, radius, z).
+var _scorches: Array[Vector3] = []
+## Light pools: colour -> transforms, split by kind (see _pool).
+var _pools := {}
+## Block roofs: [Rect2, height] (for the rooftop clutter).
+var _roofs: Array = []
+## Merged dressing meshes by name.
+var _meshes := {}
 
 
 func _initialize() -> void:
@@ -113,11 +138,20 @@ func _initialize() -> void:
 	_build_markers()
 	_build_areas()
 	_build_features()
+	_build_streets()
+	_build_story()
+	_build_market_glow()
+	_build_metro_life()
+	_build_rooftops()
+	_build_instanced()
+	_build_pools()
+	_finish_ground()
 
 	get_root().add_child(level)
 	await process_frame
 	_bake_navigation(nav)
 	get_root().remove_child(level)
+	_compound_static()
 
 	for entry in _late_scripts:
 		var node: Node = entry[0]
@@ -205,8 +239,8 @@ func _build_ground() -> void:
 	var ground := Node3D.new()
 	ground.name = "Ground"
 	geo.add_child(ground)
-	var paving := _surface("paving", ["city_sidewalk", "dune_concrete"], Color(0.95, 0.9, 0.9), 0.25, 0.85)
-	var asphalt := _surface("asphalt", ["city_asphalt", "neon_roof"], Color(1.0, 1.0, 1.0), 0.12, 0.8)
+	var paving := _ground("paving", "city_sidewalk", Color(0.95, 0.9, 0.9), 4.0, 0.22)
+	var asphalt := _ground("asphalt", "city_asphalt", Color(1.0, 1.0, 1.0), 8.0, 0.3)
 	# Square: a slab round the subway stairs' opening (x -3..3, z -22..-16).
 	_slab(ground, "SquareSlab", Rect2(-SQ, STAIR_TOP_Z, SQ * 2.0, SQ - STAIR_TOP_Z), asphalt)
 	_slab(ground, "SquareSlabNW", Rect2(-SQ, -SQ, SQ - STAIR_HALF, SQ + STAIR_TOP_Z), asphalt)
@@ -214,7 +248,7 @@ func _build_ground() -> void:
 	_slab(ground, "PassageW", Rect2(-34.0, -4.0, 12.0, 8.0), asphalt)
 	_slab(ground, "PassageE", Rect2(SQ, -4.0, 12.0, 8.0), paving)
 	_slab(ground, "PrecinctSlab", PRECINCT, asphalt)
-	_slab(ground, "MarketSlab", MARKET, paving)
+	_slab(ground, "MarketSlab", MARKET, _ground("market_paving", "city_sidewalk", Color(0.86, 0.82, 0.95), 4.0, 0.55))
 	_slab(ground, "SouthStreet", Rect2(-5.0, SQ, 10.0, 22.0), asphalt)
 	_slab(ground, "TowerAlleySlab", TOWER_ALLEY, asphalt)
 	# Tower plaza round the stairwell up from the metro (x 46..54, z -35..-29).
@@ -222,8 +256,8 @@ func _build_ground() -> void:
 	_slab(ground, "TowerSlabS", Rect2(TOWER.position.x, EXIT_Z.y, TOWER.size.x, TOWER.end.y - EXIT_Z.y), paving)
 	_slab(ground, "TowerSlabMid", Rect2(EXIT_TOP_X, EXIT_Z.x, TOWER.end.x - EXIT_TOP_X, EXIT_Z.y - EXIT_Z.x), paving)
 	# The plaza paving of the square inside the ring road.
-	var plaza := _surface("plaza", ["city_sidewalk", "frost_stone"], Color(0.85, 0.72, 0.66), 0.4, 0.85)
-	_visual_box(dressing, "SquarePaving", Vector3(26.0, 0.06, 26.0), Vector3(0, 0.03, -1.0), plaza)
+	var plaza := _ground("plaza", "city_sidewalk", Color(0.85, 0.72, 0.66), 2.5, 0.25)
+	_ground_tiles("SquarePaving", Rect2(-13.0, -14.0, 26.0, 26.0), 0.06, plaza)
 	_kerb_ring(dressing, "SquareKerb", Rect2(-13.0, -14.0, 26.0, 26.0))
 	_kerb_ring(dressing, "SidewalkKerb", Rect2(-SQ + 2.5, -SQ + 2.5, SQ * 2.0 - 5.0, SQ * 2.0 - 5.0))
 	_road_lines(dressing)
@@ -233,6 +267,9 @@ func _build_ground() -> void:
 func _slab(parent: Node3D, slab_name: String, rect: Rect2, material: Material, top := 0.0) -> StaticBody3D:
 	var size := Vector3(rect.size.x, 1.0, rect.size.y)
 	var pos := Vector3(rect.position.x + rect.size.x * 0.5, top - 0.5, rect.position.y + rect.size.y * 0.5)
+	if _ground_materials.has(material):
+		_ground_tiles(slab_name, rect, top, material)
+		return _collider(parent, slab_name, size, pos)
 	return _box(parent, slab_name, size, pos, material)
 
 
@@ -337,14 +374,26 @@ func _wreck(parent: Node3D, model: String, wreck_name: String, pos: Vector3, yaw
 		var spots := _empties(node, "Fire")
 		if spots.is_empty():
 			spots.append(pos + Vector3(0, top * 0.75, 0))
-		# A main blaze and a smaller tongue beside it per spot, so a wreck
-		# burns like a fire and not a marker.
-		var side := Basis(Vector3.UP, deg_to_rad(yaw)) * Vector3(0.6, 0, 0.35)
-		for k in spots.size():
-			var big := (1.6 if k == 0 else 1.15) + size.x * 0.04
-			_fire_at(fx, "%sFire%d" % [wreck_name, k], spots[k], big, k == 0)
-			_fire_at(fx, "%sFire%dSmall" % [wreck_name, k], spots[k] + side * (1.0 if k % 2 == 0 else -1.0) - Vector3(0, 0.15, 0), big * 0.55, false)
+		_burning_wreck(wreck_name, pos, yaw, size, spots)
 	return node
+
+
+## A wreck ablaze: a big blaze per fire spot with tongues licking along the
+## body, sparks, a column of black smoke, a scorched patch and the fire's
+## glow on the ground round it.
+func _burning_wreck(wreck_name: String, pos: Vector3, yaw: float, size: Vector3, spots: Array[Vector3]) -> void:
+	var basis := Basis(Vector3.UP, deg_to_rad(yaw))
+	var along := basis * Vector3(size.x * 0.3, 0, 0)
+	var across := basis * Vector3(0, 0, size.z * 0.28)
+	for k in spots.size():
+		var big := (2.3 if k == 0 else 1.7) + size.x * 0.05
+		_fire_at(fx, "%sFire%d" % [wreck_name, k], spots[k], big, k == 0, 3.4)
+		var flip := 1.0 if k % 2 == 0 else -1.0
+		_fire_at(fx, "%sFire%dTongue" % [wreck_name, k], spots[k] + along * flip + across - Vector3(0, 0.25, 0), big * 0.6, false, 0.0, true)
+		_fire_at(fx, "%sFire%dLick" % [wreck_name, k], spots[k] - along * flip * 0.6 - across - Vector3(0, 0.35, 0), big * 0.45, false, 0.0, true)
+	_sparks(fx, wreck_name + "Sparks", spots[0] + Vector3(0, 0.4, 0), 3.0)
+	_smoke(fx, wreck_name + "Smoke", spots[0] + Vector3(0, 0.6, 0), 0.2 + size.x * 0.012)
+	_scorches.append(Vector3(pos.x, size.x * 0.75 + 1.0, pos.z))
 
 
 func _empty_or(node: Node3D, empty_name: String, fallback: Vector3) -> Vector3:
@@ -355,10 +404,27 @@ func _empty_or(node: Node3D, empty_name: String, fallback: Vector3) -> Vector3:
 ## World positions of a kit model's empties whose names start with `prefix`.
 func _empties(node: Node3D, prefix: String) -> Array[Vector3]:
 	var out: Array[Vector3] = []
-	for child in node.get_children():
-		if child is Node3D and not child is MeshInstance3D and String(child.name).begins_with(prefix):
-			out.append(node.transform * (child as Node3D).position)
+	var spots: Dictionary = _model_empties(_kit_models.get(node, ""))
+	for empty_name in spots:
+		if String(empty_name).begins_with(prefix):
+			out.append(node.transform * (spots[empty_name] as Vector3))
 	return out
+
+
+## A kit model's empties (name -> position in the model), cached.
+func _model_empties(model: String) -> Dictionary:
+	if _empty_cache.has(model):
+		return _empty_cache[model]
+	var spots := {}
+	var path := MODELS + model + ".glb"
+	if model != "" and ResourceLoader.exists(path):
+		var source: Node3D = (load(path) as PackedScene).instantiate()
+		for child in source.get_children():
+			if child is Node3D and not child is MeshInstance3D:
+				spots[child.name] = (child as Node3D).position
+		source.free()
+	_empty_cache[model] = spots
+	return spots
 
 
 func _streetlight(parent: Node3D, lamp_name: String, pos: Vector3, yaw: float, lit: bool) -> void:
@@ -532,16 +598,22 @@ func _market_canopy() -> void:
 		_visual_box(dressing, "Banner%dWireS" % int(x), Vector3(0.04, 0.04, MARKET.size.y * 0.5 - 4.5), Vector3(x, 7.9, MARKET.end.y - (MARKET.size.y * 0.5 - 4.5) * 0.5), _mat("cable", Color(0.05, 0.05, 0.05), 0.8))
 
 
-## A neon sign from the kit, or a glowing panel; with a coloured light below it.
-func _neon_sign(parent: Node3D, model: String, sign_name: String, pos: Vector3, yaw: float, color: Color) -> void:
+## A neon sign from the kit, or a glowing panel; its glow on the wall and the
+## paving, its smear in the puddles, and maybe a coloured light below it.
+func _neon_sign(parent: Node3D, model: String, sign_name: String, pos: Vector3, yaw: float, color: Color, with_light := true) -> void:
 	var node := _kit(parent, model, sign_name, pos, yaw, Vector3(3.2, 1.2, 0.2))
 	if not ResourceLoader.exists(MODELS + model + ".glb"):
 		var panel := node.get_node("Placeholder") as MeshInstance3D
 		panel.mesh = _box_mesh(Vector3(3.2, 1.2, 0.2), _mat("neon_" + color.to_html(false), color, 0.4, color, 3.0))
 	node.add_to_group("city_neon_flicker", true)
 	var forward := Basis(Vector3.UP, deg_to_rad(yaw)) * Vector3(0, 0, 1)
-	var l := _omni(fx, sign_name + "Light", pos + forward * 1.4 + Vector3(0, 2.6, 0), color, 1.4, 7.0)
-	l.add_to_group("city_neon_flicker", true)
+	_wall_glow(pos + Vector3(0, 1.0, 0), forward, 2.8, color, 0.35)
+	_pool(Vector3(pos.x, 0, pos.z) + forward * 2.6, 3.4, color, false, 0.4)
+	if with_light:
+		var l := _omni(fx, sign_name + "Light", pos + forward * 1.4 + Vector3(0, 2.6, 0), color, 1.4, 7.0)
+		l.add_to_group("city_neon_flicker", true)
+	else:
+		_reflectors.append([pos + forward * 0.4 + Vector3(0, 1.0, 0), color, 0.6, 0.8])
 
 
 # ---------------------------------------------------------------------------
@@ -552,7 +624,7 @@ func _build_metro() -> void:
 	var m := Node3D.new()
 	m.name = "Metro"
 	geo.add_child(m)
-	var tiles := _surface("metro_tiles", ["sky_tiles"], Color(0.62, 0.7, 0.66), 0.5, 0.6)
+	var tiles := _ground("metro_tiles", "sky_tiles", Color(0.72, 0.78, 0.74), 2.0, 0.5)
 	var wall := _surface("metro_wall", ["city_concrete", "frost_stone"], Color(0.62, 0.74, 0.7), 0.3, 0.8)
 	var dark := _mat("metro_dark", Color(0.12, 0.12, 0.14), 0.95)
 	var x0 := HALL.position.x
@@ -606,7 +678,7 @@ func _build_train(parent: Node3D, centre: Vector3, length: float) -> void:
 	var body := _mat("train_body", Color(0.82, 0.83, 0.8), 0.45)
 	var roof := _mat("train_roof", Color(0.42, 0.44, 0.46), 0.6)
 	var stripe := _mat("train_stripe", Color(0.2, 0.75, 0.42), 0.5, Color(0.3, 1.0, 0.55), 0.35)
-	var lit := _mat("train_window_lit", Color(0.95, 0.85, 0.6), 0.3, Color(1.0, 0.78, 0.45), 0.7)
+	var lit := _mat("train_window_lit", Color(0.95, 0.85, 0.6), 0.3, Color(1.0, 0.78, 0.45), 1.8)
 	var dark := _mat("train_window_dark", Color(0.06, 0.07, 0.08), 0.2)
 	var door := _mat("train_door", Color(0.62, 0.64, 0.62), 0.5)
 	var under := _mat("train_under", Color(0.08, 0.08, 0.09), 0.9)
@@ -665,7 +737,7 @@ func _metro_dressing(parent: Node3D) -> void:
 		k += 1
 	var bench := _mat("bench", Color(0.5, 0.3, 0.18), 0.6)
 	for x in [-9.0, 1.0, 23.0]:
-		_solid_kit(parent, "city_bench", "Bench%d" % int(x), Vector3(x, METRO_Y, -28.7), 180.0, Vector3(2.4, 0.5, 0.6))
+		_bench(parent, "Bench%d" % int(x), Vector3(x, METRO_Y, -28.7), 180.0)
 	# Line signs over the platform edge, hanging from the ceiling.
 	for x in [-6.0, 22.0]:
 		_visual_box(dressing, "LineSign%d" % int(x), Vector3(3.4, 0.7, 0.12), Vector3(x, HALL_CEILING - 1.2, -37.0), board)
@@ -955,6 +1027,7 @@ func _block(parent: Node3D, block_name: String, r: Rect2, height: float, facing:
 	var size := Vector3(r.size.x, height, r.size.y)
 	var centre := Vector3(r.get_center().x, height * 0.5, r.get_center().y)
 	_collider(parent, block_name, size, centre)
+	_roofs.append([r, height + 0.0])
 	var facade := _facade_material(block_name.hash())
 	var shelled := ResourceLoader.exists(MODELS + SHELLS[0] + ".glb") and facing != "" and not block_name.begins_with("PrecinctHQ")
 	if block_name.begins_with("PrecinctHQ"):
@@ -1016,7 +1089,9 @@ func _kit_facades(block_name: String, r: Rect2, height: float, facing: String) -
 		var sc := Vector3(sx, height / aabb.size.y, sx)
 		# Local +Z is the front: its far edge goes on the face.
 		var origin := face - basis * Vector3(aabb.get_center().x * sc.x, 0, aabb.end.z * sc.z)
-		var key := "%s|%s" % [block_name.substr(0, 3), model]
+		# Three bands west to east: a view culls the bands behind it.
+		var band := "W" if face.x < -30.0 else ("M" if face.x < 40.0 else "E")
+		var key := "%s|%s" % [band, model]
 		if not _shell_xforms.has(key):
 			var fresh: Array[Transform3D] = []
 			_shell_xforms[key] = fresh
@@ -1038,13 +1113,7 @@ func _build_shell_multimeshes() -> void:
 
 
 func _model_mesh(model: String) -> Mesh:
-	if _mesh_cache.has(model):
-		return _mesh_cache[model]
-	var source: Node3D = (load(MODELS + model + ".glb") as PackedScene).instantiate()
-	var mesh: Mesh = (source.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D).mesh
-	source.free()
-	_mesh_cache[model] = mesh
-	return mesh
+	return Batch.merged_model(MODELS + model + ".glb")
 
 
 ## The police station: blue-grey with more of its windows still lit.
@@ -1071,8 +1140,8 @@ func _facade_material(seed: int) -> Material:
 	m.shader = load(SHADERS + "city_sky_skyline.gdshader")
 	m.set_shader_parameter("wall_color", tints[absi(seed) % 3])
 	m.set_shader_parameter("seed", float(absi(seed) % 3) * 7.3)
-	m.set_shader_parameter("lit_fraction", 0.03)
-	m.set_shader_parameter("fire_fraction", 0.025)
+	m.set_shader_parameter("lit_fraction", 0.07)
+	m.set_shader_parameter("fire_fraction", 0.035)
 	_materials[key] = m
 	return m
 
@@ -1121,6 +1190,9 @@ func _gate(parent: Node3D, gate_name: String, g: Array) -> void:
 	# Door: what moves away.
 	var door := _kit(gate, prefix + "_door", "Door", Vector3.ZERO, 0.0, Vector3.ZERO)
 	door.scale = Vector3.ONE * kit_scale
+	# The leaves move on their own: each keeps its node, its surfaces merged.
+	for leaf in door.find_children("*", "MeshInstance3D", true, false):
+		(leaf as MeshInstance3D).mesh = Batch.compound([[(leaf as MeshInstance3D).mesh, Transform3D()]])
 	if door_aabb.size.x > 0.1:
 		_late(door, "res://scripts/props/city_gate_door.gd", {"style": g[4]})
 	else:
@@ -1205,7 +1277,7 @@ func _build_entrances() -> void:
 	var e := Node3D.new()
 	e.name = "Entrances"
 	geo.add_child(e)
-	var asphalt := _surface("asphalt", ["city_asphalt", "neon_roof"], Color(1.0, 1.0, 1.0), 0.12, 0.8)
+	var asphalt := _ground("asphalt", "city_asphalt", Color(1.0, 1.0, 1.0), 8.0, 0.3)
 	var i := 0
 	for entry in ENTRANCES:
 		if entry[3] != null:
@@ -1247,6 +1319,7 @@ func _build_boundary() -> void:
 	var i := 0
 	for m in mouths:
 		_player_wall(walls, "Mouth%d" % i, m[0], m[1], WALL_H)
+		_tape_line(m[0], m[1], i)
 		i += 1
 
 
@@ -1443,6 +1516,819 @@ func _build_features() -> void:
 
 
 # ---------------------------------------------------------------------------
+# Wet streets: the city_ground shader in tiles, each mirroring and lit by the
+# lights nearest it (a tile is one object: the renderer lights an object with
+# its first few lights only)
+# ---------------------------------------------------------------------------
+
+func _ground(key: String, texture: String, tint: Color, tile_metres: float, puddles: float) -> ShaderMaterial:
+	if _materials.has(key):
+		return _materials[key]
+	var m := ShaderMaterial.new()
+	m.resource_name = key
+	m.shader = load(SHADERS + "city_ground.gdshader")
+	m.set_shader_parameter("albedo_tex", load(TEXTURES + texture + ".png"))
+	var normal_path := TEXTURES + texture + "_normal.png"
+	if ResourceLoader.exists(normal_path):
+		m.set_shader_parameter("normal_tex", load(normal_path))
+	m.set_shader_parameter("puddle_tex", load(TEXTURES + "neon_puddles.png"))
+	m.set_shader_parameter("tint", tint)
+	m.set_shader_parameter("tile_metres", tile_metres)
+	m.set_shader_parameter("puddle_amount", puddles)
+	_materials[key] = m
+	_ground_materials[m] = true
+	return m
+
+
+## Visual floor tiles (1 m thick, top at `top`) over `rect`.
+func _ground_tiles(tiles_name: String, rect: Rect2, top: float, material: ShaderMaterial) -> void:
+	var nx := maxi(1, ceili(rect.size.x / GROUND_TILE))
+	var nz := maxi(1, ceili(rect.size.y / GROUND_TILE))
+	var sx := rect.size.x / nx
+	var sz := rect.size.y / nz
+	var mesh := _box_mesh(Vector3(sx, 1.0, sz), material)
+	for i in nx:
+		for j in nz:
+			var mi := MeshInstance3D.new()
+			mi.name = "%sTile%d_%d" % [tiles_name, i, j]
+			mi.mesh = mesh
+			mi.position = Vector3(rect.position.x + sx * (i + 0.5), top - 0.5, rect.position.y + sz * (j + 0.5))
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			dressing.add_child(mi)
+			_tiles.append([mi, material])
+
+
+## Gives every ground tile its own copy of its material holding the lights
+## and scorched patches nearest it.
+func _finish_ground() -> void:
+	for entry in _tiles:
+		var mi: MeshInstance3D = entry[0]
+		var centre := mi.position + Vector3(0, 0.5, 0)
+		var below := centre.y < UNDERGROUND_Y
+		var near: Array = []
+		for r in _reflectors:
+			var p: Vector3 = r[0]
+			if (p.y < UNDERGROUND_Y) != below:
+				continue
+			var d := Vector2(p.x - centre.x, p.z - centre.z).length()
+			if d < 34.0:
+				near.append([d, r])
+		near.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+		var pos := PackedVector4Array()
+		var col := PackedVector4Array()
+		for k in 12:
+			if k < near.size():
+				var r: Array = near[k][1]
+				var p: Vector3 = r[0]
+				var c: Color = r[1]
+				pos.append(Vector4(p.x, p.y, p.z, r[2]))
+				col.append(Vector4(c.r, c.g, c.b, r[3]))
+			else:
+				pos.append(Vector4.ZERO)
+				col.append(Vector4.ZERO)
+		var burns := PackedVector3Array()
+		for s in _scorches:
+			if burns.size() < 4 and not below and Vector2(s.x - centre.x, s.z - centre.z).length() < GROUND_TILE + s.y:
+				burns.append(s)
+		burns.resize(4)
+		var m := (entry[1] as ShaderMaterial).duplicate() as ShaderMaterial
+		m.set_shader_parameter("light_pos", pos)
+		m.set_shader_parameter("light_col", col)
+		m.set_shader_parameter("scorch", burns)
+		mi.material_override = m
+
+
+# ---------------------------------------------------------------------------
+# Light pools: additive glow cards on floors and walls (one MultiMesh per kind)
+# ---------------------------------------------------------------------------
+
+## A pool of light on the floor at `pos`, `radius` metres; fire pools waver.
+func _pool(pos: Vector3, radius: float, color: Color, fire := false, strength := 0.5) -> void:
+	_pool_xform(Transform3D(Basis(Vector3.RIGHT, -PI * 0.5).scaled(Vector3.ONE * radius), pos + Vector3(0, 0.09, 0)), color, fire, strength)
+
+
+## A glow on a wall: `normal` is the direction the wall faces.
+func _wall_glow(pos: Vector3, normal: Vector3, radius: float, color: Color, strength := 0.4) -> void:
+	var basis := Basis.looking_at(-normal, Vector3.UP)
+	_pool_xform(Transform3D(basis.scaled_local(Vector3(radius, radius * 0.8, 1.0)), pos + normal * 0.06), color, false, strength)
+
+
+func _pool_xform(xf: Transform3D, color: Color, fire: bool, strength: float) -> void:
+	var key := ("fire" if fire else "steady") + ("Metro" if xf.origin.y < UNDERGROUND_Y else "")
+	if not _pools.has(key):
+		_pools[key] = [[], []]
+	_pools[key][0].append(xf)
+	_pools[key][1].append(Color(color.r, color.g, color.b, clampf(strength, 0.0, 1.0)))
+
+
+func _build_pools() -> void:
+	for key in _pools:
+		var quad := QuadMesh.new()
+		quad.size = Vector2(2.0, 2.0)
+		var m := ShaderMaterial.new()
+		m.shader = load(SHADERS + "city_pool.gdshader")
+		m.set_shader_parameter("use_instance_color", true)
+		m.set_shader_parameter("strength", 1.1)
+		m.set_shader_parameter("flicker", 1.0 if String(key).begins_with("fire") else 0.0)
+		quad.material = m
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
+		mm.mesh = quad
+		var xforms: Array = _pools[key][0]
+		mm.instance_count = xforms.size()
+		for k in xforms.size():
+			mm.set_instance_transform(k, xforms[k])
+			mm.set_instance_color(k, _pools[key][1][k])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "LightPools_" + key
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if not String(key).ends_with("Metro"):
+			mmi.add_to_group("city_surface", true)
+		fx.add_child(mmi)
+
+
+func _sparks(parent: Node3D, sparks_name: String, pos: Vector3, interval: float) -> void:
+	var scene := PROPS + "city_sparks.tscn"
+	if not ResourceLoader.exists(scene):
+		return
+	var s: Node3D = (load(scene) as PackedScene).instantiate()
+	s.name = sparks_name
+	parent.add_child(s)
+	s.position = pos
+	s.set("interval", interval)
+
+
+# ---------------------------------------------------------------------------
+# Instanced dressing: small repeated things (litter, tape, sandbags, cables,
+# neon tubes) collected by kind and drawn as one MultiMesh each
+# ---------------------------------------------------------------------------
+
+## Kind -> [mesh, transforms, colours (or empty), shadows].
+var _instanced := {}
+
+
+func _instance(kind: String, xf: Transform3D, color := Color.WHITE) -> void:
+	var key := kind + ("Metro" if xf.origin.y < UNDERGROUND_Y else "")
+	if not _instanced.has(key):
+		_instanced[key] = [kind, [], []]
+	_instanced[key][1].append(xf)
+	_instanced[key][2].append(color)
+
+
+func _build_instanced() -> void:
+	for key in _instanced:
+		var kind: String = _instanced[key][0]
+		var mesh := _instance_mesh(kind)
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
+		mm.mesh = mesh
+		var xforms: Array = _instanced[key][1]
+		mm.instance_count = xforms.size()
+		for k in xforms.size():
+			mm.set_instance_transform(k, xforms[k])
+			mm.set_instance_color(k, _instanced[key][2][k])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "Dressing_" + String(key)
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if kind in ["sandbag", "tank", "ac"] else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if not String(key).ends_with("Metro"):
+			mmi.add_to_group("city_surface", true)
+		dressing.add_child(mmi)
+
+
+## A colour-by-instance material (the MultiMesh colour is the albedo).
+func _tinted(key: String, roughness: float, emission := 0.0, texture := "", tile := 1.0) -> StandardMaterial3D:
+	if _materials.has("tinted_" + key):
+		return _materials["tinted_" + key]
+	var m := StandardMaterial3D.new()
+	m.resource_name = key
+	m.vertex_color_use_as_albedo = true
+	m.vertex_color_is_srgb = true
+	m.roughness = roughness
+	if texture != "":
+		m.albedo_texture = load(TEXTURES + texture + ".png")
+		m.uv1_triplanar = true
+		m.uv1_scale = Vector3.ONE / tile
+	if emission > 0.0:
+		# Glowing tubes: unshaded and over-bright so the bloom catches them.
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_color = Color(emission, emission, emission)
+	_materials["tinted_" + key] = m
+	return m
+
+
+func _instance_mesh(kind: String) -> Mesh:
+	match kind:
+		"paper":
+			var q := PlaneMesh.new()
+			q.size = Vector2(0.3, 0.4)
+			var m := _tinted("paper", 0.95)
+			m.cull_mode = BaseMaterial3D.CULL_DISABLED
+			q.material = m
+			return q
+		"chunk":
+			var b := BoxMesh.new()
+			b.size = Vector3(0.32, 0.14, 0.22)
+			b.material = _tinted("chunk", 0.9, 0.0, "city_grime", 1.5)
+			return b
+		"tape":
+			var t := BoxMesh.new()
+			t.size = Vector3(1.0, 0.09, 0.012)
+			t.material = _tinted("tape", 0.6, 1.25)
+			return t
+		"cable":
+			var c := BoxMesh.new()
+			c.size = Vector3(0.035, 0.035, 1.0)
+			c.material = _tinted("cable", 0.8)
+			return c
+		"sandbag":
+			var s := CapsuleMesh.new()
+			s.radius = 0.2
+			s.height = 0.8
+			s.radial_segments = 8
+			s.rings = 2
+			s.material = _tinted("sandbag", 0.95, 0.0, "city_grime", 1.0)
+			return s
+		"bag":
+			var s := SphereMesh.new()
+			s.radius = 0.35
+			s.height = 0.5
+			s.radial_segments = 8
+			s.rings = 4
+			s.material = _tinted("bag", 0.35)
+			return s
+		"bin":
+			var c := CylinderMesh.new()
+			c.top_radius = 0.32
+			c.bottom_radius = 0.28
+			c.height = 0.9
+			c.radial_segments = 10
+			c.material = _tinted("bin", 0.6, 0.0, "city_grime", 1.0)
+			return c
+		"manhole":
+			var c := CylinderMesh.new()
+			c.top_radius = 0.48
+			c.bottom_radius = 0.5
+			c.height = 0.05
+			c.radial_segments = 16
+			c.material = _tinted("manhole", 0.5, 0.0, "city_grime", 0.6)
+			return c
+		"paint":
+			var q := PlaneMesh.new()
+			q.size = Vector2(1.0, 1.0)
+			q.material = _tinted("paint", 0.8)
+			return q
+		"tube":
+			var b := BoxMesh.new()
+			b.size = Vector3(1.0, 0.07, 0.07)
+			b.material = _tinted("tube", 0.4, 3.2)
+			return b
+		"panel":
+			var b := BoxMesh.new()
+			b.size = Vector3(1.9, 0.05, 0.95)
+			b.material = _tinted("panel", 0.8, 0.0, "city_grime", 1.0)
+			return b
+		"tank":
+			return _tank_mesh()
+		"ac":
+			return _ac_mesh()
+		"antenna":
+			return _antenna_mesh()
+	return BoxMesh.new()
+
+
+## A rooftop water tank on legs (merged primitives).
+func _tank_mesh() -> Mesh:
+	var wood := _mat("tank_wood", Color(0.42, 0.27, 0.2), 0.9)
+	var steel := _mat("tank_steel", Color(0.16, 0.15, 0.17), 0.6)
+	var body := CylinderMesh.new()
+	body.top_radius = 1.3
+	body.bottom_radius = 1.3
+	body.height = 2.4
+	body.radial_segments = 14
+	var roof := CylinderMesh.new()
+	roof.top_radius = 0.05
+	roof.bottom_radius = 1.45
+	roof.height = 0.8
+	roof.radial_segments = 14
+	var band := CylinderMesh.new()
+	band.top_radius = 1.33
+	band.bottom_radius = 1.33
+	band.height = 0.08
+	band.radial_segments = 14
+	var leg := BoxMesh.new()
+	leg.size = Vector3(0.16, 2.2, 0.16)
+	var parts: Array = [[body, Transform3D(Basis(), Vector3(0, 3.4, 0)), wood], [roof, Transform3D(Basis(), Vector3(0, 5.0, 0)), steel]]
+	for y in [2.6, 3.4, 4.2]:
+		parts.append([band, Transform3D(Basis(), Vector3(0, y, 0)), steel])
+	for a in 4:
+		var d := Vector3(cos(a * PI * 0.5 + 0.78), 0, sin(a * PI * 0.5 + 0.78)) * 0.95
+		parts.append([leg, Transform3D(Basis(), d + Vector3(0, 1.1, 0)), steel])
+	return Batch.compound(parts)
+
+
+## A rooftop air conditioner with its fan.
+func _ac_mesh() -> Mesh:
+	var body := BoxMesh.new()
+	body.size = Vector3(1.4, 0.9, 1.0)
+	var fan := CylinderMesh.new()
+	fan.top_radius = 0.34
+	fan.bottom_radius = 0.34
+	fan.height = 0.06
+	fan.radial_segments = 12
+	return Batch.compound([[body, Transform3D(Basis(), Vector3(0, 0.45, 0)), _mat("ac_body", Color(0.62, 0.62, 0.6), 0.6)],
+		[fan, Transform3D(Basis(), Vector3(0.3, 0.92, 0)), _mat("ac_fan", Color(0.1, 0.1, 0.11), 0.7)],
+		[fan, Transform3D(Basis(), Vector3(-0.32, 0.92, 0)), _mat("ac_fan", Color(0.1, 0.1, 0.11), 0.7)]])
+
+
+## A thin antenna mast with cross bars and a red tip.
+func _antenna_mesh() -> Mesh:
+	var steel := _mat("tank_steel", Color(0.16, 0.15, 0.17), 0.6)
+	var mast := BoxMesh.new()
+	mast.size = Vector3(0.1, 6.0, 0.1)
+	var bar := BoxMesh.new()
+	bar.size = Vector3(1.6, 0.06, 0.06)
+	var tip := BoxMesh.new()
+	tip.size = Vector3(0.22, 0.22, 0.22)
+	return Batch.compound([[mast, Transform3D(Basis(), Vector3(0, 3.0, 0)), steel], [bar, Transform3D(Basis(), Vector3(0, 4.6, 0)), steel],
+		[bar, Transform3D(Basis(Vector3.UP, 1.2), Vector3(0, 5.3, 0)), steel],
+		[tip, Transform3D(Basis(), Vector3(0, 6.05, 0)), _mat("antenna_tip", Color(1.0, 0.15, 0.1), 0.4, Color(1.0, 0.1, 0.05), 5.0)]])
+
+
+## A sagging cable from `a` to `b`, `sag` metres at the middle.
+func _cable(a: Vector3, b: Vector3, sag: float, segments := 10) -> void:
+	for i in segments:
+		var t0 := float(i) / segments
+		var t1 := float(i + 1) / segments
+		var p := a.lerp(b, t0) - Vector3(0, sag * sin(PI * t0), 0)
+		var q := a.lerp(b, t1) - Vector3(0, sag * sin(PI * t1), 0)
+		var seg := q - p
+		_instance("cable", Transform3D(Basis.looking_at(seg.normalized(), Vector3.UP if absf(seg.normalized().y) < 0.98 else Vector3.RIGHT).scaled_local(Vector3(1, 1, seg.length() + 0.02)), (p + q) * 0.5), Color(0.06, 0.055, 0.06))
+
+
+## Police tape across an opening (a, b at ground): two lines that sag, the
+## lower one torn and hanging from both ends where the zombies broke through.
+func _tape_line(a: Vector3, b: Vector3, seed: int) -> void:
+	var yellow := Color(1.0, 0.8, 0.08)
+	var dark := Color(0.08, 0.07, 0.05)
+	var torn := seed % 3 != 2
+	for line in 2:
+		var h := 1.05 - line * 0.32 + (seed % 2) * 0.06
+		var pa := a + Vector3(0, h, 0)
+		var pb := b + Vector3(0, h + 0.08 * ((seed + line) % 2), 0)
+		var pieces: Array = [[pa, pb, 0.18]]
+		if torn and line == 1:
+			var cut := 0.35 + 0.1 * (seed % 3)
+			pieces = [[pa, pa.lerp(pb, cut) - Vector3(0, 0.7, 0), 0.05], [pb, pa.lerp(pb, cut + 0.12) - Vector3(0, 0.85, 0), 0.05]]
+		for piece in pieces:
+			var p0: Vector3 = piece[0]
+			var p1: Vector3 = piece[1]
+			var n := maxi(2, int(p0.distance_to(p1) / 0.6))
+			for i in n:
+				var t0 := float(i) / n
+				var t1 := float(i + 1) / n
+				var sag: float = piece[2]
+				var q0 := p0.lerp(p1, t0) - Vector3(0, sag * sin(PI * t0), 0)
+				var q1 := p0.lerp(p1, t1) - Vector3(0, sag * sin(PI * t1), 0)
+				var seg := q1 - q0
+				var x := seg.normalized()
+				var z := x.cross(Vector3.UP).normalized()
+				if z.length() < 0.1:
+					z = Vector3.FORWARD
+				var basis := Basis(x * seg.length(), z.cross(x).normalized(), z)
+				_instance("tape", Transform3D(basis, (q0 + q1) * 0.5), yellow if (i + line) % 2 == 0 else dark)
+
+
+## A wall of sandbags from `a` to `b` (ground), `rows` high, staggered.
+func _sandbags(a: Vector3, b: Vector3, rows: int) -> void:
+	var dir := (b - a).normalized()
+	var yaw := atan2(-dir.z, dir.x)
+	var length := a.distance_to(b)
+	for row in rows:
+		var n := int(length / 0.78)
+		for i in n:
+			var t := (i + 0.5 + (0.5 if row % 2 == 1 else 0.0)) * 0.78
+			if t > length - 0.3:
+				continue
+			var p := a + dir * t + Vector3(0, 0.15 + row * 0.27, 0)
+			var basis := Basis(Vector3.UP, yaw + _rng.randf_range(-0.12, 0.12)) * Basis(Vector3.FORWARD, PI * 0.5)
+			basis = basis.scaled_local(Vector3(0.75, 1.0, 1.15))
+			var shade := _rng.randf_range(0.85, 1.05)
+			_instance("sandbag", Transform3D(basis, p), Color(0.72 * shade, 0.62 * shade, 0.44 * shade))
+
+
+## Litter strewn over `rect` at floor height `y`: paper and chunks of concrete.
+func _litter(rect: Rect2, y: float, papers: int, chunks: int) -> void:
+	var paper_tints := [Color(0.92, 0.9, 0.82), Color(0.8, 0.78, 0.72), Color(0.95, 0.75, 0.8), Color(0.75, 0.86, 0.95), Color(0.98, 0.92, 0.6)]
+	for i in papers:
+		var p := Vector3(_rng.randf_range(rect.position.x, rect.end.x), y + 0.035, _rng.randf_range(rect.position.y, rect.end.y))
+		var basis := Basis(Vector3.UP, _rng.randf() * TAU) * Basis(Vector3.RIGHT, _rng.randf_range(-0.15, 0.15))
+		_instance("paper", Transform3D(basis, p), paper_tints[_rng.randi() % paper_tints.size()])
+	for i in chunks:
+		var p := Vector3(_rng.randf_range(rect.position.x, rect.end.x), y + 0.05, _rng.randf_range(rect.position.y, rect.end.y))
+		var basis := Basis(Vector3.UP, _rng.randf() * TAU) * Basis(Vector3.RIGHT, _rng.randf_range(-0.3, 0.3))
+		var s := _rng.randf_range(0.5, 1.2)
+		var shade := _rng.randf_range(0.35, 0.75)
+		var c := Color(shade, shade * 0.95, shade * 0.92) if _rng.randf() < 0.7 else Color(0.62, 0.3, 0.22)
+		_instance("chunk", Transform3D(basis.scaled_local(Vector3(s, s * 0.8, s)), p), c)
+
+
+## Bins and bin bags along a wall from `a` to `b` (some bins knocked over).
+func _bins(a: Vector3, b: Vector3, count: int) -> void:
+	for i in count:
+		var p := a.lerp(b, (i + 0.5) / count + _rng.randf_range(-0.08, 0.08))
+		if _rng.randf() < 0.45:
+			var basis := Basis(Vector3.UP, _rng.randf() * TAU) * Basis(Vector3.FORWARD, PI * 0.5)
+			_instance("bin", Transform3D(basis, p + Vector3(0, 0.3, 0)), Color(0.2, 0.36, 0.26))
+		else:
+			_instance("bin", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU), p + Vector3(0, 0.45, 0)), Color(0.22, 0.4, 0.3))
+		for k in 2:
+			var q := p + Vector3(_rng.randf_range(-0.8, 0.8), 0.18, _rng.randf_range(-0.8, 0.8))
+			var bag_tint := Color(0.08, 0.09, 0.1) if _rng.randf() < 0.6 else Color(0.15, 0.24, 0.16)
+			_instance("bag", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU), q), bag_tint)
+
+
+## A manhole cover; `steam` puts a lazy plume of steam over it.
+func _manhole(pos: Vector3, steam: bool) -> void:
+	_instance("manhole", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU), pos + Vector3(0, 0.03, 0)), Color(0.32, 0.3, 0.3))
+	if steam:
+		_steam(pos, Color(0.85, 0.72, 0.68), 0.32)
+
+
+func _steam(pos: Vector3, color: Color, strength: float) -> void:
+	var quad := QuadMesh.new()
+	quad.size = Vector2(2.4, 6.0)
+	quad.center_offset = Vector3(0, 3.0, 0)
+	var m := ShaderMaterial.new()
+	m.shader = load(SHADERS + "neon_steam.gdshader")
+	m.set_shader_parameter("steam_color", color)
+	m.set_shader_parameter("strength", strength)
+	m.set_shader_parameter("speed", 0.35)
+	m.set_shader_parameter("time_offset", pos.x * 0.37 + pos.z * 0.11)
+	for k in 2:
+		var q := MeshInstance3D.new()
+		q.name = "Steam%d_%d_%d" % [int(pos.x), int(pos.z), k]
+		q.mesh = quad
+		q.material_override = m
+		q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		q.position = pos
+		q.rotation.y = k * PI * 0.5 + 0.5
+		fx.add_child(q)
+
+
+## A crosswalk: `count` white bars across the road at `centre`, bars along `yaw`.
+func _crosswalk(centre: Vector3, yaw: float, count: int) -> void:
+	var basis := Basis(Vector3.UP, deg_to_rad(yaw))
+	for i in count:
+		var off := basis * Vector3((i - (count - 1) * 0.5) * 0.9, 0, 0)
+		var worn := _rng.randf_range(0.55, 0.85)
+		_instance("paint", Transform3D(basis.scaled_local(Vector3(0.5, 1.0, 3.2)), centre + off + Vector3(0, 0.025, 0)), Color(worn, worn * 0.96, worn * 0.9))
+
+
+## Graffiti and stencils on a wall: `normal` is the way the wall faces.
+func _graffiti(text: String, pos: Vector3, normal: Vector3, color: Color, font_size := 96) -> void:
+	var yaw := rad_to_deg(atan2(normal.x, normal.z))
+	var l := _label(dressing, "Graffiti_%s_%d" % [text.validate_node_name().replace(" ", ""), int(pos.x * 10 + pos.z)], text, pos + normal * 0.05, yaw, font_size, color)
+	l.outline_size = 6
+	l.outline_modulate = color.darkened(0.75)
+	l.rotation.z = deg_to_rad(_rng.randf_range(-6.0, 6.0))
+	l.shaded = true
+
+
+# ---------------------------------------------------------------------------
+# Set dressing: every district's story, street furniture, rooftops
+# ---------------------------------------------------------------------------
+
+func _build_streets() -> void:
+	# Ashfall Square: crossings over the ring road, manholes (two steaming).
+	for c in [[Vector3(0, 0, -16.5), 90.0], [Vector3(0, 0, 16.5), 90.0], [Vector3(-16.5, 0, 0), 0.0], [Vector3(16.5, 0, 0), 0.0]]:
+		_crosswalk(c[0], c[1], 7)
+	for c in [[Vector3(-46.0, 0, 0.5), 0.0], [Vector3(-30.0, 0, 0.0), 0.0]]:
+		_crosswalk(c[0], c[1], 6)
+	_manhole(Vector3(-10.5, 0, -16.2), true)
+	_manhole(Vector3(10.0, 0, 16.0), true)
+	_manhole(Vector3(-16.0, 0, 4.0), false)
+	_manhole(Vector3(-56.0, 0, -9.0), true)
+	_manhole(Vector3(-44.0, 0, 15.5), false)
+	_manhole(Vector3(70.0, 0, -36.0), true)
+	_manhole(Vector3(88.0, 0, -66.0), false)
+	# Litter everywhere people ran.
+	_litter(Rect2(-21.0, -21.0, 42.0, 42.0), 0.0, 150, 70)
+	_litter(Rect2(-72.0, -22.0, 36.0, 44.0), 0.0, 110, 60)
+	_litter(Rect2(35.0, -7.5, 54.0, 15.0), 0.0, 120, 40)
+	_litter(Rect2(47.0, -71.0, 46.0, 48.0), 0.0, 90, 90)
+	_litter(Rect2(-24.0, -37.5, 63.0, 9.0), METRO_Y, 90, 30)
+	_litter(Rect2(-32.0, -3.5, 12.0, 7.0), 0.0, 20, 10)
+	# Bins and bags against the facades.
+	_bins(Vector3(-21.2, 0, -12.0), Vector3(-21.2, 0, -6.0), 2)
+	_bins(Vector3(21.2, 0, 13.0), Vector3(21.2, 0, 19.0), 2)
+	_bins(Vector3(-36.0, 0, -23.2), Vector3(-30.0, 0, -23.2), 2)
+	_bins(Vector3(-73.0, 0, -14.0), Vector3(-73.0, 0, -8.0), 2)
+	_bins(Vector3(36.0, 0, 7.2), Vector3(44.0, 0, 7.2), 2)
+	_bins(Vector3(74.0, 0, -7.2), Vector3(84.0, 0, -7.2), 3)
+	_bins(Vector3(47.0, 0, -70.0), Vector3(47.0, 0, -64.0), 2)
+	_bins(Vector3(93.0, 0, -30.0), Vector3(93.0, 0, -24.0), 2)
+	# Cables strung over the streets, a few snapped and sparking.
+	for x in [-14.0, -2.0, 9.0]:
+		_cable(Vector3(x, 9.5, -22.0), Vector3(x + 3.0, 8.8, 22.0), 2.2, 16)
+	_cable(Vector3(-22.0, 10.0, -8.0), Vector3(22.0, 9.0, -12.0), 2.6, 16)
+	_cable(Vector3(-34.0, 9.0, -14.0), Vector3(-34.0, 9.5, 14.0), 1.8, 12)
+	for z in [-15.0, 6.0]:
+		_cable(Vector3(-74.0, 8.5, z), Vector3(-34.0, 9.0, z + 4.0), 2.4, 16)
+	_cable(Vector3(46.0, 11.0, -40.0), Vector3(94.0, 10.0, -44.0), 3.0, 18)
+	_cable(Vector3(46.0, 10.0, -62.0), Vector3(94.0, 11.0, -58.0), 2.8, 18)
+	_cable(Vector3(60.0, 12.0, -72.0), Vector3(62.0, 9.0, -22.0), 3.2, 18)
+	# A snapped line hanging off a facade, spitting sparks.
+	_cable(Vector3(22.0, 8.0, -14.0), Vector3(20.5, 2.6, -14.6), 0.4, 8)
+	_sparks(fx, "SnappedSquare", Vector3(20.5, 2.6, -14.6), 1.8)
+	_cable(Vector3(-34.0, 9.0, 18.0), Vector3(-35.6, 3.2, 17.0), 0.3, 8)
+	_sparks(fx, "SnappedPrecinct", Vector3(-35.6, 3.2, 17.0), 2.2)
+	_cable(Vector3(94.0, 9.0, -55.0), Vector3(92.0, 2.8, -55.5), 0.4, 8)
+	_sparks(fx, "SnappedTower", Vector3(92.0, 2.8, -55.5), 2.0)
+
+
+## The abandoned checkpoint in the street to the Precinct, the station's last
+## stand (sandbags, tape, floodlights), the cars that ran into storefronts.
+func _build_story() -> void:
+	# Checkpoint: sandbags along both walls of the barricaded street, a raised
+	# boom, floodlights still burning.
+	_sandbags(Vector3(-33.6, 0, -3.55), Vector3(-29.5, 0, -3.55), 3)
+	_sandbags(Vector3(-33.6, 0, 3.55), Vector3(-29.5, 0, 3.55), 3)
+	_sandbags(Vector3(-26.5, 0, -3.55), Vector3(-22.4, 0, -3.55), 2)
+	_sandbags(Vector3(-26.5, 0, 3.55), Vector3(-22.4, 0, 3.55), 2)
+	_boom_barrier(Vector3(-24.0, 0, 3.4))
+	_floodlight("CheckpointFlood", Vector3(-33.0, 0, -3.0), Vector3(-26.0, 0, 0.5))
+	_graffiti("CHECKPOINT 4", Vector3(-30.5, 3.2, -4.0), Vector3(0, 0, 1), Color(0.95, 0.95, 0.9), 80)
+	_graffiti("NO ENTRY", Vector3(-30.5, 3.2, 4.0), Vector3(0, 0, -1), Color(1.0, 0.3, 0.25), 90)
+	# The station front: sandbags under the windows, floodlights on the steps,
+	# tape round the bays.
+	_sandbags(Vector3(-73.5, 0, -22.0), Vector3(-73.5, 0, -6.0), 2)
+	_sandbags(Vector3(-73.5, 0, 6.0), Vector3(-73.5, 0, 22.0), 2)
+	_floodlight("StationFloodN", Vector3(-71.5, 0, -8.0), Vector3(-58.0, 0, -2.0))
+	_floodlight("StationFloodS", Vector3(-71.5, 0, 8.0), Vector3(-58.0, 0, 3.0))
+	_tape_line(Vector3(-66.0, 0, -4.6), Vector3(-66.0, 0, 4.6), 3)
+	_graffiti("QUARANTINE", Vector3(-73.95, 5.0, -13.0), Vector3(1, 0, 0), Color(1.0, 0.82, 0.2), 110)
+	_graffiti("HELP US", Vector3(-73.95, 2.6, 15.0), Vector3(1, 0, 0), Color(1.0, 0.25, 0.3), 120)
+	# Square: walls of the passages, the last messages.
+	_graffiti("THEY CAME FROM THE METRO", Vector3(26.0, 2.8, -4.0), Vector3(0, 0, 1), Color(1.0, 0.3, 0.6), 64)
+	_graffiti("EVAC >", Vector3(-25.5, 2.4, 4.0), Vector3(0, 0, -1), Color(0.4, 1.0, 0.6), 96)
+	_graffiti("NO WAY OUT", Vector3(4.9, 2.5, 30.0), Vector3(1, 0, 0), Color(1.0, 0.35, 0.2), 80)
+	_graffiti("STAY INSIDE", Vector3(87.0, 3.0, -8.0), Vector3(0, 0, 1), Color(0.3, 0.95, 1.0), 72)
+	_graffiti("ON AIR", Vector3(93.95, 3.6, -48.0), Vector3(-1, 0, 0), Color(1.0, 0.2, 0.2), 90)
+	# Cars that ran into storefronts, nose first, still burning.
+	_storefront_crash("CrashSquare", "city_taxi_wreck", Vector3(24.0, 0, 15.0), 14.0, Vector3(-1, 0, 0))
+	_storefront_crash("CrashPrecinct", "city_car_burnt", Vector3(-44.0, 0, -26.0), 100.0, Vector3(0, 0, 1))
+	_storefront_crash("CrashTower", "city_car_burnt_b", Vector3(96.2, 0, -30.0), 172.0, Vector3(-1, 0, 0))
+
+
+## A raised boom barrier (striped arm) on a post at `pos`.
+func _boom_barrier(pos: Vector3) -> void:
+	var post := _mat("boom_post", Color(0.2, 0.2, 0.22), 0.6)
+	_visual_box(dressing, "BoomPost", Vector3(0.35, 1.2, 0.35), pos + Vector3(0, 0.6, 0), post)
+	var arm := _visual_box(dressing, "BoomArm", Vector3(0.12, 0.12, 5.0), pos + Vector3(0, 1.1, 0), _surface("hazard", ["dune_hazard"], Color.WHITE, 1.0, 0.7))
+	arm.rotation.x = deg_to_rad(68.0)
+	arm.position += arm.basis * Vector3(0, 0, -2.4)
+	arm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## A work floodlight on a stand at `pos`, aimed at `target`, with its pool.
+func _floodlight(flood_name: String, pos: Vector3, target: Vector3) -> void:
+	var dark := _mat("flood_stand", Color(0.12, 0.12, 0.13), 0.6)
+	var head := pos + Vector3(0, 2.6, 0)
+	var dir := (target - head).normalized()
+	for a in 3:
+		var foot := pos + Vector3(cos(a * TAU / 3.0), 0, sin(a * TAU / 3.0)) * 0.6
+		var leg := _visual_box(dressing, "%sLeg%d" % [flood_name, a], Vector3(0.05, 2.7, 0.05), (foot + head) * 0.5, dark)
+		leg.basis = Basis(Vector3.UP.cross(head - foot).normalized(), Vector3.UP.angle_to(head - foot)) if (head - foot).normalized() != Vector3.UP else Basis()
+		leg.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var lamp := _visual_box(dressing, flood_name + "Head", Vector3(0.7, 0.5, 0.25), head, dark)
+	lamp.basis = Basis.looking_at(dir, Vector3.UP)
+	var face := _visual_box(dressing, flood_name + "Face", Vector3(0.6, 0.4, 0.04), head + dir * 0.14, _mat("flood_face", Color(1.0, 0.97, 0.88), 0.3, Color(1.0, 0.95, 0.82), 6.0))
+	face.basis = Basis.looking_at(dir, Vector3.UP)
+	var l := _omni(fx, flood_name + "Light", head + dir * 1.5, Color(1.0, 0.93, 0.8), 2.0, 14.0)
+	l.omni_attenuation = 1.8
+	_pool(target.lerp(Vector3(pos.x, 0, pos.z), 0.35), 6.0, Color(1.0, 0.92, 0.75), false, 0.32)
+
+
+## A car run into a storefront: the kit wreck nose-first into the block face
+## (`out`: the way the face looks), tipped up on the kerb, burning.
+func _storefront_crash(crash_name: String, model: String, pos: Vector3, yaw: float, out: Vector3) -> void:
+	var node := _kit(dressing, model, crash_name, pos, yaw, Vector3(4.3, 1.45, 2.0))
+	node.rotation.x = deg_to_rad(5.0)
+	var spots := _empties(node, "Fire")
+	if spots.is_empty():
+		spots.append(pos + Vector3(0, 1.1, 0))
+	_fire_at(fx, crash_name + "Fire", spots[0] + out * 0.3, 2.2, true, 3.2)
+	_fire_at(fx, crash_name + "Inside", pos - out * 1.8 + Vector3(0, 0.6, 0), 1.6, false)
+	_smoke(fx, crash_name + "Smoke", pos - out * 1.0 + Vector3(0, 2.0, 0), 0.24)
+	_sparks(fx, crash_name + "Sparks", pos + out * 1.2 + Vector3(0, 2.6, 0), 2.4)
+	_scorches.append(Vector3(pos.x + out.x * 2.0, 3.0, pos.z + out.z * 2.0))
+	_wall_glow(pos + out * 0.3 + Vector3(0, 3.5, 0), out, 4.0, Color(1.0, 0.45, 0.15), 0.4)
+
+
+## Water tanks, air conditioners and masts on the roofs (silhouettes against
+## the sky from every street).
+func _build_rooftops() -> void:
+	var i := 0
+	for roof in _roofs:
+		var r: Rect2 = roof[0]
+		var h: float = roof[1]
+		var inner := r.grow(-2.5)
+		if inner.size.x < 2.0 or inner.size.y < 2.0:
+			continue
+		if i % 3 != 1:
+			_instance("tank", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU), _roof_spot(inner, h)), Color.WHITE)
+		for k in 2 + i % 3:
+			_instance("ac", Transform3D(Basis(Vector3.UP, _rng.randi() % 4 * PI * 0.5), _roof_spot(inner, h)), Color.WHITE)
+		if i % 4 == 0:
+			_instance("antenna", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU), _roof_spot(inner, h)), Color.WHITE)
+		i += 1
+
+
+func _roof_spot(inner: Rect2, h: float) -> Vector3:
+	return Vector3(_rng.randf_range(inner.position.x, inner.end.x), h, _rng.randf_range(inner.position.y, inner.end.y))
+
+
+# ---------------------------------------------------------------------------
+# The Neon Market's glow and the Metro's life
+# ---------------------------------------------------------------------------
+
+## More signs up the facades, neon tubes along the shopfronts, lit stalls,
+## steam from the drains, the colours pooling on the wet paving.
+func _build_market_glow() -> void:
+	var colors := [Color(1.0, 0.2, 0.7), Color(0.2, 0.9, 1.0), Color(1.0, 0.75, 0.2), Color(0.5, 0.35, 1.0), Color(0.4, 1.0, 0.45)]
+	var more := [[46.0, 4.6, -1.0], [52.0, 6.2, -1.0], [59.0, 4.0, -1.0], [74.0, 6.0, -1.0], [84.5, 4.2, -1.0],
+		[41.0, 5.0, 1.0], [50.5, 3.8, 1.0], [61.0, 5.6, 1.0], [70.0, 3.6, 1.0], [76.5, 6.4, 1.0], [88.0, 4.4, 1.0]]
+	var i := 0
+	for s in more:
+		var side: float = s[2]
+		var model := "city_neon_sign_a" if i % 2 == 0 else "city_neon_sign_b"
+		_neon_sign(dressing, model, "NeonUpper%d" % i, Vector3(s[0], s[1], MARKET.position.y if side < 0.0 else MARKET.end.y), 0.0 if side < 0.0 else 180.0, colors[(i + 1) % colors.size()], false)
+		i += 1
+	# Tubes along both shopfronts at awning height, broken into runs.
+	i = 0
+	for side in [-1.0, 1.0]:
+		var z: float = (MARKET.position.y + 0.12) if side < 0.0 else (MARKET.end.y - 0.12)
+		var x := MARKET.position.x + 1.0
+		while x < MARKET.end.x - 2.0:
+			var run := _rng.randf_range(2.5, 5.5)
+			var skip: bool = (side < 0.0 and x + run > 39.5 and x < 44.5) or (side < 0.0 and x + run > 61.5 and x < 70.5) or (side > 0.0 and x + run > 53.5 and x < 58.5)
+			if not skip:
+				var c: Color = colors[i % colors.size()]
+				var y := 3.1 + (i % 2) * 0.35
+				_instance("tube", Transform3D(Basis().scaled(Vector3(run, 1, 1)), Vector3(x + run * 0.5, y, z)), c)
+				if i % 3 == 0:
+					_instance("tube", Transform3D(Basis().scaled(Vector3(run * 0.7, 1, 1)), Vector3(x + run * 0.5, y + 0.5, z)), colors[(i + 2) % colors.size()])
+				_wall_glow(Vector3(x + run * 0.5, y, z - side * 0.12), Vector3(0, 0, -side), run * 0.6, c, 0.3)
+				_pool(Vector3(x + run * 0.5, 0, z - side * 1.6), run * 0.55, c, false, 0.28)
+				i += 1
+			x += run + _rng.randf_range(1.0, 3.0)
+	# The stalls' own light under their awnings.
+	for x in [40.0, 52.0, 72.0, 82.0]:
+		for side in [-1.0, 1.0]:
+			_pool(Vector3(x, 0, side * 2.6), 3.2, Color(1.0, 0.72, 0.38), false, 0.4)
+	_omni(fx, "StallLightW", Vector3(46.0, 2.6, 0.0), Color(1.0, 0.7, 0.4), 1.2, 9.0)
+	_omni(fx, "StallLightE", Vector3(77.0, 2.6, 0.0), Color(1.0, 0.7, 0.4), 1.2, 9.0)
+	# Steam out of the drains, lit by the signs.
+	_manhole(Vector3(47.0, 0, 5.0), true)
+	_manhole(Vector3(67.5, 0, -4.0), true)
+	_manhole(Vector3(86.0, 0, 4.5), true)
+	_steam(Vector3(57.0, 0, -7.4), Color(0.9, 0.55, 0.85), 0.3)
+	_steam(Vector3(79.0, 0, 7.4), Color(0.5, 0.8, 1.0), 0.3)
+	# Bulb strings cast their warm glow down the lanes.
+	for x in range(40, 90, 6):
+		_pool(Vector3(float(x) + 1.5, 0, 0.0), 3.6, Color(1.0, 0.68, 0.4), false, 0.22)
+	# Lanterns hanging in the side alleys beyond the zombie entrances.
+	_tape_line(Vector3(40.0, 0, -8.4), Vector3(44.0, 0, -8.4), 1)
+	_tape_line(Vector3(54.0, 0, 8.4), Vector3(58.0, 0, 8.4), 2)
+
+
+## The Metro's furniture beyond the benches: tiled walls, a ceiling of panels
+## (some fallen), emergency light pooling on the wet platform, the train's
+## lit windows spilling onto the edge, exit signs and roundels.
+func _build_metro_life() -> void:
+	var y0 := METRO_Y
+	var tile := StandardMaterial3D.new()
+	tile.albedo_texture = load(TEXTURES + "sky_tiles.png")
+	tile.albedo_color = Color(0.86, 0.9, 0.82)
+	tile.uv1_triplanar = true
+	tile.uv1_world_triplanar = true
+	tile.uv1_scale = Vector3.ONE * 0.5
+	tile.roughness = 0.25
+	tile.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	var trim := _mat("metro_trim", Color(0.12, 0.45, 0.32), 0.4)
+	# Tiles on the hall's south wall (between the openings) and the pillars.
+	var wall_z := HALL.end.y - 0.03
+	var spans: Array[Vector2] = [Vector2(HALL.position.x - 8.0, SERVICE_DOORS[0] - SERVICE_DOOR_WIDTH * 0.5), Vector2(SERVICE_DOORS[0] + SERVICE_DOOR_WIDTH * 0.5, -STAIR_HALF),
+		Vector2(STAIR_HALF, SERVICE_DOORS[1] - SERVICE_DOOR_WIDTH * 0.5), Vector2(SERVICE_DOORS[1] + SERVICE_DOOR_WIDTH * 0.5, HALL.end.x)]
+	var k := 0
+	for s in spans:
+		_visual_box(dressing, "WallTiles%d" % k, Vector3(s.y - s.x, 2.6, 0.05), Vector3((s.x + s.y) * 0.5, y0 + 1.3, wall_z), tile)
+		_visual_box(dressing, "WallTrim%d" % k, Vector3(s.y - s.x, 0.22, 0.08), Vector3((s.x + s.y) * 0.5, y0 + 2.7, wall_z), trim)
+		k += 1
+	for p in 7:
+		var px := HALL.position.x + 5.0 + p * 8.0
+		_visual_box(dressing, "PillarTiles%d" % p, Vector3(1.0, 2.4, 1.0), Vector3(px, y0 + 1.2, -33.0), tile)
+		var disc := _visual_box(dressing, "Roundel%d" % p, Vector3(0.9, 0.9, 0.05), Vector3(px, y0 + 3.2, -32.52), _mat("roundel", Color(0.85, 0.16, 0.14), 0.4, Color(1.0, 0.2, 0.15), 0.6))
+		disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_label(dressing, "RoundelText%d" % p, "3", Vector3(px, y0 + 3.2, -32.48), 0.0, 120, Color(1, 1, 1))
+	# Ceiling panels; every so often one is missing, hanging or down.
+	var hang := 0
+	for gx in range(int(HALL.position.x - 7.0), int(HALL.end.x), 2):
+		for gz in range(int(HALL.position.y) + 1, int(HALL.end.y), 1):
+			var p := Vector3(gx + 1.0, HALL_CEILING - 0.05, gz + 0.5)
+			var roll := _rng.randf()
+			if roll < 0.06:
+				continue
+			if roll < 0.09 and p.z > PLATFORM_EDGE_Z + 1.0:
+				var tilt := deg_to_rad(_rng.randf_range(35.0, 55.0)) * (1.0 if hang % 2 == 0 else -1.0)
+				var pivot := p + Vector3(0, 0, -0.47 if tilt > 0.0 else 0.47)
+				var basis := Basis(Vector3.RIGHT, tilt)
+				_instance("panel", Transform3D(basis, pivot + basis * Vector3(0, 0, 0.47 if tilt > 0.0 else -0.47)), Color(0.7, 0.72, 0.68))
+				hang += 1
+				continue
+			if roll < 0.11:
+				var floor_y := y0 if p.z > PLATFORM_EDGE_Z else y0 - 1.2
+				_instance("panel", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU) * Basis(Vector3.RIGHT, _rng.randf_range(-0.08, 0.08)), Vector3(p.x, floor_y + 0.04, p.z)), Color(0.6, 0.62, 0.58))
+				continue
+			var shade := _rng.randf_range(0.62, 0.8)
+			_instance("panel", Transform3D(Basis(), p), Color(shade, shade * 1.02, shade * 0.96))
+	# Emergency light pooling on the platform and the wall.
+	for e in 6:
+		var lx := HALL.position.x + 4.0 + e * 10.0
+		var red := e % 3 == 1
+		var color := Color(1.0, 0.25, 0.15) if red else Color(1.0, 0.62, 0.3)
+		_pool(Vector3(lx, y0, -31.5), 4.5, color, false, 0.42)
+		_wall_glow(Vector3(lx, y0 + 3.4, HALL.end.y - 0.05), Vector3(0, 0, -1), 3.0, color, 0.3)
+	# The train's lit windows spill onto the platform edge.
+	var train_z := (HALL.position.y + PLATFORM_EDGE_Z) * 0.5 - 0.3
+	var length := HALL.size.x + 12.0
+	var car_len := (length - 0.7 * 4) / 5
+	for c in 5:
+		var cx := (HALL.position.x + HALL.end.x) * 0.5 - length * 0.5 + car_len * 0.5 + c * (car_len + 0.7)
+		var xf := Transform3D(Basis(Vector3.RIGHT, -PI * 0.5).scaled_local(Vector3(car_len * 0.45, 1.6, 1.0)), Vector3(cx, y0 + 0.09, PLATFORM_EDGE_Z + 1.4))
+		_pool_xform(xf, Color(1.0, 0.8, 0.5), false, 0.38)
+		if c % 2 == 0:
+			_omni(fx, "TrainGlow%d" % c, Vector3(cx, y0 + 1.6, train_z + 1.9), Color(1.0, 0.78, 0.5), 0.9, 6.0)
+	# Exit signs over the stairs.
+	_exit_sign("ExitSquare", Vector3(0, y0 + 4.4, HALL.end.y - 0.6), 180.0, "EXIT  ASHFALL SQ")
+	_exit_sign("ExitTower", Vector3(HALL.end.x - 0.6, y0 + 4.4, (EXIT_Z.x + EXIT_Z.y) * 0.5), -90.0, "EXIT  TOWER >")
+	# Cable trays along the north wall and loops hanging from the ceiling.
+	_visual_box(dressing, "CableTray", Vector3(HALL.size.x + 8.0, 0.12, 0.5), Vector3((HALL.position.x + HALL.end.x) * 0.5 - 4.0, y0 + 4.6, HALL.position.y + 0.3), _mat("tray", Color(0.22, 0.22, 0.24), 0.6))
+	for x in [-14.0, 3.0, 17.0, 33.0]:
+		_cable(Vector3(x, HALL_CEILING - 0.1, -30.0), Vector3(x + 4.0, HALL_CEILING - 0.1, -31.5), 1.4, 8)
+	# A tube light torn loose, hanging by one end and spitting sparks.
+	var tube := _visual_box(dressing, "LooseTube", Vector3(0.12, 1.4, 0.12), Vector3(9.0, HALL_CEILING - 0.75, -34.5), _mat("tube_light", Color(0.9, 0.95, 1.0), 0.3, Color(0.85, 0.95, 1.0), 5.0))
+	tube.rotation.z = deg_to_rad(18.0)
+	tube.add_to_group("city_neon_flicker", true)
+	_sparks(fx, "LooseTubeSparks", Vector3(9.2, HALL_CEILING - 1.4, -34.5), 1.6)
+	# Puddled leaks under the ceiling cracks.
+	_steam(Vector3(-20.0, y0, -29.0), Color(0.6, 0.65, 0.7), 0.18)
+
+
+func _exit_sign(sign_name: String, pos: Vector3, yaw: float, text: String) -> void:
+	var board := _visual_box(dressing, sign_name, Vector3(3.6, 0.6, 0.12), pos, _mat("exit_board", Color(0.05, 0.45, 0.22), 0.4, Color(0.15, 0.95, 0.45), 1.6))
+	board.rotation.y = deg_to_rad(yaw)
+	board.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var forward := Basis(Vector3.UP, deg_to_rad(yaw)) * Vector3(0, 0, 1)
+	_label(dressing, sign_name + "Text", text, pos + forward * 0.08, yaw, 56, Color(1, 1, 1))
+	_wall_glow(pos + forward * 0.1 - Vector3(0, 0.2, 0), forward, 2.2, Color(0.2, 1.0, 0.5), 0.25)
+
+
+## A metro bench: wooden slats on a steel frame (one merged mesh), with the
+## collider the grey-box bench had.
+func _bench(parent: Node3D, bench_name: String, pos: Vector3, yaw: float) -> void:
+	if not _meshes.has("bench"):
+		var wood := _mat("bench_wood", Color(0.55, 0.32, 0.18), 0.6)
+		var steel := _mat("bench_steel", Color(0.18, 0.19, 0.2), 0.4)
+		var slat := BoxMesh.new()
+		slat.size = Vector3(2.4, 0.06, 0.14)
+		var leg := BoxMesh.new()
+		leg.size = Vector3(0.08, 0.45, 0.5)
+		var back := BoxMesh.new()
+		back.size = Vector3(2.4, 0.12, 0.05)
+		var parts: Array = []
+		for k in 3:
+			parts.append([slat, Transform3D(Basis(), Vector3(0, 0.46, -0.18 + k * 0.17)), wood])
+		for k in 2:
+			parts.append([back, Transform3D(Basis(Vector3.RIGHT, -0.2), Vector3(0, 0.72 + k * 0.18, 0.3)), wood])
+		for x in [-1.0, 1.0]:
+			parts.append([leg, Transform3D(Basis(), Vector3(x, 0.22, 0)), steel])
+		_meshes["bench"] = Batch.compound(parts)
+	var mi := MeshInstance3D.new()
+	mi.name = bench_name
+	mi.mesh = _meshes["bench"]
+	mi.position = pos
+	mi.rotation.y = deg_to_rad(yaw)
+	dressing.add_child(mi)
+	var body := _collider(parent, bench_name + "Collision", Vector3(2.4, 0.5, 0.6), pos + Vector3(0, 0.25, 0))
+	body.rotation.y = deg_to_rad(yaw)
+
+
+# ---------------------------------------------------------------------------
 # Fire, smoke and lights
 # ---------------------------------------------------------------------------
 
@@ -1457,11 +2343,19 @@ func _omni(parent: Node3D, light_name: String, pos: Vector3, color: Color, energ
 	l.shadow_enabled = false
 	parent.add_child(l)
 	_light_count += 1
+	_reflectors.append([pos, color, 0.5, clampf(energy * 0.3, 0.3, 0.9)])
 	return l
 
 
-## A fire (the kit's city_fire scene, scaled, or crossed flame quads) with an optional light.
-func _fire_at(parent: Node3D, fire_name: String, pos: Vector3, size: float, with_light: bool) -> void:
+## A fire (the kit's city_fire scene, scaled, or crossed flame quads) with an
+## optional light (`energy` 0: the scene's default); it glows on the ground
+## below and smears in the puddles.
+func _fire_at(parent: Node3D, fire_name: String, pos: Vector3, size: float, with_light: bool, energy := 0.0, minor := false) -> void:
+	var floor_y := METRO_Y if pos.y < UNDERGROUND_Y else 0.0
+	if with_light or size >= 1.5:
+		_pool(Vector3(pos.x, floor_y, pos.z), 1.5 + size * 1.6, Color(1.0, 0.42, 0.12), true, 0.42 if with_light else 0.25)
+	if size >= 0.7:
+		_reflectors.append([pos + Vector3(0, size * 0.8, 0), Color(1.0, 0.5, 0.18), 0.35 + size * 0.25, 0.55 + size * 0.15])
 	var scene := PROPS + "city_fire.tscn"
 	if ResourceLoader.exists(scene):
 		var f: Node3D = (load(scene) as PackedScene).instantiate()
@@ -1470,6 +2364,11 @@ func _fire_at(parent: Node3D, fire_name: String, pos: Vector3, size: float, with
 		f.position = pos
 		f.set("size", size)
 		f.set("with_light", with_light)
+		if energy > 0.0:
+			f.set("light_energy", energy)
+		if minor:
+			f.set("with_embers", false)
+			f.set("with_smoke", false)
 		f.add_to_group("city_fire", true)
 		return
 	var holder := Node3D.new()
@@ -1526,6 +2425,80 @@ func _smoke(parent: Node3D, smoke_name: String, pos: Vector3, size: float) -> vo
 		q.rotation.y = PI * k / 2.0 + 0.4
 		q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		holder.add_child(q)
+
+
+# ---------------------------------------------------------------------------
+# Draw calls: the static boxes merged per district
+# ---------------------------------------------------------------------------
+
+## Merges the static boxes (walls, pillars, block cores, parapets, kerbs,
+## signs, the train) into one mesh per district and shadow setting, after the
+## navigation bake (colliders are kept). Hundreds of objects become a few
+## dozen; the Precinct's and the Market's are hidden underground with the
+## facades.
+func _compound_static() -> void:
+	var groups := {}
+	var order: Array = []
+	for node in level.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if not _compoundable(mi):
+			continue
+		var xf := _to_level(mi)
+		var centre := xf * mi.mesh.get_aabb().get_center()
+		var key := "%s_%d" % [_area_of(centre), mi.cast_shadow]
+		if not groups.has(key):
+			groups[key] = [[], [], mi.cast_shadow]
+			order.append(key)
+		groups[key][0].append([mi.mesh, xf])
+		groups[key][1].append(mi)
+	for key in order:
+		var merged := MeshInstance3D.new()
+		merged.name = "Merged_" + String(key)
+		merged.mesh = Batch.compound(groups[key][0])
+		merged.cast_shadow = groups[key][2]
+		if String(key).begins_with("precinct") or String(key).begins_with("market"):
+			merged.add_to_group("city_surface", true)
+		dressing.add_child(merged)
+		for mi in groups[key][1]:
+			(mi as Node).get_parent().remove_child(mi)
+			(mi as Node).free()
+	print("build_endless_city: merged %d static groups" % order.size())
+
+
+func _compoundable(mi: MeshInstance3D) -> bool:
+	if not mi.mesh is BoxMesh or mi.material_override != null or not mi.visible or mi.get_child_count() > 0:
+		return false
+	if not mi.get_groups().is_empty():
+		return false
+	var n: Node = mi.get_parent()
+	while n != level:
+		if n == fx or n.name == "Gates" or n.scene_file_path != "" or not n.get_groups().is_empty():
+			return false
+		if n is Node3D and not (n as Node3D).visible:
+			return false
+		n = n.get_parent()
+	return true
+
+
+func _to_level(node: Node3D) -> Transform3D:
+	var xf := node.transform
+	var n: Node = node.get_parent()
+	while n != level:
+		xf = (n as Node3D).transform * xf
+		n = n.get_parent()
+	return xf
+
+
+func _area_of(p: Vector3) -> String:
+	if p.y < -0.2:
+		return "metroW" if p.x < 12.0 else "metroE"
+	if p.x < -28.0:
+		return "precinct"
+	if p.x > 28.0 and p.z > -12.0:
+		return "market"
+	if p.x > 34.0 and p.z <= -12.0:
+		return "tower"
+	return "square"
 
 
 # ---------------------------------------------------------------------------
@@ -1779,8 +2752,18 @@ func _solid_kit(parent: Node3D, model: String, prop_name: String, pos: Vector3, 
 func _kit(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_degrees: float, placeholder_size: Vector3) -> Node3D:
 	var path := MODELS + model + ".glb"
 	var node: Node3D
-	if ResourceLoader.exists(path):
+	if ResourceLoader.exists(path) and KIT_SCENES.any(func(p: String) -> bool: return model.begins_with(p)):
 		node = (load(path) as PackedScene).instantiate()
+	elif ResourceLoader.exists(path):
+		# Static props: the model's surfaces merged into one mesh.
+		node = Node3D.new()
+		var mi := MeshInstance3D.new()
+		mi.name = "Mesh"
+		mi.mesh = Batch.merged_model(path)
+		if KIT_SMALL.any(func(p: String) -> bool: return model.begins_with(p)):
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			mi.visibility_range_end = SMALL_RANGE
+		node.add_child(mi)
 	else:
 		node = Node3D.new()
 		if placeholder_size != Vector3.ZERO:
@@ -1793,6 +2776,7 @@ func _kit(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_de
 	parent.add_child(node)
 	node.position = pos
 	node.rotation.y = deg_to_rad(yaw_degrees)
+	_kit_models[node] = model
 	return node
 
 
