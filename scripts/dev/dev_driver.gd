@@ -92,6 +92,9 @@ var _aim_offset := Vector2.ZERO
 var _aim_timer := 0.0
 var _log_timer := 0.0
 var _min_health := 100.0
+var _boss_seen: Zombie
+var _boss_clock := 0.0
+var _boss_hurt := 0.0
 var _frame_times: Array[float] = []
 var _stuck_time := 0.0
 var _last_pos := Vector3.ZERO
@@ -269,8 +272,11 @@ func _physics_process(delta: float) -> void:
 			_snap("boss", 2, _director.boss)
 		for b in _director.boss.behaviours:
 			if b is AlphaBossBehaviour and b._slam_left > 0.0:
-				_slam_watch = false
 				_snap("slam", 40, _director.boss)
+			if b is AlphaBossBehaviour and b._move:
+				_snap("move_%s" % b._move.move_name, int(b._move.windup * 60.0) + 25, _director.boss)
+			if b is AlphaBossBehaviour and b._roar_left > 0.0:
+				_snap("phase_%d" % b.phase(), 30, _director.boss)
 
 	_log_timer -= delta
 	if _log_timer <= 0.0:
@@ -314,9 +320,7 @@ func _watch_rounds() -> void:
 	_director.surge_warning.connect(func(point: Node3D, seconds: float):
 		print("[dev] SURGE warning at %s in %.1fs" % [SpawnPlanner.label(point), seconds])
 		_snap("surge", 60, point))
-	_director.boss_changed.connect(func(boss: Zombie):
-		print("[dev] BOSS %s" % ("%s arrived with %d health" % [boss.data.display_name, int(boss.health)] if boss else "down"))
-		_slam_watch = boss != null)
+	_director.boss_changed.connect(_on_boss_changed)
 	_director.bounty_changed.connect(func(target: Zombie):
 		print("[dev] BOUNTY %s" % ("on the run" if target else ("claimed" if _director._bounties_claimed > 0 else "gone")))
 		if target:
@@ -330,8 +334,28 @@ func _watch_rounds() -> void:
 	_player.shield_hit.connect(_on_player_damaged)
 
 
+## Logs an alpha's arrival, and at its fall the fight's length, the damage the
+## player took meanwhile and the moves it used (balance log).
+func _on_boss_changed(boss: Zombie) -> void:
+	_slam_watch = boss != null
+	if boss:
+		_boss_seen = boss
+		_boss_clock = _clock
+		_boss_hurt = 0.0
+		print("[dev] BOSS %s arrived with %d health t=%.0fs" % [boss.data.display_name, int(boss.health), _clock])
+		return
+	var uses := {}
+	if is_instance_valid(_boss_seen):
+		for b in _boss_seen.behaviours:
+			if b is AlphaBossBehaviour:
+				uses = b.uses
+	print("[dev] BOSS down after %.0fs hurt=%d uses=%s" % [_clock - _boss_clock, int(_boss_hurt), uses])
+
+
 ## Books damage to the enemy standing nearest to where it came from (balance log).
 func _on_player_damaged(amount: float, source: Vector3) -> void:
+	if is_instance_valid(_director.boss):
+		_boss_hurt += amount
 	var who := "?"
 	var best := 4.0
 	for z in _director.alive_enemies():
@@ -686,10 +710,10 @@ func _boss_escape() -> Vector3:
 	if not is_instance_valid(boss):
 		return Vector3.ZERO
 	for b in boss.behaviours:
-		if b is AlphaBossBehaviour and b._slam_left > 0.0:
-			var away := _flat(_player.global_position - boss.global_position)
-			if away.length() < b.slam_radius + 1.0:
-				return away.normalized() if away.length() > 0.1 else -boss.global_basis.z
+		if b is AlphaBossBehaviour:
+			if b.wants_jump(boss, _player.global_position) and _player.is_on_floor():
+				_tap("jump")
+			return b.escape_from(boss, _player.global_position)
 	return Vector3.ZERO
 
 

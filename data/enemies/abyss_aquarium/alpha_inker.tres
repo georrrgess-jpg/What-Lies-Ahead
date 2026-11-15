@@ -5,6 +5,10 @@
 [ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/aqua_ink_volley.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_burrow.gd" id="b_burrow"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_strike_zones.gd" id="b_zones"]
 
 [sub_resource type="Resource" id="ink"]
 script = ExtResource("4")
@@ -19,25 +23,113 @@ projectile_speed = 11.0
 arc = 0.45
 color = Color(0.6, 0.25, 1, 1)
 
+[sub_resource type="Resource" id="dive"]
+script = ExtResource("b_burrow")
+move_name = &"dive"
+cooldown = 13.0
+first_delay = 3.0
+min_range = 5.0
+max_range = 30.0
+callout = "INKY DIVES — KEEP MOVING, DON'T BE WHERE HE SURFACES"
+windup = 0.5
+windup_clip = &"Spit"
+windup_sound = &"rounds_boss_splash"
+travel_time = 2.6
+travel_speed = 6.5
+surface_telegraph = 1.1
+radius = 3.2
+damage = 12.6
+color = Color(0.7, 0.35, 1.0, 1.0)
+ring_count = 4
+ring_spread = 4.5
+ring_damage = 8.1
+ring_prop_color = Color(0.55, 0.3, 0.9, 1.0)
+
+[sub_resource type="Resource" id="tentacle_line"]
+script = ExtResource("b_zones")
+move_name = &"tentacle_line"
+cooldown = 9.0
+first_delay = 6.0
+min_range = 4.0
+max_range = 22.0
+callout = "TENTACLES FROM BELOW — STEP OFF THE LINE"
+windup = 0.8
+windup_clip = &"Attack"
+pattern = 2
+count = 6
+stagger = 0.18
+radius = 1.5
+telegraph = 1.0
+damage = 9.9
+color = Color(0.7, 0.35, 1.0, 1.0)
+style = 0
+prop = 2
+prop_color = Color(0.55, 0.3, 0.9, 1.0)
+prop_height = 3.2
+linger = 3.0
+linger_dps = 3.6
+linger_slow = 0.7
+
+[sub_resource type="Resource" id="tentacle_cage"]
+script = ExtResource("b_zones")
+move_name = &"tentacle_cage"
+min_phase = 1
+cooldown = 12.0
+first_delay = 0.0
+max_range = 30.0
+windup = 0.8
+windup_clip = &"Attack"
+pattern = 1
+count = 5
+stagger = 0.12
+spread = 3.5
+radius = 1.6
+telegraph = 1.2
+damage = 10.8
+color = Color(0.7, 0.35, 1.0, 1.0)
+style = 0
+prop = 2
+prop_color = Color(0.55, 0.3, 0.9, 1.0)
+prop_height = 3.2
+
+[sub_resource type="Resource" id="event_0"]
+script = ExtResource("b_event")
+kind = &"ink"
+phase = 1
+seconds = 14.0
+strength = 0.35
+color = Color(0.12, 0.04, 0.2, 1.0)
+
+[sub_resource type="Resource" id="event_1"]
+script = ExtResource("b_event")
+kind = &"ink"
+phase = 2
+strength = 0.45
+color = Color(0.12, 0.04, 0.2, 1.0)
+
 [sub_resource type="Resource" id="alpha"]
 script = ExtResource("alpha_script")
-color = Color(0.7, 0.35, 1, 1)
-slam_damage = 16.0
-volley_shots = 7
-volley_damage = 5.0
+color = Color(0.7, 0.35, 1.0, 1.0)
+title = "THE DEEP-SEA DIVA"
+phase_callouts = PackedStringArray("INKY THROWS INK — THE EDGES GO DARK", "INKY IS FURIOUS — TENTACLES EVERYWHERE")
+slam_damage = 14.4
+volley_shots = 0
+volley_damage = 4.5
 volley_speed = 8.5
 volley_spread_degrees = 36.0
 volley_min_range = 4.5
 volley_max_range = 13.0
-volley_cooldown = 11.0
+volley_cooldown = 13.0
 volley_windup = 1.2
 volley_size = 0.34
+moves = Array[ExtResource("b_move")]([SubResource("dive"), SubResource("tentacle_line"), SubResource("tentacle_cage")])
+events = Array[ExtResource("b_event")]([SubResource("event_0"), SubResource("event_1")])
 
 [resource]
 script = ExtResource("1")
 id = &"alpha_inker"
 display_name = "Inky the Great"
-max_health = 2100.0
+max_health = 2900.0
 move_speed = 2.3
 speed_variance = 0.0
 turn_speed = 5.0

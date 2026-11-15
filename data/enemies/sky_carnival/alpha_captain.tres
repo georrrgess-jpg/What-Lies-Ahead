@@ -5,6 +5,9 @@
 [ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/sky_dive.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_strike_zones.gd" id="b_zones"]
 
 [sub_resource type="Resource" id="dive"]
 script = ExtResource("4")
@@ -30,24 +33,81 @@ launch_sound = &"sky_dive_launch"
 land_sound = &"sky_dive_land"
 dust_color = Color(1, 0.95, 0.88, 1)
 
+[sub_resource type="Resource" id="lightning"]
+script = ExtResource("b_zones")
+move_name = &"lightning"
+cooldown = 9.0
+first_delay = 2.5
+max_range = 30.0
+callout = "LIGHTNING — DON'T STAND STILL"
+windup = 0.8
+windup_clip = &"Roar"
+windup_sound = &"rounds_boss_thunder"
+pattern = 0
+count = 5
+stagger = 0.5
+radius = 1.6
+telegraph = 1.05
+damage = 7.7
+color = Color(0.6, 0.85, 1.0, 1.0)
+style = 0
+prop = 1
+prop_color = Color(0.85, 0.95, 1.0, 1.0)
+prop_height = 7.0
+hit_sound = &"rounds_boss_thunder"
+
+[sub_resource type="Resource" id="broadside"]
+script = ExtResource("b_zones")
+move_name = &"broadside"
+min_phase = 1
+cooldown = 12.0
+first_delay = 0.0
+max_range = 30.0
+callout = "BROADSIDE FROM THE AIRSHIP!"
+windup = 0.9
+windup_clip = &"Throw"
+pattern = 1
+count = 5
+stagger = 0.2
+spread = 4.0
+radius = 2.0
+telegraph = 1.4
+damage = 7.7
+color = Color(1.0, 0.75, 0.3, 1.0)
+style = 1
+prop = 4
+prop_color = Color(0.2, 0.22, 0.3, 1.0)
+hits_airborne = true
+
+[sub_resource type="Resource" id="event_0"]
+script = ExtResource("b_event")
+kind = &"gale"
+phase = 1
+strength = 2.6
+color = Color(1.0, 0.75, 0.3, 1.0)
+
 [sub_resource type="Resource" id="alpha"]
 script = ExtResource("alpha_script")
-color = Color(1, 0.75, 0.3, 1)
-slam_damage = 20.0
+color = Color(1.0, 0.75, 0.3, 1.0)
+title = "ADMIRAL OF THE SKY FLEET"
+phase_callouts = PackedStringArray("GALE FORCE — HOLD YOUR GROUND", "ALL GUNS — THE AIRSHIP OPENS FIRE")
+slam_damage = 14.0
 slam_cooldown = 9.0
 volley_shots = 4
-volley_damage = 5.5
+volley_damage = 3.8
 volley_speed = 13.0
 volley_spread_degrees = 15.0
 volley_arc = 0.45
-volley_cooldown = 10.0
+volley_cooldown = 11.0
 volley_size = 0.4
+moves = Array[ExtResource("b_move")]([SubResource("lightning"), SubResource("broadside")])
+events = Array[ExtResource("b_event")]([SubResource("event_0")])
 
 [resource]
 script = ExtResource("1")
 id = &"alpha_captain"
 display_name = "Captain Cumulus"
-max_health = 2500.0
+max_health = 3400.0
 move_speed = 1.95
 speed_variance = 0.0
 turn_speed = 3.5
