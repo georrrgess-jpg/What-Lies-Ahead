@@ -201,7 +201,11 @@ sound_category = Dictionary[StringName, StringName]({
 &"gn2_sparkler_fire": &"weapon",
 &"gn2_ring_fire": &"weapon",
 &"gn2_ring_ricochet": &"impact",
-&"gn2_ring_bounce": &"impact"
+&"gn2_ring_bounce": &"impact",
+&"weap_ripsaw_": &"handling",
+&"weap_ripsaw_fire": &"weapon",
+&"weap_ripsaw_bite": &"impact",
+&"weap_ripsaw_splat": &"impact"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,

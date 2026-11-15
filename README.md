@@ -158,6 +158,7 @@ fullscreen.
 | Frostbite Cryo Beam | Primary | Lockdown | Player level 9 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
 | Rail Lancer | Primary | Anti-heavy | Player level 12 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
 | Gumball Drum Popper | Primary | Trick shots | Player level 15 | Semi-auto drum of bouncy gumballs: each ricochets up to twice (+25% per bounce) and bends toward a zombie, so bank shots round corners land; no splash |
+| Toxic Ripsaw | Primary | Saw shotgun | Player level 20 | Semi-auto slime shotgun whose hits splat a slowing puddle; hold MELEE (T or middle mouse) to rev the chain saw, which saws through the rank and file (heavies and alphas take a third to a half) on a fuel rack that refills while resting or on reload; slows you while sawing |
 | Whirligig | Primary | Crowd shredder | Player level 22 | Prize-wheel minigun: spins up for 0.4 s, then 18 rounds a second that pass through a second zombie; slows you while it spins; overheats |
 | Riptide Harpoon | Primary | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
 | Sparkler | Secondary | Spray and burn | Player level 18 | Full-auto firework machine pistol; every hit adds a fizz burn stack (up to six) that keeps burning; the fuse burns down with the magazine |
@@ -190,7 +191,8 @@ be set in Settings. Code: `scripts/weapons/sights/`; check every weapon × sight
 beam, projectile and splash, pierce, chain, chill/shock and heat), implemented once in
 `scripts/player/weapon_controller.gd` and `scripts/weapons/`. A weapon can add its own behaviour with a `WeaponMode` script
 (`WeaponData.mode_script`, `scripts/weapons/modes/`): the Whirligig's spin-up, the Drum
-Popper's ricochet rounds (`RicochetRound`) and the Riptide's reel (`HarpoonLine`).
+Popper's ricochet rounds (`RicochetRound`), the Riptide's reel (`HarpoonLine`), and the Toxic Ripsaw's chain saw on
+the `melee` action (`WeaponMode.melee`, damage through `WeaponController.melee_hit`).
 
 ## Progression, Sparks and the Shop
 
