@@ -98,9 +98,21 @@ static func effects(id: StringName) -> PackedStringArray:
 	return out
 
 
-## One value of the current tier's row (see TABLE).
+## Endless overrides per tier: a run that never ends compounds every
+## multiplier, so Hard keeps a little relief there (it stays clearly harder
+## than Standard: about wave 18-22 against the mid-20s for the same player).
+const ENDLESS_TABLE := {
+	&"hard": {"health": 1.08, "relief": 2.0, "pace_max": 1.3},
+}
+
+
+## One value of the current tier's row (see TABLE), with the Endless
+## override when an endless level is being played.
 static func value(key: String) -> float:
-	return float(TABLE[current()][key])
+	var tier := current()
+	if Game.level and Game.level.is_endless() and ENDLESS_TABLE.has(tier) and ENDLESS_TABLE[tier].has(key):
+		return float(ENDLESS_TABLE[tier][key])
+	return float(TABLE[tier][key])
 
 
 ## Multiplies enemy health.
