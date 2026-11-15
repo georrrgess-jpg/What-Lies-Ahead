@@ -121,6 +121,20 @@ func setup(director: RunDirector) -> void:
 
 # --- queries ---------------------------------------------------------------------
 
+## The middle of district `id` on the ground (its area's first box), or
+## Vector3.INF when it has no area.
+func district_centre(id: StringName) -> Vector3:
+	for area in _areas:
+		if _district_of(area) != id:
+			continue
+		for shape in area.get_children():
+			if shape is CollisionShape3D:
+				var at := (shape as CollisionShape3D).global_position
+				var map := run.player.get_world_3d().navigation_map
+				return NavigationServer3D.map_get_closest_point(map, at)
+	return Vector3.INF
+
+
 ## The districts open now, in the rules' order.
 func open_districts() -> Array[EndlessDistrict]:
 	var out: Array[EndlessDistrict] = []
@@ -202,6 +216,19 @@ func rest_before(next: int) -> float:
 ## The banner title of wave `n` for the round chip ("" for a plain wave).
 func title_of(n: int) -> String:
 	return waves.title_of(n)
+
+
+## Where an entrance is, for a surge warning: its district and which way it
+## lies from the player ("PRECINCT 9, BEHIND YOU").
+func entrance_label(point: Node3D) -> String:
+	var d := rules.district(_district_of(point))
+	var to := point.global_position - run.player.global_position
+	to.y = 0.0
+	var basis := run.player.camera.global_transform.basis
+	var ahead := (-basis.z).dot(to.normalized())
+	var right := basis.x.dot(to.normalized())
+	var side := "AHEAD" if ahead > 0.7 else ("BEHIND YOU" if ahead < -0.5 else ("ON YOUR RIGHT" if right > 0.0 else "ON YOUR LEFT"))
+	return "%s, %s" % [d.display_name.to_upper() if d else "NEARBY", side]
 
 
 ## Entrances wave `n` works at a time: two or three streets, never all.

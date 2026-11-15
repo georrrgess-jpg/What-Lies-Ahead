@@ -176,6 +176,17 @@ it: waves are generated as they come (kinds as above plus a horde every 5th and 
 the planner prefers the district the player stands in (`SpawnPlanner.set_points`,
 `set_bias`). No portal, checkpoint or continue; `total_waves()` is 0. See docs/ENDLESS.md.
 
+Endless turns on the planner's **strict rules** (`SpawnPlanner.set_strict(14, 5)`, update 10):
+an entrance in the player's view or closer than 14 m in a straight line is out (like one under
+13 m of route), only the 5 valid entrances with the shortest routes are in play (the rest lose
+6 points), a wave's fronts are chosen in different directions from the player and are kept
+while they stay valid (re-read only when one is not), and spread spawns (ambush, ranged) keep to
+the fronts. The fronts per wave come from `EndlessWaves.fronts_of()` (2; 3 for a horde, ambush
+or ranged wave; 1 for a breather) in place of `RunDirector.FRONTS`. A zombie still more than
+46 m of route away is brought to a near entrance out of sight once at any point of a wave
+(`RunDirector.STRAGGLER_ROUTE`), and a surge's warning gives 4.5 s and names the district and
+which way it lies from the player ("SURGE INCOMING — PRECINCT 9, BEHIND YOU").
+
 ## Spawn planner (map logic)
 
 `SpawnPlanner` scores the level's `enemy_spawn` markers for every spawn:

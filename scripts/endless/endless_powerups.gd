@@ -35,6 +35,8 @@ const BLAST_DAMAGE := 160.0
 const BLAST_PUSH := 16.0
 const HEAVY_SHARE := 0.6
 const BOSS_SHARE := 0.15
+## A drop further than this (m) from the navmesh is not made.
+const GROUND_REACH := 3.0
 
 var director: EndlessDirector
 ## The power-up on the ground, if any.
@@ -50,8 +52,7 @@ var _last: StringName
 
 ## Rolls a drop where `z` fell.
 func on_kill(z: Zombie, n: int) -> void:
-	var run := director.run
-	var boss := z == run.boss
+	var boss := z.data.id == director.rules.boss_id
 	if not boss and (n < director.rules.powerup_from_wave or is_instance_valid(pickup) or _since < director.rules.powerup_gap):
 		return
 	if not boss and randf() >= director.rules.powerup_chance:
@@ -98,8 +99,11 @@ func _drop(kind: StringName, at: Vector3) -> void:
 	var run := director.run
 	if is_instance_valid(pickup):
 		pickup.queue_free()
+	# It lies on walkable ground the player can reach, or not at all.
 	var map := run.player.get_world_3d().navigation_map
 	var ground := NavigationServer3D.map_get_closest_point(map, at)
+	if ground.distance_to(at) > GROUND_REACH:
+		return
 	var info: Array = KINDS[kind]
 	pickup = EndlessPowerup.new()
 	pickup.name = "PowerUp"
@@ -112,7 +116,7 @@ func _drop(kind: StringName, at: Vector3) -> void:
 	pickup.collected.connect(_take)
 	pickup.tree_exited.connect(func(): dropped.emit(null))
 	run.get_parent().add_child(pickup)
-	pickup.global_position = ground if ground.distance_to(at) < 2.0 else at
+	pickup.global_position = ground
 	_last = kind
 	_since = 0.0
 	Sfx.play_at(&"cos_unlock", pickup.global_position + Vector3.UP, -2.0, 1.0, 30.0)

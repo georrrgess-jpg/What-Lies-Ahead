@@ -7,8 +7,9 @@ extends Control
 ##   - at the bottom centre: the prompt of the gate or trap the player stands
 ##     at ("HOLD [E]  OPEN PRECINCT 9   500 tickets"), with the hold filling
 ##     a bar, in red with what is missing when the tickets are short;
-##   - a marker on a supply crate until it is picked up, and on a power-up
-##     while it lies on the ground;
+##   - a marker on a supply crate until it is picked up, on a power-up
+##     while it lies on the ground, and in the middle of a district just
+##     opened (until the player walks in or REVEAL_SECONDS pass);
 ##   - under the district chip, a timer bar for every timed power-up running
 ##     (Double Tickets, Rapid Fire), and the weapon in hand's bench tier.
 
@@ -16,6 +17,7 @@ const DISTRICT_POS := Vector2(48, 152)
 const PROMPT_BOTTOM := 250.0
 const SUPPLY_COLOR := Color(0.35, 1.0, 0.45)
 const TIMERS_POS := Vector2(48, 206)
+const REVEAL_SECONDS := 12.0
 
 var _director: RunDirector
 var _endless: EndlessDirector
@@ -33,6 +35,10 @@ var _ticket_icon: Control
 var _bar: ProgressBar
 var _supply: Waypoint
 var _powerup: Waypoint
+var _reveal: Waypoint
+var _reveal_left := 0.0
+var _reveal_id: StringName
+var _reveal_spot: Node3D
 var _timers: VBoxContainer
 ## Timed power-up kind -> [row, bar, seconds label].
 var _timer_rows := {}
@@ -59,6 +65,13 @@ func _ready() -> void:
 	_powerup.offset = Vector3(0, 2.4, 0)
 	_powerup.visible = false
 	add_child(_powerup)
+	_reveal = Waypoint.new()
+	_reveal.icon = "portal"
+	_reveal.offset = Vector3(0, 4.2, 0)
+	_reveal.visible = false
+	add_child(_reveal)
+	_reveal_spot = Node3D.new()
+	add_child(_reveal_spot)
 	_build_timers()
 	visible = false
 
@@ -78,6 +91,8 @@ func bind(director: RunDirector, player: Player) -> void:
 	visible = true
 	_supply.camera = player.camera
 	_powerup.camera = player.camera
+	_reveal.camera = player.camera
+	_endless.district_opened.connect(_on_district_opened)
 	_endless.powerups.dropped.connect(_on_powerup)
 	_endless.powerups.changed.connect(_rebuild_timers)
 	_endless.district_entered.connect(_show_district.bind(true))
@@ -88,7 +103,7 @@ func bind(director: RunDirector, player: Player) -> void:
 	_show_district(_endless.current_district(), false)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _endless == null:
 		return
 	var best := maxi(_endless.best_before, _director.wave_number)
@@ -97,6 +112,11 @@ func _process(_delta: float) -> void:
 		_best.text = "BEST WAVE %d" % best if best > 0 else "FIRST RUN"
 	_update_prompt()
 	_update_timers()
+	if _reveal.visible:
+		_reveal_left -= delta
+		var here := _endless.current_district()
+		if _reveal_left <= 0.0 or (here and here.id == _reveal_id):
+			_reveal.visible = false
 
 
 # --- district chip -------------------------------------------------------------------
@@ -283,6 +303,20 @@ func _on_powerup(p: EndlessPowerup) -> void:
 	if p:
 		_powerup.label = p.title
 		_powerup.color = p.color
+
+
+## A district just opened: a marker over its middle shows the way in.
+func _on_district_opened(d: EndlessDistrict) -> void:
+	var at := _endless.district_centre(d.id)
+	if at == Vector3.INF:
+		return
+	_reveal_spot.global_position = at
+	_reveal.target = _reveal_spot
+	_reveal.label = d.display_name.to_upper()
+	_reveal.color = d.accent_color.lerp(Color.WHITE, 0.2)
+	_reveal_id = d.id
+	_reveal_left = REVEAL_SECONDS
+	_reveal.visible = true
 
 
 func _on_supply(crate: EndlessSupply) -> void:

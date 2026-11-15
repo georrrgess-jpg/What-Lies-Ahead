@@ -19,6 +19,10 @@ const TRAP_REACH := 14.0
 const REACH := 3.0
 ## A power-up further than this walk (m) is left where it lies.
 const POWERUP_REACH := 24.0
+## ...and is only fetched with no zombie this close (m).
+const POWERUP_CLEAR := 9.0
+## ...and given up when one comes this close (m).
+const POWERUP_ABORT := 5.0
 
 var dev: Node
 var _errand: Node3D
@@ -139,7 +143,9 @@ func busy(delta: float) -> bool:
 		if _errand == null:
 			return false
 	_errand_time += delta
-	if _errand_time > 25.0 or _done(run):
+	# A power-up is not worth dying for: back to the fight once they close in.
+	var hunted := _errand is EndlessPowerup and not _clear_around(run, POWERUP_ABORT)
+	if _errand_time > 25.0 or hunted or _done(run):
 		_finish(run)
 		return false
 	var at := run.player.global_position.distance_to(_goal) < 1.6
@@ -160,7 +166,7 @@ func _pick(run: RunDirector) -> Node3D:
 		_goal = e.supply.global_position
 		return e.supply
 	var p := e.powerups.pickup
-	if is_instance_valid(p) and p.time_left() > 2.0 and _reachable(run, p.global_position) \
+	if is_instance_valid(p) and p.time_left() > 2.0 and _clear_around(run) and _reachable(run, p.global_position) \
 			and run.planner.route_length(p.global_position) < POWERUP_REACH:
 		_goal = p.global_position
 		return p
@@ -180,6 +186,14 @@ func _pick(run: RunDirector) -> Node3D:
 	if run.state == RunDirector.State.WAVE and spare >= 0:
 		return _pick_trap(run)
 	return null
+
+
+## True when no zombie is within `radius` m (the bot stops shooting on an errand).
+func _clear_around(run: RunDirector, radius := POWERUP_CLEAR) -> bool:
+	for z in run.alive_enemies():
+		if is_instance_valid(z) and z.global_position.distance_to(run.player.global_position) < radius:
+			return false
+	return true
 
 
 ## Tickets the bot keeps back for the cheapest gate it can still open or the
@@ -298,6 +312,7 @@ func report(timeout: bool) -> void:
 	if run == null or run.endless == null:
 		return
 	_log_spawns(_last_wave)
-	print("[dev] ENDLESS RESULT wave=%d timeout=%s difficulty=%s time=%.0fs kills=%d tickets=%d districts=%d/%d gates=%d traps=%d upgrades=%d powerups=%d best_wave=%d score=%d" % [
+	print("[dev] ENDLESS RESULT wave=%d timeout=%s difficulty=%s time=%.0fs kills=%d tickets=%d districts=%d/%d gates=%d traps=%d upgrades=%d powerups=%d best_wave=%d score=%d at=(%.0f, %.0f, %.0f)" % [
 		run.wave_number, timeout, run.difficulty, run.elapsed, run.total_kills, run.tickets, run.endless.open_districts().size(),
-		run.level.endless.districts.size(), _gates_bought, _traps_armed, _upgrades, run.endless.powerups.taken, EndlessRecords.best_wave(), run.score.score if run.score else 0])
+		run.level.endless.districts.size(), _gates_bought, _traps_armed, _upgrades, run.endless.powerups.taken, EndlessRecords.best_wave(), run.score.score if run.score else 0,
+		run.player.global_position.x, run.player.global_position.y, run.player.global_position.z])

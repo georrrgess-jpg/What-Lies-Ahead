@@ -10,8 +10,13 @@ extends RefCounted
 ## a HORDE (three streets at once, a surge), and the waves between cycle
 ## through the kinds of the story levels, gentle for the first four.
 
-## The kinds of the waves between hordes, in turn (waves 1-4 are fixed).
-const CYCLE: Array[StringName] = [&"standard", &"rush", &"siege", &"bounty", &"ranged", &"standard", &"ambush", &"rush"]
+## The kinds of the waves between hordes, in turn (waves 1-4 are fixed). The
+## cycle lines up with the boss every 10th wave, so every ten waves read: x1
+## breather, x2 standard, x3 rush, x4 crossfire, x5 horde, x6 standard, x7
+## siege, x8 ambush, x9 bounty (a prize before the boss), x0 boss: pressure
+## rises toward each horde and boss and eases after them. (Slot 4 always
+## falls on a breather.)
+const CYCLE: Array[StringName] = [&"standard", &"siege", &"ambush", &"bounty", &"rush", &"standard", &"rush", &"ranged"]
 const OPENING: Array[StringName] = [&"standard", &"standard", &"rush", &"standard"]
 const HORDE_EVERY := 5
 
@@ -31,7 +36,7 @@ const TITLES := {
 ## Shares of a wave's zombies by role, per kind: regular, fast, heavy, special.
 const MIX := {
 	&"standard": [0.62, 0.22, 0.06, 0.10],
-	&"rush": [0.25, 0.62, 0.0, 0.13],
+	&"rush": [0.4, 0.47, 0.0, 0.13],
 	&"siege": [0.5, 0.12, 0.16, 0.22],
 	&"ambush": [0.55, 0.25, 0.06, 0.14],
 	&"ranged": [0.45, 0.15, 0.05, 0.35],
@@ -41,8 +46,8 @@ const MIX := {
 	&"boss": [0.6, 0.25, 0.0, 0.15],
 }
 ## Size and spawn interval of each kind, relative to a standard wave.
-const SIZE := {&"rush": 1.1, &"siege": 0.85, &"ambush": 1.0, &"ranged": 0.9, &"horde": 1.3, &"boss": 0.6, &"calm": 0.55}
-const PACE := {&"rush": 0.6, &"siege": 1.15, &"ambush": 0.75, &"horde": 0.7, &"boss": 1.1, &"calm": 1.5}
+const SIZE := {&"rush": 1.1, &"siege": 0.85, &"ambush": 1.0, &"ranged": 0.9, &"horde": 1.2, &"boss": 0.6, &"calm": 0.55}
+const PACE := {&"rush": 0.75, &"siege": 1.15, &"ambush": 0.75, &"horde": 0.7, &"boss": 1.1, &"calm": 1.5}
 ## Crowd cap of each kind, relative to a standard wave.
 const CROWD := {&"calm": 0.6}
 ## Entrances a wave works at a time (SpawnPlanner fronts): two or three
@@ -106,12 +111,12 @@ func build(n: int, pool: Dictionary) -> WaveData:
 	wave.spawns = _spawns(count, MIX[kind], pool, n)
 	wave.spawn_interval = maxf(rules.interval_min, rules.interval_base - rules.interval_per_wave * (n - 1)) * float(PACE.get(kind, 1.0))
 	wave.max_alive = mini(rules.crowd_max, int(round((rules.crowd_base + rules.crowd_per_wave * (n - 1)) * float(CROWD.get(kind, 1.0)))))
-	wave.burst = 2 if kind in [&"rush", &"horde", &"ambush"] and n >= 8 else 1
+	wave.burst = 2 if kind in [&"rush", &"horde", &"ambush"] and n >= 12 else 1
 	wave.speed_scale = rules.speed_scale(n)
 	wave.late_types_after = 0.2 if n > 2 else 0.4
-	if kind == &"horde" or (kind == &"standard" and n >= 4):
+	if kind == &"horde" or (kind == &"standard" and n >= 6):
 		wave.surge_at = 0.45
-		wave.surge_count = mini(4 + n / 4, 9)
+		wave.surge_count = mini(3 + n / 5, 8)
 	if kind == &"boss":
 		wave.boss = rules.boss_id
 		wave.boss_at = 0.3

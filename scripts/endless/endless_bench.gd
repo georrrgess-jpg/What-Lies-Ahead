@@ -60,7 +60,7 @@ func _process(delta: float) -> void:
 	player_inside = player != null and player.alive and player.global_position.distance_to(global_position) < REACH
 	if _holo:
 		_holo.rotation.y += delta * (4.0 if _flash > 0.0 else 0.9)
-		_holo.position.y = 1.45 + sin(_time * 2.0) * 0.04
+		_holo.position.y = 1.65 + sin(_time * 2.0) * 0.04
 		_holo.scale = Vector3.ONE * (1.0 + _flash * 0.35)
 	_flash = maxf(0.0, _flash - delta * 1.5)
 	if _glow:
@@ -139,7 +139,7 @@ func _build() -> void:
 func _build_hologram() -> void:
 	_holo = Node3D.new()
 	_holo.name = "Hologram"
-	_holo.position = Vector3(0, 1.45, 0.1)
+	_holo.position = Vector3(0, 1.65, 0.1)
 	add_child(_holo)
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

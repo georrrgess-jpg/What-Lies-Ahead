@@ -303,11 +303,12 @@ func _physics_process(delta: float) -> void:
 
 	_log_timer -= delta
 	if _log_timer <= 0.0:
-		_log_timer = 15.0
-		print("[dev] t=%4.0fs state=%-10s wave=%d left=%d hp=%3d tickets=%d %s %d/%d fps=%.0f" % [
+		_log_timer = 3.0 if _endless else 15.0
+		print("[dev] t=%4.0fs state=%-10s wave=%d left=%d hp=%3d tickets=%d %s %d/%d fps=%.0f at=(%.0f, %.0f)" % [
 			_clock, RunDirector.State.keys()[_director.state], _director.wave_number, _director.enemies_remaining(),
 			int(_player.health), _director.tickets, _player.weapons.current.id,
-			_player.weapons.magazine(), _player.weapons.reserve(), Engine.get_frames_per_second()])
+			_player.weapons.magazine(), _player.weapons.reserve(), Engine.get_frames_per_second(),
+			_player.global_position.x, _player.global_position.z])
 
 	if perf and _director.state == RunDirector.State.WAVE:
 		_sample_perf(delta)
@@ -591,8 +592,9 @@ func _do_break(delta: float) -> void:
 		_tap("buy_damage_boost")
 		await get_tree().physics_frame
 		await get_tree().physics_frame
-	# In Endless the gate errand comes first (EndlessBot); the shield keeps a small reserve.
-	var spare := _director.tickets - (EndlessBot.RESERVE if _endless else 0)
+	# In Endless the gate and bench errands come first (EndlessBot): the shield
+	# only takes what is left after saving for the next of them.
+	var spare := _director.tickets - (maxi(EndlessBot.RESERVE, _endless.saving_for()) if _endless else 0)
 	if spare >= waves.overshield_price and _director.overshield < waves.overshield_amount:
 		_tap("buy_overshield")
 		await get_tree().physics_frame

@@ -598,7 +598,7 @@ func _tick_surge(delta: float, wave: WaveData) -> void:
 			return
 		_surge_left = surge_warning_seconds
 		Sfx.play(&"rounds_surge_siren", -2.0)
-		notice.emit("SURGE INCOMING — %s" % SpawnPlanner.label(_surge_point), &"bad")
+		notice.emit("SURGE INCOMING — %s" % (endless.entrance_label(_surge_point) if endless else SpawnPlanner.label(_surge_point)), &"bad")
 		surge_warning.emit(_surge_point, surge_warning_seconds)
 	if _surge_left <= 0.0:
 		return
