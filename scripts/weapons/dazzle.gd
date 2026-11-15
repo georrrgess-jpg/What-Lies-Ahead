@@ -100,7 +100,7 @@ func _show_stars(on: bool) -> void:
 			m.mesh = _star()
 			m.material_override = _star_mat(i)
 			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			m.scale = Vector3.ONE * 0.17
+			m.scale = Vector3.ONE * 0.42
 			add_child(m)
 			_stars.append(m)
 	for s in _stars:
@@ -134,6 +134,7 @@ static func _star_mat(i: int) -> StandardMaterial3D:
 			var m := StandardMaterial3D.new()
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+			m.billboard_keep_scale = true
 			m.cull_mode = BaseMaterial3D.CULL_DISABLED
 			m.albedo_color = c
 			_star_mats.append(m)

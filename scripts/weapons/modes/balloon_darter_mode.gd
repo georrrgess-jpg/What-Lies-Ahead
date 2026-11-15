@@ -1,6 +1,6 @@
 extends WeaponMode
 ## Balloon Darter: every dart that hits a zombie sticks and ties a balloon on
-## it (BalloonBunch). A second after the first dart the bunch pops for damage
+## it (BalloonBunch). Just under a second after the first dart the bunch pops for damage
 ## per balloon and splashes its neighbours, setting off their balloons too, so
 ## tagging a pack then watching it go off in a chain is the weapon's trick.
 ## The darts themselves are light hitscan shots (WeaponData damage). The dart,

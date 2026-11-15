@@ -163,6 +163,8 @@ fullscreen.
 | Riptide Harpoon | Primary | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
 | Sparkler | Secondary | Spray and burn | Player level 18 | Full-auto firework machine pistol; every hit adds a fizz burn stack (up to six) that keeps burning; the fuse burns down with the magazine |
 | Ring Toss | Secondary | Ricochet | Player level 26 | Throws a glowing hoop that ricochets through up to four zombies and flies back to be caught; a headshot "Ringer" does double damage and refunds the hoop |
+| Shutterbug | Secondary | Crowd stun | Player level 13 | Flash camera: each shot hits every zombie in a 12 m cone (no headshots, weaker toward the rim and far end) and dazzles it: knocked out of its swing, staggered (each zombie once per 2.5 s; heavies and alphas are only slowed) and seeing stars; aiming zooms the flash (narrower, longer, x1.3) |
+| Balloon Darter | Secondary | Tag and pop | Player level 37 | Quick darts tie a balloon onto each zombie they hit (up to four); 0.9 s after the first dart the bunch pops for 28 a balloon and splashes its neighbours, setting off their balloons in a chain |
 
 `python3 tools/balance_report.py` prints each weapon's time-to-kill, sustained DPS and
 ammo economy from data. The latest balance pass (about 150 bot runs) evened the worlds
@@ -191,8 +193,9 @@ be set in Settings. Code: `scripts/weapons/sights/`; check every weapon × sight
 beam, projectile and splash, pierce, chain, chill/shock and heat), implemented once in
 `scripts/player/weapon_controller.gd` and `scripts/weapons/`. A weapon can add its own behaviour with a `WeaponMode` script
 (`WeaponData.mode_script`, `scripts/weapons/modes/`): the Whirligig's spin-up, the Drum
-Popper's ricochet rounds (`RicochetRound`), the Riptide's reel (`HarpoonLine`), and the Toxic Ripsaw's chain saw on
-the `melee` action (`WeaponMode.melee`, damage through `WeaponController.melee_hit`).
+Popper's ricochet rounds (`RicochetRound`), the Riptide's reel (`HarpoonLine`), the Toxic Ripsaw's chain saw on
+the `melee` action (`WeaponMode.melee`, damage through `WeaponController.melee_hit`), the Shutterbug's
+flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
 
 ## Progression, Sparks and the Shop
 
