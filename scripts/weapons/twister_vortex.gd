@@ -366,20 +366,20 @@ func _whirl_cup() -> Node3D:
 	var root := Node3D.new()
 	var saucer := MeshInstance3D.new()
 	saucer.mesh = _saucer_mesh
-	saucer.material_override = _glow(CUP_COLORS[1], 0.4)
+	saucer.material_override = _glow(CUP_COLORS[1], 0.14)
 	saucer.scale = Vector3(CUP_RADIUS + 0.5, 1.0, CUP_RADIUS + 0.5)
 	root.add_child(saucer)
 	var cup := MeshInstance3D.new()
 	cup.mesh = _cup_mesh
-	cup.material_override = _glow(CUP_COLORS[0], 0.32)
-	cup.scale = Vector3(CUP_RADIUS, 1.4, CUP_RADIUS)
-	cup.position.y = 0.7
+	cup.material_override = _glow(CUP_COLORS[0], 0.12)
+	cup.scale = Vector3(CUP_RADIUS, 0.9, CUP_RADIUS)
+	cup.position.y = 0.45
 	root.add_child(cup)
 	var rim := MeshInstance3D.new()
 	rim.mesh = _rim_mesh
-	rim.material_override = _glow(CUP_COLORS[2], 0.8)
+	rim.material_override = _glow(CUP_COLORS[2], 0.4)
 	rim.scale = Vector3.ONE * CUP_RADIUS
-	rim.position.y = 1.4
+	rim.position.y = 0.9
 	root.add_child(rim)
 	for c in root.get_children():
 		(c as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

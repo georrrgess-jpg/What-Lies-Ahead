@@ -5,7 +5,7 @@ extends MeshInstance3D
 ## sagging a little with distance, with a splash where it lands. One per
 ## weapon mode (DunkTankMode), reused shot after shot.
 
-const LINGER := 0.11
+const LINGER := 0.14
 const POINTS := 14
 ## Drop at the middle of the jet per metre of length.
 const SAG := 0.035
@@ -38,6 +38,7 @@ func spray(from: Vector3, to: Vector3, on_zombie: bool) -> void:
 	_left = LINGER
 	_hit_zombie = on_zombie
 	visible = true
+	_rebuild()
 
 
 func _process(delta: float) -> void:
@@ -61,7 +62,7 @@ func _rebuild() -> void:
 	var eye := cam.global_position if cam else _from + Vector3.UP
 	var length := _from.distance_to(_to)
 	var t := Time.get_ticks_msec() * 0.001
-	var fade := clampf(_left / LINGER, 0.0, 1.0)
+	var fade := sqrt(clampf(_left / LINGER, 0.0, 1.0))
 	var pts := PackedVector3Array()
 	var side := (_to - _from).cross(Vector3.UP).normalized()
 	for i in POINTS + 1:
@@ -69,6 +70,6 @@ func _rebuild() -> void:
 		var wobble := sin(k * 9.0 - t * 40.0) * 0.025 * k
 		pts.append(_from.lerp(_to, k) + Vector3.DOWN * SAG * length * sin(k * PI) + side * wobble)
 	WeaponFx.begin_ribbons(_im, WeaponFx.ribbon_material(6.0, 3.0))
-	WeaponFx.add_ribbon(_im, pts, 0.11, Color(BODY, 0.45 * fade), eye)
-	WeaponFx.add_ribbon(_im, pts, 0.045, Color(CORE, 0.9 * fade), eye)
+	WeaponFx.add_ribbon(_im, pts, 0.16, Color(BODY, 0.7 * fade), eye)
+	WeaponFx.add_ribbon(_im, pts, 0.06, Color(CORE, fade), eye)
 	WeaponFx.end_ribbons(_im)
