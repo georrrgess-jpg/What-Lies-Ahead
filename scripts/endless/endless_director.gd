@@ -51,7 +51,7 @@ var supply: EndlessSupply
 ## The Upgrade Bench tiers and Rapid Fire (weapon stats for the run).
 var upgrades: EndlessUpgrades
 var powerups: EndlessPowerups
-## The interactable the player is at (an EndlessGate or EndlessTrap), and how
+## The interactable the player is at (an EndlessGate, EndlessBench or EndlessTrap), and how
 ## long the interact key has been held there.
 var focus: Node3D
 var hold := 0.0
