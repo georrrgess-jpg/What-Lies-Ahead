@@ -37,7 +37,7 @@ stagger = 0.15
 spread = 4.5
 radius = 1.3
 telegraph = 1.1
-damage = 10.0
+damage = 7.0
 color = Color(0.3, 1.0, 0.66, 1.0)
 style = 0
 prop = 1
@@ -61,7 +61,7 @@ beam_range = 26.0
 height = 0.55
 half_width = 0.5
 jumpable = true
-dps = 34.0
+dps = 23.8
 color = Color(0.3, 1.0, 0.66, 1.0)
 
 [sub_resource type="Resource" id="idol_circle"]
@@ -79,7 +79,7 @@ beam_range = 26.0
 height = 0.55
 half_width = 0.5
 jumpable = true
-dps = 34.0
+dps = 23.8
 color = Color(0.3, 1.0, 0.66, 1.0)
 
 [sub_resource type="Resource" id="alpha"]
@@ -87,7 +87,7 @@ script = ExtResource("alpha_script")
 color = Color(0.3, 1.0, 0.66, 1.0)
 title = "GUARDIAN OF THE IDOL"
 phase_callouts = PackedStringArray("THE IDOL AWAKENS — ITS LASER SWEEPS FASTER", "THE IDOL BLAZES — A FULL-CIRCLE SWEEP")
-slam_damage = 17.0
+slam_damage = 11.9
 slam_cooldown = 9.0
 armour_health = 900.0
 armour_share = 0.5
