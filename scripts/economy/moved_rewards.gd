@@ -1,0 +1,38 @@
+class_name MovedRewards
+extends RefCounted
+## One-time carry-over for level rewards that moved to the Shop (update 12:
+## four new guns took their levels). A save that had already reached the
+## level keeps the item it earned there (granted "cosmetic:<id>"); everyone
+## else buys it in the Shop. "moved_rewards" in the progression section
+## records the batches applied, so each runs once per profile.
+
+## Batch id -> {cosmetic id: the level that used to give it}.
+const BATCHES := {
+	"u12": {&"charm_duck": 11, &"cell_blue_raspberry": 24, &"banner_ferris_glow": 28, &"banner_night_shift": 32},
+}
+
+
+static func apply_if_pending() -> void:
+	var sec := Profile.section("progression")
+	var done: Array = sec.get("moved_rewards", [])
+	var changed := false
+	for batch in BATCHES:
+		if done.has(batch):
+			continue
+		apply(BATCHES[batch])
+		done.append(batch)
+		changed = true
+	if changed:
+		sec["moved_rewards"] = done
+		Profile.save_profile()
+
+
+## Grants every item whose old level the save has reached. Returns their ids.
+static func apply(items: Dictionary) -> Array[StringName]:
+	var kept: Array[StringName] = []
+	for id in items:
+		var it := Cosmetics.item(id)
+		if it and Progression.xp() >= Progression.xp_for_level(int(items[id])) and not Cosmetics.is_owned_anywhere(it):
+			Cosmetics.grant(it)
+			kept.append(id)
+	return kept

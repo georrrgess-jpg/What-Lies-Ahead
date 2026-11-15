@@ -31,6 +31,8 @@ func _ready() -> void:
 	# A save from before the level 50 cap keeps its XP and weapons (first: it
 	# leaves a pre-economy save to LegacyGrant).
 	CapRaise.apply_if_pending()
+	# Level rewards that moved to the Shop stay with saves that earned them.
+	MovedRewards.apply_if_pending()
 	# A save from before the Sparks economy keeps everything it owned.
 	LegacyGrant.apply_if_pending()
 	PrizePrints.connect_hooks()
