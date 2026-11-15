@@ -1,0 +1,77 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/endless_rules.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/data/endless_district.gd" id="3"]
+
+[sub_resource type="Resource" id="d_square"]
+script = ExtResource("3")
+id = &"ashfall_square"
+display_name = "Ashfall Square"
+blurb = "The old town square: a toppled statue, burning cars and the last working loadout station."
+price = 0
+enemies = Array[StringName]([])
+accent_color = Color(1, 0.48, 0.18, 1)
+
+[sub_resource type="Resource" id="d_precinct"]
+script = ExtResource("3")
+id = &"precinct"
+display_name = "Precinct 9"
+blurb = "The police station and its car park of riot vans. The riot squad never clocked off."
+price = 500
+enemies = Array[StringName]([&"riot_shield"])
+accent_color = Color(0.25, 0.55, 1, 1)
+
+[sub_resource type="Resource" id="d_metro"]
+script = ExtResource("3")
+id = &"metro"
+display_name = "Metro Line"
+blurb = "Down the stairs to the flooded platforms, lit by emergency lamps. Something crawls in the tunnels."
+price = 750
+enemies = Array[StringName]([&"tunnel_crawler"])
+accent_color = Color(0.3, 1, 0.55, 1)
+
+[sub_resource type="Resource" id="d_market"]
+script = ExtResource("3")
+id = &"market"
+display_name = "Neon Market"
+blurb = "A collapsed street of stalls under flickering neon. Mind the ones carrying bottles."
+price = 1000
+enemies = Array[StringName]([&"firebug"])
+accent_color = Color(1, 0.25, 0.75, 1)
+
+[sub_resource type="Resource" id="d_tower"]
+script = ExtResource("3")
+id = &"tower"
+display_name = "Broadcast Tower"
+blurb = "The foot of the broken skyscraper and its radio mast. Whatever wrecked the city sleeps here."
+price = 1500
+enemies = Array[StringName]([&"city_bruiser"])
+accent_color = Color(1, 0.85, 0.3, 1)
+
+[sub_resource type="Resource" id="rules"]
+script = ExtResource("2")
+districts = Array[ExtResource("3")]([SubResource("d_square"), SubResource("d_precinct"), SubResource("d_metro"), SubResource("d_market"), SubResource("d_tower")])
+base_enemies = Array[StringName]([&"city_shambler", &"city_runner", &"city_bruiser"])
+boss_id = &"the_wrecker"
+boss_every = 10
+
+[resource]
+script = ExtResource("1")
+id = &"endless_city"
+display_name = "Ashfall City"
+blurb = "Endless. A burnt-out city that never stops coming. Hold the square, then buy your way through the gates into the rest of the city."
+scene_path = "res://scenes/levels/endless_city.tscn"
+requires_level = &""
+sort_order = 0
+music = &"city_endless_loop"
+music_final = &"city_endless_final"
+ambience = &"city_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(1, 0.42, 0.16, 1)
+menu_camera_from = Vector3(24, 10, 22)
+menu_camera_to = Vector3(0, 3, 0)
+heal_item_name = "Canned peaches"
+loading_tips = PackedStringArray()
+endless = SubResource("rules")

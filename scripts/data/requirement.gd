@@ -14,6 +14,8 @@ enum Kind {
 	## Challenge `target` completed (weapon challenges: on the weapon in context,
 	## or on any weapon without context). Fixed value: saved in .tres files.
 	CHALLENGE = 20,
+	ENDLESS_WAVE = 21,      ## best Endless wave >= amount (EndlessRecords)
+	ENDLESS_DISTRICT = 22,  ## Endless district `target` opened at least once
 }
 
 @export var kind: Kind = Kind.NONE
@@ -46,6 +48,10 @@ func is_met(weapon_ctx: StringName = &"") -> bool:
 			return Unlocks.is_granted(target)
 		Kind.CHALLENGE:
 			return Progression.is_challenge_complete(target, weapon_ctx)
+		Kind.ENDLESS_WAVE:
+			return EndlessRecords.best_wave() >= amount
+		Kind.ENDLESS_DISTRICT:
+			return EndlessRecords.has_opened(target)
 	return true
 
 
@@ -70,6 +76,10 @@ func describe() -> String:
 			text = "Special unlock"
 		Kind.CHALLENGE:
 			text = "Complete the challenge \"%s\"" % Progression.challenge_name(target)
+		Kind.ENDLESS_WAVE:
+			text = "Reach wave %d in Endless" % amount
+		Kind.ENDLESS_DISTRICT:
+			text = "Open %s in Endless" % _district_name(target)
 	for r in all_of:
 		if r and not r.is_met():
 			text = (text + " and " if text != "" else "") + r.describe()
@@ -89,3 +99,12 @@ static func weapon_rank(weapon_id: StringName, rank: int) -> Requirement:
 	r.target = weapon_id
 	r.amount = rank
 	return r
+
+
+## The display name of Endless district `id` (any endless level), or the id.
+static func _district_name(id: StringName) -> String:
+	for level in GameData.endless_levels():
+		var d := level.endless.district(id)
+		if d:
+			return d.display_name
+	return String(id).capitalize()

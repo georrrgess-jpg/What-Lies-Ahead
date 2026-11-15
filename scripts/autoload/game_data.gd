@@ -16,6 +16,7 @@ var _weapon_map := {}
 var _enemies := {}
 var _worlds: Array[WorldData] = []
 var _levels := {}
+var _endless: Array[LevelData] = []
 var _cosmetics: Array[CosmeticItem] = []
 var _ui: Array[UiExtension] = []
 
@@ -38,6 +39,10 @@ func _ready() -> void:
 			if level:
 				_levels[level.id] = level
 				level.world = world
+	for r in scan("res://data/endless", false):
+		if r is LevelData and r.is_endless():
+			_levels[r.id] = r
+			_endless.append(r)
 	for r in scan("res://data/cosmetics", true):
 		if r is CosmeticItem:
 			_cosmetics.append(r)
@@ -92,6 +97,11 @@ func level(id: StringName) -> LevelData:
 
 func worlds() -> Array[WorldData]:
 	return _worlds
+
+
+## Endless levels (data/endless/): not part of any world.
+func endless_levels() -> Array[LevelData]:
+	return _endless
 
 
 func cosmetics() -> Array[CosmeticItem]:

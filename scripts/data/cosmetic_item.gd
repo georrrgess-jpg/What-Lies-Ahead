@@ -8,7 +8,8 @@ extends Resource
 ## (null = owned by default), or from the shop: an item with a `price` is
 ## bought with Sparks (see Cosmetics.buy) once its requirement, if any, is met.
 
-enum Rarity { COMMON, RARE, EPIC, LEGENDARY, MASTERY }
+## MYTHIC (above Legendary) is earned, never sold: Endless rewards.
+enum Rarity { COMMON, RARE, EPIC, LEGENDARY, MASTERY, MYTHIC }
 
 ## Stable ID saved in the profile. Never rename once shipped.
 @export var id: StringName
@@ -67,8 +68,9 @@ static func rarity_color(r: Rarity) -> Color:
 		Rarity.EPIC: return Color("b45cff")
 		Rarity.LEGENDARY: return Color("ffb22e")
 		Rarity.MASTERY: return Color("35f0ff")
+		Rarity.MYTHIC: return Color("ff3b5c")
 	return Color("c9c6d2")
 
 
 static func rarity_name(r: Rarity) -> String:
-	return ["Common", "Rare", "Epic", "Legendary", "Mastery"][int(r)]
+	return ["Common", "Rare", "Epic", "Legendary", "Mastery", "Mythic"][int(r)]

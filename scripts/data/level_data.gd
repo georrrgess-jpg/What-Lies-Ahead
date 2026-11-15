@@ -33,6 +33,10 @@ extends Resource
 @export var heal_item_name := "Snack"
 ## Shown on the loading screen.
 @export var loading_tips: PackedStringArray = PackedStringArray()
+## Endless levels only: their districts and scaling (null for a story level).
+## An endless level lives in data/endless/, belongs to no world and has no
+## wave set; its waves never run out (docs/ENDLESS.md).
+@export var endless: EndlessRules
 
 ## Set by GameData at load: the world that lists this level.
 var world: WorldData
@@ -41,3 +45,7 @@ var world: WorldData
 ## The loop for the final wave and extraction.
 func final_music() -> StringName:
 	return music_final if music_final != &"" else music
+
+
+func is_endless() -> bool:
+	return endless != null
