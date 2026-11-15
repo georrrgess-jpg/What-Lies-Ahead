@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Shader" path="res://art/shaders/city_smoke.gdshader" id="1"]
+
+[sub_resource type="QuadMesh" id="column_mesh"]
+center_offset = Vector3(0, 0.5, 0)
+
+[sub_resource type="ShaderMaterial" id="column_material"]
+render_priority = -1
+shader = ExtResource("1")
+shader_parameter/opacity = 0.85
+shader_parameter/speed = 0.04
+shader_parameter/lean = 0.22
+shader_parameter/under_glow = 1.0
+
+[sub_resource type="ShaderMaterial" id="inner_material"]
+shader = ExtResource("1")
+shader_parameter/smoke_color = Color(0.24, 0.17, 0.17, 1)
+shader_parameter/opacity = 0.7
+shader_parameter/speed = 0.06
+shader_parameter/lean = 0.3
+shader_parameter/under_glow = 1.3
+
+[node name="CitySmokeColumn" type="Node3D"]
+
+[node name="Column" type="MeshInstance3D" parent="."]
+transform = Transform3D(16, 0, 0, 0, 48, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+extra_cull_margin = 24.0
+mesh = SubResource("column_mesh")
+surface_material_override/0 = SubResource("column_material")
+
+[node name="Inner" type="MeshInstance3D" parent="."]
+transform = Transform3D(9, 0, 0, 0, 30, 0, 0, 0, 1, 0.6, 0, 0.4)
+cast_shadow = 0
+extra_cull_margin = 16.0
+mesh = SubResource("column_mesh")
+surface_material_override/0 = SubResource("inner_material")
