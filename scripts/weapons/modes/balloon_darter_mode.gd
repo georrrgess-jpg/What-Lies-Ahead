@@ -14,3 +14,11 @@ func shape_hits(hits: Dictionary, _from: Vector3, _end: Vector3, _power: float) 
 		var z: Zombie = entry["zombie"]
 		if is_instance_valid(z) and not z.is_dead():
 			BalloonBunch.of(z).add(data, controller, entry["body_point"])
+
+
+## Every dart ties a balloon that pops for BalloonBunch.POP_DAMAGE (at most
+## MAX_BALLOONS per FUSE on one zombie).
+func arsenal_dps(base: float) -> float:
+	var darts_per_second := base / maxf(1.0, data.burst_damage())
+	var balloons := minf(darts_per_second, BalloonBunch.MAX_BALLOONS / BalloonBunch.FUSE)
+	return base + balloons * BalloonBunch.POP_DAMAGE

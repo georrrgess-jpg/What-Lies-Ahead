@@ -22,6 +22,14 @@ static func create(weapon: WeaponData, owner_controller: WeaponController) -> We
 	return mode
 
 
+## The sustained single-target damage per second the Arsenal shows, given
+## `base` (WeaponData.damage_per_second(), which only sees the weapon's own
+## hits). Modes that deal damage their data does not describe (a whirl's spin
+## ticks, balloons popping) add it here. Called on a mode with only `data` set.
+func arsenal_dps(base: float) -> float:
+	return base
+
+
 ## Every physics frame while the weapon can be used. `spinning` is true while
 ## fire is held and nothing (a reload, a switch, a sprint) stops the weapon.
 ## Return false to hold the shot back.
