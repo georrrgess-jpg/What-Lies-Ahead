@@ -1,0 +1,38 @@
+[gd_resource type="Resource" format=3]
+
+[resource]
+metadata/clips = {
+"Idle": {"length": 2},
+"Walk": {"length": 0.9167, "speed": 1.548},
+"Run": {"length": 0.5417, "speed": 3.956},
+"Attack": {"length": 1.083, "strike": 0.5958},
+"Drum": {"beats": [0.2083, 0.4583, 0.7083], "length": 1},
+"Recover": {"length": 1.25},
+"Walk_Firebug": {"length": 0.7083, "speed": 2.093},
+"Run_Firebug": {"length": 0.4167, "speed": 5.467},
+"Idle_Firebug": {"length": 2},
+"Attack_Firebug": {"length": 1.083, "strike": 0.5958},
+"Throw_Bottle": {"length": 1.25, "release": 0.875},
+"Idle_Crawler": {"length": 2},
+"Walk_Crawler": {"length": 0.6042, "speed": 1.505},
+"Run_Crawler": {"length": 0.3333, "speed": 4.143},
+"Attack_Crawler": {"length": 0.9167, "strike": 0.5042},
+"Crouch_Crawler": {"length": 0.7083},
+"Leap_Crawler": {"length": 0.5833},
+"Stagger_Crawler": {"length": 0.5833},
+"Emerge_Crawler": {"length": 0.9167},
+"Die_Back_Crawler": {"impact": 0.4167, "length": 1.083},
+"Die_Front_Crawler": {"impact": 0.4167, "length": 1.083},
+"Die_Spin_Crawler": {"impact": 0.4167, "length": 1.083},
+"Die_HeadPop_Crawler": {"impact": 0.5833, "length": 1.083, "pop": 0.3125},
+"Stagger": {"length": 0.625},
+"Stagger_Firebug": {"length": 0.625},
+"Hit_Head": {"length": 0.3333},
+"Die_Back": {"impact": 0.5417, "length": 1.083},
+"Die_Front": {"impact": 0.625, "length": 1.083},
+"Die_Spin": {"impact": 0.7083, "length": 1.167},
+"Die_Heavy": {"impact": 1.125, "length": 1.5, "thud": 0.5},
+"Die_HeadPop": {"impact": 1, "length": 1.333, "pop": 0.3542},
+"Emerge": {"length": 0.9167},
+"Emerge_Firebug": {"length": 0.9167}
+}

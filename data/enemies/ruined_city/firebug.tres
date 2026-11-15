@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/zombie_city_special.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/city_firebug.gd" id="4"]
+
+[sub_resource type="Resource" id="bottle"]
+script = ExtResource("4")
+min_range = 6.0
+max_range = 22.0
+cooldown = 6.0
+windup = 1.0
+damage = 8.0
+damage_per_second = 5.0
+radius = 1.7
+linger = 3.0
+projectile_speed = 13.0
+lead = 0.55
+apex = 2.4
+
+[resource]
+script = ExtResource("1")
+id = &"firebug"
+display_name = "Firebug"
+max_health = 85.0
+move_speed = 2.6
+speed_variance = 0.1
+turn_speed = 6.0
+tickets = 22
+score = 260
+xp = 22
+damage = 14.0
+attack_range = 1.7
+attack_reach = 2.3
+attack_windup = 0.6
+attack_recover = 0.8
+lunge_speed = 3.0
+mass = 1.0
+flank_degrees = 50.0
+model_scene = ExtResource("2")
+outfit = &"Firebug"
+body_scale = 0.96
+capsule_radius = 0.46
+capsule_height = 1.9
+head_height = 1.25
+shirt_colors = Array[Color]([Color(0.15, 0.15, 0.19, 1), Color(0.58, 0.16, 0.22, 1), Color(0.34, 0.22, 0.55, 1), Color(0.18, 0.38, 0.34, 1)])
+skin_colors = Array[Color]([Color(0.62, 0.8, 0.4, 1), Color(0.56, 0.77, 0.47, 1), Color(0.66, 0.78, 0.43, 1)])
+accessory_slots = PackedStringArray("Acc_Firebug_Goggles|", "Acc_Firebug_Mohawk|", "Acc_Firebug_Can||")
+move_animation = &"Walk"
+clip_style = &"Firebug"
+animation_reference_speed = 2.6
+avoidance_radius = 0.55
+behaviours = Array[ExtResource("3")]([SubResource("bottle")])
+voice_sounds = Array[StringName]([&"cz_firebug_cackle_1", &"cz_firebug_cackle_2"])
+voice_interval = Vector2(3, 6)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

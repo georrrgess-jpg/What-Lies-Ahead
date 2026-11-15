@@ -231,6 +231,10 @@ var warmup_only := false
 var behaviours: Array[EnemyBehaviour] = []
 ## Multiplies chase speed this frame (behaviours set it; reset every frame).
 var speed_multiplier := 1.0
+## True on frames a behaviour moves the zombie itself (on_physics returned
+## true): the avoidance agent's callback, which keeps steering at the last
+## chase velocity, must not move it as well.
+var _behaviour_moved := false
 
 
 func _ready() -> void:
@@ -456,6 +460,7 @@ func _physics_process(delta: float) -> void:
 	for b in behaviours:
 		if b.on_physics(self, delta):
 			skip = true
+	_behaviour_moved = skip
 	if skip:
 		_voice(delta)
 		return
@@ -630,7 +635,7 @@ func _has_clear_line() -> bool:
 
 
 func _on_velocity_computed(safe_velocity: Vector3) -> void:
-	if state != State.CHASE or _stagger_left > 0.0:
+	if state != State.CHASE or _stagger_left > 0.0 or _behaviour_moved:
 		return
 	velocity.x = safe_velocity.x + _knock.x
 	velocity.z = safe_velocity.z + _knock.z
