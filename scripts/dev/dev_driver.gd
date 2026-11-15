@@ -659,6 +659,9 @@ func _bot_range(data: WeaponData) -> float:
 		return minf(data.max_range * 0.85, 17.0)
 	if data.projectile_speed > 0.0:
 		return 21.0
+	# Short-reach weapons (the Shutterbug's flash) close in first.
+	if data.max_range < 30.0:
+		return data.max_range * 0.75
 	return 26.0
 
 
