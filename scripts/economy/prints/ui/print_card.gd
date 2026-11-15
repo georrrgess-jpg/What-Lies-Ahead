@@ -18,7 +18,7 @@ static func create(card_size := CARD_SIZE) -> PrintCard:
 	var c := PrintCard.new()
 	c.custom_minimum_size = card_size
 	c._build("")
-	c._title.add_theme_font_size_override("font_size", 21)
+	c.title_size = 21
 	c._heart = UiKit.label("♥", 26, UiKit.PINK, true)
 	c._heart.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	c._heart.grow_horizontal = Control.GROW_DIRECTION_BEGIN

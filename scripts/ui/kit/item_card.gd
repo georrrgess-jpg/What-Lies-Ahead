@@ -15,6 +15,9 @@ extends Button
 ##   card.pressed.connect(_select.bind(item))
 
 const LOCKED_TINT := Color(0.34, 0.31, 0.46)
+## Title font size, and the smallest it shrinks to so a long word still fits.
+const TITLE_SIZE := 24
+const TITLE_MIN_SIZE := 15
 
 ## Whether this card is the selected one of its group.
 var selected: bool:
@@ -27,6 +30,12 @@ var selected: bool:
 		set_pressed_no_signal(v)
 var _picture: TextureRect
 var _holder: Control
+## Title font size before shrinking to fit (cards may set a smaller one).
+var title_size := TITLE_SIZE:
+	set(value):
+		title_size = value
+		if _title:
+			_fit_title()
 var _title: Label
 var _status: HBoxContainer
 var _tag: KitChip
@@ -71,10 +80,13 @@ func _build(title: String) -> void:
 	_rarity.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_rarity.visible = false
 	col.add_child(_rarity)
-	_title = UiKit.label(title, 24, UiKit.CREAM, true)
+	_title = UiKit.label(title, TITLE_SIZE, UiKit.CREAM, true)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# Wrap between words only; a word too wide for the card shrinks the text
+	# instead of breaking ("SHUTTERBU / G").
+	_title.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_title.resized.connect(_fit_title)
 	_title.max_lines_visible = 2
 	_title.add_theme_constant_override("line_spacing", -8)
 	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -94,6 +106,24 @@ func _build(title: String) -> void:
 
 func set_title(text: String) -> void:
 	_title.text = text
+	_fit_title()
+
+
+## Shrinks the title from title_size (down to TITLE_MIN_SIZE) until its longest word fits the
+## card's width, so a name never breaks in the middle of a word.
+func _fit_title() -> void:
+	var width := _title.size.x
+	if width <= 0.0:
+		return
+	var font := _title.get_theme_font(&"font")
+	var longest := 0.0
+	for word in _title.text.split(" ", false):
+		longest = maxf(longest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x)
+	var font_size := title_size
+	if longest > width:
+		font_size = maxi(TITLE_MIN_SIZE, floori(title_size * width / longest))
+	if _title.get_theme_font_size(&"font_size") != font_size:
+		_title.add_theme_font_size_override(&"font_size", font_size)
 
 
 ## The picture (a thumbnail texture; a ViewportTexture works).
