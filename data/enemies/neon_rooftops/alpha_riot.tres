@@ -4,7 +4,6 @@
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/neon_riot_shield.gd" id="2"]
 [ext_resource type="PackedScene" path="res://art/models/neon_riot.glb" id="3"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
-
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_charge.gd" id="b_charge"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]

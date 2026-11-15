@@ -5,7 +5,6 @@
 [ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/sky_dive.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
-
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_strike_zones.gd" id="b_zones"]
@@ -48,8 +47,8 @@ pattern = 0
 count = 5
 stagger = 0.5
 radius = 1.6
-telegraph = 1.0
-damage = 13.0
+telegraph = 1.05
+damage = 11.0
 color = Color(0.6, 0.85, 1.0, 1.0)
 style = 0
 prop = 1
@@ -73,7 +72,7 @@ stagger = 0.2
 spread = 4.0
 radius = 2.0
 telegraph = 1.4
-damage = 14.0
+damage = 11.0
 color = Color(1.0, 0.75, 0.3, 1.0)
 style = 1
 prop = 4
@@ -84,7 +83,7 @@ hits_airborne = true
 script = ExtResource("b_event")
 kind = &"gale"
 phase = 1
-strength = 3.2
+strength = 2.6
 color = Color(1.0, 0.75, 0.3, 1.0)
 
 [sub_resource type="Resource" id="alpha"]
@@ -108,7 +107,7 @@ events = Array[ExtResource("b_event")]([SubResource("event_0")])
 script = ExtResource("1")
 id = &"alpha_captain"
 display_name = "Captain Cumulus"
-max_health = 3600.0
+max_health = 3400.0
 move_speed = 1.95
 speed_variance = 0.0
 turn_speed = 3.5

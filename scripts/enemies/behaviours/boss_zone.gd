@@ -176,7 +176,7 @@ func _strike() -> void:
 	if is_instance_valid(_prop):
 		_prop.visible = true
 	Sfx.play_at(hit_sound, global_position + Vector3.UP, 2.0, randf_range(0.92, 1.08), 14.0)
-	for i in 5:
+	for i in 5 if damage > 0.0 else 0:
 		var a := TAU * i / 5.0
 		Fx.impact(get_parent(), global_position + Vector3(cos(a), 0.2, sin(a)) * radius * 0.6, Vector3.UP, color)
 	var player := get_tree().get_first_node_in_group("player") as Player

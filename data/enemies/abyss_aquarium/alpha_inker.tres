@@ -5,7 +5,6 @@
 [ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/aqua_ink_volley.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
-
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_burrow.gd" id="b_burrow"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
