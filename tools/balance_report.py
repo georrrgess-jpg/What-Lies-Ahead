@@ -20,7 +20,13 @@ to the pop and gathers the pack into the cup (scripts/weapons/twister_vortex.gd)
 Tank's soak multiplies its own hits (scripts/weapons/soak.gd), the Road Rager's hubcap
 (scripts/weapons/hubcap_shot.gd) hits its target on the way out and back, is paced by its
 round trips (catches refill it, so it never reloads or runs dry) and slices through the
-whole pack, a pile-up hitting harder; the "amp" column is the
+whole pack, a pile-up hitting harder; the Lava Lampoon fires its warm-up groove's slower shots
+first and its target burns in the lava puddle under it (the pack walks through it); the Markdown
+Marker's tags (scripts/weapons/markdown_marker_tags.gd) mark the target down per tag, a full stack
+pops for its own damage and splash and refunds tags (a longer magazine); the T-Minus Six
+dumb-fires from the hip (its rockets pop with a small splash, scripts/weapons/t_minus_rocket.gd),
+and its aimed swarm (one lock per LOCK_TIME, rockets seeking heads, less of the bonus on heavies)
+is printed below the tables; the "amp" column is the
 damage bonus a status lends every other weapon. Ground Control's full-charge ring
 (scripts/weapons/ground_control_ring.gd) passes through the whole pack, weaker for each
 zombie it has passed, and its mark (scripts/weapons/ground_control_mark.gd) adds its bonus
@@ -54,7 +60,8 @@ WEAPON_DEFAULTS = {
 FIZZ_MAX_STACKS = 6
 FIZZ_RAMP = 0.75
 # Constants of the weapons whose behaviour lives in a script (WeaponData.mode_script).
-SCRIPT_CONSTS = {"flash": "scripts/weapons/modes/shutterbug_mode.gd", "balloon": "scripts/weapons/balloon_bunch.gd"}
+SCRIPT_CONSTS = {"flash": "scripts/weapons/modes/shutterbug_mode.gd", "balloon": "scripts/weapons/balloon_bunch.gd",
+	"marker": "scripts/weapons/markdown_marker_tags.gd"}
 
 
 def gd_consts(rel_path):
@@ -76,7 +83,14 @@ SOAK = gd_consts("scripts/weapons/soak.gd")
 HUBCAP = gd_consts("scripts/weapons/hubcap_shot.gd")
 PING = gd_consts("scripts/weapons/ground_control_ring.gd")
 MARK = gd_consts("scripts/weapons/ground_control_mark.gd")
+TMINUS = gd_consts("scripts/weapons/modes/t_minus_six_mode.gd")
+TMINUS.update(gd_consts("scripts/weapons/t_minus_rocket.gd"))
+# Share of a painted swarm's rockets that land on the head they seek.
+TMINUS_SEEK_HEAD = 0.85
 MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
+# The Lava Lampoon: its warm-up groove (mode) and the lava puddle its globs leave.
+LAVA_MODE = gd_consts("scripts/weapons/modes/lava_lampoon_mode.gd")
+LAVA_PUDDLE = gd_consts("scripts/weapons/lava_lampoon_puddle.gd")
 # Share of the pop a gathered zombie takes (they spin near the cup's centre).
 VORTEX_POP_SHARE = 0.8
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
@@ -163,6 +177,10 @@ def mode_kind(w):
 		return "flash"
 	if mode.endswith("balloon_darter_mode.gd"):
 		return "balloon"
+	if mode.endswith("markdown_marker_mode.gd"):
+		return "marker"
+	if mode.endswith("t_minus_six_mode.gd"):
+		return "tminus"
 	return ""
 
 
@@ -202,6 +220,38 @@ def balloon_sim(w, hp, d, head):
 			fuse_at, balloons = None, 0
 		t = t_next
 	return math.inf, darts
+
+
+def marker_sim(w, hp, d, head, heavy=False):
+	"""Markdown Marker on one target: tags stack the mark-down, the dart that hits a
+	full stack pops it (its own damage, the tags back in the magazine) and the
+	stack starts again. Returns (seconds, darts) to deal hp."""
+	c = script_consts("marker")
+	dart = w["damage"] * falloff(w, d) * (1.0 + head * (w["headshot_multiplier"] - 1.0))
+	t, dealt, darts, mag, tags = 0.0, 0.0, 0, int(w["magazine_size"]), 0
+	while t < 60.0:
+		darts += 1
+		mag -= 1
+		dealt += dart * (1.0 + c["TAG_BONUS"] * tags)
+		if tags >= c["MAX_TAGS"]:
+			dealt += c["POP_DAMAGE"] * (c["HEAVY_POP_SCALE"] if heavy else 1.0)
+			tags = 0
+			mag = min(int(w["magazine_size"]), mag + int(c["POP_REFUND"]))
+		else:
+			tags += 1
+		if dealt >= hp:
+			return t, darts
+		t += w["fire_interval"] if mag > 0 else w["reload_time"]
+		if mag <= 0:
+			mag = int(w["magazine_size"])
+	return math.inf, darts
+
+
+def marker_cycle():
+	"""Darts in one stack-and-pop cycle, and the darts it costs (the pop refunds some)."""
+	c = script_consts("marker")
+	n = int(c["MAX_TAGS"]) + 1
+	return n, n - int(c["POP_REFUND"])
 
 
 def hubcap_cycle(w):
@@ -255,11 +305,21 @@ def pull_damage(w, e, d, head):
 		per_fuse = math.floor(c["FUSE"] / w["fire_interval"]) + 1
 		share = min(1.0, c["MAX_BALLOONS"] / per_fuse)
 		return w["damage"] * falloff(w, d) * head_mix + c["POP_DAMAGE"] * share, w["fire_interval"]
+	if mode_kind(w) == "marker":
+		# Per dart, its share of a stack-and-pop cycle: the mark-down on it and the pop.
+		c = script_consts("marker")
+		n, _ = marker_cycle()
+		marked = sum(1.0 + c["TAG_BONUS"] * i for i in range(n)) / n
+		return w["damage"] * falloff(w, d) * head_mix * marked + c["POP_DAMAGE"] / n, w["fire_interval"]
 	if w["ricochet_count"] > 0:
 		# A thrown ring (RingShot) flies straight at its first target and can headshot.
 		return w["damage"] * head_mix, w["fire_interval"]
 	if MODE_OF.get(w["id"]) == "vortex":
 		return w["damage"] + vortex_spin(), w["fire_interval"]
+	if w["id"] == "lava_lampoon":
+		# A glob hits like a ray shot; the target burns in the puddle under it meanwhile.
+		cycle = lava_cycle(w)
+		return w["damage"] * scale * head_mix + LAVA_PUDDLE["BURN_DPS"] * cycle, cycle
 	if w["projectile_speed"] > 0.0:
 		dmg = w["damage"] + w["direct_hit_bonus"]
 		return dmg, w["fire_interval"]
@@ -271,6 +331,13 @@ def pull_damage(w, e, d, head):
 	return dmg * w["burst_count"] + fizz_per_pull(w, cycle), cycle
 
 
+def lava_cycle(w):
+	"""Average seconds per shot over a magazine: the warm-up groove's slow shots, then the data rate."""
+	warm = math.ceil(LAVA_MODE["GROOVE_TIME"] / LAVA_MODE["WARM_INTERVAL"])
+	mag = w["magazine_size"]
+	return (LAVA_MODE["GROOVE_TIME"] + (mag - warm) * w["fire_interval"]) / mag
+
+
 def vortex_spin():
 	"""Spin damage a zombie in the cup takes over one whirl (ticks until it pops)."""
 	if not VORTEX:
@@ -279,9 +346,12 @@ def vortex_spin():
 
 
 def amp(w):
-	"""Damage bonus the weapon's status lends every hit on the target (soak)."""
+	"""Damage bonus the weapon's status lends every hit on the target (soak; a full stack of tags)."""
 	if mode_kind(w) == "ping":
 		return MARK.get("DAMAGE_BONUS", 1.0) - 1.0
+	if mode_kind(w) == "marker":
+		c = script_consts("marker")
+		return c["TAG_BONUS"] * c["MAX_TAGS"]
 	return SOAK.get("DAMAGE_BONUS", 1.0) - 1.0 if MODE_OF.get(w["id"]) == "soak" else 0.0
 
 
@@ -297,6 +367,8 @@ def ttk(w, e, d, head):
 	hp = e["max_health"] + e["armour"]
 	if mode_kind(w) == "balloon":
 		return balloon_sim(w, hp, d, head)
+	if mode_kind(w) == "marker":
+		return marker_sim(w, hp, d, head, bool(e.get("heavy", False)))
 	dmg, cycle = pull_damage(w, e, d, head)
 	if dmg <= 0.0:
 		return math.inf, math.inf
@@ -327,6 +399,9 @@ def sustained_dps(w, head, d=8.0, e=None):
 	if mode_kind(w) == "hubcap":
 		return dmg / cycle
 	pulls = max(1, int(w["magazine_size"] // w["burst_count"]))
+	if mode_kind(w) == "marker":
+		n, cost = marker_cycle()
+		pulls = int(pulls * n / cost)
 	reload = w["reload_time"]
 	if w["regen_rate"] > 0.0:
 		# Heat: fire a full bar, cool it back from empty (vent) each cycle.
@@ -350,6 +425,15 @@ def crowd_damage(w, d=8.0):
 		strikes = 6
 		pile = int(HUBCAP["PILEUP"])
 		return w["damage"] * (min(strikes, pile) + max(0, strikes - pile) * HUBCAP["PILEUP_BONUS"])
+	if mode_kind(w) == "marker":
+		# The popping dart into one of the pack: the pop splashes the other three (half
+		# way to the rim) and tags each.
+		c = script_consts("marker")
+		dart = w["damage"] * (1.0 + c["TAG_BONUS"] * c["MAX_TAGS"])
+		return dart + c["POP_DAMAGE"] * (1.0 + 3 * (1.0 + c["POP_EDGE"]) / 2)
+	if mode_kind(w) == "tminus":
+		# A dumb rocket into one of the pack: its pop splashes the other three.
+		return dmg + 3 * TMINUS["SPLASH_DAMAGE"]
 	if mode_kind(w) == "balloon":
 		# One dart into one of the pack: its balloon pops and splashes the other three.
 		c = script_consts("balloon")
@@ -365,6 +449,9 @@ def crowd_damage(w, d=8.0):
 		return w["damage"] * MARK.get("DAMAGE_BONUS", 1.0) * sum(max(PING["MIN_SHARE"], PING["ATTENUATION"] ** k) for k in range(4))
 	if MODE_OF.get(w["id"]) == "vortex":
 		return dmg + 3 * (vortex_spin() + w["damage"] * VORTEX_POP_SHARE)
+	if w["id"] == "lava_lampoon":
+		# The pack walks through the puddle (about a second each at shambling pace).
+		return dmg + 3 * LAVA_PUDDLE["BURN_DPS"] * 2 * LAVA_PUDDLE["RADIUS"] / 2.0
 	if w["splash_radius"] > 0.0:
 		return dmg + 3 * w["damage"] * (1 + w["splash_edge_scale"]) / 2
 	if w["pierce"] > 0:
@@ -377,7 +464,24 @@ def ammo_damage(w, head):
 	if mode_kind(w) == "hubcap":
 		return math.inf
 	dmg, _ = pull_damage(w, {"capsule_radius": 0.5, "body_scale": 1.0, "capsule_height": 1.9}, 8.0, head)
-	return dmg * (w["magazine_size"] + w["reserve_max"]) / w["burst_count"]
+	stock = (w["magazine_size"] + w["reserve_max"]) / w["burst_count"]
+	if mode_kind(w) == "marker":
+		n, cost = marker_cycle()
+		stock *= n / cost
+	return dmg * stock
+
+
+def tminus_swarm(w, heavy=False):
+	"""T-Minus Six aimed: (single-target DPS of full paints, damage of one full
+	swarm spread over a pack of four standing close, seconds per volley)."""
+	n = int(min(TMINUS["MAX_LOCKS"], w["magazine_size"]))
+	bonus = (w["headshot_multiplier"] - 1.0) * (TMINUS["HEAVY_HEAD_SHARE"] if heavy else 1.0)
+	rocket = w["damage"] * (1.0 + TMINUS_SEEK_HEAD * bonus)
+	volley = n * TMINUS["LOCK_TIME"] + n * TMINUS["RIPPLE"] + 0.35
+	single = rocket * n / (volley + w["reload_time"])
+	# Each pop splashes about one and a half of the pack's other zombies.
+	crowd = n * (rocket + 1.5 * TMINUS["SPLASH_DAMAGE"])
+	return single, crowd, volley
 
 
 def main():
@@ -409,6 +513,13 @@ def main():
 		t20, _ = ttk(w, es["tourist_shambler"], 20.0, head)
 		print(f"| {w['display_name']} | {w.get('slot_class', 'primary')} | {sustained_dps(w, head):.0f} | {sustained_dps(w, head, 20.0):.0f} | "
 			f"{crowd_damage(w):.0f} | {ammo_damage(w, head):.0f} | {eff:.0f} m | {t20:.2f} | {amp(w) * 100:+.0f}% |")
+	for w in ws.values():
+		if mode_kind(w) == "tminus":
+			single, crowd, volley = tminus_swarm(w)
+			boss, _, _ = tminus_swarm(w, heavy=True)
+			n = int(min(TMINUS["MAX_LOCKS"], w["magazine_size"]))
+			print(f"\n{w['display_name']} aimed: a full paint of {n} in {volley:.2f} s, {int(TMINUS_SEEK_HEAD * 100)}% of the rockets "
+				f"on the head: {single:.0f} DPS on one light zombie, {boss:.0f} on a heavy or boss; one swarm over a pack of four {crowd:.0f}")
 
 
 if __name__ == "__main__":

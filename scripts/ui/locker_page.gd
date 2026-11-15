@@ -4,8 +4,11 @@ extends MenuPage
 ## groups (header tabs): CHARACTER (operators, gloves), WEAPON (skins, Prize
 ## Prints, sights, cells, charms, decals), EFFECTS (kill effects, tracers)
 ## and PROFILE (banners, titles). Under them, the group's categories and, for
-## weapon items, which weapon is being customised. The tray shows the
-## category's cards under a toolbar (search, SORT, SHOW, FROM; kept per tab);
+## weapon items, which weapon is being customised: a PRIMARIES / SECONDARIES
+## choice (keys 1 / 2), then the arrows step through that class's weapons
+## (the page remembers the class and the weapon last picked in each). The
+## tray shows the category's cards under a toolbar (search, SORT, SHOW, FROM,
+## and FITS on the weapon tabs; kept per tab);
 ## beside it, the selected item large in the display case and a short
 ## signboard (name, rarity, where it comes from, its one action). The PRINTS
 ## tab lists the player's Prize Prints with the print inspect view beside.
@@ -22,6 +25,11 @@ const CARD_GAP := 12
 const GRID_MARGIN := 14
 ## Browsing with the keyboard builds the 3D preview once the focus rests.
 const PREVIEW_DELAY := 0.09
+## The class choice beside the weapon picker, in Loadout slot order.
+const CLASS_TABS := ["PRIMARIES", "SECONDARIES"]
+const CLASS_TAB_WIDTH := 176.0
+## Profile.section("menu") key: {"class": slot index, "primary": id, "secondary": id}.
+const MEMORY_KEY := "locker_weapons"
 
 var _slot: StringName = &"avatar"
 var _weapon_id: StringName
@@ -38,6 +46,7 @@ var _tabs: KitTabs
 var _group_tabs := {}
 var _weapon_box: HBoxContainer
 var _weapon_plate: SlotPlate
+var _class_tabs: Array[SignButton] = []
 var _collection: Label
 var _collection_bar: ProgressBar
 var _toolbar: LockerToolbar
@@ -70,9 +79,7 @@ func header_extra() -> Control:
 
 
 func _ready() -> void:
-	_weapon_id = StringName(String(Profile.data.get("last_weapon", "")))
-	if GameData.weapon(_weapon_id) == null:
-		_weapon_id = GameData.default_weapon_id()
+	_weapon_id = _first_weapon()
 	_thumbs = CosmeticThumbs.new()
 	add_child(_thumbs)
 	get_viewport().gui_focus_changed.connect(_on_focus_changed)
@@ -140,6 +147,10 @@ func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or KitDialog.open_count > 0:
 		return
 	if get_viewport().gui_get_focus_owner() is LineEdit:
+		return
+	if _weapon_box.is_visible_in_tree() and (event.is_action_pressed("weapon_1") or event.is_action_pressed("weapon_2")):
+		_pick_class(Loadout.PRIMARY if event.is_action_pressed("weapon_1") else Loadout.SECONDARY)
+		get_viewport().set_input_as_handled()
 		return
 	var step := 0
 	if event.is_action_pressed("move_left"):
@@ -226,6 +237,7 @@ func _build_strip() -> Control:
 	_weapon_box = HBoxContainer.new()
 	_weapon_box.add_theme_constant_override("separation", UiKit.GAP_S)
 	row.add_child(_weapon_box)
+	_weapon_box.add_child(_build_class_tabs())
 	var previous := UiKit.icon_button(&"icon_arrow_left", "Previous weapon")
 	previous.pressed.connect(_step_weapon.bind(-1))
 	_weapon_box.add_child(previous)
@@ -236,6 +248,32 @@ func _build_strip() -> Control:
 	next.pressed.connect(_step_weapon.bind(1))
 	_weapon_box.add_child(next)
 	return strip
+
+
+## PRIMARIES over SECONDARIES: the class the weapon picker steps through.
+## Compact tabs, so the two stack in the height of the weapon plate.
+func _build_class_tabs() -> Control:
+	var col := VBoxContainer.new()
+	col.name = "WeaponClass"
+	col.add_theme_constant_override("separation", UiKit.GAP_XS)
+	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var group := ButtonGroup.new()
+	for slot_index in 2:
+		var tab := SignButton.make_tab(CLASS_TABS[slot_index], group, 22)
+		tab.name = "Class%s" % String(Loadout.SLOT_NAMES[slot_index])
+		tab.custom_minimum_size.x = CLASS_TAB_WIDTH
+		tab.tooltip_text = "Customise a %s weapon [%d]" % [String(Loadout.SLOT_NAMES[slot_index]).to_lower(), slot_index + 1]
+		for state in [&"normal", &"hover", &"pressed", &"hover_pressed"]:
+			var box := tab.get_theme_stylebox(state).duplicate() as StyleBox
+			box.content_margin_top = 4
+			box.content_margin_bottom = 8
+			box.content_margin_left = 14
+			box.content_margin_right = 14
+			tab.add_theme_stylebox_override(state, box)
+		tab.pressed.connect(_on_class_tab.bind(slot_index))
+		col.add_child(tab)
+		_class_tabs.append(tab)
+	return col
 
 
 ## The tray: the toolbar, a caption with what is owned here, and the cards.
@@ -348,7 +386,7 @@ func show_category(slot: StringName) -> void:
 func set_show_filter(id: StringName) -> void:
 	var s := _state(_slot)
 	s.show = ({&"owned": LockerFilters.Show.OWNED, &"locked": LockerFilters.Show.LOCKED, &"sale": LockerFilters.Show.FOR_SALE} as Dictionary).get(id, LockerFilters.Show.ALL)
-	_toolbar.set_state(s, _slot == LockerFilters.PRINTS)
+	_toolbar.set_state(s, _slot == LockerFilters.PRINTS, _weapon_class())
 	_on_filters_changed()
 
 
@@ -365,7 +403,7 @@ func _open(slot: StringName, prefer: CosmeticItem) -> void:
 	_weapon_box.visible = prints or LockerCatalog.uses_weapon(slot)
 	_item_side.visible = not prints
 	_inspect.visible = prints
-	_toolbar.set_state(_state(slot), prints)
+	_toolbar.set_state(_state(slot), prints, _weapon_class())
 	_refresh_weapon_plate()
 	if not _built:
 		return
@@ -385,7 +423,7 @@ func _open(slot: StringName, prefer: CosmeticItem) -> void:
 func select_weapon(weapon_id: StringName) -> void:
 	if GameData.weapon(weapon_id) == null:
 		return
-	_weapon_id = weapon_id
+	_set_weapon(weapon_id)
 	show_category(_slot)
 
 
@@ -396,7 +434,7 @@ func select_item(id: StringName) -> void:
 	if it == null:
 		return
 	if it.is_weapon_slot() and it.weapon_id != &"":
-		_weapon_id = it.weapon_id
+		_set_weapon(it.weapon_id)
 	var s := _state(it.slot)
 	if not LockerFilters.items(it.slot, _weapon_id, s).has(it):
 		s.clear()
@@ -419,6 +457,13 @@ func _ctx() -> StringName:
 
 func _weapon() -> WeaponData:
 	return GameData.weapon(_weapon_id)
+
+
+## "PRIMARY" or "SECONDARY" while the open tab is customised per weapon (the
+## toolbar's FITS texts), else "".
+func _weapon_class() -> String:
+	var per_weapon := LockerCatalog.is_weapon_slot(_slot) or _slot == LockerFilters.PRINTS
+	return LockerFilters.weapon_class_of(_weapon()) if per_weapon and _weapon() else ""
 
 
 func _step_tab(direction: int) -> void:
@@ -543,7 +588,7 @@ func _on_empty_action() -> void:
 	var s := _state(_slot)
 	if s.narrows():
 		s.clear()
-		_toolbar.set_state(s, _slot == LockerFilters.PRINTS)
+		_toolbar.set_state(s, _slot == LockerFilters.PRINTS, _weapon_class())
 		_on_filters_changed()
 		_focus_selected()
 	elif _slot == LockerFilters.PRINTS:
@@ -830,7 +875,7 @@ func _refresh_collection() -> void:
 	_collection_bar.value = float(have.x) / maxf(1.0, have.y)
 
 
-## "ION CARBINE  ·  WEAPON SKINS" and how many of the cards on show are owned.
+## "PRIMARY  ·  ION CARBINE  ·  WEAPON SKINS" and how many of the cards on show are owned.
 func _refresh_caption() -> void:
 	var weapon := _weapon()
 	if _slot == LockerFilters.PRINTS:
@@ -839,7 +884,7 @@ func _refresh_caption() -> void:
 		_caption_note.text = "%d of %d prints  ·  Enter wears one on the %s" % [shown, PrizePrints.held().size(), weapon.display_name if weapon else "weapon"]
 		return
 	var label := String(LockerCatalog.category(_slot)["label"]).to_upper()
-	_caption.text = "%s  ·  %s" % [weapon.display_name.to_upper(), label] if LockerCatalog.is_weapon_slot(_slot) and weapon else label
+	_caption.text = "%s  ·  %s  ·  %s" % [LockerFilters.weapon_class_of(weapon), weapon.display_name.to_upper(), label] if LockerCatalog.is_weapon_slot(_slot) and weapon else label
 	var owned := 0
 	var shown := 0
 	for card in _cards:
@@ -860,15 +905,77 @@ func _refresh_weapon_plate() -> void:
 	_weapon_plate.active = per_weapon
 	_weapon_plate.set_value(weapon.display_name.to_upper())
 	_weapon_plate.set_note(Mastery.rank_label(Mastery.rank(weapon.id)).capitalize())
+	var slot_index := Loadout.slot_for(weapon)
+	for i in _class_tabs.size():
+		_class_tabs[i].set_pressed_no_signal(i == slot_index)
 
 
+# --- the weapon picker ---------------------------------------------------------------
+
+## The weapon the page opens on: the one last customised in the class picked
+## last, else the weapon played last.
+func _first_weapon() -> StringName:
+	var memory := _memory()
+	var slot_index := clampi(int(memory.get("class", -1)), -1, 1)
+	var id := StringName(String(memory.get(Loadout.SLOT_KEYS[slot_index], ""))) if slot_index >= 0 else &""
+	if GameData.weapon(id) == null:
+		id = StringName(String(Profile.data.get("last_weapon", "")))
+	return id if GameData.weapon(id) else GameData.default_weapon_id()
+
+
+func _memory() -> Dictionary:
+	var menu := Profile.section("menu")
+	if typeof(menu.get(MEMORY_KEY)) != TYPE_DICTIONARY:
+		menu[MEMORY_KEY] = {}
+	return menu[MEMORY_KEY]
+
+
+## Customises `weapon_id` from now on and remembers it as its class's pick
+## (saved with the profile when the page closes).
+func _set_weapon(weapon_id: StringName) -> void:
+	_weapon_id = weapon_id
+	var slot_index := Loadout.slot_for(_weapon())
+	var memory := _memory()
+	memory["class"] = slot_index
+	memory[Loadout.SLOT_KEYS[slot_index]] = String(weapon_id)
+
+
+## The previous or next weapon of the class being customised.
 func _step_weapon(direction: int) -> void:
-	var weapons := GameData.weapons()
+	var weapons := Loadout.weapons_for(Loadout.slot_for(_weapon()))
 	if weapons.is_empty():
 		return
 	var at := weapons.find(_weapon())
 	UiSound.select()
-	select_weapon(weapons[posmod(at + direction, weapons.size())].id)
+	_switch_weapon(weapons[posmod(at + direction, weapons.size())].id)
+
+
+func _on_class_tab(slot_index: int) -> void:
+	UiSound.tab()
+	_pick_class(slot_index)
+
+
+## Switches the picker to a class: the weapon last customised there, else
+## the one in that loadout slot.
+func _pick_class(slot_index: int) -> void:
+	var id := StringName(String(_memory().get(Loadout.SLOT_KEYS[slot_index], "")))
+	var w := GameData.weapon(id)
+	if w == null or Loadout.slot_for(w) != slot_index:
+		id = Loadout.slot(slot_index)
+	if Loadout.slot_for(_weapon()) == slot_index or GameData.weapon(id) == null:
+		_refresh_weapon_plate()
+		return
+	_switch_weapon(id)
+
+
+## Customises `weapon_id`; focus on the cards moves to the selected one.
+func _switch_weapon(weapon_id: StringName) -> void:
+	var focus := get_viewport().gui_get_focus_owner()
+	var on_cards := focus != null and _grid.is_ancestor_of(focus)
+	select_weapon(weapon_id)
+	_deal_cards()
+	if on_cards:
+		_focus_selected()
 
 
 func _on_group_changed(id: StringName) -> void:

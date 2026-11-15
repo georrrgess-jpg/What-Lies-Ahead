@@ -655,8 +655,14 @@ func _do_fight(delta: float) -> void:
 		# Steady shots from the sights; back at the hip when it has to move.
 		_set_held("aim", in_range and not should_move)
 		_aimed_time += delta if _player.is_aiming() else 0.0
+	# A weapon that paints targets from the sights (the T-Minus Six) says when to aim and fire.
+	var paints := w.mode != null and w.mode.has_method("bot_aim")
+	if paints:
+		_set_held("aim", in_range and not should_move and w.mode.bot_aim())
 	if w.current.charge_time > 0.0:
 		_fire_charge(w, target, aligned, in_range, dist)
+	elif paints and not w.mode.bot_fire(nearest):
+		_release("fire")
 	elif aligned and in_range and not w.is_reloading():
 		if w.current.automatic or w.current.beam:
 			_press("fire")

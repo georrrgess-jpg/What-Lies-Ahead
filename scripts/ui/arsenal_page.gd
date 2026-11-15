@@ -425,6 +425,12 @@ func _row_note(slot: int, columns: int) -> Control:
 	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.custom_minimum_size.x = CARD_SIZE.x
+	# A wrapped label asks for the height of its lines at the width it last
+	# had: while its row is hidden (the other section is shown) that width is
+	# stale, and a note wrapped to a card's width would make the tray too tall
+	# for the screen. Capped, it never asks for more than the cards do.
+	note.max_lines_visible = 3
+	note.text_overrun_behavior = TextServer.OVERRUN_TRIM_WORD_ELLIPSIS
 	return note
 
 

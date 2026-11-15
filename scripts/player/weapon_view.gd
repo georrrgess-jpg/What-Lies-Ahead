@@ -773,6 +773,13 @@ func register_part(part: String) -> void:
 		_rest[part] = {"node": node, "transform": node.transform}
 
 
+## Calls `fn(k)` every frame of the reload, k running 0 to 1 over `d`, for a
+## reload that poses its parts itself on its own curves (the Lava Lampoon).
+## It stops with the reload and follows retime_reload like the tracks.
+func drive(d: float, fn: Callable) -> void:
+	_reload_tween.tween_method(fn, 0.0, 1.0, maxf(0.001, d))
+
+
 ## Pulse Pistol "holo-print": the support hand lets go, the spent cell drops
 ## out of the grip and spins away, a new one is printed as a hologram and
 ## slides up into the grip, solidifies with a flare, and the slide snaps home.
