@@ -594,9 +594,11 @@ func _build_shark_tank() -> void:
 	# Interior shell: back wall, side walls, sand floor, the window bay.
 	_mesh_box(tank, "BackWall", Vector3(2.0 * TANK_X, 7.0, 0.4), Vector3(0, 3.5, Z0 - 0.2), wall)
 	for s in [-1.0, 1.0]:
-		_mesh_box(tank, "SideN%d" % int(s), Vector3(0.4, 7.0, (Z0 + 22.5 - 0.0) * -1.0), Vector3(s * (TANK_X + 0.2), 3.5, (Z0 + TUN_Z - TUN_HALF) * 0.5), wall)
-		_mesh_box(tank, "SideS%d" % int(s), Vector3(0.4, 7.0, -CORE - (TUN_Z + TUN_HALF)), Vector3(s * (TANK_X + 0.2), 3.5, (-CORE + TUN_Z + TUN_HALF) * 0.5), wall)
-		_mesh_box(tank, "SideTop%d" % int(s), Vector3(0.4, 7.0 - 4.4, 2.0 * TUN_HALF), Vector3(s * (TANK_X + 0.2), (7.0 + 4.4) * 0.5, TUN_Z), wall)
+		# The side walls are also the corner halls' walls: panelled on the hall side.
+		var inward := Vector3(-s, 0, 0)
+		_shell_wall(tank, "SideN%d" % int(s), Vector3(0.4, 7.0, (Z0 + 22.5 - 0.0) * -1.0), Vector3(s * (TANK_X + 0.2), 3.5, (Z0 + TUN_Z - TUN_HALF) * 0.5), inward)
+		_shell_wall(tank, "SideS%d" % int(s), Vector3(0.4, 7.0, -CORE - (TUN_Z + TUN_HALF)), Vector3(s * (TANK_X + 0.2), 3.5, (-CORE + TUN_Z + TUN_HALF) * 0.5), inward)
+		_shell_wall(tank, "SideTop%d" % int(s), Vector3(0.4, 7.0 - 4.4, 2.0 * TUN_HALF), Vector3(s * (TANK_X + 0.2), (7.0 + 4.4) * 0.5, TUN_Z), inward)
 		# The bay's side walls, from the core face down to the window.
 		_mesh_box(tank, "Bay%d" % int(s), Vector3(TANK_X - 6.4, 7.0, 0.4), Vector3(s * (TANK_X + 6.4) * 0.5, 3.5, -CORE + 0.2), wall)
 	var zn := TUN_Z - TUN_HALF - 0.45
@@ -662,6 +664,16 @@ func _build_shark_tank() -> void:
 	_school(tank, "TopTangs", "FishTang", 10, Vector3(0, 5.4, TUN_Z), Vector2(7.5, 2.0), Vector2(0.3, 0.4), 0.3, 1.2, 0.5)
 
 
+## A tank shell wall that also faces a hall: a body in the hall's wall panels
+## (scenery layer, lit like the hall) and a thin tank-wall skin on the face
+## toward the water. `inward` is the unit axis pointing into the tank.
+func _shell_wall(tank: Node3D, wname: String, size: Vector3, pos: Vector3, inward: Vector3) -> void:
+	var skin := 0.02
+	var thick := absf(size.dot(inward))
+	_mesh_box(dressing, wname + "Hall", size - inward.abs() * skin, pos - inward * skin * 0.5, _wall_mat())
+	_mesh_box(tank, wname, size - inward.abs() * (thick - skin), pos + inward * (thick - skin) * 0.5, _tank_wall_mat())
+
+
 ## Flat fill of the window bay: from z = `z_back` out to the rotunda window's
 ## arc, at height y, facing up (sand) or down (the water surface from below).
 func _bay_fill(parent: Node3D, fname: String, z_back: float, y: float, face_up: bool, material: Material) -> void:
@@ -720,8 +732,9 @@ func _build_kelp_gallery() -> void:
 	var len_z := KELP_Z1 - KELP_Z0
 	var zc := (KELP_Z0 + KELP_Z1) * 0.5
 	_mesh_box(tank, "Back", Vector3(0.4, HALL_H, len_z), Vector3(X0 - 0.2, HALL_H * 0.5, zc), wall)
-	_mesh_box(tank, "EndN", Vector3(X0 * -1.0 + KELP_GLASS_X, HALL_H, 0.4), Vector3((X0 + KELP_GLASS_X) * 0.5, HALL_H * 0.5, KELP_Z0 - 0.2), wall)
-	_mesh_box(tank, "EndS", Vector3(X0 * -1.0 + KELP_GLASS_X, HALL_H, 0.4), Vector3((X0 + KELP_GLASS_X) * 0.5, HALL_H * 0.5, KELP_Z1 + 0.2), wall)
+	# The end walls stand into the hall past the glass: panelled on the hall side.
+	_shell_wall(tank, "EndN", Vector3(X0 * -1.0 + KELP_GLASS_X, HALL_H, 0.4), Vector3((X0 + KELP_GLASS_X) * 0.5, HALL_H * 0.5, KELP_Z0 - 0.2), Vector3.BACK)
+	_shell_wall(tank, "EndS", Vector3(X0 * -1.0 + KELP_GLASS_X, HALL_H, 0.4), Vector3((X0 + KELP_GLASS_X) * 0.5, HALL_H * 0.5, KELP_Z1 + 0.2), Vector3.FORWARD)
 	_mesh_box(tank, "Sand", Vector3(KELP_GLASS_X - X0, 0.5, len_z), Vector3((X0 + KELP_GLASS_X) * 0.5, 0.25, zc), _sand_mat())
 	var glass := MeshInstance3D.new()
 	glass.name = "KelpGlass"
@@ -1500,7 +1513,9 @@ func _build_markers() -> void:
 	var points := {
 		"SpawnFiltration": [Vector3(-17.0, 0.1, Z0 - 3.0), 0.0],
 		"SpawnElevator": [Vector3(17.0, 0.1, Z0 - 1.6), 0.0],
-		"SpawnLoadingBay": [Vector3(X1 + 1.8, 0.1, 7.2), -90.0],
+		# In the clear lane between the dock's two crate stacks (offsets of up
+		# to 1 m must not land inside either).
+		"SpawnLoadingBay": [Vector3(X1 + 1.1, 0.1, 7.0), -90.0],
 		"SpawnStaffDoor": [Vector3(X0 - 2.2, 0.1, 11.5), 90.0],
 		"SpawnStockroom": [Vector3(0.0, 0.1, MEZZ_Z + 2.5), 180.0],
 	}

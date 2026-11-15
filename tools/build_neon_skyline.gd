@@ -1267,7 +1267,9 @@ func _build_markers() -> void:
 	spawns.name = "EnemySpawns"
 	level.add_child(spawns)
 	var points := {
-		"SpawnFreightElevator": [Vector3(-9.5, N_Y + 0.1, -27.6), 180.0],
+		# Far enough in front of the car (its body ends at z -28.5) that no
+		# spawn offset lands a zombie inside it.
+		"SpawnFreightElevator": [Vector3(-9.5, N_Y + 0.1, -26.9), 180.0],
 		"SpawnRoofDoor": [Vector3(-14.2, 0.1, -8.0), 90.0],
 		"SpawnFireEscapeWest": [Vector3(-21.3, FE_LOW_W + 0.1, 11.0), 0.0],
 		"SpawnFireEscapeEast": [Vector3(22.8, 0.1, 11.0), 180.0],
