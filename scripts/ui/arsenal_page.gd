@@ -850,12 +850,15 @@ func _refresh_cards() -> void:
 		card.set_tag("EQUIPPED" if Loadout.slot_of(w.id) >= 0 else "")
 
 
-## "Lv 5" for a player-level lock, else the requirement's own text.
+## "Lv 5" for a player-level lock, "Wave 10" for an Endless one, else the
+## requirement's own text.
 func _short_lock(w: WeaponData) -> String:
 	if w.unlock == null:
 		return "Locked"
 	if w.unlock.kind == Requirement.Kind.PLAYER_LEVEL and w.unlock.all_of.is_empty():
 		return "Lv %d" % w.unlock.amount
+	if w.unlock.kind == Requirement.Kind.ENDLESS_WAVE and w.unlock.all_of.is_empty():
+		return "Wave %d" % w.unlock.amount
 	return w.unlock.describe()
 
 

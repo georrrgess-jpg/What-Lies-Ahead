@@ -1309,7 +1309,9 @@ func _fit_width(node: Node3D, model: String, width: float) -> void:
 
 ## [district, marker position, yaw (facing the district), alley rect (x, z, w, d)
 ## or null (a door built with its district), depth of the block closing the
-## alley's far end, the lintel over it (bottom, top; zero: open to the sky)]
+## alley's far end, the lintel over it (bottom, top; zero: open to the sky)].
+## A marker stands over 1 m clear of the alley's end block and a door's back
+## wall: RunDirector spreads a pack 1 m round it (tools/spawn_probe.gd).
 const ENTRANCES := [
 	[&"ashfall_square", Vector3(-15.5, 0, -27.5), 180.0, Rect2(-18.0, -34.0, 5.0, 12.0), 10.0, Vector2.ZERO],
 	[&"ashfall_square", Vector3(15.5, 0, -27.5), 180.0, Rect2(13.0, -34.0, 5.0, 12.0), 10.0, Vector2.ZERO],
@@ -1320,10 +1322,10 @@ const ENTRANCES := [
 	[&"precinct", Vector3(-78.0, 0, 0.0), -90.0, Rect2(-82.0, -3.0, 8.0, 6.0), 10.0, Vector2(4.5, 16.0)],
 	[&"market", Vector3(42.0, 0, -14.0), 180.0, Rect2(40.0, -20.0, 4.0, 12.0), 2.0, Vector2.ZERO],
 	[&"market", Vector3(56.0, 0, 14.0), 0.0, Rect2(54.0, 8.0, 4.0, 12.0), 10.0, Vector2.ZERO],
-	[&"market", Vector3(97.0, 0, -5.0), 90.0, Rect2(90.0, -8.0, 8.0, 16.0), 10.0, Vector2.ZERO],
+	[&"market", Vector3(96.0, 0, -5.0), 90.0, Rect2(90.0, -8.0, 8.0, 16.0), 10.0, Vector2.ZERO],
 	[&"metro", Vector3(-23.5, METRO_Y, -31.5), -90.0, null, 0.0, Vector2.ZERO],
-	[&"metro", Vector3(21.5, METRO_Y, -24.0), 0.0, null, 0.0, Vector2.ZERO],
-	[&"metro", Vector3(-12.0, METRO_Y, -24.0), 0.0, null, 0.0, Vector2.ZERO],
+	[&"metro", Vector3(21.5, METRO_Y, -25.0), 0.0, null, 0.0, Vector2.ZERO],
+	[&"metro", Vector3(-12.0, METRO_Y, -25.0), 0.0, null, 0.0, Vector2.ZERO],
 	[&"tower", Vector3(70.0, 0, -77.0), 180.0, Rect2(66.0, -84.0, 8.0, 12.0), 6.0, Vector2(5.0, 24.0)],
 	[&"tower", Vector3(99.0, 0, -46.0), 90.0, Rect2(94.0, -50.0, 12.0, 8.0), 10.0, Vector2.ZERO],
 	[&"tower", Vector3(40.0, 0, -56.0), -90.0, Rect2(34.0, -58.0, 12.0, 4.0), 10.0, Vector2.ZERO],

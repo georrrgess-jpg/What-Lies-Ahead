@@ -3,7 +3,7 @@ extends RefCounted
 ## How the Locker groups, sorts and filters what it shows: the four groups of
 ## categories (CHARACTER, WEAPON, EFFECTS, PROFILE; the WEAPON group also has
 ## the player's Prize Prints), where an item comes from (shop, prints, level,
-## mastery, world, milestone, starter), and one filter state per tab (sort,
+## mastery, world, milestone, Endless, starter), and one filter state per tab (sort,
 ## what to show, source, search text) that the page keeps while it is open.
 
 ## The tab id of the Prize Prints list (not a cosmetic slot).
@@ -30,10 +30,10 @@ const SHOW_NAMES := ["ALL", "OWNED", "LOCKED", "FOR SALE"]
 enum PrintShow { ALL, FITS, WORN, KEPT }
 const PRINT_SHOW_NAMES := ["ALL", "FITS THIS GUN", "WORN", "KEPT ♥"]
 
-enum Source { ANY, SHOP, PRINTS, LEVEL, MASTERY, WORLD, MILESTONE, STARTER }
-const SOURCE_NAMES := ["ANY", "SHOP", "PRINTS", "LEVEL", "MASTERY", "WORLD", "MILESTONE", "STARTER"]
+enum Source { ANY, SHOP, PRINTS, LEVEL, MASTERY, WORLD, MILESTONE, STARTER, ENDLESS }
+const SOURCE_NAMES := ["ANY", "SHOP", "PRINTS", "LEVEL", "MASTERY", "WORLD", "MILESTONE", "STARTER", "ENDLESS"]
 ## How an item of each source is obtained, for the details panel.
-const SOURCE_TEXT := ["", "Shop", "Prize Prints", "Level reward", "Mastery reward", "World reward", "Milestone", "Starter"]
+const SOURCE_TEXT := ["", "Shop", "Prize Prints", "Level reward", "Mastery reward", "World reward", "Milestone", "Starter", "Endless reward"]
 
 
 ## One tab's filter choices.
@@ -91,6 +91,8 @@ static func source_of(it: CosmeticItem) -> Source:
 			return Source.WORLD
 		Requirement.Kind.NONE:
 			return Source.STARTER
+		Requirement.Kind.ENDLESS_WAVE, Requirement.Kind.ENDLESS_DISTRICT:
+			return Source.ENDLESS
 	return Source.MILESTONE
 
 

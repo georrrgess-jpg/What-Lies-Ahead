@@ -318,9 +318,10 @@ func _build_floors() -> void:
 	# Passages through the rotunda openings, wide enough to run under the jamb
 	# pillars (no gap between the round slab and the hall slabs).
 	var w := tan(deg_to_rad(OPEN_HALF)) * ROT_R + 2.2
-	_slab(floors, "PassW", -CORE - 0.2, -ROT_R + 0.6, -w, w, tiles)
-	_slab(floors, "PassE", ROT_R - 0.6, CORE + 0.2, -w, w, tiles)
-	_slab(floors, "PassS", -w, w, ROT_R - 0.6, CORE + 0.2, tiles)
+	# They end where the hall slabs begin (overlapping tops would flicker).
+	_slab(floors, "PassW", -CORE, -ROT_R + 0.6, -w, w, tiles)
+	_slab(floors, "PassE", ROT_R - 0.6, CORE, -w, w, tiles)
+	_slab(floors, "PassS", -w, w, ROT_R - 0.6, CORE, tiles)
 	# Halls.
 	_slab(floors, "WestHall", KELP_GLASS_X, -CORE, KELP_Z0, KELP_Z1, tiles)
 	_slab(floors, "WestHallN", X0, -CORE, -CORE, KELP_Z0, tiles)
@@ -370,7 +371,7 @@ func _build_rotunda() -> void:
 		_arc_wall(rot, "Lintel%d" % int(centre), ROT_R, a0, a1, 4.6, ROT_H, upper)
 		var ac := deg_to_rad(centre)
 		var soffit := _mesh_box(dressing, "Soffit%d" % int(centre), Vector3(2.0, 0.3, 2.0 * tan(deg_to_rad(OPEN_HALF)) * ROT_R + 1.0),
-			Vector3(cos(ac), 0, sin(ac)) * (ROT_R + 0.9) + Vector3(0, 4.75, 0), _mat("navy_light", Color(0.11, 0.23, 0.39), 0.5))
+			Vector3(cos(ac), 0, sin(ac)) * (ROT_R + 0.9) + Vector3(0, 4.74, 0), _mat("navy_light", Color(0.11, 0.23, 0.39), 0.5))
 		soffit.rotation.y = -ac
 	var wa0 := deg_to_rad(237.0)
 	var wa1 := deg_to_rad(303.0)
@@ -424,16 +425,22 @@ func _build_rotunda() -> void:
 				_recolor(pillar, "PillarLed", _glow_mat("led_amber", Color(1.0, 0.68, 0.3), 2.6))
 			var c := _collider(geo, "PillarCol%d%s" % [int(centre), "A" if s < 0 else "B"], Vector3(1.6, 9.0, 1.8), p + Vector3(0, 4.5, 0))
 			c.rotation.y = -a
-	# Behind the jamb pillars: solid fills between the rotunda wall and the core
-	# walls (that space has no floor; nobody may squeeze into it).
+	# Behind the jamb pillars: solid, visible fills between the rotunda wall and
+	# the core walls (that space has no floor; nobody may squeeze into it, and
+	# the passage must not show the void and the porthole tanks' backs).
+	var jamb_wall := _wall_mat()
 	for centre in [0.0, 90.0, 180.0]:
 		var ac := deg_to_rad(centre)
 		var radial := Vector3(cos(ac), 0, sin(ac))
 		var side := Vector3(-radial.z, 0, radial.x)
 		for s in [-1.0, 1.0]:
-			var fill := _collider(geo, "JambFill%d%s" % [int(centre), "A" if s < 0 else "B"], Vector3(2.4, 6.0, 1.9),
-				radial * 12.85 + side * s * 4.8 + Vector3(0, 3.0, 0))
+			var tag := "%d%s" % [int(centre), "A" if s < 0 else "B"]
+			# Behind the pillar, then a return from the pillar's back half to the
+			# core face (the pillar's front half stands proud of it).
+			var fill := _box(geo, "JambFill" + tag, Vector3(1.6, 6.0, 1.9), radial * 12.85 + side * s * 5.2 + Vector3(0, 3.0, 0), jamb_wall)
 			fill.rotation.y = -ac + PI * 0.5
+			var ret := _box(geo, "JambReturn" + tag, Vector3(0.8, 6.0, 0.8), radial * 13.4 + side * s * 4.0 + Vector3(0, 3.0, 0), jamb_wall)
+			ret.rotation.y = -ac + PI * 0.5
 	# Floor inlay rings around the station (scenery).
 	var inlay := _node(dressing, "FloorInlay")
 	_flat_ring(inlay, "RingOuter", 10.6, 10.85, _glow_mat("inlay_cyan", Color(0.2, 0.85, 1.0), 1.2))
@@ -516,8 +523,9 @@ func _build_ceilings() -> void:
 	for bz in range(-12, 13, 6):
 		_mesh_box(ceil, "WestBeam%d" % bz, Vector3(-CORE - X0, 0.4, 0.3), Vector3((X0 - CORE) * 0.5, HALL_H - 0.2, bz), beam)
 		_mesh_box(ceil, "EastBeam%d" % bz, Vector3(X1 - CORE, 0.4, 0.3), Vector3((X1 + CORE) * 0.5, HALL_H - 0.2, bz), beam)
-	_ceiling(ceil, "WestHall", X0, -CORE, -CORE, CORE, HALL_H, m)
-	_ceiling(ceil, "EastHall", CORE, X1, -CORE, CORE, HALL_H, m)
+	# The hall ceilings stop at the lobby header beam's face (not under it).
+	_ceiling(ceil, "WestHall", X0, -CORE, -CORE, CORE - 0.25, HALL_H, m)
+	_ceiling(ceil, "EastHall", CORE, X1, -CORE, CORE - 0.25, HALL_H, m)
 	_ceiling(ceil, "NWCorner", X0, -TANK_X, Z0, -CORE, HALL_H, m)
 	_ceiling(ceil, "NECorner", TANK_X, X1, Z0, -CORE, HALL_H, m)
 	_ceiling(ceil, "Lobby", X0, X1, CORE, Z1, LOBBY_H, m)
@@ -588,9 +596,11 @@ func _build_shark_tank() -> void:
 	# Interior shell: back wall, side walls, sand floor, the window bay.
 	_mesh_box(tank, "BackWall", Vector3(2.0 * TANK_X, 7.0, 0.4), Vector3(0, 3.5, Z0 - 0.2), wall)
 	for s in [-1.0, 1.0]:
-		_mesh_box(tank, "SideN%d" % int(s), Vector3(0.4, 7.0, (Z0 + 22.5 - 0.0) * -1.0), Vector3(s * (TANK_X + 0.2), 3.5, (Z0 + TUN_Z - TUN_HALF) * 0.5), wall)
-		_mesh_box(tank, "SideS%d" % int(s), Vector3(0.4, 7.0, -CORE - (TUN_Z + TUN_HALF)), Vector3(s * (TANK_X + 0.2), 3.5, (-CORE + TUN_Z + TUN_HALF) * 0.5), wall)
-		_mesh_box(tank, "SideTop%d" % int(s), Vector3(0.4, 7.0 - 4.4, 2.0 * TUN_HALF), Vector3(s * (TANK_X + 0.2), (7.0 + 4.4) * 0.5, TUN_Z), wall)
+		# The side walls are also the corner halls' walls: panelled on the hall side.
+		var inward := Vector3(-s, 0, 0)
+		_shell_wall(tank, "SideN%d" % int(s), Vector3(0.4, 7.0, (Z0 + 22.5 - 0.0) * -1.0), Vector3(s * (TANK_X + 0.2), 3.5, (Z0 + TUN_Z - TUN_HALF) * 0.5), inward)
+		_shell_wall(tank, "SideS%d" % int(s), Vector3(0.4, 7.0, -CORE - (TUN_Z + TUN_HALF)), Vector3(s * (TANK_X + 0.2), 3.5, (-CORE + TUN_Z + TUN_HALF) * 0.5), inward)
+		_shell_wall(tank, "SideTop%d" % int(s), Vector3(0.4, 7.0 - 4.4, 2.0 * TUN_HALF), Vector3(s * (TANK_X + 0.2), (7.0 + 4.4) * 0.5, TUN_Z), inward)
 		# The bay's side walls, from the core face down to the window.
 		_mesh_box(tank, "Bay%d" % int(s), Vector3(TANK_X - 6.4, 7.0, 0.4), Vector3(s * (TANK_X + 6.4) * 0.5, 3.5, -CORE + 0.2), wall)
 	var zn := TUN_Z - TUN_HALF - 0.45
@@ -656,6 +666,16 @@ func _build_shark_tank() -> void:
 	_school(tank, "TopTangs", "FishTang", 10, Vector3(0, 5.4, TUN_Z), Vector2(7.5, 2.0), Vector2(0.3, 0.4), 0.3, 1.2, 0.5)
 
 
+## A tank shell wall that also faces a hall: a body in the hall's wall panels
+## (scenery layer, lit like the hall) and a thin tank-wall skin on the face
+## toward the water. `inward` is the unit axis pointing into the tank.
+func _shell_wall(tank: Node3D, wname: String, size: Vector3, pos: Vector3, inward: Vector3) -> void:
+	var skin := 0.02
+	var thick := absf(size.dot(inward))
+	_mesh_box(dressing, wname + "Hall", size - inward.abs() * skin, pos - inward * skin * 0.5, _wall_mat())
+	_mesh_box(tank, wname, size - inward.abs() * (thick - skin), pos + inward * (thick - skin) * 0.5, _tank_wall_mat())
+
+
 ## Flat fill of the window bay: from z = `z_back` out to the rotunda window's
 ## arc, at height y, facing up (sand) or down (the water surface from below).
 func _bay_fill(parent: Node3D, fname: String, z_back: float, y: float, face_up: bool, material: Material) -> void:
@@ -714,8 +734,9 @@ func _build_kelp_gallery() -> void:
 	var len_z := KELP_Z1 - KELP_Z0
 	var zc := (KELP_Z0 + KELP_Z1) * 0.5
 	_mesh_box(tank, "Back", Vector3(0.4, HALL_H, len_z), Vector3(X0 - 0.2, HALL_H * 0.5, zc), wall)
-	_mesh_box(tank, "EndN", Vector3(X0 * -1.0 + KELP_GLASS_X, HALL_H, 0.4), Vector3((X0 + KELP_GLASS_X) * 0.5, HALL_H * 0.5, KELP_Z0 - 0.2), wall)
-	_mesh_box(tank, "EndS", Vector3(X0 * -1.0 + KELP_GLASS_X, HALL_H, 0.4), Vector3((X0 + KELP_GLASS_X) * 0.5, HALL_H * 0.5, KELP_Z1 + 0.2), wall)
+	# The end walls stand into the hall past the glass: panelled on the hall side.
+	_shell_wall(tank, "EndN", Vector3(X0 * -1.0 + KELP_GLASS_X, HALL_H, 0.4), Vector3((X0 + KELP_GLASS_X) * 0.5, HALL_H * 0.5, KELP_Z0 - 0.2), Vector3.BACK)
+	_shell_wall(tank, "EndS", Vector3(X0 * -1.0 + KELP_GLASS_X, HALL_H, 0.4), Vector3((X0 + KELP_GLASS_X) * 0.5, HALL_H * 0.5, KELP_Z1 + 0.2), Vector3.FORWARD)
 	_mesh_box(tank, "Sand", Vector3(KELP_GLASS_X - X0, 0.5, len_z), Vector3((X0 + KELP_GLASS_X) * 0.5, 0.25, zc), _sand_mat())
 	var glass := MeshInstance3D.new()
 	glass.name = "KelpGlass"
@@ -819,8 +840,9 @@ func _build_jelly_room() -> void:
 	var wall := _caustic_mat("jelly_wall", Color(0.12, 0.05, 0.28), {"caustic_strength": 0.6, "caustic_color": Color(0.7, 0.4, 1.0), "roughness": 0.9})
 	var zc := -6.0
 	_mesh_box(room, "WallTankBack", Vector3(0.4, HALL_H, 10.0), Vector3(X1 + 2.6, HALL_H * 0.5, zc), wall)
-	_mesh_box(room, "WallTankN", Vector3(2.6, HALL_H, 0.4), Vector3(X1 + 1.3, HALL_H * 0.5, -11.2), wall)
-	_mesh_box(room, "WallTankS", Vector3(2.6, HALL_H, 0.4), Vector3(X1 + 1.3, HALL_H * 0.5, -0.8), wall)
+	# The end walls start behind the 0.5 m outer wall (no coplanar faces behind the glass).
+	_mesh_box(room, "WallTankN", Vector3(2.1, HALL_H, 0.4), Vector3(X1 + 1.55, HALL_H * 0.5, -11.2), wall)
+	_mesh_box(room, "WallTankS", Vector3(2.1, HALL_H, 0.4), Vector3(X1 + 1.55, HALL_H * 0.5, -0.8), wall)
 	_mesh_box(room, "WallTankFloor", Vector3(2.6, 0.6, 10.0), Vector3(X1 + 1.3, 0.3, zc), wall)
 	var glass_w := MeshInstance3D.new()
 	glass_w.name = "JellyWallGlass"
@@ -1000,7 +1022,7 @@ func _build_lobby() -> void:
 	_collider(lobby, "ShopCounter", Vector3(1.8, 1.0, 0.7), Vector3(2.8, 0.5, MEZZ_Z + 2.6))
 	_collider(lobby, "ShopBack", Vector3(17.0, MEZZ_Y, 0.3), Vector3(0, MEZZ_Y * 0.5, Z1 - 0.1))
 	# Touch pool at the west end of the lobby (long axis north-south).
-	_prop(lobby, "aqua_touch_pool", "TouchPool", Vector3(-19.0, 0, 18.0), 90.0, Vector3(6.4, 0.8, 3.8))
+	var pool := _prop(lobby, "aqua_touch_pool", "TouchPool", Vector3(-19.0, 0, 18.0), 90.0, Vector3(6.4, 0.8, 3.8))
 	# Stadium-shaped collision (a box plus two round ends; shapes are never scaled).
 	_collider(lobby, "TouchPoolCol", Vector3(3.9, 0.8, 3.2), Vector3(-19.0, 0.4, 18.0))
 	for e in [-1.0, 1.0]:
@@ -1014,9 +1036,16 @@ func _build_lobby() -> void:
 		ec.height = 0.8
 		es.shape = ec
 		end.add_child(es)
-	var water := level.find_child("TouchWater", true, false)
+	# Clear, lit water so the stars, urchins and anemones on the bed show (the
+	# model's own water is an opaque glow). Saved as an editable-instance override.
+	var touch_water := _mat("touch_water", Color(0.3, 0.85, 0.95, 0.38), 0.05, Color(0.1, 0.55, 0.65), 0.35)
+	touch_water.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	touch_water.metallic_specular = 0.9
+	var water := pool.find_child("TouchWater*", true, false)    # imported as TouchWater_001
 	if water is MeshInstance3D:
-		(water as MeshInstance3D).material_override = _water_mat("water_touch", 0.0, 0.6, {"density": 0.6, "max_distance": 1.0})
+		(water as MeshInstance3D).material_override = touch_water
+		(water as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_editable.append(pool)
 	# Hanging whale sculpture over the lobby, swimming toward the rotunda.
 	var whale := _prop(dressing, "aqua_whale", "Whale", Vector3(-6.2, 5.6, 17.9), 104.0, Vector3(2, 2, 9))
 	whale.rotation.z = deg_to_rad(4.0)
@@ -1168,22 +1197,22 @@ func _build_entrances() -> void:
 	_prop(ent, "aqua_filtration", "Filtration", Vector3(-17.0, 0, Z0), 0.0, Vector3(3, 3, 0.5))
 	_collider(ent, "PumpW", Vector3(1.7, 2.6, 1.7), Vector3(-19.1, 1.3, Z0 - 3.3))
 	_collider(ent, "PumpE", Vector3(1.7, 2.6, 1.7), Vector3(-14.9, 1.3, Z0 - 3.3))
-	_slab(ent, "FiltFloor", -20.0, -14.0, Z0 - 5.4, Z0 + 0.1, concrete)
+	_slab(ent, "FiltFloor", -20.0, -14.0, Z0 - 5.4, Z0, concrete)
 	_room_walls(ent, "Filt", -20.0, -14.0, Z0 - 5.4, Z0, 4.6, wall)
 	# 2. Service elevator, NE corner.
 	_prop(ent, "aqua_elevator", "Elevator", Vector3(17.0, 0, Z0), 0.0, Vector3(3, 3, 0.5))
-	_slab(ent, "ElevFloor", 15.7, 18.3, Z0 - 2.9, Z0 + 0.1, concrete)
+	_slab(ent, "ElevFloor", 15.7, 18.3, Z0 - 2.9, Z0, concrete)
 	_room_walls(ent, "Elev", 15.7, 18.3, Z0 - 2.9, Z0, 3.0, wall)
 	# 3. Loading bay on the east wall.
 	_prop(ent, "aqua_loading_door", "LoadingDoor", Vector3(X1, 0, 7.0), -90.0, Vector3(5, 4, 0.5))
-	_slab(ent, "DockFloor", X1 - 0.1, X1 + 4.4, 4.6, 9.4, concrete)
+	_slab(ent, "DockFloor", X1, X1 + 4.4, 4.6, 9.4, concrete)
 	_room_walls(ent, "Dock", X1, X1 + 4.4, 4.6, 9.4, 4.0, wall, "W")
 	_collider(ent, "DockCrates", Vector3(1.2, 1.8, 1.6), Vector3(X1 + 3.0, 0.9, 5.4))
 	_collider(ent, "DockCrates2", Vector3(2.2, 1.2, 1.4), Vector3(X1 + 2.9, 0.6, 8.6))
 	_collider(ent, "DockCratesBack", Vector3(0.8, 1.8, 1.6), Vector3(X1 + 4.0, 0.9, 5.4))
 	# 4. Staff door on the west wall.
 	_prop(ent, "aqua_staff_door", "StaffDoor", Vector3(X0, 0, 11.5), 90.0, Vector3(3, 3, 0.5))
-	_slab(ent, "StaffFloor", X0 - 4.0, X0 + 0.1, 10.3, 12.7, concrete)
+	_slab(ent, "StaffFloor", X0 - 4.0, X0, 10.3, 12.7, concrete)
 	_room_walls(ent, "Staff", X0 - 4.0, X0, 10.3, 12.7, 3.0, wall, "E")
 	_dress_back_rooms()
 	# Red emergency beacons above each door (light + pulsing via the Ambience animation).
@@ -1261,18 +1290,26 @@ func _dress_back_rooms() -> void:
 ## Three walls (and a lid) around a spawn room; `open` names the side left open
 ## (the door side). Default open side is south (+Z) for rooms north of the hall.
 func _room_walls(parent: Node3D, prefix: String, x0: float, x1: float, z0: float, z1: float, h: float, m: Material, open := "S") -> void:
+	# The side walls start behind the hall's 0.5 m outer wall rather than inside
+	# it (coplanar faces at the door jambs would flicker).
+	var za := z0 + (0.5 if open == "N" else 0.0)
+	var zb := z1 - (0.5 if open == "S" else 0.0)
 	if open != "W":
-		_box(parent, prefix + "W", Vector3(0.4, h, z1 - z0), Vector3(x0 - 0.2, h * 0.5, (z0 + z1) * 0.5), m)
+		_box(parent, prefix + "W", Vector3(0.4, h, zb - za), Vector3(x0 - 0.2, h * 0.5, (za + zb) * 0.5), m)
 	if open != "E":
-		_box(parent, prefix + "E", Vector3(0.4, h, z1 - z0), Vector3(x1 + 0.2, h * 0.5, (z0 + z1) * 0.5), m)
-	# The walls across the open side's ends stop flush with the opening.
-	var xa := x0 - (0.0 if open == "W" else 0.4)
-	var xb := x1 + (0.0 if open == "E" else 0.4)
+		_box(parent, prefix + "E", Vector3(0.4, h, zb - za), Vector3(x1 + 0.2, h * 0.5, (za + zb) * 0.5), m)
+	var xa := x0 - 0.4 + (0.9 if open == "W" else 0.0)
+	var xb := x1 + 0.4 - (0.9 if open == "E" else 0.0)
 	if open != "N":
 		_box(parent, prefix + "N", Vector3(xb - xa, h, 0.4), Vector3((xa + xb) * 0.5, h * 0.5, z0 - 0.2), m)
 	if open != "S":
 		_box(parent, prefix + "S", Vector3(xb - xa, h, 0.4), Vector3((xa + xb) * 0.5, h * 0.5, z1 + 0.2), m)
-	_mesh_box(dressing, prefix + "Lid", Vector3(x1 - x0 + 0.8, 0.3, z1 - z0 + 0.8), Vector3((x0 + x1) * 0.5, h + 0.15, (z0 + z1) * 0.5), _mat("ceiling", Color(0.05, 0.08, 0.15), 0.85))
+	# The lid stops behind the hall wall on the open side (the door head shows there).
+	var lx0 := x0 - 0.4 + (0.9 if open == "W" else 0.0)
+	var lx1 := x1 + 0.4 - (0.9 if open == "E" else 0.0)
+	var lz0 := z0 - 0.4 + (0.9 if open == "N" else 0.0)
+	var lz1 := z1 + 0.4 - (0.9 if open == "S" else 0.0)
+	_mesh_box(dressing, prefix + "Lid", Vector3(lx1 - lx0, 0.3, lz1 - lz0), Vector3((lx0 + lx1) * 0.5, h + 0.15, (lz0 + lz1) * 0.5), _mat("ceiling", Color(0.05, 0.08, 0.15), 0.85))
 
 
 # ---------------------------------------------------------------------------
@@ -1487,7 +1524,9 @@ func _build_markers() -> void:
 	var points := {
 		"SpawnFiltration": [Vector3(-17.0, 0.1, Z0 - 3.0), 0.0],
 		"SpawnElevator": [Vector3(17.0, 0.1, Z0 - 1.6), 0.0],
-		"SpawnLoadingBay": [Vector3(X1 + 1.8, 0.1, 7.2), -90.0],
+		# In front of the dock's two crate stacks: offsets of up to 1 m (a
+		# zombie pack) must not land inside either (tools/spawn_probe.gd).
+		"SpawnLoadingBay": [Vector3(X1 + 0.7, 0.1, 7.0), -90.0],
 		"SpawnStaffDoor": [Vector3(X0 - 2.2, 0.1, 11.5), 90.0],
 		"SpawnStockroom": [Vector3(0.0, 0.1, MEZZ_Z + 2.5), 180.0],
 	}

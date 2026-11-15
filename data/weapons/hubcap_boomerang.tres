@@ -1,0 +1,75 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/hubcap_boomerang.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/hubcap_boomerang_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/hubcap_boomerang_view.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/hubcap_boomerang_mode.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 21
+amount = 10
+
+[resource]
+script = ExtResource("1")
+id = &"hubcap_boomerang"
+sort_order = 117
+category = "Hubcap Boomerang"
+slot_class = "primary"
+display_name = "Road Rager"
+role = "Flings a spinning hubcap that slices through every zombie on its way out and again on its way back. From the hip it carves a wide loop to the right; aim down sights to throw it straight out and back down one line. Catch it and it slots straight back in, so you never run dry (a catch mid-reload cuts the reload short). Four zombies in one throw is a pile-up: the hubcap turns gold and hits 50% harder for the rest of its flight."
+unlock = SubResource("unlock")
+magazine_size = 3
+reserve_start = 12
+reserve_max = 24
+reload_time = 1.9
+emergency_recharge_interval = 2.5
+automatic = false
+fire_interval = 0.4
+damage = 50.0
+pellets = 1
+spread_degrees = 0.15
+spread_bloom = 0.2
+spread_bloom_max = 0.6
+spread_recovery = 4.0
+max_range = 22.0
+falloff_start = 22.0
+falloff_end = 30.0
+falloff_min_scale = 1.0
+headshot_multiplier = 1.5
+knockback = 1.6
+ads_fov_scale = 0.82
+ads_time = 0.17
+ads_spread_scale = 0.3
+ads_depth = 0.1
+first_shot_accurate = true
+reticle_style = "bracket"
+recoil_kick = 1.6
+recoil_yaw = 0.4
+view_kick = 0.07
+shake = 0.14
+tracer_color = Color(1, 0.5, 0.14, 1)
+tracer_width = 0.05
+viewmodel = ExtResource("3")
+view_position = Vector3(0.24, -0.25, -0.62)
+view_rotation_degrees = Vector3(0, 0, -3)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"hub_throw"
+reload_sound = &"hub_reload"
+empty_sound = &"empty_click"
+equip_sound = &"hub_equip"
+fire_pitch_variance = 0.05
+move_speed_scale = 0.97
+equip_time = 0.36
+projectile_speed = 27.0
+projectile_fuse = 1.4
+projectile_size = 0.2
+bounce_sound = &"hub_clang"
+ricochet_sound = &"hub_strike"
+catch_sound = &"hub_catch"
+tracer_style = &"none"
+mode_script = ExtResource("6")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

@@ -240,7 +240,12 @@ sound_category = Dictionary[StringName, StringName]({
 &"cz_wrecker_impact": &"enemy_attack",
 &"cz_wrecker_engine": &"enemy_telegraph",
 &"cz_wrecker_charge": &"enemy_telegraph",
-&"cz_wrecker_debris": &"enemy_attack"
+&"cz_wrecker_debris": &"enemy_attack",
+&"hub_": &"handling",
+&"hub_throw": &"weapon",
+&"hub_strike": &"impact",
+&"hub_clang": &"impact",
+&"hub_pileup": &"impact"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,

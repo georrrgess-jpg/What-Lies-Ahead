@@ -32,7 +32,7 @@ func show_item(it: CosmeticItem, shown_on: WeaponData, thumbs: CosmeticThumbs) -
 	item = it
 	weapon = shown_on
 	set_title(it.display_name.to_upper())
-	set_rarity(CosmeticItem.rarity_color(it.rarity))
+	set_item_rarity(it)
 	_show_art(thumbs)
 	refresh_state()
 
@@ -152,5 +152,6 @@ func _title_art() -> Control:
 	label.add_theme_constant_override("line_spacing", -8)
 	label.custom_minimum_size = Vector2(custom_minimum_size.x - 28, 0)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	MythicFx.dress(label, item)
 	plate.add_child(label)
 	return plate

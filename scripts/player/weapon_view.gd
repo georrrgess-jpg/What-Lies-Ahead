@@ -109,6 +109,7 @@ var _holo_mats := {}                               # part name -> ShaderMaterial
 var _rest := {}            # node -> rest Transform3D, for reload animations
 var _pending: WeaponData   # weapon to show once the old one is lowered
 var _reload_player: Object # the running custom reload (WeaponData.reload_script)
+var _reload_duration := 0.0
 var _view_driver: Object   # the weapon's own part motion (WeaponData.view_script)
 var _lowering := false
 var _time := 0.0
@@ -509,6 +510,7 @@ func play_reload(weapon: WeaponData, duration: float) -> void:
 	_kill_reload_tween()
 	_reset_parts()
 	_reload_tween = create_tween().set_parallel(true)
+	_reload_duration = duration
 	if weapon.reload_script:
 		# Kept until the next reload so callbacks bound to it stay valid.
 		_reload_player = weapon.reload_script.new()
@@ -523,6 +525,15 @@ func play_reload(weapon: WeaponData, duration: float) -> void:
 func cancel_reload() -> void:
 	_kill_reload_tween()
 	_reset_parts()
+
+
+## The reload was cut short (WeaponController.hurry_reload): the rest of its
+## animation plays out in the `left` seconds still to go.
+func retime_reload(left: float) -> void:
+	if not is_reloading():
+		return
+	var rest := _reload_duration - _reload_tween.get_total_elapsed_time()
+	_reload_tween.set_speed_scale(maxf(1.0, rest / maxf(0.05, left)))
 
 
 func _kill_reload_tween() -> void:

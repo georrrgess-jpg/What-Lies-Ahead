@@ -84,7 +84,8 @@ func retry() -> void:
 
 ## True when the last run was lost past a checkpoint and can be continued.
 func can_continue_run() -> bool:
-	return level != null and checkpoint_wave > 0
+	# Endless has no checkpoints: a fallen run is over.
+	return level != null and not level.is_endless() and checkpoint_wave > 0
 
 
 ## Restarts the level at the last checkpoint wave (see can_continue_run()).

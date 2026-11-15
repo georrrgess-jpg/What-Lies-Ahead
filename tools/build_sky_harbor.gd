@@ -281,10 +281,7 @@ func _build_dock() -> void:
 		_textured("deck", "sky_deck", 0.32, 0.8))
 	_visual_box(dressing, "BoardingBand", Vector3(x1 - x0 + 0.3, 0.3, z1 - z0 + 0.3), Vector3((x0 + x1) * 0.5, UPPER_Y - 0.35, (z0 + z1) * 0.5),
 		_mat("navy", Color(0.17, 0.23, 0.4), 0.6))
-	for k in 5:
-		var z := z0 + 1.5 + k * 3.0
-		_visual_box(dressing, "WallStripe%d" % k, Vector3(0.06, UPPER_Y - 0.6, 1.0), Vector3(x1 + 0.02, (UPPER_Y - 0.6) * 0.5, z),
-			_mat("red", Color(0.91, 0.22, 0.31), 0.5))
+	_boarding_office_front(x1, z0)
 	# Stairs at both ends of the east face (top at the deck edge, foot to the east).
 	_stairs(dock, "StairN", Vector3(x1, UPPER_Y, z0 + 1.5), Vector3(x1 + 8.0, 0.0, z0 + 1.5), 3.0)
 	_stairs(dock, "StairS", Vector3(x1, UPPER_Y, z1 - 1.5), Vector3(x1 + 8.0, 0.0, z1 - 1.5), 3.0)
@@ -308,12 +305,14 @@ func _build_dock() -> void:
 	_lamp(dock, "UpperLampE", Vector3(-34.8, y, -2.0))
 	_string_bunting(Vector3(-41.2, y + 3.0, z0 + 0.8), Vector3(-34.8, y + 3.0, -2.0), 0.6)
 	_string_bunting(Vector3(-34.8, y + 3.0, -2.0), Vector3(-41.2, y + 3.0, z1 - 0.8), 0.6)
-	# Ground-level dock: freight, carts and benches as cover along the routes.
-	_solid_prop(dock, "sky_crates", "DockCratesA", Vector3(-28.0, 0, -11.5), 0.0, Vector3(1.9, 1.6, 1.3))
+	# Ground-level dock: freight, carts and benches as cover along the routes,
+	# each leaving a 2.4 m lane past the stair feet so the strips beside the
+	# boarding deck stay on the zombies' navmesh.
+	_solid_prop(dock, "sky_crates", "DockCratesA", Vector3(-28.0, 0, -12.75), 0.0, Vector3(1.9, 1.6, 1.3))
 	_solid_prop(dock, "sky_crates", "DockCratesB", Vector3(-29.0, 0, 8.5), 160.0, Vector3(1.9, 1.6, 1.3))
 	_solid_prop(dock, "sky_balloon_cart", "DockBalloonCart", Vector3(-28.5, 0, -6.5), 60.0, Vector3(1.4, 1.1, 0.8))
-	_solid_prop(dock, "sky_planter", "DockPlanterA", Vector3(-24.0, 0, 5.5), 90.0, Vector3(1.6, 0.7, 0.8))
-	_solid_prop(dock, "sky_planter", "DockPlanterB", Vector3(-24.0, 0, -8.5), 90.0, Vector3(1.6, 0.7, 0.8))
+	_solid_prop(dock, "sky_planter", "DockPlanterA", Vector3(-23.0, 0, 4.4), 90.0, Vector3(1.6, 0.7, 0.8))
+	_solid_prop(dock, "sky_planter", "DockPlanterB", Vector3(-23.0, 0, -8.4), 90.0, Vector3(1.6, 0.7, 0.8))
 	_solid_prop(dock, "sky_booth", "DockBooth", Vector3(-30.0, 0, 9.4), 180.0, Vector3(3.2, 2.6, 2.0))
 	_lamp(dock, "DockLampA", Vector3(-25.0, 0, -12.6))
 	_lamp(dock, "DockLampB", Vector3(-25.0, 0, 9.6))
@@ -353,10 +352,12 @@ func _build_bigtop_isle() -> void:
 			var aa := deg_to_rad(half * 180.0 + 20.0 + 140.0 * k / 6.0)
 			var ab := deg_to_rad(half * 180.0 + 20.0 + 140.0 * (k + 1) / 6.0)
 			_wall_segment(isle, "Kerb%d_%d" % [half, k], BIGTOP + Vector3(cos(aa), 0, -sin(aa)) * 3.6, BIGTOP + Vector3(cos(ab), 0, -sin(ab)) * 3.6, 0.65, 0.6)
-	# Bleachers inside, between the doorways (NE and SW), facing the ring.
+	# Bleachers inside, between the doorways (NE and SW), facing the ring. Set
+	# back to r 7.4 so the aisle to the kerb is wide enough for the navmesh
+	# (it joins the east doorway and the backstage entrance to the west door).
 	for entry in [[45.0, "BleachersNE"], [225.0, "BleachersSW"]]:
 		var a := deg_to_rad(entry[0])
-		var p := BIGTOP + Vector3(cos(a), 0, -sin(a)) * 6.9
+		var p := BIGTOP + Vector3(cos(a), 0, -sin(a)) * 7.4
 		var yaw := rad_to_deg(atan2(BIGTOP.x - p.x, BIGTOP.z - p.z))
 		_solid_prop(isle, "sky_bleachers", entry[1], p, yaw, Vector3(5.2, 1.45, 2.4))
 	for entry in [[135.0, "CratesNW"], [315.0, "CratesSE"]]:
@@ -544,8 +545,10 @@ func _build_hub_props() -> void:
 	var props := Node3D.new()
 	props.name = "Props"
 	geo.add_child(props)
-	# The carousel (south-west): the base collides, the top turns.
-	var car := Vector3(-9.5, 0, 6.0)
+	# The carousel (south-west): the base collides, the top turns. It stands
+	# 2.3 m clear of the west railing so zombies from the balloon pad can walk
+	# round it (and just off the plaza rim).
+	var car := Vector3(-8.8, 0, 6.6)
 	_prop(props, "sky_carousel", "Carousel", car, 0.0, Vector3(10, 4, 10))
 	var top := _prop(dressing, "sky_carousel_top", "CarouselTop", car, 0.0, Vector3(10, 4, 10))
 	_late(top, "res://scripts/props/sky_spinner.gd", {"axis": Vector3.UP, "degrees_per_second": 14.0, "wind_response": 0.0})
@@ -568,7 +571,7 @@ func _build_hub_props() -> void:
 	_solid_prop(props, "sky_crates", "CratesW", Vector3(-12.5, 0, -3.5), 100.0, Vector3(1.9, 1.6, 1.3))
 	_solid_prop(props, "sky_crates", "CratesSE", Vector3(9.0, 0, 11.0), 250.0, Vector3(1.9, 1.6, 1.3))
 	_solid_prop(props, "sky_crates", "CratesE", Vector3(7.0, 0, -4.5), 40.0, Vector3(1.9, 1.6, 1.3))
-	_solid_prop(props, "sky_planter", "PlanterA", Vector3(-3.5, 0, 7.5), 0.0, Vector3(1.6, 0.7, 0.8))
+	_solid_prop(props, "sky_planter", "PlanterA", Vector3(-2.6, 0, 7.9), 0.0, Vector3(1.6, 0.7, 0.8))
 	_solid_prop(props, "sky_planter", "PlanterB", Vector3(4.0, 0, -8.0), 90.0, Vector3(1.6, 0.7, 0.8))
 	_solid_prop(props, "sky_planter", "PlanterC", Vector3(-6.5, 0, -6.0), 45.0, Vector3(1.6, 0.7, 0.8))
 	for entry in [["BenchA", Vector3(-14.8, 0, -6.5), 90.0], ["BenchB", Vector3(14.8, 0, -4.5), 270.0], ["BenchC", Vector3(-7.0, 0, 12.8), 0.0],
@@ -589,7 +592,7 @@ func _build_hub_props() -> void:
 		var l: Vector3 = [lamps[1], lamps[3], lamps[6], lamps[7]][i]
 		_string_bunting(l + Vector3.UP * 3.0, STATION + Vector3(0, 6.6, 0), 0.9)
 	# Pinwheels round the edges.
-	var pins := [[Vector3(-15.0, 0, 3.0), 90.0], [Vector3(15.0, 0, -2.5), 270.0], [Vector3(-6.0, 0, -14.2), 10.0], [Vector3(-13.0, 0, 11.2), 225.0],
+	var pins := [[Vector3(-15.1, 0, 0.9), 90.0], [Vector3(15.0, 0, -2.5), 270.0], [Vector3(-6.0, 0, -14.2), 10.0], [Vector3(-13.0, 0, 11.2), 225.0],
 		[Vector3(-4.5, 0, 20.0), 180.0], [Vector3(4.5, 0, 20.0), 180.0]]
 	for i in pins.size():
 		_pinwheel(props, "Pinwheel%d" % i, pins[i][0], pins[i][1])
@@ -914,6 +917,37 @@ func _build_cloud_banks(parent: Node3D) -> void:
 			count += 1
 
 
+## The boarding deck stands on the harbour's ticket office: its east face
+## between the two stair runs gets a door under a lit TICKETS sign and a
+## window either side, instead of blank wall; its name runs on the band.
+func _boarding_office_front(x1: float, z0: float) -> void:
+	var red := _mat("red", Color(0.91, 0.22, 0.31), 0.5)
+	var navy := _mat("navy", Color(0.17, 0.23, 0.4), 0.6)
+	var glass := _mat("office_glass", Color(0.55, 0.78, 0.95), 0.15, Color(1.0, 0.85, 0.6), 0.35)
+	var gold := _mat("office_gold", Color(1.0, 0.8, 0.3), 0.35)
+	var door_z := z0 + 7.5
+	_visual_box(dressing, "OfficeDoorFrame", Vector3(0.08, 2.5, 1.5), Vector3(x1 + 0.04, 1.25, door_z), navy)
+	_visual_box(dressing, "OfficeDoor", Vector3(0.06, 2.3, 1.2), Vector3(x1 + 0.08, 1.15, door_z), red)
+	_visual_box(dressing, "OfficeDoorPane", Vector3(0.04, 0.7, 0.7), Vector3(x1 + 0.11, 1.7, door_z), glass)
+	_visual_box(dressing, "OfficeDoorKnob", Vector3(0.1, 0.1, 0.1), Vector3(x1 + 0.13, 1.05, door_z - 0.42), gold)
+	var sign := Label3D.new()
+	sign.name = "OfficeSignText"
+	sign.text = "TICKETS"
+	sign.font = load("res://art/fonts/LilitaOne-Regular.ttf")
+	sign.font_size = 96
+	sign.pixel_size = 0.0028
+	sign.modulate = Color(1.0, 0.85, 0.4)
+	sign.outline_size = 0
+	sign.shaded = false
+	sign.position = Vector3(x1 + 0.18, UPPER_Y - 0.35, door_z)
+	sign.rotation.y = PI * 0.5
+	dressing.add_child(sign)
+	for dz in [-3.2, 3.2]:
+		_visual_box(dressing, "OfficeWindowFrame%d" % int(dz), Vector3(0.08, 1.3, 1.7), Vector3(x1 + 0.04, 1.7, door_z + dz), navy)
+		_visual_box(dressing, "OfficeWindow%d" % int(dz), Vector3(0.06, 1.1, 1.5), Vector3(x1 + 0.07, 1.7, door_z + dz), glass)
+		_visual_box(dressing, "OfficeAwning%d" % int(dz), Vector3(0.6, 0.12, 1.9), Vector3(x1 + 0.3, 2.45, door_z + dz), red)
+
+
 func _model_mesh(model: String) -> Mesh:
 	if _mesh_cache.has(model):
 		return _mesh_cache[model]
@@ -963,11 +997,13 @@ func _build_markers() -> void:
 	var spawns := Node3D.new()
 	spawns.name = "EnemySpawns"
 	level.add_child(spawns)
+	# Each marker's 2 x 2 m pack square (RunDirector spreads zombies 1 m round
+	# it) stays clear of the basket, the wagon and the pad railings.
 	var points := {
 		"SpawnGangway": [Vector3(-48.5, UPPER_Y + 0.1, -2.0), -90.0],
 		"SpawnSkyRide": [Vector3(6.0, 0.1, -20.0), 0.0],
-		"SpawnBackstage": [Vector3(BIGTOP.x + BIGTOP_APOTHEM + 2.5, 0.1, 2.5), 90.0],
-		"SpawnBalloon": [Vector3(-18.6, 0.1, 5.2), -90.0],
+		"SpawnBackstage": [Vector3(BIGTOP.x + BIGTOP_APOTHEM + 2.3, 0.1, 2.7), 90.0],
+		"SpawnBalloon": [Vector3(-18.1, 0.1, 5.1), -90.0],
 		"SpawnCargoLift": [Vector3(7.5, 0.1, 17.0), 180.0],
 	}
 	for point_name in points:

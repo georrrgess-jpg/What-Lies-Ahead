@@ -48,6 +48,8 @@ static func _chip(it: CosmeticItem) -> Control:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", -6)
 	chip.add_child(col)
-	col.add_child(UiKit.label(it.display_name.to_upper(), 22, CosmeticItem.rarity_color(it.rarity).lerp(UiKit.CREAM, 0.3), true))
+	var name_label := UiKit.label(it.display_name.to_upper(), 22, CosmeticItem.rarity_color(it.rarity).lerp(UiKit.CREAM, 0.3), true)
+	MythicFx.dress(name_label, it)
+	col.add_child(name_label)
 	col.add_child(UiKit.label(LockerCatalog.category_label(it), UiKit.SIZE_SMALL, UiKit.MUTED))
 	return chip

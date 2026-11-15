@@ -69,6 +69,9 @@ var _mesh_cache := {}
 var _clear: Array = []
 ## Dirt trails painted into the ground (polylines, XZ).
 var _trails: Array = []
+## Where the trail (W) and the camp road (S) leave the basin through their gates.
+const NEAR_TERRAIN := Rect2(-84, -80, 144, 162)
+const EXITS := [[Vector2(-26.0, 14.6), Vector2(-60.0, 19.2)], [Vector2(13.0, 26.5), Vector2(16.2, 64.0)]]
 
 
 func _initialize() -> void:
@@ -206,8 +209,8 @@ func _plan_trails() -> void:
 		[Vector2(1, -4), Vector2(0, -9), Vector2(0, -12)],                                     # hut -> stairs
 		[Vector2(-4, -1), Vector2(-9, -8), Vector2(-14, -11), Vector2(-20, -11.5), Vector2(-27, -11)],   # cave -> hut
 		[Vector2(6, 3), Vector2(12, 7), Vector2(17, 8.5), Vector2(19.5, 10.5)],                   # hut -> camp stairs
-		[Vector2(13, 28), Vector2(12.5, 21), Vector2(10, 15), Vector2(6, 7)],                    # camp road
-		[Vector2(-28, 15), Vector2(-20, 14), Vector2(-12, 11.5), Vector2(-4, 6)],                # trail gate
+		[Vector2(16, 62), Vector2(14, 44), Vector2(13, 28), Vector2(12.5, 21), Vector2(10, 15), Vector2(6, 7)],    # camp road
+		[Vector2(-58, 19), Vector2(-42, 16), Vector2(-28, 15), Vector2(-20, 14), Vector2(-12, 11.5), Vector2(-4, 6)],  # trail gate
 		[Vector2(-1, 7), Vector2(-3.5, 14), Vector2(-6, 19.5)],                                  # exit trail
 		[Vector2(-13.5, -12), Vector2(-13.5, -16)],                                              # west ramp foot
 	]
@@ -223,7 +226,42 @@ func _terrain_height(x: float, z: float) -> float:
 	if x < BASIN.position.x:
 		rise += 10.0 * smoothstep(0.0, 6.0, dx)
 	var rough := clampf(away / 10.0, 0.0, 1.0)
-	return rise + n * 10.0 * rough
+	var h := rise + n * 10.0 * rough
+	# The trail and the camp road run on into the jungle through a gentle cut.
+	var cut := _exit_cut(Vector2(x, z))
+	return lerpf(h, away * 0.12, cut)
+
+
+## 1 on the trail and the camp road beyond their gates (a 5 m cut through the
+## hills), falling to 0 `reach` metres either side and back toward the basin.
+func _exit_cut(p: Vector2, reach := 7.0) -> float:
+	var best := 0.0
+	for exit in EXITS:
+		var a: Vector2 = exit[0]
+		var b: Vector2 = exit[1]
+		var ab := b - a
+		var u := (p - a).dot(ab) / ab.length_squared()
+		if u < -0.2:
+			continue
+		var d := p.distance_to(a + ab * clampf(u, 0.0, 1.0))
+		best = maxf(best, (1.0 - smoothstep(2.5, reach, d)) * smoothstep(-0.2, 0.0, u))
+	return best
+
+
+## Height of the near terrain mesh itself at p (its 2 m triangles, not the
+## smooth function), so props on the steep sides of the exit cuts sit on it.
+func _ground_height(p: Vector2) -> float:
+	var g := (p - NEAR_TERRAIN.position) / 2.0
+	var c := g.floor()
+	var f := g - c
+	var o := NEAR_TERRAIN.position + c * 2.0
+	var hb := _terrain_height(o.x + 2.0, o.y)
+	var hc := _terrain_height(o.x, o.y + 2.0)
+	if f.x + f.y <= 1.0:
+		var ha := _terrain_height(o.x, o.y)
+		return ha + (hb - ha) * f.x + (hc - ha) * f.y
+	var hd := _terrain_height(o.x + 2.0, o.y + 2.0)
+	return hd + (hc - hd) * (1.0 - f.x) + (hb - hd) * (1.0 - f.y)
 
 
 func _trail_weight(p: Vector2) -> float:
@@ -252,7 +290,7 @@ func _build_ground() -> void:
 	floor_mat.shader = load(SHADERS + "jungle_ground.gdshader")
 	floor_mat.set_shader_parameter("grass_texture", load(TEXTURES + "jungle_grass.png"))
 	floor_mat.set_shader_parameter("dirt_texture", load(TEXTURES + "jungle_dirt.png"))
-	holder.add_child(_terrain_mesh("TerrainNear", Rect2(-60, -80, 120, 138), 2.0, floor_mat, 0.0, true))
+	holder.add_child(_terrain_mesh("TerrainNear", NEAR_TERRAIN, 2.0, floor_mat, 0.0, true))
 	holder.add_child(_terrain_mesh("TerrainFar", Rect2(-696, -696, 1392, 1392), 24.0, floor_mat, 3.0, false))
 
 
@@ -268,8 +306,10 @@ func _terrain_mesh(mesh_name: String, area: Rect2, cell: float, material: Materi
 			var x := area.position.x + i * cell
 			var z := area.position.y + j * cell
 			var h := _terrain_height(x, z)
-			if sink > 0.0 and x > -58.0 and x < 58.0 and z > -78.0 and z < 58.0:
-				h -= sink
+			if sink > 0.0 and x > -82.0 and x < 58.0 and z > -78.0 and z < 80.0:
+				# Well under the near patch, and deep along the exit cuts, which
+				# the coarse far grid could not follow.
+				h -= sink + 30.0 * _exit_cut(Vector2(x, z), 30.0)
 			var col := Color(0, 0, 0)
 			if paint:
 				var p := Vector2(x, z)
@@ -956,17 +996,34 @@ func _build_jungle_wall() -> void:
 					continue
 				var bs := rng.randf_range(0.9, 1.5)
 				bushes.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(bs, bs, bs)), Vector3(q.x, _terrain_height(q.x, q.y), q.y)))
+	# An avenue of trees and palms along the trail and the camp road beyond the gates.
+	for exit in EXITS:
+		var a: Vector2 = exit[0]
+		var b: Vector2 = exit[1]
+		var dir := (b - a).normalized()
+		var across := Vector2(-dir.y, dir.x)
+		var t := 6.0
+		while t < a.distance_to(b):
+			for side in [-1.0, 1.0]:
+				var p: Vector2 = a + dir * (t + rng.randf_range(-1.0, 1.0)) + across * side * rng.randf_range(4.2, 5.5)
+				var s := rng.randf_range(0.9, 1.3)
+				var xf := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(s, s, s)), Vector3(p.x, _ground_height(p) - 0.2, p.y))
+				if rng.randf() < 0.6:
+					trees.append(xf)
+				else:
+					palms.append(xf)
+			t += 3.6
 	_multimesh(dressing, "WallTrees", "jungle_canopy_tree", trees)
 	_multimesh(dressing, "WallPalms", "jungle_palm", palms)
 	_multimesh(dressing, "WallBushes", "jungle_bush", bushes)
 
 
-## True near an entrance opening or behind the temple (kept clear of the wall).
+## True near an entrance opening, on an exit cut or behind the temple (kept clear of the wall).
 func _near_gap(p: Vector2) -> bool:
 	for g in [Vector2(-28.5, -11.0), Vector2(26.6, TRACK_Z), Vector2(-25.0, 14.5), Vector2(13.0, 25.6), Vector2(-25.6, -2.2)]:
 		if p.distance_to(g) < 5.0:
 			return true
-	return absf(p.x) < 17.0 and p.y < -26.0
+	return (absf(p.x) < 17.0 and p.y < -26.0) or _exit_cut(p) > 0.05
 
 
 func _free(p: Vector2, radius: float) -> bool:
@@ -986,8 +1043,8 @@ func _build_backdrop() -> void:
 	var back := Node3D.new()
 	back.name = "Backdrop"
 	dressing.add_child(back)
-	# West cliff wall the falls pour from.
-	var cliffs := [[Vector3(-32.0, 0, -24.0), 1.5], [Vector3(-34.5, 0, -2.6), 1.8], [Vector3(-32.5, 0, 9.5), 1.4], [Vector3(-31.0, 0, 22.0), 1.4],
+	# West cliff wall the falls pour from, open where the jungle trail leaves.
+	var cliffs := [[Vector3(-32.0, 0, -24.0), 1.5], [Vector3(-34.5, 0, -2.6), 1.8], [Vector3(-32.5, 0, 4.0), 1.2], [Vector3(-31.0, 0, 27.0), 1.2],
 		[Vector3(-34.0, 6.0, -10.0), 1.6]]
 	var i := 0
 	for c in cliffs:
@@ -1003,7 +1060,7 @@ func _build_backdrop() -> void:
 		tries += 1
 		var x := rng.randf_range(-260.0, 260.0)
 		var z := rng.randf_range(-280.0, 240.0)
-		if BASIN.grow(4.0).has_point(Vector2(x, z)):
+		if BASIN.grow(4.0).has_point(Vector2(x, z)) or _exit_cut(Vector2(x, z)) > 0.1:
 			continue
 		var h := _terrain_height(x, z)
 		var s := rng.randf_range(1.0, 1.9)
