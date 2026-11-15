@@ -1,0 +1,73 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/lava_lampoon.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/lava_lampoon_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/lava_lampoon_mode.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/views/lava_lampoon_view.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 24
+
+[resource]
+script = ExtResource("1")
+id = &"lava_lampoon"
+sort_order = 104
+category = "Lava Blaster"
+display_name = "Lava Lampoon"
+role = "Full-auto lava-lamp blaster: the wax blobs in the lamp are the magazine. It warms up for half a second, then grooves into a faster rhythm. Every molten glob splats a small lava puddle that burns zombies walking through it for 1.5 s; puddles do not stack, so spread fire across a lane. Reload flips the lamp: tap reload again while it is upside down to skip to the twist-lock."
+unlock = SubResource("unlock")
+slot_class = "primary"
+magazine_size = 30
+reserve_start = 150
+reserve_max = 270
+reload_time = 2.4
+emergency_recharge_interval = 1.0
+automatic = true
+fire_interval = 0.085
+damage = 19.0
+pellets = 1
+spread_degrees = 0.9
+spread_bloom = 0.12
+spread_bloom_max = 1.8
+spread_recovery = 6.0
+max_range = 60.0
+falloff_start = 18.0
+falloff_end = 40.0
+falloff_min_scale = 0.6
+headshot_multiplier = 1.5
+knockback = 0.45
+ads_fov_scale = 0.82
+ads_time = 0.2
+ads_spread_scale = 0.45
+ads_depth = 0.12
+first_shot_accurate = false
+reticle_style = "circle"
+recoil_kick = 0.55
+recoil_yaw = 0.25
+view_kick = 0.03
+shake = 0.08
+tracer_color = Color(1, 0.48, 0.14, 1)
+tracer_width = 0.04
+view_position = Vector3(0.27, -0.27, -0.66)
+view_rotation_degrees = Vector3(0, 0, -3)
+viewmodel = ExtResource("3")
+reload_script = ExtResource("4")
+view_script = ExtResource("6")
+fire_sound = &"weap_lava_fire"
+reload_sound = &"weap_lava_pop"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.06
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
+move_speed_scale = 0.95
+equip_time = 0.42
+equip_sound = &"weap_lava_equip"
+projectile_speed = 70.0
+projectile_fuse = 0.9
+projectile_size = 0.06
+explosion_sound = &"weap_lava_splat"
+tracer_style = &"none"
+mode_script = ExtResource("5")

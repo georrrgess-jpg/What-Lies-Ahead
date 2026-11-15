@@ -67,6 +67,9 @@ JOINTS = {
                       + [(f"Cup{i}", p) for i in range(4) for p in ("Drum", "Shell", "Cell")],
     "dunk_tank": [("Cell", "Shell"), ("Water", "Cell"), ("Water", "Shell"), ("Pump", "Shell"), ("Needle", "Shell"), ("Target", "Shell")],
 }
+WEAPONS.append("lava_lampoon")
+JOINTS["lava_lampoon"] = [("Lamp", "Shell"), ("LampGlass", "Lamp"), ("LampCap", "LampGlass"), ("LampCap", "Lamp"), ("LampWax", "LampGlass"),
+                          ("LampWax", "Lamp"), ("LampGlass", "Shell"), ("Cell", "Shell"), ("Cell", "Lamp")] + [(f"Pip{i}", "Shell") for i in range(10)]
 
 
 def world_tree(ob, matrix=None):

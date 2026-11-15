@@ -20,7 +20,8 @@ to the pop and gathers the pack into the cup (scripts/weapons/twister_vortex.gd)
 Tank's soak multiplies its own hits (scripts/weapons/soak.gd), the Road Rager's hubcap
 (scripts/weapons/hubcap_shot.gd) hits its target on the way out and back, is paced by its
 round trips (catches refill it, so it never reloads or runs dry) and slices through the
-whole pack, a pile-up hitting harder; the "amp" column is the
+whole pack, a pile-up hitting harder; the Lava Lampoon fires its warm-up groove's slower shots
+first and its target burns in the lava puddle under it (the pack walks through it); the "amp" column is the
 damage bonus a status lends every other weapon. Armour behaviours (helmets, shields, ice
 shells) are approximated as extra health. Numbers are for comparison
 between weapons, not exact in-game times.
@@ -72,6 +73,9 @@ VORTEX = gd_consts("scripts/weapons/twister_vortex.gd")
 SOAK = gd_consts("scripts/weapons/soak.gd")
 HUBCAP = gd_consts("scripts/weapons/hubcap_shot.gd")
 MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
+# The Lava Lampoon: its warm-up groove (mode) and the lava puddle its globs leave.
+LAVA_MODE = gd_consts("scripts/weapons/modes/lava_lampoon_mode.gd")
+LAVA_PUDDLE = gd_consts("scripts/weapons/lava_lampoon_puddle.gd")
 # Share of the pop a gathered zombie takes (they spin near the cup's centre).
 VORTEX_POP_SHARE = 0.8
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
@@ -250,6 +254,10 @@ def pull_damage(w, e, d, head):
 		return w["damage"] * head_mix, w["fire_interval"]
 	if MODE_OF.get(w["id"]) == "vortex":
 		return w["damage"] + vortex_spin(), w["fire_interval"]
+	if w["id"] == "lava_lampoon":
+		# A glob hits like a ray shot; the target burns in the puddle under it meanwhile.
+		cycle = lava_cycle(w)
+		return w["damage"] * scale * head_mix + LAVA_PUDDLE["BURN_DPS"] * cycle, cycle
 	if w["projectile_speed"] > 0.0:
 		dmg = w["damage"] + w["direct_hit_bonus"]
 		return dmg, w["fire_interval"]
@@ -259,6 +267,13 @@ def pull_damage(w, e, d, head):
 	dmg = w["damage"] * w["pellets"] * pellet_fraction(w, e, d) * scale * head_mix * (1.0 + amp(w))
 	cycle = w["fire_interval"] + (w["burst_count"] - 1) * w["burst_interval"]
 	return dmg * w["burst_count"] + fizz_per_pull(w, cycle), cycle
+
+
+def lava_cycle(w):
+	"""Average seconds per shot over a magazine: the warm-up groove's slow shots, then the data rate."""
+	warm = math.ceil(LAVA_MODE["GROOVE_TIME"] / LAVA_MODE["WARM_INTERVAL"])
+	mag = w["magazine_size"]
+	return (LAVA_MODE["GROOVE_TIME"] + (mag - warm) * w["fire_interval"]) / mag
 
 
 def vortex_spin():
@@ -350,6 +365,9 @@ def crowd_damage(w, d=8.0):
 		return dmg + w["damage"] * hops
 	if MODE_OF.get(w["id"]) == "vortex":
 		return dmg + 3 * (vortex_spin() + w["damage"] * VORTEX_POP_SHARE)
+	if w["id"] == "lava_lampoon":
+		# The pack walks through the puddle (about a second each at shambling pace).
+		return dmg + 3 * LAVA_PUDDLE["BURN_DPS"] * 2 * LAVA_PUDDLE["RADIUS"] / 2.0
 	if w["splash_radius"] > 0.0:
 		return dmg + 3 * w["damage"] * (1 + w["splash_edge_scale"]) / 2
 	if w["pierce"] > 0:
