@@ -29,7 +29,7 @@ extends Resource
 @export var trap_cooldown := 40.0
 ## The Upgrade Bench: tickets for Mk I, II and III of the weapon in hand, and
 ## the damage each tier deals (x; Mk II adds the magazine and reload instead).
-@export var bench_prices := PackedInt32Array([500, 1100, 2000])
+@export var bench_prices := PackedInt32Array([500, 1100, 1800])
 @export var bench_damage := PackedFloat32Array([1.3, 1.3, 1.7])
 ## Power-ups: the chance a kill drops one (from powerup_from_wave on), the
 ## least seconds between two drops, how long one lies on the ground and how

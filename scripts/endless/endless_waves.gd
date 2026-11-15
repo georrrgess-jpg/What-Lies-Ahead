@@ -24,7 +24,7 @@ const HORDE_EVERY := 5
 const TITLES := {
 	&"standard": ["", ""],
 	&"rush": ["RUSH HOUR", "Fast ones in numbers: keep your back to a wall."],
-	&"siege": ["HEAVY TRAFFIC", "The heavies come first, one street at a time."],
+	&"siege": ["HEAVY TRAFFIC", "The heavies lead the way: drop them before the crowd arrives."],
 	&"ambush": ["AMBUSH", "They pour in from every street at once."],
 	&"ranged": ["CROSSFIRE", "Specialists from every side: take them first."],
 	&"bounty": ["THE GOLDEN COURIER", "Pop the golden runner before it gets away."],
@@ -37,7 +37,7 @@ const TITLES := {
 const MIX := {
 	&"standard": [0.62, 0.22, 0.06, 0.10],
 	&"rush": [0.4, 0.47, 0.0, 0.13],
-	&"siege": [0.5, 0.12, 0.16, 0.22],
+	&"siege": [0.6, 0.12, 0.1, 0.18],
 	&"ambush": [0.55, 0.25, 0.06, 0.14],
 	&"ranged": [0.45, 0.15, 0.05, 0.35],
 	&"bounty": [0.6, 0.24, 0.06, 0.10],

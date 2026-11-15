@@ -28,6 +28,14 @@ fixed: saves, data and scenes refer to them.
 | `market` | Neon Market | 1400 | `firebug` |
 | `tower` | Broadcast Tower | 1800 | more `city_bruiser`; the boss's lair |
 
+Ashfall City (update 10) has 21 entrances: 5 in the square and 4 in every other district.
+Precinct 9 has two gates (`Gate_precinct`, `Gate_precinct2`) and the Broadcast Tower two
+(`Gate_tower`: the Market's north alley, `Gate_tower2`: the Metro's east stairs), so every
+district is a loop; paying at either gate of a district opens both. Two `upgrade_bench`
+markers: Ashfall Square (7.5, 0, 7) facing +Z, beside the loadout station, and the Broadcast
+Tower (48, 0, -46) at yaw 90. The generator bakes each bench's footprint
+(`BenchFootprint_<district>`, 2.4 x 1.1 x 1.2 m) off the navmesh.
+
 Boss: `the_wrecker`, every `boss_every` (10) waves.
 
 ## Records and unlocks
@@ -143,7 +151,7 @@ marker follows it.
 a pegboard of glowing tools, a neon UPGRADES sign naming the next tier and its price, and a
 hologram weapon turning over the vice): standing at it shows "HOLD E · UPGRADE ION CARBINE TO
 MK II · 1100 · MAGAZINE 32 → 48, FASTER RELOAD". Each press buys one tier of the weapon in hand
-for the run (`EndlessUpgrades`; prices `bench_prices`, 500 / 1100 / 2000):
+for the run (`EndlessUpgrades`; prices `bench_prices`, 500 / 1100 / 1800):
 
 | Tier | Gives |
 | --- | --- |
