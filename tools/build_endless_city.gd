@@ -43,6 +43,15 @@ const KIT_SMALL := ["city_hydrant", "city_debris", "city_neon_sign", "city_stree
 const SMALL_RANGE := 75.0
 
 const SQ := 22.0                       # Ashfall Square half size
+## The toppled statue's parts in its own space: [name, size, centre, extra yaw]:
+## the plinth's two steps, its block and cap, and the founder lying beside it.
+const STATUE_PARTS := [
+	["StatueStep0", Vector3(5.4, 0.35, 5.4), Vector3(0, 0.175, 0), 0.0],
+	["StatueStep1", Vector3(4.4, 0.35, 4.4), Vector3(0, 0.525, 0), 0.0],
+	["StatueBlock", Vector3(2.6, 2.2, 2.6), Vector3(0, 1.8, 0), 0.0],
+	["StatueCapStone", Vector3(3.0, 0.3, 3.0), Vector3(0, 3.05, 0), 0.0],
+	["StatueFigure", Vector3(5.6, 0.9, 1.2), Vector3(-3.0, 0.45, 3.9), -8.0],
+]
 const STATION := Vector3(0.0, 0.0, 8.5)
 const STATUE := Vector3(0.0, 0.0, -6.0)
 const METRO_Y := -6.0
@@ -322,9 +331,15 @@ func _build_square() -> void:
 	sq.add_child(station)
 	station.position = STATION
 	# The statue: plinth and the fallen founder across the plaza.
-	var statue := _solid_kit(sq, "city_statue_toppled", "Statue", STATUE, 20.0, Vector3(9.0, 2.6, 4.0))
-	var statue_box := (statue.get_child(0) as CollisionShape3D).shape as BoxShape3D
-	_player_block(sq, "StatueCap", Vector3(statue_box.size.x, 3.0, statue_box.size.z), statue.position + Vector3(0, statue_box.size.y * 0.5 + 1.5, 0), deg_to_rad(20.0))
+	# Colliders follow its parts (art/blender/build_city_street.py): one box
+	# round the whole model blocked the open paving between plinth and figure.
+	_kit(sq, "city_statue_toppled", "Statue", STATUE, 20.0, Vector3(9.0, 2.6, 4.0))
+	var turn := Basis(Vector3.UP, deg_to_rad(20.0))
+	for part in STATUE_PARTS:
+		var body := _collider(sq, part[0], part[1], STATUE)
+		body.position = STATUE + turn * (part[2] as Vector3)
+		body.rotation.y = deg_to_rad(20.0) + deg_to_rad(part[3])
+	_player_block(sq, "StatueCap", Vector3(3.0, 3.0, 3.0), STATUE + Vector3(0, 3.2 + 1.5, 0), deg_to_rad(20.0))
 	# The ring of wrecks on the road (cover, loops round the plaza), half of them burning.
 	var wrecks := [
 		["city_car_burnt", Vector3(-16.5, 0, -10.0), 12.0, true], ["city_taxi_wreck", Vector3(-16.8, 0, 7.0), 168.0, false],
