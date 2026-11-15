@@ -79,6 +79,10 @@ const CLOSE_OUT := 3
 ## A straggler whose walk to the player is longer than this (m) is brought
 ## to the nearest entrance while the player is not looking.
 const REGROUP_ROUTE := 36.0
+## Endless: a zombie whose walk in is longer than this (m) is brought to a
+## near entrance out of sight at any point of a wave (once), so a big city
+## never means long empty walks.
+const STRAGGLER_ROUTE := 46.0
 ## Fraction of the wave that must have spawned before the bounty target appears.
 const BOUNTY_AT := 0.3
 ## Seconds a bounty target lingers once it is the last thing standing.
@@ -167,6 +171,9 @@ var _bounty_spawned := false
 var _bounty_left := 0.0
 var _reinforce_timer := 0.0
 var _regroup_timer := 0.0
+var _straggler_timer := 0.0
+## Seconds between a surge's warning and its arrival (Endless sets its own).
+var surge_warning_seconds := SURGE_WARNING
 # --- run totals for the results ---
 var _grades: Array[String] = []
 var _bosses_defeated := 0
@@ -434,7 +441,7 @@ func start_next_wave() -> void:
 	_bounty_spawned = wave.bounty == &""
 	_reinforce_timer = REINFORCE_SECONDS
 	pacing.begin_wave()
-	planner.begin_wave(int(FRONTS.get(wave.kind, 2)))
+	planner.begin_wave(endless.fronts(wave_number) if endless else int(FRONTS.get(wave.kind, 2)))
 	if kiosk:
 		kiosk.set_open(false)
 	if damage_boost == Boost.READY:
@@ -531,6 +538,8 @@ func _tick_wave(delta: float) -> void:
 			_queue.pop_front()
 			_spawned += 1
 	_close_out(delta)
+	if endless:
+		_regroup_stragglers(delta)
 
 	# A wave ends only when nothing is queued, pending or alive.
 	if _queue.is_empty() and _alive.is_empty() and _surge_left <= 0.0 and _boss_spawned and _bounty_spawned:
@@ -587,10 +596,10 @@ func _tick_surge(delta: float, wave: WaveData) -> void:
 		_surge_point = planner.surge_point()
 		if _surge_point == null:
 			return
-		_surge_left = SURGE_WARNING
+		_surge_left = surge_warning_seconds
 		Sfx.play(&"rounds_surge_siren", -2.0)
 		notice.emit("SURGE INCOMING — %s" % SpawnPlanner.label(_surge_point), &"bad")
-		surge_warning.emit(_surge_point, SURGE_WARNING)
+		surge_warning.emit(_surge_point, surge_warning_seconds)
 	if _surge_left <= 0.0:
 		return
 	_surge_left -= delta
@@ -749,6 +758,26 @@ func _close_out(delta: float) -> void:
 			if point:
 				z.global_position = point.global_position
 				z.reset_stall()
+
+
+## Endless: a zombie still a long walk away (STRAGGLER_ROUTE) is brought,
+## once, to a near entrance out of the player's sight.
+func _regroup_stragglers(delta: float) -> void:
+	_straggler_timer -= delta
+	if _straggler_timer > 0.0:
+		return
+	_straggler_timer = 1.5
+	for z in _alive:
+		if z == bounty or z == boss or z.is_dead() or z.state != Zombie.State.CHASE:
+			continue
+		var key := z.get_instance_id()
+		if _recoveries.has(key) or planner.route_length(z.global_position) <= STRAGGLER_ROUTE or _in_view(z.global_position):
+			continue
+		var point := planner.pick(SpawnPlanner.Role.CLOSE)
+		if point and planner.route_length(point.global_position) < STRAGGLER_ROUTE:
+			_recoveries[key] = 1
+			z.global_position = point.global_position
+			z.reset_stall()
 
 
 ## True if the player is looking toward `at` (whatever stands in between).
@@ -998,8 +1027,15 @@ func boost_percent() -> int:
 
 func _set_damage_boost(value: Boost) -> void:
 	damage_boost = value
-	player.weapons.damage_multiplier = waves.damage_boost_scale if value == Boost.ACTIVE else 1.0
+	refresh_damage()
 	damage_boost_changed.emit(value)
+
+
+## The weapon in hand's damage multiplier: the running damage boost, times
+## its Upgrade Bench tier in an endless run.
+func refresh_damage() -> void:
+	var boost := waves.damage_boost_scale if damage_boost == Boost.ACTIVE else 1.0
+	player.weapons.damage_multiplier = boost * (endless.damage_scale() if endless else 1.0)
 
 
 ## Mirrors the player's shield for the HUD and plays its block/break sounds.

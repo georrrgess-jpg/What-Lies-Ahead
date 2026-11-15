@@ -27,6 +27,18 @@ extends Resource
 @export var trap_price := 250
 @export var trap_seconds := 15.0
 @export var trap_cooldown := 40.0
+## The Upgrade Bench: tickets for Mk I, II and III of the weapon in hand, and
+## the damage each tier deals (x; Mk II adds the magazine and reload instead).
+@export var bench_prices := PackedInt32Array([800, 1600, 3000])
+@export var bench_damage := PackedFloat32Array([1.3, 1.3, 1.7])
+## Power-ups: the chance a kill drops one (from powerup_from_wave on), the
+## least seconds between two drops, how long one lies on the ground and how
+## long a timed one (Double Tickets, Rapid Fire) runs.
+@export var powerup_chance := 0.03
+@export var powerup_from_wave := 3
+@export var powerup_gap := 35.0
+@export var powerup_life := 20.0
+@export var powerup_seconds := 20.0
 
 @export_group("Scaling")
 ## Zombies in wave 1, how many each wave adds, and the most one wave holds.
