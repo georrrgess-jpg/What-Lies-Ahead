@@ -21,13 +21,13 @@ const MASK_WORLD := 1
 const STEPS := [
 	{"r0": 0.25, "r1": 0.75, "speed": 42.0, "range": 34.0, "damage": 0.25, "push": 0.4},
 	{"r0": 0.35, "r1": 1.3, "speed": 32.0, "range": 36.0, "damage": 0.5, "push": 1.2},
-	{"r0": 0.45, "r1": 1.9, "speed": 24.0, "range": 38.0, "damage": 0.75, "push": 2.5},
-	{"r0": 0.55, "r1": 2.8, "speed": 17.0, "range": 40.0, "damage": 1.0, "push": 5.5},
+	{"r0": 0.45, "r1": 1.9, "speed": 24.0, "range": 38.0, "damage": 0.75, "push": 2.0},
+	{"r0": 0.55, "r1": 2.8, "speed": 17.0, "range": 40.0, "damage": 1.0, "push": 3.6},
 ]
-const OVERCHARGE := {"r0": 0.7, "r1": 4.2, "speed": 19.0, "range": 32.0, "damage": 1.35, "push": 7.5}
+const OVERCHARGE := {"r0": 0.7, "r1": 4.2, "speed": 19.0, "range": 32.0, "damage": 1.35, "push": 6.0}
 ## Damage kept for each zombie the ring has already passed through this leg.
-const ATTENUATION := 0.88
-const MIN_SHARE := 0.5
+const ATTENUATION := 0.82
+const MIN_SHARE := 0.4
 ## How far in front of or behind the ring plane a zombie still counts as crossed.
 const SLAB := 0.35
 ## The radius grows quickly at first and then levels off.

@@ -61,8 +61,8 @@ func _satellite(v: WeaponView, d: float) -> void:
 		_sat_mat.set_shader_parameter("span", 0.05)
 	sat.material_override = _sat_mat
 	var high := Vector3(0.0, 0.14, -0.02)
-	v.track("SatHolo", d, [[0.16, high, Vector3(0, -90, 20), 1.6, "hold"], [0.32, high * 0.6, Vector3(0, 0, 10), 1.4],
-		[0.48, Vector3.ZERO, Vector3(0, 60, 0), 1.0]], Tween.TRANS_SINE, Tween.EASE_OUT)
+	v.track("SatHolo", d, [[0.16, high, Vector3(0, -90, 20), 2.4, "hold"], [0.32, high * 0.6, Vector3(0, 0, 10), 2.0],
+		[0.48, Vector3.ZERO, Vector3(0, 60, 0), 1.2]], Tween.TRANS_SINE, Tween.EASE_OUT)
 	v.at(0.16, d, func():
 		sat.visible = true
 		var tw := sat.create_tween()

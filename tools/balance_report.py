@@ -21,7 +21,10 @@ Tank's soak multiplies its own hits (scripts/weapons/soak.gd), the Road Rager's 
 (scripts/weapons/hubcap_shot.gd) hits its target on the way out and back, is paced by its
 round trips (catches refill it, so it never reloads or runs dry) and slices through the
 whole pack, a pile-up hitting harder; the "amp" column is the
-damage bonus a status lends every other weapon. Armour behaviours (helmets, shields, ice
+damage bonus a status lends every other weapon. Ground Control's full-charge ring
+(scripts/weapons/ground_control_ring.gd) passes through the whole pack, weaker for each
+zombie it has passed, and its mark (scripts/weapons/ground_control_mark.gd) adds its bonus
+to every hit after the first. Armour behaviours (helmets, shields, ice
 shells) are approximated as extra health. Numbers are for comparison
 between weapons, not exact in-game times.
 """
@@ -71,6 +74,8 @@ def gd_consts(rel_path):
 VORTEX = gd_consts("scripts/weapons/twister_vortex.gd")
 SOAK = gd_consts("scripts/weapons/soak.gd")
 HUBCAP = gd_consts("scripts/weapons/hubcap_shot.gd")
+PING = gd_consts("scripts/weapons/ground_control_ring.gd")
+MARK = gd_consts("scripts/weapons/ground_control_mark.gd")
 MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
 # Share of the pop a gathered zombie takes (they spin near the cup's centre).
 VORTEX_POP_SHARE = 0.8
@@ -152,6 +157,8 @@ def mode_kind(w):
 	mode = w.get("mode_script_path", "")
 	if mode.endswith("hubcap_boomerang_mode.gd"):
 		return "hubcap"
+	if mode.endswith("ground_control_mode.gd"):
+		return "ping"
 	if mode.endswith("shutterbug_mode.gd"):
 		return "flash"
 	if mode.endswith("balloon_darter_mode.gd"):
@@ -239,6 +246,9 @@ def pull_damage(w, e, d, head):
 	if mode_kind(w) == "hubcap":
 		# Aimed down the sights it strikes the target on the way out and back.
 		return 2.0 * w["damage"] * head_mix, hubcap_cycle(w)
+	if mode_kind(w) == "ping":
+		# A full-charge ring (no headshots); the mark it leaves makes the next ones hit harder.
+		return w["damage"] * MARK.get("DAMAGE_BONUS", 1.0), w["fire_interval"] + w["charge_time"]
 	if mode_kind(w) == "balloon":
 		# Per dart, its share of a bunch: MAX_BALLOONS of the darts fired in one fuse pop.
 		c = script_consts("balloon")
@@ -270,6 +280,8 @@ def vortex_spin():
 
 def amp(w):
 	"""Damage bonus the weapon's status lends every hit on the target (soak)."""
+	if mode_kind(w) == "ping":
+		return MARK.get("DAMAGE_BONUS", 1.0) - 1.0
 	return SOAK.get("DAMAGE_BONUS", 1.0) - 1.0 if MODE_OF.get(w["id"]) == "soak" else 0.0
 
 
@@ -348,6 +360,9 @@ def crowd_damage(w, d=8.0):
 	if w["ricochet_count"] > 0:
 		hops = sum(w["ricochet_falloff"] ** (k + 1) for k in range(int(min(3, w["ricochet_count"]))))
 		return dmg + w["damage"] * hops
+	if mode_kind(w) == "ping":
+		# Through all four, weaker for each one passed (no bounce counted).
+		return w["damage"] * MARK.get("DAMAGE_BONUS", 1.0) * sum(max(PING["MIN_SHARE"], PING["ATTENUATION"] ** k) for k in range(4))
 	if MODE_OF.get(w["id"]) == "vortex":
 		return dmg + 3 * (vortex_spin() + w["damage"] * VORTEX_POP_SHARE)
 	if w["splash_radius"] > 0.0:
