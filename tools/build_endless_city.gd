@@ -2193,10 +2193,17 @@ func _build_story() -> void:
 	_floodlight("StationFloodN", Vector3(-71.5, 0, -8.0), Vector3(-58.0, 0, -2.0))
 	_floodlight("StationFloodS", Vector3(-71.5, 0, 8.0), Vector3(-58.0, 0, 3.0))
 	_tape_line(Vector3(-66.0, 0, -4.6), Vector3(-66.0, 0, 4.6), 3)
-	_graffiti("QUARANTINE", Vector3(-73.95, 5.0, -13.0), Vector3(1, 0, 0), Color(1.0, 0.82, 0.2), 110)
-	_graffiti("HELP US", Vector3(-73.95, 2.6, 15.0), Vector3(1, 0, 0), Color(1.0, 0.25, 0.3), 120)
+	_graffiti("QUARANTINE", Vector3(-73.62, 5.4, -13.0), Vector3(1, 0, 0), Color(1.0, 0.82, 0.2), 110)
+	_graffiti("HELP US", Vector3(-73.95, 2.7, 16.0), Vector3(1, 0, 0), Color(1.0, 0.25, 0.3), 120)
 	# Square: walls of the passages, the last messages.
 	_graffiti("THEY CAME FROM THE METRO", Vector3(26.0, 2.8, -4.0), Vector3(0, 0, 1), Color(1.0, 0.3, 0.6), 64)
+	var walls := [[Vector3(-24.0, 1.7, -3.96), Vector3(0, 0, 1)], [Vector3(-32.0, 1.6, 3.96), Vector3(0, 0, -1)], [Vector3(23.5, 1.7, 3.96), Vector3(0, 0, -1)],
+		[Vector3(31.0, 1.6, -3.96), Vector3(0, 0, 1)], [Vector3(-73.94, 1.8, -17.0), Vector3(1, 0, 0)], [Vector3(-73.94, 1.6, -11.0), Vector3(1, 0, 0)]]
+	var n := 0
+	for w in walls:
+		_poster("StreetPoster%d" % n, w[0], w[1], n * 3 + 1)
+		_poster("StreetPoster%db" % n, w[0] + Vector3(-w[1].z, 0.3, w[1].x) * 1.1, w[1], n * 3 + 2)
+		n += 1
 	_graffiti("EVAC >", Vector3(-25.5, 2.4, 4.0), Vector3(0, 0, -1), Color(0.4, 1.0, 0.6), 96)
 	_graffiti("NO WAY OUT", Vector3(4.9, 2.5, 30.0), Vector3(1, 0, 0), Color(1.0, 0.35, 0.2), 80)
 	_graffiti("STAY INSIDE", Vector3(87.0, 3.0, -8.0), Vector3(0, 0, 1), Color(0.3, 0.95, 1.0), 72)
@@ -2238,6 +2245,30 @@ func _roof_billboard(board_name: String, pos: Vector3, yaw: float) -> void:
 	node.scale = Vector3.ONE * 1.4
 	var forward := Basis(Vector3.UP, deg_to_rad(yaw)) * Vector3(0, 0, 1)
 	_wall_glow(pos + Vector3(0, 4.5, 0) + forward * 0.5, forward, 4.5, Color(1.0, 0.75, 0.45), 0.25)
+
+
+## A paper poster (a cell of the ads sheet, not lit) pasted on a wall facing
+## `normal`, a little crooked.
+func _poster(poster_name: String, pos: Vector3, normal: Vector3, cell: int) -> void:
+	var key := "poster_%d" % (cell % 32)
+	if not _materials.has(key):
+		var m := StandardMaterial3D.new()
+		m.albedo_texture = load(TEXTURES + "neon_ads.png")
+		m.albedo_color = Color(0.85, 0.82, 0.78)
+		m.roughness = 0.9
+		m.uv1_scale = Vector3(0.25, 0.125, 1.0)
+		m.uv1_offset = Vector3((cell % 4) * 0.25, ((cell * 5) % 8) * 0.125, 0.0)
+		_materials[key] = m
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.9, 1.25)
+	quad.material = _materials[key]
+	var mi := MeshInstance3D.new()
+	mi.name = poster_name
+	mi.mesh = quad
+	mi.basis = Basis.looking_at(-normal, Vector3.UP) * Basis(Vector3.BACK, deg_to_rad(_rng.randf_range(-7.0, 7.0)))
+	mi.position = pos + normal * 0.01
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dressing.add_child(mi)
 
 
 ## A raised boom barrier (striped arm) on a post at `pos`.
@@ -2459,6 +2490,11 @@ func _build_metro_life() -> void:
 		lamp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_wall_glow(lamp_pos, Vector3(-s, 0, 0), 2.0, Color(1.0, 0.75, 0.45), 0.16)
 	_omni(fx, "StairLight", Vector3(0, -1.8, -21.0), Color(1.0, 0.78, 0.52), 1.2, 8.0)
+	# Paper posters pasted on the tiles, peeling.
+	var k2 := 0
+	for x in [-23.0, -17.5, -6.0, 3.9, 11.0, 18.0, 30.5, 38.0]:
+		_poster("MetroPoster%d" % k2, Vector3(x, y0 + 1.6 + (k2 % 2) * 0.25, HALL.end.y - 0.07), Vector3(0, 0, -1), k2 + 3)
+		k2 += 1
 	# Puddled leaks under the ceiling cracks.
 	_steam(Vector3(-20.0, y0, -29.0), Color(0.6, 0.65, 0.7), 0.18)
 
@@ -2640,7 +2676,7 @@ func _compound_static() -> void:
 
 
 func _compoundable(mi: MeshInstance3D) -> bool:
-	if not mi.mesh is BoxMesh or mi.material_override != null or not mi.visible or mi.get_child_count() > 0:
+	if not mi.mesh is PrimitiveMesh or mi.material_override != null or not mi.visible or mi.get_child_count() > 0:
 		return false
 	if not mi.get_groups().is_empty():
 		return false
