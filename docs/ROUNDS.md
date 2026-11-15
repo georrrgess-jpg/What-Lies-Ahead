@@ -168,6 +168,14 @@ never dodges projectiles and never uses cover. `--snap=<prefix>` also saves
 alpha with `--live=1 --boss-move=<name>` (that move next), `--boss-phase=n`,
 `--boss-roar=1` (run with `--fixed-fps 60` so frames are game time).
 
+## Endless
+
+An endless level (Ashfall City) runs on the same director with an `EndlessDirector` beside
+it: waves are generated as they come (kinds as above plus a horde every 5th and the boss every
+10th), zombies scale with the wave, the entrances in use are those of the open districts and
+the planner prefers the district the player stands in (`SpawnPlanner.set_points`,
+`set_bias`). No portal, checkpoint or continue; `total_waves()` is 0. See docs/ENDLESS.md.
+
 ## Spawn planner (map logic)
 
 `SpawnPlanner` scores the level's `enemy_spawn` markers for every spawn:

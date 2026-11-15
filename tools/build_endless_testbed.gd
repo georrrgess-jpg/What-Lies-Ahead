@@ -250,6 +250,7 @@ func _markers() -> void:
 	features.name = "Features"
 	level.add_child(features)
 	var list := [
+		["TrapSquare", &"trap_fire", &"ashfall_square", Vector3(-12, 0, -13)],
 		["TrapPrecinct", &"trap_fire", &"precinct", Vector3(0, 0, -44)],
 		["TrapMetro", &"trap_shock", &"metro", Vector3(42, 0, 0)],
 		["TrapMarket", &"trap_fire", &"market", Vector3(-42, 0, 0)],

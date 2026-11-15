@@ -8,7 +8,7 @@ extends RefCounted
 ## docs/ENDLESS.md.
 
 ## Tickets the bot keeps after buying a gate (heals, energy, overshield).
-const RESERVE := 250
+const RESERVE := 150
 ## Zombies inside a trap's radius before the bot runs over to arm it.
 const TRAP_CROWD := 4
 ## A trap further than this (m) is not worth the walk mid-wave.
@@ -77,9 +77,23 @@ func _pick(run: RunDirector) -> Node3D:
 		return e.supply
 	if run.is_intermission():
 		return _pick_gate(run)
-	if run.state == RunDirector.State.WAVE and run.tickets >= run.level.endless.trap_price + RESERVE:
+	# Traps on the big waves, or with tickets to spare after the next gate.
+	var big := e.waves.kind_of(run.wave_number) in [&"horde", &"boss"]
+	var spare := run.tickets - run.level.endless.trap_price - (RESERVE if big else saving_for())
+	if run.state == RunDirector.State.WAVE and spare >= 0:
 		return _pick_trap(run)
 	return null
+
+
+## Tickets the bot keeps back for the cheapest gate it can still open (0 when none is left).
+func saving_for() -> int:
+	var run: RunDirector = dev._director
+	var cheapest := 0
+	for node in run.get_tree().get_nodes_in_group("endless_gate"):
+		var gate := node as EndlessGate
+		if gate and not gate.is_open and gate.data and (cheapest == 0 or gate.data.price < cheapest):
+			cheapest = gate.data.price
+	return cheapest + RESERVE if cheapest > 0 else 0
 
 
 func _pick_gate(run: RunDirector) -> EndlessGate:
@@ -119,7 +133,7 @@ func _pick_trap(run: RunDirector) -> EndlessTrap:
 func _open_side(run: RunDirector, gate: EndlessGate) -> Vector3:
 	var map := run.player.get_world_3d().navigation_map
 	for s in [1.0, -1.0]:
-		var want := gate.global_position + gate.global_transform.basis.z.normalized() * 2.2 * s
+		var want: Vector3 = gate.global_position + gate.global_transform.basis.z.normalized() * 2.2 * s
 		var spot := NavigationServer3D.map_get_closest_point(map, want)
 		if spot.distance_to(want) < 1.5 and _reachable(run, spot):
 			return spot

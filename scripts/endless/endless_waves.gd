@@ -65,7 +65,7 @@ func kind_of(n: int) -> StringName:
 func title_of(n: int) -> String:
 	var kind := kind_of(n)
 	if kind == &"boss":
-		var boss := GameData.enemy(rules.boss_id)
+		var boss := GameData.enemy(EndlessDirector.resolve(rules.boss_id))
 		return boss.display_name.to_upper() if boss else "THE BOSS"
 	return TITLES[kind][0]
 

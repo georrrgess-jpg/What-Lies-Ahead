@@ -61,3 +61,75 @@ Music: `city_endless_loop`, `city_endless_final` (boss waves); ambience `city_am
 `end_gate_denied`, `end_gate_sting` (a district opens), `end_district_enter`,
 `end_wave_horn` (wave start), `end_supply_incoming`, `end_supply_land`, `end_trap_ready`,
 `end_trap_fire`, `end_trap_shock`, `end_boss_siren`, `end_new_best`.
+
+## How a run plays (code: `scripts/endless/`, `RunDirector`)
+
+`RunDirector` runs an endless level with an `EndlessDirector` child (`endless`): there is no
+wave list, portal, checkpoint or continue. `total_waves()` is 0 (the HUD shows "WAVE 14" with
+no "of N"). Preparation, then wave, break, wave... with the loadout station open in every
+break (prices from `EndlessRules.economy`, a `WaveSet` whose wave list stays empty). The run
+ends when the player falls: the tickets left are cashed into score, and
+`EndlessRecords.record(result)` saves runs, best score, best wave (overall and per difficulty)
+and districts opened. Best wave and districts are also noted the moment they happen, so their
+unlocks land mid-run (Progression collects them at once).
+
+**Waves** (`EndlessWaves`, deterministic per wave number): every `boss_every`-th (10th) wave is
+the boss's (`the_wrecker`, kind `finale`: the alpha with its escorts and reinforcements, the
+`city_endless_final` loop); every 5th is a **HORDE** (all entrances, 1.45x size, a surge);
+waves 1-4 are standard, standard, rush, standard; the rest cycle standard, rush, siege, bounty,
+ranged, standard, ambush, rush. A wave's zombies are split by role (regular, fast, heavy,
+special = the open districts' own) by its kind's mix; a role with nothing open hands its share
+to the regulars, heavies join from wave 3.
+
+**Scaling** (`EndlessRules`, all tunable in `data/endless/endless_city.tres`), before the
+difficulty's own multipliers:
+
+| | wave 1 | wave 5 | wave 10 | wave 15 | wave 20 | wave 30 | cap |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| zombies (standard wave) | 10 | 18 | 28 | 38 | 48 | 60 | 60 |
+| alive at once | 7 | 9 | 11 | 13 | 16 | 18 | 18 (`crowd_max`, the director's CROWD_LIMIT) |
+| spawn interval (s) | 2.0 | 1.72 | 1.37 | 1.02 | 0.8 | 0.8 | 0.8 |
+| health | x1.0 | x1.28 | x1.63 | x1.98 | x2.11 | x2.36 | x2.6 (+7%/wave to 15, +2.5% after) |
+| damage | x1.0 | x1.08 | x1.18 | x1.28 | x1.38 | x1.5 | x1.5 |
+| speed | x1.0 | x1.04 | x1.09 | x1.14 | x1.19 | x1.2 | x1.2 |
+| kill tickets | x1.0 | x1.08 | x1.18 | x1.28 | x1.38 | x1.5 | x1.5 |
+
+The boss has its own curve: its data health x `boss_health` (difficulty) x (1 + 0.45 per earlier
+visit). Crowd, speed and health all flatten, so late waves press with numbers and tempo, never
+with bullet sponges. Breaks are 20 s (28 s before a boss), skippable as usual.
+
+**Districts and gates** (`EndlessGate`): standing in a gate's `Zone` shows the HUD prompt
+"HOLD E · OPEN PRECINCT 9 · 500" (red, with what is missing, when short). Holding interact for
+0.5 s pays; short of tickets the door shakes with `end_gate_denied`. Paying opens every gate of
+the district (its `open_style`: shutter rolls up, slide, topple), removes the blockers, enables
+the NavLinks, wakes its `enemy_spawn` markers (`SpawnPlanner.set_points`), adds its enemies to
+the pool and shows the district banner (`end_gate_sting`). The planner prefers the entrances of
+the district the player stands in (`endless_district_area`, +2.5 score), and far entrances
+cost points as on every map, so pressure follows the player through the city.
+
+**Features** (built at `endless_feature` markers): `trap_fire` / `trap_shock` (`EndlessTrap`):
+hold interact to pay `trap_price` (250); it burns or shocks every zombie inside its radius
+(marker meta `radius`, default 4.5 m) for `trap_seconds` (15), then recharges for
+`trap_cooldown` (40). Fire: 20 x wave health per 0.3 s; shock: 55 x wave health per 0.75 s plus
+an interrupt; heavies take 60%. It never hurts the player. The kit's `city_trap_fire.glb` /
+`city_trap_shock.glb` are used when present. `supply_drop` (`EndlessSupply`): after every 5th
+wave a crate parachutes onto a drop marker in an open district (the player's own if it has
+one); walking into it fills both weapons, heals 50 and pays 150 + 10 per wave tickets. A HUD
+marker follows it.
+
+**UI**: the Play page's last carousel slot is ENDLESS (`EndlessCard`): best wave and score,
+best on the chosen difficulty, districts opened, the districts with their prices and the reward
+track (`EndlessRewards`: every weapon and cosmetic whose requirement is ENDLESS_WAVE or
+ENDLESS_DISTRICT, read from the catalog). In a run the HUD widget (`EndlessHud`,
+`data/ui/hud_endless.tres`) shows the district the player is in and the best wave, gate and
+trap prompts and the supply marker; the results section (`EndlessResultsSection`,
+`data/ui/results_endless.tres`) shows "WAVE 14 · NEW BEST", the districts and the rewards the
+run unlocked and the next one.
+
+**Testing**: `tools/build_endless_testbed.gd` builds `scenes/levels/endless_testbed.tscn`, a
+grey box of the five districts with every contract marker (a dev tool, not in the game).
+`--autoplay=endless` (scripts/dev/endless_bot.gd) plays until it falls or `--max-seconds`,
+buys a gate in a break when it can keep 250 tickets, arms a trap with 4+ zombies in it, picks up
+crates and logs `[dev] ENDLESS wave=..` per wave and `[dev] ENDLESS RESULT wave=..` at the end;
+`--scene=<path>` plays another scene for the endless level (the testbed), and `--god`,
+`--difficulty`, `--start-wave` work as usual.
