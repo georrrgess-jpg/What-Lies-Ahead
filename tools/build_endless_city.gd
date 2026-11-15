@@ -721,7 +721,6 @@ func _build_train(parent: Node3D, centre: Vector3, length: float) -> void:
 	var body := _mat("train_body", Color(0.82, 0.83, 0.8), 0.45)
 	var roof := _mat("train_roof", Color(0.42, 0.44, 0.46), 0.6)
 	var stripe := _mat("train_stripe", Color(0.2, 0.75, 0.42), 0.5, Color(0.3, 1.0, 0.55), 0.35)
-	var lit := _mat("train_window_lit", Color(0.95, 0.85, 0.6), 0.3, Color(1.0, 0.78, 0.45), 1.8)
 	var dark := _mat("train_window_dark", Color(0.06, 0.07, 0.08), 0.2)
 	var door := _mat("train_door", Color(0.62, 0.64, 0.62), 0.5)
 	var under := _mat("train_under", Color(0.08, 0.08, 0.09), 0.9)
@@ -746,7 +745,15 @@ func _build_train(parent: Node3D, centre: Vector3, length: float) -> void:
 				doors.append(Transform3D(Basis(), Vector3(dx + (0.35 if w == 1 and c % 2 == 0 else 0.0), centre.y + 1.95, face_z + 0.03)))
 		if c < cars - 1:
 			_visual_box(dressing, "TrainCoupling%d" % c, Vector3(gap + 0.2, 2.4, 2.2), Vector3(cx + car_len * 0.5 + gap * 0.5, centre.y + 1.8, centre.z), under)
-	dressing.add_child(_multimesh("TrainWindowsLit", _box_mesh(Vector3(1.5, 0.95, 0.04), lit), windows_lit))
+	# Lit windows show the carriage behind them (city_train_window shader).
+	var pane := QuadMesh.new()
+	pane.size = Vector2(1.5, 0.95)
+	var interior := ShaderMaterial.new()
+	interior.shader = load(SHADERS + "city_train_window.gdshader")
+	pane.material = interior
+	var lit_windows := _multimesh("TrainWindowsLit", pane, windows_lit)
+	lit_windows.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dressing.add_child(lit_windows)
 	dressing.add_child(_multimesh("TrainWindowsDark", _box_mesh(Vector3(1.5, 0.95, 0.04), dark), windows_dark))
 	dressing.add_child(_multimesh("TrainDoors", _box_mesh(Vector3(1.3, 2.3, 0.05), door), doors))
 	_collider(parent, "Train", Vector3(length, 3.8, 3.0), centre + Vector3(0, 1.9, 0))
