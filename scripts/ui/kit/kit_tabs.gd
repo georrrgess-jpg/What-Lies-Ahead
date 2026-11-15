@@ -65,7 +65,8 @@ func set_badge(id: StringName, count: int) -> void:
 		b.add_child(badge)
 		badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 		badge.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		badge.position = Vector2(-10, -10)
+		# Over the tab's top right corner (the preset placed it inside).
+		badge.position += Vector2(10, -10)
 	badge.visible = true
 	badge.set_text(str(count))
 

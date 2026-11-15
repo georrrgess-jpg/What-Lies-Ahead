@@ -1,19 +1,22 @@
 class_name LockerPage
 extends MenuPage
-## The Locker: everything the player owns or could own, in one place.
-## A tab per category (with a count of what is new), the items of the open
-## category as cards in a tray (what is worn first, then owned, for sale,
-## locked), the selected item live in the display case, and its signboard
-## with one action: EQUIP, BUY for Sparks, or what unlocks it.
-## Weapon cosmetics are equipped per weapon: the header's weapon plate picks
-## the weapon, and the filters narrow the tray to what is owned or for sale.
+## The Locker: everything the player owns or could own, sorted into four
+## groups (header tabs): CHARACTER (operators, gloves), WEAPON (skins, Prize
+## Prints, sights, cells, charms, decals), EFFECTS (kill effects, tracers)
+## and PROFILE (banners, titles). Under them, the group's categories and, for
+## weapon items, which weapon is being customised. The tray shows the
+## category's cards under a toolbar (search, SORT, SHOW, FROM; kept per tab);
+## beside it, the selected item large in the display case and a short
+## signboard (name, rarity, where it comes from, its one action). The PRINTS
+## tab lists the player's Prize Prints with the print inspect view beside.
 ##
 ## Keys: arrows browse (the case follows), Enter equips or buys, A / D (or
-## the triggers) change category. Mouse: click selects, double-click acts.
+## the triggers) walk the categories across the groups. Mouse: click
+## selects, double-click acts.
 
 ## Shown on the purchase stamp of the display case.
 const BOUGHT_TEXT := "ADDED TO YOUR LOCKER"
-const SIDE_WIDTH := 744.0
+const SIDE_WIDTH := 700.0
 const CARD_GAP := 12
 ## Room around the cards for the hover growth and the focus ring.
 const GRID_MARGIN := 14
@@ -22,27 +25,39 @@ const PREVIEW_DELAY := 0.09
 
 var _slot: StringName = &"avatar"
 var _weapon_id: StringName
-var _filter := LockerCatalog.Filter.ALL
 var _selected: CosmeticItem
+var _selected_print: Dictionary = {}
 var _built := false
 var _trigger_held := 0
+## Tab id -> LockerFilters.State (what each tab was sorted and filtered by).
+var _states := {}
 var _header: HBoxContainer
+var _groups: KitTabs
+## The categories of the open group (one KitTabs per group, one shown).
+var _tabs: KitTabs
+var _group_tabs := {}
 var _weapon_box: HBoxContainer
 var _weapon_plate: SlotPlate
-var _filters: KitTabs
 var _collection: Label
 var _collection_bar: ProgressBar
-var _tabs: KitTabs
+var _toolbar: LockerToolbar
 var _caption: Label
 var _caption_note: Label
 var _scroll: ScrollContainer
 var _grid: GridContainer
-var _empty: Label
+var _empty: VBoxContainer
+var _empty_title: Label
+var _empty_text: Label
+var _empty_button: SignButton
 var _cards: Array[LockerCard] = []
+var _print_cards: Array[PrintCard] = []
 var _card_group := ButtonGroup.new()
 var _thumbs: CosmeticThumbs
+var _item_side: VBoxContainer
 var _showcase: CosmeticShowcase
 var _panel: CosmeticPanel
+var _inspect: PrintInspect
+var _print_button: SignButton
 var _preview_timer: Timer
 
 
@@ -70,14 +85,13 @@ func _ready() -> void:
 	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	col.add_theme_constant_override("separation", UiKit.GAP_M)
 	add_child(col)
-	col.add_child(_build_tabs())
+	col.add_child(_build_strip())
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", UiKit.GAP_L)
 	col.add_child(body)
 	body.add_child(_build_tray())
 	body.add_child(_build_side())
-	_build_print_button()
 	visibility_changed.connect(_on_visibility_changed)
 	Wallet.balance_changed.connect(_on_balance_changed)
 
@@ -85,7 +99,7 @@ func _ready() -> void:
 ## Makes the first category's cards ahead of the first visit, a few per
 ## frame (they stay hidden until refresh() fills them).
 func prewarm(queue: BuildQueue) -> void:
-	var count := LockerCatalog.items(_slot, _weapon_id, _filter).size()
+	var count := LockerFilters.items(_slot, _weapon_id, _state(_slot)).size()
 	for i in range(0, count, 3):
 		queue.add(_prewarm_cards.bind(mini(i + 3, count)))
 
@@ -106,11 +120,25 @@ func refresh() -> void:
 
 
 func first_focus() -> Control:
-	return _card_of(_selected)
+	if _slot == LockerFilters.PRINTS:
+		return _print_card_of(_selected_print) if _print_card_of(_selected_print) else _toolbar.search_box()
+	var card := _card_of(_selected)
+	return card if card else _toolbar.search_box()
+
+
+func handle_back() -> bool:
+	# Esc in the search box leaves the box first.
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus is LineEdit and is_ancestor_of(focus):
+		_focus_selected()
+		return true
+	return false
 
 
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or KitDialog.open_count > 0:
+		return
+	if get_viewport().gui_get_focus_owner() is LineEdit:
 		return
 	var step := 0
 	if event.is_action_pressed("move_left"):
@@ -120,7 +148,7 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventJoypadMotion:
 		step = _trigger_step(event as InputEventJoypadMotion)
 	if step != 0:
-		_tabs.step(step)
+		_step_tab(step)
 		get_viewport().set_input_as_handled()
 
 
@@ -143,68 +171,82 @@ func _trigger_step(event: InputEventJoypadMotion) -> int:
 
 # --- layout ---------------------------------------------------------------------
 
-## Right of the marquee: the weapon plate, the filters and the collection.
+## Right of the marquee: the four groups, and the collection.
 func _build_header() -> void:
 	_header = HBoxContainer.new()
 	_header.add_theme_constant_override("separation", UiKit.GAP_L)
-	_weapon_box = HBoxContainer.new()
-	_weapon_box.add_theme_constant_override("separation", UiKit.GAP_S)
-	_header.add_child(_weapon_box)
-	var previous := UiKit.icon_button(&"icon_arrow_left", "Previous weapon")
-	previous.pressed.connect(_step_weapon.bind(-1))
-	_weapon_box.add_child(previous)
-	_weapon_plate = UiKit.slot_plate("WEAPON", "")
-	_weapon_plate.custom_minimum_size.x = 400
-	_weapon_box.add_child(_weapon_plate)
-	var next := UiKit.icon_button(&"icon_arrow_right", "Next weapon")
-	next.pressed.connect(_step_weapon.bind(1))
-	_weapon_box.add_child(next)
+	_groups = UiKit.tabs(28)
+	_groups.name = "LockerTabs"
+	_groups.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	for g in LockerFilters.GROUPS:
+		var b := _groups.add_tab(g["id"], String(g["label"]))
+		b.tooltip_text = ", ".join((g["slots"] as Array).map(func(s): return LockerFilters.tab_label(s).capitalize()))
+	_groups.tab_changed.connect(_on_group_changed)
+	_header.add_child(_groups)
 	_header.add_child(UiKit.filler())
-	_filters = UiKit.tabs(24)
-	_filters.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_filters.add_tab(&"all", "ALL")
-	_filters.add_tab(&"owned", "OWNED")
-	_filters.add_tab(&"sale", "FOR SALE")
-	_filters.tab_changed.connect(_on_filter_changed)
-	_header.add_child(_filters)
 	var progress := VBoxContainer.new()
 	progress.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	progress.add_theme_constant_override("separation", UiKit.GAP_XS)
 	_header.add_child(progress)
-	_collection = UiKit.label("", UiKit.SIZE_LABEL, UiKit.CREAM, true)
+	_collection = UiKit.label("", UiKit.SIZE_SMALL, UiKit.CREAM, true)
 	progress.add_child(_collection)
-	_collection_bar = UiKit.progress(0.0, 12.0, UiKit.AMBER)
-	_collection_bar.custom_minimum_size.x = 230
+	_collection_bar = UiKit.progress(0.0, 10.0, UiKit.AMBER)
+	_collection_bar.custom_minimum_size.x = 200
 	progress.add_child(_collection_bar)
 
 
-## One tab per category on a dark strip across the page.
-func _build_tabs() -> Control:
+## The open group's categories on a dark strip, and the weapon being customised.
+func _build_strip() -> Control:
 	var strip := UiKit.card_panel(6)
-	_tabs = KitTabs.make(24, true)
-	_tabs.add_theme_constant_override("separation", UiKit.GAP_XS)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiKit.GAP_M)
+	strip.add_child(row)
 	var slots := {}
 	for it in GameData.cosmetics():
 		slots[it.slot] = true
-	for cat in LockerCatalog.CATEGORIES:
-		# A category the game has no items for (yet) gets no tab.
-		if not slots.has(cat["slot"]):
-			continue
-		var tab := _tabs.add_tab(cat["slot"], String(cat["tab"]))
-		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tab.tooltip_text = String(cat["label"])
-	_tabs.tab_changed.connect(_on_tab_changed)
-	strip.add_child(_tabs)
+	for g in LockerFilters.GROUPS:
+		var tabs := KitTabs.make(24, true)
+		tabs.add_theme_constant_override("separation", UiKit.GAP_XS)
+		tabs.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		for slot in g["slots"]:
+			# A category the game has no items for (yet) gets no tab.
+			if slot != LockerFilters.PRINTS and not slots.has(slot):
+				continue
+			var tab := tabs.add_tab(slot, LockerFilters.tab_label(slot))
+			tab.custom_minimum_size.x = 150
+			tab.tooltip_text = "Your Prize Prints: one-of-a-kind skins" if slot == LockerFilters.PRINTS else String(LockerCatalog.category(slot)["label"])
+		tabs.tab_changed.connect(_on_tab_changed)
+		tabs.visible = false
+		row.add_child(tabs)
+		_group_tabs[g["id"]] = tabs
+	_tabs = _group_tabs[LockerFilters.GROUPS[0]["id"]]
+	_tabs.visible = true
+	row.add_child(UiKit.filler())
+	_weapon_box = HBoxContainer.new()
+	_weapon_box.add_theme_constant_override("separation", UiKit.GAP_S)
+	row.add_child(_weapon_box)
+	var previous := UiKit.icon_button(&"icon_arrow_left", "Previous weapon")
+	previous.pressed.connect(_step_weapon.bind(-1))
+	_weapon_box.add_child(previous)
+	_weapon_plate = UiKit.slot_plate("CUSTOMISING", "")
+	_weapon_plate.custom_minimum_size.x = 380
+	_weapon_box.add_child(_weapon_plate)
+	var next := UiKit.icon_button(&"icon_arrow_right", "Next weapon")
+	next.pressed.connect(_step_weapon.bind(1))
+	_weapon_box.add_child(next)
 	return strip
 
 
-## The tray: a caption with what is owned here, and the scrolling card grid.
+## The tray: the toolbar, a caption with what is owned here, and the cards.
 func _build_tray() -> Control:
-	var tray := UiKit.metal_frame(32)
+	var tray := UiKit.metal_frame(28)
 	tray.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", UiKit.GAP_XS)
+	col.add_theme_constant_override("separation", UiKit.GAP_S)
 	tray.add_child(col)
+	_toolbar = LockerToolbar.new()
+	_toolbar.changed.connect(_on_filters_changed)
+	col.add_child(_toolbar)
 	var caption := UiKit.section("", " ")
 	_caption = caption.get_child(0) as Label
 	_caption_note = caption.get_child(2) as Label
@@ -226,56 +268,109 @@ func _build_tray() -> Control:
 	_grid.add_theme_constant_override("h_separation", CARD_GAP)
 	_grid.add_theme_constant_override("v_separation", CARD_GAP)
 	pad.add_child(_grid)
-	_empty = UiKit.body("", 0.0, UiKit.SIZE_LABEL, UiKit.MUTED)
-	_empty.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_empty.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	area.add_child(_empty)
+	area.add_child(_build_empty())
 	return tray
 
 
-## The display case over the item's signboard.
+## What the tray says when it has no cards: why, and the one thing to do.
+func _build_empty() -> Control:
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_empty = VBoxContainer.new()
+	_empty.alignment = BoxContainer.ALIGNMENT_CENTER
+	_empty.add_theme_constant_override("separation", UiKit.GAP_M)
+	center.add_child(_empty)
+	_empty_title = UiKit.sign_label("", UiKit.SIZE_HEADING)
+	_empty_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_empty.add_child(_empty_title)
+	_empty_text = UiKit.body("", 560, UiKit.SIZE_BODY, UiKit.MUTED)
+	_empty_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_empty.add_child(_empty_text)
+	_empty_button = UiKit.sign_button("", SignButton.Kind.SECONDARY, 28)
+	_empty_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_empty_button.pressed.connect(_on_empty_action)
+	_empty.add_child(_empty_button)
+	center.visible = false
+	return center
+
+
+## The display case over the item's signboard, or the print inspect view.
 func _build_side() -> Control:
-	var side := VBoxContainer.new()
+	var side := Control.new()
 	side.custom_minimum_size.x = SIDE_WIDTH
-	side.add_theme_constant_override("separation", UiKit.GAP_M)
+	_item_side = VBoxContainer.new()
+	_item_side.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_item_side.add_theme_constant_override("separation", UiKit.GAP_M)
+	side.add_child(_item_side)
 	_showcase = CosmeticShowcase.new()
 	_showcase.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	side.add_child(_showcase)
+	_item_side.add_child(_showcase)
 	_panel = CosmeticPanel.new()
 	_panel.custom_minimum_size.y = 292
 	_panel.equip_requested.connect(_equip)
 	_panel.unequip_requested.connect(_unequip)
 	_panel.buy_requested.connect(_buy)
-	side.add_child(_panel)
+	_item_side.add_child(_panel)
+	_print_button = UiKit.sign_button("", SignButton.Kind.SECONDARY, 22)
+	_print_button.visible = false
+	_print_button.pressed.connect(_open_prints_of_selected)
+	_showcase.add_child(_print_button)
+	_print_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_print_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_print_button.position += Vector2(-22.0, 20.0)
+	_inspect = PrintInspect.new()
+	_inspect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_inspect.visible = false
+	_inspect.changed.connect(_on_print_changed)
+	side.add_child(_inspect)
 	return side
 
 
 ## As many columns as fit the tray (it is wider on an ultrawide screen).
 func _fit_columns() -> void:
 	var room := _scroll.size.x - GRID_MARGIN * 2.0 - 18.0
-	_grid.columns = clampi(int((room + CARD_GAP) / (LockerCard.CARD_SIZE.x + CARD_GAP)), 3, 9)
+	_grid.columns = clampi(int((room + CARD_GAP) / (LockerCard.CARD_SIZE.x + CARD_GAP)), 2, 9)
 
 
-# --- behaviour ------------------------------------------------------------------
+# --- opening tabs ------------------------------------------------------------------
 
-## Opens a category tab (by slot) and selects what is worn there.
+## Opens a category tab (by slot, or LockerFilters.PRINTS) and selects what is worn there.
 func show_category(slot: StringName) -> void:
 	_open(slot, null)
 
 
-## Opens a category and selects `prefer` if it is there, else its first item
-## (what is worn, when the filter shows it).
+## Shows only `id` of the tray's "show" choices: all, owned, locked or sale.
+func set_show_filter(id: StringName) -> void:
+	var s := _state(_slot)
+	s.show = ({&"owned": LockerFilters.Show.OWNED, &"locked": LockerFilters.Show.LOCKED, &"sale": LockerFilters.Show.FOR_SALE} as Dictionary).get(id, LockerFilters.Show.ALL)
+	_toolbar.set_state(s, _slot == LockerFilters.PRINTS)
+	_on_filters_changed()
+
+
+## Opens a category and selects `prefer` if it is there, else its first item.
 func _open(slot: StringName, prefer: CosmeticItem) -> void:
 	_slot = slot
+	var group: Dictionary = LockerFilters.group_of(slot)
+	_groups.select(group["id"])
+	for id in _group_tabs:
+		(_group_tabs[id] as KitTabs).visible = id == group["id"]
+	_tabs = _group_tabs[group["id"]]
 	_tabs.select(slot)
-	_weapon_box.visible = LockerCatalog.uses_weapon(slot)
+	var prints := slot == LockerFilters.PRINTS
+	_weapon_box.visible = prints or LockerCatalog.uses_weapon(slot)
+	_item_side.visible = not prints
+	_inspect.visible = prints
+	_toolbar.set_state(_state(slot), prints)
 	_refresh_weapon_plate()
 	if not _built:
 		return
-	_fill_grid()
 	_scroll.scroll_vertical = 0
+	if prints:
+		_fill_prints()
+		_select_print(_print_cards[0].print_data if not _print_cards.is_empty() and _print_cards[0].visible else {}, false)
+		return
+	_fill_grid()
 	if _card_of(prefer):
 		_select(prefer, false)
 	else:
@@ -291,20 +386,27 @@ func select_weapon(weapon_id: StringName) -> void:
 
 
 ## Selects an item by id (opening its category and, for an item made for one
-## weapon, that weapon).
+## weapon, that weapon). Filters that would hide it are cleared.
 func select_item(id: StringName) -> void:
 	var it := Cosmetics.item(id)
 	if it == null:
 		return
 	if it.is_weapon_slot() and it.weapon_id != &"":
 		_weapon_id = it.weapon_id
-	if _filter != LockerCatalog.Filter.ALL:
-		_filter = LockerCatalog.Filter.ALL
-		_filters.select(&"all")
+	var s := _state(it.slot)
+	if not LockerFilters.items(it.slot, _weapon_id, s).has(it):
+		s.clear()
 	_open(it.slot, it)
 	if is_visible_in_tree():
 		_focus_selected()
 	_reveal_selected()
+
+
+## A tab's filter state (made on first use).
+func _state(slot: StringName) -> LockerFilters.State:
+	if not _states.has(slot):
+		_states[slot] = LockerFilters.State.new()
+	return _states[slot]
 
 
 func _ctx() -> StringName:
@@ -315,27 +417,69 @@ func _weapon() -> WeaponData:
 	return GameData.weapon(_weapon_id)
 
 
+func _step_tab(direction: int) -> void:
+	var order := LockerFilters.all_tabs().filter(func(s): return _has_tab(s))
+	var at := order.find(_slot)
+	UiSound.tab()
+	_switch_to(order[posmod(at + direction, order.size())], false)
+
+
+func _has_tab(slot: StringName) -> bool:
+	for id in _group_tabs:
+		if (_group_tabs[id] as KitTabs).button(slot):
+			return true
+	return false
+
+
+## Opens `slot` from a tab or a key; `keep_tab_focus` leaves the focus on the tab rows.
+func _switch_to(slot: StringName, keep_tab_focus: bool) -> void:
+	show_category(slot)
+	_deal_cards()
+	if not keep_tab_focus:
+		_focus_selected()
+
+
+# --- the cards ---------------------------------------------------------------------
+
 ## Shows the items of the open category on the cards (cards are reused).
 func _fill_grid() -> void:
-	var items := LockerCatalog.items(_slot, _weapon_id, _filter)
-	if _cards.is_empty() or _cards.size() < items.size():
+	var items := LockerFilters.items(_slot, _weapon_id, _state(_slot))
+	if _cards.size() < items.size() or _cards.is_empty():
 		for i in maxi(1, items.size()) - _cards.size():
 			_cards.append(_new_card())
 	var weapon := _weapon()
+	for card in _print_cards:
+		card.visible = false
 	for i in _cards.size():
 		var card := _cards[i]
 		card.visible = i < items.size()
 		if card.visible:
 			card.show_item(items[i], weapon, _thumbs)
 	_refresh_caption()
-	_empty.visible = items.is_empty()
-	match _filter:
-		LockerCatalog.Filter.OWNED:
-			_empty.text = "Nothing owned here yet.\nPlay to unlock some, or look at what is for sale."
-		LockerCatalog.Filter.FOR_SALE:
-			_empty.text = "Nothing for sale here right now."
-		_:
-			_empty.text = "Nothing here yet."
+	_show_empty(items.is_empty())
+
+
+func _fill_prints() -> void:
+	var list := LockerFilters.prints(_weapon_id, _state(LockerFilters.PRINTS))
+	while _print_cards.size() < list.size():
+		var card := PrintCard.create(LockerCard.CARD_SIZE + Vector2(0, 6))
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.button_group = _card_group
+		card.pressed.connect(_on_print_pressed.bind(card))
+		card.focus_entered.connect(_on_print_pressed.bind(card))
+		card.gui_input.connect(_on_print_input.bind(card))
+		_grid.add_child(card)
+		_print_cards.append(card)
+	for card in _cards:
+		card.visible = false
+	var weapon := _weapon()
+	for i in _print_cards.size():
+		var card := _print_cards[i]
+		card.visible = i < list.size()
+		if card.visible:
+			card.show_print(list[i], weapon, _thumbs)
+	_refresh_caption()
+	_show_empty(list.is_empty())
 
 
 func _new_card() -> LockerCard:
@@ -358,6 +502,65 @@ func _card_of(it: CosmeticItem) -> LockerCard:
 	return null
 
 
+func _print_card_of(p: Dictionary) -> PrintCard:
+	if p.is_empty():
+		return null
+	for card in _print_cards:
+		if card.visible and card.print_data == p:
+			return card
+	return null
+
+
+## Why the tray is empty, and the one way out.
+func _show_empty(empty: bool) -> void:
+	var holder := _empty.get_parent() as Control
+	holder.visible = empty
+	if not empty:
+		return
+	var s := _state(_slot)
+	var prints := _slot == LockerFilters.PRINTS
+	var noun := "prints" if prints else String(LockerCatalog.category(_slot)["label"]).to_lower()
+	if s.narrows():
+		_empty_title.text = "NOTHING MATCHES"
+		_empty_text.text = "No %s match these filters%s." % [noun, " or this search" if s.search.strip_edges() != "" else ""]
+		_empty_button.text = "CLEAR FILTERS"
+	elif prints:
+		_empty_title.text = "NO PRIZE PRINTS YET"
+		_empty_text.text = "Every run can earn Prize Capsules. Open them on the Prizes page: each print is a one-of-a-kind skin with its own serial."
+		_empty_button.text = "GO TO PRIZES"
+	else:
+		_empty_title.text = "NOTHING HERE YET"
+		_empty_text.text = "There are no %s to show." % noun
+		_empty_button.text = "SHOW ALL"
+	_empty_button.visible = s.narrows() or prints
+
+
+func _on_empty_action() -> void:
+	var s := _state(_slot)
+	if s.narrows():
+		s.clear()
+		_toolbar.set_state(s, _slot == LockerFilters.PRINTS)
+		_on_filters_changed()
+		_focus_selected()
+	elif _slot == LockerFilters.PRINTS:
+		open_page.emit(&"prizes")
+
+
+func _on_filters_changed() -> void:
+	if not _built:
+		return
+	_scroll.scroll_vertical = 0
+	if _slot == LockerFilters.PRINTS:
+		var keep := _selected_print
+		_fill_prints()
+		_select_print(keep if _print_card_of(keep) else (_print_cards[0].print_data if not _print_cards.is_empty() and _print_cards[0].visible else {}), false)
+	else:
+		var keep := _selected
+		_fill_grid()
+		_select(keep if _card_of(keep) else (_cards[0].item if _cards[0].visible else null), false)
+	_deal_cards()
+
+
 func _on_card_pressed(card: LockerCard) -> void:
 	if card.item != _selected:
 		_select(card.item, true)
@@ -371,14 +574,18 @@ func _on_card_focused(card: LockerCard) -> void:
 
 ## Enter (or the gamepad's accept) and a double-click act on the item.
 func _on_card_input(event: InputEvent, card: LockerCard) -> void:
-	var click := event as InputEventMouseButton
-	var double_click := click != null and click.double_click and click.button_index == MOUSE_BUTTON_LEFT
-	if not double_click and not event.is_action_pressed("ui_accept"):
+	if not _is_activation(event):
 		return
 	card.accept_event()
 	if card.item != _selected:
 		_select(card.item, true)
 	_activate(card.item)
+
+
+func _is_activation(event: InputEvent) -> bool:
+	var click := event as InputEventMouseButton
+	var double_click := click != null and click.double_click and click.button_index == MOUSE_BUTTON_LEFT
+	return double_click or event.is_action_pressed("ui_accept")
 
 
 func _select(it: CosmeticItem, by_player: bool) -> void:
@@ -402,7 +609,7 @@ func _select(it: CosmeticItem, by_player: bool) -> void:
 
 
 func _show_preview(flourish: bool) -> void:
-	if _selected:
+	if _selected and _slot != LockerFilters.PRINTS:
 		_showcase.show_item(_selected, _weapon(), flourish)
 
 
@@ -461,9 +668,85 @@ func _after_change(flourish: bool) -> void:
 	_show_preview(flourish)
 
 
+# --- prints ---------------------------------------------------------------------------
+
+func _on_print_pressed(card: PrintCard) -> void:
+	if card.print_data != _selected_print:
+		_select_print(card.print_data, true)
+
+
+## Enter or a double-click wears the print on the weapon being customised
+## (or takes it off when it is already worn there).
+func _on_print_input(event: InputEvent, card: PrintCard) -> void:
+	if not _is_activation(event):
+		return
+	card.accept_event()
+	if card.print_data != _selected_print:
+		_select_print(card.print_data, true)
+	var p := card.print_data
+	if PrizePrints.equipped(_weapon_id) == p:
+		PrizePrints.take_off(_weapon_id)
+		Sfx.play(&"cos_unequip", -6.0)
+	elif PrizePrints.equip(p, _weapon_id):
+		UiSound.equip()
+	else:
+		UiSound.deny()
+		UiKit.toast("This print fits only its own weapon", UiKit.AMBER)
+		return
+	_on_print_changed()
+
+
+func _select_print(p: Dictionary, _by_player: bool) -> void:
+	_selected_print = p
+	_inspect.show_print(p, _weapon_id)
+	var card := _print_card_of(p)
+	if card == null:
+		return
+	card.selected = true
+	if bool(p.get("new", false)):
+		PrizePrints.mark_seen(p)
+		card.refresh_state()
+		_refresh_badges()
+
+
+## Worn, kept or recycled in the inspect view: the cards follow.
+func _on_print_changed() -> void:
+	if _print_card_of(_selected_print) == null or not PrizePrints.held().has(_selected_print):
+		_on_filters_changed()
+		return
+	for card in _print_cards:
+		if card.visible:
+			card.refresh_state()
+	_inspect.show_print(_selected_print, _weapon_id)
+
+
+## The showcase's "YOUR PRINTS" button: the Prints tab, searched to this finish.
+func _open_prints_of_selected() -> void:
+	if _selected == null:
+		return
+	var s := _state(LockerFilters.PRINTS)
+	s.clear()
+	s.search = _selected.display_name
+	_switch_to(LockerFilters.PRINTS, false)
+
+
+func _refresh_print_button() -> void:
+	var count := PrizePrints.prints_of(_selected.id).size() if _selected and _selected.slot == &"weapon_finish" else 0
+	_print_button.visible = count > 0
+	if count == 0:
+		return
+	var worn := PrizePrints.equipped(_weapon_id)
+	var wearing := not worn.is_empty() and StringName(String(worn["f"])) == _selected.id
+	_print_button.text = ("WEARING PRINT %s" % PrintLook.serial_text(int(worn["serial"]))) if wearing else "YOUR PRINTS  x%d" % count
+
+
+# --- small refreshes ----------------------------------------------------------------
+
 ## The cards on show pop in one after another.
 func _deal_cards() -> void:
-	UiFx.stagger_in(_cards.filter(func(card: LockerCard) -> bool: return card.visible))
+	var shown: Array = _cards.filter(func(card: LockerCard) -> bool: return card.visible)
+	shown.append_array(_print_cards.filter(func(card: PrintCard) -> bool: return card.visible))
+	UiFx.stagger_in(shown)
 
 
 ## Scrolls the tray to the selected card once the grid has been laid out.
@@ -475,9 +758,9 @@ func _reveal_selected() -> void:
 
 
 func _focus_selected() -> void:
-	var card := _card_of(_selected)
-	if card:
-		card.grab_focus()
+	var target := first_focus()
+	if target:
+		target.grab_focus()
 
 
 func _refresh_states() -> void:
@@ -487,13 +770,26 @@ func _refresh_states() -> void:
 
 
 func _refresh_badges() -> void:
-	for slot in _tabs.ids():
-		_tabs.set_badge(slot, Cosmetics.new_count(slot))
-		# Keep the count inside the tab's top right corner.
-		var badge := _tabs.button(slot).get_node_or_null("Badge") as Control
-		if badge:
-			badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-			badge.position += Vector2(-6.0, 2.0)
+	var group_counts := {}
+	for id in _group_tabs:
+		var tabs: KitTabs = _group_tabs[id]
+		var total := 0
+		for slot in tabs.ids():
+			var count := PrizePrints.new_count() if slot == LockerFilters.PRINTS else Cosmetics.new_count(slot)
+			total += count
+			tabs.set_badge(slot, count)
+			_tuck_badge(tabs.button(slot))
+		group_counts[id] = total
+	for id in group_counts:
+		_groups.set_badge(id, group_counts[id])
+
+
+## Keeps a tab's count inside its top right corner.
+static func _tuck_badge(tab: Control) -> void:
+	var badge := tab.get_node_or_null("Badge") as Control if tab else null
+	if badge:
+		badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+		badge.position += Vector2(-6.0, 2.0)
 
 
 func _refresh_collection() -> void:
@@ -502,10 +798,15 @@ func _refresh_collection() -> void:
 	_collection_bar.value = float(have.x) / maxf(1.0, have.y)
 
 
-## "ION CARBINE SKINS" and how many of the cards on show are owned.
+## "ION CARBINE  ·  WEAPON SKINS" and how many of the cards on show are owned.
 func _refresh_caption() -> void:
-	var label := String(LockerCatalog.category(_slot)["label"]).to_upper()
 	var weapon := _weapon()
+	if _slot == LockerFilters.PRINTS:
+		_caption.text = "YOUR PRIZE PRINTS"
+		var shown := _print_cards.filter(func(c: PrintCard) -> bool: return c.visible).size()
+		_caption_note.text = "%d of %d prints  ·  Enter wears one on the %s" % [shown, PrizePrints.held().size(), weapon.display_name if weapon else "weapon"]
+		return
+	var label := String(LockerCatalog.category(_slot)["label"]).to_upper()
 	_caption.text = "%s  ·  %s" % [weapon.display_name.to_upper(), label] if LockerCatalog.is_weapon_slot(_slot) and weapon else label
 	var owned := 0
 	var shown := 0
@@ -514,14 +815,17 @@ func _refresh_caption() -> void:
 			shown += 1
 			if card.state <= LockerCatalog.State.OWNED:
 				owned += 1
-	_caption_note.text = "%d of %d owned" % [owned, shown]
+	var total := LockerCatalog.items(_slot, _weapon_id).size()
+	_caption_note.text = "%d of %d owned" % [owned, shown] + ("  ·  showing %d of %d" % [shown, total] if shown < total else "")
 
 
 func _refresh_weapon_plate() -> void:
 	var weapon := _weapon()
 	if weapon == null:
 		return
-	_weapon_plate.set_caption("WEAPON" if LockerCatalog.is_weapon_slot(_slot) else "SHOWN ON")
+	var per_weapon := LockerCatalog.is_weapon_slot(_slot) or _slot == LockerFilters.PRINTS
+	_weapon_plate.set_caption("CUSTOMISING" if per_weapon else "SHOWN ON")
+	_weapon_plate.active = per_weapon
 	_weapon_plate.set_value(weapon.display_name.to_upper())
 	_weapon_plate.set_note(Mastery.rank_label(Mastery.rank(weapon.id)).capitalize())
 
@@ -535,25 +839,21 @@ func _step_weapon(direction: int) -> void:
 	select_weapon(weapons[posmod(at + direction, weapons.size())].id)
 
 
+func _on_group_changed(id: StringName) -> void:
+	var tabs: KitTabs = _group_tabs[id]
+	if not tabs.ids().is_empty():
+		_switch_to(tabs.ids()[0], true)
+
+
 func _on_tab_changed(slot: StringName) -> void:
-	# A / D and the triggers leave the focus on the cards; a click or Enter
-	# on a tab keeps it on the tab row.
+	# A click or Enter on a tab keeps the focus on the tab row.
 	var focus := get_viewport().gui_get_focus_owner()
-	var on_tabs := focus != null and _tabs.is_ancestor_of(focus)
-	show_category(slot)
-	_deal_cards()
-	if not on_tabs:
-		_focus_selected()
-
-
-func _on_filter_changed(id: StringName) -> void:
-	_filter = {&"owned": LockerCatalog.Filter.OWNED, &"sale": LockerCatalog.Filter.FOR_SALE}.get(id, LockerCatalog.Filter.ALL)
-	show_category(_slot)
+	_switch_to(slot, focus != null and _tabs.is_ancestor_of(focus))
 
 
 ## Prices turn red or gold as the balance changes.
 func _on_balance_changed(_balance: int) -> void:
-	if _built and is_visible_in_tree():
+	if _built and is_visible_in_tree() and _slot != LockerFilters.PRINTS:
 		_refresh_states()
 		_panel.refresh()
 
@@ -562,37 +862,3 @@ func _on_balance_changed(_balance: int) -> void:
 func _on_visibility_changed() -> void:
 	if not is_visible_in_tree() and _built:
 		Profile.save_profile()
-
-
-# --- Prize Prints ------------------------------------------------------------------
-
-## A button over the display case, shown for a finish the player holds Prize
-## Prints of: it opens the Prizes page's collection on that finish.
-var _print_button: SignButton
-
-
-func _build_print_button() -> void:
-	_print_button = UiKit.sign_button("", SignButton.Kind.SECONDARY, 22)
-	_print_button.visible = false
-	_print_button.pressed.connect(_open_prints)
-	_showcase.add_child(_print_button)
-	_print_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	_print_button.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_print_button.position += Vector2(-22.0, 20.0)
-
-
-func _refresh_print_button() -> void:
-	var count := PrizePrints.prints_of(_selected.id).size() if _selected and _selected.slot == &"weapon_finish" else 0
-	_print_button.visible = count > 0
-	var worn := PrizePrints.equipped(_weapon_id)
-	var wearing := not worn.is_empty() and _selected and StringName(String(worn["f"])) == _selected.id
-	_print_button.text = ("WEARING PRINT %s" % PrintLook.serial_text(int(worn["serial"]))) if wearing else "YOUR PRINTS  x%d" % count
-
-
-func _open_prints() -> void:
-	var finish := _selected
-	open_page.emit(&"prizes")
-	var menu := get_tree().current_scene
-	var prizes := menu.page("prizes") as PrizesPage if menu.has_method("page") else null
-	if prizes and finish:
-		prizes.show_finish(finish.id)

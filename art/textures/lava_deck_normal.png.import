@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/lava_deck_normal.png-e5275cbe00d6abcc183ce740
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0

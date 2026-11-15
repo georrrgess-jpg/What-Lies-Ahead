@@ -3,7 +3,10 @@ extends Button
 ## The kit's button: a painted fairground sign with a darker lip. It grows a
 ## little and sends a shine across its face on hover or keyboard focus,
 ## squashes when pressed, shows the focus ring while focused and plays the kit's
-## sounds. Make one through UiKit (sign_button, back_button, icon_button,
+## sounds; the paint flashes when struck, a disabled sign goes grey and
+## matt and does not react. Every face is candy enamel: a gloss band over
+## the top half, a rim light and a darker lip (tools/gen_ui_textures.py).
+## Make one through UiKit (sign_button, back_button, icon_button,
 ## toggle_button) or SignButton.make().
 
 enum Kind {
@@ -124,6 +127,8 @@ func _style() -> void:
 
 func _update_lift(entering: bool) -> void:
 	var want := (is_hovered() or has_focus()) and not disabled
+	if disabled:
+		shine = -1.0
 	if want == _lifted:
 		return
 	_lifted = want
@@ -139,6 +144,9 @@ func _update_lift(entering: bool) -> void:
 
 func _on_down() -> void:
 	UiFx.squash(self, UiFx.HOVER_SCALE if _lifted else 1.0)
+	# The paint flashes as it is struck.
+	self_modulate = Color(1.3, 1.3, 1.3)
+	create_tween().tween_property(self, "self_modulate", Color.WHITE, 0.18).set_ease(Tween.EASE_OUT)
 
 
 func _on_pressed() -> void:

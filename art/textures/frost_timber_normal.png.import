@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/frost_timber_normal.png-ab9d907c9b6fa971a77cc
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0

@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/prog_rank_bronze.wav-820fe139d2bbdb773e57674b
 
 force/8_bit=false
 force/mono=false
-force/max_rate=true
-force/max_rate_hz=22050
+force/max_rate=false
+force/max_rate_hz=44100
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

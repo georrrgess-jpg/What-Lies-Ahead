@@ -6,14 +6,24 @@ extends CanvasLayer
 ## player card...) in a metal tray that scrolls when they do not fit.
 ## Bottom: the primary action first: NEXT WORLD after a clear, CONTINUE FROM
 ## WAVE N after a defeat past a checkpoint, then RETRY and MAIN MENU.
-## Laid out for the 1920x1080 HUD canvas (fits 1280x720 and 16:10 scaled).
+## Laid out on the HUD canvas, which is 1920x1080 or more in each direction
+## (16:10 is taller, ultrawide is wider): the columns share the width, long
+## content scrolls inside its panel, section text wraps to the column, and
+## if the content still needs more room than the window has, the whole
+## screen is scaled down to fit (so nothing is ever off screen).
 
 const MARGIN := 40.0
-const LEFT_WIDTH := 980.0
+const TOP := 24.0
+const BOTTOM := 28.0
+## On an ultrawide screen the columns stop growing here (the rest is margin).
+const MAX_WIDTH := 2240.0
+## The run summary's share of the width against the sections' 1.0.
+const LEFT_RATIO := 1.12
 ## Seconds the score takes to count up.
 const COUNT_TIME := 1.4
 
 var _root: Control
+var _outer: VBoxContainer
 
 
 func _ready() -> void:
@@ -37,13 +47,9 @@ func show_result(result: Dictionary) -> void:
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(dim)
 	var outer := VBoxContainer.new()
-	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	outer.offset_left = MARGIN
-	outer.offset_right = -MARGIN
-	outer.offset_top = 24
-	outer.offset_bottom = -28
 	outer.add_theme_constant_override("separation", UiKit.GAP_M)
 	_root.add_child(outer)
+	_outer = outer
 
 	var header := _header(result, victory, level, next)
 	outer.add_child(header)
@@ -56,14 +62,30 @@ func show_result(result: Dictionary) -> void:
 	var side := _sections(result)
 	if side:
 		body.add_child(side)
-	else:
-		summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# Sections build their content when they enter the tree.
+		for section in side.find_children("*", "", true, false).filter(func(n): return n.has_meta(&"results_section")):
+			fit_to_width(section, section)
 	var buttons := _buttons(victory, next)
 	outer.add_child(buttons)
+	_root.resized.connect(_fit)
+	_outer.minimum_size_changed.connect(_fit, CONNECT_DEFERRED)
+	_fit()
 
 	UiSound.open()
 	UiFx.fade_in(dim, 0.25)
 	UiFx.stagger_in([header, summary, side, buttons].filter(func(c): return c != null), 0.05, 0.08)
+
+
+## Centres the content in the window, at most MAX_WIDTH wide, and scales it
+## down when its minimum size does not fit (a short or narrow window).
+func _fit() -> void:
+	var view := _root.size
+	var room := Vector2(minf(view.x - MARGIN * 2.0, MAX_WIDTH), view.y - TOP - BOTTOM)
+	var need := _outer.get_combined_minimum_size()
+	var s := minf(1.0, minf(room.x / maxf(1.0, need.x), room.y / maxf(1.0, need.y)))
+	_outer.scale = Vector2.ONE * s
+	_outer.size = room / s
+	_outer.position = Vector2((view.x - room.x) * 0.5, TOP)
 
 
 # --- header ---------------------------------------------------------------------
@@ -82,6 +104,7 @@ func _header(result: Dictionary, victory: bool, level: LevelData, next: LevelDat
 		outcome += "  Next up: World %d, %s." % [GameData.worlds().find(next.world) + 1, next.world.display_name]
 	var sub := UiKit.label(outcome, UiKit.SIZE_LABEL, UiKit.CREAM)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(sub)
 	return col
 
@@ -91,7 +114,8 @@ func _header(result: Dictionary, victory: bool, level: LevelData, next: LevelDat
 func _summary(result: Dictionary, victory: bool) -> Control:
 	var board := UiKit.signboard()
 	board.set_padding(36, 26)
-	board.custom_minimum_size.x = LEFT_WIDTH
+	board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	board.size_flags_stretch_ratio = LEFT_RATIO
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", UiKit.GAP_M)
 	board.add_child(col)
@@ -117,10 +141,9 @@ func _summary(result: Dictionary, victory: bool) -> Control:
 	for row in rows:
 		rows_box.add_child(_weapon_row(row))
 	# Weapons and unlock lines scroll; they never push the buttons off screen.
-	var scroll := UiKit.scroll(Vector2(0, 120))
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.add_child(rows_box)
-	col.add_child(scroll)
+	var area := _scroll_area(rows_box, Vector2(0, 140))
+	area.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(area)
 	return board
 
 
@@ -198,6 +221,8 @@ func _weapon_row(row: Dictionary) -> Control:
 	v.add_child(top)
 	var name_label := UiKit.sign_label(weapon.display_name.to_upper(), 30)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_label.custom_minimum_size.x = 160
 	top.add_child(name_label)
 	top.add_child(UiKit.label("%d kills" % int(row["kills"]), UiKit.SIZE_BODY, UiKit.MUTED))
 	top.add_child(UiKit.label("+%s XP" % Wallet.format(int(row["xp_gained"])), 30, UiKit.GREEN, true))
@@ -254,22 +279,69 @@ func _sections(result: Dictionary) -> Control:
 	var tray := UiKit.metal_frame()
 	tray.set_padding(26, 26)
 	tray.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var frame := Control.new()
-	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tray.add_child(frame)
-	var scroll := UiKit.scroll()
-	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	frame.add_child(scroll)
 	var side := VBoxContainer.new()
 	side.add_theme_constant_override("separation", UiKit.GAP_M)
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(side)
 	for section in sections:
+		section.set_meta(&"results_section", true)
 		side.add_child(section)
-	_add_edge_fades(frame, scroll)
-	_reveal_tail(scroll)
+	var area := _scroll_area(side)
+	tray.add_child(area)
+	_reveal_tail(area.get_child(0) as ScrollContainer)
 	return tray
+
+
+## A box whose `content` scrolls vertically, with fades over the edges while
+## there is more to see. The box never takes its width from the content.
+func _scroll_area(content: Control, min_size := Vector2.ZERO) -> Control:
+	var frame := Control.new()
+	frame.custom_minimum_size = min_size
+	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	frame.clip_contents = true
+	var scroll := UiKit.scroll()
+	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	frame.add_child(scroll)
+	scroll.add_child(content)
+	_add_edge_fades(frame, scroll)
+	return frame
+
+
+## Lets the text of a results section follow the column's width: every label
+## that is stretched to the width of its column wraps (or, on a row, trims)
+## instead of setting the section's minimum width. Sections come from other
+## features, so a long line in one of them can never push the screen wider
+## than the window.
+static func fit_to_width(node: Node, root: Control) -> void:
+	for child in node.get_children():
+		fit_to_width(child, root)
+	var label := node as Label
+	if label == null or label.autowrap_mode != TextServer.AUTOWRAP_OFF or label.text_overrun_behavior != TextServer.OVERRUN_NO_TRIMMING:
+		return
+	if not _stretched(label, root):
+		return
+	if label.get_parent() is HBoxContainer:
+		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		label.custom_minimum_size.x = maxf(label.custom_minimum_size.x, 80.0)
+	else:
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+
+## True when `c` gets the full width its ancestors (up to `root`) are given:
+## filled in vertical boxes and panels, expanding on rows, never in a grid
+## or flow (those size children to their minimum).
+static func _stretched(c: Control, root: Control) -> bool:
+	while c != root:
+		var parent := c.get_parent() as Container
+		if parent == null or parent is GridContainer or parent is FlowContainer:
+			return false
+		if parent is HBoxContainer:
+			if not c.size_flags_horizontal & Control.SIZE_EXPAND:
+				return false
+		elif not c.size_flags_horizontal & Control.SIZE_FILL:
+			return false
+		c = parent
+	return true
 
 
 ## Fades over the top / bottom edge of `scroll` while there is more to see that way.

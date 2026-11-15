@@ -157,19 +157,15 @@ def write_wav(name, x, peak=0.85):
 
 
 def set_import_rate(path, x):
-    """A sound with nothing above 10 kHz (under -50 dB of its energy: voices,
-    thuds, round chimes) imports at 22.05 kHz, half the size and sounding the
-    same. Only touches an existing .import (Godot writes it on first import;
-    the next run of this script sets the rate)."""
+    """Every sound imports at its full 44.1 kHz rate (builds ship as GitHub
+    Releases, so there is no size budget). Resets an existing .import that an
+    older version of this script set to 22.05 kHz."""
     imp = path + ".import"
     if not os.path.exists(imp):
         return
-    spec = np.abs(np.fft.rfft(x)) ** 2
-    top = spec[np.fft.rfftfreq(len(x), 1.0 / SR) > 10000].sum() / max(spec.sum(), 1e-20)
     text = open(imp).read()
-    new = text.replace("force/max_rate=%s" % ("false" if top < 1e-5 else "true"),
-                       "force/max_rate=%s" % ("true" if top < 1e-5 else "false"))
-    new = re.sub(r"force/max_rate_hz=\d+", "force/max_rate_hz=22050", new) if top < 1e-5 else new
+    new = text.replace("force/max_rate=true", "force/max_rate=false")
+    new = re.sub(r"force/max_rate_hz=\d+", "force/max_rate_hz=44100", new)
     if new != text:
         with open(imp, "w") as f:
             f.write(new)
@@ -211,7 +207,7 @@ CEILING_DB = -2.0      # sample-peak ceiling (Vorbis encoding overshoots by up t
 MUSIC_EQ = {"hp": 50.0, "bells": ((100.0, -5.0, 0.7), (2500.0, 3.5, 0.55)), "shelf": (8000.0, 1.5)}
 BED_EQ = {"hp": 40.0}
 # Vorbis quality per kind of loop (see write_music).
-MUSIC_Q, FINAL_Q, AMBIENCE_Q = 2, 1.5, 0
+MUSIC_Q, FINAL_Q, AMBIENCE_Q = 6, 6, 5
 
 
 def _eq_gain(n, hp=None, bells=(), shelf=None):
@@ -303,15 +299,11 @@ def master(x, target_lufs, voicing):
 
 
 def write_music(name, stereo):
-    """Masters and writes a loop. Names ending in _ambience are beds (mono,
-    Vorbis q0: a wash needs no width or detail), _final the final-wave
-    variants (q1.5: dense and heard under a fight); anything else is a music
-    loop (q2). Together these keep the shipped music small."""
+    """Masters and writes a loop at full quality (builds ship as GitHub
+    Releases, so there is no size budget): names ending in _ambience are
+    stereo beds at Vorbis q5, everything else q6."""
     if name.endswith("_ambience"):
-        # Folded to mono first, so the bed is normalised as it plays (the game
-        # sends a mono stream to both speakers at full level).
-        folded = np.repeat(np.asarray(stereo).mean(axis=1, keepdims=True), 2, axis=1)
-        return write_ogg(name, master(folded, BED_LUFS, BED_EQ), peak=None, quality=AMBIENCE_Q, mono=True)
+        return write_ogg(name, master(stereo, BED_LUFS, BED_EQ), peak=None, quality=AMBIENCE_Q)
     final = name.endswith("_final")
     x = master(stereo, FINAL_LUFS if final else MUSIC_LUFS, MUSIC_EQ)
     return write_ogg(name, x, peak=None, quality=FINAL_Q if final else MUSIC_Q)
