@@ -1,8 +1,9 @@
 class_name KeyArt
 extends RefCounted
 ## Key-art stills of the levels: art/keyart/<level_id>.jpg, rendered from each
-## level's menu camera by tools/capture_keyart.gd. Used by the loading screen
-## and the Play page's world cards; both fall back to their plain look when a
+## level's menu camera by tools/capture_keyart.gd (the endless levels too).
+## Used by the loading screen, the Play page's cards and the home screen's
+## goal and Endless tiles; they fall back to their plain look when a
 ## level has no still yet.
 
 const DIR := "res://art/keyart/"
@@ -35,6 +36,7 @@ static func _levels() -> Array[LevelData]:
 	var out: Array[LevelData] = []
 	for w in GameData.worlds():
 		out.append_array(w.levels)
+	out.append_array(GameData.endless_levels())
 	return out
 
 

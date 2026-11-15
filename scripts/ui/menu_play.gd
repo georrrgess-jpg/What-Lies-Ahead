@@ -9,10 +9,14 @@ extends MenuPage
 ## distance, their art slides behind the frame), and the picked world's
 ## accent pools under it.
 ##
-## After the last world comes ENDLESS (an EndlessCard per endless level, open
-## from player level 1): its board shows the best wave and score, the
-## districts opened and the reward track read from the catalog
-## (EndlessRewards), and DEPLOY reads START.
+## Two modes, picked with the large STORY / ENDLESS tabs in the header (or
+## Tab / the gamepad's Y): STORY browses the worlds; ENDLESS (an EndlessCard
+## per endless level, open from player level 1) shows the city's board: the
+## best wave and score, the districts opened and the reward track read from
+## the catalog (EndlessRewards), and DEPLOY reads START. The ENDLESS tab
+## wears a NEW badge until the player has started an Endless run. The mode,
+## the world and the endless level browsed last are kept in the profile's
+## "menu" section ("mode", "world", "endless").
 
 ## The world in the carousel changed: the shell cross-fades the backdrop.
 signal world_changed(level: LevelData)
@@ -31,14 +35,26 @@ const GLIDE := 0.42
 const HOLD_STEP := 0.09
 ## Gap between the selected card and its neighbours (canvas px).
 const CARD_GAP := 30.0
+const STORY := &"story"
+## The Endless board's short rules: [what, the gist].
+const HOW_IT_PLAYS := [["NO LAST WAVE", "EVERY 5TH A HORDE"], ["THE WRECKER", "EVERY 10TH WAVE"],
+	["UPGRADE BENCH", "MK I-III FOR THE RUN"], ["POWER-UPS", "FROM FALLEN ZOMBIES"]]
+const ENDLESS := &"endless"
 
 var selected_level: LevelData
 ## Starter weapon for dev runs (the saved Loadout is used otherwise).
 var selected_weapon: StringName
+## The story world browsed (its carousel slot in STORY).
 var world_index := 0
+## STORY or ENDLESS.
+var mode := STORY
+## The endless level browsed (its carousel slot in ENDLESS).
+var endless_index := 0
 ## The soft disc under the selected card (shared by every Play page).
 static var _glow_tex: GradientTexture2D
 
+## Every card: the worlds', then the endless levels' (each `index` is its
+## slot in its own mode's row).
 var _cards: Array[WorldCard] = []
 var _carousel: Control
 var _pips: Control
@@ -66,68 +82,120 @@ var _stats: HBoxContainer
 var _enemies: HFlowContainer
 var _lock: Control
 var _art: TextureRect
+## In ENDLESS, the endless level's card takes the key art's place on the
+## board (its emblem, chasing bulbs and best wave).
+var _hero: EndlessCard
+var _head: HBoxContainer
 var _plates: Array[SlotPlate] = []
 var _difficulty: KitTabs
 var _difficulty_note: Label
 var _deploy: SignButton
 var _who: Control
 var _endless_box: VBoxContainer
-## The header's jump between the story worlds and ENDLESS.
-var _mode_jump: SignButton
-var _story_slot := 0
+## The header's mode tabs and the key prompts beside them.
+var _mode_tiles: Array[ModeTile] = []
+var _browse_prompt: Control
+var _deploy_prompt: HBoxContainer
+var _arrows: Array[Control] = []
 
 
 func _init() -> void:
 	selected_weapon = StringName(String(Profile.data.get("last_weapon", "")))
 	if GameData.weapon(selected_weapon) == null:
 		selected_weapon = GameData.default_weapon_id()
-	world_index = clampi(int(Profile.section("menu").get("world", 0)), 0, maxi(0, slot_count() - 1))
+	mode = saved_mode()
+	world_index = saved_world()
+	endless_index = clampi(int(Profile.section("menu").get("endless", 0)), 0, maxi(0, GameData.endless_levels().size() - 1))
 
 
-## The level the Play page opens on: the world browsed last, its first
-## unlocked level (the shell shows it behind the menu before the page exists).
+## The level the Play page opens on: the endless level or the world browsed
+## last (its first unlocked level). The shell shows it behind the menu
+## before the page exists.
 static func remembered_level() -> LevelData:
 	var worlds := GameData.worlds()
+	if saved_mode() == ENDLESS:
+		var levels := GameData.endless_levels()
+		return levels[clampi(int(Profile.section("menu").get("endless", 0)), 0, levels.size() - 1)]
 	if worlds.is_empty():
 		return null
-	var slot := int(Profile.section("menu").get("world", 0))
-	if endless_at(slot):
-		return endless_at(slot)
-	var world := worlds[clampi(slot, 0, worlds.size() - 1)]
+	var world := worlds[saved_world()]
 	for l in world.levels:
 		if GameData.is_level_unlocked(l):
 			return l
 	return world.levels[0] if not world.levels.is_empty() else null
 
 
-## Carousel slots: every world, then every endless level.
-static func slot_count() -> int:
-	return GameData.worlds().size() + GameData.endless_levels().size()
+## The mode browsed last (a save from before the mode tabs kept Endless as
+## the carousel slot after the last world).
+static func saved_mode() -> StringName:
+	if GameData.endless_levels().is_empty():
+		return STORY
+	var menu := Profile.section("menu")
+	if menu.has("mode"):
+		return ENDLESS if String(menu["mode"]) == String(ENDLESS) else STORY
+	return ENDLESS if int(menu.get("world", 0)) >= GameData.worlds().size() else STORY
 
 
-## The endless level in carousel slot `i`, or null for a world's slot.
-static func endless_at(i: int) -> LevelData:
-	var j := i - GameData.worlds().size()
-	return GameData.endless_levels()[j] if j >= 0 and j < GameData.endless_levels().size() else null
+## The story world browsed last.
+static func saved_world() -> int:
+	var slot := int(Profile.section("menu").get("world", 0))
+	return clampi(slot, 0, maxi(0, GameData.worlds().size() - 1)) if slot < GameData.worlds().size() else 0
+
+
+## True until the player has started an Endless run (the ENDLESS tab's NEW badge).
+static func endless_is_new() -> bool:
+	return not bool(Profile.section("menu").get("endless_started", false)) and EndlessRecords.runs() == 0 and EndlessRecords.best_wave() == 0
+
+
+## The selected slot of the current mode's row, and how many it has.
+func _slot() -> int:
+	return endless_index if mode == ENDLESS else world_index
+
+
+func _slot_count() -> int:
+	return (GameData.endless_levels() if mode == ENDLESS else GameData.worlds()).size()
+
+
+func _in_row(card: WorldCard) -> bool:
+	return (card is EndlessCard) == (mode == ENDLESS)
 
 
 func uses_shell_header() -> bool:
 	return true
 
 
+## The two mode tabs, then the key prompts.
 func header_extra() -> Control:
 	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_END
-	row.add_theme_constant_override("separation", UiKit.GAP_L)
+	row.add_theme_constant_override("separation", UiKit.GAP_M)
 	if not GameData.endless_levels().is_empty():
-		# Endless sits after the last world: one press gets there (and back).
-		_mode_jump = UiKit.sign_button("", SignButton.Kind.GOLD, 22)
-		_mode_jump.pressed.connect(_jump_mode)
-		row.add_child(_mode_jump)
-		_refresh_mode_jump()
-	row.add_child(UiKit.key_prompt("A", "Previous world"))
-	row.add_child(UiKit.key_prompt("D", "Next world"))
-	row.add_child(UiKit.key_prompt("ENTER", "Deploy"))
+		var group := ButtonGroup.new()
+		_mode_tiles.append(ModeTile.make(STORY, "STORY", ModeTile.STORY_ACCENT, group))
+		_mode_tiles.append(ModeTile.make(ENDLESS, "ENDLESS", EndlessCard.EMBER, group))
+		for tile in _mode_tiles:
+			tile.name = "Mode" + String(tile.mode).capitalize()
+			tile.pressed.connect(select_mode.bind(tile.mode))
+			row.add_child(tile)
+		UiKit.tooltip(_mode_tiles[0], "The worlds, one level after another  (Tab)")
+		UiKit.tooltip(_mode_tiles[1], "Survive waves without end in Ashfall City  (Tab)")
+	row.add_child(UiKit.filler())
+	var prompts := VBoxContainer.new()
+	prompts.alignment = BoxContainer.ALIGNMENT_CENTER
+	prompts.add_theme_constant_override("separation", UiKit.GAP_XS)
+	row.add_child(prompts)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", UiKit.GAP_M)
+	prompts.add_child(top)
+	if not _mode_tiles.is_empty():
+		top.add_child(UiKit.key_prompt("TAB", "Mode"))
+	_deploy_prompt = UiKit.key_prompt("ENTER", "Deploy")
+	top.add_child(_deploy_prompt)
+	_browse_prompt = HBoxContainer.new()
+	_browse_prompt.add_theme_constant_override("separation", UiKit.GAP_XS)
+	_browse_prompt.add_child(UiKit.key_glyph("A"))
+	_browse_prompt.add_child(UiKit.key_prompt("D", "Browse worlds"))
+	prompts.add_child(_browse_prompt)
+	_refresh_mode_tiles()
 	return row
 
 
@@ -152,6 +220,7 @@ func refresh() -> void:
 		return
 	for card in _cards:
 		card.refresh()
+	_refresh_mode_tiles()
 	_difficulty.select(Difficulty.current())
 	_difficulty_note.text = Difficulty.description(Difficulty.current())
 	_refresh_details()
@@ -165,6 +234,10 @@ func first_focus() -> Control:
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or KitDialog.open_count > 0:
 		return
+	if _is_mode_toggle(event):
+		get_viewport().set_input_as_handled()
+		select_mode(STORY if mode == ENDLESS else ENDLESS)
+		return
 	var step := 0
 	if event.is_action_pressed("ui_left", true) or event.is_action_pressed("move_left", true):
 		step = -1
@@ -172,8 +245,10 @@ func _input(event: InputEvent) -> void:
 		step = 1
 	if step == 0:
 		return
-	# Inside the difficulty row the arrows move between its options.
+	# Inside the mode tabs and the difficulty row the arrows move between their options.
 	var focus := get_viewport().gui_get_focus_owner()
+	if focus is ModeTile and not (event is InputEventKey and (event as InputEventKey).physical_keycode in [KEY_A, KEY_D]):
+		return
 	if focus and _difficulty.is_ancestor_of(focus) and not (event is InputEventKey and (event as InputEventKey).physical_keycode in [KEY_A, KEY_D]):
 		return
 	get_viewport().set_input_as_handled()
@@ -181,10 +256,19 @@ func _input(event: InputEvent) -> void:
 		# Held: run through the worlds at a steady pace, stopping at either end.
 		if Time.get_ticks_msec() - _last_step_ms < HOLD_STEP * 1000.0:
 			return
-		select_world(clampi(world_index + step, 0, slot_count() - 1))
+		_select_slot(clampi(_slot() + step, 0, _slot_count() - 1))
 	else:
 		step_world(step)
 	_last_step_ms = Time.get_ticks_msec()
+
+
+## Tab or the gamepad's Y switches the mode (while there are two).
+func _is_mode_toggle(event: InputEvent) -> bool:
+	if _mode_tiles.is_empty() or event.is_echo():
+		return false
+	if event is InputEventKey and event.pressed:
+		return (event as InputEventKey).physical_keycode == KEY_TAB
+	return event is InputEventJoypadButton and event.pressed and (event as InputEventJoypadButton).button_index == JOY_BUTTON_Y
 
 
 # --- layout -------------------------------------------------------------------------
@@ -198,6 +282,7 @@ func _build_info() -> Control:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", UiKit.GAP_L)
 	v.add_child(head)
+	_head = head
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text.add_theme_constant_override("separation", 6)
@@ -310,7 +395,7 @@ func _build_carousel() -> Control:
 		_carousel.add_child(card)
 		_cards.append(card)
 	for i in GameData.endless_levels().size():
-		var card := EndlessCard.make(GameData.endless_levels()[i], GameData.worlds().size() + i)
+		var card := EndlessCard.make(GameData.endless_levels()[i], i)
 		_carousel.add_child(card)
 		_cards.append(card)
 	for side in [-1, 1]:
@@ -322,6 +407,7 @@ func _build_carousel() -> Control:
 		arrow.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT if side < 0 else Control.PRESET_CENTER_RIGHT)
 		arrow.grow_horizontal = Control.GROW_DIRECTION_END if side < 0 else Control.GROW_DIRECTION_BEGIN
 		arrow.grow_vertical = Control.GROW_DIRECTION_BOTH
+		_arrows.append(arrow)
 	_pips = Control.new()
 	_pips.z_index = 20
 	_pips.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
@@ -331,45 +417,106 @@ func _build_carousel() -> Control:
 	_pips.draw.connect(_draw_pips)
 	_pips.gui_input.connect(_on_pips_input)
 	_carousel.add_child(_pips)
-	_scroll = world_index
+	_scroll = _slot()
 	return _carousel
 
 
 # --- selection ----------------------------------------------------------------------
 
+## Shows story world `i` (switching to STORY).
 func select_world(i: int) -> void:
-	if i < 0 or i >= slot_count():
+	if i < 0 or i >= GameData.worlds().size():
 		return
-	if i != world_index:
+	var changed := i != world_index or mode != STORY
+	if changed:
 		UiSound.select()
 	world_index = i
 	Profile.section("menu")["world"] = i
+	_show_mode(STORY, changed)
+
+
+## Shows the row of mode `id` (STORY or ENDLESS) at the slot browsed last.
+func select_mode(id: StringName) -> void:
+	if id == ENDLESS and GameData.endless_levels().is_empty():
+		id = STORY
+	if id != mode:
+		UiSound.tab()
+	_show_mode(id, id != mode)
+
+
+func _show_mode(id: StringName, changed: bool) -> void:
+	var switched := id != mode
+	mode = id
+	Profile.section("menu")["mode"] = String(id)
 	selected_level = null
+	if switched:
+		# The new row starts where it was left, without gliding across.
+		_scroll = _slot()
+	_refresh_mode_tiles()
 	_refresh_details()
-	_layout_cards(true)
-	_animate_details()
-	_refresh_mode_jump()
+	_layout_cards(not switched)
+	if changed:
+		_animate_details()
+		if switched:
+			_deal_row()
 	world_changed.emit(selected_level)
 
 
-## ENDLESS from a world's slot, STORY WORLDS back to the world it came from.
-func _jump_mode() -> void:
-	if endless_at(world_index):
-		select_world(_story_slot)
-	else:
-		_story_slot = world_index
-		select_world(GameData.worlds().size())
+## Picks slot `i` of the current mode's row.
+func _select_slot(i: int) -> void:
+	if mode == STORY:
+		select_world(i)
+		return
+	if i < 0 or i >= GameData.endless_levels().size():
+		return
+	var changed := i != endless_index
+	if changed:
+		UiSound.select()
+	endless_index = i
+	Profile.section("menu")["endless"] = i
+	_show_mode(ENDLESS, changed)
 
 
-func _refresh_mode_jump() -> void:
-	if _mode_jump:
-		_mode_jump.set_text("STORY WORLDS" if endless_at(world_index) else "ENDLESS MODE")
+## The tabs follow the mode; the prompts and the carousel's arrows and pips suit it.
+func _refresh_mode_tiles() -> void:
+	var worlds := GameData.worlds()
+	for tile in _mode_tiles:
+		tile.set_pressed_no_signal(tile.mode == mode)
+		tile.refresh_state()
+		if tile.mode == ENDLESS:
+			var best := EndlessRecords.best_wave()
+			tile.set_note("BEST WAVE %d" % best if best > 0 else "WAVES WITHOUT END")
+			tile.set_new(endless_is_new())
+		else:
+			var cleared := worlds.filter(func(w: WorldData) -> bool: return WorldCard.world_stars(w) >= 3).size()
+			tile.set_note("%d WORLDS  ·  %d CLEARED" % [worlds.size(), cleared])
+	if _browse_prompt:
+		_browse_prompt.visible = mode == STORY
+		(_deploy_prompt.get_child(1) as Label).text = "Start" if mode == ENDLESS else "Deploy"
+	var browse := _slot_count() > 1
+	for arrow in _arrows:
+		arrow.visible = browse
+	if _pips:
+		_pips.visible = browse
+		# A lone endless level needs no row: its card sits on the board.
+		_carousel.visible = mode == STORY or browse
+
+
+## The cards of a newly shown row deal in.
+func _deal_row() -> void:
+	if not is_visible_in_tree():
+		return
+	var shown: Array[Control] = []
+	for card in _cards:
+		if card.visible:
+			shown.append(card)
+	UiFx.stagger_in(shown, 0.0, 0.05)
 
 
 func step_world(step: int) -> void:
-	var n := slot_count()
-	if n > 0:
-		select_world(posmod(world_index + step, n))
+	var n := _slot_count()
+	if n > 1:
+		_select_slot(posmod(_slot() + step, n))
 
 
 func select_level(level: LevelData) -> void:
@@ -382,6 +529,8 @@ func select_level(level: LevelData) -> void:
 func start() -> void:
 	if selected_level == null:
 		return
+	if selected_level.endless:
+		Profile.section("menu")["endless_started"] = true
 	Profile.save_profile()
 	Sfx.play(&"deploy", -2.0)
 	# The saved Loadout, unless a dev run picked a weapon.
@@ -412,12 +561,12 @@ func _refresh_details() -> void:
 	var worlds := GameData.worlds()
 	if worlds.is_empty():
 		return
-	world_index = clampi(world_index, 0, slot_count() - 1)
-	_who.visible = endless_at(world_index) == null
+	world_index = clampi(world_index, 0, worlds.size() - 1)
+	_who.visible = mode == STORY
 	_enemies.visible = _who.visible
 	_endless_box.visible = not _who.visible
-	if endless_at(world_index):
-		_refresh_endless(endless_at(world_index))
+	if mode == ENDLESS:
+		_refresh_endless(GameData.endless_levels()[endless_index])
 		return
 	var world := worlds[world_index]
 	_resolve_level(world)
@@ -430,6 +579,8 @@ func _refresh_details() -> void:
 	_art.texture = KeyArt.texture(level)
 	_art.visible = _art.texture != null
 	(_art.material as ShaderMaterial).set_shader_parameter("saturation", 1.0 if unlocked else 0.25)
+	if _hero:
+		_hero.visible = false
 	_fill_level_tabs(world, level)
 	_fill_stats(world, level, unlocked)
 	_fill_enemies(level)
@@ -446,13 +597,12 @@ func _refresh_details() -> void:
 ## The Endless board: records, districts and the reward track.
 func _refresh_endless(level: LevelData) -> void:
 	selected_level = level
-	_world_caption.text = "ENDLESS MODE  ·  OPEN FROM LEVEL 1"
+	_world_caption.text = "NEW MODE  ·  ENDLESS  ·  OPEN FROM LEVEL 1" if endless_is_new() else "ENDLESS MODE  ·  OPEN FROM LEVEL 1"
 	_world_caption.add_theme_color_override("font_color", EndlessCard.EMBER)
 	_level_name.text = level.display_name.to_upper()
 	_blurb.text = level.blurb
-	_art.texture = KeyArt.texture(level)
-	_art.visible = _art.texture != null
-	(_art.material as ShaderMaterial).set_shader_parameter("saturation", 1.0)
+	_art.visible = false
+	_show_hero(level)
 	_level_tabs.visible = false
 	_lock.visible = false
 	var unlocked := GameData.is_level_unlocked(level)
@@ -475,6 +625,23 @@ func _refresh_endless(level: LevelData) -> void:
 		_plates[slot].set_note("%s  ·  %s" % [w.category, UiKit.rank_name(Mastery.rank(w.id), w.max_rank()).capitalize()] if w else "")
 
 
+## The card of endless `level` in the key art's place, picked (bulbs on).
+func _show_hero(level: LevelData) -> void:
+	if _hero and _hero.level != level:
+		_hero.queue_free()
+		_hero = null
+	if _hero == null:
+		_hero = EndlessCard.make(level, 0)
+		_hero.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		# The board's card is to look at: the carousel handles the input.
+		_hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_head.add_child(_hero)
+	else:
+		_hero.refresh()
+	_hero.visible = true
+	_hero.selected = true
+
+
 ## The districts (with their prices) and the reward track.
 func _fill_endless(rules: EndlessRules) -> void:
 	_clear(_endless_box)
@@ -485,7 +652,8 @@ func _fill_endless(rules: EndlessRules) -> void:
 	_endless_box.add_child(row)
 	for d in rules.districts:
 		var note := "START" if d.price == 0 else "%d TICKETS" % d.price
-		row.add_child(_district_chip(d, note, d.price == 0 or EndlessRecords.has_opened(d.id)))
+		var lit := d.price == 0 or EndlessRecords.has_opened(d.id)
+		row.add_child(_pill(d.display_name.to_upper(), note, d.accent_color, lit, UiKit.AMBER if d.price > 0 else UiKit.GREEN))
 	_endless_box.add_child(UiKit.section("REWARD TRACK", "", UiKit.AMBER))
 	var track := HFlowContainer.new()
 	track.add_theme_constant_override("h_separation", UiKit.GAP_S)
@@ -496,11 +664,19 @@ func _fill_endless(rules: EndlessRules) -> void:
 		track.add_child(UiKit.body("Rewards arrive with the city's camos, its weapon and its Mythic finish.", 0, UiKit.SIZE_SMALL, UiKit.MUTED))
 	for e in rewards:
 		track.add_child(_reward_chip(e))
+	_endless_box.add_child(UiKit.section("HOW IT PLAYS", "", EndlessCard.EMBER))
+	var rules_row := HFlowContainer.new()
+	rules_row.add_theme_constant_override("h_separation", UiKit.GAP_S)
+	rules_row.add_theme_constant_override("v_separation", UiKit.GAP_S)
+	_endless_box.add_child(rules_row)
+	for r in HOW_IT_PLAYS:
+		rules_row.add_child(_pill(r[0], r[1], EndlessCard.EMBER, true, UiKit.CREAM))
 
 
-func _district_chip(d: EndlessDistrict, note: String, opened: bool) -> Control:
+## A dark pill: a `title` in `accent` (muted unless `lit`), then a note.
+func _pill(title: String, note: String, accent: Color, lit: bool, note_color: Color) -> Control:
 	var pill := PanelContainer.new()
-	var box := UiKit.box(Color("2c2257"), Color(d.accent_color, 0.9 if opened else 0.35), 22, 2, 0)
+	var box := UiKit.box(Color("2c2257"), Color(accent, 0.9 if lit else 0.35), 22, 2, 0)
 	box.content_margin_left = 14
 	box.content_margin_right = 14
 	box.content_margin_top = 2
@@ -510,8 +686,8 @@ func _district_chip(d: EndlessDistrict, note: String, opened: bool) -> Control:
 	var r := HBoxContainer.new()
 	r.add_theme_constant_override("separation", 8)
 	pill.add_child(r)
-	r.add_child(UiKit.label(d.display_name.to_upper(), 20, d.accent_color.lerp(Color.WHITE, 0.4) if opened else UiKit.MUTED, true))
-	r.add_child(UiKit.label(note, 18, UiKit.AMBER if d.price > 0 else UiKit.GREEN, true))
+	r.add_child(UiKit.label(title, 20, accent.lerp(Color.WHITE, 0.4) if lit else UiKit.MUTED, true))
+	r.add_child(UiKit.label(note, 18, note_color, true))
 	return pill
 
 
@@ -579,7 +755,7 @@ func _fill_stats(world: WorldData, level: LevelData, unlocked: bool) -> void:
 func _animate_details() -> void:
 	if not is_visible_in_tree():
 		return
-	UiFx.fade_in(_art, 0.25)
+	UiFx.fade_in(_hero if mode == ENDLESS and _hero else _art, 0.25)
 	UiFx.fade_in(_level_name, 0.2)
 	if _best_value and selected_level:
 		UiFx.count_up(_best_value, 0, Profile.best_score(selected_level.id), 0.6, func(n: int) -> String: return ScorePanel._fmt(n))
@@ -655,18 +831,19 @@ func _stat_tile(caption: String, value: String, accent: Color) -> PanelContainer
 ## Points the carousel at the selected world: the cards glide there (or jump,
 ## when not animated) and the accent pool under them changes colour.
 func _layout_cards(animate: bool) -> void:
+	var at := _slot()
 	for card in _cards:
-		card.selected = card.index == world_index
+		card.selected = _in_row(card) and card.index == at
 	_pips.queue_redraw()
 	if _glide and _glide.is_valid():
 		_glide.kill()
 	_tint_glow(animate)
 	if not animate or not is_visible_in_tree():
-		_place_cards(world_index)
+		_place_cards(at)
 		return
-	var seconds := clampf(GLIDE + absf(world_index - _scroll) * 0.03, GLIDE, 0.7)
+	var seconds := clampf(GLIDE + absf(at - _scroll) * 0.03, GLIDE, 0.7)
 	_glide = create_tween()
-	_glide.tween_method(_place_cards, _scroll, float(world_index), seconds).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	_glide.tween_method(_place_cards, _scroll, float(at), seconds).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 
 
 ## Places every card for carousel position `at` (in worlds): the nearest is
@@ -684,7 +861,7 @@ func _place_cards(at: float) -> void:
 	for card in _cards:
 		var d := card.index - at
 		var ad := absf(d)
-		card.visible = ad < CARDS_AROUND
+		card.visible = _in_row(card) and ad < CARDS_AROUND
 		if not card.visible:
 			continue
 		var k := 1.0 - 0.18 * minf(ad, 1.0) - 0.14 * clampf(ad - 1.0, 0.0, 1.6)
@@ -701,8 +878,8 @@ func _place_cards(at: float) -> void:
 
 func _world_accent() -> Color:
 	var worlds := GameData.worlds()
-	if endless_at(world_index):
-		return endless_at(world_index).accent_color
+	if mode == ENDLESS:
+		return GameData.endless_levels()[endless_index].accent_color
 	return worlds[world_index].accent_color if world_index < worlds.size() else UiKit.CYAN
 
 
@@ -710,7 +887,7 @@ func _world_accent() -> Color:
 ## colour (amber while the world is locked).
 func _tint_glow(animate: bool) -> void:
 	var target := _world_accent()
-	if world_index < GameData.worlds().size() and not GameData.is_world_unlocked(GameData.worlds()[world_index]):
+	if mode == STORY and world_index < GameData.worlds().size() and not GameData.is_world_unlocked(GameData.worlds()[world_index]):
 		target = UiKit.AMBER.darkened(0.3)
 	if _glow_tween and _glow_tween.is_valid():
 		_glow_tween.kill()
@@ -745,7 +922,7 @@ func _on_carousel_input(event: InputEvent) -> void:
 	elif mb and mb.button_index == MOUSE_BUTTON_LEFT and _dragging:
 		_dragging = false
 		if _drag_moved:
-			select_world(clampi(roundi(_scroll), 0, _cards.size() - 1))
+			_select_slot(clampi(roundi(_scroll), 0, _slot_count() - 1))
 		else:
 			_click(mb.position)
 	elif event is InputEventMouseMotion and _dragging:
@@ -763,27 +940,27 @@ func _drag_to(dx: float) -> void:
 		return
 	if _glide and _glide.is_valid():
 		_glide.kill()
-	_place_cards(clampf(_drag_scroll - dx / (WorldCard.SIZE.x * 0.95), -0.45, _cards.size() - 0.55))
+	_place_cards(clampf(_drag_scroll - dx / (WorldCard.SIZE.x * 0.95), -0.45, _slot_count() - 0.55))
 
 
 func _on_pips_input(event: InputEvent) -> void:
 	var mb := event as InputEventMouseButton
 	if mb and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
-		var x0 := _pips.size.x * 0.5 - PIP_STEP * (_cards.size() - 1) * 0.5
+		var x0 := _pips.size.x * 0.5 - PIP_STEP * (_slot_count() - 1) * 0.5
 		var i := roundi((mb.position.x - x0) / PIP_STEP)
-		if i >= 0 and i < _cards.size():
-			select_world(i)
+		if i >= 0 and i < _slot_count():
+			_select_slot(i)
 		_pips.accept_event()
 
 
 func _click(at: Vector2) -> void:
 	# The card nearest the middle wins where they overlap.
-	var order := _cards.filter(func(c: WorldCard) -> bool: return c.visible and c.mouse_filter != Control.MOUSE_FILTER_IGNORE)
+	var order := _cards.filter(func(c: WorldCard) -> bool: return c.visible and _in_row(c) and c.mouse_filter != Control.MOUSE_FILTER_IGNORE)
 	order.sort_custom(func(a: WorldCard, b: WorldCard) -> bool: return absf(a.index - _scroll) < absf(b.index - _scroll))
 	for card: WorldCard in order:
 		var local := card.get_transform().affine_inverse() * at
 		if Rect2(Vector2.ZERO, WorldCard.SIZE).has_point(local):
-			select_world(card.index)
+			_select_slot(card.index)
 			return
 
 
@@ -796,17 +973,22 @@ func _draw_carousel() -> void:
 	_carousel.draw_texture_rect(_glow_texture(), Rect2(mid - pool * 0.5, pool), false, Color(_glow_color, 0.55))
 
 
-## One pip per world on a dark pill (gold once cleared, dim with an amber
-## ring while locked), the selected one large in its accent.
+## One pip per slot of the row on a dark pill: a world's is gold once
+## cleared, dim with an amber ring while locked, the selected one large in
+## its accent; an endless level's is the Endless emblem.
 func _draw_pips() -> void:
 	var worlds := GameData.worlds()
-	var n := slot_count()
+	var n := _slot_count()
 	var x0 := _pips.size.x * 0.5 - PIP_STEP * (n - 1) * 0.5
 	var y := _pips.size.y * 0.5
 	var pill := Rect2(x0 - 20.0, y - 11.0, PIP_STEP * (n - 1) + 40.0, 22.0)
 	_pip_box.bg_color = Color(UiKit.INK, 0.75)
 	_pip_box.set_corner_radius_all(11)
 	_pips.draw_style_box(_pip_box, pill)
+	if mode == ENDLESS:
+		for i in n:
+			EndlessEmblem.paint(_pips, Vector2(x0 + i * PIP_STEP, y), 13.0 if i == endless_index else 9.0, 1.0 if i == endless_index else 0.6)
+		return
 	for i in worlds.size():
 		var at := Vector2(x0 + i * PIP_STEP, y)
 		if i == world_index:
@@ -818,16 +1000,6 @@ func _draw_pips() -> void:
 		else:
 			var cleared := WorldCard.world_stars(worlds[i]) >= 3
 			_pips.draw_circle(at, 7.0, Wallet.COLOR if cleared else UiKit.CREAM, true, -1.0, true)
-	# The endless slots: an ember diamond each.
-	for i in range(worlds.size(), n):
-		var at := Vector2(x0 + i * PIP_STEP, y)
-		var r := 12.0 if i == world_index else 8.0
-		var diamond := PackedVector2Array([at + Vector2(0, -r), at + Vector2(r, 0), at + Vector2(0, r), at + Vector2(-r, 0)])
-		_pips.draw_colored_polygon(diamond, EndlessCard.EMBER if i == world_index else Color(EndlessCard.EMBER, 0.7))
-		if i == world_index:
-			_pips.draw_polyline(diamond + PackedVector2Array([diamond[0]]), UiKit.CREAM, 3.0, true)
-
-
 
 
 ## A soft white disc fading to nothing at its rim (tinted when drawn).
