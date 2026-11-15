@@ -31,7 +31,7 @@ const CORE := 0.7
 ## Zombies inside this radius take whirl damage.
 const CUP_RADIUS := 2.3
 const WHIRL_TICK := 0.3
-const WHIRL_TICK_DAMAGE := 13.0
+const WHIRL_TICK_DAMAGE := 16.0
 ## Zombies heavier than this, and bosses, are not caught, only slowed.
 const CAPTURE_MASS := 5.0
 const HEAVY_DRAG := 0.5
