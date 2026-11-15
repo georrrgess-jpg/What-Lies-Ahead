@@ -21,6 +21,7 @@ const STYLES := {
 	&"portal": [Color.WHITE, UiKit.CYAN],
 	&"victory": [Color(1.0, 0.9, 0.6), UiKit.AMBER],
 	&"defeat": [Color(1.0, 0.72, 0.76), UiKit.RED],
+	&"district": [Color(1.0, 0.9, 0.76), Color(1.0, 0.48, 0.18)],
 }
 const MERGE_WINDOW := 0.4
 const HOLD := 1.9

@@ -44,6 +44,7 @@ var _points: Array[Node3D] = []
 var _route := PackedFloat32Array()
 var _seen := PackedByteArray()
 var _load := PackedFloat32Array()
+var _bias := PackedFloat32Array()
 var _fronts: Array[int] = []
 var _front_count := 2
 var _age := INF
@@ -60,7 +61,23 @@ func setup(points: Array, player: Player) -> void:
 	_seen.resize(_points.size())
 	_load.resize(_points.size())
 	_load.fill(0.0)
+	_bias.clear()
 	_age = INF
+
+
+## Swaps the entrances in use (an Endless district opened) and re-reads the
+## fronts at once.
+func set_points(points: Array) -> void:
+	setup(points, _player)
+	_front_count = mini(_front_count, _points.size())
+	_refresh()
+	_pick_fronts()
+
+
+## A score bonus per entrance (same order as points()): an Endless run
+## prefers the entrances of the district the player is in.
+func set_bias(values: PackedFloat32Array) -> void:
+	_bias = values if values.size() == _points.size() else PackedFloat32Array()
 
 
 func is_empty() -> bool:
@@ -154,6 +171,8 @@ func _score(i: int, role: Role) -> float:
 	if _seen[i]:
 		score -= 3.0
 	score -= maxf(0.0, route - FAR_ROUTE) * 0.1
+	if not _bias.is_empty():
+		score += _bias[i]
 	match role:
 		Role.MAIN:
 			score -= _load[i] * 0.6

@@ -780,7 +780,9 @@ func _on_run_finished(result: Dictionary) -> void:
 	if bool(result["victory"]):
 		_banner.show_banner("LEVEL CLEARED!", level.display_name, "", &"victory", 0.4)
 	else:
-		_banner.show_banner("OVERRUN!", "Wave %d of %d" % [int(result["wave_reached"]), int(result["total_waves"])], level.display_name, &"defeat", 1.0)
+		var total := int(result["total_waves"])
+		var reached := "Wave %d of %d" % [int(result["wave_reached"]), total] if total > 0 else "Wave %d" % int(result["wave_reached"])
+		_banner.show_banner("OVERRUN!", reached, level.display_name, &"defeat", 1.0)
 
 
 ## Lets the staging tools clear or set the notice line through `_notice.text`.

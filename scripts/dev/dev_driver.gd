@@ -8,6 +8,12 @@ extends Node
 ##   --autoplay=route     crowd test: do zombies use both lanes around the kiosk?
 ##   --autoplay=tutorial  play Boot Camp end to end from the menu (options in
 ##                        scripts/onboarding/tutorial_bot.gd: --tutorial-runs, --tutorial-skip)
+##   --autoplay=endless   play Endless (Ashfall City unless --level names another endless
+##                        level) until the bot falls or --max-seconds: it buys gates when it
+##                        can keep a reserve, arms traps it stands near, picks up supply
+##                        crates and logs every wave (scripts/dev/endless_bot.gd)
+##   --scene=<path>       play this scene in place of the endless levels' own (the Endless
+##                        grey box: res://scenes/levels/endless_testbed.tscn), also for --shot
 ##   --weapon=<id>        weapon the bot starts with in hand (default: pulse_pistol); it goes in
 ##                        its own class's slot (a sidearm in slot 2) next to the saved other one
 ##   --level=<id>         level to play (default: the first one); locks are ignored
@@ -39,7 +45,7 @@ extends Node
 ## The bot plays through the real input pipeline (InputEventAction), so the
 ## same code paths run as for a human player.
 
-enum Mode { NONE, CLEAR, DEFEAT, SHOT, PAUSE, ROUTE, TUTORIAL }
+enum Mode { NONE, CLEAR, DEFEAT, SHOT, PAUSE, ROUTE, TUTORIAL, ENDLESS }
 
 ## Frames drawn before a --snap still is saved (shaders compile, the camera settles).
 const SNAP_FRAMES := 6
@@ -99,6 +105,8 @@ var _frame_times: Array[float] = []
 var _stuck_time := 0.0
 var _last_pos := Vector3.ZERO
 var _tutorial: TutorialBot
+var _endless: EndlessBot
+var scene_override := ""
 
 
 func _ready() -> void:
@@ -115,6 +123,11 @@ func _ready() -> void:
 		elif arg == "--autoplay=tutorial":
 			mode = Mode.TUTORIAL
 			_tutorial = TutorialBot.new(self)
+		elif arg == "--autoplay=endless":
+			mode = Mode.ENDLESS
+			_endless = EndlessBot.new(self)
+		elif arg.begins_with("--scene="):
+			scene_override = arg.trim_prefix("--scene=")
 		elif arg.begins_with("--level="):
 			level_id = StringName(arg.trim_prefix("--level="))
 		elif arg.begins_with("--ring="):
@@ -162,6 +175,10 @@ func _ready() -> void:
 			var kv := arg.trim_prefix("--shot-").split("=")
 			if kv.size() == 2:
 				shot_args[kv[0]] = kv[1]
+	# --scene replaces the endless levels' scene (bot runs and stills).
+	if scene_override != "":
+		for l in GameData.endless_levels():
+			l.scene_path = scene_override
 	print("[dev] mode=%s weapon=%s swap=%s god=%s" % [Mode.keys()[mode], weapon, swap_each_break, god])
 	if snap_prefix != "":
 		# The software renderer draws about a frame a second: only draw the stills.
@@ -181,6 +198,8 @@ func _physics_process(delta: float) -> void:
 	_clock += delta
 	if _clock > max_seconds:
 		print("[dev] TIMEOUT after %.0fs" % _clock)
+		if _endless:
+			_endless.report(true)
 		_quit(2)
 		return
 
@@ -198,6 +217,8 @@ func _physics_process(delta: float) -> void:
 			print("[dev] menu loaded; starting level via Play page")
 			scene._show("play")
 			scene._select_weapon(weapon)
+			if mode == Mode.ENDLESS and level_id == &"" and not GameData.endless_levels().is_empty():
+				level_id = GameData.endless_levels()[0].id
 			if level_id != &"":
 				scene._selected_level = GameData.level(level_id)
 			scene._start()
@@ -262,6 +283,8 @@ func _physics_process(delta: float) -> void:
 
 	if god and _player.health < _player.max_health and _player.alive:
 		_player.health = _player.max_health
+	if _endless:
+		_endless.tick(delta)
 	_min_health = minf(_min_health, _player.health)
 	# A still is being framed: leave the camera where _snap() pointed it.
 	if _snap_hold > 0:
@@ -291,14 +314,15 @@ func _physics_process(delta: float) -> void:
 
 	match _director.state:
 		RunDirector.State.PREP, RunDirector.State.BREAK:
-			_do_break(delta)
+			if _endless == null or not _endless.busy(delta):
+				_do_break(delta)
 		RunDirector.State.WAVE:
 			_break_done = false
 			_break_timer = 0.0
 			if mode == Mode.DEFEAT or (continue_test and _runs == 1):
 				_stop_moving()
 				_release("fire")
-			else:
+			elif _endless == null or not _endless.busy(delta):
 				_do_fight(delta)
 		RunDirector.State.EXTRACTION:
 			_release("fire")
@@ -567,7 +591,9 @@ func _do_break(delta: float) -> void:
 		_tap("buy_damage_boost")
 		await get_tree().physics_frame
 		await get_tree().physics_frame
-	if _director.tickets >= waves.overshield_price and _director.overshield < waves.overshield_amount:
+	# In Endless the gate errand comes first (EndlessBot); the shield keeps a small reserve.
+	var spare := _director.tickets - (EndlessBot.RESERVE if _endless else 0)
+	if spare >= waves.overshield_price and _director.overshield < waves.overshield_amount:
 		_tap("buy_overshield")
 		await get_tree().physics_frame
 		await get_tree().physics_frame
@@ -860,8 +886,8 @@ func _after_run() -> void:
 			rows.append("%s +%dxp %dkills rank %d->%d unlocks=%s" % [row["weapon"].id, row["xp_gained"], row["kills"], row["rank_before"], row["rank_after"], unlocks])
 		var sparks := Wallet.settle(r)
 		var career := Progression.settle(r)
-		print("[dev] RESULT victory=%s difficulty=%s waves=%d/%d kills=%d time=%.0fs hp_left=%d min_hp=%d tickets_left=%d cashed=%d score=%d headshots=%d best_combo=%d switches=%d/%d grades=%s bosses=%d bounties=%d resumed_from=%d can_continue=%s pace=%.2f relief=%.1fs sparks=%d wallet=%d xp=%d level=%d" % [
-			r["victory"], r["difficulty"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_player.health), int(_min_health), _director.tickets, int(r.get("tickets_cashed", 0)),
+		print("[dev] RESULT victory=%s difficulty=%s wave=%d waves=%d/%d kills=%d time=%.0fs hp_left=%d min_hp=%d tickets_left=%d cashed=%d score=%d headshots=%d best_combo=%d switches=%d/%d grades=%s bosses=%d bounties=%d resumed_from=%d can_continue=%s pace=%.2f relief=%.1fs sparks=%d wallet=%d xp=%d level=%d" % [
+			r["victory"], r["difficulty"], r["wave_reached"], r["waves_cleared"], r["total_waves"], r["kills"], r["seconds"], int(_player.health), int(_min_health), _director.tickets, int(r.get("tickets_cashed", 0)),
 			int(r.get("score", 0)), int(r.get("headshots", 0)), int(r.get("best_combo", 0)), _switch_cancels, _switches,
 			"".join(r["grades"]), r["bosses_defeated"], r["bounties_claimed"], r["resumed_from"], r["can_continue"],
 			_director.pacing.average_pace(), _director.pacing.relief_used,
@@ -872,6 +898,8 @@ func _after_run() -> void:
 				_director.enemies_remaining()])
 		for line in rows:
 			print("[dev]   ", line)
+		if _endless:
+			_endless.report(false)
 		if use_ads:
 			print("[dev] aimed down sights for %.0fs" % _aimed_time)
 		print("[dev]   sparks: ", sparks.get("lines", []), " contracts done: ", (career.get("contracts", []) as Array).map(func(e): return e["id"]))

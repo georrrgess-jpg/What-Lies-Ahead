@@ -11,6 +11,11 @@ extends Node
 ## of the Difficulty, and a lost run can be continued from the level's
 ## checkpoint wave. docs/ROUNDS.md describes the rules.
 ##
+## An endless level (LevelData.is_endless()) has no wave list, portal or
+## checkpoint: an EndlessDirector child builds every wave as it comes, scales
+## its zombies, runs the districts, gates, traps and supply drops, and the run
+## ends when the player falls (docs/ENDLESS.md).
+##
 ## The level scene needs:
 ##   - one node in group "player_spawn"   (Marker3D)
 ##   - nodes in group "enemy_spawn"       (Marker3D, outside the main loop)
@@ -125,6 +130,8 @@ var boss: Zombie
 var bounty: Zombie
 var pacing: PacingDirector
 var planner: SpawnPlanner
+## The Endless side of the run (null on a story level).
+var endless: EndlessDirector
 
 var player: Player
 var kiosk: PrizeKiosk
@@ -143,6 +150,7 @@ var _finished := false
 var score: ScoreKeeper
 var _new_best := false
 var _player_start := Vector3.ZERO
+var _wave: WaveData
 # --- the wave in progress ---
 var _wave_total := 0         # enemies in the wave's list
 var _spawned := 0            # of those, how many have spawned
@@ -180,7 +188,7 @@ func _ready() -> void:
 		Game.level = level
 		if Game.weapon_id == &"":
 			Game.weapon_id = Loadout.primary()
-	waves = level.wave_set
+	waves = EndlessDirector.make_wave_set(level) if level.is_endless() else level.wave_set
 	difficulty = Difficulty.current()
 	ensure_station_actions()
 	_zombie_scene = load(ZOMBIE_SCENE)
@@ -212,7 +220,15 @@ func _begin() -> void:
 		player.set_look(spawn.global_rotation.y, 0.0)
 	pacing = PacingDirector.new()
 	planner = SpawnPlanner.new()
-	planner.setup(get_tree().get_nodes_in_group("enemy_spawn"), player)
+	if level.is_endless():
+		endless = EndlessDirector.new()
+		endless.name = "Endless"
+		add_child(endless)
+		endless.setup(self)
+		planner.setup(endless.open_spawns(), player)
+		endless.refresh_bias()
+	else:
+		planner.setup(get_tree().get_nodes_in_group("enemy_spawn"), player)
 	player.died.connect(_on_player_died)
 	player.shield_changed.connect(_on_shield_changed)
 	player.damaged.connect(_on_player_damaged)
@@ -255,6 +271,8 @@ func _begin() -> void:
 	if resumed_from > 0:
 		notice.emit("CHECKPOINT — WAVE %d" % resumed_from, &"banner_wave")
 		notice.emit("Continuing from the checkpoint: rewards -%d%%" % int(round((1.0 - Difficulty.CONTINUE_REWARD_SCALE) * 100.0)), &"info")
+	elif endless:
+		notice.emit("Hold the square. Pay tickets at the gates to open the rest of the city.", &"info")
 	else:
 		notice.emit("Get ready! Follow the marker to the Loadout Station between waves.", &"info")
 	_announce_next()
@@ -329,8 +347,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # --- queries -------------------------------------------------------------------
 
+## Waves in the level (0 for an endless level: they never run out).
 func total_waves() -> int:
-	return waves.waves.size()
+	return 0 if level.is_endless() else waves.waves.size()
 
 
 func enemies_remaining() -> int:
@@ -356,7 +375,7 @@ func heals_left() -> int:
 
 ## The wave in progress (or the last one started); null before wave 1.
 func current_wave() -> WaveData:
-	return waves.waves[wave_number - 1] if wave_number >= 1 and wave_number <= total_waves() else null
+	return _wave if wave_number >= 1 else null
 
 
 ## True at the end of a wave, when nothing is left to spawn and only a few
@@ -378,6 +397,8 @@ func bounty_seconds_left() -> float:
 
 ## Every enemy type that appears in this level's waves.
 func _level_enemies() -> Array:
+	if endless:
+		return endless.all_enemies()
 	var out: Array = []
 	for wave in waves.waves:
 		var ids: Array = wave.spawns.keys()
@@ -396,7 +417,8 @@ func start_next_wave() -> void:
 	if not is_intermission():
 		return
 	wave_number += 1
-	var wave := waves.waves[wave_number - 1]
+	var wave := endless.build_wave(wave_number) if endless else waves.waves[wave_number - 1]
+	_wave = wave
 	_queue = _build_queue(wave)
 	_wave_kills.clear()
 	_spawn_timer = 1.6
@@ -418,7 +440,7 @@ func start_next_wave() -> void:
 	if damage_boost == Boost.READY:
 		_set_damage_boost(Boost.ACTIVE)
 	_set_state(State.WAVE)
-	var final := wave_number == total_waves()
+	var final := not endless and wave_number == total_waves()
 	Sfx.play(&"final_wave" if final else &"wave_start", -2.0)
 	if wave.kind != &"standard" and not final:
 		Sfx.play(StringName("rounds_wave_%s" % wave.kind), -3.0)
@@ -428,6 +450,8 @@ func start_next_wave() -> void:
 		_twist = WaveTwist.new(wave.twist, self)
 		_twist.begin()
 	score.on_wave_started()
+	if endless:
+		endless.on_wave_started(wave_number)
 	wave_started.emit(wave_number, total_waves(), _banner_for(wave, final))
 
 
@@ -445,8 +469,9 @@ func _banner_for(wave: WaveData, final: bool) -> String:
 ## The round chip during an intermission: the tier and the wave coming next.
 func _announce_next() -> void:
 	var text := Difficulty.label(difficulty)
-	if wave_number < total_waves() and waves.waves[wave_number].title != "":
-		text += "  ·  NEXT: " + waves.waves[wave_number].title
+	var next := endless.title_of(wave_number + 1) if endless else (waves.waves[wave_number].title if wave_number < total_waves() else "")
+	if next != "":
+		text += "  ·  NEXT: " + next
 	notice.emit(text, &"round")
 
 
@@ -480,7 +505,7 @@ func _build_queue(wave: WaveData) -> Array[StringName]:
 
 
 func _tick_wave(delta: float) -> void:
-	var wave := waves.waves[wave_number - 1]
+	var wave := _wave
 	# Drop anything that was freed behind our back so it cannot hold the wave open.
 	for i in range(_alive.size() - 1, -1, -1):
 		if not is_instance_valid(_alive[i]) or _alive[i].is_dead():
@@ -535,6 +560,8 @@ func _spawn(enemy_id: StringName, wave: WaveData, point: Node3D, spread := 1.0) 
 		return null
 	var z: Zombie = _zombie_scene.instantiate()
 	z.setup(data, player, wave.speed_scale)
+	if endless:
+		endless.prepare(z, wave_number)
 	if _twist:
 		_twist.on_spawn(z)
 	var offset := Vector3(randf_range(-spread, spread), 0.0, randf_range(-spread, spread))
@@ -611,7 +638,8 @@ func _spawn_boss(wave: WaveData) -> void:
 	var z := _spawn(wave.boss, wave, planner.pick(SpawnPlanner.Role.MAIN), 0.0)
 	if z == null:
 		return
-	z.set_rank(Zombie.RANK_BOSS, Difficulty.boss_health_scale() / Difficulty.enemy_health_scale(), BOSS_TINT)
+	var health := endless.boss_rank_scale(z, wave_number) if endless else Difficulty.boss_health_scale() / Difficulty.enemy_health_scale()
+	z.set_rank(Zombie.RANK_BOSS, health, BOSS_TINT)
 	z.phase_reached.connect(_on_boss_phase)
 	for b in z.behaviours:
 		if b is AlphaBossBehaviour:
@@ -679,7 +707,7 @@ func _spawn_bounty(wave: WaveData) -> void:
 ## Points on the navmesh in a ring around the loadout station: the arena the
 ## player fights in, where a bounty target runs its laps.
 func _arena_ring(radius: float, count: int) -> PackedVector3Array:
-	var centre := kiosk.global_position if kiosk else _player_start
+	var centre := endless.arena_centre() if endless else (kiosk.global_position if kiosk else _player_start)
 	var map := player.get_world_3d().navigation_map
 	var out := PackedVector3Array()
 	for i in count:
@@ -737,8 +765,9 @@ func _on_player_damaged(amount: float, _source: Vector3) -> void:
 func _on_zombie_died(z: Zombie, weapon_id: StringName) -> void:
 	_alive.erase(z)
 	total_kills += 1
-	tickets += z.data.tickets
-	_wave_tickets += z.data.tickets
+	var paid := endless.kill_tickets(z, wave_number) if endless else z.data.tickets
+	tickets += paid
+	_wave_tickets += paid
 	if ticket_scale > 1.0:
 		var extra := int(round(z.data.tickets * (ticket_scale - 1.0)))
 		tickets += extra
@@ -808,7 +837,10 @@ func _end_wave() -> void:
 	_commit()
 	wave_cleared.emit(wave_number, total_waves())
 	Events.wave_cleared.emit(wave_number, total_waves())
-	if wave_number >= total_waves():
+	if endless:
+		endless.on_wave_cleared(wave_number)
+		_begin_break()
+	elif wave_number >= total_waves():
 		_begin_extraction()
 	else:
 		_begin_break()
@@ -831,8 +863,11 @@ func _pay_wave_grade() -> void:
 
 func _begin_break() -> void:
 	heals_this_break = 0
-	var next := waves.waves[wave_number]
-	countdown = next.rest_before if next.rest_before > 0.0 else waves.break_seconds
+	if endless:
+		countdown = endless.rest_before(wave_number + 1)
+	else:
+		var next := waves.waves[wave_number]
+		countdown = next.rest_before if next.rest_before > 0.0 else waves.break_seconds
 	_set_state(State.BREAK)
 	var gained := player.weapons.refill_fraction(waves.break_refill_fraction)
 	var healed := player.heal(Difficulty.value("wave_heal")) if player.health < player.max_health else 0.0
@@ -885,6 +920,9 @@ func _on_player_died() -> void:
 	# Past the checkpoint the run can be continued from it (see Game.continue_run).
 	if waves.checkpoint_wave > 1 and wave_number >= waves.checkpoint_wave:
 		Game.checkpoint_wave = waves.checkpoint_wave
+	# An endless run always ends here: what is left in the pocket is score.
+	if endless:
+		_cash_in_tickets()
 	_commit()
 	Sfx.play(&"defeat", 0.0)
 	_finish(false)
@@ -1000,6 +1038,19 @@ static func ensure_station_actions() -> void:
 			InputMap.action_add_event(action, e)
 
 
+## Pays `amount` tickets from outside the station (a supply crate), with a
+## popup `label` at `at`.
+func add_tickets(amount: int, label: String, at: Vector3) -> void:
+	tickets += amount
+	tickets_changed.emit(tickets)
+	Fx.ticket_popup(get_parent(), at, amount, label)
+
+
+## Spends tickets at a gate or trap (false, with the usual denial, if short).
+func spend_tickets(price: int) -> bool:
+	return _spend(price)
+
+
 func _spend(price: int) -> bool:
 	if tickets < price:
 		Sfx.play(&"deny", -4.0)
@@ -1103,7 +1154,7 @@ func result() -> Dictionary:
 		"total_waves": total_waves(),
 		"kills": total_kills,
 		"seconds": elapsed,
-		"best_wave": Profile.best_wave(level.id),
+		"best_wave": EndlessRecords.best_wave() if endless else Profile.best_wave(level.id),
 		"weapons": weapon_rows,
 		"score": score.score if score else 0,
 		"best_score": Profile.best_score(level.id),
@@ -1122,6 +1173,7 @@ func result() -> Dictionary:
 		"grades": _grades.duplicate(),
 		"bosses_defeated": _bosses_defeated,
 		"bounties_claimed": _bounties_claimed,
+		"endless": endless.result() if endless else {},
 	}
 
 
@@ -1133,8 +1185,10 @@ func _finish(victory: bool) -> void:
 	# A multi-kill still counting down belongs to this run's score.
 	score.flush()
 	_new_best = Profile.record_score(level.id, score.score)
-	Profile.save_profile()
 	var data := result()
+	if endless:
+		data["endless"]["new_best_score"] = EndlessRecords.record(data)
+	Profile.save_profile()
 	run_finished.emit(data)
 	Events.run_finished.emit(data)
 	await get_tree().create_timer(0.9 if victory else 1.6).timeout
@@ -1158,6 +1212,8 @@ func _settle_abandoned() -> void:
 	_freeze_player()
 	var data := result()
 	data["abandoned"] = true
+	if endless:
+		EndlessRecords.record(data)
 	Events.run_finished.emit(data)
 	_commit()
 

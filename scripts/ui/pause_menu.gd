@@ -111,7 +111,8 @@ func _run_board() -> Control:
 	var chips := HBoxContainer.new()
 	chips.add_theme_constant_override("separation", UiKit.GAP_S)
 	col.add_child(chips)
-	chips.add_child(UiKit.chip("WAVE %d OF %d" % [maxi(1, _director.wave_number), _director.total_waves()], UiKit.CYAN, 22))
+	var total := _director.total_waves()
+	chips.add_child(UiKit.chip("WAVE %d OF %d" % [maxi(1, _director.wave_number), total] if total > 0 else "WAVE %d" % maxi(1, _director.wave_number), UiKit.CYAN, 22))
 	chips.add_child(UiKit.chip(Difficulty.label(Difficulty.current()), UiKit.AMBER, 22))
 	var objective := String(_director.hud.objective_text()) if _director.hud and _director.hud.has_method("objective_text") else ""
 	if objective != "":
