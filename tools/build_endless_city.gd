@@ -483,6 +483,15 @@ func _build_precinct() -> void:
 	_visual_box(dressing, "StationPorch", Vector3(3.0, 0.4, 12.0), front + Vector3(-1.5, 5.2, 0), concrete)
 	_omni(fx, "StationLamp", front + Vector3(1.2, 4.2, 0), Color(0.35, 0.55, 1.0), 1.6, 9.0)
 	_label(dressing, "StationName", "PRECINCT 9", front + Vector3(0.48, 7.2, 0), 90.0, 240, Color(0.85, 0.92, 1.0))
+	# Relief on the station's face: pilasters, cornices, a blue band.
+	var trim := _surface("precinct_trim", ["city_concrete"], Color(0.78, 0.8, 0.86), 0.3, 0.85)
+	var blue := _mat("precinct_band", Color(0.12, 0.22, 0.55), 0.5)
+	for side in [-1.0, 1.0]:
+		var zc: float = side * 13.5
+		for z in [3.6, 8.5, 13.5, 18.5, 23.4]:
+			_visual_box(dressing, "Pilaster%d" % int(side * z), Vector3(0.4, 15.6, 0.8), front + Vector3(0.1, 7.8, side * z), trim)
+		for band in [[4.5, 0.45, trim], [10.2, 0.35, trim], [15.7, 0.6, trim], [3.9, 0.5, blue]]:
+			_visual_box(dressing, "Cornice%d_%d" % [int(side), int(band[0] * 10)], Vector3(0.5, band[1], 21.0), front + Vector3(0.15, band[0], zc), band[2])
 
 
 ## A fallen slab of facade: tilted concrete with a window row, chest-high
@@ -495,13 +504,47 @@ func _fallen_slab(parent: Node3D, slab_name: String, pos: Vector3, size: Vector3
 	holder.rotation.y = deg_to_rad(yaw)
 	var mi := MeshInstance3D.new()
 	mi.name = "Slab"
-	mi.mesh = _box_mesh(size, _facade_material(slab_name.hash()))
+	mi.mesh = _slab_mesh(size, slab_name.hash())
 	mi.rotation.x = deg_to_rad(tilt)
 	mi.position.y = size.z * 0.5 * sin(deg_to_rad(tilt)) + size.y * 0.3
 	holder.add_child(mi)
+	# Broken concrete heaped round its foot.
+	var foot := holder.transform * Vector3(0, 0, -size.z * 0.5 * cos(deg_to_rad(tilt)) - 0.4)
+	for k in 9:
+		var p := foot + holder.basis * Vector3(_rng.randf_range(-size.x * 0.55, size.x * 0.55), 0.05, _rng.randf_range(-0.9, 0.5))
+		var sc := _rng.randf_range(1.2, 2.6)
+		var shade := _rng.randf_range(0.45, 0.7)
+		_instance("chunk", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled_local(Vector3(sc, sc, sc)), p), Color(shade, shade * 0.96, shade * 0.92))
 	var height := size.z * sin(deg_to_rad(tilt)) + size.y
 	_collider(holder, "Collision", Vector3(size.x, height, size.z * cos(deg_to_rad(tilt)) + size.y * 0.5), Vector3(0, height * 0.5, 0))
 	_player_block(holder, "Cap", Vector3(size.x, 3.0, size.z), Vector3(0, height + 1.5, 0))
+
+
+## A slab of facade torn off a building: concrete body, the facade's windows
+## on its face, rebar bent out of both broken ends (one merged mesh).
+func _slab_mesh(size: Vector3, seed: int) -> Mesh:
+	var key := "slab_%s_%d" % [size, absi(seed) % 3]
+	if _meshes.has(key):
+		return _meshes[key]
+	var concrete := _surface("slab_concrete", ["city_concrete"], Color(0.62, 0.58, 0.56), 0.35, 0.9)
+	var rebar := _mat("rebar", Color(0.32, 0.17, 0.1), 0.7)
+	var body := BoxMesh.new()
+	body.size = size
+	var face := BoxMesh.new()
+	face.size = Vector3(size.x - 0.2, 0.04, size.z - 0.2)
+	var rod := BoxMesh.new()
+	rod.size = Vector3(0.05, 0.05, 1.0)
+	var parts: Array = [[body, Transform3D(), concrete], [face, Transform3D(Basis(), Vector3(0, size.y * 0.5 + 0.02, 0)), _facade_material(seed)]]
+	for end in [-1.0, 1.0]:
+		for k in 5:
+			var x := (k - 2) * size.x * 0.2
+			var bend := Basis(Vector3.UP, _rng.randf_range(-0.5, 0.5)) * Basis(Vector3.RIGHT, _rng.randf_range(-0.6, 0.4))
+			var length := _rng.randf_range(0.5, 1.3)
+			var tip := Vector3(x, _rng.randf_range(-0.15, 0.15), end * (size.z * 0.5 + length * 0.45))
+			parts.append([rod, Transform3D(bend.scaled_local(Vector3(1, 1, length)), tip), rebar])
+	var mesh := Batch.compound(parts)
+	_meshes[key] = mesh
+	return mesh
 
 
 ## A light bar's light: the environment script swaps it red and blue.
@@ -1745,11 +1788,11 @@ func _instance_mesh(kind: String) -> Mesh:
 			c.material = _tinted("cable", 0.8)
 			return c
 		"sandbag":
-			var s := CapsuleMesh.new()
-			s.radius = 0.2
-			s.height = 0.8
-			s.radial_segments = 8
-			s.rings = 2
+			var s := SphereMesh.new()
+			s.radius = 0.5
+			s.height = 1.0
+			s.radial_segments = 10
+			s.rings = 5
 			s.material = _tinted("sandbag", 0.95, 0.0, "city_grime", 1.0)
 			return s
 		"bag":
@@ -1913,9 +1956,9 @@ func _sandbags(a: Vector3, b: Vector3, rows: int) -> void:
 			var t := (i + 0.5 + (0.5 if row % 2 == 1 else 0.0)) * 0.78
 			if t > length - 0.3:
 				continue
-			var p := a + dir * t + Vector3(0, 0.15 + row * 0.27, 0)
-			var basis := Basis(Vector3.UP, yaw + _rng.randf_range(-0.12, 0.12)) * Basis(Vector3.FORWARD, PI * 0.5)
-			basis = basis.scaled_local(Vector3(0.75, 1.0, 1.15))
+			var p := a + dir * t + Vector3(0, 0.13 + row * 0.23, 0)
+			var basis := Basis(Vector3.UP, yaw + _rng.randf_range(-0.12, 0.12)) * Basis(Vector3.RIGHT, _rng.randf_range(-0.08, 0.08))
+			basis = basis.scaled_local(Vector3(0.8, 0.27, 0.46))
 			var shade := _rng.randf_range(0.85, 1.05)
 			_instance("sandbag", Transform3D(basis, p), Color(0.72 * shade, 0.62 * shade, 0.44 * shade))
 
@@ -1925,15 +1968,31 @@ func _litter(rect: Rect2, y: float, papers: int, chunks: int) -> void:
 	var paper_tints := [Color(0.92, 0.9, 0.82), Color(0.8, 0.78, 0.72), Color(0.95, 0.75, 0.8), Color(0.75, 0.86, 0.95), Color(0.98, 0.92, 0.6)]
 	for i in papers:
 		var p := Vector3(_rng.randf_range(rect.position.x, rect.end.x), y + 0.035, _rng.randf_range(rect.position.y, rect.end.y))
+		if _over_hole(p):
+			continue
 		var basis := Basis(Vector3.UP, _rng.randf() * TAU) * Basis(Vector3.RIGHT, _rng.randf_range(-0.15, 0.15))
 		_instance("paper", Transform3D(basis, p), paper_tints[_rng.randi() % paper_tints.size()])
 	for i in chunks:
 		var p := Vector3(_rng.randf_range(rect.position.x, rect.end.x), y + 0.05, _rng.randf_range(rect.position.y, rect.end.y))
+		if _over_hole(p):
+			continue
 		var basis := Basis(Vector3.UP, _rng.randf() * TAU) * Basis(Vector3.RIGHT, _rng.randf_range(-0.3, 0.3))
 		var s := _rng.randf_range(0.5, 1.2)
 		var shade := _rng.randf_range(0.35, 0.75)
 		var c := Color(shade, shade * 0.95, shade * 0.92) if _rng.randf() < 0.7 else Color(0.62, 0.3, 0.22)
 		_instance("chunk", Transform3D(basis.scaled_local(Vector3(s, s * 0.8, s)), p), c)
+
+
+## True over the stairwells' openings in the street (nothing to lie on).
+func _over_hole(p: Vector3) -> bool:
+	if p.y < UNDERGROUND_Y:
+		return false
+	var holes := [Rect2(-STAIR_HALF - 0.6, -SQ - 0.6, STAIR_HALF * 2.0 + 1.2, SQ + STAIR_TOP_Z + 1.2),
+		Rect2(TOWER.position.x - 0.6, EXIT_Z.x - 0.6, EXIT_TOP_X - TOWER.position.x + 1.2, EXIT_Z.y - EXIT_Z.x + 1.2)]
+	for h in holes:
+		if (h as Rect2).has_point(Vector2(p.x, p.z)):
+			return true
+	return false
 
 
 ## Bins and bin bags along a wall from `a` to `b` (some bins knocked over).
@@ -1984,7 +2043,7 @@ func _crosswalk(centre: Vector3, yaw: float, count: int) -> void:
 	var basis := Basis(Vector3.UP, deg_to_rad(yaw))
 	for i in count:
 		var off := basis * Vector3((i - (count - 1) * 0.5) * 0.9, 0, 0)
-		var worn := _rng.randf_range(0.55, 0.85)
+		var worn := _rng.randf_range(0.38, 0.6)
 		_instance("paint", Transform3D(basis.scaled_local(Vector3(0.5, 1.0, 3.2)), centre + off + Vector3(0, 0.025, 0)), Color(worn, worn * 0.96, worn * 0.9))
 
 
@@ -2004,7 +2063,7 @@ func _graffiti(text: String, pos: Vector3, normal: Vector3, color: Color, font_s
 
 func _build_streets() -> void:
 	# Ashfall Square: crossings over the ring road, manholes (two steaming).
-	for c in [[Vector3(0, 0, -16.5), 90.0], [Vector3(0, 0, 16.5), 90.0], [Vector3(-16.5, 0, 0), 0.0], [Vector3(16.5, 0, 0), 0.0]]:
+	for c in [[Vector3(-8.5, 0, -16.5), 90.0], [Vector3(0, 0, 16.5), 90.0], [Vector3(-16.5, 0, 0), 0.0], [Vector3(16.5, 0, 0), 0.0]]:
 		_crosswalk(c[0], c[1], 7)
 	for c in [[Vector3(-46.0, 0, 0.5), 0.0], [Vector3(-30.0, 0, 0.0), 0.0]]:
 		_crosswalk(c[0], c[1], 6)
@@ -2079,9 +2138,42 @@ func _build_story() -> void:
 	_graffiti("STAY INSIDE", Vector3(87.0, 3.0, -8.0), Vector3(0, 0, 1), Color(0.3, 0.95, 1.0), 72)
 	_graffiti("ON AIR", Vector3(93.95, 3.6, -48.0), Vector3(-1, 0, 0), Color(1.0, 0.2, 0.2), 90)
 	# Cars that ran into storefronts, nose first, still burning.
-	_storefront_crash("CrashSquare", "city_taxi_wreck", Vector3(24.0, 0, 15.0), 14.0, Vector3(-1, 0, 0))
-	_storefront_crash("CrashPrecinct", "city_car_burnt", Vector3(-44.0, 0, -26.0), 100.0, Vector3(0, 0, 1))
-	_storefront_crash("CrashTower", "city_car_burnt_b", Vector3(96.2, 0, -30.0), 172.0, Vector3(-1, 0, 0))
+	# Cars run into the walls at the far ends of the alleys (behind the
+	# zombies' entrances: seen from the street, never in anyone's way).
+	_alley_crash("CrashSquareSE", "city_taxi_wreck", Vector3(15.5, 0, 34.0), Vector3(0, 0, 1), 28.0)
+	_alley_crash("CrashSquareNW", "city_car_burnt", Vector3(-15.5, 0, -34.0), Vector3(0, 0, -1), -24.0)
+	_alley_crash("CrashPrecinctS", "city_car_burnt_b", Vector3(-54.0, 0, 36.0), Vector3(0, 0, 1), 18.0)
+	_alley_crash("CrashTowerE", "city_car_burnt", Vector3(106.0, 0, -46.0), Vector3(1, 0, 0), -22.0)
+	# Billboards on the roofs round the square, lit from below.
+	_roof_billboard("BillboardNorth", Vector3(-4.0, 22.0, -26.0), 0.0)
+	_roof_billboard("BillboardSouth", Vector3(9.0, 18.0, 25.0), 180.0)
+	_roof_billboard("BillboardMarket", Vector3(80.0, 16.0, 11.0), 180.0)
+	# Broadcast plaza: the mast's base taped off and floodlit, wreckage of
+	# the skyscraper heaped along its foot.
+	var mast := Vector3(TOWER.get_center().x + 4.0, 0, -48.0)
+	var corners := [Vector3(-4.2, 0, -4.2), Vector3(4.2, 0, -4.2), Vector3(4.2, 0, 4.2), Vector3(-4.2, 0, 4.2)]
+	for k in 4:
+		_tape_line(mast + corners[k], mast + corners[(k + 1) % 4], k + 7)
+	_floodlight("MastFloodW", mast + Vector3(-7.0, 0, 5.0), mast + Vector3(0, 0, 0))
+	_floodlight("MastFloodE", mast + Vector3(8.0, 0, -6.0), mast + Vector3(0, 0, 0))
+	_scorches.append(Vector3(70.0, 7.0, -64.0))
+	_scorches.append(Vector3(60.0, 5.0, -45.0))
+	for x in range(47, 94, 2):
+		if x > 65 and x < 75:
+			continue
+		for k in 3:
+			var shade := _rng.randf_range(0.4, 0.68)
+			var sc := _rng.randf_range(1.0, 3.2)
+			var p := Vector3(float(x) + _rng.randf_range(-1.0, 1.0), 0.05, -71.4 + _rng.randf_range(0.0, 1.4))
+			_instance("chunk", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled_local(Vector3(sc, sc, sc)), p), Color(shade, shade * 0.95, shade * 0.9))
+
+
+## The kit's torn billboard on a roof, facing `yaw`, with a lamp on it.
+func _roof_billboard(board_name: String, pos: Vector3, yaw: float) -> void:
+	var node := _kit(dressing, "city_billboard_torn", board_name, pos, yaw, Vector3(6.0, 7.0, 0.6))
+	node.scale = Vector3.ONE * 1.4
+	var forward := Basis(Vector3.UP, deg_to_rad(yaw)) * Vector3(0, 0, 1)
+	_wall_glow(pos + Vector3(0, 4.5, 0) + forward * 0.5, forward, 4.5, Color(1.0, 0.75, 0.45), 0.25)
 
 
 ## A raised boom barrier (striped arm) on a post at `pos`.
@@ -2113,20 +2205,31 @@ func _floodlight(flood_name: String, pos: Vector3, target: Vector3) -> void:
 	_pool(target.lerp(Vector3(pos.x, 0, pos.z), 0.35), 6.0, Color(1.0, 0.92, 0.75), false, 0.32)
 
 
-## A car run into a storefront: the kit wreck nose-first into the block face
-## (`out`: the way the face looks), tipped up on the kerb, burning.
-func _storefront_crash(crash_name: String, model: String, pos: Vector3, yaw: float, out: Vector3) -> void:
-	var node := _kit(dressing, model, crash_name, pos, yaw, Vector3(4.3, 1.45, 2.0))
-	node.rotation.x = deg_to_rad(5.0)
+## A car run nose-first into the wall at the end of an alley (`end`: the
+## wall at ground level, `away`: the alley's direction out of the street,
+## `angle`: degrees off straight), burning, the wall scorched above it.
+func _alley_crash(crash_name: String, model: String, end: Vector3, away: Vector3, angle: float) -> void:
+	var d := Basis(Vector3.UP, deg_to_rad(angle)) * away
+	var yaw := rad_to_deg(atan2(-d.z, d.x))
+	var centre := end - d * 2.3
+	var node := _kit(dressing, model, crash_name, centre, yaw, Vector3(4.3, 1.45, 2.0))
+	node.rotation.z = deg_to_rad(-4.0)
 	var spots := _empties(node, "Fire")
 	if spots.is_empty():
-		spots.append(pos + Vector3(0, 1.1, 0))
-	_fire_at(fx, crash_name + "Fire", spots[0] + out * 0.3, 2.2, true, 3.2)
-	_fire_at(fx, crash_name + "Inside", pos - out * 1.8 + Vector3(0, 0.6, 0), 1.6, false)
-	_smoke(fx, crash_name + "Smoke", pos - out * 1.0 + Vector3(0, 2.0, 0), 0.24)
-	_sparks(fx, crash_name + "Sparks", pos + out * 1.2 + Vector3(0, 2.6, 0), 2.4)
-	_scorches.append(Vector3(pos.x + out.x * 2.0, 3.0, pos.z + out.z * 2.0))
-	_wall_glow(pos + out * 0.3 + Vector3(0, 3.5, 0), out, 4.0, Color(1.0, 0.45, 0.15), 0.4)
+		spots.append(centre + Vector3(0, 1.2, 0))
+	_fire_at(fx, crash_name + "Fire", spots[0], 2.0, true, 3.0)
+	_fire_at(fx, crash_name + "Nose", end - d * 0.6 + Vector3(0, 0.5, 0), 1.3, false, 0.0, true)
+	_smoke(fx, crash_name + "Smoke", end - away * 0.8 + Vector3(0, 1.5, 0), 0.22)
+	_sparks(fx, crash_name + "Sparks", end - away * 0.1 + Vector3(0, 3.0, 0), 2.6)
+	_scorches.append(Vector3(centre.x, 3.2, centre.z))
+	_wall_glow(end - away * 0.05 + Vector3(0, 2.8, 0), -away, 3.6, Color(1.0, 0.45, 0.15), 0.45)
+	var side := Vector3(-away.z, 0, away.x)
+	for k in 12:
+		var p := end - away * _rng.randf_range(0.2, 1.6) + side * _rng.randf_range(-2.0, 2.0) + Vector3(0, 0.05, 0)
+		var sc := _rng.randf_range(1.0, 2.4)
+		var c := Color(0.62, 0.3, 0.22) if k % 3 == 0 else Color(0.5, 0.48, 0.46)
+		_instance("chunk", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled_local(Vector3(sc, sc, sc)), p), c)
+
 
 
 ## Water tanks, air conditioners and masts on the roofs (silhouettes against
@@ -2285,6 +2388,13 @@ func _build_metro_life() -> void:
 	tube.rotation.z = deg_to_rad(18.0)
 	tube.add_to_group("city_neon_flicker", true)
 	_sparks(fx, "LooseTubeSparks", Vector3(9.2, HALL_CEILING - 1.4, -34.5), 1.6)
+	# Lamps down the stairs from the square.
+	for s in [-1.0, 1.0]:
+		var lamp_pos := Vector3(s * (STAIR_HALF - 0.05), -2.2, -21.0)
+		var lamp := _visual_box(dressing, "StairLamp%s" % ("W" if s < 0 else "E"), Vector3(0.1, 0.3, 0.9), lamp_pos, _mat("stair_lamp", Color(1.0, 0.9, 0.7), 0.3, Color(1.0, 0.82, 0.55), 2.2))
+		lamp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_wall_glow(lamp_pos, Vector3(-s, 0, 0), 2.0, Color(1.0, 0.75, 0.45), 0.16)
+	_omni(fx, "StairLight", Vector3(0, -1.8, -21.0), Color(1.0, 0.78, 0.52), 1.2, 8.0)
 	# Puddled leaks under the ceiling cracks.
 	_steam(Vector3(-20.0, y0, -29.0), Color(0.6, 0.65, 0.7), 0.18)
 
