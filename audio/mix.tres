@@ -216,7 +216,12 @@ sound_category = Dictionary[StringName, StringName]({
 &"gn8_twister_fire": &"weapon",
 &"gn8_dunk_fire": &"weapon",
 &"gn8_twister_whirl": &"impact",
-&"gn8_twister_pop": &"impact"
+&"gn8_twister_pop": &"impact",
+&"end_": &"cue",
+&"city_endless_loop": &"music",
+&"city_endless_final": &"music",
+&"city_ambience": &"ambience",
+&"city_fire_crackle": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -268,5 +273,15 @@ sound_trim_db = Dictionary[StringName, float]({
 &"menu_theme": 3.0,
 &"ui_click": 3.0,
 &"rounds_surge_siren": -4.0,
-&"onb_ding": -4.0
+&"onb_ding": -4.0,
+&"end_boss_siren": 1.0,
+&"end_district_enter": -2.0,
+&"end_gate_denied": -2.0,
+&"end_gate_open": 1.0,
+&"end_gate_sting": 2.0,
+&"end_new_best": 2.0,
+&"end_supply_incoming": -3.5,
+&"end_supply_land": -0.5,
+&"end_trap_ready": -5.0,
+&"end_trap_shock": 0.5
 })

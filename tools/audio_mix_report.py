@@ -416,10 +416,11 @@ def call_sites(names):
 def levels():
     defaults = {k: float(v) for k, v in re.findall(r"@export var (\w+_volume_db) := (-?[\d.]+)", read("scripts/data/level_data.gd"))}
     out = []
-    for path in sorted(glob.glob(os.path.join(ROOT, "data/levels/*.tres"))):
+    for path in sorted(glob.glob(os.path.join(ROOT, "data/levels/*.tres")) + glob.glob(os.path.join(ROOT, "data/endless/*.tres"))):
         if path.endswith("_waves.tres"):
             continue
         text = open(path, encoding="utf-8").read()
+        text = text[text.find("[resource]"):]  # the level itself, not its sub-resources (Endless districts)
         lv = {"id": re.search(r'^id = &"(\w+)"', text, re.M).group(1)}
         for key in ("music", "ambience", "music_final"):
             m = re.search(r'^%s = &"(\w+)"' % key, text, re.M)
