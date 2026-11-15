@@ -424,16 +424,22 @@ func _build_rotunda() -> void:
 				_recolor(pillar, "PillarLed", _glow_mat("led_amber", Color(1.0, 0.68, 0.3), 2.6))
 			var c := _collider(geo, "PillarCol%d%s" % [int(centre), "A" if s < 0 else "B"], Vector3(1.6, 9.0, 1.8), p + Vector3(0, 4.5, 0))
 			c.rotation.y = -a
-	# Behind the jamb pillars: solid fills between the rotunda wall and the core
-	# walls (that space has no floor; nobody may squeeze into it).
+	# Behind the jamb pillars: solid, visible fills between the rotunda wall and
+	# the core walls (that space has no floor; nobody may squeeze into it, and
+	# the passage must not show the void and the porthole tanks' backs).
+	var jamb_wall := _wall_mat()
 	for centre in [0.0, 90.0, 180.0]:
 		var ac := deg_to_rad(centre)
 		var radial := Vector3(cos(ac), 0, sin(ac))
 		var side := Vector3(-radial.z, 0, radial.x)
 		for s in [-1.0, 1.0]:
-			var fill := _collider(geo, "JambFill%d%s" % [int(centre), "A" if s < 0 else "B"], Vector3(2.4, 6.0, 1.9),
-				radial * 12.85 + side * s * 4.8 + Vector3(0, 3.0, 0))
+			var tag := "%d%s" % [int(centre), "A" if s < 0 else "B"]
+			# Behind the pillar, then a return from the pillar's back half to the
+			# core face (the pillar's front half stands proud of it).
+			var fill := _box(geo, "JambFill" + tag, Vector3(1.6, 6.0, 1.9), radial * 12.85 + side * s * 5.2 + Vector3(0, 3.0, 0), jamb_wall)
 			fill.rotation.y = -ac + PI * 0.5
+			var ret := _box(geo, "JambReturn" + tag, Vector3(0.8, 6.0, 0.8), radial * 13.4 + side * s * 4.0 + Vector3(0, 3.0, 0), jamb_wall)
+			ret.rotation.y = -ac + PI * 0.5
 	# Floor inlay rings around the station (scenery).
 	var inlay := _node(dressing, "FloorInlay")
 	_flat_ring(inlay, "RingOuter", 10.6, 10.85, _glow_mat("inlay_cyan", Color(0.2, 0.85, 1.0), 1.2))
@@ -1000,7 +1006,7 @@ func _build_lobby() -> void:
 	_collider(lobby, "ShopCounter", Vector3(1.8, 1.0, 0.7), Vector3(2.8, 0.5, MEZZ_Z + 2.6))
 	_collider(lobby, "ShopBack", Vector3(17.0, MEZZ_Y, 0.3), Vector3(0, MEZZ_Y * 0.5, Z1 - 0.1))
 	# Touch pool at the west end of the lobby (long axis north-south).
-	_prop(lobby, "aqua_touch_pool", "TouchPool", Vector3(-19.0, 0, 18.0), 90.0, Vector3(6.4, 0.8, 3.8))
+	var pool := _prop(lobby, "aqua_touch_pool", "TouchPool", Vector3(-19.0, 0, 18.0), 90.0, Vector3(6.4, 0.8, 3.8))
 	# Stadium-shaped collision (a box plus two round ends; shapes are never scaled).
 	_collider(lobby, "TouchPoolCol", Vector3(3.9, 0.8, 3.2), Vector3(-19.0, 0.4, 18.0))
 	for e in [-1.0, 1.0]:
@@ -1014,9 +1020,16 @@ func _build_lobby() -> void:
 		ec.height = 0.8
 		es.shape = ec
 		end.add_child(es)
-	var water := level.find_child("TouchWater", true, false)
+	# Clear, lit water so the stars, urchins and anemones on the bed show (the
+	# model's own water is an opaque glow). Saved as an editable-instance override.
+	var touch_water := _mat("touch_water", Color(0.3, 0.85, 0.95, 0.38), 0.05, Color(0.1, 0.55, 0.65), 0.35)
+	touch_water.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	touch_water.metallic_specular = 0.9
+	var water := pool.find_child("TouchWater*", true, false)    # imported as TouchWater_001
 	if water is MeshInstance3D:
-		(water as MeshInstance3D).material_override = _water_mat("water_touch", 0.0, 0.6, {"density": 0.6, "max_distance": 1.0})
+		(water as MeshInstance3D).material_override = touch_water
+		(water as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_editable.append(pool)
 	# Hanging whale sculpture over the lobby, swimming toward the rotunda.
 	var whale := _prop(dressing, "aqua_whale", "Whale", Vector3(-6.2, 5.6, 17.9), 104.0, Vector3(2, 2, 9))
 	whale.rotation.z = deg_to_rad(4.0)
