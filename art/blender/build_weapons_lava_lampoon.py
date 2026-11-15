@@ -112,7 +112,7 @@ def build_lava_lampoon():
         # Stubby magma-orange receiver on a basalt belly.
         loft("Body", [(-0.115, 0.042, 0.04, 0.032, 0.018), (-0.06, 0.048, 0.047, 0.03, 0.022), (0.12, 0.048, 0.047, 0.03, 0.022),
                       (0.19, 0.04, 0.038, 0.034, 0.018)], M["shell"]),
-        box("Belly", (0.09, 0.27, 0.03), (0, 0.04, -0.016), bevel=0.01, m=basalt),
+        box("Belly", (0.09, 0.24, 0.02), (0, 0.03, -0.01), bevel=0.008, m=basalt),
         box("TopDeck", (0.07, 0.2, 0.01), (0.008, 0.03, 0.077), bevel=0.004, m=basalt),
         # The lamp's sponson: a basalt shelf under the overhang on the left.
         box("Sponson", (0.05, 0.08, 0.022), (lx, ly, SOCKET_Z - 0.008), bevel=0.008, m=basalt),
@@ -134,9 +134,9 @@ def build_lava_lampoon():
         sphere("ForegripKnob", 0.026, (0, fore[1], fore[2] - 0.062), scale=(1, 1, 0.6), m=M["pink"], segs=14, rings=8),
         # Short stock with a magenta butt pad.
         box("StockNeck", (0.05, 0.06, 0.05), (0, -0.13, 0.02), bevel=0.012, m=M["dark"]),
-        box("Stock", (0.056, 0.05, 0.07), (0, -0.165, 0.012), bevel=0.016, m=M["shell"]),
-        box("ButtPad", (0.06, 0.012, 0.074), (0, -0.193, 0.012), bevel=0.006, m=M["dark"]),
-        box("ButtStripe", (0.062, 0.013, 0.012), (0, -0.193, 0.03), bevel=0.003, m=M["pink"]),
+        box("Stock", (0.052, 0.05, 0.07), (0, -0.165, 0.012), bevel=0.016, m=M["shell"]),
+        box("ButtPad", (0.05, 0.012, 0.074), (0, -0.193, 0.012), bevel=0.006, m=M["dark"]),
+        box("ButtStripe", (0.052, 0.013, 0.012), (0, -0.193, 0.03), bevel=0.003, m=M["pink"]),
         # The holographic ammo display's housing on the left flank.
         box("DisplayFrame", (0.006, 0.086, 0.04), (-0.049, -0.07, 0.03), bevel=0.003, m=M["dark"]),
         box("DisplayGlass", (0.003, 0.078, 0.032), (-0.0525, -0.07, 0.03), bevel=0.001, m=mat("DisplayBack", "#0d3a40", rough=0.2, emit=0.6, emit_color="#1fc8b8")),
@@ -158,7 +158,7 @@ def build_lava_lampoon():
     # Vent slits behind the muzzle that glow when it pulses.
     shell += vent_slots("Vent", 0.049, 0.05, 0.095, 0.03, 3, M["dark"], M["cell"], height=0.03, side=1)
     shell += bolts("Pin", [(-0.049, 0.06, 0.0), (0.049, 0.02, 0.05), (-0.049, 0.16, 0.06)], M["steel"], radius=0.006, height=0.006)
-    lug, charm_point = charm_lug(-0.028, -0.165, 0.004, M)
+    lug, charm_point = charm_lug(-0.027, -0.165, 0.004, M)
     shell += lug
     sight_rear, sight_front = sights_notch(0.0, -0.055, 0.095, RAIL_TOP, RAIL_TOP, RAIL_TOP + SIGHT_HEIGHT, M, gap=0.016)
 
