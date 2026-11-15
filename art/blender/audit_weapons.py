@@ -31,7 +31,8 @@ from weapon_kit import CHARM_STANDOFF, RAIL_FLAT  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 WEAPONS = ["pulse_pistol", "ion_carbine", "scatter_blaster", "comet_cannon", "arc_coil", "bumper_lobber", "cryo_beam", "rail_lancer",
            "sparkler", "ring_toss", "drum_popper", "whirligig", "riptide", "toxic_ripsaw",
-           "shutterbug", "balloon_darter", "teacup_twister", "dunk_tank"]
+           "shutterbug", "balloon_darter", "teacup_twister", "dunk_tank",
+           "markdown_marker"]
 REQUIRED = ["Shell", "ArmL", "ArmR", "Decal", "IronSightRear", "IronSightFront",
             "Muzzle", "SightPoint", "SightMount", "EjectPoint", "VentPoint", "CharmPoint", "ElbowL", "ElbowR"]
 # The energy cell and its hologram copy (the Scatter Blaster loads two capsules instead).
