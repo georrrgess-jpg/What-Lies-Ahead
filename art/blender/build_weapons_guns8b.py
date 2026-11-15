@@ -88,9 +88,6 @@ def build_shutterbug():
         sphere("ReadyLight", 0.0045, (-0.028, 0.112, 0.098), m=M["cell"], segs=10, rings=6),
         box("Counter", (0.014, 0.014, 0.004), (-0.029, 0.136, 0.098), bevel=0.0015, m=M["dark"]),
         cyl("WindBoss", 0.009, 0.006, (wind_c[0], wind_c[1], 0.095), segs=14, bevel=0.002, m=M["dark"]),
-        # Strap lugs and a pink strap stub on the right.
-        box("StrapLug", (0.006, 0.014, 0.014), (0.045, 0.142, 0.06), bevel=0.003, m=M["steel"]),
-        box("StrapStub", (0.004, 0.03, 0.012), (0.049, 0.122, 0.06), rot=rad(18, 0, 0), bevel=0.002, m=M["pink"]),
         # Right flank: a vent grille for the flash capacitor.
         box("RightPanel", (0.005, 0.07, 0.03), (0.044, 0.07, 0.024), bevel=0.003, m=M["dark"]),
     ]
@@ -119,7 +116,7 @@ def build_shutterbug():
             shell.append(sphere(f"WrapStud{i}{side}", 0.003, (side * 0.0445, 0.0 + i * 0.03, 0.05), scale=(0.5, 1, 1), m=M["dark"], segs=6, rings=4))
     shell += top_rail("TopRail", 0.0, 0.128, rail_top, M, width=0.032)
     shell += bolts("Pin", [(-0.0425, 0.02, -0.02), (0.0425, 0.02, -0.02), (0.0425, 0.14, 0.0)], M["steel"], radius=0.005, height=0.006)
-    lug, charm_point = charm_lug(0.044, 0.004, -0.014, M, out=1.0)
+    lug, charm_point = charm_lug(0.0465, 0.164, 0.0, M, out=1.0)
     shell += lug
     sight_rear, sight_front = sights_frame(0.0, -0.016, 0.148, 0.097, 0.097, z_line, M, m_frame=M["dark"])
 
@@ -278,7 +275,7 @@ def build_balloon_darter():
     shell += top_rail("TopRail", -0.03, 0.07, rail_top, M, width=0.03)
     shell.append(box("RailRiser", (0.028, 0.1, 0.014), (0, 0.02, rail_top - 0.02), bevel=0.003, m=M["trim"]))
     shell += bolts("Pin", [(-0.032, -0.03, 0.0), (0.032, -0.03, 0.0), (0.032, 0.2, 0.02)], M["steel"], radius=0.0055, height=0.006)
-    lug, charm_point = charm_lug(0.032, 0.17, -0.002, M, out=1.0)
+    lug, charm_point = charm_lug(0.033, 0.215, 0.006, M, out=1.0)
     shell += lug
     sight_rear, sight_front = sights_notch(0.0, -0.046, 0.238, 0.086, 0.086, z_line, M, gap=0.015)
 
