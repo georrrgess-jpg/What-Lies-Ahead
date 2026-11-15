@@ -17,7 +17,13 @@ extends Button
 const LOCKED_TINT := Color(0.34, 0.31, 0.46)
 ## Title font size, and the smallest it shrinks to so a long word still fits.
 const TITLE_SIZE := 24
-const TITLE_MIN_SIZE := 15
+const TITLE_MIN_SIZE := 14
+## A name shrinks to fit two lines down to this size; past it, a third line
+## reads better than tiny letters.
+const TITLE_TWO_LINE_MIN := 18
+## Line spacing at TITLE_SIZE (tight, as the titles are capitals); it scales
+## with the font size so smaller titles do not overlap.
+const TITLE_LINE_SPACING := -8.0
 
 ## Whether this card is the selected one of its group.
 var selected: bool:
@@ -88,7 +94,6 @@ func _build(title: String) -> void:
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD
 	_title.resized.connect(_fit_title)
 	_title.max_lines_visible = 2
-	_title.add_theme_constant_override("line_spacing", -8)
 	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_title)
 	_status = HBoxContainer.new()
@@ -109,21 +114,55 @@ func set_title(text: String) -> void:
 	_fit_title()
 
 
-## Shrinks the title from title_size (down to TITLE_MIN_SIZE) until its longest word fits the
-## card's width, so a name never breaks in the middle of a word.
+## Picks the title size so that every word fits the card's width (a name
+## never breaks inside a word or spills past the card's edges) and nothing
+## is cut off: the biggest size at which the name takes two lines, down to
+## TITLE_TWO_LINE_MIN; below that, the biggest at which it takes three.
 func _fit_title() -> void:
-	var width := _title.size.x
+	# A little slack for the outline, which draws outside the glyphs.
+	var width := _title.size.x - 6.0
 	if width <= 0.0:
 		return
 	var font := _title.get_theme_font(&"font")
-	var longest := 0.0
-	for word in _title.text.split(" ", false):
-		longest = maxf(longest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x)
+	var words := _title.text.split(" ", false)
 	var font_size := title_size
-	if longest > width:
-		font_size = maxi(TITLE_MIN_SIZE, floori(title_size * width / longest))
+	var lines := _line_count(font, words, font_size, width)
+	var two_line_min := mini(TITLE_TWO_LINE_MIN, title_size)
+	while lines > 2 and font_size > two_line_min:
+		font_size -= 1
+		lines = _line_count(font, words, font_size, width)
+	if lines > 2:
+		font_size = title_size
+		lines = _line_count(font, words, font_size, width)
+		while lines > 3 and font_size > TITLE_MIN_SIZE:
+			font_size -= 1
+			lines = _line_count(font, words, font_size, width)
+	var spacing := roundi(TITLE_LINE_SPACING * font_size / TITLE_SIZE)
 	if _title.get_theme_font_size(&"font_size") != font_size:
 		_title.add_theme_font_size_override(&"font_size", font_size)
+	if _title.get_theme_constant(&"line_spacing") != spacing:
+		_title.add_theme_constant_override(&"line_spacing", spacing)
+	_title.max_lines_visible = clampi(lines, 2, 3)
+
+
+## How many lines `words` wrap to at `font_size` in `width` (wrapping only
+## between words), or 99 when one word alone is wider than `width`.
+static func _line_count(font: Font, words: PackedStringArray, font_size: int, width: float) -> int:
+	if words.is_empty():
+		return 1
+	var space := font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var lines := 1
+	var line_w := -space
+	for word in words:
+		var w := font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		if w > width:
+			return 99
+		if line_w + space + w > width:
+			lines += 1
+			line_w = w
+		else:
+			line_w += space + w
+	return lines
 
 
 ## The picture (a thumbnail texture; a ViewportTexture works).

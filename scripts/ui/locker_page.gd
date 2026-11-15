@@ -75,6 +75,7 @@ func _ready() -> void:
 		_weapon_id = GameData.default_weapon_id()
 	_thumbs = CosmeticThumbs.new()
 	add_child(_thumbs)
+	get_viewport().gui_focus_changed.connect(_on_focus_changed)
 	_preview_timer = Timer.new()
 	_preview_timer.one_shot = true
 	_preview_timer.wait_time = PREVIEW_DELAY
@@ -257,6 +258,9 @@ func _build_tray() -> Control:
 	_scroll = UiKit.scroll()
 	_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_scroll.resized.connect(_fit_columns)
+	# The tray follows focus itself (see _on_focus_changed): the scroll
+	# container's own follow would chase cards that are still popping in.
+	_scroll.follow_focus = false
 	area.add_child(_scroll)
 	var pad := MarginContainer.new()
 	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -754,7 +758,35 @@ func _reveal_selected() -> void:
 	await get_tree().process_frame
 	var card := _card_of(_selected)
 	if card:
-		_scroll.ensure_control_visible(card)
+		_scroll_to(card)
+
+
+## Keeps the focused card in view as keyboard or gamepad focus moves.
+func _on_focus_changed(control: Control) -> void:
+	if control == null or not _built or not _grid.is_ancestor_of(control):
+		return
+	while control.get_parent() != _grid:
+		control = control.get_parent() as Control
+	_scroll_to(control)
+
+
+## Scrolls the tray just enough to show `card`, from its place in the grid
+## rather than its on-screen rect: cards still popping in (or lifted) would
+## scroll the tray past the top row and clip its corner tags. The grid's
+## margin stays in view.
+func _scroll_to(card: Control) -> void:
+	# Focus can land before the tray is laid out (no height yet), when any
+	# scroll would overshoot to the bottom: wait a frame for the layout.
+	if _scroll.size.y <= 1.0:
+		await get_tree().process_frame
+		if not is_instance_valid(card) or _scroll.size.y <= 1.0:
+			return
+	var top := card.position.y
+	var bottom := card.position.y + card.size.y + GRID_MARGIN * 2.0
+	if top < _scroll.scroll_vertical:
+		_scroll.scroll_vertical = int(top)
+	elif bottom > _scroll.scroll_vertical + _scroll.size.y:
+		_scroll.scroll_vertical = int(ceilf(bottom - _scroll.size.y))
 
 
 func _focus_selected() -> void:

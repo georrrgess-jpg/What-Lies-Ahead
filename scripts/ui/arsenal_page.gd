@@ -11,8 +11,10 @@ extends MenuPage
 ## own class's slot. The section tabs, the slot plates, the 1 / 2 keys and the
 ## gamepad triggers switch sections; the cards slide across.
 
-## Minimum card size; cards share the tray's width (the longer section fills it).
+## Card size at its widest; cards share the tray's width (the longer section
+## fills it) and narrow, down to CARD_MIN_WIDTH, so every card stays on screen.
 const CARD_SIZE := Vector2(150, 196)
+const CARD_MIN_WIDTH := 96.0
 const SECTION_NAMES := ["PRIMARIES", "SECONDARIES"]
 ## Shown in the empty part of a section's row when the other has more weapons.
 const SECTION_NOTES := [
@@ -362,6 +364,7 @@ func _build_tray() -> Control:
 	deck.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	deck.custom_minimum_size.y = CARD_SIZE.y
 	deck.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	deck.resized.connect(_fit_cards.bind(deck))
 	row.add_child(deck)
 	var columns := maxi(Loadout.weapons_for(Loadout.PRIMARY).size(), Loadout.weapons_for(Loadout.SECONDARY).size())
 	var group := ButtonGroup.new()
@@ -379,6 +382,28 @@ func _build_tray() -> Control:
 		if weapons.size() < columns:
 			cards.add_child(_row_note(slot, columns - weapons.size()))
 	return tray
+
+
+## Narrows the cards so the longer section's row fits the deck's width
+## (a row wider than the deck would run off the side of the screen).
+func _fit_cards(deck: Control) -> void:
+	var columns := maxi(Loadout.weapons_for(Loadout.PRIMARY).size(), Loadout.weapons_for(Loadout.SECONDARY).size())
+	if columns == 0 or deck.size.x <= 0.0:
+		return
+	var gaps := UiKit.GAP_S * (columns - 1)
+	var card_w := clampf(floorf((deck.size.x - gaps) / columns), CARD_MIN_WIDTH, CARD_SIZE.x)
+	for row in _rows:
+		for child in row.get_children():
+			# Cards, and the note that fills a shorter section's spare room.
+			(child as Control).custom_minimum_size.x = card_w
+	# A row that once grew past the deck keeps that size until told otherwise;
+	# the deck also grows to the tallest row (locked cards carry a level line).
+	var height := CARD_SIZE.y
+	for row in _rows:
+		height = maxf(height, row.get_combined_minimum_size().y)
+	deck.custom_minimum_size.y = height
+	for row in _rows:
+		row.size = Vector2(deck.size.x, height)
 
 
 func _new_card(w: WeaponData, group: ButtonGroup) -> ItemCard:
