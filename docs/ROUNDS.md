@@ -525,3 +525,40 @@ Known: the weakest gun (Pulse Pistol) needs up to 113 s for the Night
 Manager; the newly merged Teacup Twister took 403 s for him in its one
 check run (its single-target damage, or how the bot fires it, wants a look
 in the weapons lane).
+
+### Update 12: Teacup Twister lockdown
+
+The Twister becomes a late reward, and its whirl held too much: every
+zombie in 7 m, Bruisers included, spun with no attacks for 1.8 s, and a
+crowd was free for only 1.0 s before the next cup could catch it again
+(locked about 64% of the time under steady fire). Its damage was not the
+problem: the bot (level-40 profile, Standard) clears with it like the Bumper
+Lobber and the Whirligig, and its alpha fights are the quickest of the three.
+Two changes, both to the lockdown (`scripts/weapons/twister_vortex.gd`):
+
+* **The whirl holds the crowd, not the big hitters**: `CAPTURE_MASS` 5.0 to
+  2.5. Bruisers, Riot Shields, Riot Bruisers, Yetis and the Overgrown (mass
+  2.6-3.2) are only slowed, like alphas and bosses, and keep swinging; a cup
+  that lands on one latches on and rides with it, so it still takes the spin
+  ticks and the pop.
+* **No chained lockdown**: `FREE_TIME` 1.0 to 2.0 s, longer than a whirl, so
+  back-to-back cups leave a crowd free at least as long as they held it
+  (about 47% at most).
+
+Damage, radius, rate, magazine and the boss latch are unchanged. Bot, one run
+per cell unless noted (HP left / alpha fight; endless: best wave, damage
+taken over waves 1-30):
+
+| Run | Before | After | Bumper Lobber | Whirligig |
+|---|---|---|---|---|
+| Prize Pier | 79 / 35 s | 88 / 48 s | 79 / 56 s | 80 / 80 s |
+| Candy Works | 2 / 66 s | 72, 84 / 63, 56 s | 82 / 68 s | 20 / 78 s |
+| Lava Lagoon | 44 / 59 s | 25 / 48 s | 21 / 70 s | 1 / 53 s |
+| Sky Harbor | lost w7, boss 38% | lost w7, boss 32% | lost w7, boss 45% | lost w7, boss 44% |
+| Endless (aim 2.5) | w32 at the 1500 s cap, 583 | w32 at the cap, 615 | w31+ (cut at 1298 s), 457 | died w10 |
+
+The bot fires at the nearest zombie and does not farm the lockdown, so its
+numbers barely move; the change is aimed at a player who chains cups into a
+crowd. A third Candy Works run timed out at wave 6 with one zombie counted
+but none alive (no stall line); two reruns cleared, so it is listed as a
+known director quirk, not a Twister result.
