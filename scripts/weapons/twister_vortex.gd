@@ -9,12 +9,14 @@ extends Node3D
 ## Hold behaviour (EnemyBehaviour.on_physics) takes over their movement and
 ## drags them along a spiral into the cup, so they cannot attack while they
 ## spin; the catch knocks them out of any windup. Pull and swirl speed fall
-## with the zombie's weight (1 / sqrt(mass)). Zombies heavier than
-## CAPTURE_MASS (alphas) and bosses are never caught: the whirl only drags at
-## their feet (HEAVY_DRAG). A cup that lands on one of them (within
-## CUP_RADIUS) latches on and rides with it, so a big target cannot simply
-## walk out of the cup before it pops. Zombies inside CUP_RADIUS take WHIRL_TICK_DAMAGE
-## every WHIRL_TICK, quietly like a burn (only the finishing tick is a full
+## with the zombie's weight (1 / sqrt(mass)). The whirl holds the crowd, not
+## the big hitters: zombies from CAPTURE_MASS up (Bruisers, Riot Shields,
+## Yetis, alphas) and bosses are never caught, it only drags at their feet
+## (HEAVY_DRAG) while they keep swinging. A cup that lands on one of them
+## (within CUP_RADIUS) latches on and rides with it, so a big target cannot
+## simply walk out of the cup before it pops. A zombie flung out by a pop
+## cannot be caught again for FREE_TIME, so chained cups cannot hold a crowd
+## for good. Zombies inside CUP_RADIUS take WHIRL_TICK_DAMAGE every WHIRL_TICK, quietly like a burn (only the finishing tick is a full
 ## hit). Then the cup pops: the weapon's splash (damage, splash_radius,
 ## splash_push) through WeaponController.projectile_detonated, hurling the
 ## bunched-up crowd outward. tools/balance_report.py reads these constants.
@@ -34,12 +36,14 @@ const CORE := 0.7
 const CUP_RADIUS := 2.3
 const WHIRL_TICK := 0.3
 const WHIRL_TICK_DAMAGE := 16.0
-## Zombies heavier than this, and bosses, are not caught, only slowed.
-const CAPTURE_MASS := 5.0
+## Zombies this heavy or heavier (the Bruiser class, 2.6+), and bosses, are not
+## caught, only slowed.
+const CAPTURE_MASS := 2.5
 const HEAVY_DRAG := 0.5
-## Seconds a zombie flung out by a pop cannot be caught by another whirl, so
-## back-to-back cups do not hold a crowd for good.
-const FREE_TIME := 1.0
+## Seconds a zombie flung out by a pop cannot be caught by another whirl:
+## longer than a whirl, so back-to-back cups free a crowd at least as long as
+## they held it.
+const FREE_TIME := 2.0
 ## Height (m) above or below the centre a zombie may stand and still be caught.
 const REACH_UP := 2.5
 const SPIRAL_ARMS := 3
