@@ -30,7 +30,7 @@ from weapon_kit import CHARM_STANDOFF, RAIL_FLAT  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 WEAPONS = ["pulse_pistol", "ion_carbine", "scatter_blaster", "comet_cannon", "arc_coil", "bumper_lobber", "cryo_beam", "rail_lancer",
-           "sparkler", "ring_toss", "drum_popper", "whirligig", "riptide", "teacup_twister", "dunk_tank"]
+           "sparkler", "ring_toss", "drum_popper", "whirligig", "riptide", "toxic_ripsaw", "teacup_twister", "dunk_tank"]
 REQUIRED = ["Shell", "ArmL", "ArmR", "Decal", "IronSightRear", "IronSightFront",
             "Muzzle", "SightPoint", "SightMount", "EjectPoint", "VentPoint", "CharmPoint", "ElbowL", "ElbowR"]
 # The energy cell and its hologram copy (the Scatter Blaster loads two capsules instead).
@@ -56,6 +56,9 @@ JOINTS = {
     "sparkler": [("Cell", "Shell"), ("Pinwheel", "Shell"), ("Flint", "Shell")] + [(f"FuseSeg{i}", p) for i in range(8) for p in ("Cell", "Shell")],
     "ring_toss": [("Ring", "Shell"), ("Ring", "Hooks"), ("Ring", "Flipper"), ("Flipper", "Shell"), ("Hooks", "Shell"), ("Cell", "Shell")]
                  + [(f"Stack{i}", p) for i in range(4) for p in ("Cell", "Shell")],
+    "toxic_ripsaw": [("Pump", "Shell"), ("Cell", "Shell"), ("Sprocket", "Shell"), ("PullHandle", "Shell"), ("PullCord", "Shell"),
+                     ("GaugeNeedle", "Shell")] + [(f"Tooth{i}", p) for i in range(22) for p in ("Shell", "Sprocket")]
+                    + [(f"Slime{i}", p) for i in range(4) for p in ("Cell", "Shell")] + [(f"Bubble{i}", p) for i in range(8) for p in ("Cell", "Shell")],
     "teacup_twister": [("Drum", "Shell"), ("Cell", "Drum"), ("Cell", "Shell"), ("Saucer", "Shell"), ("Swirl", "Shell")]
                       + [(f"Cup{i}", p) for i in range(4) for p in ("Drum", "Shell", "Cell")],
     "dunk_tank": [("Cell", "Shell"), ("Water", "Cell"), ("Water", "Shell"), ("Pump", "Shell"), ("Needle", "Shell"), ("Target", "Shell")],
