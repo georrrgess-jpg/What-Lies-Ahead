@@ -6,6 +6,7 @@ extends Control
 ##   weapon_cell    glowing energy orb      title   name plate
 ##   other slots    rarity gem               stamp   Pier Pass stamp (no item)
 ## Locked rewards are shown greyed out with a padlock; `equipped` adds a ring.
+## A Mythic reward wears an animated red-gold frame (MythicFx).
 
 const SWATCH_SHADER := "res://art/shaders/mastery_swatch.gdshader"
 const BANNER_SHADER := "res://art/shaders/mastery_banner.gdshader"
@@ -54,6 +55,9 @@ func _process(delta: float) -> void:
 	_time += delta
 	if item and item.slot == &"weapon_cell" and not locked:
 		queue_redraw()
+	if MythicFx.is_mythic(item):
+		queue_redraw()
+		_overlay.queue_redraw()
 
 
 ## Finish swatch style for the shader: 0 paint, 1 metal, 2 gold, 3 diamond, 4 prismatic.
@@ -119,6 +123,12 @@ func _draw() -> void:
 
 func _draw_overlay() -> void:
 	var side := minf(size.x, size.y)
+	if MythicFx.is_mythic(item):
+		var frame := Rect2((size - Vector2(side, side)) * 0.5, Vector2(side, side)).grow(-2.0)
+		var col := MythicFx.tint(item) if not locked else Color(0.6, 0.4, 0.45)
+		_overlay.draw_style_box(UiKit.box(Color.TRANSPARENT, col, int(side * 0.2), 3, 0), frame)
+		var glint := fposmod(_time * 0.6, 1.0)
+		_overlay.draw_circle(frame.position + Vector2(frame.size.x * glint, 2.0), maxf(2.0, side * 0.03), Color(1, 0.95, 0.8, 0.9 * sin(glint * PI)))
 	if equipped:
 		var ring := Rect2((size - Vector2(side, side)) * 0.5, Vector2(side, side)).grow(-1.0)
 		if item and item.slot != &"weapon_finish":
@@ -156,7 +166,7 @@ func _draw_title() -> void:
 
 
 func _draw_gem(c: Vector2, r: float) -> void:
-	var col := CosmeticItem.rarity_color(item.rarity) if not locked else Color(0.45, 0.42, 0.55)
+	var col := MythicFx.tint(item) if not locked else Color(0.45, 0.42, 0.55)
 	ProgStyle.fill_gradient(self, ProgStyle.polygon(c, r, 4), col.lightened(0.4), col.darkened(0.4))
 	ProgStyle.outline(self, ProgStyle.polygon(c, r * 0.6, 4), Color(1, 1, 1, 0.5), 2.0)
 

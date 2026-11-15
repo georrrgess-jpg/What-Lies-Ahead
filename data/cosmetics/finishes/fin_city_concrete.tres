@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 21
+amount = 15
+
+[resource]
+script = ExtResource("1")
+id = &"fin_city_concrete"
+display_name = "Concrete Jungle"
+description = "Poured concrete with the form-tie holes still bleeding rust, hairline cracks and worn safety-yellow trim."
+slot = &"weapon_finish"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.64, 0.62, 0.59, 1, 0.46, 0.45, 0.43, 1)
+params = {
+"shader": "res://art/shaders/finish_city.gdshader",
+"shader_params": {
+"pattern": 7,
+"color_b": Color(0.75, 0.32, 0.1, 1),
+"color_c": Color(1, 0.78, 0.1, 1)
+}
+}
+sort_order = 2403

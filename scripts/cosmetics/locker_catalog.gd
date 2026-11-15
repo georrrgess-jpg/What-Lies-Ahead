@@ -163,6 +163,10 @@ static func unlock_short(it: CosmeticItem) -> String:
 			return level.display_name if level else "Clear a level"
 		Requirement.Kind.CHALLENGE:
 			return "Challenge"
+		Requirement.Kind.ENDLESS_WAVE:
+			return "Wave %d" % r.amount
+		Requirement.Kind.ENDLESS_DISTRICT:
+			return "Endless"
 	return "Special"
 
 
@@ -180,6 +184,8 @@ static func progress(it: CosmeticItem, weapon_id: StringName = &"") -> float:
 			return clampf(float(Mastery.total_kills()) / goal, 0.0, 1.0)
 		Requirement.Kind.BEST_SCORE:
 			return clampf(float(Profile.best_score(r.target)) / goal, 0.0, 1.0)
+		Requirement.Kind.ENDLESS_WAVE:
+			return clampf(float(EndlessRecords.best_wave()) / goal, 0.0, 1.0)
 		Requirement.Kind.WEAPON_RANK:
 			var wid := r.target if r.target != &"" else weapon_id
 			return clampf(float(Mastery.rank(wid)) / goal, 0.0, 1.0) if wid != &"" else -1.0
@@ -202,6 +208,8 @@ static func progress_text(it: CosmeticItem, weapon_id: StringName = &"") -> Stri
 			return "%s / %s kills" % [Wallet.format(Mastery.total_kills()), Wallet.format(r.amount)]
 		Requirement.Kind.BEST_SCORE:
 			return "Best %s / %s" % [Wallet.format(Profile.best_score(r.target)), Wallet.format(r.amount)]
+		Requirement.Kind.ENDLESS_WAVE:
+			return "Best wave %d / %d" % [EndlessRecords.best_wave(), r.amount]
 		Requirement.Kind.WEAPON_RANK:
 			var wid := r.target if r.target != &"" else weapon_id
 			return "Rank %d / %d" % [Mastery.rank(wid), r.amount] if wid != &"" else ""

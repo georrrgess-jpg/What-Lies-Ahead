@@ -17,7 +17,10 @@ reach and far-end falloff, no headshots) hits every zombie of the pack; the Ball
 darts are simulated with their balloon pops (BalloonBunch fuse, balloons per zombie, pop
 damage and splash, read from the scripts). The Teacup Twister's whirl adds its spin ticks
 to the pop and gathers the pack into the cup (scripts/weapons/twister_vortex.gd); the Dunk
-Tank's soak multiplies its own hits (scripts/weapons/soak.gd), and the "amp" column is the
+Tank's soak multiplies its own hits (scripts/weapons/soak.gd), the Road Rager's hubcap
+(scripts/weapons/hubcap_shot.gd) hits its target on the way out and back, is paced by its
+round trips (catches refill it, so it never reloads or runs dry) and slices through the
+whole pack, a pile-up hitting harder; the "amp" column is the
 damage bonus a status lends every other weapon. Armour behaviours (helmets, shields, ice
 shells) are approximated as extra health. Numbers are for comparison
 between weapons, not exact in-game times.
@@ -67,6 +70,7 @@ def gd_consts(rel_path):
 # Weapons whose mode adds damage their WeaponData does not show.
 VORTEX = gd_consts("scripts/weapons/twister_vortex.gd")
 SOAK = gd_consts("scripts/weapons/soak.gd")
+HUBCAP = gd_consts("scripts/weapons/hubcap_shot.gd")
 MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
 # Share of the pop a gathered zombie takes (they spin near the cup's centre).
 VORTEX_POP_SHARE = 0.8
@@ -144,8 +148,10 @@ def script_consts(key):
 
 
 def mode_kind(w):
-	"""'flash' (Shutterbug), 'balloon' (Balloon Darter) or ''."""
+	"""'flash' (Shutterbug), 'balloon' (Balloon Darter), 'hubcap' (Road Rager) or ''."""
 	mode = w.get("mode_script_path", "")
+	if mode.endswith("hubcap_boomerang_mode.gd"):
+		return "hubcap"
 	if mode.endswith("shutterbug_mode.gd"):
 		return "flash"
 	if mode.endswith("balloon_darter_mode.gd"):
@@ -191,6 +197,14 @@ def balloon_sim(w, hp, d, head):
 	return math.inf, darts
 
 
+def hubcap_cycle(w):
+	"""Seconds between throws when every hubcap is caught: the round trip
+	(out to max_range, the hang, home) shared by the magazine, or the fire rate."""
+	out = w["max_range"] / (w["projectile_speed"] * (1.0 - HUBCAP["OUT_SLOWDOWN"] / 3.0))
+	back = w["max_range"] / (w["projectile_speed"] * (HUBCAP["BACK_START"] + HUBCAP["BACK_TOP"]) * 0.5)
+	return max(w["fire_interval"], (out + HUBCAP["HANG_TIME"] + back) / w["magazine_size"])
+
+
 def falloff(w, d):
 	if d <= w["falloff_start"]:
 		return 1.0
@@ -222,6 +236,9 @@ def pull_damage(w, e, d, head):
 	head_mix = 1.0 + head * (w["headshot_multiplier"] - 1.0)
 	if mode_kind(w) == "flash":
 		return w["damage"] * flash_scale(d), w["fire_interval"]
+	if mode_kind(w) == "hubcap":
+		# Aimed down the sights it strikes the target on the way out and back.
+		return 2.0 * w["damage"] * head_mix, hubcap_cycle(w)
 	if mode_kind(w) == "balloon":
 		# Per dart, its share of a bunch: MAX_BALLOONS of the darts fired in one fuse pop.
 		c = script_consts("balloon")
@@ -283,6 +300,8 @@ def ttk(w, e, d, head):
 	reload = w["reload_time"]
 	if w["regen_rate"] > 0.0:
 		reload = w["magazine_size"] / w["regen_rate"] if reloads else 0.0
+	if mode_kind(w) == "hubcap":
+		reload = 0.0
 	first_shot = w["charge_time"] if w["charge_time"] > 0 else 0.0
 	if MODE_OF.get(w["id"]) == "vortex":
 		# The whirl deals its damage over WHIRL_TIME, after the shell's flight (~0.5 s at 8 m).
@@ -293,6 +312,8 @@ def ttk(w, e, d, head):
 def sustained_dps(w, head, d=8.0, e=None):
 	e = e or {"capsule_radius": 0.5, "body_scale": 1.0, "capsule_height": 1.9, "mass": 1.0}
 	dmg, cycle = pull_damage(w, e, d, head)
+	if mode_kind(w) == "hubcap":
+		return dmg / cycle
 	pulls = max(1, int(w["magazine_size"] // w["burst_count"]))
 	reload = w["reload_time"]
 	if w["regen_rate"] > 0.0:
@@ -311,6 +332,12 @@ def crowd_damage(w, d=8.0):
 		# All four in the cone, between its centre line and its rim.
 		rim = script_consts("flash")["RIM_SCALE"]
 		return 4 * dmg * (1.0 + rim) / 2
+	if mode_kind(w) == "hubcap":
+		# From the hip: through all four on the way out, two on the loop home,
+		# the strikes after the pile-up harder.
+		strikes = 6
+		pile = int(HUBCAP["PILEUP"])
+		return w["damage"] * (min(strikes, pile) + max(0, strikes - pile) * HUBCAP["PILEUP_BONUS"])
 	if mode_kind(w) == "balloon":
 		# One dart into one of the pack: its balloon pops and splashes the other three.
 		c = script_consts("balloon")
@@ -332,6 +359,8 @@ def crowd_damage(w, d=8.0):
 
 def ammo_damage(w, head):
 	"""Damage a full stock (magazine + max reserve) can deal to single targets."""
+	if mode_kind(w) == "hubcap":
+		return math.inf
 	dmg, _ = pull_damage(w, {"capsule_radius": 0.5, "body_scale": 1.0, "capsule_height": 1.9}, 8.0, head)
 	return dmg * (w["magazine_size"] + w["reserve_max"]) / w["burst_count"]
 

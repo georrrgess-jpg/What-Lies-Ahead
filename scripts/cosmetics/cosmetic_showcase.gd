@@ -19,6 +19,7 @@ const OPERATOR_ZOOM := 1.3
 var item: CosmeticItem
 var _case: Control
 var _glow: ColorRect
+var _glow_tween: Tween
 var _operator: OperatorPreview
 var _stage: LockerStage
 var _card_view: VBoxContainer
@@ -140,7 +141,7 @@ func show_item(it: CosmeticItem, weapon: WeaponData, flourish := false) -> void:
 	_operator.visible = it.slot == &"avatar"
 	_card_view.visible = it.slot == &"banner" or it.slot == &"title"
 	_stage.visible = not (_operator.visible or _card_view.visible)
-	(_glow.material as ShaderMaterial).set_shader_parameter("tint", CosmeticItem.rarity_color(it.rarity))
+	_tint_glow(it)
 	_lens.visible = it.slot == &"weapon_sight"
 	if _lens.visible:
 		_lens_view.item = it
@@ -181,6 +182,22 @@ func _show_on_card(it: CosmeticItem) -> void:
 	else:
 		_title.text = it.display_name.to_upper()
 		_title.add_theme_color_override("font_color", CosmeticItem.rarity_color(it.rarity).lerp(Color.WHITE, 0.35))
+		MythicFx.dress(_title, it)
+
+
+## The glow behind takes the item's rarity colour; a Mythic item's glow
+## breathes between red and gold.
+func _tint_glow(it: CosmeticItem) -> void:
+	var m := _glow.material as ShaderMaterial
+	if _glow_tween:
+		_glow_tween.kill()
+		_glow_tween = null
+	var base := CosmeticItem.rarity_color(it.rarity)
+	m.set_shader_parameter("tint", base)
+	if MythicFx.is_mythic(it):
+		_glow_tween = create_tween().set_loops()
+		_glow_tween.tween_property(m, "shader_parameter/tint", MythicFx.GOLD, 1.1).set_trans(Tween.TRANS_SINE)
+		_glow_tween.tween_property(m, "shader_parameter/tint", base, 1.1).set_trans(Tween.TRANS_SINE)
 
 
 ## The purchase moment: the case flashes, Sparks burst out of it and a stamp
