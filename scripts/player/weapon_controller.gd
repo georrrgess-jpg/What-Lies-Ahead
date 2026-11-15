@@ -68,6 +68,8 @@ var _tick := 1.0 / 60.0    # length of the last physics frame
 var _reload_left := 0.0
 var _reloading := false
 var _bloom := 0.0
+## The blast pattern's turn this shot (multi-pellet weapons).
+var _pattern_turn := 0.0
 var _fire_buffer := 0.0
 var _dry_cooldown := 0.0
 var _trickle := 0.0
@@ -575,8 +577,9 @@ func _fire_shot(scale: float, power: float) -> void:
 	# (one flash, one sound, summed damage and knockback), not nine tiny ones.
 	var hits := {}
 	var last_end := muzzle
+	_pattern_turn = randf() * TAU
 	for i in data.pellets:
-		var dir := _spread_dir(aim, spread)
+		var dir := _pellet_dir(aim, spread, i, data.pellets)
 		if mode and mode.launch(muzzle, dir, scale):
 			continue
 		if data.ricochet_count > 0:
@@ -617,6 +620,21 @@ func _fire_shot(scale: float, power: float) -> void:
 		# Auto-reload shortly after the last shot so the player is never stuck clicking.
 		_cooldown = maxf(_cooldown, 0.2)
 		get_tree().create_timer(0.2, false).timeout.connect(_auto_reload.bind(data))
+
+
+## Direction of pellet `i` of `count`. A single shot spreads at random in the
+## cone; a multi-pellet blast keeps a centred pattern so it always lands on
+## the crosshair: the first pellet flies dead centre (its streak is always
+## drawn) and the rest ring it evenly, with a little jitter.
+func _pellet_dir(aim: Basis, spread: float, i: int, count: int) -> Vector3:
+	if count <= 1:
+		return _spread_dir(aim, spread)
+	if i == 0:
+		return -aim.z
+	var ring := count - 1
+	var angle := TAU * float(i - 1) / ring + randf_range(-0.25, 0.25) * TAU / ring + _pattern_turn
+	var radius := tan(spread) * randf_range(0.55, 1.0)
+	return (-aim.z + aim.x * cos(angle) * radius + aim.y * sin(angle) * radius).normalized()
 
 
 func _spread_dir(aim: Basis, spread: float) -> Vector3:
