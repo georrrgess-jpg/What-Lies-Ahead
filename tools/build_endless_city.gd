@@ -368,7 +368,11 @@ func _build_precinct() -> void:
 	_solid_kit(p, "city_barrier_jersey", "JerseyA", Vector3(-52.5, 0, -6.5), 0.0, Vector3(3.0, 1.0, 0.7))
 	_solid_kit(p, "city_barrier_jersey", "JerseyB", Vector3(-38.0, 0, 6.5), 0.0, Vector3(3.0, 1.0, 0.7))
 	_solid_kit(p, "city_barrier_jersey", "JerseyC", Vector3(-58.0, 0, 20.5), 90.0, Vector3(3.0, 1.0, 0.7))
+	_solid_kit(p, "city_barrier_jersey", "JerseyD", Vector3(-66.0, 0, -17.0), 0.0, Vector3(3.0, 1.0, 0.7))
+	_solid_kit(p, "city_barrier_jersey", "JerseyE", Vector3(-40.0, 0, -5.5), 90.0, Vector3(3.0, 1.0, 0.7))
+	_solid_kit(p, "city_police_barrier", "BarrierC", Vector3(-50.0, 0, 17.5), 0.0, Vector3(2.8, 1.1, 0.5))
 	_solid_kit(p, "city_dumpster", "Dumpster", Vector3(-71.6, 0, -19.0), 90.0, Vector3(2.0, 1.4, 1.2))
+	_fallen_slab(p, "FallenSlab", Vector3(-68.0, 0, 17.0), Vector3(4.5, 0.6, 3.0), 30.0, 18.0)
 	_solid_kit(p, "city_rubble_a", "Rubble", Vector3(-37.0, 0, 20.0), 120.0, Vector3(3.2, 1.2, 2.6))
 	_streetlight(p, "LampA", Vector3(-48.0, 0, -22.4), 0.0, true)
 	_streetlight(p, "LampB", Vector3(-48.0, 0, 22.4), 180.0, false)
@@ -380,6 +384,25 @@ func _build_precinct() -> void:
 	_visual_box(dressing, "StationSign", Vector3(0.3, 1.2, 10.0), front + Vector3(0.3, 7.2, 0), _mat("precinct_sign", Color(0.1, 0.2, 0.55), 0.5, Color(0.3, 0.55, 1.0), 1.4))
 	_visual_box(dressing, "StationPorch", Vector3(3.0, 0.4, 12.0), front + Vector3(-1.5, 5.2, 0), concrete)
 	_omni(fx, "StationLamp", front + Vector3(1.2, 4.2, 0), Color(0.35, 0.55, 1.0), 1.6, 9.0)
+
+
+## A fallen slab of facade: tilted concrete with a window row, chest-high
+## cover (the collider is its upright box, capped against standing on it).
+func _fallen_slab(parent: Node3D, slab_name: String, pos: Vector3, size: Vector3, yaw: float, tilt: float) -> void:
+	var holder := Node3D.new()
+	holder.name = slab_name
+	parent.add_child(holder)
+	holder.position = pos
+	holder.rotation.y = deg_to_rad(yaw)
+	var mi := MeshInstance3D.new()
+	mi.name = "Slab"
+	mi.mesh = _box_mesh(size, _facade_material(slab_name.hash()))
+	mi.rotation.x = deg_to_rad(tilt)
+	mi.position.y = size.z * 0.5 * sin(deg_to_rad(tilt)) + size.y * 0.3
+	holder.add_child(mi)
+	var height := size.z * sin(deg_to_rad(tilt)) + size.y
+	_collider(holder, "Collision", Vector3(size.x, height, size.z * cos(deg_to_rad(tilt)) + size.y * 0.5), Vector3(0, height * 0.5, 0))
+	_player_block(holder, "Cap", Vector3(size.x, 3.0, size.z), Vector3(0, height + 1.5, 0))
 
 
 ## A light bar's light: the environment script swaps it red and blue.
@@ -410,7 +433,7 @@ func _build_market() -> void:
 	_solid_kit(m, "city_dumpster", "DumpsterN", Vector3(46.0, 0, -6.8), 0.0, Vector3(2.0, 1.4, 1.2))
 	_solid_kit(m, "city_dumpster", "DumpsterS", Vector3(76.0, 0, 6.8), 180.0, Vector3(2.0, 1.4, 1.2))
 	_wreck(m, "city_car_burnt_b", "MarketCar", Vector3(64.0, 0, -5.4), 8.0, true)
-	_wreck(m, "city_truck_jackknifed", "EastTruck", Vector3(92.5, 0, 0.0), 75.0, true)
+	_wreck(m, "city_truck_jackknifed", "EastTruck", Vector3(91.0, 0, 1.5), 60.0, true)
 	# Neon signs on both facades (flickering), and a cable of bulbs over the street.
 	var signs := [[Vector3(38.0, 5.5, -8.2), 0.0, "city_neon_sign_a"], [Vector3(55.0, 6.0, 8.2), 180.0, "city_neon_sign_b"],
 		[Vector3(68.0, 5.0, -8.2), 0.0, "city_neon_sign_b"], [Vector3(86.0, 5.5, 8.2), 180.0, "city_neon_sign_a"],
@@ -455,7 +478,6 @@ func _build_metro() -> void:
 	var len_x := x1 - x0
 	# Platform (y -6) and the service tunnel west of it.
 	_slab(m, "Platform", Rect2(x0 - 8.0, PLATFORM_EDGE_Z, len_x + 8.0, zs - PLATFORM_EDGE_Z), tiles, METRO_Y)
-	_slab(m, "ServiceRoomFloor", Rect2(x1, PLATFORM_EDGE_Z, 6.0, EXIT_Z.x - PLATFORM_EDGE_Z), tiles, METRO_Y)
 	# Track pit (visual) and the train standing in it, end to end.
 	_visual_box(dressing, "TrackBed", Vector3(len_x + 16.0, 0.3, PLATFORM_EDGE_Z - zn), Vector3((x0 + x1) * 0.5, METRO_Y - 1.35, (zn + PLATFORM_EDGE_Z) * 0.5), dark)
 	_collider(m, "TrackBedFloor", Vector3(len_x + 16.0, 1.0, PLATFORM_EDGE_Z - zn), Vector3((x0 + x1) * 0.5, METRO_Y - 1.7, (zn + PLATFORM_EDGE_Z) * 0.5))
@@ -500,26 +522,45 @@ func _build_train(parent: Node3D, centre: Vector3, length: float) -> void:
 	_player_block(parent, "TrainCap", Vector3(length, 3.0, 3.0), centre + Vector3(0, 5.0, 0))
 
 
-## The hall's south wall, with the opening of the stairs from the square and a service door.
+## Service doors in the hall's south wall (entrances), centred on these x.
+const SERVICE_DOORS: Array[float] = [-12.0, 21.5]
+const SERVICE_DOOR_WIDTH := 4.0
+
+
+## The hall's south wall: the opening of the stairs from the square and the
+## service doors, each into a small dark room the zombies come out of.
 func _hall_south_wall(parent: Node3D, material: Material) -> void:
-	var x0 := HALL.position.x - 8.0
-	var x1 := HALL.end.x
 	var z := HALL.end.y + 0.5
 	var y := METRO_Y + 2.7
-	_box(parent, "WallSouthW", Vector3(-STAIR_HALF - x0, 5.4, 1.0), Vector3((x0 - STAIR_HALF) * 0.5, y, z), material)
-	_box(parent, "WallSouthMid", Vector3(20.0 - STAIR_HALF, 5.4, 1.0), Vector3((STAIR_HALF + 20.0) * 0.5, y, z), material)
-	_box(parent, "WallSouthE", Vector3(x1 - 23.0, 5.4, 1.0), Vector3((23.0 + x1) * 0.5, y, z), material)
-	# Service door room (an entrance) behind x 20..23.
-	_box(parent, "DoorLintel", Vector3(3.0, 2.4, 1.0), Vector3(21.5, METRO_Y + 4.2, z), material)
-	_box(parent, "DoorRoomFloor", Vector3(3.0, 1.0, 5.0), Vector3(21.5, METRO_Y - 0.5, z + 2.5), material)
-	_box(parent, "DoorRoomW", Vector3(0.5, 5.4, 5.0), Vector3(19.75, y, z + 2.5), material)
-	_box(parent, "DoorRoomE", Vector3(0.5, 5.4, 5.0), Vector3(23.25, y, z + 2.5), material)
-	_box(parent, "DoorRoomBack", Vector3(3.0, 5.4, 0.5), Vector3(21.5, y, z + 5.25), material)
-	_player_wall(_player_walls(), "DoorRoom", Vector3(20.0, METRO_Y, z + 0.3), Vector3(23.0, METRO_Y, z + 0.3), 6.0)
+	var half := SERVICE_DOOR_WIDTH * 0.5
+	# Wall pieces between the openings, west to east.
+	var cuts: Array[Vector2] = [Vector2(-STAIR_HALF, STAIR_HALF)]
+	for x in SERVICE_DOORS:
+		cuts.append(Vector2(x - half, x + half))
+	cuts.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x < b.x)
+	var from := HALL.position.x - 8.0
+	var k := 0
+	for c in cuts:
+		_box(parent, "WallSouth%d" % k, Vector3(c.x - from, 5.4, 1.0), Vector3((from + c.x) * 0.5, y, z), material)
+		from = c.y
+		k += 1
+	_box(parent, "WallSouth%d" % k, Vector3(HALL.end.x - from, 5.4, 1.0), Vector3((from + HALL.end.x) * 0.5, y, z), material)
+	var dark := _mat("metro_dark", Color(0.12, 0.12, 0.14), 0.95)
+	var depth := 5.0
+	for x in SERVICE_DOORS:
+		var room := "ServiceDoor%d" % int(x)
+		_box(parent, room + "Lintel", Vector3(SERVICE_DOOR_WIDTH, 2.4, 1.0), Vector3(x, METRO_Y + 4.2, z), material)
+		_slab(parent, room + "Floor", Rect2(x - half - 0.5, HALL.end.y, SERVICE_DOOR_WIDTH + 1.0, depth + 0.5), dark, METRO_Y)
+		_box(parent, room + "W", Vector3(0.5, 5.4, depth), Vector3(x - half - 0.25, y, z + depth * 0.5 - 0.5), dark)
+		_box(parent, room + "E", Vector3(0.5, 5.4, depth), Vector3(x + half + 0.25, y, z + depth * 0.5 - 0.5), dark)
+		_box(parent, room + "Back", Vector3(SERVICE_DOOR_WIDTH + 1.0, 5.4, 0.5), Vector3(x, y, z + depth - 0.25), dark)
+		_box(parent, room + "Ceiling", Vector3(SERVICE_DOOR_WIDTH + 1.0, 0.6, depth), Vector3(x, HALL_CEILING + 0.3, z + depth * 0.5 - 0.5), dark)
+		_player_wall(_player_walls(), room, Vector3(x - half, METRO_Y, z + 0.3), Vector3(x + half, METRO_Y, z + 0.3), 6.0)
+		_omni(fx, room + "Glow", Vector3(x, METRO_Y + 2.5, z + 3.0), Color(1.0, 0.3, 0.15), 0.8, 5.0)
 
 
-## The hall's ends: the west service tunnel (an entrance) and the east wall with
-## the tower stairs' opening and a second service door.
+## The hall's ends: the west service tunnel (an entrance) and the east wall
+## with the tower stairs' opening.
 func _hall_end_walls(parent: Node3D, material: Material) -> void:
 	var zn := HALL.position.y
 	var zs := HALL.end.y
@@ -527,19 +568,13 @@ func _hall_end_walls(parent: Node3D, material: Material) -> void:
 	# West: the tunnel continues 8 m (platform level) to a collapse.
 	var xw := HALL.position.x - 8.0
 	_box(parent, "WestCollapse", Vector3(1.0, 5.4, zs - zn), Vector3(xw - 0.5, y, (zn + zs) * 0.5), material)
-	_solid_kit(parent, "city_rubble_b", "WestRubble", Vector3(xw + 1.5, METRO_Y, -31.0), 90.0, Vector3(3.0, 1.1, 2.4))
+	_solid_kit(parent, "city_rubble_b", "WestRubble", Vector3(xw + 1.8, METRO_Y, -36.2), 90.0, Vector3(3.0, 1.1, 2.4))
 	_player_wall(_player_walls(), "WestTunnel", Vector3(HALL.position.x - 2.0, METRO_Y, PLATFORM_EDGE_Z), Vector3(HALL.position.x - 2.0, METRO_Y, zs), 6.0)
-	# East: wall at x 40 with the exit opening (z -35..-29) and a service door (z -38..-35).
+	# East: wall at x 40 with the exit opening (z -35..-29).
 	var xe := HALL.end.x + 0.5
 	_box(parent, "EastWallS", Vector3(1.0, 5.4, zs - EXIT_Z.y), Vector3(xe, y, (EXIT_Z.y + zs) * 0.5), material)
-	_box(parent, "EastWallN", Vector3(1.0, 5.4, PLATFORM_EDGE_Z - zn), Vector3(xe, y, (zn + PLATFORM_EDGE_Z) * 0.5), material)
-	_box(parent, "EastDoorLintel", Vector3(1.0, 2.4, 3.0), Vector3(xe, METRO_Y + 4.2, -36.5), material)
+	_box(parent, "EastWallN", Vector3(1.0, 5.4, EXIT_Z.x - zn), Vector3(xe, y, (zn + EXIT_Z.x) * 0.5), material)
 	_box(parent, "EastExitLintel", Vector3(1.0, 1.6, EXIT_Z.y - EXIT_Z.x), Vector3(xe, METRO_Y + 4.6, (EXIT_Z.x + EXIT_Z.y) * 0.5), material)
-	_box(parent, "EastDoorPier", Vector3(1.0, 5.4, 0.6), Vector3(xe, y, EXIT_Z.x - 0.3), material)
-	_box(parent, "ServiceRoomN", Vector3(5.0, 5.4, 0.5), Vector3(xe + 3.0, y, PLATFORM_EDGE_Z - 0.25), material)
-	_box(parent, "ServiceRoomS", Vector3(5.0, 5.4, 0.5), Vector3(xe + 3.0, y, EXIT_Z.x - 0.85), material)
-	_box(parent, "ServiceRoomBack", Vector3(0.5, 5.4, 3.0), Vector3(xe + 5.5, y, -36.5), material)
-	_player_wall(_player_walls(), "EastDoor", Vector3(HALL.end.x + 0.2, METRO_Y, PLATFORM_EDGE_Z), Vector3(HALL.end.x + 0.2, METRO_Y, EXIT_Z.x - 0.6), 6.0)
 
 
 ## Stairs from the square down to the platform, and from the hall up to the tower plaza.
@@ -669,6 +704,11 @@ func _build_tower() -> void:
 	_solid_kit(t, "city_rubble_a", "ChunkC", Vector3(90.0, 0, -46.0), 260.0, Vector3(3.2, 1.2, 2.6))
 	_solid_kit(t, "city_barrier_jersey", "JerseyA", Vector3(55.0, 0, -42.0), 90.0, Vector3(3.0, 1.0, 0.7))
 	_solid_kit(t, "city_barrier_jersey", "JerseyB", Vector3(79.0, 0, -53.0), 30.0, Vector3(3.0, 1.0, 0.7))
+	# Chunks of the skyscraper's facade that came down on the plaza.
+	_fallen_slab(t, "FallenSlabA", Vector3(60.0, 0, -45.0), Vector3(5.0, 0.7, 3.4), 80.0, 24.0)
+	_fallen_slab(t, "FallenSlabB", Vector3(85.0, 0, -52.0), Vector3(4.6, 0.7, 3.2), 200.0, 20.0)
+	_fallen_slab(t, "FallenSlabC", Vector3(70.0, 0, -64.0), Vector3(6.0, 0.8, 3.6), 10.0, 14.0)
+	_fallen_slab(t, "FallenSlabD", Vector3(52.0, 0, -66.0), Vector3(4.0, 0.6, 3.0), 300.0, 28.0)
 	_solid_kit(t, "city_billboard_torn", "Billboard", Vector3(92.0, 0, -36.0), -90.0, Vector3(6.0, 7.0, 0.6))
 	_streetlight(t, "LampA", Vector3(48.0, 0, -24.0), 135.0, true)
 	_streetlight(t, "LampB", Vector3(92.0, 0, -70.0), -45.0, true)
@@ -883,10 +923,10 @@ const ENTRANCES := [
 	[&"precinct", Vector3(-78.0, 0, 0.0), -90.0, Rect2(-82.0, -3.0, 8.0, 6.0), 10.0, Vector2(4.5, 16.0)],
 	[&"market", Vector3(42.0, 0, -14.0), 180.0, Rect2(40.0, -20.0, 4.0, 12.0), 2.0, Vector2.ZERO],
 	[&"market", Vector3(56.0, 0, 14.0), 0.0, Rect2(54.0, 8.0, 4.0, 12.0), 10.0, Vector2.ZERO],
-	[&"market", Vector3(95.5, 0, -5.5), 90.0, Rect2(90.0, -8.0, 8.0, 16.0), 10.0, Vector2.ZERO],
+	[&"market", Vector3(97.0, 0, -5.0), 90.0, Rect2(90.0, -8.0, 8.0, 16.0), 10.0, Vector2.ZERO],
 	[&"metro", Vector3(-23.5, METRO_Y, -33.0), -90.0, null, 0.0, Vector2.ZERO],
-	[&"metro", Vector3(21.5, METRO_Y, -25.0), 0.0, null, 0.0, Vector2.ZERO],
-	[&"metro", Vector3(43.5, METRO_Y, -36.5), 90.0, null, 0.0, Vector2.ZERO],
+	[&"metro", Vector3(21.5, METRO_Y, -24.0), 0.0, null, 0.0, Vector2.ZERO],
+	[&"metro", Vector3(-12.0, METRO_Y, -24.0), 0.0, null, 0.0, Vector2.ZERO],
 	[&"tower", Vector3(70.0, 0, -77.0), 180.0, Rect2(66.0, -84.0, 8.0, 12.0), 6.0, Vector2(5.0, 24.0)],
 	[&"tower", Vector3(99.0, 0, -46.0), 90.0, Rect2(94.0, -50.0, 12.0, 8.0), 10.0, Vector2.ZERO],
 	[&"tower", Vector3(40.0, 0, -56.0), -90.0, Rect2(34.0, -58.0, 12.0, 4.0), 10.0, Vector2.ZERO],
@@ -1151,11 +1191,13 @@ func _fire_at(parent: Node3D, fire_name: String, pos: Vector3, size: float, with
 		parent.add_child(f)
 		f.position = pos
 		f.scale = Vector3.ONE * size
+		f.add_to_group("city_fire", true)
 		return
 	var holder := Node3D.new()
 	holder.name = fire_name
 	parent.add_child(holder)
 	holder.position = pos
+	holder.add_to_group("city_fire", true)
 	var quad := QuadMesh.new()
 	quad.size = Vector2(1.1, 1.5) * size
 	quad.center_offset = Vector3(0, 0.75 * size, 0)

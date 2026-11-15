@@ -7,7 +7,9 @@ extends "res://scripts/run/level_environment.gd"
 ##    "phase"): the light swaps red and blue;
 ##  - neon that still flickers (group "city_neon_flicker": signs drop out,
 ##    lights dip, now and then, each on its own clock);
-##  - aviation beacons (group "city_beacon") blinking on the radio mast.
+##  - aviation beacons (group "city_beacon") blinking on the radio mast;
+##  - the crackle of the nearest few fires (Node3D in group "city_fire"): a
+##    small pool of positional players moved onto the fires nearest the camera.
 
 const POLICE_RED := Color(1.0, 0.15, 0.12)
 const POLICE_BLUE := Color(0.2, 0.4, 1.0)
@@ -22,6 +24,12 @@ const ASH_AMOUNT := [220, 90]
 const EMBER_AMOUNT := [40, 16]
 ## The ash box round the camera (metres).
 const ASH_EXTENTS := Vector3(16.0, 9.0, 16.0)
+const CRACKLE := &"city_fire_crackle"
+## Fires heard at once, how often the nearest are picked, how far one is heard.
+const CRACKLE_VOICES := 3
+const CRACKLE_CHECK := 0.5
+const CRACKLE_RANGE := 26.0
+const CRACKLE_DB := -4.0
 
 var _time := 0.0
 var _police: Array[OmniLight3D] = []
@@ -31,6 +39,11 @@ var _beacons: Array[OmniLight3D] = []
 var _flicker: Array = []
 var _ash: CPUParticles3D
 var _embers: CPUParticles3D
+var _fires: Array[Node3D] = []
+## Crackle players and the fire each is on (null: idle).
+var _crackle: Array[AudioStreamPlayer3D] = []
+var _crackle_on: Array = []
+var _crackle_check := 0.0
 
 
 func _ready() -> void:
@@ -50,6 +63,10 @@ func _ready() -> void:
 		if node is Node3D and is_ancestor_of(node):
 			var base := (node as OmniLight3D).light_energy if node is OmniLight3D else -1.0
 			_flicker.append([node, base, randf_range(FLICKER_GAP.x, FLICKER_GAP.y), 0.0])
+	for node in get_tree().get_nodes_in_group("city_fire"):
+		if node is Node3D and is_ancestor_of(node):
+			_fires.append(node)
+	_build_crackle()
 
 
 func apply_graphics_preset(low: bool) -> void:
@@ -66,6 +83,10 @@ func _process(delta: float) -> void:
 		var p := cam.global_position
 		_ash.global_position = p + Vector3(0, 3.0, 0)
 		_embers.global_position = p
+		_crackle_check -= delta
+		if _crackle_check <= 0.0:
+			_crackle_check = CRACKLE_CHECK
+			_update_crackle(p)
 	_update_police()
 	_update_flicker()
 	for b in _beacons:
@@ -96,6 +117,49 @@ func _update_flicker() -> void:
 			node.visible = not dark
 		else:
 			(node as OmniLight3D).light_energy = entry[1] * (0.15 if dark else 1.0)
+
+
+func _build_crackle() -> void:
+	var s := Sfx.stream(CRACKLE)
+	if s == null or _fires.is_empty():
+		return
+	for i in mini(CRACKLE_VOICES, _fires.size()):
+		var p := AudioStreamPlayer3D.new()
+		p.name = "Crackle%d" % i
+		p.stream = s
+		p.bus = Sfx.MIX.bus_of(CRACKLE)
+		p.volume_db = CRACKLE_DB + Sfx.mix_db(CRACKLE)
+		p.unit_size = 5.0
+		p.max_distance = CRACKLE_RANGE
+		add_child(p)
+		_crackle.append(p)
+		_crackle_on.append(null)
+
+
+## Moves the crackle players onto the fires nearest `from`; a player whose
+## fire is still among the nearest keeps playing, a moved one starts at a
+## random point of the loop.
+func _update_crackle(from: Vector3) -> void:
+	if _crackle.is_empty():
+		return
+	var near: Array[Node3D] = []
+	for f in _fires:
+		if f.global_position.distance_to(from) < CRACKLE_RANGE:
+			near.append(f)
+	near.sort_custom(func(a: Node3D, b: Node3D) -> bool:
+		return a.global_position.distance_squared_to(from) < b.global_position.distance_squared_to(from))
+	near.resize(mini(near.size(), _crackle.size()))
+	for i in _crackle.size():
+		if _crackle_on[i] != null and not near.has(_crackle_on[i]):
+			_crackle_on[i] = null
+			_crackle[i].stop()
+	for f in near:
+		if _crackle_on.has(f):
+			continue
+		var i := _crackle_on.find(null)
+		_crackle_on[i] = f
+		_crackle[i].global_position = f.global_position
+		_crackle[i].play(randf() * _crackle[i].stream.get_length())
 
 
 ## Grey flakes falling and swirling slowly round the camera.
