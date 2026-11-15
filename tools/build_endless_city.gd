@@ -1851,7 +1851,7 @@ func _instance_mesh(kind: String) -> Mesh:
 			s.height = 0.5
 			s.radial_segments = 8
 			s.rings = 4
-			s.material = _tinted("bag", 0.35)
+			s.material = _tinted("bag", 0.55)
 			return s
 		"bin":
 			var c := CylinderMesh.new()
@@ -1872,7 +1872,7 @@ func _instance_mesh(kind: String) -> Mesh:
 		"paint":
 			var q := PlaneMesh.new()
 			q.size = Vector2(1.0, 1.0)
-			q.material = _tinted("paint", 0.8)
+			q.material = _tinted("paint", 0.85, 0.0, "city_grime", 1.2)
 			return q
 		"tube":
 			var b := BoxMesh.new()
@@ -2117,6 +2117,13 @@ func _build_streets() -> void:
 		_crosswalk(c[0], c[1], 7)
 	for c in [[Vector3(-46.0, 0, 0.5), 0.0], [Vector3(-30.0, 0, 0.0), 0.0]]:
 		_crosswalk(c[0], c[1], 6)
+	# The Precinct's car park: bay lines under the riot vans.
+	for row in [-14.0, 14.0]:
+		for k in 12:
+			var x := -71.0 + k * 3.0
+			if x > -63.0 and x < -55.0:
+				continue
+			_instance("paint", Transform3D(Basis().scaled_local(Vector3(0.14, 1.0, 5.0)), Vector3(x, 0.025, row)), Color(0.55, 0.52, 0.45))
 	_manhole(Vector3(-10.5, 0, -16.2), true)
 	_manhole(Vector3(10.0, 0, 16.0), true)
 	_manhole(Vector3(-16.0, 0, 4.0), false)
@@ -2513,7 +2520,7 @@ func _omni(parent: Node3D, light_name: String, pos: Vector3, color: Color, energ
 func _fire_at(parent: Node3D, fire_name: String, pos: Vector3, size: float, with_light: bool, energy := 0.0, minor := false) -> void:
 	var floor_y := METRO_Y if pos.y < UNDERGROUND_Y else 0.0
 	if with_light or size >= 1.5:
-		_pool(Vector3(pos.x, floor_y, pos.z), 1.5 + size * 1.6, Color(1.0, 0.42, 0.12), true, 0.42 if with_light else 0.25)
+		_pool(Vector3(pos.x, floor_y, pos.z), 1.2 + size * 1.4, Color(1.0, 0.42, 0.12), true, 0.3 if with_light else 0.2)
 	if size >= 0.7:
 		_reflectors.append([pos + Vector3(0, size * 0.8, 0), Color(1.0, 0.5, 0.18), 0.35 + size * 0.25, 0.55 + size * 0.15])
 	var scene := PROPS + "city_fire.tscn"
