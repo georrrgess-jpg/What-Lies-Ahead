@@ -915,7 +915,15 @@ func _fill_traits(tags: Array[String], w: WeaponData) -> void:
 ## Sustained single-target damage per second at the real fire rate, reloads
 ## (or overheat vents) included, so a big magazine and a fast reload count.
 func _stat_dps(w: WeaponData) -> Array:
-	return [w.damage_per_second(), "%d" % roundi(w.damage_per_second())]
+	var dps := w.damage_per_second()
+	if w.status_effect == &"fizz":
+		# A sprayed target carries about three quarters of the full fizz burn.
+		dps += w.status_amount * FizzBurn.MAX_STACKS * 0.75
+	if w.mode_script != null:
+		var mode: WeaponMode = w.mode_script.new()
+		mode.data = w
+		dps = mode.arsenal_dps(dps)
+	return [dps, "%d" % roundi(dps)]
 
 
 ## Damage of one trigger pull: a whole burst, every pellet, a full charge.

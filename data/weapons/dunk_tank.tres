@@ -1,0 +1,72 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/dunk_tank.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/dunk_tank_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/dunk_tank_view.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/dunk_tank_mode.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 7
+
+[resource]
+script = ExtResource("1")
+id = &"dunk_tank"
+sort_order = 45
+category = "Water Pistol"
+slot_class = "secondary"
+display_name = "Dunk Tank"
+role = "Full-auto water jet that hoses back the zombie in front and the one behind it. Everything it wets is soaked for 3 s: slowed, and it takes +25% damage from every weapon. Short reach (under 24 m); soak a Bruiser or a crowd, then finish it with your primary."
+unlock = SubResource("unlock")
+magazine_size = 42
+reserve_start = 252
+reserve_max = 420
+reload_time = 1.7
+emergency_recharge_interval = 0.3
+automatic = true
+fire_interval = 0.085
+damage = 11.0
+pellets = 1
+spread_degrees = 0.9
+spread_bloom = 0.08
+spread_bloom_max = 1.8
+spread_recovery = 8.0
+max_range = 24.0
+falloff_start = 12.0
+falloff_end = 24.0
+falloff_min_scale = 0.5
+headshot_multiplier = 1.4
+knockback = 0.75
+ads_fov_scale = 0.86
+ads_time = 0.12
+ads_spread_scale = 0.55
+ads_depth = 0.08
+first_shot_accurate = false
+reticle_style = "circle"
+recoil_kick = 0.16
+recoil_yaw = 0.12
+view_kick = 0.014
+shake = 0.03
+tracer_color = Color(0.36, 0.82, 1, 1)
+tracer_width = 0.04
+viewmodel = ExtResource("3")
+view_position = Vector3(0.22, -0.21, -0.54)
+view_rotation_degrees = Vector3(0, 0, -2.5)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"gn8_dunk_fire"
+reload_sound = &"gn8_dunk_reload"
+empty_sound = &"empty_click"
+equip_sound = &"gn8_dunk_equip"
+fire_pitch_variance = 0.07
+move_speed_scale = 1.0
+equip_time = 0.24
+pierce = 1
+pierce_falloff = 0.8
+tracer_style = &"none"
+impact_style = &"frost"
+mode_script = ExtResource("6")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/balloon_darter.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/balloon_darter_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/balloon_darter_view.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/balloon_darter_mode.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 37
+
+[resource]
+script = ExtResource("1")
+id = &"balloon_darter"
+sort_order = 130
+category = "Dart Pistol"
+slot_class = "secondary"
+display_name = "Balloon Darter"
+role = "Balloon dart pistol. Every dart that hits ties a balloon on (up to four per zombie). Just under a second after the first dart the bunch pops for 28 damage a balloon, and the blast sets off any ballooned zombie beside it. Tag a pack, then watch it go up in a chain; three darts and their pop drop a tourist."
+unlock = SubResource("unlock")
+magazine_size = 12
+reserve_start = 72
+reserve_max = 144
+reload_time = 1.9
+emergency_recharge_interval = 0.9
+automatic = false
+fire_interval = 0.17
+damage = 16.0
+pellets = 1
+spread_degrees = 0.3
+spread_bloom = 0.3
+spread_bloom_max = 1.2
+spread_recovery = 5.0
+max_range = 60.0
+falloff_start = 25.0
+falloff_end = 60.0
+falloff_min_scale = 0.7
+headshot_multiplier = 1.8
+knockback = 0.4
+ads_fov_scale = 0.78
+ads_time = 0.14
+ads_spread_scale = 0.3
+ads_depth = 0.08
+first_shot_accurate = true
+reticle_style = "dot"
+recoil_kick = 0.7
+recoil_yaw = 0.25
+view_kick = 0.035
+shake = 0.08
+tracer_color = Color(1, 0.42, 0.72, 1)
+tracer_width = 0.03
+viewmodel = ExtResource("3")
+view_position = Vector3(0.22, -0.21, -0.55)
+view_rotation_degrees = Vector3(0, 0, -2.5)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"gn8b_dart_fire"
+reload_sound = &"gn8b_dart_reload"
+empty_sound = &"empty_click"
+equip_sound = &"gn8b_dart_equip"
+fire_pitch_variance = 0.05
+move_speed_scale = 1.0
+equip_time = 0.24
+mode_script = ExtResource("6")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
