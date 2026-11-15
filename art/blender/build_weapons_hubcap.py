@@ -10,7 +10,8 @@ finish, cell, decal and charm works), built-in sights. Moving parts, driven by
 scripts/weapons/views/hubcap_boomerang_view.gd and
 scripts/weapons/reloads/hubcap_boomerang_reload.gd:
 
-  Loaded      the hubcap lying on the launch tray (pivot at its centre, axis +Z)
+  Loaded      the hubcap on the launch tray, tipped back to face the player
+              (pivot at its centre)
   WheelL/R    the two pitching tyres either side of it (spin on every throw)
   Catcher     the horseshoe magnet on the nose that snaps the hubcap home
   Cell        the hubcap rack on the left flank (its glowing rails) >
@@ -40,17 +41,18 @@ def palette(shell, trim, dark, steel, pink, steel_metal=0.8):
     mat("GunPink", pink, rough=0.34)
 
 
-def _place(parts, centre, axis):
-    """Moves parts built round the origin (axis +Z) to `centre`, turning +Z onto `axis` ('x', 'y' or 'z')."""
+def _place(parts, centre, axis, tilt=0.0):
+    """Moves parts built round the origin (axis +Z) to `centre`, turning +Z onto `axis` ('x', 'y' or 'z'),
+    then tipping it back towards the player by `tilt` degrees (about X)."""
     bpy.context.view_layer.update()
     rot = {"z": Matrix.Identity(4), "x": Matrix.Rotation(math.pi / 2, 4, "Y"), "y": Matrix.Rotation(-math.pi / 2, 4, "X")}[axis]
-    move = Matrix.Translation(Vector(centre))
+    move = Matrix.Translation(Vector(centre)) @ Matrix.Rotation(math.radians(tilt), 4, "X")
     for ob in parts:
         ob.matrix_world = move @ rot @ ob.matrix_world
     return parts
 
 
-def hubcap(prefix, radius, chrome, dark, glow, centre=(0, 0, 0), axis="z", detail=True):
+def hubcap(prefix, radius, chrome, dark, glow, centre=(0, 0, 0), axis="z", detail=True, tilt=0.0):
     """A chunky chrome hubcap round the origin (axis +Z, face up): a domed dish,
     a ribbed outer rim, six spokes, lug nuts and a glowing centre badge."""
     t = radius * 0.22
@@ -70,7 +72,7 @@ def hubcap(prefix, radius, chrome, dark, glow, centre=(0, 0, 0), axis="z", detai
             b = a + math.pi / SPOKES
             parts.append(cyl(f"{prefix}Nut{i}", radius * 0.045, t * 0.4, (math.cos(b) * radius * 0.34, math.sin(b) * radius * 0.34, t * 0.62),
                              segs=6, bevel=0.0, m=dark))
-    return _place(parts, centre, axis)
+    return _place(parts, centre, axis, tilt)
 
 
 def tyre(prefix, centre, radius, height, M):
@@ -97,36 +99,36 @@ def build_hubcap_boomerang():
     grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.07, 0.092, 0.19), body_bottom=-0.02)
     rail_top = 0.106
     z_line = rail_top + SIGHT_HEIGHT
-    tray_z = 0.05
-    cap_c = (0, 0.33, tray_z + 0.02)       # the loaded hubcap on the tray
-    cap_r = 0.058
-    wheel_x = cap_r + 0.032
-    wheel_c = (wheel_x, 0.33, tray_z + 0.022)
-    rack_c = (-0.066, 0.1, 0.028)          # spare hubcaps on edge, left flank
-    magnet_c = (0, 0.42, tray_z + 0.022)
-    fore = (0, 0.235, -0.085)
+    tray_z = 0.072
+    cap_c = (0, 0.29, tray_z + 0.022)      # the loaded hubcap, tipped back on the tray
+    cap_r = 0.068
+    wheel_x = cap_r + 0.03
+    wheel_c = (wheel_x, 0.29, tray_z + 0.022)
+    rack_c = (-0.066, 0.04, 0.028)          # spare hubcaps on edge, left flank
+    magnet_c = (0, 0.385, tray_z + 0.022)
+    fore = (0, 0.215, -0.072)
 
     shell = grip_parts + [
         # Hot-rod body: candy orange-red, a hazard-yellow belt line and a dark sill.
-        box("Body", (0.092, 0.3, 0.1), (0, 0.06, 0.03), bevel=0.026, segs=3, m=M["shell"]),
-        box("BeltLine", (0.096, 0.28, 0.016), (0, 0.06, 0.044), bevel=0.005, m=M["trim"]),
-        box("Sill", (0.094, 0.26, 0.022), (0, 0.06, -0.014), bevel=0.008, m=M["dark"]),
-        box("Hood", (0.07, 0.12, 0.012), (0, 0.15, 0.084), bevel=0.005, m=M["shell"]),
-        box("RailRiser", (0.036, 0.19, 0.018), (0, 0.02, rail_top - 0.017), bevel=0.004, m=M["dark"]),
+        box("Body", (0.092, 0.24, 0.1), (0, 0.03, 0.03), bevel=0.026, segs=3, m=M["shell"]),
+        box("BeltLine", (0.096, 0.22, 0.016), (0, 0.03, 0.044), bevel=0.005, m=M["trim"]),
+        box("Sill", (0.094, 0.2, 0.02), (0, 0.03, -0.008), bevel=0.008, m=M["dark"]),
+        box("Hood", (0.07, 0.1, 0.012), (0, 0.1, 0.084), bevel=0.005, m=M["shell"]),
+        box("RailRiser", (0.036, 0.16, 0.018), (0, 0.01, rail_top - 0.017), bevel=0.004, m=M["dark"]),
         # Launch tray out front: a steel plate between two fenders, a foregrip mount below.
-        box("Tray", (0.15, 0.19, 0.014), (0, 0.32, tray_z), bevel=0.005, m=M["dark"]),
-        box("TrayLip", (0.12, 0.012, 0.016), (0, 0.226, tray_z + 0.01), bevel=0.004, m=chrome),
-        box("TrayNeck", (0.07, 0.06, 0.05), (0, 0.22, 0.02), bevel=0.012, m=M["shell"]),
-        box("ForegripMount", (0.056, 0.07, 0.03), (0, fore[1], -0.012), bevel=0.008, m=M["dark"]),
+        box("Tray", (0.17, 0.2, 0.014), (0, 0.28, tray_z), bevel=0.005, m=M["dark"]),
+        box("TrayLip", (0.12, 0.012, 0.016), (0, 0.186, tray_z + 0.01), bevel=0.004, m=chrome),
+        box("TrayNeck", (0.07, 0.07, 0.07), (0, 0.17, 0.035), bevel=0.012, m=M["shell"]),
+        box("ForegripMount", (0.056, 0.07, 0.07), (0, fore[1], 0.03), bevel=0.008, m=M["dark"]),
         # Chrome front bumper under the nose, with two red tail-light studs.
-        box("Bumper", (0.17, 0.016, 0.018), (0, 0.418, tray_z - 0.012), bevel=0.007, m=chrome),
+        box("Bumper", (0.19, 0.016, 0.018), (0, 0.384, tray_z - 0.012), bevel=0.007, m=chrome),
         # Muffler stock with a chrome end can and a tail light.
-        ycyl("Muffler", 0.034, 0.16, -0.17, z=0.02, m=chrome, segs=20, bevel=0.006),
-        ring("MufflerBandA", 0.035, 0.004, -0.13, z=0.02, m=M["dark"], segs=20),
-        ring("MufflerBandB", 0.035, 0.004, -0.21, z=0.02, m=M["dark"], segs=20),
-        ycyl("Butt", 0.037, 0.02, -0.255, z=0.02, m=M["dark"], segs=20, bevel=0.006),
-        ycyl("TailLight", 0.016, 0.006, -0.266, z=0.02, m=M["pink"], segs=16, bevel=0.002),
-        box("StockNeck", (0.05, 0.06, 0.05), (0, -0.1, 0.02), bevel=0.012, m=M["dark"]),
+        ycyl("Muffler", 0.026, 0.1, -0.15, z=0.015, m=chrome, segs=20, bevel=0.006),
+        ring("MufflerBandA", 0.027, 0.0035, -0.12, z=0.015, m=M["dark"], segs=20),
+        ring("MufflerBandB", 0.027, 0.0035, -0.18, z=0.015, m=M["dark"], segs=20),
+        ycyl("Butt", 0.029, 0.018, -0.205, z=0.015, m=M["dark"], segs=20, bevel=0.006),
+        ycyl("TailLight", 0.012, 0.006, -0.215, z=0.015, m=M["pink"], segs=16, bevel=0.002),
+        box("StockNeck", (0.05, 0.05, 0.05), (0, -0.095, 0.02), bevel=0.012, m=M["dark"]),
         # The rack's saddle on the left flank.
         box("RackSaddle", (0.012, 0.13, 0.05), (-0.05, rack_c[1], rack_c[2]), bevel=0.004, m=M["dark"]),
     ]
@@ -145,24 +147,22 @@ def build_hubcap_boomerang():
                              rot=rad(32, 0, 0), bevel=0.0, m=M["trim"] if i % 2 == 0 else M["dark"]))
     # Fenders over the pitching tyres.
     for side in (-1, 1):
-        shell.append(box(f"Fender{side}", (0.05, 0.09, 0.01), (side * wheel_x, 0.33, tray_z + 0.052), bevel=0.004, m=M["shell"]))
-        shell.append(box(f"FenderStrut{side}", (0.008, 0.012, 0.05), (side * (wheel_x + 0.02), 0.33, tray_z + 0.026), bevel=0.002, m=chrome))
-        shell.append(sphere(f"Headlight{side}", 0.011, (side * 0.06, 0.426, tray_z - 0.012), scale=(1, 0.6, 1), m=M["cell"], segs=10, rings=6))
-    # Vertical foregrip: a ribbed rubber gear-stick boot with a chrome knob.
+        shell.append(box(f"Fender{side}", (0.05, 0.09, 0.01), (side * wheel_x, 0.29, tray_z + 0.05), bevel=0.004, m=M["shell"]))
+        shell.append(box(f"FenderStrut{side}", (0.008, 0.012, 0.05), (side * (wheel_x + 0.02), 0.29, tray_z + 0.026), bevel=0.002, m=chrome))
+        shell.append(sphere(f"Headlight{side}", 0.011, (side * 0.065, 0.392, tray_z - 0.012), scale=(1, 0.6, 1), m=M["cell"], segs=10, rings=6))
+    # Vertical foregrip: a rubber gear-stick boot with a chrome knob.
     shell += [
-        box("Foregrip", (0.046, 0.054, 0.12), fore, bevel=0.016, m=M["dark"]),
-        sphere("ForegripKnob", 0.028, (0, fore[1], fore[2] - 0.068), scale=(1, 1, 0.75), m=chrome, segs=16, rings=10),
+        box("Foregrip", (0.042, 0.05, 0.12), fore, bevel=0.016, m=M["dark"]),
+        sphere("ForegripKnob", 0.025, (0, fore[1], fore[2] - 0.078), scale=(1, 1, 0.7), m=chrome, segs=16, rings=10),
     ]
-    for i in range(4):
-        shell.append(box(f"BootRib{i}", (0.05, 0.058, 0.006), (0, fore[1], fore[2] + 0.04 - i * 0.026), bevel=0.002, m=M["trim"]))
-    shell += top_rail("TopRail", -0.06, 0.1, rail_top, M, width=0.032)
-    shell += bolts("Pin", [(-0.047, 0.2, 0.0), (0.047, 0.2, 0.0), (0.047, -0.07, 0.04)], chrome, radius=0.006, height=0.006)
-    lug, charm_point = charm_lug(0.046, -0.05, -0.002, M, out=1.0)
+    shell += top_rail("TopRail", -0.07, 0.08, rail_top, M, width=0.032)
+    shell += bolts("Pin", [(-0.047, 0.12, 0.0), (0.047, 0.12, 0.0), (0.047, -0.07, 0.04)], chrome, radius=0.006, height=0.006)
+    lug, charm_point = charm_lug(-0.026, -0.165, 0.004, M)
     shell += lug
-    sight_rear, sight_front = sights_notch(0.0, -0.05, 0.2, rail_top, 0.09, z_line, M, gap=0.016)
-    shell.append(box("FrontSightBase", (0.03, 0.03, 0.01), (0, 0.2, 0.085), bevel=0.003, m=M["dark"]))
+    sight_rear, sight_front = sights_notch(0.0, -0.06, 0.14, rail_top, 0.09, z_line, M, gap=0.016)
+    shell.append(box("FrontSightBase", (0.03, 0.03, 0.01), (0, 0.14, 0.088), bevel=0.003, m=M["dark"]))
 
-    loaded = hubcap("Loaded", cap_r, chrome, M["dark"], M["cell"], cap_c, "z")
+    loaded = hubcap("Loaded", cap_r, chrome, M["dark"], M["cell"], cap_c, "z", tilt=24.0)
     wheel_l = tyre("WheelL", (-wheel_c[0], wheel_c[1], wheel_c[2]), 0.03, 0.03, M)
     wheel_r = tyre("WheelR", wheel_c, 0.03, 0.03, M)
 
@@ -190,13 +190,13 @@ def build_hubcap_boomerang():
     rack_holo = holo_copy(rack[:2] + [p for p in spares["Cap0"][0][:2]])
 
     bolt = [(-0.008, 0.02), (0.012, 0.004), (0.002, 0.0), (0.01, -0.02), (-0.012, -0.002), (-0.002, 0.0)]
-    decal = [side_emblem("Emblem", bolt, -0.047, -0.03, 0.05, M["decal"])]
+    decal = [side_emblem("Emblem", bolt, -0.047, -0.065, 0.05, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
     arm_l, elbow_l = vertical_hand(fore, 0.023, 0.027, 0.12, M, (-0.52, -0.16, -0.46))
     groups = {
         "Shell": (shell, (0, 0, 0), None),
-        "IronSightRear": (sight_rear, (0, -0.05, rail_top), None),
-        "IronSightFront": (sight_front, (0, 0.2, 0.09), None),
+        "IronSightRear": (sight_rear, (0, -0.06, rail_top), None),
+        "IronSightFront": (sight_front, (0, 0.14, 0.09), None),
         "Loaded": (loaded, cap_c, None),
         "WheelL": (wheel_l, (-wheel_c[0], wheel_c[1], wheel_c[2]), None),
         "WheelR": (wheel_r, wheel_c, None),
@@ -210,9 +210,9 @@ def build_hubcap_boomerang():
     for name, (parts, centre) in spares.items():
         groups[name] = (parts, centre, "Cell")
     empties = {
-        "Muzzle": ((0, 0.45, tray_z + 0.022), None),
-        "SightPoint": ((0, -0.05, z_line), None),
-        "SightMount": ((0, 0.02, rail_top), None),
+        "Muzzle": ((0, 0.41, tray_z + 0.022), None),
+        "SightPoint": ((0, -0.06, z_line), None),
+        "SightMount": ((0, 0.005, rail_top), None),
         "EjectPoint": ((rx - 0.03, ry, rz - 0.03), None),
         "VentPoint": ((0.068, -0.02, 0.085), None),
         "CharmPoint": (charm_point, None),

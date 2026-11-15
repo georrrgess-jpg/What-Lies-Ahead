@@ -97,14 +97,14 @@ func _pose_loaded(v: WeaponView, mag: int) -> void:
 	if t < THROW:
 		var k := t / THROW
 		_loaded.visible = true
-		_loaded.transform = Transform3D(rest.basis.rotated(Vector3.UP, k * 4.0), rest.origin + THROW_OFFSET * k * k)
+		_loaded.transform = Transform3D(rest.basis * Basis(Vector3.UP, k * 4.0), rest.origin + THROW_OFFSET * k * k)
 	elif t < LOAD_START or mag <= 0:
 		_loaded.visible = false
 	elif t < LOAD_END:
 		var k := smoothstep(LOAD_START, LOAD_END, t)
 		_loaded.visible = true
 		var lift := Vector3(0.0, sin(k * PI) * 0.025, 0.0)
-		_loaded.transform = Transform3D(rest.basis.rotated(Vector3.UP, (1.0 - k) * PI), rest.origin + LOAD_OFFSET * (1.0 - k) + lift)
+		_loaded.transform = Transform3D(rest.basis * Basis(Vector3.UP, (1.0 - k) * PI), rest.origin + LOAD_OFFSET * (1.0 - k) + lift)
 	else:
 		_loaded.visible = true
 		_loaded.transform = rest
@@ -114,7 +114,7 @@ func _pose_loaded(v: WeaponView, mag: int) -> void:
 func _pose_catch(v: WeaponView) -> void:
 	var k := sin(clampf(_since_catch / CATCH_TIME, 0.0, 1.0) * PI)
 	if _catcher:
-		_catcher.transform = v.rest_transform("Catcher") * Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-k * 18.0)), Vector3(0.0, 0.0, 0.025 * k))
+		_catcher.transform = v.rest_transform("Catcher") * Transform3D(Basis(Vector3.RIGHT, deg_to_rad(k * 18.0)), Vector3(0.0, 0.0, 0.025 * k))
 	if v.model and _since_catch < CATCH_TIME + 0.05:
 		var jolt := 1.6 if _pileup else 1.0
 		var rot := Vector3(5.0, -2.0, -5.0) * k * jolt

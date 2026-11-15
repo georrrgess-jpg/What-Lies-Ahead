@@ -1,9 +1,9 @@
 extends RefCounted
-## Road Rager "pit stop": the gun rolls over to show the rack, the support
-## hand yanks the empty rack off the flank and tosses it; a hologram rack of
-## hubcaps prints in and is slammed home. Then the flourish: the top hubcap is
-## flipped up off the rack, spins in the air and drops onto the tray, the
-## pitching tyres rev with a screech and the magnet clacks.
+## Road Rager "pit stop": the gun rolls over to show the rack and the empty
+## rack springs off the flank; a hologram rack of hubcaps prints in and is
+## shoved home. Then the flourish: the top hubcap is flipped up off the rack,
+## spins in the air and drops onto the tray, the pitching tyres rev with a
+## screech and the magnet clacks.
 
 const SPARES := 2
 const EMBER := [Color(1.0, 0.55, 0.15), Color(1.0, 0.95, 0.8), Color(1.0, 0.82, 0.3)]
@@ -29,17 +29,12 @@ func play(v: WeaponView, d: float) -> void:
 	v.track("Root", d, [[0.1, Vector3(0.01, 0.025, 0.0), Vector3(4, -6, -20)], [0.62, Vector3(0.01, 0.025, 0.0), Vector3(4, -6, -20)],
 		[0.72, Vector3(0.0, 0.01, 0.0), Vector3(-2, 0, -4)], [0.84, Vector3(0.0, 0.03, 0.0), Vector3(-9, 0, 3)], [0.95, Vector3.ZERO, Vector3.ZERO]])
 	v.glow_ramp(0.06, 0.16, d, 1.0, 0.2)
-	# The empty rack is yanked off the flank and tossed down to the left.
-	v.track("Cell", d, [[0.14, Vector3.ZERO, Vector3.ZERO], [0.22, Vector3(-0.05, 0.01, 0.0), Vector3(0, 0, 10)],
-		[0.36, Vector3(-0.3, -0.24, 0.06), Vector3(30, 40, 160), 0.8]], Tween.TRANS_QUAD, Tween.EASE_IN)
+	# The empty rack springs off the flank, tumbling up and away to the left.
+	v.track("Cell", d, [[0.14, Vector3.ZERO, Vector3.ZERO], [0.2, Vector3(-0.04, 0.02, 0.0), Vector3(0, 0, 12)],
+		[0.36, Vector3(-0.28, 0.14, 0.12), Vector3(40, 30, 200), 0.8]], Tween.TRANS_QUAD, Tween.EASE_OUT)
 	v.at(0.15, d, func(): Sfx.play(&"reload_clunk", -6.0, 1.15))
-	v.burst(0.18, d, "EjectPoint", "sparks")
+	v.burst(0.16, d, "EjectPoint", "sparks")
 	v.hide_part(0.36, d, "Cell")
-	# The support hand leaves the foregrip, grabs the rack, comes back with the new one.
-	v.track("ArmL", d, [[0.1, Vector3(-0.04, 0.01, 0.06), Vector3(0, 0, -10)], [0.2, Vector3(-0.1, 0.04, 0.14), Vector3(0, 10, -24)],
-		[0.3, Vector3(-0.2, -0.06, 0.12), Vector3(0, 14, -36)], [0.42, Vector3(-0.12, 0.0, 0.14), Vector3(0, 10, -20)],
-		[0.6, Vector3(-0.1, 0.03, 0.14), Vector3(0, 10, -24)], [0.7, Vector3(-0.04, 0.01, 0.06), Vector3(0, 0, -10)],
-		[0.78, Vector3.ZERO, Vector3.ZERO]])
 	# A hologram rack prints in beside the flank and is slammed home.
 	v.track("CellHolo", d, [[0.38, Vector3(-0.08, 0.0, 0.0), Vector3(0, 0, -20), 1.0, "hold"], [0.54, Vector3(-0.04, 0.0, 0.0), Vector3.ZERO],
 		[0.6, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_BACK, Tween.EASE_OUT)
@@ -53,7 +48,7 @@ func play(v: WeaponView, d: float) -> void:
 	v.at(0.7, d, func(): Sfx.play(&"hub_flip", -5.0))
 	v.track("WheelL", d, ReloadKeys.spin(0.86, 1.0, Vector3.UP, 1080.0, Vector3.ZERO, Vector3.ZERO, 1.0), Tween.TRANS_LINEAR)
 	v.track("WheelR", d, ReloadKeys.spin(0.86, 1.0, Vector3.UP, -1080.0, Vector3.ZERO, Vector3.ZERO, 1.0), Tween.TRANS_LINEAR)
-	v.track("Catcher", d, [[0.9, Vector3.ZERO, Vector3.ZERO], [0.93, Vector3(0, 0, 0.02), Vector3(-16, 0, 0)], [1.0, Vector3.ZERO, Vector3.ZERO]])
+	v.track("Catcher", d, [[0.9, Vector3.ZERO, Vector3.ZERO], [0.93, Vector3(0, 0, 0.02), Vector3(16, 0, 0)], [1.0, Vector3.ZERO, Vector3.ZERO]])
 	v.at(0.92, d, _landed.bind(v))
 	v.glow_ramp(0.92, 0.95, d, 0.6, 3.0)
 	v.glow_ramp(0.95, 1.0, d, 3.0, 1.0)
@@ -62,7 +57,7 @@ func play(v: WeaponView, d: float) -> void:
 ## The flip off the rack: a hop up and over onto the tray, two turns on the
 ## way (in quarter-turn keys, so the turn is not taken the short way round).
 func _flip_keys(t0: float, t1: float) -> Array:
-	var start := Vector3(-0.07, 0.0, 0.2)
+	var start := Vector3(-0.08, 0.06, 0.2)
 	var keys: Array = [[t0, start, Vector3(0, 0, 90), 0.6, "hold"]]
 	var steps := 8
 	for i in range(1, steps + 1):

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 21
+amount = 30
+
+[resource]
+script = ExtResource("1")
+id = &"fin_last_light"
+display_name = "Last Light"
+description = "The last light of Ashfall City, burned into black chrome: its skyline drifts past in molten gold, windows flickering, under an ember sky. Rivulets of fire run along the weapon, embers rise off it and the whole picture wavers in the heat. Earned by the few who reach wave 30."
+slot = &"weapon_finish"
+rarity = 5
+requirement = SubResource("req")
+colors = PackedColorArray(0.04, 0.035, 0.05, 1, 1, 0.68, 0.22, 1)
+params = {
+"shader": "res://art/shaders/finish_last_light.gdshader",
+"shader_params": {
+"molten": Color(1, 0.32, 0.06, 1),
+"hot": Color(1, 0.86, 0.5, 1)
+}
+}
+sort_order = 2400
