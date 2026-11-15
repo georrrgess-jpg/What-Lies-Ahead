@@ -70,7 +70,7 @@ const PORTAL := Vector3(10.0, UP, -22.4)
 ## Retro Records (upper north-west): the shutter is still down north of
 ## REC_OPEN (z) and torn open south of it; REC_SPAWN is its spawn (x, z).
 const REC_OPEN := -18.6
-const REC_SPAWN := Vector2(-20.6, -15.4)
+const REC_SPAWN := Vector2(-20.8, -15.8)
 ## Light-sized batching cells (the Compatibility renderer lights an object with
 ## at most 8 omni lights, so merged geometry is split into 12 m cells).
 const CELL := 12.0
@@ -1388,6 +1388,15 @@ func _build_record_store(e: Node3D) -> void:
 	_bbox("neon_teal", Vector3(0.05, 0.3, 1.5), Vector3(X0 + 0.12, y + 2.95, door_z))
 	_label(signs, "RecordsStairs", "SERVICE STAIRS", Vector3(X0 + 0.16, y + 2.95, door_z), half_pi, 0.0017, Color(0.05, 0.2, 0.2))
 	_prop(dressing, "mall_exit_sign", "RecordsExitBox", Vector3(X0 + 0.3, y + 3.45, door_z), 90.0)
+	# A new-releases bin fills the corner between the party wall and the
+	# south pilaster, so a crowd leaving the shop slides past it instead of
+	# wedging there.
+	var bin := [Vector2(-18.3, -12.15), Vector2(-19.2, -12.15), Vector2(-18.3, -13.05)]
+	_bprism("teal", bin, y, y + 0.95)
+	_bprism("neon_teal", bin, y + 0.95, y + 0.99)
+	_prism_collider(e, "RecordsBin", bin, y, y + 1.0)
+	_bbox("hazard", Vector3(0.05, 0.34, 0.34), Vector3(-18.62, y + 1.15, -12.5), PI * 0.25)
+	_bbox("pink", Vector3(0.05, 0.34, 0.34), Vector3(-18.5, y + 1.15, -12.66), PI * 0.25)
 	# Sleeves pinned up either side of the door.
 	var k := 0
 	for z in [-17.9, -17.2, -13.6, -12.9]:
@@ -1686,7 +1695,10 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	mesh.agent_max_slope = 40.0
 	mesh.region_min_size = 14.0
 	# Both floors; the roof and the tops of counters stay out (largest island).
-	mesh.filter_baking_aabb = AABB(Vector3(X0 - 1.0, -1.0, Z0 - 1.0), Vector3(X1 - X0 + 2.0, UP + 1.5, Z1 - Z0 + 2.0))
+	# The box reaches a body height over the upper floor: cut lower, the shop
+	# fronts and party walls up there were only stubs the bake walked over,
+	# and upstairs routes ran through the walls into the shops.
+	mesh.filter_baking_aabb = AABB(Vector3(X0 - 1.0, -1.0, Z0 - 1.0), Vector3(X1 - X0 + 2.0, UP + 3.0, Z1 - Z0 + 2.0))
 	var source := NavigationMeshSourceGeometryData3D.new()
 	NavigationServer3D.parse_source_geometry_data(mesh, source, region)
 	NavigationServer3D.bake_from_source_geometry_data(mesh, source)
