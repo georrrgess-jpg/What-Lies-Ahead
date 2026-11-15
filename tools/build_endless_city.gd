@@ -109,6 +109,7 @@ func _initialize() -> void:
 	_build_entrances()
 	_build_boundary()
 	_build_skyline()
+	_build_ashfall()
 	_build_markers()
 	_build_areas()
 	_build_features()
@@ -336,8 +337,13 @@ func _wreck(parent: Node3D, model: String, wreck_name: String, pos: Vector3, yaw
 		var spots := _empties(node, "Fire")
 		if spots.is_empty():
 			spots.append(pos + Vector3(0, top * 0.75, 0))
+		# A main blaze and a smaller tongue beside it per spot, so a wreck
+		# burns like a fire and not a marker.
+		var side := Basis(Vector3.UP, deg_to_rad(yaw)) * Vector3(0.6, 0, 0.35)
 		for k in spots.size():
-			_fire_at(fx, "%sFire%d" % [wreck_name, k], spots[k], 0.9 + size.x * 0.05, k == 0)
+			var big := (1.6 if k == 0 else 1.15) + size.x * 0.04
+			_fire_at(fx, "%sFire%d" % [wreck_name, k], spots[k], big, k == 0)
+			_fire_at(fx, "%sFire%dSmall" % [wreck_name, k], spots[k] + side * (1.0 if k % 2 == 0 else -1.0) - Vector3(0, 0.15, 0), big * 0.55, false)
 	return node
 
 
@@ -584,7 +590,7 @@ func _build_metro() -> void:
 		var red := k % 3 == 1
 		var color := Color(1.0, 0.25, 0.15) if red else Color(1.0, 0.62, 0.3)
 		_visual_box(dressing, "EmergencyLamp%d" % k, Vector3(1.4, 0.2, 0.4), Vector3(lx, HALL_CEILING - 0.15, -31.0), _mat("lamp_" + color.to_html(false), color, 0.4, color, 4.0))
-		var l := _omni(fx, "Emergency%d" % k, Vector3(lx, HALL_CEILING - 1.0, -32.0), color, 1.6 if red else 1.4, 10.0)
+		var l := _omni(fx, "Emergency%d" % k, Vector3(lx, HALL_CEILING - 1.0, -32.0), color, 2.4 if red else 2.2, 12.0)
 		if red:
 			l.add_to_group("city_neon_flicker", true)
 	_build_stairs(m)
@@ -1026,6 +1032,8 @@ func _build_shell_multimeshes() -> void:
 		# The block cores behind cast the buildings' shadows (one surface
 		# each, not the facades' twenty-odd).
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mmi.visibility_range_end = 120.0
+		mmi.add_to_group("city_surface", true)
 		dressing.add_child(mmi)
 
 
@@ -1302,6 +1310,7 @@ func _build_skyline() -> void:
 			xforms.append(Transform3D(basis, pos))
 	var mmi := _multimesh("Towers", mesh, xforms)
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	back.add_to_group("city_surface", true)
 	back.add_child(mmi)
 	# The ground out to the horizon round the city's footprint (the districts
 	# have their own floors; the stairwells must stay open), and a dark floor
@@ -1326,6 +1335,15 @@ func _build_skyline() -> void:
 	_smoke(fx, "SmokeFarS", Vector3(40.0, 20.0, 170.0), 2.6)
 	_smoke(fx, "SmokeFarN", Vector3(-40.0, 25.0, -190.0), 3.4)
 	_omni(fx, "SkyscraperFire", Vector3(64.0, 60.0, -88.0), Color(1.0, 0.45, 0.15), 4.0, 60.0)
+
+
+## The kit's drifting ash round the camera (it follows the camera itself).
+func _build_ashfall() -> void:
+	var scene := PROPS + "city_ashfall.tscn"
+	if ResourceLoader.exists(scene):
+		var ash: Node3D = (load(scene) as PackedScene).instantiate()
+		ash.name = "Ashfall"
+		fx.add_child(ash)
 
 
 # ---------------------------------------------------------------------------
@@ -1450,7 +1468,8 @@ func _fire_at(parent: Node3D, fire_name: String, pos: Vector3, size: float, with
 		f.name = fire_name
 		parent.add_child(f)
 		f.position = pos
-		f.scale = Vector3.ONE * size
+		f.set("size", size)
+		f.set("with_light", with_light)
 		f.add_to_group("city_fire", true)
 		return
 	var holder := Node3D.new()
