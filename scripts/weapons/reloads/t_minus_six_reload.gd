@@ -1,18 +1,19 @@
 extends RefCounted
-## T-Minus Six "launch gantry": the launcher tips its pod up toward the eye,
+## T-Minus Six "launch gantry": the launcher rolls its pod up toward the eye,
 ## the arming rings go dark and a teal hologram gantry (CellHolo) projects
 ## over the pod. One by one the empty tubes are filled: a fresh rocket
-## appears on the gantry's rails above the pod's mouth and slides down and
-## back into its tube with a click, while the dish spins up. Then the
+## appears high on the gantry's rails behind the pod and slides down and
+## forward into its tube with a click, while the dish spins up. Then the
 ## countdown strip runs 3-2-1, the gantry dissolves and the pod flares:
 ## go for launch. Rockets still in the pod stay put, so a partial reload has
 ## fewer to load (and is shorter: TMinusSixMode.PARTIAL_RELOAD_CUT).
 
 const ROCKETS := 6
 const COUNT := 3
-## Where a fresh rocket appears on the rails (above and ahead of its tube).
-const RAIL_START := Vector3(0.0, 0.065, -0.11)
-const RAIL_BEND := Vector3(0.0, 0.012, -0.075)
+## Where a fresh rocket appears on the rails (above and behind its tube: it
+## slides forward and down into the pod through the gantry).
+const RAIL_START := Vector3(0.0, 0.09, 0.1)
+const RAIL_BEND := Vector3(0.0, 0.035, 0.05)
 const LOAD_START := 0.24
 const LOAD_END := 0.72
 const SLIDE := 0.13
@@ -37,9 +38,9 @@ func play(v: WeaponView, d: float) -> void:
 		_show(v, "Rocket%d" % i, i < mag)
 	for i in COUNT:
 		_show(v, "Count%d" % i, false)
-	# Pod up toward the eye, held while it loads, then a little settle.
-	v.track("Root", d, [[0.12, Vector3(-0.01, 0.03, 0.01), Vector3(14, -10, -16)], [0.74, Vector3(-0.01, 0.03, 0.01), Vector3(14, -10, -16)],
-		[0.86, Vector3(0.0, 0.012, 0.0), Vector3(4, -3, -4)], [0.94, Vector3(0.0, 0.02, 0.0), Vector3(-5, 0, 2)], [1.0, Vector3.ZERO, Vector3.ZERO]])
+	# The pod rolls up toward the eye, held while it loads, then a little settle.
+	v.track("Root", d, [[0.14, Vector3(-0.02, 0.045, 0.02), Vector3(-8, 16, 18)], [0.74, Vector3(-0.02, 0.045, 0.02), Vector3(-9, 18, 18)],
+		[0.86, Vector3(0.0, 0.015, 0.0), Vector3(4, 6, -4)], [0.94, Vector3(0.0, 0.02, 0.0), Vector3(-5, 0, 2)], [1.0, Vector3.ZERO, Vector3.ZERO]])
 	v.glow_ramp(0.04, 0.14, d, 1.0, 0.3)
 	# The gantry projects over the pod, rising into place.
 	v.track("CellHolo", d, [[0.1, Vector3(0, -0.02, 0), Vector3.ZERO, 0.85, "hold"], [0.24, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_BACK, Tween.EASE_OUT)

@@ -46,11 +46,11 @@ def rocket(i, centre, M, cream):
     and its arming ring (a separate group, lit when painted)."""
     x, y, z = centre
     parts = [
-        ycyl(f"RocketBody{i}", 0.0105, 0.1, y, z=z, x=x, m=cream, segs=14, bevel=0.002),
-        ycyl(f"RocketNose{i}", 0.0105, 0.026, y + 0.063, z=z, x=x, m=M["trim"], segs=14, bevel=0.0015, radius_top=0.0018),
-        ring(f"RocketBand{i}", 0.0108, 0.0016, y + 0.045, z=z, x=x, m=M["dark"], segs=14),
+        ycyl(f"RocketBody{i}", 0.0125, 0.1, y, z=z, x=x, m=cream, segs=14, bevel=0.002),
+        ycyl(f"RocketNose{i}", 0.0125, 0.034, y + 0.067, z=z, x=x, m=M["trim"], segs=14, bevel=0.0015, radius_top=0.0018),
+        ring(f"RocketBand{i}", 0.0128, 0.0016, y + 0.045, z=z, x=x, m=M["dark"], segs=14),
     ]
-    arm = [ring(f"ArmRing{i}", 0.0122, 0.0021, y + 0.05, z=z, x=x, m=M["cell"], segs=16)]
+    arm = [ring(f"ArmRing{i}", 0.0145, 0.0021, y + 0.05, z=z, x=x, m=M["cell"], segs=16)]
     return parts, arm
 
 
@@ -74,10 +74,10 @@ def build_t_minus_six():
 
     rail_top = 0.1
     z_line = rail_top + SIGHT_HEIGHT
-    pod_c = (0.0, 0.205, 0.035)
-    pod_r = 0.055
+    pod_c = (0.0, 0.205, 0.043)
+    pod_r = 0.064
     pod_y0, pod_y1 = 0.145, 0.265
-    ring_r = 0.03                         # the rockets' circle in the pod
+    ring_r = 0.036                         # the rockets' circle in the pod
     dish_c = (-0.058, 0.03, 0.092)        # dish pivot (turns about Z)
     tube_c = (0.026, 0.045, 0.087)        # fuel-cell tube on the top-right shoulder
     screen_y = -0.073
@@ -105,8 +105,8 @@ def build_t_minus_six():
         box("TubeClampR", (0.022, 0.01, 0.014), (tube_c[0], tube_c[1] - 0.06, tube_c[2]), bevel=0.003, m=M["dark"]),
         box("TubeClampF", (0.022, 0.01, 0.014), (tube_c[0], tube_c[1] + 0.06, tube_c[2]), bevel=0.003, m=M["dark"]),
         # The lock screen at the back: a framed dark glass with a teal ring and a crosshair.
-        box("ScreenFrame", (0.058, 0.006, 0.046), (0, screen_y + 0.004, 0.046), bevel=0.003, m=M["dark"]),
-        box("ScreenGlass", (0.05, 0.004, 0.038), (0, screen_y, 0.046), bevel=0.0015, m=glass),
+        box("ScreenFrame", (0.05, 0.006, 0.04), (0, screen_y + 0.004, 0.046), bevel=0.003, m=M["dark"]),
+        box("ScreenGlass", (0.043, 0.004, 0.033), (0, screen_y, 0.046), bevel=0.0015, m=glass),
         torus("ScreenRing", 0.012, 0.0014, (0, screen_y - 0.0022, 0.052), rot=rad(90, 0, 0), m=M["cell"], major_segs=24, minor_segs=4),
         box("ScreenCrossH", (0.03, 0.0015, 0.0012), (0, screen_y - 0.0022, 0.052), bevel=0.0, m=M["cell"]),
         box("ScreenCrossV", (0.0012, 0.0015, 0.03), (0, screen_y - 0.0022, 0.052), bevel=0.0, m=M["cell"]),
@@ -118,25 +118,26 @@ def build_t_minus_six():
     # Hazard stripes slanted round the band.
     for i in range(12):
         a = math.tau * i / 12
-        shell.append(obox(f"HazardStripe{i}", (0.006, 0.026, 0.0016),
+        shell.append(obox(f"HazardStripe{i}", (0.026, 0.006, 0.0016),
                           (math.cos(a) * (pod_r + 0.0035), 0.228, pod_c[2] + math.sin(a) * (pod_r + 0.0035)),
-                          (-math.sin(a), 0.6, math.cos(a)), (math.cos(a), 0, math.sin(a)), bevel=0.0, m=M["dark"]))
+                          (-math.sin(a), 0.6, math.cos(a)), (0, 1, 0), bevel=0.0, m=M["dark"]))
     # Tube bores round each rocket at the pod's face, and a centre hub.
     for i in range(ROCKETS):
         a = math.radians(90 + 60 * i)
-        shell.append(ring(f"Bore{i}", 0.0128, 0.0022, pod_y1 + 0.008, z=pod_c[2] + math.sin(a) * ring_r, x=math.cos(a) * ring_r, m=M["dark"], segs=16))
+        shell.append(ring(f"Bore{i}", 0.015, 0.0022, pod_y1 + 0.008, z=pod_c[2] + math.sin(a) * ring_r, x=math.cos(a) * ring_r, m=M["dark"], segs=16))
     shell.append(ycyl("PodHub", 0.009, 0.01, pod_y1 + 0.008, z=pod_c[2], m=M["steel"], segs=14, bevel=0.002))
     shell += top_rail("TopRail", -0.045, 0.075, rail_top, M, width=0.03)
     shell += bolts("Pin", [(-0.034, -0.03, 0.0), (0.034, -0.03, 0.0), (0.034, 0.12, 0.02)], M["steel"], radius=0.005, height=0.006)
-    lug, charm_point = charm_lug(pod_r + 0.003, 0.185, pod_c[2], M, out=1.0)
+    lug, charm_point = charm_lug(pod_r + 0.005, 0.185, pod_c[2], M, out=1.0)
     shell += lug
+    shell.append(box("CharmLugFoot", (0.012, 0.03, 0.022), (pod_r + 0.002, 0.185, pod_c[2] + 0.004), bevel=0.003, m=M["steel"]))
     sight_rear, sight_front = sights_notch(0.0, -0.058, 0.25, 0.102, pod_c[2] + pod_r + 0.001, z_line, M, gap=0.016)
 
     # The six rockets, top one first, round the pod.
     rockets = {}
     for i in range(ROCKETS):
         a = math.radians(90 + 60 * i)
-        c = (math.cos(a) * ring_r, 0.222, pod_c[2] + math.sin(a) * ring_r)
+        c = (math.cos(a) * ring_r, 0.245, pod_c[2] + math.sin(a) * ring_r)
         parts, arm = rocket(i, c, M, cream)
         rockets[i] = (parts, arm, c)
 
@@ -150,12 +151,12 @@ def build_t_minus_six():
     holo = M["holo"]
     gantry = []
     for side in (-1, 1):
-        gantry.append(box(f"GantryPost{side}", (0.006, 0.008, 0.11), (side * 0.066, 0.2, 0.04), bevel=0.0, m=holo))
-        gantry.append(obox(f"GantryRail{side}", (0.13, 0.005, 0.005), (side * 0.02, 0.33, 0.1), (0, 0.86, 0.5), (1, 0, 0), bevel=0.0, m=holo))
-    gantry.append(box("GantryBeam", (0.138, 0.008, 0.006), (0, 0.2, 0.097), bevel=0.0, m=holo))
+        gantry.append(box(f"GantryPost{side}", (0.006, 0.008, 0.13), (side * 0.075, 0.2, 0.05), bevel=0.0, m=holo))
+        gantry.append(obox(f"GantryRail{side}", (0.13, 0.005, 0.005), (side * 0.022, 0.165, 0.16), (0, -0.55, 0.83), (1, 0, 0), bevel=0.0, m=holo))
+    gantry.append(box("GantryBeam", (0.156, 0.008, 0.006), (0, 0.2, 0.115), bevel=0.0, m=holo))
     gantry.append(torus("GantryRing", pod_r + 0.008, 0.002, (0, pod_y1 + 0.012, pod_c[2]), rot=rad(90, 0, 0), m=holo, major_segs=36, minor_segs=4))
     for k in range(4):
-        gantry.append(box(f"GantryRung{k}", (0.044, 0.004, 0.003), (0, 0.29 + k * 0.03, 0.082 + k * 0.0175), rot=rad(-30, 0, 0), bevel=0.0, m=holo))
+        gantry.append(box(f"GantryRung{k}", (0.05, 0.004, 0.003), (0, 0.2 - k * 0.026, 0.125 + k * 0.038), rot=rad(34, 0, 0), bevel=0.0, m=holo))
 
     # Radar dish, tilted out over the left flank, with its glowing antenna bulb.
     dx, dy, dz = dish_c
@@ -209,7 +210,7 @@ def build_t_minus_six():
     for i, (parts, at) in lamps.items():
         groups[f"Count{i}"] = (parts, at, None)
     empties = {
-        "Muzzle": ((0, pod_y1 + 0.03, pod_c[2]), None),
+        "Muzzle": ((0, pod_y1 + 0.07, pod_c[2]), None),
         "SightPoint": ((0, -0.058, z_line), None),
         "SightMount": ((0, 0.015, rail_top), None),
         "EjectPoint": ((0, pod_y0, pod_c[2] - pod_r), None),
