@@ -24,7 +24,7 @@ func play(v: WeaponView, d: float) -> void:
 		if cup:
 			cup.visible = (CUPS - k) % CUPS >= spent
 	# Roll over to show the carousel, then back for the flick.
-	v.track("Root", d, [[0.1, Vector3(0.0, 0.02, 0.0), Vector3(8, 4, -22)], [0.58, Vector3(0.0, 0.02, 0.0), Vector3(8, 4, -22)],
+	v.track("Root", d, [[0.1, Vector3(0.0, 0.02, 0.0), Vector3(8, 4, -14)], [0.58, Vector3(0.0, 0.02, 0.0), Vector3(8, 4, -14)],
 		[0.66, Vector3(0.0, 0.01, 0.0), Vector3(2, 0, -6)], [0.9, Vector3(0.0, 0.0, 0.0), Vector3(-3, 0, 4)], [0.97, Vector3.ZERO, Vector3.ZERO]])
 	v.glow_ramp(0.08, 0.16, d, 1.0, 0.2)
 	# The carousel spins out (turning the cups to the open side) and they fly off.
@@ -38,9 +38,10 @@ func play(v: WeaponView, d: float) -> void:
 		v.at(t, d, func(): Sfx.play(&"reload_clunk", -12.0, 1.5 + 0.08 * k))
 	v.burst(0.2, d, "EjectPoint", "sparks")
 	# The support hand drops off the foregrip while the cups print in.
-	v.track("ArmL", d, [[0.1, Vector3(-0.04, -0.06, 0.04), Vector3(0, 0, -16)], [0.58, Vector3(-0.05, -0.07, 0.08), Vector3(0, 0, -20)],
-		[0.65, Vector3(-0.11, -0.04, 0.2), Vector3(0, 30, -30)], [0.7, Vector3(-0.04, 0.03, 0.2), Vector3(0, 30, 20)],
-		[0.78, Vector3(-0.06, -0.06, 0.1), Vector3(0, 0, -10)], [0.9, Vector3.ZERO, Vector3.ZERO]])
+	v.track("ArmL", d, [[0.07, Vector3(0, -0.07, 0), Vector3(0, 0, -14)], [0.14, Vector3(-0.03, -0.11, 0.06), Vector3(0, 0, 8)],
+		[0.58, Vector3(-0.04, -0.12, 0.08), Vector3(0, 0, 10)], [0.65, Vector3(-0.21, -0.04, 0.17), Vector3(0, 8, 0)],
+		[0.7, Vector3(-0.2, 0.05, 0.17), Vector3(0, 8, -6)], [0.78, Vector3(-0.06, -0.09, 0.1), Vector3(0, 0, 4)],
+		[0.84, Vector3(0, -0.07, 0), Vector3(0, 0, -14)], [0.92, Vector3.ZERO, Vector3.ZERO]])
 	v.holo_build("CellHolo", 0.36, 0.56, d)
 	v.at(0.58, d, _cups_in.bind(v))
 	v.solidify("CellHolo", "Cell", 0.58, d)
