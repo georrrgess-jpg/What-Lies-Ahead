@@ -61,14 +61,14 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"lava_fire_dancer": 10,
+"lava_fire_dancer": 9,
 "tourist_shambler": 9,
 "lava_tiki_bartender": 4,
 "boardwalk_bruiser": 1
 }
 spawn_interval = 1.25
 burst = 1
-max_alive = 13
+max_alive = 12
 speed_scale = 1.05
 late_types_after = 0.2
 banner = ""

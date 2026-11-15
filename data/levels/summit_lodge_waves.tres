@@ -114,14 +114,14 @@ surge_count = 6
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"frost_frozen_tourist": 12,
-"frost_ski_racer": 11,
+"frost_frozen_tourist": 10,
+"frost_ski_racer": 10,
 "lifeguard_runner": 3,
 "frost_yeti": 1
 }
 spawn_interval = 2.0
 burst = 2
-max_alive = 13
+max_alive = 12
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""

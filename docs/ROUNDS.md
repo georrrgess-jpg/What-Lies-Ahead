@@ -105,11 +105,11 @@ light and 0.9 s of slow motion).
 | World | Alpha (epithet) | Health (Standard) | Signature kit (phase it unlocks) | Arena event | Aim reward |
 |---|---|---|---|---|---|
 | Prize Pier | Big Bruno (The Prize Booth Bully) | 2900 + 700 armour | prize booths thrown onto 3 marked spots around you; bull rush down a lane, then dizzy; ground pound with 2 rolling rings (2); booth barrage, 5 booths that follow you (3) | - | gold prize-belt plates; dizzy weak spot |
-| Neon Skyline | Captain Lockdown (Riot Control) | 2700 + 500 shield | riot-shield charge (frontal shots do 15%), then shield down; 4 flashbangs; calls a shield line of 2 Riot Bruisers (2); 5-orb volley | lights out (3) | shoot around the shield; dizzy weak spot |
-| Tidal Tunnels | Inky the Great (The Deep-Sea Diva) | 2900 | dives (cannot be hit), a ripple follows you and he bursts up under it with 4 tentacles; a line of tentacles from below that leaves slowing ink; tentacle cage around you (2); the Inker's ink lob | ink creeps in from the screen edges (2, 14 s; 3, for good) | - |
+| Neon Skyline | Captain Lockdown (Riot Control) | 2500 + 500 shield | riot-shield charge (frontal shots do 15%), then shield down; 4 flashbangs; calls a shield line of 2 Riot Bruisers (2); 5-orb volley | lights out (3) | shoot around the shield; dizzy weak spot |
+| Tidal Tunnels | Inky the Great (The Deep-Sea Diva) | 2700 | dives (cannot be hit), a ripple follows you and he bursts up under it with 4 tentacles; a line of tentacles from below that leaves slowing ink; tentacle cage around you (2); the Inker's ink lob | ink creeps in from the screen edges (2, 14 s; 3, for good) | - |
 | Launch Pad 9 | Chief Burnout (The Launch Controller) | 2900 | rocket-boot dash that leaves a fire trail, then overheated; launch-pad jetpack dive; rocket barrage that follows you (2) | afterburners: 1.35x speed and tempo for 10 s (3) | overheated weak spot |
 | Summit Lodge | Old Frostbite (The Abominable Host) | 2900 | ice walls rise around you (they block you for 7 s); frost pound with 2 rings; avalanche of 7 snowballs (3); big snowball | blizzard: you move at 82% for 14 s (2) | - |
-| Midnight Mall | The Night Manager (After-Hours Security) | 3300 | flashlight sweep (a lit 140° beam; break line of sight); power walk; calls security, 3 Mall Walkers (2); clean-up: three charges in a row, then winded (3) | lights out for good (2) | winded weak spot |
+| Midnight Mall | The Night Manager (After-Hours Security) | 3100 | flashlight sweep (a lit 140° beam; break line of sight); power walk; calls security, 2 Mall Walkers (2); clean-up: three charges in a row, then winded (3) | lights out for good (2) | winded weak spot |
 | Lost Temple | The Idol Keeper (Guardian of the Idol) | 3300 + 900 armour | raises 4 stone pillars around you (cover, 9 s); idol laser: a low beam sweeping 120° (jump it or hide behind a pillar); a 300° sweep (3); vine lash | - | stone plates (headshots ignore them) |
 | Candy Works | The Confectioner (Head of Candy R&D) | 3200 | gummy batch, 2 Gummy Bears (up to 3); syrup rush leaving a sticky trail, then dizzy; gumball drop that follows you; taffy yank; 5-orb volley | sugar rush: 1.4x speed and tempo for 12 s (3) | dizzy weak spot |
 | Lava Lagoon | Kahuna Krakatoa (The Volcano's Voice) | 2900 | a line of lava geysers that leave burning lava; volcano stomp (1 ring); a ring of 6 geysers around you (2); geysers that follow you (3); coconut bombs | the sky goes red-dark (3) | - |
@@ -217,9 +217,9 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 
 | | Casual | Standard | Hard |
 |---|---|---|---|
-| Enemy health | 80% | 100% | 112% |
+| Enemy health | 80% | 100% | 114% |
 | Alpha health | 70% | 100% | 100% |
-| Enemy damage | 60% | 100% | 105% |
+| Enemy damage | 60% | 100% | 108% |
 | Enemy speed | 95% | 100% | 105% |
 | Crowd cap | 80% | 100% | 105% |
 | Spawn interval | 120% | 100% | 95% |
@@ -234,7 +234,7 @@ Casual never presses, eases early, and tops the player up between waves: a
 first-time player can make mistakes in every wave and still finish. Hard is
 more, faster and angrier, with no safety net. Its alphas keep Standard health
 (tougher escorts, more of them and faster specials already make the finale
-harder) and its hits are only 5% heavier: the extra crowd is the threat, and a
+harder) and its hits are only 8% heavier: the extra crowd is the threat, and a
 player who dodges and dashes can still clear every world. The run score is not scaled, so
 best scores stay comparable. The tier is shown on the HUD chip and is in the
 result (`difficulty`, `difficulty_label`).
@@ -431,6 +431,78 @@ Frostbite, Kahuna 2900, Confectioner 3200, Cumulus 3400), Inky, Old Frostbite
 and Kahuna lose the orb volley (their world lobs stay), forcing a phase pays
 35% of the reserve energy (was 20%), and Hard is 112% enemy health, 105% crowd
 and 95% spawn interval (was 120 / 110 / 90%: it lost early waves on four of six
-worlds). Known: Sky Harbor's and Midnight Mall's early waves cost the
-pistol-only bot runs on Standard, and Candy Works' finale is still the hardest;
-these want a second look with more runs per cell.
+worlds). That grid left Sky Harbor's and Midnight Mall's early waves costing
+the pistol-only bot runs on Standard, and Candy Works' finale the hardest; the
+second look below fixed both.
+
+### Update 8: the mode grid, second look
+
+More than one run per cell (bot, max profile, full runs from wave 1; Pulse
+Pistol, Ion Carbine, Scatter Blaster), counted on the final data of each
+world. Health left at the portal over the clears; alpha fight in seconds.
+
+| World | Standard before | Standard after | Health left (clears) | Alpha fight (s) |
+|---|---|---|---|---|
+| Prize Pier | 3/3 | 4/4 | 62-99 | 37-41 |
+| Neon Skyline | 2/3 | 3/3 | 44-66 | 56-74 |
+| Tidal Tunnels | 3/3 (2-30 left) | 2/3 | 22-31 | 44-55 |
+| Launch Pad 9 | 3/3 | 3/3 | 20-88 | 46-65 |
+| Summit Lodge | 3/3 | 2/3 | 45-85 | 40-52 |
+| Midnight Mall | 2/3 | 6/6 | 13-73 | 40-113 |
+| Lost Temple | 3/3 | 5/6 | 12-81 | 46-67 |
+| Candy Works | 1/3 | 5/7 | 10-82 | 52-81 |
+| Lava Lagoon | 2/3 | 4/6 | 19-74 | 42-54 |
+| Sky Harbor | 0/3 | 7/10 | 7-55 | 45-66 |
+| **Total** | **22/30 (73%)** | **41/51 (80%)** | | |
+
+Hard (Pulse Pistol and Ion Carbine on Prize Pier, Tidal Tunnels, Summit
+Lodge, Lost Temple, Lava Lagoon, Sky Harbor): 7/12 (58%) before, 8/12 (67%)
+once the Standard fixes were in, 4/12 at 112% damage and 115% health, **6/12
+(50%)** at the final 108% / 114% (Prize Pier 2/2, Summit Lodge 2/2, Lost
+Temple, Lava Lagoon 1/2, Tidal Tunnels, Sky Harbor 0/2; five of the six losses
+are finales). Casual (Pulse Pistol; Sky Harbor, Candy Works, Tidal Tunnels):
+3/3, 89-100 health left.
+
+What the early walls were, and what changed:
+
+* **Sky Harbor** opened with the biggest waves of any world (20 in wave 1 with
+  4 Balloon Vendors and 6 Sky Divers, 25 in the Freefall rush with 16 divers
+  dropping 12-damage landings every 4.5 s, 29 by wave 4) at caps of 10-14.
+  Waves 1-4 now 17 / 21 / 21 / 25 at caps 9 / 11 / 11 / 13 (one vendor and a
+  diver or three fewer each, wave 1 interval 1.7, the rush 1.05 with a surge
+  of 4), wave 5 cap 14, wave 6 one vendor fewer, the finale 27 at cap 13 (two
+  shamblers and a diver fewer). No early loss in ten runs since.
+* **Midnight Mall**: the siege opened with a Boardwalk Bruiser (380 health,
+  30-damage hits, a charge) at world 6 wave 3; the pistol bot lost two hits
+  to it. It now opens with a **Riot Bruiser** (mall security, 280, no charge;
+  the hint says shoot around the shield) with a walker and a flinger fewer.
+  Flingers lob every 7.5 s (was 6.5) and walkers burst every 7 s (was 6):
+  Flingers' soda did 38-61 a wave from every side. One flinger fewer in waves
+  4-6, two walkers fewer in wave 5. With the early waves passable the Night
+  Manager became the wall (46-70 damage after all-S waves), so he has 3100
+  health (was 3300), kit hits about 12% softer (melee 14, slam 12.8,
+  flashlight 11.2/s, clean-up 9.8) and calls 2 walkers, at most 3 (was 3/4);
+  his horde has two walkers and two shamblers fewer.
+* **Lava Lagoon** wave 4: one Fire Dancer fewer, cap 12.
+* **Finale packs**: an alpha's phase calls 5 of the wave's *first-listed*
+  type once the queue is out. Neon Skyline's was shamblers (80 damage in two
+  losses after all-S waves at world 2): couriers lead now, the horde is 25 at
+  cap 11 and Captain Lockdown has 2500 health (fights were 65-68 s, longer than
+  Big Bruno's). Tidal Tunnels sat below worlds 6-9 (2-30 left): Inky has 2700
+  health, kit hits about 11% softer, and two jellies and two Deep Divers fewer
+  in his horde. Summit Lodge's finale is 24 at cap 12 (was 27 at 13).
+
+**Candy Works** (world 8, still the hardest finale before Sky Harbor): the
+Taffy Pullers' yank dragged the bot into gummies and the Confectioner (taffy 30-54
+a loss). The horde is 19 at cap 12 (11 gummies, 3 pullers, 3 runners, 2
+shamblers; was 13 / 6 / 3 and a yeti), pullers swing for 15 (was 18), and his
+gumballs hit for 7 (was 8), syrup rush 11 (12.8), slam 12.6 (13.6) and the
+sugar rush is 1.3x (1.4x). His kit and 3200 health are unchanged: 3100 cleared
+6/6, too easy for world 8.
+
+Hard: 108% damage and 114% health (was 105 / 112%); the other rows stand.
+
+Known: the weakest gun (Pulse Pistol) needs up to 113 s for the Night
+Manager; the newly merged Teacup Twister took 403 s for him in its one
+check run (its single-target damage, or how the bot fires it, wants a look
+in the weapons lane).
