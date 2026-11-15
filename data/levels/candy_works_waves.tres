@@ -122,9 +122,9 @@ surge_count = 5
 script = ExtResource("2")
 spawns = {
 "candy_gummy": 11,
-"candy_taffy_puller": 5,
+"candy_taffy_puller": 3,
 "lifeguard_runner": 3,
-"frost_yeti": 1
+"tourist_shambler": 2
 }
 spawn_interval = 2.0
 burst = 2
