@@ -81,7 +81,7 @@ func _crowd(director: RunDirector, at: Vector3, spread: float) -> void:
 	var scene: PackedScene = load(RunDirector.ZOMBIE_SCENE)
 	for i in 5:
 		var z: Zombie = scene.instantiate()
-		z.setup(GameData.enemy(EndlessDirector.resolve(&"city_shambler")), director.player, 0.0)
+		z.setup(GameData.enemy(&"city_shambler"), director.player, 0.0)
 		var a := TAU * i / 5.0
 		z.position = at + Vector3(cos(a), 0, sin(a)) * spread
 		director._enemies_root.add_child(z)

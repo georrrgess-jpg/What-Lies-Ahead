@@ -27,18 +27,6 @@ const HOME_BIAS := 2.5
 const HEAVY_GROWTH := 0.5
 ## Breaks before a boss wave are this much longer.
 const BOSS_REST := 1.4
-## Enemies that stand in for the city's own until they exist (the map and the
-## zombies are built alongside this mode; an id missing from the catalog uses
-## its stand-in instead of breaking the run).
-const STAND_INS := {
-	&"city_shambler": &"tourist_shambler",
-	&"city_runner": &"lifeguard_runner",
-	&"city_bruiser": &"boardwalk_bruiser",
-	&"riot_shield": &"riot_bruiser",
-	&"tunnel_crawler": &"hover_courier",
-	&"firebug": &"mall_flinger",
-	&"the_wrecker": &"alpha_bruiser",
-}
 
 var run: RunDirector
 var rules: EndlessRules
@@ -137,19 +125,12 @@ func open_spawns() -> Array[Node3D]:
 	return out
 
 
-## An enemy id the catalog has: `id` itself or its stand-in.
-static func resolve(id: StringName) -> StringName:
-	if GameData.enemy(id) == null and STAND_INS.has(id) and GameData.enemy(STAND_INS[id]):
-		return STAND_INS[id]
-	return id
-
-
 ## The enemies the open districts field, by role: "regular", "fast",
 ## "heavy" (EnemyData.heavy) and "special" (the districts' own that are not heavies).
 func pool() -> Dictionary:
 	var out := {"regular": [], "fast": [], "heavy": [], "special": []}
 	for raw in rules.base_enemies:
-		var e := GameData.enemy(resolve(raw))
+		var e := GameData.enemy(raw)
 		if e == null:
 			continue
 		var role := "heavy" if e.heavy else ("fast" if e.move_speed >= 4.0 else "regular")
@@ -157,7 +138,7 @@ func pool() -> Dictionary:
 			out[role].append(e.id)
 	for d in open_districts():
 		for raw in d.enemies:
-			var e := GameData.enemy(resolve(raw))
+			var e := GameData.enemy(raw)
 			if e == null:
 				continue
 			# A heavy (the riot squad, the Tower's bruisers) joins the heavies'
@@ -177,7 +158,7 @@ func all_enemies() -> Array:
 		ids.append_array(d.enemies)
 	ids.append(rules.boss_id)
 	for raw in ids:
-		var e := GameData.enemy(resolve(raw))
+		var e := GameData.enemy(raw)
 		if e and not out.has(e):
 			out.append(e)
 	return out
@@ -364,7 +345,7 @@ func open_district(d: EndlessDistrict) -> void:
 	run.notice.emit("%s — %s" % [d.display_name.to_upper(), d.blurb], &"banner_district")
 	var added: Array = []
 	for raw in d.enemies:
-		var e := GameData.enemy(resolve(raw))
+		var e := GameData.enemy(raw)
 		if e:
 			added.append(e.display_name)
 	if not added.is_empty():
