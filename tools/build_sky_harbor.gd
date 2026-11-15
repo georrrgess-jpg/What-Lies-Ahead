@@ -305,12 +305,14 @@ func _build_dock() -> void:
 	_lamp(dock, "UpperLampE", Vector3(-34.8, y, -2.0))
 	_string_bunting(Vector3(-41.2, y + 3.0, z0 + 0.8), Vector3(-34.8, y + 3.0, -2.0), 0.6)
 	_string_bunting(Vector3(-34.8, y + 3.0, -2.0), Vector3(-41.2, y + 3.0, z1 - 0.8), 0.6)
-	# Ground-level dock: freight, carts and benches as cover along the routes.
-	_solid_prop(dock, "sky_crates", "DockCratesA", Vector3(-28.0, 0, -11.5), 0.0, Vector3(1.9, 1.6, 1.3))
+	# Ground-level dock: freight, carts and benches as cover along the routes,
+	# each leaving a 2.4 m lane past the stair feet so the strips beside the
+	# boarding deck stay on the zombies' navmesh.
+	_solid_prop(dock, "sky_crates", "DockCratesA", Vector3(-28.0, 0, -12.75), 0.0, Vector3(1.9, 1.6, 1.3))
 	_solid_prop(dock, "sky_crates", "DockCratesB", Vector3(-29.0, 0, 8.5), 160.0, Vector3(1.9, 1.6, 1.3))
 	_solid_prop(dock, "sky_balloon_cart", "DockBalloonCart", Vector3(-28.5, 0, -6.5), 60.0, Vector3(1.4, 1.1, 0.8))
-	_solid_prop(dock, "sky_planter", "DockPlanterA", Vector3(-24.0, 0, 5.5), 90.0, Vector3(1.6, 0.7, 0.8))
-	_solid_prop(dock, "sky_planter", "DockPlanterB", Vector3(-24.0, 0, -8.5), 90.0, Vector3(1.6, 0.7, 0.8))
+	_solid_prop(dock, "sky_planter", "DockPlanterA", Vector3(-23.0, 0, 4.4), 90.0, Vector3(1.6, 0.7, 0.8))
+	_solid_prop(dock, "sky_planter", "DockPlanterB", Vector3(-23.0, 0, -8.4), 90.0, Vector3(1.6, 0.7, 0.8))
 	_solid_prop(dock, "sky_booth", "DockBooth", Vector3(-30.0, 0, 9.4), 180.0, Vector3(3.2, 2.6, 2.0))
 	_lamp(dock, "DockLampA", Vector3(-25.0, 0, -12.6))
 	_lamp(dock, "DockLampB", Vector3(-25.0, 0, 9.6))
