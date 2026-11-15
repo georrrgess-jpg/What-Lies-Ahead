@@ -1,10 +1,11 @@
 class_name CityFire
 extends Node3D
 ## A burning fire for Ashfall City (scenes/props/city_fire.tscn): three crossed
-## flame cards, rising embers, a smoke wisp and an optional flickering light.
-## Cheap: every fire shares one mesh, one set of materials and one ember
-## MultiMesh; the shaders animate them (seeded by position), and the only
-## per-frame work is the light's flicker. Scale it with `size`, not the node.
+## flame cards (one mesh, one draw), rising embers, a smoke wisp and an
+## optional flickering light. Cheap: every fire shares one mesh, one set of
+## materials and one ember MultiMesh; the shaders animate them (seeded by
+## position), and the only per-frame work is the light's flicker. Scale it
+## with `size`, not the node.
 
 const FLAME_SHADER := preload("res://art/shaders/city_fire.gdshader")
 const EMBER_SHADER := preload("res://art/shaders/city_embers.gdshader")
@@ -21,7 +22,7 @@ const EMBERS := 18
 @export var with_embers := true
 @export var with_smoke := true
 
-static var _flame_mesh: QuadMesh
+static var _flame_mesh: ArrayMesh
 static var _flame_material: ShaderMaterial
 static var _ember_multimesh: MultiMesh
 static var _smoke_mesh: QuadMesh
@@ -36,15 +37,13 @@ func _ready() -> void:
 	add_to_group("graphics_listener")
 	_build_shared()
 	_time = randf() * 10.0
-	for k in 3:
-		var flame := MeshInstance3D.new()
-		flame.name = "Flame%d" % k
-		flame.mesh = _flame_mesh
-		flame.material_override = _flame_material
-		flame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		flame.rotation.y = PI * k / 3.0
-		flame.scale = Vector3.ONE * size
-		add_child(flame)
+	var flame := MeshInstance3D.new()
+	flame.name = "Flames"
+	flame.mesh = _flame_mesh
+	flame.material_override = _flame_material
+	flame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	flame.scale = Vector3.ONE * size
+	add_child(flame)
 	if with_smoke:
 		var smoke := MeshInstance3D.new()
 		smoke.name = "Smoke"
@@ -93,9 +92,14 @@ func _process(delta: float) -> void:
 static func _build_shared() -> void:
 	if _flame_mesh:
 		return
-	_flame_mesh = QuadMesh.new()
-	_flame_mesh.size = Vector2(1.2, 1.7)
-	_flame_mesh.center_offset = Vector3(0, 0.85, 0)
+	# Three crossed cards in one mesh.
+	var card := QuadMesh.new()
+	card.size = Vector2(1.2, 1.7)
+	card.center_offset = Vector3(0, 0.85, 0)
+	var tool := SurfaceTool.new()
+	for k in 3:
+		tool.append_from(card, 0, Transform3D(Basis(Vector3.UP, PI * k / 3.0), Vector3.ZERO))
+	_flame_mesh = tool.commit()
 	_flame_material = ShaderMaterial.new()
 	_flame_material.shader = FLAME_SHADER
 	var ember_quad := QuadMesh.new()

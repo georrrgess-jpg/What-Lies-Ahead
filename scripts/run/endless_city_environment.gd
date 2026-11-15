@@ -10,6 +10,8 @@ extends "res://scripts/run/level_environment.gd"
 ##  - neon that still flickers (group "city_neon_flicker": signs drop out,
 ##    lights dip, now and then, each on its own clock);
 ##  - aviation beacons (group "city_beacon") blinking on the radio mast;
+##  - searchlights (group "city_searchlight", meta "yaw" and "phase") sweeping
+##    the smoke from beyond the city;
 ##  - the crackle of the nearest few fires (Node3D in group "city_fire"): a
 ##    small pool of positional players moved onto the fires nearest the camera.
 
@@ -21,6 +23,9 @@ const POLICE_PERIOD := 0.42
 const FLICKER_GAP := Vector2(1.5, 7.0)
 const FLICKER_LENGTH := Vector2(0.05, 0.22)
 const BEACON_PERIOD := 1.6
+## Searchlights swing this far either side (radians), this fast (rad/s).
+const SWEEP := 0.7
+const SWEEP_SPEED := 0.23
 ## Below this height the camera is in the Metro.
 const UNDERGROUND_Y := -1.6
 const SHADOW_DISTANCE := 50.0
@@ -35,6 +40,7 @@ var _time := 0.0
 var _police: Array[OmniLight3D] = []
 var _police_energy: Array[float] = []
 var _beacons: Array[OmniLight3D] = []
+var _searchlights: Array[Node3D] = []
 ## Flickering nodes: [node, base energy (lights) or -1, next flicker time, end time].
 var _flicker: Array = []
 var _fill: DirectionalLight3D
@@ -57,6 +63,9 @@ func _ready() -> void:
 	for node in get_tree().get_nodes_in_group("city_beacon"):
 		if node is OmniLight3D and is_ancestor_of(node):
 			_beacons.append(node)
+	for node in get_tree().get_nodes_in_group("city_searchlight"):
+		if node is Node3D and is_ancestor_of(node):
+			_searchlights.append(node)
 	for node in get_tree().get_nodes_in_group("city_neon_flicker"):
 		if node is Node3D and is_ancestor_of(node):
 			var base := (node as OmniLight3D).light_energy if node is OmniLight3D else -1.0
@@ -100,6 +109,9 @@ func _process(delta: float) -> void:
 	_update_flicker()
 	for b in _beacons:
 		b.visible = fmod(_time, BEACON_PERIOD) < BEACON_PERIOD * 0.35
+	for s in _searchlights:
+		var phase: float = s.get_meta("phase", 0.0)
+		s.rotation.y = float(s.get_meta("yaw", 0.0)) + sin(_time * SWEEP_SPEED + phase) * SWEEP
 
 
 func _update_police() -> void:
