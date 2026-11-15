@@ -206,19 +206,37 @@ the player; a boss's minions are counted apart) and `[dev] ENDLESS RESULT wave=.
 
 ## Balance (bot, Ashfall City, ion carbine, max profile)
 
-`--autoplay=endless --weapon=ion_carbine`, one run each (the bot keeps 150 tickets, buys gates
-first, then the overshield; it does not use traps from the square). Tickets are what it held at
-the wave start.
+Update 10, on the final city (21 entrances, two gates for Precinct 9 and the Tower, the bench
+footprints baked): `--autoplay=endless --weapon=ion_carbine --difficulty=<id> --aim-error=<deg>`,
+one line per run. The bot buys the cheaper of the next gate and the next bench tier (keeping 150
+tickets), the overshield only with what is left; it only upgrades the weapon in hand and does
+not arm traps from the square, so a player who also upgrades the sidearm and uses the traps does
+a little better.
 
-| Difficulty, aim error | Wave reached | Time | Districts opened on waves | Tickets at waves 5 / 10 / 15 / 20 |
-| --- | --- | --- | --- | --- |
-| Casual, 1.2 | 35 | 33:31 | 5, 8, 11, 16 | 426 / 822 / 789 / 1856 |
-| Standard, 1.2 | 20 | 15:28 | 6, 9, 14, 19 | 388 / 218 / 273 / 352 |
-| Hard, 1.2 | 14 | 10:06 | 6, 10 | 278 / 628 / - / - |
-| Standard, 3.5 (human-like) | 10 (the Wrecker at 41%) | 6:01 | 6 | 388 / 518 / - / - |
-| Hard, 3.5 | 12 | 9:13 | 6, 10 | 278 / 928 / - / - |
+| Difficulty, aim error | Waves reached (each run) | Median | Gates opened on waves | Bench tiers on waves | Deaths |
+| --- | --- | --- | --- | --- | --- |
+| Standard, 2.5 (decent) | 36, 26, 26, 20, 10 | 26 | 6-7, 9-10, 15-19, 18-21 | Mk I 4-5, Mk II 11-12, Mk III 20-22 | crowds of runners and shamblers late; the 1st or 2nd Wrecker (at 33-63%) for the short runs |
+| Standard, 3.5 (sloppy) | 30, 20, 15 | 20 | 7, 10, 15-16, 18-19 | Mk I 5, Mk II 12, Mk III 20 | the Wrecker on 20 and 30; a crowd on 15 |
+| Hard, 2.5 | 15, 10 | 12 | 7, 9 | Mk I 5, Mk II 11 | the 1st Wrecker (35%), a horde |
+| Casual, 2.5 | 68+ (still alive at the 60-minute cap) | - | 6, 9, 13, 16 | Mk I 4, Mk II 10, Mk III 18 | - |
 
-Deaths come from crowds (shamblers and runners) and the boss, not from long fights with single
-zombies. The bot with a 3.5 degree aim error stands in the Wrecker's telegraphed moves (it only
-steps out of slams), so its wall is wave 10; a player who sidesteps the bulldoze and debris goes
-on.
+Before (v0.9.0 rules and the v0.9.0 city, same bot): Standard 2.5 reached 10 and 18, 1.2 reached
+13, 3.5 reached 16; the 1st or 2nd Wrecker or a mid-teens crowd ended every run.
+
+**Spawn fairness** (the bot's `[dev] ENDLESS spawns` lines, every zombie that came through an
+entrance; a boss's minions excluded):
+
+| | spawned within 14 m | spawned in the player's view | closest spawn | walk to the player (route) | time to reach the player |
+| --- | --- | --- | --- | --- | --- |
+| v0.9.0 (4 runs, 1067 spawns) | 1.3-2.1% | 5.6-13.0% (mean 8%) | 4.6 m | 30 m | 9-11 s |
+| update 10 (11 runs, 6834 spawns) | 0-0.8% (2.2% in one 10-wave run) | 3.5-9.5% (mean 5%) | 12.8 m | 30 m | 8-11 s |
+
+What is still "in view" is mostly surge packs: their entrance is named and marked 4.5 s ahead,
+so the player has turned to face it by the time they pour in. Waves now come from 3.9-4.6
+entrances each (2 fronts, 3 for hordes, plus flankers and the close-out) instead of whichever
+were free, and no zombie walks more than 46 m before it is brought closer.
+
+Known: the bot's results are wide (10-36 on Standard) because one early Wrecker or a mid-teens
+crowd can end any run; Hard sits below its 20-25 aim (the bot cannot sidestep the Wrecker's
+telegraphed moves, which costs it most on Hard). Tickets pile up for the bot late (it never
+upgrades its sidearm or buys traps); a player has those sinks.
