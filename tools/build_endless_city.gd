@@ -526,28 +526,56 @@ func _fallen_slab(parent: Node3D, slab_name: String, pos: Vector3, size: Vector3
 	_player_block(holder, "Cap", Vector3(size.x, 3.0, size.z), Vector3(0, height + 1.5, 0))
 
 
-## A slab of facade torn off a building: concrete body, the facade's windows
-## on its face, rebar bent out of both broken ends (one merged mesh).
+## A slab of facade torn off a building (one merged mesh): a chunky concrete
+## body whose broken ends are jagged blocks knocked out of line, the
+## facade's window rows on its face (dark glass, a few still lit, some
+## smashed out), a lighter band where each floor's slab ran, and rebar bent
+## out of both ends.
 func _slab_mesh(size: Vector3, seed: int) -> Mesh:
 	var key := "slab_%s_%d" % [size, absi(seed) % 3]
 	if _meshes.has(key):
 		return _meshes[key]
-	var concrete := _surface("slab_concrete", ["city_concrete"], Color(0.62, 0.58, 0.56), 0.35, 0.9)
+	var concrete := _surface("slab_concrete", ["city_concrete"], Color(0.68, 0.62, 0.58), 0.35, 0.9)
+	var band := _surface("slab_band", ["city_concrete"], Color(0.86, 0.8, 0.72), 0.5, 0.85)
+	var glass := _mat("slab_glass", Color(0.08, 0.1, 0.16), 0.2)
+	var lit := _mat("slab_lit", Color(1.0, 0.75, 0.4), 0.4, Color(1.0, 0.62, 0.3), 1.6)
 	var rebar := _mat("rebar", Color(0.32, 0.17, 0.1), 0.7)
-	var body := BoxMesh.new()
-	body.size = size
-	var face := BoxMesh.new()
-	face.size = Vector3(size.x - 0.2, 0.04, size.z - 0.2)
-	var rod := BoxMesh.new()
-	rod.size = Vector3(0.05, 0.05, 1.0)
-	var parts: Array = [[body, Transform3D(), concrete], [face, Transform3D(Basis(), Vector3(0, size.y * 0.5 + 0.02, 0)), _facade_material(seed)]]
+	var body_len := size.z * 0.78
+	var parts: Array = [[_box_mesh(Vector3(size.x, size.y, body_len), concrete), Transform3D()]]
+	# Jagged ends: a few blocks each, staggered in length, knocked askew.
+	for end in [-1.0, 1.0]:
+		var pieces := 3
+		for k in pieces:
+			var w := size.x / pieces * _rng.randf_range(0.8, 1.0)
+			var length := size.z * _rng.randf_range(0.03, 0.12)
+			var x := (k - (pieces - 1) * 0.5) * size.x / pieces
+			var tilt := Basis(Vector3.RIGHT, _rng.randf_range(-0.12, 0.12)) * Basis(Vector3.UP, _rng.randf_range(-0.08, 0.08))
+			var y := _rng.randf_range(-0.12, 0.04) * size.y
+			var at := Vector3(x, y, end * (body_len * 0.5 + length * 0.5 - 0.02))
+			parts.append([_box_mesh(Vector3(w, size.y * _rng.randf_range(0.6, 0.95), length), concrete), Transform3D(tilt, at)])
+	# The face (+Y): floor bands across, window rows between them.
+	var rows := maxi(2, int(body_len / 1.4))
+	var cols := maxi(2, int(size.x / 1.1))
+	var pitch := body_len / rows
+	for r in rows + 1:
+		var z := -body_len * 0.5 + r * pitch
+		parts.append([_box_mesh(Vector3(size.x + 0.04, 0.05, 0.18), band), Transform3D(Basis(), Vector3(0, size.y * 0.5 + 0.02, z))])
+	for r in rows:
+		for c in cols:
+			if _rng.randf() < 0.15:
+				continue
+			var x := (c - (cols - 1) * 0.5) * size.x / cols
+			var z := -body_len * 0.5 + (r + 0.5) * pitch
+			var pane := _box_mesh(Vector3(size.x / cols * 0.6, 0.04, pitch * 0.55), lit if _rng.randf() < 0.12 else glass)
+			parts.append([pane, Transform3D(Basis(), Vector3(x, size.y * 0.5 + 0.015, z))])
+	var rod := _box_mesh(Vector3(0.06, 0.06, 1.0), rebar)
 	for end in [-1.0, 1.0]:
 		for k in 5:
 			var x := (k - 2) * size.x * 0.2
 			var bend := Basis(Vector3.UP, _rng.randf_range(-0.5, 0.5)) * Basis(Vector3.RIGHT, _rng.randf_range(-0.6, 0.4))
 			var length := _rng.randf_range(0.5, 1.3)
 			var tip := Vector3(x, _rng.randf_range(-0.15, 0.15), end * (size.z * 0.5 + length * 0.45))
-			parts.append([rod, Transform3D(bend.scaled_local(Vector3(1, 1, length)), tip), rebar])
+			parts.append([rod, Transform3D(bend.scaled_local(Vector3(1, 1, length)), tip)])
 	var mesh := Batch.compound(parts)
 	_meshes[key] = mesh
 	return mesh
@@ -1137,6 +1165,10 @@ func _block(parent: Node3D, block_name: String, r: Rect2, height: float, facing:
 	# Tar and gravel inside the parapet (the roofs show from the high views).
 	var roof := _surface("roof_tar", ["city_asphalt"], Color(0.95, 0.85, 0.8), 0.15, 0.95)
 	_visual_box(dressing, block_name + "Roof", Vector3(look_size.x - 0.2, 0.1, look_size.z - 0.2), Vector3(look_centre.x, height + 0.65, look_centre.z), roof).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if shelled:
+		# The shells' own tops read dark from above: a lower tar roof over
+		# the whole block, stepped down from the core's.
+		_visual_box(dressing, block_name + "ShellRoof", Vector3(r.size.x - 0.5, 0.1, r.size.y - 0.5), Vector3(centre.x, height + 0.02, centre.z), roof).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_player_block(parent, block_name + "Cap", Vector3(r.size.x, 12.0, r.size.y), Vector3(centre.x, height + 6.0, centre.z))
 
 
