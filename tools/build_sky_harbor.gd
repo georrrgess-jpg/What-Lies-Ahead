@@ -281,10 +281,7 @@ func _build_dock() -> void:
 		_textured("deck", "sky_deck", 0.32, 0.8))
 	_visual_box(dressing, "BoardingBand", Vector3(x1 - x0 + 0.3, 0.3, z1 - z0 + 0.3), Vector3((x0 + x1) * 0.5, UPPER_Y - 0.35, (z0 + z1) * 0.5),
 		_mat("navy", Color(0.17, 0.23, 0.4), 0.6))
-	for k in 5:
-		var z := z0 + 1.5 + k * 3.0
-		_visual_box(dressing, "WallStripe%d" % k, Vector3(0.06, UPPER_Y - 0.6, 1.0), Vector3(x1 + 0.02, (UPPER_Y - 0.6) * 0.5, z),
-			_mat("red", Color(0.91, 0.22, 0.31), 0.5))
+	_boarding_office_front(x1, z0)
 	# Stairs at both ends of the east face (top at the deck edge, foot to the east).
 	_stairs(dock, "StairN", Vector3(x1, UPPER_Y, z0 + 1.5), Vector3(x1 + 8.0, 0.0, z0 + 1.5), 3.0)
 	_stairs(dock, "StairS", Vector3(x1, UPPER_Y, z1 - 1.5), Vector3(x1 + 8.0, 0.0, z1 - 1.5), 3.0)
@@ -912,6 +909,37 @@ func _build_cloud_banks(parent: Node3D) -> void:
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			parent.add_child(mi)
 			count += 1
+
+
+## The boarding deck stands on the harbour's ticket office: its east face
+## between the two stair runs gets a door under a lit TICKETS sign and a
+## window either side, instead of blank wall; its name runs on the band.
+func _boarding_office_front(x1: float, z0: float) -> void:
+	var red := _mat("red", Color(0.91, 0.22, 0.31), 0.5)
+	var navy := _mat("navy", Color(0.17, 0.23, 0.4), 0.6)
+	var glass := _mat("office_glass", Color(0.55, 0.78, 0.95), 0.15, Color(1.0, 0.85, 0.6), 0.35)
+	var gold := _mat("office_gold", Color(1.0, 0.8, 0.3), 0.35)
+	var door_z := z0 + 7.5
+	_visual_box(dressing, "OfficeDoorFrame", Vector3(0.08, 2.5, 1.5), Vector3(x1 + 0.04, 1.25, door_z), navy)
+	_visual_box(dressing, "OfficeDoor", Vector3(0.06, 2.3, 1.2), Vector3(x1 + 0.08, 1.15, door_z), red)
+	_visual_box(dressing, "OfficeDoorPane", Vector3(0.04, 0.7, 0.7), Vector3(x1 + 0.11, 1.7, door_z), glass)
+	_visual_box(dressing, "OfficeDoorKnob", Vector3(0.1, 0.1, 0.1), Vector3(x1 + 0.13, 1.05, door_z - 0.42), gold)
+	var sign := Label3D.new()
+	sign.name = "OfficeSignText"
+	sign.text = "TICKETS"
+	sign.font = load("res://art/fonts/LilitaOne-Regular.ttf")
+	sign.font_size = 96
+	sign.pixel_size = 0.0028
+	sign.modulate = Color(1.0, 0.85, 0.4)
+	sign.outline_size = 0
+	sign.shaded = false
+	sign.position = Vector3(x1 + 0.18, UPPER_Y - 0.35, door_z)
+	sign.rotation.y = PI * 0.5
+	dressing.add_child(sign)
+	for dz in [-3.2, 3.2]:
+		_visual_box(dressing, "OfficeWindowFrame%d" % int(dz), Vector3(0.08, 1.3, 1.7), Vector3(x1 + 0.04, 1.7, door_z + dz), navy)
+		_visual_box(dressing, "OfficeWindow%d" % int(dz), Vector3(0.06, 1.1, 1.5), Vector3(x1 + 0.07, 1.7, door_z + dz), glass)
+		_visual_box(dressing, "OfficeAwning%d" % int(dz), Vector3(0.6, 0.12, 1.9), Vector3(x1 + 0.3, 2.45, door_z + dz), red)
 
 
 func _model_mesh(model: String) -> Mesh:

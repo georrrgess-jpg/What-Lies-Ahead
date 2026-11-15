@@ -360,7 +360,21 @@ func _build_river() -> void:
 	sheet.rotation = Vector3(0, 0, deg_to_rad(62.0))
 	sheet.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	dressing.add_child(sheet)
-	_prop(dressing, "lava_cliff", "FallCliff", Vector3(47.0, -1.0, -11.8), 90.0, Vector3(16, 10, 6)).scale = Vector3(1.0, 1.3, 1.0)
+	# The basalt chute the lava pours down, so the fall never hangs in the air,
+	# crowned by the cliff it spills over.
+	var chute := _visual_box(dressing, "FallChute", Vector3(15.6, 1.6, 8.6), sheet.position + Vector3(0.75, -0.4, 0),
+		_textured("terrain_rock", "lava_rock", 0.08, 0.95))
+	chute.rotation = sheet.rotation
+	# Boulders line both banks of the fall and heap up where it spills over.
+	var along := Vector3(cos(sheet.rotation.z), sin(sheet.rotation.z), 0.0)
+	var n := 0
+	for t in [-0.15, 0.2, 0.5, 0.8]:
+		for side in [-1.0, 1.0]:
+			var at: Vector3 = sheet.position + along * (7.5 * t) + Vector3(0, -0.6, side * 3.7)
+			var rock := _prop(dressing, "lava_boulder" if n % 2 == 0 else "lava_boulder_b", "FallRock%d" % n, at, n * 47.0, Vector3(2.4, 1.4, 1.5))
+			rock.scale = Vector3.ONE * (2.2 - t)
+			n += 1
+	_prop(dressing, "lava_cliff", "FallCliff", Vector3(47.0, 5.0, -11.8), 90.0, Vector3(16, 10, 6))
 	_prop(dressing, "lava_cliff", "FallCliffN", Vector3(40.0, 1.0, -20.0), 10.0, Vector3(16, 10, 6))
 	_prop(dressing, "lava_cliff", "FallCliffS", Vector3(38.0, -1.0, -2.5), 175.0, Vector3(16, 10, 6)).scale = Vector3(0.8, 0.7, 0.8)
 	_prop(dressing, "lava_cave", "TubeMouth", Vector3(-41.0, RIVER_Y - 0.5, -11.8), 90.0, Vector3(8, 6, 8))
@@ -865,6 +879,14 @@ func _build_entrances() -> void:
 	_post(e, "GatePostN", 0.42, 4.2, gate + Vector3(0, 0, -3.1))
 	_post(e, "GatePostS", 0.42, 4.2, gate + Vector3(0, 0, 3.1))
 	_collider(e, "TrailFloor", Vector3(14.0, 1.0, 6.0), Vector3(32.0, -0.5, -1.0))
+	# The trail beyond the gate: palms and torches lead the eye into the jungle.
+	var trail := [[Vector3(29.0, 0, -4.6), 20.0, "lava_palm"], [Vector3(30.5, 0, 3.0), 160.0, "lava_palm_b"],
+		[Vector3(34.5, 0, -5.0), 250.0, "lava_palm_b"], [Vector3(36.0, 0, 3.4), 80.0, "lava_palm"]]
+	for t in trail:
+		_prop(dressing, t[2], "TrailPalm%d" % int(t[0].x), t[0], t[1], Vector3(1, 7, 1))
+	for p in [Vector3(28.0, 0, -3.6), Vector3(28.0, 0, 1.6), Vector3(33.0, 0, -3.6), Vector3(33.0, 0, 1.6)]:
+		_prop(dressing, "lava_torch", "TrailTorch%d%d" % [int(p.x), int(p.z)], p, 0.0, Vector3(0.3, 2.5, 0.3))
+		_fire(dressing, "TrailFlame%d%d" % [int(p.x), int(p.z)], p + Vector3(0, 2.52, 0), 0.75, false)
 
 
 # ---------------------------------------------------------------------------
@@ -890,7 +912,7 @@ func _build_boundary() -> void:
 	_fence_run(f, "TerraceRailBackE", Vector3(21.0, TERRACE_Y, TERRACE_BACK - 0.4), Vector3(ARENA_X + 0.4, TERRACE_Y, TERRACE_BACK - 0.4))
 	# Cliffs of basalt columns framing the shelf.
 	var cliffs := [
-		[Vector3(-33.0, 0.0, -4.0), 90.0, 1.0], [Vector3(-33.0, 0.0, 26.0), 80.0, 0.9], [Vector3(34.0, 0.0, 9.0), -90.0, 1.0],
+		[Vector3(-33.0, 0.0, -8.0), 90.0, 0.75], [Vector3(-33.0, 0.0, 26.0), 80.0, 0.9], [Vector3(34.0, 0.0, 9.0), -90.0, 1.0],
 		[Vector3(33.0, 0.0, 24.0), -100.0, 0.8], [Vector3(-36.0, TERRACE_Y, -26.0), 90.0, 1.2], [Vector3(36.0, TERRACE_Y, -22.0), -90.0, 1.2],
 		[Vector3(-31.0, 0.0, 10.0), 95.0, 0.6],
 	]
@@ -993,7 +1015,7 @@ func _build_lights() -> void:
 		_omni(lights, "RiverGlow%d" % int(x), Vector3(x, 0.6, (RIVER_Z0 + RIVER_Z1) * 0.5), Color(1.0, 0.42, 0.14), 2.2, 9.0)
 	_omni(lights, "BarGlow", BAR + Vector3(0, 2.6, 0.4), Color(1.0, 0.6, 0.35), 1.4, 8.0)
 	_omni(lights, "HeadGlow", Vector3(0, TERRACE_Y + 3.0, -21.0), Color(1.0, 0.45, 0.2), 1.6, 9.0)
-	_omni(lights, "CaveGlow", Vector3(-27.0, 2.0, 2.0), Color(1.0, 0.4, 0.15), 1.4, 8.0)
+	_omni(lights, "CaveGlow", Vector3(-33.0, 1.8, 2.0), Color(1.0, 0.4, 0.15), 2.6, 9.0)
 	_omni(lights, "FalLGlow", Vector3(36.0, 3.0, -11.8), Color(1.0, 0.45, 0.15), 2.5, 16.0)
 
 

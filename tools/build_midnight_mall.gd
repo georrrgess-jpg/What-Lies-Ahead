@@ -311,6 +311,12 @@ func _m(key: String) -> Material:
 			return _glow("panel_light", Color(1.0, 0.95, 0.85), 1.8)
 		"outside":
 			return _mat("outside", Color(0.05, 0.06, 0.12), 0.9)
+		"steel":
+			return _mat("steel", Color(0.52, 0.56, 0.68), 0.35, Color.BLACK, 0.0, 0.55)
+		"tile":
+			return _mat("tile", Color(0.9, 0.93, 1.0), 0.3)
+		"hazard":
+			return _mat("hazard", Color(1.0, 0.78, 0.2), 0.5)
 	push_error("unknown material " + key)
 	return _mat("missing", Color.MAGENTA)
 
@@ -1221,6 +1227,116 @@ func _build_entrances() -> void:
 		_bbox("chrome", Vector3(1.0, 1.5, 0.1), Vector3(x, UP + 1.9, Z1 - 0.2))
 		_bbox("neon_violet" if x < 0.0 else "neon_teal", Vector3(0.84, 1.3, 0.04), Vector3(x, UP + 1.9, Z1 - 0.27))
 	_omni(lights, "Cinema", Vector3(0, UP + 3.0, 27.0), VIOLET.lerp(WARM, 0.3), 1.4, 8.0).add_to_group("mall_mains", true)
+	_build_back_rooms(e)
+
+
+## Fit-out of the back rooms the zombies come through, so none of them is a
+## bare box: the staff corridor ends at the loading-dock doors, the kitchen
+## has its range, fridge, stores and fire door, the cinema's ticket machines
+## have screens and posters, and the department store a stocked back wall.
+func _build_back_rooms(e: Node3D) -> void:
+	_build_staff_corridor(e)
+	_build_kitchen(e)
+	_build_ticket_kiosks()
+	# Department store back wall: shelving either side, the logo above.
+	for x in [-5.0, 5.0]:
+		_prop(dressing, "mall_shelf", "DeptShelf%d" % int(x), Vector3(x, 0, Z0 + 0.36), 0.0)
+		_collider(e, "DeptShelf%d" % int(x), Vector3(2.0, 2.0, 0.56), Vector3(x, 1.0, Z0 + 0.36))
+	_bbox("neon_pink", Vector3(11.6, 0.06, 0.04), Vector3(0, 2.62, Z0 + 0.17))
+	_label(signs, "DeptBackLogo", "HALLEY & HART", Vector3(0, 3.3, Z0 + 0.2), 0.0, 0.006, PINK * 1.5)
+	_label(signs, "DeptFloors", "FASHION  -  BEAUTY  -  HOME", Vector3(0, 2.85, Z0 + 0.2), 0.0, 0.0024, CREAM * 1.3)
+
+
+## Staff corridor (W, x -24..-18, z -1.85..1.85): lockers, pipes, a dado
+## stripe and the double doors to the loading dock at its end.
+func _build_staff_corridor(e: Node3D) -> void:
+	for z in [-1.83, 1.83]:
+		_bbox("violet", Vector3(6.0, 0.14, 0.03), Vector3(-21.0, 1.05, z))
+		_bbox("navy", Vector3(6.0, 0.18, 0.03), Vector3(-21.0, 0.09, z))
+	# Loading-dock doors in the end wall, with push bars and wired windows.
+	var door_x := X0 + 0.04
+	_bbox("violet", Vector3(0.1, 2.75, 2.6), Vector3(door_x, 1.375, 0))
+	for z in [-0.56, 0.56]:
+		_bbox("steel", Vector3(0.08, 2.5, 1.06), Vector3(door_x + 0.04, 1.25, z))
+		_bbox("navy", Vector3(0.04, 0.5, 0.36), Vector3(door_x + 0.09, 1.75, z))
+		_bbox("chrome", Vector3(0.1, 0.07, 0.8), Vector3(door_x + 0.14, 1.05, z))
+	_bbox("hazard", Vector3(0.04, 0.2, 2.2), Vector3(door_x + 0.09, 0.3, 0))
+	_bbox("panel_light", Vector3(0.05, 0.3, 1.5), Vector3(door_x + 0.06, 2.95, 0))
+	_label(signs, "DockSign", "LOADING DOCK", Vector3(door_x + 0.1, 2.95, 0), PI * 0.5, 0.0019, Color(0.15, 0.1, 0.3))
+	_label(signs, "StaffOnly", "STAFF\nONLY", Vector3(door_x + 0.13, 2.2, 0.56), PI * 0.5, 0.0016, PINK * 1.3)
+	# A bank of lockers along the south wall.
+	for i in 4:
+		var c := Vector3(-23.0 + i * 0.8, 0, 1.6)
+		_bbox("teal", Vector3(0.76, 1.95, 0.46), c + Vector3(0, 0.975, 0))
+		for v in [1.45, 0.55]:
+			_bbox("navy", Vector3(0.4, 0.04, 0.02), c + Vector3(0, v, -0.24))
+		_bbox("chrome", Vector3(0.05, 0.16, 0.03), c + Vector3(0.28, 1.0, -0.24))
+	_collider(e, "Lockers", Vector3(3.2, 1.95, 0.46), Vector3(-21.8, 0.975, 1.6))
+	_bbox("hazard", Vector3(0.36, 0.45, 0.36), Vector3(-19.6, 0.225, 1.55))
+	_collider(e, "MopBucket", Vector3(0.36, 0.45, 0.36), Vector3(-19.6, 0.225, 1.55))
+	# Service pipes under the ceiling.
+	for p in [[0.09, 1.25, "chrome"], [0.13, 1.55, "teal"]]:
+		var pipe := MeshInstance3D.new()
+		pipe.name = "CorridorPipe%d" % int(p[1] * 100)
+		pipe.mesh = _cylinder_mesh(p[0], 6.0, p[2])
+		pipe.position = Vector3(-21.0, 2.9, p[1])
+		pipe.rotation.z = PI * 0.5
+		dressing.add_child(pipe)
+
+
+## Kitchen (E, x 18.3..24, z -3.5..3.5): tiled walls, the range and its oven
+## doors, a walk-in fridge, dry stores and the fire door the zombies use.
+func _build_kitchen(e: Node3D) -> void:
+	_bbox("tile", Vector3(0.04, 3.1, 7.0), Vector3(X1 - 0.03, 1.55, 0))
+	for z in [-3.47, 3.47]:
+		_bbox("tile", Vector3(5.7, 3.1, 0.04), Vector3(21.15, 1.55, z))
+		_bbox("teal", Vector3(5.7, 0.12, 0.05), Vector3(21.15, 1.15, z))
+	_bbox("teal", Vector3(0.05, 0.12, 7.0), Vector3(X1 - 0.05, 1.15, 0))
+	# The range: burners on top, oven doors on the front.
+	for z in [-1.4, -0.45, 0.5, 1.45]:
+		var burner := MeshInstance3D.new()
+		burner.name = "Burner%d" % int(z * 10)
+		burner.mesh = _cylinder_mesh(0.2, 0.04, "navy")
+		burner.position = Vector3(23.4, 1.02, z)
+		dressing.add_child(burner)
+	for z in [-1.0, 1.0]:
+		_bbox("navy", Vector3(0.04, 0.6, 1.6), Vector3(22.88, 0.5, z))
+		_bbox("chrome", Vector3(0.08, 0.05, 1.2), Vector3(22.84, 0.86, z))
+	# Walk-in fridge in the north-east corner.
+	_bbox("steel", Vector3(1.4, 2.4, 0.8), Vector3(22.6, 1.2, -3.05))
+	_bbox("chrome", Vector3(0.06, 1.0, 0.08), Vector3(23.1, 1.3, -2.62))
+	_bbox("neon_teal", Vector3(0.5, 0.08, 0.02), Vector3(22.4, 2.1, -2.64))
+	_collider(e, "Fridge", Vector3(1.4, 2.4, 0.8), Vector3(22.6, 1.2, -3.05))
+	# Dry stores on the south wall.
+	_prop(dressing, "mall_shelf", "KitchenStores", Vector3(20.4, 0, 3.2), 180.0)
+	_collider(e, "KitchenStores", Vector3(2.0, 2.0, 0.56), Vector3(20.4, 1.0, 3.2))
+	# Fire door in the east wall, beside the range.
+	_bbox("steel", Vector3(0.08, 2.3, 1.1), Vector3(X1 - 0.06, 1.15, 2.75))
+	_bbox("chrome", Vector3(0.1, 0.07, 0.8), Vector3(X1 - 0.14, 1.05, 2.75))
+	_bbox("hazard", Vector3(0.04, 0.15, 1.1), Vector3(X1 - 0.11, 0.25, 2.75))
+	_bbox("neon_teal", Vector3(0.04, 0.22, 0.7), Vector3(X1 - 0.1, 2.5, 2.75))
+	_label(signs, "FireExit", "FIRE EXIT", Vector3(X1 - 0.14, 2.5, 2.75), -PI * 0.5, 0.0014, Color(0.05, 0.2, 0.2))
+
+
+## Ticket machines and film posters on the aisle faces of the cinema blocks.
+func _build_ticket_kiosks() -> void:
+	var films := ["NIGHT OF THE\nMALL RATS", "GALAXY\nGRANNY"]
+	for side in [-1.0, 1.0]:
+		var face: float = side * 1.6
+		var yaw: float = PI * 0.5 if side < 0.0 else -PI * 0.5
+		var out: float = -side
+		for z in [24.95, 26.15]:
+			_bbox("violet", Vector3(0.06, 1.3, 0.92), Vector3(face + out * 0.03, UP + 1.35, z))
+			_bbox("panel_light", Vector3(0.04, 0.5, 0.66), Vector3(face + out * 0.07, UP + 1.6, z))
+			_bbox("chrome", Vector3(0.12, 0.08, 0.4), Vector3(face + out * 0.06, UP + 1.0, z))
+			_label(signs, "Tickets%d_%d" % [int(side), int(z * 10)], "TICKETS", Vector3(face + out * 0.1, UP + 2.12, z), yaw,
+				0.0016, TEAL * 1.5)
+		var pz := 27.4
+		_bbox("chrome", Vector3(0.06, 1.6, 1.0), Vector3(face + out * 0.03, UP + 1.3, pz))
+		_bbox("neon_pink" if side < 0.0 else "neon_violet", Vector3(0.04, 1.44, 0.86), Vector3(face + out * 0.06, UP + 1.3, pz))
+		_bbox("navy", Vector3(0.04, 1.3, 0.74), Vector3(face + out * 0.08, UP + 1.3, pz))
+		_label(signs, "FilmPoster%d" % int(side), films[0 if side < 0.0 else 1], Vector3(face + out * 0.11, UP + 1.45, pz), yaw,
+			0.0012, AMBER * 1.4)
 
 
 func _build_outside() -> void:
