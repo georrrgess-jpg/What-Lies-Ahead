@@ -89,3 +89,11 @@ func reloaded() -> void:
 ## The weapon is put away: free anything the mode made.
 func dispose() -> void:
 	pass
+
+
+## Every physics frame while a charge weapon is charging, `charge` 0-1 (1 =
+## full). Return seconds to stall the weapon for (an overcharge held too
+## long): the charge is dropped without a shot and nothing fires for that
+## long. 0 keeps charging.
+func charging(_charge: float, _delta: float) -> float:
+	return 0.0
