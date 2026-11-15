@@ -638,7 +638,7 @@ func _spawn_boss(wave: WaveData) -> void:
 	var z := _spawn(wave.boss, wave, planner.pick(SpawnPlanner.Role.MAIN), 0.0)
 	if z == null:
 		return
-	var health := endless.boss_rank_scale(wave_number) if endless else Difficulty.boss_health_scale() / Difficulty.enemy_health_scale()
+	var health := endless.boss_rank_scale(z, wave_number) if endless else Difficulty.boss_health_scale() / Difficulty.enemy_health_scale()
 	z.set_rank(Zombie.RANK_BOSS, health, BOSS_TINT)
 	z.phase_reached.connect(_on_boss_phase)
 	for b in z.behaviours:

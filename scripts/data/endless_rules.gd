@@ -31,28 +31,28 @@ extends Resource
 @export_group("Scaling")
 ## Zombies in wave 1, how many each wave adds, and the most one wave holds.
 @export var count_base := 10
-@export var count_per_wave := 1.6
-@export var count_max := 60
+@export var count_per_wave := 1.1
+@export var count_max := 50
 ## Crowd cap (zombies alive at once): wave 1, per wave, ceiling.
 @export var crowd_base := 7
-@export var crowd_per_wave := 0.45
+@export var crowd_per_wave := 0.35
 @export var crowd_max := 18
 ## Seconds between spawns: wave 1, less per wave, floor.
 @export var interval_base := 2.0
-@export var interval_per_wave := 0.07
-@export var interval_min := 0.8
+@export var interval_per_wave := 0.05
+@export var interval_min := 0.85
 ## Enemy health: +health_growth per wave until health_knee, +health_late per
 ## wave after it, never more than health_max (death comes from pressure,
 ## not from bullet sponges).
-@export var health_growth := 0.05
+@export var health_growth := 0.03
 @export var health_knee := 15
-@export var health_late := 0.02
-@export var health_max := 2.4
+@export var health_late := 0.015
+@export var health_max := 2.0
 ## Enemy damage and speed: + per wave, capped.
-@export var damage_growth := 0.015
-@export var damage_max := 1.35
-@export var speed_growth := 0.01
-@export var speed_max := 1.2
+@export var damage_growth := 0.01
+@export var damage_max := 1.3
+@export var speed_growth := 0.008
+@export var speed_max := 1.15
 ## The boss's health: x(1 + boss_growth) for every earlier visit.
 @export var boss_growth := 0.45
 ## Kill tickets: + per wave, capped (tougher zombies pay a little more).

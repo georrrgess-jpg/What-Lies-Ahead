@@ -38,7 +38,7 @@ const MIX := {
 	&"boss": [0.6, 0.25, 0.0, 0.15],
 }
 ## Size and spawn interval of each kind, relative to a standard wave.
-const SIZE := {&"rush": 1.1, &"siege": 0.85, &"ambush": 1.0, &"ranged": 0.9, &"horde": 1.45, &"boss": 0.6}
+const SIZE := {&"rush": 1.1, &"siege": 0.85, &"ambush": 1.0, &"ranged": 0.9, &"horde": 1.3, &"boss": 0.6}
 const PACE := {&"rush": 0.6, &"siege": 1.15, &"ambush": 0.75, &"horde": 0.7, &"boss": 1.1}
 
 var rules: EndlessRules

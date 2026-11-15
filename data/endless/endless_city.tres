@@ -28,7 +28,7 @@ script = ExtResource("3")
 id = &"metro"
 display_name = "Metro Line"
 blurb = "Down the stairs to the flooded platforms, lit by emergency lamps. Something crawls in the tunnels."
-price = 900
+price = 1000
 enemies = Array[StringName]([&"tunnel_crawler"])
 accent_color = Color(0.3, 1, 0.55, 1)
 
@@ -37,7 +37,7 @@ script = ExtResource("3")
 id = &"market"
 display_name = "Neon Market"
 blurb = "A collapsed street of stalls under flickering neon. Mind the ones carrying bottles."
-price = 1200
+price = 1400
 enemies = Array[StringName]([&"firebug"])
 accent_color = Color(1, 0.25, 0.75, 1)
 
@@ -46,7 +46,7 @@ script = ExtResource("3")
 id = &"tower"
 display_name = "Broadcast Tower"
 blurb = "The foot of the broken skyscraper and its radio mast. Whatever wrecked the city sleeps here."
-price = 1600
+price = 1800
 enemies = Array[StringName]([&"city_bruiser"])
 accent_color = Color(1, 0.85, 0.3, 1)
 

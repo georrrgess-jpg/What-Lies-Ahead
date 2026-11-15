@@ -23,6 +23,8 @@ signal new_best(wave: int)
 const HOLD_SECONDS := 0.5
 ## Spawn-planner bonus for the entrances of the player's own district.
 const HOME_BIAS := 2.5
+## Heavies take this share of the wave's health growth.
+const HEAVY_GROWTH := 0.5
 ## Breaks before a boss wave are this much longer.
 const BOSS_REST := 1.4
 ## Enemies that stand in for the city's own until they exist (the map and the
@@ -143,7 +145,7 @@ static func resolve(id: StringName) -> StringName:
 
 
 ## The enemies the open districts field, by role: "regular", "fast",
-## "heavy" (EnemyData.heavy) and "special" (the districts' own).
+## "heavy" (EnemyData.heavy) and "special" (the districts' own that are not heavies).
 func pool() -> Dictionary:
 	var out := {"regular": [], "fast": [], "heavy": [], "special": []}
 	for raw in rules.base_enemies:
@@ -158,10 +160,11 @@ func pool() -> Dictionary:
 			var e := GameData.enemy(resolve(raw))
 			if e == null:
 				continue
-			# A district that adds one of the base enemies (the Tower's
-			# bruisers) adds more of it, as a special.
-			if not (out["special"] as Array).has(e.id):
-				out["special"].append(e.id)
+			# A heavy (the riot squad, the Tower's bruisers) joins the heavies'
+			# share; the others are the wave's specials.
+			var role := "heavy" if e.heavy else "special"
+			if not (out[role] as Array).has(e.id):
+				out[role].append(e.id)
 	return out
 
 
@@ -203,11 +206,12 @@ func build_wave(n: int) -> WaveData:
 	return waves.build(n, pool())
 
 
-## A freshly set-up zombie of wave `n`: tougher and harder-hitting with the wave.
+## A freshly set-up zombie of wave `n`: tougher and harder-hitting with the
+## wave. Heavies grow at half the rate (they are already the tanks and hit hardest).
 func prepare(z: Zombie, n: int) -> void:
-	z.max_health *= rules.health_scale(n)
+	z.max_health *= _growth(z, n)
 	z.health = z.max_health
-	var d := rules.damage_scale(n)
+	var d := 1.0 + (rules.damage_scale(n) - 1.0) * (HEAVY_GROWTH if z.data.heavy else 1.0)
 	z.damage_scale *= d
 	for b in z.behaviours:
 		for field in Zombie.BEHAVIOUR_DAMAGE_FIELDS:
@@ -215,9 +219,14 @@ func prepare(z: Zombie, n: int) -> void:
 				b.set(field, float(b.get(field)) * d)
 
 
-## set_rank() health factor of the boss on wave `n` (its own curve, not the horde's).
-func boss_rank_scale(n: int) -> float:
-	return Difficulty.boss_health_scale() * rules.boss_scale(n) / (Difficulty.enemy_health_scale() * rules.health_scale(n))
+## set_rank() health factor of `boss` on wave `n` (its own curve, not the horde's).
+func boss_rank_scale(boss: Zombie, n: int) -> float:
+	return Difficulty.boss_health_scale() * rules.boss_scale(n) / (Difficulty.enemy_health_scale() * _growth(boss, n))
+
+
+## The health factor prepare() gives `z` on wave `n`.
+func _growth(z: Zombie, n: int) -> float:
+	return 1.0 + (rules.health_scale(n) - 1.0) * (HEAVY_GROWTH if z.data.heavy else 1.0)
 
 
 ## Tickets a kill of `z` pays on wave `n`.
