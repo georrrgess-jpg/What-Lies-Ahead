@@ -101,7 +101,8 @@ func _strike() -> void:
 		return
 	var scale := director.endless.health_scale() if director.endless else 1.0
 	var hits := 0
-	for z in director.alive_enemies():
+	# A copy: a kill takes the zombie out of the director's list.
+	for z: Zombie in director.alive_enemies().duplicate():
 		if not is_instance_valid(z) or z.is_dead():
 			continue
 		var flat := Vector2(z.global_position.x - global_position.x, z.global_position.z - global_position.z)

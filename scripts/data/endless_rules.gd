@@ -31,7 +31,7 @@ extends Resource
 @export_group("Scaling")
 ## Zombies in wave 1, how many each wave adds, and the most one wave holds.
 @export var count_base := 10
-@export var count_per_wave := 2.0
+@export var count_per_wave := 1.8
 @export var count_max := 60
 ## Crowd cap (zombies alive at once): wave 1, per wave, ceiling.
 @export var crowd_base := 7
@@ -44,10 +44,10 @@ extends Resource
 ## Enemy health: +health_growth per wave until health_knee, +health_late per
 ## wave after it, never more than health_max (death comes from pressure,
 ## not from bullet sponges).
-@export var health_growth := 0.07
+@export var health_growth := 0.06
 @export var health_knee := 15
-@export var health_late := 0.025
-@export var health_max := 2.6
+@export var health_late := 0.02
+@export var health_max := 2.4
 ## Enemy damage and speed: + per wave, capped.
 @export var damage_growth := 0.02
 @export var damage_max := 1.5
