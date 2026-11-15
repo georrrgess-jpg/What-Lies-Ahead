@@ -913,6 +913,20 @@ func hurry_reload(data: WeaponData, seconds: float) -> bool:
 	return true
 
 
+## Takes up to `count` more rounds of `data` out of the magazine for one
+## trigger pull that fires several (the T-Minus Six's swarm). Returns how
+## many it took.
+func spend_rounds(data: WeaponData, count: int) -> int:
+	var state: Dictionary = _ammo.get(data.id, {})
+	if state.is_empty() or count <= 0:
+		return 0
+	var taken := mini(count, int(state["mag"]))
+	state["mag"] = int(state["mag"]) - taken
+	if data == current:
+		_emit_ammo()
+	return taken
+
+
 ## Hit-confirm feedback: reticle marker plus non-positional sounds, so
 ## far-away hits still register. The kill sound climbs with the combo.
 func _confirm(result: Array) -> void:

@@ -267,7 +267,11 @@ sound_category = Dictionary[StringName, StringName]({
 &"mdm_": &"handling",
 &"mdm_fire": &"weapon",
 &"mdm_stick": &"impact",
-&"mdm_pop": &"impact"
+&"mdm_pop": &"impact",
+&"tm6_": &"handling",
+&"tm6_fire": &"weapon",
+&"tm6_launch": &"weapon",
+&"tm6_pop": &"impact"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,

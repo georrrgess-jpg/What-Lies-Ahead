@@ -23,7 +23,10 @@ round trips (catches refill it, so it never reloads or runs dry) and slices thro
 whole pack, a pile-up hitting harder; the Lava Lampoon fires its warm-up groove's slower shots
 first and its target burns in the lava puddle under it (the pack walks through it); the Markdown
 Marker's tags (scripts/weapons/markdown_marker_tags.gd) mark the target down per tag, a full stack
-pops for its own damage and splash and refunds tags (a longer magazine); the "amp" column is the
+pops for its own damage and splash and refunds tags (a longer magazine); the T-Minus Six
+dumb-fires from the hip (its rockets pop with a small splash, scripts/weapons/t_minus_rocket.gd),
+and its aimed swarm (one lock per LOCK_TIME, rockets seeking heads, less of the bonus on heavies)
+is printed below the tables; the "amp" column is the
 damage bonus a status lends every other weapon. Ground Control's full-charge ring
 (scripts/weapons/ground_control_ring.gd) passes through the whole pack, weaker for each
 zombie it has passed, and its mark (scripts/weapons/ground_control_mark.gd) adds its bonus
@@ -80,6 +83,10 @@ SOAK = gd_consts("scripts/weapons/soak.gd")
 HUBCAP = gd_consts("scripts/weapons/hubcap_shot.gd")
 PING = gd_consts("scripts/weapons/ground_control_ring.gd")
 MARK = gd_consts("scripts/weapons/ground_control_mark.gd")
+TMINUS = gd_consts("scripts/weapons/modes/t_minus_six_mode.gd")
+TMINUS.update(gd_consts("scripts/weapons/t_minus_rocket.gd"))
+# Share of a painted swarm's rockets that land on the head they seek.
+TMINUS_SEEK_HEAD = 0.85
 MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
 # The Lava Lampoon: its warm-up groove (mode) and the lava puddle its globs leave.
 LAVA_MODE = gd_consts("scripts/weapons/modes/lava_lampoon_mode.gd")
@@ -172,6 +179,8 @@ def mode_kind(w):
 		return "balloon"
 	if mode.endswith("markdown_marker_mode.gd"):
 		return "marker"
+	if mode.endswith("t_minus_six_mode.gd"):
+		return "tminus"
 	return ""
 
 
@@ -422,6 +431,9 @@ def crowd_damage(w, d=8.0):
 		c = script_consts("marker")
 		dart = w["damage"] * (1.0 + c["TAG_BONUS"] * c["MAX_TAGS"])
 		return dart + c["POP_DAMAGE"] * (1.0 + 3 * (1.0 + c["POP_EDGE"]) / 2)
+	if mode_kind(w) == "tminus":
+		# A dumb rocket into one of the pack: its pop splashes the other three.
+		return dmg + 3 * TMINUS["SPLASH_DAMAGE"]
 	if mode_kind(w) == "balloon":
 		# One dart into one of the pack: its balloon pops and splashes the other three.
 		c = script_consts("balloon")
@@ -459,6 +471,19 @@ def ammo_damage(w, head):
 	return dmg * stock
 
 
+def tminus_swarm(w, heavy=False):
+	"""T-Minus Six aimed: (single-target DPS of full paints, damage of one full
+	swarm spread over a pack of four standing close, seconds per volley)."""
+	n = int(min(TMINUS["MAX_LOCKS"], w["magazine_size"]))
+	bonus = (w["headshot_multiplier"] - 1.0) * (TMINUS["HEAVY_HEAD_SHARE"] if heavy else 1.0)
+	rocket = w["damage"] * (1.0 + TMINUS_SEEK_HEAD * bonus)
+	volley = n * TMINUS["LOCK_TIME"] + n * TMINUS["RIPPLE"] + 0.35
+	single = rocket * n / (volley + w["reload_time"])
+	# Each pop splashes about one and a half of the pack's other zombies.
+	crowd = n * (rocket + 1.5 * TMINUS["SPLASH_DAMAGE"])
+	return single, crowd, volley
+
+
 def main():
 	head = 0.3
 	dist = 8.0
@@ -488,6 +513,13 @@ def main():
 		t20, _ = ttk(w, es["tourist_shambler"], 20.0, head)
 		print(f"| {w['display_name']} | {w.get('slot_class', 'primary')} | {sustained_dps(w, head):.0f} | {sustained_dps(w, head, 20.0):.0f} | "
 			f"{crowd_damage(w):.0f} | {ammo_damage(w, head):.0f} | {eff:.0f} m | {t20:.2f} | {amp(w) * 100:+.0f}% |")
+	for w in ws.values():
+		if mode_kind(w) == "tminus":
+			single, crowd, volley = tminus_swarm(w)
+			boss, _, _ = tminus_swarm(w, heavy=True)
+			n = int(min(TMINUS["MAX_LOCKS"], w["magazine_size"]))
+			print(f"\n{w['display_name']} aimed: a full paint of {n} in {volley:.2f} s, {int(TMINUS_SEEK_HEAD * 100)}% of the rockets "
+				f"on the head: {single:.0f} DPS on one light zombie, {boss:.0f} on a heavy or boss; one swarm over a pack of four {crowd:.0f}")
 
 
 if __name__ == "__main__":
