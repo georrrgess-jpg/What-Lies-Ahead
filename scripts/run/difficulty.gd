@@ -102,7 +102,7 @@ static func effects(id: StringName) -> PackedStringArray:
 ## multiplier, so Hard keeps a little relief there (it stays clearly harder
 ## than Standard: about wave 18-22 against the mid-20s for the same player).
 const ENDLESS_TABLE := {
-	&"hard": {"health": 1.08, "relief": 2.0, "pace_max": 1.3},
+	&"hard": {"health": 1.1, "relief": 1.0, "pace_max": 1.35},
 }
 
 
