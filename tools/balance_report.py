@@ -12,7 +12,11 @@ sampled in their cone against the target's capsule (Monte Carlo), burst,
 charge, beam heat and frozen bonus included. Splash and chain hit one target
 here; their crowd value is in the "crowd" column (damage one trigger pull
 spreads over a pack of four; ricochets count like chain jumps). Fizz burn
-(the Sparkler) adds its average burn over each pull's time. Armour behaviours (helmets, shields, ice
+(the Sparkler) adds its average burn over each pull's time. The Teacup
+Twister's whirl adds its spin ticks to the pop and gathers the pack into the
+cup (scripts/weapons/twister_vortex.gd); the Dunk Tank's soak multiplies its
+own hits (scripts/weapons/soak.gd), and the "amp" column is the damage bonus
+a status lends every other weapon. Armour behaviours (helmets, shields, ice
 shells) are approximated as extra health. Numbers are for comparison
 between weapons, not exact in-game times.
 """
@@ -41,6 +45,27 @@ WEAPON_DEFAULTS = {
 # carries on average while it is being sprayed (the stacks build up).
 FIZZ_MAX_STACKS = 6
 FIZZ_RAMP = 0.75
+
+
+def gd_consts(rel_path):
+	"""`const NAME := number` values of a GDScript file (mode tuning lives there)."""
+	out = {}
+	path = os.path.join(ROOT, rel_path)
+	if not os.path.exists(path):
+		return out
+	for line in open(path, encoding="utf-8"):
+		m = re.match(r'^const (\w+) := (-?[\d.]+)\s*$', line.strip())
+		if m:
+			out[m.group(1)] = float(m.group(2))
+	return out
+
+
+# Weapons whose mode adds damage their WeaponData does not show.
+VORTEX = gd_consts("scripts/weapons/twister_vortex.gd")
+SOAK = gd_consts("scripts/weapons/soak.gd")
+MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
+# Share of the pop a gathered zombie takes (they spin near the cup's centre).
+VORTEX_POP_SHARE = 0.8
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
 	"capsule_height": 1.9, "mass": 1.0, "move_speed": 2.0}
 # Extra effective health from armour behaviours (helmet, riot shield, ice shell).
@@ -125,15 +150,29 @@ def pull_damage(w, e, d, head):
 	if w["ricochet_count"] > 0:
 		# A thrown ring (RingShot) flies straight at its first target and can headshot.
 		return w["damage"] * head_mix, w["fire_interval"]
+	if MODE_OF.get(w["id"]) == "vortex":
+		return w["damage"] + vortex_spin(), w["fire_interval"]
 	if w["projectile_speed"] > 0.0:
 		dmg = w["damage"] + w["direct_hit_bonus"]
 		return dmg, w["fire_interval"]
 	if w["charge_time"] > 0.0:
 		# Full charge, as a player would against anything slower than a runner.
 		return w["damage"] * scale * head_mix, w["fire_interval"] + w["charge_time"]
-	dmg = w["damage"] * w["pellets"] * pellet_fraction(w, e, d) * scale * head_mix
+	dmg = w["damage"] * w["pellets"] * pellet_fraction(w, e, d) * scale * head_mix * (1.0 + amp(w))
 	cycle = w["fire_interval"] + (w["burst_count"] - 1) * w["burst_interval"]
 	return dmg * w["burst_count"] + fizz_per_pull(w, cycle), cycle
+
+
+def vortex_spin():
+	"""Spin damage a zombie in the cup takes over one whirl (ticks until it pops)."""
+	if not VORTEX:
+		return 0.0
+	return math.floor(VORTEX["WHIRL_TIME"] / VORTEX["WHIRL_TICK"]) * VORTEX["WHIRL_TICK_DAMAGE"]
+
+
+def amp(w):
+	"""Damage bonus the weapon's status lends every hit on the target (soak)."""
+	return SOAK.get("DAMAGE_BONUS", 1.0) - 1.0 if MODE_OF.get(w["id"]) == "soak" else 0.0
 
 
 def fizz_per_pull(w, cycle):
@@ -162,6 +201,9 @@ def ttk(w, e, d, head):
 	if w["regen_rate"] > 0.0:
 		reload = w["magazine_size"] / w["regen_rate"] if reloads else 0.0
 	first_shot = w["charge_time"] if w["charge_time"] > 0 else 0.0
+	if MODE_OF.get(w["id"]) == "vortex":
+		# The whirl deals its damage over WHIRL_TIME, after the shell's flight (~0.5 s at 8 m).
+		first_shot += VORTEX.get("WHIRL_TIME", 0.0) + 0.5
 	return first_shot + (pulls - 1) * cycle + reloads * reload, pulls
 
 
@@ -188,6 +230,8 @@ def crowd_damage(w, d=8.0):
 	if w["ricochet_count"] > 0:
 		hops = sum(w["ricochet_falloff"] ** (k + 1) for k in range(int(min(3, w["ricochet_count"]))))
 		return dmg + w["damage"] * hops
+	if MODE_OF.get(w["id"]) == "vortex":
+		return dmg + 3 * (vortex_spin() + w["damage"] * VORTEX_POP_SHARE)
 	if w["splash_radius"] > 0.0:
 		return dmg + 3 * w["damage"] * (1 + w["splash_edge_scale"]) / 2
 	if w["pierce"] > 0:
@@ -221,15 +265,15 @@ def main():
 			t, n = ttk(w, es[i], dist, head)
 			cells.append(f"{t:.2f} ({n})")
 		print(f"| {w['display_name']} | " + " | ".join(cells) + " |")
-	print("\n| Weapon | DPS @8m | DPS @20m | crowd/pull | stock dmg | eff. range | tourist@20m |")
-	print("|---|---|---|---|---|---|---|")
+	print("\n| Weapon | Slot | DPS @8m | DPS @20m | crowd/pull | stock dmg | eff. range | tourist@20m | amp |")
+	print("|---|---|---|---|---|---|---|---|---|")
 	for w in ws.values():
 		eff = min(w["max_range"], w["falloff_start"] + (w["falloff_end"] - w["falloff_start"]) * 0.35)
 		if w["projectile_speed"] > 0:
 			eff = min(w["max_range"], w["projectile_speed"] * w["projectile_fuse"] * 0.6)
 		t20, _ = ttk(w, es["tourist_shambler"], 20.0, head)
-		print(f"| {w['display_name']} | {sustained_dps(w, head):.0f} | {sustained_dps(w, head, 20.0):.0f} | "
-			f"{crowd_damage(w):.0f} | {ammo_damage(w, head):.0f} | {eff:.0f} m | {t20:.2f} |")
+		print(f"| {w['display_name']} | {w.get('slot_class', 'primary')} | {sustained_dps(w, head):.0f} | {sustained_dps(w, head, 20.0):.0f} | "
+			f"{crowd_damage(w):.0f} | {ammo_damage(w, head):.0f} | {eff:.0f} m | {t20:.2f} | {amp(w) * 100:+.0f}% |")
 
 
 if __name__ == "__main__":
