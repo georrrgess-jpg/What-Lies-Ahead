@@ -87,7 +87,7 @@ func _physics_process(delta: float) -> void:
 func _orbit(delta: float) -> void:
 	_spin = fmod(_spin + ORBIT_SPEED * delta, TAU)
 	var s := zombie.data.body_scale
-	var top := (zombie.data.head_height + 0.42) * s
+	var top := (zombie.data.head_height + 0.75) * s
 	for i in _stars.size():
 		var a := _spin + TAU * i / STARS
 		_stars[i].position = Vector3(cos(a) * ORBIT * s, top + sin(a * 2.0 + i) * 0.04, sin(a) * ORBIT * s)

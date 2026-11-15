@@ -200,7 +200,7 @@ func _float() -> void:
 		var a := TAU * i / MAX_BALLOONS + 0.6
 		var anchor := _anchors[i]
 		var sway := Vector3(sin(_time * 3.1 + i * 1.7), 0.0, cos(_time * 2.6 + i * 2.3)) * 0.05
-		var top := Vector3(cos(a) * 0.22 * s, (zombie.data.head_height + 0.55 + 0.08 * (i % 2)) * s, sin(a) * 0.22 * s) + sway
+		var top := Vector3(cos(a) * 0.22 * s, (zombie.data.head_height + 0.9 + 0.08 * (i % 2)) * s, sin(a) * 0.22 * s) + sway
 		var size := lerpf(0.2, 0.42, swell) * s * (1.0 + 0.06 * sin(_time * 9.0 + i))
 		var skin := _balloons[i]
 		skin.position = top
