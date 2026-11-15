@@ -217,12 +217,12 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 
 | | Casual | Standard | Hard |
 |---|---|---|---|
-| Enemy health | 80% | 100% | 120% |
+| Enemy health | 80% | 100% | 112% |
 | Alpha health | 70% | 100% | 100% |
 | Enemy damage | 60% | 100% | 105% |
 | Enemy speed | 95% | 100% | 105% |
-| Crowd cap | 80% | 100% | 110% |
-| Spawn interval | 120% | 100% | 90% |
+| Crowd cap | 80% | 100% | 105% |
+| Spawn interval | 120% | 100% | 95% |
 | Special-attack cooldowns | 145% | 100% | 90% |
 | Pace bounds (min-max) | 0.55-1.0 | 0.7-1.35 | 0.85-1.4 |
 | Spawn pause for a player in trouble | 6 s per wave | 3.5 s | none |
