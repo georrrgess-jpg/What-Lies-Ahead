@@ -263,7 +263,7 @@ def build_shell_c():
     z = H0
     for f in range(5):
         right = cuts[f + 1]
-        p += storey(f"S{f}_", x0, right, D, z, H, st, cut_right=right < x1, blown={"B": (2, 3)} if f == 1 else {}, bays_per_m=0.38)
+        p += storey(f"S{f}_", x0, right, D, z, H, st, cut_right=right < x1, blown={"B": (2, 3)} if f == 1 else {}, bays_per_m=0.34)
         if right < cuts[f]:
             p += stubs(f"St{f}", right + 0.6, D, z + 0.15, st, seed=f * 5 + 3)
         z += H
@@ -305,9 +305,9 @@ def build_corner():
     p += place(corner, (c[0] - 0.4, c[1] - 0.4, 0), rot_z=math.radians(-45))
     # Shops along both street faces.
     p += shopfront("FA", 2.0, 5.0, 0.0, st, "LAUNDRY", NEON_CYAN)
-    p += place(shopfront("LA", 2.0, 5.0, 0.0, st, "RECORDS", NEON_LIME, shutter=False), (-S / 2, 0, 0), rot_z=-math.pi / 2)
+    p += place(shopfront("LA", 2.0, 5.0, 0.0, st, "VINYL", NEON_LIME, shutter=False), (-S / 2, 0, 0), rot_z=-math.pi / 2)
     p += water_tank("WT", (3.0, 3.0, z + 0.35))
-    p += graffiti("Tag", "NO ONE LEFT", 0.55, (4.0, -S / 2 - 0.02, H0 + 1.8), NEON_PINK)
+    p += graffiti("Tag", "NO ONE", 0.6, (4.0, -S / 2 - 0.02, H0 + 1.8), NEON_PINK)
     csave("city_building_corner", [merge("Corner", p)], budget=8000)
 
 
