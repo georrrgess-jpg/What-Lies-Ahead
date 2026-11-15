@@ -222,7 +222,8 @@ func _on_recycle() -> void:
 		UiSound.deny()
 		return
 	var p := print_data
-	var text := "%s %s becomes %d Prize Tokens. This cannot be undone." % [PrintLook.title(p), PrintLook.serial_text(int(p["serial"])), PrizePrints.token_value(p)]
+	var value := PrizePrints.token_value(p)
+	var text := "%s %s becomes %d Prize Token%s. This cannot be undone." % [PrintLook.title(p), PrintLook.serial_text(int(p["serial"])), value, "" if value == 1 else "s"]
 	UiKit.confirm(self, "RECYCLE THIS PRINT?", text, "RECYCLE", func():
 		if PrizePrints.recycle(p) > 0:
 			Sfx.play(&"prz_token", -4.0)

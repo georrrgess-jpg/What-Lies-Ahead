@@ -12,6 +12,8 @@ signal cancelled
 
 ## How many dialogs are open (a screen can ignore its own shortcuts meanwhile).
 static var open_count := 0
+## Above the pause menu (30), results (40) and toasts (80); below the loading screen (100).
+const LAYER := 90
 
 var _on_yes := Callable()
 var _panel: KitPanel
@@ -27,7 +29,7 @@ static func ask(host: Node, title: String, text: String, yes_text: String, on_ye
 	var d := KitDialog.new()
 	d._on_yes = on_yes
 	d._build(title, text, yes_text, no_text)
-	host.add_child(d)
+	_attach(host, d)
 	return d
 
 
@@ -35,8 +37,20 @@ static func ask(host: Node, title: String, text: String, yes_text: String, on_ye
 static func notice(host: Node, title: String, text: String, ok_text := "OK") -> KitDialog:
 	var d := KitDialog.new()
 	d._build(title, text, "", ok_text)
-	host.add_child(d)
+	_attach(host, d)
 	return d
+
+
+## Shows `d` on its own layer above everything (pause menu, results, the
+## Prizes overlays), covering the whole window. The layer lives under `host`,
+## so the dialog goes when its screen does; added straight to `host`, a
+## container would lay the dialog out as one more row or column, off screen.
+static func _attach(host: Node, d: KitDialog) -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = LAYER
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	layer.add_child(d)
+	host.add_child(layer)
 
 
 func _build(title: String, text: String, yes_text: String, no_text: String) -> void:
@@ -138,4 +152,4 @@ func _close(yes: bool) -> void:
 		cancelled.emit()
 	var tw := create_tween()
 	tw.tween_property(self, "modulate:a", 0.0, 0.12)
-	tw.tween_callback(queue_free)
+	tw.tween_callback((get_parent() if get_parent() is CanvasLayer else self).queue_free)
