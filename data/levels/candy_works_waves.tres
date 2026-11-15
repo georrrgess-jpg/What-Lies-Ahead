@@ -121,14 +121,14 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"candy_gummy": 13,
-"candy_taffy_puller": 6,
+"candy_gummy": 11,
+"candy_taffy_puller": 5,
 "lifeguard_runner": 3,
 "frost_yeti": 1
 }
 spawn_interval = 2.0
 burst = 2
-max_alive = 13
+max_alive = 12
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
