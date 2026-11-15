@@ -20,7 +20,9 @@ to the pop and gathers the pack into the cup (scripts/weapons/twister_vortex.gd)
 Tank's soak multiplies its own hits (scripts/weapons/soak.gd), the Road Rager's hubcap
 (scripts/weapons/hubcap_shot.gd) hits its target on the way out and back, is paced by its
 round trips (catches refill it, so it never reloads or runs dry) and slices through the
-whole pack, a pile-up hitting harder; the "amp" column is the
+whole pack, a pile-up hitting harder; the Markdown Marker's tags (scripts/weapons/markdown_marker_tags.gd)
+mark the target down per tag, a full stack pops for its own damage and splash and refunds tags
+(a longer magazine); the "amp" column is the
 damage bonus a status lends every other weapon. Armour behaviours (helmets, shields, ice
 shells) are approximated as extra health. Numbers are for comparison
 between weapons, not exact in-game times.
@@ -51,7 +53,8 @@ WEAPON_DEFAULTS = {
 FIZZ_MAX_STACKS = 6
 FIZZ_RAMP = 0.75
 # Constants of the weapons whose behaviour lives in a script (WeaponData.mode_script).
-SCRIPT_CONSTS = {"flash": "scripts/weapons/modes/shutterbug_mode.gd", "balloon": "scripts/weapons/balloon_bunch.gd"}
+SCRIPT_CONSTS = {"flash": "scripts/weapons/modes/shutterbug_mode.gd", "balloon": "scripts/weapons/balloon_bunch.gd",
+	"marker": "scripts/weapons/markdown_marker_tags.gd"}
 
 
 def gd_consts(rel_path):
@@ -156,6 +159,8 @@ def mode_kind(w):
 		return "flash"
 	if mode.endswith("balloon_darter_mode.gd"):
 		return "balloon"
+	if mode.endswith("markdown_marker_mode.gd"):
+		return "marker"
 	return ""
 
 
@@ -195,6 +200,38 @@ def balloon_sim(w, hp, d, head):
 			fuse_at, balloons = None, 0
 		t = t_next
 	return math.inf, darts
+
+
+def marker_sim(w, hp, d, head, heavy=False):
+	"""Markdown Marker on one target: tags stack the mark-down, the dart that hits a
+	full stack pops it (its own damage, the tags back in the magazine) and the
+	stack starts again. Returns (seconds, darts) to deal hp."""
+	c = script_consts("marker")
+	dart = w["damage"] * falloff(w, d) * (1.0 + head * (w["headshot_multiplier"] - 1.0))
+	t, dealt, darts, mag, tags = 0.0, 0.0, 0, int(w["magazine_size"]), 0
+	while t < 60.0:
+		darts += 1
+		mag -= 1
+		dealt += dart * (1.0 + c["TAG_BONUS"] * tags)
+		if tags >= c["MAX_TAGS"]:
+			dealt += c["POP_DAMAGE"] * (c["HEAVY_POP_SCALE"] if heavy else 1.0)
+			tags = 0
+			mag = min(int(w["magazine_size"]), mag + int(c["POP_REFUND"]))
+		else:
+			tags += 1
+		if dealt >= hp:
+			return t, darts
+		t += w["fire_interval"] if mag > 0 else w["reload_time"]
+		if mag <= 0:
+			mag = int(w["magazine_size"])
+	return math.inf, darts
+
+
+def marker_cycle():
+	"""Darts in one stack-and-pop cycle, and the darts it costs (the pop refunds some)."""
+	c = script_consts("marker")
+	n = int(c["MAX_TAGS"]) + 1
+	return n, n - int(c["POP_REFUND"])
 
 
 def hubcap_cycle(w):
@@ -245,6 +282,12 @@ def pull_damage(w, e, d, head):
 		per_fuse = math.floor(c["FUSE"] / w["fire_interval"]) + 1
 		share = min(1.0, c["MAX_BALLOONS"] / per_fuse)
 		return w["damage"] * falloff(w, d) * head_mix + c["POP_DAMAGE"] * share, w["fire_interval"]
+	if mode_kind(w) == "marker":
+		# Per dart, its share of a stack-and-pop cycle: the mark-down on it and the pop.
+		c = script_consts("marker")
+		n, _ = marker_cycle()
+		marked = sum(1.0 + c["TAG_BONUS"] * i for i in range(n)) / n
+		return w["damage"] * falloff(w, d) * head_mix * marked + c["POP_DAMAGE"] / n, w["fire_interval"]
 	if w["ricochet_count"] > 0:
 		# A thrown ring (RingShot) flies straight at its first target and can headshot.
 		return w["damage"] * head_mix, w["fire_interval"]
@@ -269,7 +312,10 @@ def vortex_spin():
 
 
 def amp(w):
-	"""Damage bonus the weapon's status lends every hit on the target (soak)."""
+	"""Damage bonus the weapon's status lends every hit on the target (soak; a full stack of tags)."""
+	if mode_kind(w) == "marker":
+		c = script_consts("marker")
+		return c["TAG_BONUS"] * c["MAX_TAGS"]
 	return SOAK.get("DAMAGE_BONUS", 1.0) - 1.0 if MODE_OF.get(w["id"]) == "soak" else 0.0
 
 
@@ -285,6 +331,8 @@ def ttk(w, e, d, head):
 	hp = e["max_health"] + e["armour"]
 	if mode_kind(w) == "balloon":
 		return balloon_sim(w, hp, d, head)
+	if mode_kind(w) == "marker":
+		return marker_sim(w, hp, d, head, bool(e.get("heavy", False)))
 	dmg, cycle = pull_damage(w, e, d, head)
 	if dmg <= 0.0:
 		return math.inf, math.inf
@@ -315,6 +363,9 @@ def sustained_dps(w, head, d=8.0, e=None):
 	if mode_kind(w) == "hubcap":
 		return dmg / cycle
 	pulls = max(1, int(w["magazine_size"] // w["burst_count"]))
+	if mode_kind(w) == "marker":
+		n, cost = marker_cycle()
+		pulls = int(pulls * n / cost)
 	reload = w["reload_time"]
 	if w["regen_rate"] > 0.0:
 		# Heat: fire a full bar, cool it back from empty (vent) each cycle.
@@ -338,6 +389,12 @@ def crowd_damage(w, d=8.0):
 		strikes = 6
 		pile = int(HUBCAP["PILEUP"])
 		return w["damage"] * (min(strikes, pile) + max(0, strikes - pile) * HUBCAP["PILEUP_BONUS"])
+	if mode_kind(w) == "marker":
+		# The popping dart into one of the pack: the pop splashes the other three (half
+		# way to the rim) and tags each.
+		c = script_consts("marker")
+		dart = w["damage"] * (1.0 + c["TAG_BONUS"] * c["MAX_TAGS"])
+		return dart + c["POP_DAMAGE"] * (1.0 + 3 * (1.0 + c["POP_EDGE"]) / 2)
 	if mode_kind(w) == "balloon":
 		# One dart into one of the pack: its balloon pops and splashes the other three.
 		c = script_consts("balloon")
@@ -362,7 +419,11 @@ def ammo_damage(w, head):
 	if mode_kind(w) == "hubcap":
 		return math.inf
 	dmg, _ = pull_damage(w, {"capsule_radius": 0.5, "body_scale": 1.0, "capsule_height": 1.9}, 8.0, head)
-	return dmg * (w["magazine_size"] + w["reserve_max"]) / w["burst_count"]
+	stock = (w["magazine_size"] + w["reserve_max"]) / w["burst_count"]
+	if mode_kind(w) == "marker":
+		n, cost = marker_cycle()
+		stock *= n / cost
+	return dmg * stock
 
 
 def main():
