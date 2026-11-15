@@ -72,6 +72,9 @@ var _difficulty_note: Label
 var _deploy: SignButton
 var _who: Control
 var _endless_box: VBoxContainer
+## The header's jump between the story worlds and ENDLESS.
+var _mode_jump: SignButton
+var _story_slot := 0
 
 
 func _init() -> void:
@@ -116,6 +119,12 @@ func header_extra() -> Control:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_END
 	row.add_theme_constant_override("separation", UiKit.GAP_L)
+	if not GameData.endless_levels().is_empty():
+		# Endless sits after the last world: one press gets there (and back).
+		_mode_jump = UiKit.sign_button("", SignButton.Kind.GOLD, 22)
+		_mode_jump.pressed.connect(_jump_mode)
+		row.add_child(_mode_jump)
+		_refresh_mode_jump()
 	row.add_child(UiKit.key_prompt("A", "Previous world"))
 	row.add_child(UiKit.key_prompt("D", "Next world"))
 	row.add_child(UiKit.key_prompt("ENTER", "Deploy"))
@@ -339,7 +348,22 @@ func select_world(i: int) -> void:
 	_refresh_details()
 	_layout_cards(true)
 	_animate_details()
+	_refresh_mode_jump()
 	world_changed.emit(selected_level)
+
+
+## ENDLESS from a world's slot, STORY WORLDS back to the world it came from.
+func _jump_mode() -> void:
+	if endless_at(world_index):
+		select_world(_story_slot)
+	else:
+		_story_slot = world_index
+		select_world(GameData.worlds().size())
+
+
+func _refresh_mode_jump() -> void:
+	if _mode_jump:
+		_mode_jump.set_text("STORY WORLDS" if endless_at(world_index) else "ENDLESS MODE")
 
 
 func step_world(step: int) -> void:
