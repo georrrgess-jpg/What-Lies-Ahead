@@ -5,6 +5,10 @@
 [ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/lava_coconut_lob.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_shockwave.gd" id="b_wave"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_strike_zones.gd" id="b_zones"]
 
 [sub_resource type="Resource" id="bomb"]
 script = ExtResource("4")
@@ -23,24 +27,122 @@ held_glow = 3.0
 windup_sound = &"lava_kahuna_roar"
 throw_sound = &"lava_coconut_throw"
 
+[sub_resource type="Resource" id="geyser_line"]
+script = ExtResource("b_zones")
+move_name = &"geyser_line"
+cooldown = 9.0
+first_delay = 2.5
+min_range = 4.0
+max_range = 24.0
+callout = "LAVA GEYSERS — STEP OFF THE LINE"
+windup = 0.9
+windup_clip = &"Roar"
+pattern = 2
+count = 6
+stagger = 0.15
+radius = 1.6
+telegraph = 1.1
+damage = 6.6
+linger = 2.5
+linger_dps = 3.0
+color = Color(1.0, 0.45, 0.12, 1.0)
+style = 0
+prop = 1
+prop_color = Color(1.0, 0.55, 0.15, 1.0)
+prop_height = 4.0
+hit_sound = &"rounds_boss_geyser"
+
+[sub_resource type="Resource" id="stomp"]
+script = ExtResource("b_wave")
+move_name = &"stomp"
+cooldown = 12.0
+first_delay = 7.0
+max_range = 14.0
+callout = "VOLCANO STOMP — JUMP THE RING!"
+windup = 1.0
+windup_clip = &"Roar"
+waves = 1
+speed = 8.0
+max_radius = 14.0
+damage = 6.0
+color = Color(1.0, 0.45, 0.12, 1.0)
+
+[sub_resource type="Resource" id="geyser_ring"]
+script = ExtResource("b_zones")
+move_name = &"geyser_ring"
+min_phase = 1
+cooldown = 12.0
+first_delay = 0.0
+max_range = 30.0
+windup = 0.9
+windup_clip = &"Roar"
+pattern = 1
+count = 6
+stagger = 0.1
+spread = 4.0
+radius = 1.7
+telegraph = 1.2
+damage = 6.6
+linger = 2.0
+linger_dps = 3.0
+color = Color(1.0, 0.45, 0.12, 1.0)
+style = 0
+prop = 1
+prop_color = Color(1.0, 0.55, 0.15, 1.0)
+prop_height = 4.0
+hit_sound = &"rounds_boss_geyser"
+
+[sub_resource type="Resource" id="geyser_chase"]
+script = ExtResource("b_zones")
+move_name = &"geyser_chase"
+min_phase = 2
+cooldown = 11.0
+first_delay = 0.0
+max_range = 30.0
+windup = 0.8
+windup_clip = &"Roar"
+pattern = 0
+count = 6
+stagger = 0.45
+radius = 1.7
+telegraph = 1.15
+damage = 6.0
+color = Color(1.0, 0.45, 0.12, 1.0)
+style = 0
+prop = 1
+prop_color = Color(1.0, 0.55, 0.15, 1.0)
+prop_height = 4.0
+hit_sound = &"rounds_boss_geyser"
+
+[sub_resource type="Resource" id="event_0"]
+script = ExtResource("b_event")
+kind = &"darkness"
+phase = 2
+strength = 0.55
+color = Color(1.0, 0.4, 0.15, 1.0)
+
 [sub_resource type="Resource" id="alpha"]
 script = ExtResource("alpha_script")
-color = Color(1, 0.45, 0.12, 1)
-slam_damage = 13.0
+color = Color(1.0, 0.45, 0.12, 1.0)
+title = "THE VOLCANO'S VOICE"
+phase_callouts = PackedStringArray("KAHUNA KRAKATOA STIRS THE VOLCANO", "ERUPTION — THE GEYSERS FOLLOW YOU")
+slam_damage = 7.8
 slam_cooldown = 10.0
-volley_shots = 3
-volley_damage = 4.0
+volley_shots = 0
+volley_damage = 2.4
 volley_speed = 12.5
 volley_spread_degrees = 15.0
 volley_arc = 0.45
-volley_cooldown = 10.0
+volley_cooldown = 11.0
 volley_size = 0.4
+moves = Array[ExtResource("b_move")]([SubResource("geyser_line"), SubResource("stomp"), SubResource("geyser_ring"), SubResource("geyser_chase")])
+events = Array[ExtResource("b_event")]([SubResource("event_0")])
 
 [resource]
 script = ExtResource("1")
 id = &"alpha_kahuna"
 display_name = "Kahuna Krakatoa"
-max_health = 2400.0
+max_health = 2900.0
 move_speed = 1.95
 speed_variance = 0.0
 turn_speed = 3.5

@@ -130,6 +130,7 @@ func _run() -> void:
 				poses[z] = [anim, clip, float(bits[3])]
 	if live:
 		player.set_physics_process(true)
+	_stage_boss(director)
 
 	if _opt("cam", "") != "":
 		var parts := _opt("cam", "").split(">")
@@ -170,6 +171,35 @@ func _run() -> void:
 	var err := img.save_png(out_path)
 	print("[stage] saved %s error=%d" % [out_path, err])
 	quit(0 if err == OK else 1)
+
+
+## A staged alpha (first enemy) as in a finale: its health bar shows, it skips
+## its entrance, and with --boss-move=<name> that move is the next it uses
+## (the rest wait); --boss-phase=n starts it in phase n; --boss-roar=1 knocks
+## it over its next phase threshold so the phase-change roar plays.
+func _stage_boss(director) -> void:
+	var z = director._alive[0] if not director._alive.is_empty() else null
+	if z == null or z.data.max_health < 1000.0:
+		return
+	z.set_rank(&"boss", 1.0, Color(0.16, 0.03, 0.14))
+	# The staged player is the target, not the subject: it never falls.
+	director.player.invulnerable = true
+	director.boss = z
+	director.boss_changed.emit(z)
+	for b in z.behaviours:
+		if b.get_class() == "Resource" and "moves" in b:
+			b._entered = true
+			b._phase = int(_opt("boss-phase", "0"))
+			b._gap = 0.0
+			b._slam_cool = 99.0
+			b._volley_cool = 99.0
+			for m in b.moves:
+				m.cool = 0.0 if String(m.move_name) == _opt("boss-move", "") else 99.0
+			if _opt("boss-roar", "0") == "1":
+				var cut: float = z.health - z.max_health * (b.phases[b._phase] - 0.05)
+				z.take_hit(cut, z.global_position + Vector3.UP, Vector3.FORWARD, &"stage", false)
+	if _opt("boss-health", "") != "":
+		z.health = z.max_health * float(_opt("boss-health", "1"))
 
 
 func _aim_at_nearest(director, player) -> void:

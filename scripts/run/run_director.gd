@@ -87,7 +87,7 @@ const BOSS_ESCORT_CAP := 0.4
 ## Zombies an alpha calls in when it reaches a new phase, and the share of
 ## reserve energy the player gets back for forcing it.
 const PHASE_PACK := 5
-const PHASE_ENERGY := 0.2
+const PHASE_ENERGY := 0.35
 ## While an alpha stands and its horde has run out, escorts keep arriving:
 ## this many every REINFORCE_SECONDS while fewer than REINFORCE_BELOW are alive.
 const REINFORCE_COUNT := 2
@@ -613,6 +613,10 @@ func _spawn_boss(wave: WaveData) -> void:
 		return
 	z.set_rank(Zombie.RANK_BOSS, Difficulty.boss_health_scale() / Difficulty.enemy_health_scale(), BOSS_TINT)
 	z.phase_reached.connect(_on_boss_phase)
+	for b in z.behaviours:
+		if b is AlphaBossBehaviour:
+			b.callout.connect(func(text: String): notice.emit(text, &"bad"))
+			b.summon_requested.connect(_on_boss_summon)
 	boss = z
 	Sfx.play(&"rounds_boss_intro", 0.0)
 	notice.emit("%s — HAS ARRIVED" % z.data.display_name.to_upper(), &"banner_boss")
@@ -633,6 +637,17 @@ func _on_boss_phase(z: Zombie, _phase: int) -> void:
 		if not _queue.is_empty():
 			_queue.pop_front()
 			_spawned += 1
+
+
+## An alpha's own minions (BossSummon) pop out around it; they count toward
+## the wave like any escort.
+func _on_boss_summon(enemy: StringName, count: int, at: Zombie, into: Array[Zombie]) -> void:
+	var wave := current_wave()
+	for i in count:
+		var z := _spawn(enemy, wave, at, 2.0)
+		if z == null:
+			break
+		into.append(z)
 
 
 func _on_boss_down(z: Zombie) -> void:

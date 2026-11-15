@@ -89,44 +89,67 @@ Each world's last wave is led by a named, oversized version of its signature
 enemy (`data/enemies/**/alpha_*.tres`: the base enemy's model at 1.4-1.5x,
 one outfit colour, a fixed set of accessories, an additive glow, and a
 pulsing ring under its feet). The first 45% of the horde is the opening act;
-then the alpha arrives ("BIG BRUNO — HAS ARRIVED" boss banner, and its health
-bar with a notch at each phase in the HUD's top slot: `RoundsBossBar`,
-`data/ui/hud_boss_bar.tres`). Surge and bounty markers and the close-out
-pings are a full-screen overlay (`rounds_hud.gd`, `data/ui/hud_rounds.tres`).
+then the alpha arrives ("BIG BRUNO — HAS ARRIVED" boss banner), stops and
+roars (a ring of light bursts out along the floor), and its health bar takes
+the HUD's top slot (`RoundsBossBar`, `data/ui/hud_boss_bar.tres`): its name, a
+notch at each phase, and under it its epithet and state ("THE PRIZE BOOTH
+BULLY · PHASE 2/3 · ARMOURED", or "DAZED — SHOOT THE GLOW"); the bar pulses
+when a phase starts. Surge and bounty markers and the close-out pings are a
+full-screen overlay (`rounds_hud.gd`, `data/ui/hud_rounds.tres`).
 
-| World | Alpha | Health (Standard) | Built on | Its patterns |
-|---|---|---|---|---|
-| Prize Pier | Big Bruno | 1800 | Boardwalk Bruiser | roar-then-charge; 3-orb lob; ground slam (the slowest: 1.3 s) |
-| Neon Skyline | Captain Lockdown | 1900 + 500 shield | Riot Bruiser | riot shield (break it or aim over it); shield charge; 5-orb volley; ground slam |
-| Tidal Tunnels | Inky the Great | 2100 | Mascot Inker (the world has no heavy) | 5-glob lobbed ink volley at range; a fan of 7 slow ink orbs at mid range; ground slam |
-| Launch Pad 9 | Chief Burnout | 2000 | Jetpack Mechanic (no heavy) | jetpack hop with a 3 m landing blast; 3-flare volley; ground slam; a slow, heavy swing |
-| Summit Lodge | Old Frostbite | 2200 | Yeti | big snowball lob; 3-snowball fan; ground slam |
-| Midnight Mall | The Night Manager | 2250 | Mall Walker | power-walk burst with a shove; 4-orb volley; ground slam |
-| Lost Temple | The Idol Keeper | 2300 | Overgrown | vine lash that leaves slowing brambles; 4-orb volley; ground slam |
-| Candy Works | The Confectioner | 2350 | Taffy Puller | taffy yank; 5-orb volley; ground slam |
-| Lava Lagoon | Kahuna Krakatoa | 2400 | Tiki Bartender | lobbed coconut bombs; 3-orb volley; ground slam |
-| Sky Harbor | Captain Cumulus | 2500 | Sky Diver | dive from on high with a landing ring; 4-orb volley; ground slam |
+Since update 8 every alpha has a **signature kit** built from reusable moves
+(`scripts/enemies/behaviours/boss_*.gd`, configured per alpha in its data),
+**three phases**, and a **defeat moment** (confetti fountains, a ring of
+light and 0.9 s of slow motion).
 
-Alpha health climbs with the worlds, 1,800 to 2,500 in steps of 50-100 (the
-first one, right after the tutorial, is the softest and the most telegraphed;
-Captain Lockdown adds a 500-point shield, and Chief Burnout stays at 2,000
-because his jetpack hop already makes him a harder fight than Inky: at 2,150
-the bot lost both Launch Pad finales it played). The
-alphas of worlds 6-10 hit no harder than Old Frostbite (melee 16-24, slam
-13-20): what makes them tougher is health and their world's own pattern. The finale's horde lists its slow
-regular first: that type opens the wave and is the one that keeps trickling in
-as escorts while the alpha stands, so a finale is about the alpha, not about a
-stream of runners.
+| World | Alpha (epithet) | Health (Standard) | Signature kit (phase it unlocks) | Arena event | Aim reward |
+|---|---|---|---|---|---|
+| Prize Pier | Big Bruno (The Prize Booth Bully) | 2900 + 700 armour | prize booths thrown onto 3 marked spots around you; bull rush down a lane, then dizzy; ground pound with 2 rolling rings (2); booth barrage, 5 booths that follow you (3) | - | gold prize-belt plates; dizzy weak spot |
+| Neon Skyline | Captain Lockdown (Riot Control) | 2700 + 500 shield | riot-shield charge (frontal shots do 15%), then shield down; 4 flashbangs; calls a shield line of 2 Riot Bruisers (2); 5-orb volley | lights out (3) | shoot around the shield; dizzy weak spot |
+| Tidal Tunnels | Inky the Great (The Deep-Sea Diva) | 2900 | dives (cannot be hit), a ripple follows you and he bursts up under it with 4 tentacles; a line of tentacles from below that leaves slowing ink; tentacle cage around you (2); the Inker's ink lob | ink creeps in from the screen edges (2, 14 s; 3, for good) | - |
+| Launch Pad 9 | Chief Burnout (The Launch Controller) | 2900 | rocket-boot dash that leaves a fire trail, then overheated; launch-pad jetpack dive; rocket barrage that follows you (2) | afterburners: 1.35x speed and tempo for 10 s (3) | overheated weak spot |
+| Summit Lodge | Old Frostbite (The Abominable Host) | 2900 | ice walls rise around you (they block you for 7 s); frost pound with 2 rings; avalanche of 7 snowballs (3); big snowball | blizzard: you move at 82% for 14 s (2) | - |
+| Midnight Mall | The Night Manager (After-Hours Security) | 3300 | flashlight sweep (a lit 140° beam; break line of sight); power walk; calls security, 3 Mall Walkers (2); clean-up: three charges in a row, then winded (3) | lights out for good (2) | winded weak spot |
+| Lost Temple | The Idol Keeper (Guardian of the Idol) | 3300 + 900 armour | raises 4 stone pillars around you (cover, 9 s); idol laser: a low beam sweeping 120° (jump it or hide behind a pillar); a 300° sweep (3); vine lash | - | stone plates (headshots ignore them) |
+| Candy Works | The Confectioner (Head of Candy R&D) | 3200 | gummy batch, 2 Gummy Bears (up to 3); syrup rush leaving a sticky trail, then dizzy; gumball drop that follows you; taffy yank; 5-orb volley | sugar rush: 1.4x speed and tempo for 12 s (3) | dizzy weak spot |
+| Lava Lagoon | Kahuna Krakatoa (The Volcano's Voice) | 2900 | a line of lava geysers that leave burning lava; volcano stomp (1 ring); a ring of 6 geysers around you (2); geysers that follow you (3); coconut bombs | the sky goes red-dark (3) | - |
+| Sky Harbor | Captain Cumulus (Admiral of the Sky Fleet) | 3400 | lightning that follows you; dive from on high; broadside, 5 cannonballs around you (2); 4-orb volley | gale: gusts lean on you from a new side every 4-5 s (2) | - |
+
+Building blocks (each a `BossMove` resource in `AlphaBossBehaviour.moves`;
+moves take turns, each unlocks at a phase, `move_gap` 1.4 s between them):
+
+| Block | What it does | Counter |
+|---|---|---|
+| `BossStrikeZones` | a pattern of `BossZone` strikes: CHASE (each lands where you stand when it is placed), AROUND (on you and a ring around you), LINE (from the alpha out past you), SCATTER, RING_BOSS. A strike bursts up (column, spikes) or drops in (booth, ball); it can leave a patch (damage per second, slow) or a solid pillar (player_walls layer: blocks the player, not zombies or bullets) | step out of the circle (1.0-1.5 s); keep moving against CHASE |
+| `BossShockwave` | pounds the floor N times, each sends a ring rolling outward | jump the ring |
+| `BossCharge` | a lane grows through you (follows you, then locks), then it rushes along it; options: frontal `guard`, a `trail` of patches, `repeats`, `dazed` (stunned afterwards with a glowing weak spot: x1.75 damage) | step off the lane; punish the daze |
+| `BossBeam` | an aiming line, then a beam sweeps an arc through you at a set height; optional spotlight | jump a low beam; hide behind scenery or a pillar |
+| `BossSummon` | its own minions pop out around it (through the director, so they count toward the wave) | clear them |
+| `BossBurrow` | it sinks (immune), a ripple follows you, stops and grows, and it bursts up there, optionally with a ring of strikes | keep moving, leave the ring |
+| `BossArenaEvent` | at a phase: `darkness`, `gale`, `ink`, `chill`, `frenzy` | - |
 
 Shared rules (`AlphaBossBehaviour`):
 
+* **Phases** at 66% and 33% health: it stops and **roars** for 1.6 s (shots do
+  25% meanwhile; a player within 6 m is shoved back), a hit never skips a
+  phase, it gains 10% speed, its moves recharge 20% faster per phase, its
+  phase's arena events start, and it calls a pack of 5 through the nearest
+  hidden entrances. Forcing a phase pays the player 35% of their reserve
+  energy (was 20%: the alphas are tougher now).
+* **Armour plates** (Big Bruno, the Idol Keeper): body shots do 50% until the
+  plates have soaked their armour; they pop off one by one with a clank.
+  Headshots ignore them.
 * **Ground slam**: with the player within 4.2 m it rears up while a ring
   grows on the floor to 5.5 m over 1.15 s, then the shockwave hits anyone
   standing inside. Back out, or jump it.
 * **Volley**: it plants its feet for 1 s, then fires a fan of slow orbs.
-* **Phases** at 66% and 33% health: it roars, gains 10% speed, and calls a
-  pack of 5 through the nearest hidden entrances. Forcing a phase pays the
-  player 20% of their reserve energy, so the fight never runs dry.
+* The first use of each move shows a callout naming the tell ("SIDESTEP THE
+  BULL RUSH — HE'S DIZZY AFTER IT: SHOOT THE GLOW!"), so the fight teaches
+  itself; every move has a wind-up clip, a sound (`tools/audio_packs/bosses.py`)
+  and a floor marker or lane, and counts for the HUD threat ring.
+* Nothing is cheesable from one spot: CHASE strikes, lanes and ripples are
+  placed on the player wherever they stand (on a ledge too), so standing still
+  is what gets hit; moving well clears every strike.
 * While it stands, its escorts are capped at 40% of the wave's crowd, and keep
   trickling in (2 every 7 s) if the horde runs out.
 * When it falls the horde breaks: nothing else spawns, and the usual
@@ -136,6 +159,14 @@ Shared rules (`AlphaBossBehaviour`):
 
 Everything is telegraphed (clip, sound, ring or glow, and the threat ring on
 the HUD) and nothing is gory: alphas pop into confetti like everyone else.
+
+Testing: the bot reads the floor markers the way a player does
+(`AlphaBossBehaviour.escape_from()`: it steps out of marked circles, lanes and
+the slam ring, and jumps rolling rings and low beams, `wants_jump()`), but it
+never dodges projectiles and never uses cover. `--snap=<prefix>` also saves
+`_move_<name>` and `_phase_<n>` stills; `tools/neon_stage_shot.gd` stages an
+alpha with `--live=1 --boss-move=<name>` (that move next), `--boss-phase=n`,
+`--boss-roar=1` (run with `--fixed-fps 60` so frames are game time).
 
 ## Spawn planner (map logic)
 
@@ -186,12 +217,12 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 
 | | Casual | Standard | Hard |
 |---|---|---|---|
-| Enemy health | 80% | 100% | 120% |
+| Enemy health | 80% | 100% | 112% |
 | Alpha health | 70% | 100% | 100% |
 | Enemy damage | 60% | 100% | 105% |
 | Enemy speed | 95% | 100% | 105% |
-| Crowd cap | 80% | 100% | 110% |
-| Spawn interval | 120% | 100% | 90% |
+| Crowd cap | 80% | 100% | 105% |
+| Spawn interval | 120% | 100% | 95% |
 | Special-attack cooldowns | 145% | 100% | 90% |
 | Pace bounds (min-max) | 0.55-1.0 | 0.7-1.35 | 0.85-1.4 |
 | Spawn pause for a player in trouble | 6 s per wave | 3.5 s | none |
@@ -350,3 +381,56 @@ came in up there crept along the deck until stall recovery dropped them to the
 floor (93 s a run with 1-2 zombies left, against about 30 elsewhere). With the
 deck baked (`tools/build_candy_works.gd`) the tail is 25 s and a Standard run
 330-350 s instead of 400-430 (3/3 clears, 9-53 health left).
+
+### Update 8: boss kits and the mode grid
+
+Before (update 7 build, the bot from the finale's start, Pulse Pistol / Ion
+Carbine / Scatter Blaster, 30 finales): every alpha shared slam + volley + one
+world move; alphas fell in 19-47 s (Big Bruno 19-26 s, the slowest 82 s),
+often dealing 0-30 damage; 29/30 finales won.
+
+After (full runs from wave 1, max profile, one run per cell; health left at
+the portal; alpha fight = seconds from its arrival to its fall, and the damage
+the player took meanwhile, escorts included):
+
+| World | Standard clears (health left) | Alpha fight (s) | Hurt during it | Losses |
+|---|---|---|---|---|
+| Prize Pier | 3/3 (100, 99, 100) | 40-58 | 16-26 | - |
+| Neon Skyline | 2/3 (82, 64) | 65-68 | 33-42 | pistol, finale (boss 16%) |
+| Tidal Tunnels | 3/3 (2, 5, 30) | 41-63 | 69-97 | - |
+| Launch Pad 9 | 3/3 (26, 36, 31) | 45-59 | 67-88 | - |
+| Summit Lodge | 3/3 (45, 17, 1) | 39-74 | 76-98 | - |
+| Midnight Mall | 2/3 (71, 10) | 77-102 | 44-94 | pistol, wave 3 siege |
+| Lost Temple | 3/3 (73, 20, 63) | 56-70 | 24-71 | - |
+| Candy Works | 1/3 (51) | 63-69 | 53-73 | pistol after the alpha fell; scatter, finale |
+| Lava Lagoon | 2/3 (36, 15) | 50-64 | 48-84 | scatter, wave 4 |
+| Sky Harbor | 0/3 (1/2 the round before) | 56 | 48 | pistol wave 2, carbine wave 4, scatter finale |
+
+Standard 22/30 (73%): of the 8 losses 4 are early waves, 1 came after the
+alpha fell and 3 are finales (rows: the third tuning round, Summit Lodge and
+Lava Lagoon re-run after the fourth). Hard
+(Ion Carbine and Pulse Pistol on six worlds): 7/12 (58%); its losses are
+finales of the later worlds and early waves of Lava Lagoon and Sky Harbor.
+Casual (Pulse Pistol on five worlds): 5/5, 79-100 health left, alphas in
+33-61 s.
+
+How the numbers were read. The bot steps out of every marked circle and lane
+and jumps rolling rings and low beams (a player reading the telegraphs does the
+same), but it never dodges a projectile, never uses cover, never switches
+weapons on its own and fights escorts and alpha with one gun, so the alpha's
+volleys, coconut and snowball lobs and the ink fan reach it every time: the
+damage it takes overstates what a moving player takes. Alpha fights of 40-100
+s with 20-100 damage taken while dodging every marker mean a player who stands
+still loses, a player who moves well wins with health to spare. The fight
+length is the "focused fire" measure: 45-60 s for Big Bruno, 55-100 s for the
+later worlds, with escorts and summons sharing the bot's fire.
+
+Changes from the grid: kit hits scaled per world (x0.9 worlds 2-4, x0.7-0.8
+worlds 5-10), alpha health trimmed (Inky, Burnout 2900, Lockdown 2700,
+Frostbite, Kahuna 2900, Confectioner 3200, Cumulus 3400), Inky, Old Frostbite
+and Kahuna lose the orb volley (their world lobs stay), forcing a phase pays
+35% of the reserve energy (was 20%), and Hard is 112% enemy health, 105% crowd
+and 95% spawn interval (was 120 / 110 / 90%: it lost early waves on four of six
+worlds). Known: Sky Harbor's and Midnight Mall's early waves cost the
+pistol-only bot runs on Standard, and Candy Works' finale is still the hardest;
+these want a second look with more runs per cell.

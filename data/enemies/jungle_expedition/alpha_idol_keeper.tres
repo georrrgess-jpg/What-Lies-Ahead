@@ -5,6 +5,9 @@
 [ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/jungle_vine_lash.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_beam.gd" id="b_beam"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_strike_zones.gd" id="b_zones"]
 
 [sub_resource type="Resource" id="lash"]
 script = ExtResource("4")
@@ -19,25 +22,84 @@ damage = 11.0
 bramble_seconds = 3.0
 bramble_slow = 0.75
 
+[sub_resource type="Resource" id="pillars"]
+script = ExtResource("b_zones")
+move_name = &"pillars"
+cooldown = 14.0
+first_delay = 2.0
+max_range = 30.0
+callout = "STONE PILLARS — USE THEM AS COVER"
+windup = 0.9
+windup_clip = &"Roar"
+pattern = 1
+count = 4
+stagger = 0.15
+spread = 4.5
+radius = 1.3
+telegraph = 1.1
+damage = 7.0
+color = Color(0.3, 1.0, 0.66, 1.0)
+style = 0
+prop = 1
+prop_color = Color(0.62, 0.56, 0.44, 1.0)
+prop_height = 3.4
+pillar_seconds = 9.0
+hit_sound = &"rounds_boss_stone"
+
+[sub_resource type="Resource" id="idol_laser"]
+script = ExtResource("b_beam")
+move_name = &"idol_laser"
+cooldown = 11.0
+first_delay = 5.0
+max_range = 26.0
+callout = "IDOL LASER — JUMP IT OR HIDE BEHIND A PILLAR"
+windup = 1.2
+windup_clip = &"Roar"
+sweep_degrees = 120.0
+sweep_time = 2.2
+beam_range = 26.0
+height = 0.55
+half_width = 0.5
+jumpable = true
+dps = 23.8
+color = Color(0.3, 1.0, 0.66, 1.0)
+
+[sub_resource type="Resource" id="idol_circle"]
+script = ExtResource("b_beam")
+move_name = &"idol_circle"
+min_phase = 2
+cooldown = 14.0
+first_delay = 0.0
+max_range = 26.0
+windup = 1.2
+windup_clip = &"Roar"
+sweep_degrees = 300.0
+sweep_time = 3.6
+beam_range = 26.0
+height = 0.55
+half_width = 0.5
+jumpable = true
+dps = 23.8
+color = Color(0.3, 1.0, 0.66, 1.0)
+
 [sub_resource type="Resource" id="alpha"]
 script = ExtResource("alpha_script")
-color = Color(0.3, 1, 0.66, 1)
-slam_damage = 17.0
+color = Color(0.3, 1.0, 0.66, 1.0)
+title = "GUARDIAN OF THE IDOL"
+phase_callouts = PackedStringArray("THE IDOL AWAKENS — ITS LASER SWEEPS FASTER", "THE IDOL BLAZES — A FULL-CIRCLE SWEEP")
+slam_damage = 11.9
 slam_cooldown = 9.0
-volley_shots = 4
-volley_min_range = 8.0
-volley_damage = 5.5
-volley_speed = 12.0
-volley_spread_degrees = 13.0
-volley_arc = 0.35
-volley_cooldown = 10.0
-volley_size = 0.42
+armour_health = 900.0
+armour_share = 0.5
+armour_color = Color(0.95, 0.8, 0.35, 1.0)
+armour_callout = "THE IDOL KEEPER'S STONE ARMOUR CRACKS!"
+moves = Array[ExtResource("b_move")]([SubResource("pillars"), SubResource("idol_laser"), SubResource("idol_circle")])
 
 [resource]
 script = ExtResource("1")
 id = &"alpha_idol_keeper"
 display_name = "The Idol Keeper"
-max_health = 2300.0
+max_health = 3300.0
 move_speed = 1.95
 speed_variance = 0.0
 turn_speed = 3.5

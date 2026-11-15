@@ -5,6 +5,11 @@
 [ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/mall_power_walk.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_beam.gd" id="b_beam"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_charge.gd" id="b_charge"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_summon.gd" id="b_summon"]
 
 [sub_resource type="Resource" id="burst"]
 script = ExtResource("4")
@@ -22,24 +27,91 @@ shove = 8.0
 windup_sound = &"mall_manager_whistle"
 burst_sound = &"mall_walker_burst"
 
+[sub_resource type="Resource" id="flashlight"]
+script = ExtResource("b_beam")
+move_name = &"flashlight"
+cooldown = 11.0
+first_delay = 3.0
+max_range = 24.0
+callout = "THE FLASHLIGHT SWEEP — BREAK HIS LINE OF SIGHT"
+windup = 1.0
+windup_clip = &"Windup"
+windup_sound = &"mall_manager_whistle"
+sweep_degrees = 140.0
+sweep_time = 3.0
+beam_range = 24.0
+height = 1.1
+half_width = 1.0
+jumpable = false
+dps = 12.8
+color = Color(1.0, 0.92, 0.6, 1.0)
+light = true
+
+[sub_resource type="Resource" id="security"]
+script = ExtResource("b_summon")
+move_name = &"security"
+min_phase = 1
+cooldown = 18.0
+first_delay = 0.0
+windup = 1.0
+windup_clip = &"Roar"
+windup_sound = &"mall_manager_whistle"
+callout = "SECURITY TO THE FLOOR!"
+enemy = &"mall_walker"
+count = 3
+max_alive = 4
+color = Color(1.0, 0.35, 0.72, 1.0)
+
+[sub_resource type="Resource" id="cleanup"]
+script = ExtResource("b_charge")
+move_name = &"cleanup"
+min_phase = 2
+cooldown = 12.0
+first_delay = 0.0
+min_range = 5.0
+max_range = 22.0
+needs_sight = true
+windup = 1.0
+windup_clip = &"Windup"
+speed = 12.0
+width = 2.2
+damage = 11.2
+color = Color(1.0, 0.35, 0.72, 1.0)
+dash_clip = &"PowerWalk"
+repeats = 3
+repeat_windup = 0.55
+dazed = 2.5
+
+[sub_resource type="Resource" id="event_0"]
+script = ExtResource("b_event")
+kind = &"darkness"
+phase = 1
+strength = 0.25
+color = Color(1.0, 0.92, 0.6, 1.0)
+
 [sub_resource type="Resource" id="alpha"]
 script = ExtResource("alpha_script")
-color = Color(1, 0.35, 0.72, 1)
-slam_damage = 18.0
+color = Color(1.0, 0.35, 0.72, 1.0)
+title = "AFTER-HOURS SECURITY"
+phase_callouts = PackedStringArray("LIGHTS OUT — FOLLOW HIS FLASHLIGHT", "CLEAN-UP ON EVERY AISLE — THREE CHARGES")
+slam_damage = 14.4
 slam_cooldown = 9.0
 volley_shots = 4
-volley_damage = 4.5
+volley_damage = 3.6
 volley_speed = 12.0
 volley_spread_degrees = 12.0
 volley_arc = 0.35
-volley_cooldown = 9.5
+volley_cooldown = 11.0
 volley_size = 0.38
+expose_callout = "HE'S WINDED — SHOOT THE GLOW!"
+moves = Array[ExtResource("b_move")]([SubResource("flashlight"), SubResource("security"), SubResource("cleanup")])
+events = Array[ExtResource("b_event")]([SubResource("event_0")])
 
 [resource]
 script = ExtResource("1")
 id = &"alpha_night_manager"
 display_name = "The Night Manager"
-max_health = 2250.0
+max_health = 3300.0
 move_speed = 2.0
 speed_variance = 0.0
 turn_speed = 3.5
