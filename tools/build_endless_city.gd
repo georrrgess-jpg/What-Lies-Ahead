@@ -63,7 +63,7 @@ const GATES := [
 	[&"metro", Vector3(0.0, 0.0, STAIR_TOP_Z), 0.0, 6.0, &"shutter", "city_gate_shutter", -1.1, 0.0],
 	[&"market", Vector3(28.0, 0.0, 0.0), 90.0, 8.0, &"shutter", "city_gate_shutter", 0.0, 0.0],
 	[&"tower", Vector3(66.0, 0.0, -15.0), 0.0, 8.0, &"slide", "city_gate_fence", 0.0, 0.0],
-	[&"tower", Vector3(HALL.end.x + 0.5, METRO_Y, -32.0), 90.0, 6.0, &"slide", "city_gate_fence", METRO_Y, METRO_Y + 0.4],
+	[&"tower", Vector3(HALL.end.x + 0.5, METRO_Y, -32.0), 90.0, 6.0, &"shutter", "city_gate_shutter", METRO_Y, METRO_Y + 0.4],
 ]
 
 var level: Node3D
@@ -204,8 +204,8 @@ func _build_ground() -> void:
 	var ground := Node3D.new()
 	ground.name = "Ground"
 	geo.add_child(ground)
-	var paving := _surface("paving", ["city_paving", "dune_concrete"], Color(0.62, 0.56, 0.56), 0.22, 0.85)
-	var asphalt := _surface("asphalt", ["city_asphalt", "neon_roof"], Color(0.55, 0.52, 0.56), 0.12, 0.8)
+	var paving := _surface("paving", ["city_sidewalk", "dune_concrete"], Color(0.95, 0.9, 0.9), 0.25, 0.85)
+	var asphalt := _surface("asphalt", ["city_asphalt", "neon_roof"], Color(1.0, 1.0, 1.0), 0.12, 0.8)
 	# Square: a slab round the subway stairs' opening (x -3..3, z -22..-16).
 	_slab(ground, "SquareSlab", Rect2(-SQ, STAIR_TOP_Z, SQ * 2.0, SQ - STAIR_TOP_Z), asphalt)
 	_slab(ground, "SquareSlabNW", Rect2(-SQ, -SQ, SQ - STAIR_HALF, SQ + STAIR_TOP_Z), asphalt)
@@ -221,7 +221,7 @@ func _build_ground() -> void:
 	_slab(ground, "TowerSlabS", Rect2(TOWER.position.x, EXIT_Z.y, TOWER.size.x, TOWER.end.y - EXIT_Z.y), paving)
 	_slab(ground, "TowerSlabMid", Rect2(EXIT_TOP_X, EXIT_Z.x, TOWER.end.x - EXIT_TOP_X, EXIT_Z.y - EXIT_Z.x), paving)
 	# The plaza paving of the square inside the ring road.
-	var plaza := _surface("plaza", ["city_paving", "frost_stone"], Color(0.6, 0.5, 0.48), 0.3, 0.85)
+	var plaza := _surface("plaza", ["city_sidewalk", "frost_stone"], Color(0.85, 0.72, 0.66), 0.4, 0.85)
 	_visual_box(dressing, "SquarePaving", Vector3(26.0, 0.06, 26.0), Vector3(0, 0.03, -1.0), plaza)
 	_kerb_ring(dressing, "SquareKerb", Rect2(-13.0, -14.0, 26.0, 26.0))
 	_kerb_ring(dressing, "SidewalkKerb", Rect2(-SQ + 2.5, -SQ + 2.5, SQ * 2.0 - 5.0, SQ * 2.0 - 5.0))
@@ -468,8 +468,8 @@ func _build_metro() -> void:
 	var m := Node3D.new()
 	m.name = "Metro"
 	geo.add_child(m)
-	var tiles := _surface("metro_tiles", ["city_tiles", "sky_tiles"], Color(0.62, 0.66, 0.6), 0.5, 0.6)
-	var wall := _surface("metro_wall", ["city_tiles", "frost_stone"], Color(0.55, 0.62, 0.6), 0.35, 0.8)
+	var tiles := _surface("metro_tiles", ["sky_tiles"], Color(0.62, 0.7, 0.66), 0.5, 0.6)
+	var wall := _surface("metro_wall", ["city_concrete", "frost_stone"], Color(0.62, 0.74, 0.7), 0.3, 0.8)
 	var dark := _mat("metro_dark", Color(0.12, 0.12, 0.14), 0.95)
 	var x0 := HALL.position.x
 	var x1 := HALL.end.x
@@ -497,7 +497,7 @@ func _build_metro() -> void:
 	_solid_kit(m, "city_barrier_jersey", "PlatformBarrierB", Vector3(26.0, METRO_Y, -30.5), 0.0, Vector3(3.0, 1.0, 0.7))
 	_solid_kit(m, "city_debris", "PlatformDebris", Vector3(30.0, METRO_Y, -35.8), 0.0, Vector3(2.0, 0.5, 1.6))
 	# Platform edge: a hazard stripe and a player-only wall (no jumping on the tracks).
-	_visual_box(dressing, "EdgeStripe", Vector3(len_x + 8.0, 0.03, 0.5), Vector3((x0 + x1) * 0.5 - 4.0, METRO_Y + 0.015, PLATFORM_EDGE_Z + 0.3), _surface("hazard", ["city_hazard", "dune_hazard"], Color.WHITE, 1.0, 0.7))
+	_visual_box(dressing, "EdgeStripe", Vector3(len_x + 8.0, 0.03, 0.5), Vector3((x0 + x1) * 0.5 - 4.0, METRO_Y + 0.015, PLATFORM_EDGE_Z + 0.3), _surface("hazard", ["dune_hazard"], Color.WHITE, 1.0, 0.7))
 	_player_wall(_player_walls(), "PlatformEdge", Vector3(x0 - 8.0, METRO_Y, PLATFORM_EDGE_Z - 0.2), Vector3(x1 + 2.0, METRO_Y, PLATFORM_EDGE_Z - 0.2), 6.0)
 	# Emergency lamps (orange, a few red) along the ceiling.
 	for k in 6:
@@ -579,7 +579,7 @@ func _hall_end_walls(parent: Node3D, material: Material) -> void:
 
 ## Stairs from the square down to the platform, and from the hall up to the tower plaza.
 func _build_stairs(parent: Node3D) -> void:
-	var wall := _surface("metro_wall", ["city_tiles", "frost_stone"], Color(0.55, 0.62, 0.6), 0.35, 0.8)
+	var wall := _surface("metro_wall", ["city_concrete", "frost_stone"], Color(0.62, 0.74, 0.7), 0.3, 0.8)
 	var steps := _mat("stair_steps", Color(0.42, 0.42, 0.44), 0.8)
 	# Square stairs: z -16 (y 0) to z -27 (y -6), then a landing to the hall.
 	_ramp(parent, "SquareStairs", Vector3(0, 0, STAIR_TOP_Z), Vector3(0, METRO_Y, STAIR_FOOT_Z), STAIR_HALF * 2.0)
@@ -842,9 +842,13 @@ func _gate(parent: Node3D, gate_name: String, g: Array) -> void:
 	gate.rotation.y = deg_to_rad(g[2])
 	_late(gate, "res://scripts/endless/endless_gate.gd", {"district": g[0], "open_style": g[4]})
 	var height := 5.0
+	# The kit's frame and door share one origin and one scale: shrunk only
+	# when the door is wider than the opening.
+	var door_aabb := _model_aabb(prefix + "_door")
+	var kit_scale := minf(1.0, width / door_aabb.size.x) if door_aabb.size.x > 0.1 else 1.0
 	# Frame: posts and lintel (collide), the kit frame on top when present.
 	var frame := _kit(gate, prefix + "_frame", "Frame", Vector3.ZERO, 0.0, Vector3.ZERO)
-	_fit_width(frame, prefix + "_frame", width + 1.6)
+	frame.scale = Vector3.ONE * kit_scale
 	if frame.get_child_count() == 0:
 		var concrete := _mat("gate_frame", Color(0.42, 0.4, 0.4), 0.85)
 		for s in [-1.0, 1.0]:
@@ -854,9 +858,11 @@ func _gate(parent: Node3D, gate_name: String, g: Array) -> void:
 		_collider(frame, "PostCollision%s" % ("L" if s < 0 else "R"), Vector3(0.8, height + 0.6, 0.8), Vector3(s * (width * 0.5 + 0.4), (height + 0.6) * 0.5, 0))
 	# Door: what moves away.
 	var door := _kit(gate, prefix + "_door", "Door", Vector3.ZERO, 0.0, Vector3.ZERO)
-	_fit_width(door, prefix + "_door", width)
-	if door.get_child_count() == 0:
-		var hazard := _surface("hazard", ["city_hazard", "dune_hazard"], Color.WHITE, 1.0, 0.7)
+	door.scale = Vector3.ONE * kit_scale
+	if door_aabb.size.x > 0.1:
+		_late(door, "res://scripts/props/city_gate_door.gd", {"style": g[4]})
+	else:
+		var hazard := _surface("hazard", ["dune_hazard"], Color.WHITE, 1.0, 0.7)
 		_visual_box(door, "Panel", Vector3(width, height, 0.25), Vector3(0, height * 0.5, 0), _mat("gate_door", Color(0.5, 0.52, 0.55), 0.5))
 		_visual_box(door, "Stripe", Vector3(width, 0.6, 0.3), Vector3(0, 1.0, 0), hazard)
 	# Blocker: the solid barrier (world layer), removed on open.
@@ -937,7 +943,7 @@ func _build_entrances() -> void:
 	var e := Node3D.new()
 	e.name = "Entrances"
 	geo.add_child(e)
-	var asphalt := _surface("asphalt", ["city_asphalt", "neon_roof"], Color(0.55, 0.52, 0.56), 0.12, 0.8)
+	var asphalt := _surface("asphalt", ["city_asphalt", "neon_roof"], Color(1.0, 1.0, 1.0), 0.12, 0.8)
 	var i := 0
 	for entry in ENTRANCES:
 		if entry[3] != null:
@@ -1373,8 +1379,6 @@ func _surface(key: String, textures: Array, tint: Color, scale: float, roughness
 		if not ResourceLoader.exists(path):
 			continue
 		m.albedo_texture = load(path)
-		if String(texture).begins_with("city_"):
-			m.albedo_color = Color.WHITE
 		m.uv1_triplanar = true
 		m.uv1_world_triplanar = true
 		m.uv1_scale = Vector3.ONE * scale
