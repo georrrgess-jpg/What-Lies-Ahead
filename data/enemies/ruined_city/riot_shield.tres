@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/zombie_city_special.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/city_riot_shield.gd" id="4"]
+
+[sub_resource type="Resource" id="shield"]
+script = ExtResource("4")
+front_cone = 0.3
+block_fraction = 1.0
+shield_health = 420.0
+shield_mesh = "Acc_Cop_Shield"
+rage_seconds = 4.0
+spark_color = Color(0.7, 0.88, 1, 1)
+block_sound = &"cz_riot_block"
+break_sound = &"cz_riot_shield_break"
+min_range = 3.5
+max_range = 11.0
+cooldown = 7.5
+drum_time = 1.05
+rush_speed = 9.5
+rush_time = 0.75
+damage = 20.0
+shove = 8.0
+exposed_time = 1.4
+
+[resource]
+script = ExtResource("1")
+id = &"riot_shield"
+display_name = "Riot Shield"
+max_health = 240.0
+move_speed = 1.6
+speed_variance = 0.06
+turn_speed = 3.2
+tickets = 40
+score = 450
+xp = 40
+damage = 18.0
+attack_range = 1.9
+attack_reach = 2.6
+attack_windup = 1.0
+attack_recover = 1.1
+lunge_speed = 3.2
+mass = 2.6
+flank_degrees = 20.0
+enrage_radius = 0.0
+model_scene = ExtResource("2")
+outfit = &"Cop"
+body_scale = 1.1
+capsule_radius = 0.58
+capsule_height = 1.95
+head_height = 1.45
+head_guard_mesh = "Acc_Cop_Shield"
+shirt_colors = Array[Color]([Color(0.16, 0.2, 0.33, 1), Color(0.28, 0.32, 0.4, 1), Color(0.12, 0.13, 0.18, 1), Color(0.22, 0.28, 0.48, 1)])
+skin_colors = Array[Color]([Color(0.56, 0.78, 0.46, 1), Color(0.5, 0.74, 0.55, 1), Color(0.62, 0.8, 0.42, 1)])
+accessory_slots = PackedStringArray("Acc_Cop_Shield", "Acc_Cop_Mask||", "Acc_Cop_Radio|", "Acc_Cop_Lamp||")
+move_animation = &"Walk"
+heavy = true
+animation_reference_speed = 1.6
+avoidance_radius = 0.75
+behaviours = Array[ExtResource("3")]([SubResource("shield")])
+voice_sounds = Array[StringName]([&"cz_riot_bark_1", &"cz_riot_bark_2"])
+voice_interval = Vector2(4, 7)
+voice_pitch = 1.0
+attack_sound = &"cz_riot_bash"

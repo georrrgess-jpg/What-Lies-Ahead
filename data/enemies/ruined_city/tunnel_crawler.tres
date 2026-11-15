@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/zombie_city_special.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/city_crawler.gd" id="4"]
+
+[sub_resource type="Resource" id="pounce"]
+script = ExtResource("4")
+min_range = 4.0
+max_range = 9.5
+cooldown = 4.5
+windup = 0.6
+flight_time = 0.5
+apex = 1.1
+land_offset = 0.7
+landing_damage = 13.0
+landing_radius = 1.6
+windup_clip = &"Crouch"
+flight_clip = &"Leap"
+windup_sound = &"cz_crawler_pounce"
+launch_sound = &"cz_crawler_hiss_2"
+land_sound = &"cz_crawler_land"
+dust_color = Color(0.62, 0.68, 0.6, 1)
+jink_speed = 4.2
+jink_every = Vector2(0.55, 1.0)
+jink_range = Vector2(3, 18)
+
+[resource]
+script = ExtResource("1")
+id = &"tunnel_crawler"
+display_name = "Tunnel Crawler"
+max_health = 45.0
+move_speed = 5.0
+speed_variance = 0.1
+turn_speed = 8.0
+tickets = 16
+score = 200
+xp = 16
+damage = 11.0
+attack_range = 1.5
+attack_reach = 2.0
+attack_windup = 0.4
+attack_recover = 0.6
+lunge_speed = 4.5
+mass = 0.7
+flank_degrees = 110.0
+model_scene = ExtResource("2")
+outfit = &"Crawler"
+body_scale = 0.95
+capsule_radius = 0.42
+capsule_height = 1.15
+head_height = 0.8
+shirt_colors = Array[Color]([Color(1, 0.48, 0.12, 1), Color(0.45, 0.47, 0.52, 1), Color(0.85, 0.7, 0.18, 1), Color(0.3, 0.4, 0.55, 1)])
+skin_colors = Array[Color]([Color(0.66, 0.8, 0.58, 1), Color(0.6, 0.76, 0.62, 1), Color(0.7, 0.78, 0.52, 1)])
+accessory_slots = PackedStringArray("Acc_Crawler_Lamp|Acc_Crawler_Lamp|Acc_Crawler_Goggles+Acc_Crawler_Hair|Acc_Crawler_Hair")
+move_animation = &"Run"
+clip_style = &"Crawler"
+animation_reference_speed = 5.0
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("pounce")])
+voice_sounds = Array[StringName]([&"cz_crawler_hiss_1", &"cz_crawler_hiss_2"])
+voice_interval = Vector2(2, 4.5)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"
