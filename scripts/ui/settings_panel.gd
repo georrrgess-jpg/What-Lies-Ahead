@@ -20,9 +20,11 @@ const CONTROLS := [
 	["Sprint", ["sprint"]],
 	["Jump", ["jump"]],
 	["Slide (while sprinting)", ["slide"]],
+	["Dash", ["dash"]],
 	["Fire", ["fire"]],
 	["Aim down sights", ["aim"]],
 	["Reload", ["reload"]],
+	["Chain saw (Toxic Ripsaw)", ["melee"]],
 	["Primary / secondary weapon", ["weapon_1", "weapon_2"]],
 	["Use the station, portals", ["interact"]],
 	["Start the next wave early", ["start_wave"]],
@@ -188,6 +190,9 @@ func _choice(key: String, text: String, options: Array) -> void:
 ## The controls reference: every action with the keys bound to it, read from
 ## the input map so it always shows the real bindings.
 static func controls_reference() -> Control:
+	# Actions registered at runtime by the player, so their keys show here too.
+	Player.ensure_dash_action()
+	WeaponController.ensure_melee_action()
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", UiKit.GAP_S)
 	col.add_child(UiKit.section("CONTROLS"))

@@ -8,6 +8,8 @@ extends Control
 ##            flashes while venting
 ##   burst    one pip per shot of a burst under the reticle, lit when ready
 ##   seek     a spinning diamond on the zombie a seeking weapon will hit
+##   gauge    a weapon mode's own gauge (WeaponMode.gauge: the Ripsaw's saw
+##            fuel) in the heat gauge's place, with the melee key under it
 ##
 ## It redraws only while one of these is showing something that moves.
 
@@ -25,6 +27,8 @@ var _diamond := PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Ve
 var _last_charge := -1.0
 var _last_heat := -1.0
 var _last_pips := -1
+var _last_gauge := -1.0
+var _melee_key := ""
 var _drawn := false
 
 
@@ -72,6 +76,10 @@ func _needs_redraw() -> bool:
 		var pips := w.magazine() if not w.is_reloading() and not w.is_switching() else 0
 		changed = changed or pips != _last_pips
 		_last_pips = pips
+	if w.mode and w.mode.gauge() >= 0.0:
+		var g := w.mode.gauge()
+		changed = changed or g != _last_gauge
+		_last_gauge = g
 	return changed or (w.lock_target != null and is_instance_valid(w.lock_target))
 
 
@@ -87,6 +95,8 @@ func _draw() -> void:
 		_draw_heat(w.heat(), w.is_reloading(), data)
 	if data.burst_count > 1:
 		_draw_burst(c, w, data)
+	if w.mode and w.mode.gauge() >= 0.0:
+		_draw_gauge(w.mode.gauge(), data)
 	if w.lock_target and is_instance_valid(w.lock_target) and not w.lock_target.is_dead():
 		_draw_lock(w.lock_target, data)
 
@@ -122,10 +132,7 @@ func _draw_charge(c: Vector2, k: float, data: WeaponData) -> void:
 func _draw_heat(heat: float, venting: bool, data: WeaponData) -> void:
 	if ammo_label == null:
 		return
-	var rect := ammo_label.get_global_rect()
-	rect.position -= get_global_rect().position
-	var left := rect.position.x + ((ammo_label as HudAmmo).digits_left() if ammo_label is HudAmmo else 0.0)
-	var bar := Rect2(left - 40.0, rect.position.y + 22.0, 20.0, rect.size.y - 46.0)
+	var bar := _side_bar()
 	draw_style_box(_heat_back, bar)
 	var col := data.tracer_color.lerp(UiKit.AMBER, smoothstep(0.45, 0.75, heat)).lerp(UiKit.RED, smoothstep(0.75, 0.95, heat))
 	if venting:
@@ -135,6 +142,34 @@ func _draw_heat(heat: float, venting: bool, data: WeaponData) -> void:
 	_heat_fill.bg_color = col
 	for i in lit:
 		draw_style_box(_heat_fill, Rect2(bar.position.x, bar.end.y - (i + 1) * step + 2.0, bar.size.x, step - 4.0))
+
+
+## The mode's gauge in the heat gauge's place: full is lit to the top, it
+## turns amber as it runs low; the melee key is written under it.
+func _draw_gauge(fill: float, data: WeaponData) -> void:
+	if ammo_label == null:
+		return
+	var bar := _side_bar()
+	draw_style_box(_heat_back, bar)
+	var col := data.tracer_color.lerp(UiKit.AMBER, 1.0 - smoothstep(0.2, 0.45, fill))
+	var step := bar.size.y / HEAT_SEGMENTS
+	_heat_fill.bg_color = col
+	for i in int(ceil(fill * HEAT_SEGMENTS - 0.01)):
+		draw_style_box(_heat_fill, Rect2(bar.position.x, bar.end.y - (i + 1) * step + 2.0, bar.size.x, step - 4.0))
+	if _melee_key == "":
+		_melee_key = Loadout.key_hint(WeaponController.MELEE_ACTION)
+	var font := get_theme_default_font()
+	var at := Vector2(bar.position.x - 20.0, bar.end.y + 24.0)
+	draw_string_outline(font, at, _melee_key, HORIZONTAL_ALIGNMENT_CENTER, bar.size.x + 40.0, 16, 5, Color(UiKit.INK, 0.85))
+	draw_string(font, at, _melee_key, HORIZONTAL_ALIGNMENT_CENTER, bar.size.x + 40.0, 16, col)
+
+
+## The column just left of the ammo counter that the heat and mode gauges fill.
+func _side_bar() -> Rect2:
+	var rect := ammo_label.get_global_rect()
+	rect.position -= get_global_rect().position
+	var left := rect.position.x + ((ammo_label as HudAmmo).digits_left() if ammo_label is HudAmmo else 0.0)
+	return Rect2(left - 40.0, rect.position.y + 22.0, 20.0, rect.size.y - 46.0)
 
 
 func _draw_burst(c: Vector2, w: WeaponController, data: WeaponData) -> void:

@@ -41,6 +41,11 @@ const BLOOM_RECOVER_DELAY := 0.12
 ## Seconds the old weapon takes to drop out of view when switching.
 const LOWER_TIME := 0.12
 const SWITCH_SOUND := &"weap_switch"
+## Melee input for a weapon mode's melee (WeaponMode.melee: the Ripsaw's saw).
+const MELEE_ACTION := &"melee"
+## Default melee bindings when the project does not define the action.
+const MELEE_KEYS: Array[Key] = [KEY_T]
+const MELEE_BUTTONS: Array[MouseButton] = [MOUSE_BUTTON_MIDDLE]
 
 var current: WeaponData
 ## Weapon ids of the primary and secondary slot.
@@ -89,6 +94,7 @@ var _charge_player: AudioStreamPlayer
 
 
 func _ready() -> void:
+	ensure_melee_action()
 	_loop_player = AudioStreamPlayer.new()
 	_loop_player.bus = &"SFX"
 	add_child(_loop_player)
@@ -363,6 +369,8 @@ func _physics_process(delta: float) -> void:
 	else:
 		if Input.is_action_just_pressed("reload"):
 			start_reload()
+		if mode:
+			mode.melee(Input.is_action_pressed(MELEE_ACTION) and not _reloading and _switch_left <= 0.0 and player.weapon_ready(), delta)
 		_handle_trigger(delta)
 	_update_aim_visuals()
 
@@ -513,6 +521,8 @@ func _finish_reload() -> void:
 	state["mag"] = int(state["mag"]) + moved
 	state["reserve"] = int(state["reserve"]) - moved
 	_emit_ammo()
+	if mode:
+		mode.reloaded()
 	reload_finished.emit(current)
 
 
@@ -772,6 +782,36 @@ func strike(data: WeaponData, z: Zombie, point: Vector3, dir: Vector3, distance:
 	var result := _apply_hits(hits, data)
 	_confirm(result)
 	return result[1]
+
+
+## A melee hit of `data` on `z` (a weapon mode's melee, the Ripsaw's saw):
+## `dmg` and `push` as given, statuses and hit confirms as for any shot, the
+## confirm sound paced like a beam's ticks. Returns true if it killed.
+func melee_hit(data: WeaponData, z: Zombie, point: Vector3, dir: Vector3, dmg: float, push: float) -> bool:
+	if not is_instance_valid(z) or z.is_dead():
+		return false
+	var hits := {}
+	_record(hits, z, point, dir, dmg, push, false)
+	var result := _apply_hits(hits, data)
+	_confirm(result)
+	_confirm_cool = maxf(_confirm_cool, 0.22)
+	return result[1]
+
+
+## Adds the melee InputMap action (MELEE_KEYS, MELEE_BUTTONS) when the project
+## does not define it.
+static func ensure_melee_action() -> void:
+	if InputMap.has_action(MELEE_ACTION):
+		return
+	InputMap.add_action(MELEE_ACTION)
+	for key in MELEE_KEYS:
+		var e := InputEventKey.new()
+		e.physical_keycode = key
+		InputMap.action_add_event(MELEE_ACTION, e)
+	for button in MELEE_BUTTONS:
+		var m := InputEventMouseButton.new()
+		m.button_index = button
+		InputMap.action_add_event(MELEE_ACTION, m)
 
 
 ## A projectile went off at `at` (`direct` = the zombie it struck, if any).

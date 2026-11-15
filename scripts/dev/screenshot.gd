@@ -33,6 +33,7 @@ extends Node
 ##   --shot-hud=0|1
 ##   --shot-frames=n       frames to wait before capturing
 ##   --shot-reload=1       start a reload just before the wait (to check reload animations)
+##   --shot-saw=1          hold the melee action (Ripsaw saw) with a zombie stepped into reach
 ##   --shot-portal=1       open the portal and light the exit route
 ##   --shot-fire=n         fire n shots at the nearest staged zombie, then wait --shot-frames
 ##   --shot-spray=n[,deg]  fire n shots from the pose at walls and floors (the aim wanders up to
@@ -289,6 +290,8 @@ func _run() -> void:
 					hp.append("%s %.0f%s" % [z.data.id, z.health, " dead" if z.is_dead() else ""])
 			print("[shot] after shot %d: %s  look_pitch=%.2f head_pitch=%.2f" % [i + 1, hp, player.look_pitch(), player.head.rotation.x])
 		player.set_physics_process(false)
+	if _arg("saw", "0") == "1":
+		await _saw(director, player, int(_arg("frames", "20")))
 	if _arg("spray", "") != "":
 		await _spray(player, _arg("spray", ""))
 	if _arg("marks", "1") == "0":
@@ -399,6 +402,26 @@ func _snap(suffix: String, frames: int) -> void:
 	var file := "%s_%s.png" % [path.get_basename(), suffix]
 	var err := get_viewport().get_texture().get_image().save_png(file)
 	print("[shot] saved %s error=%d" % [file, err])
+
+
+## Holds the melee action (the Ripsaw's saw) for `frames` with the nearest
+## staged zombie stepped into reach in front of the player.
+func _saw(director: RunDirector, player: Player, frames: int) -> void:
+	await _wait(10)
+	var alive := director.alive_enemies()
+	if not alive.is_empty():
+		var z: Zombie = alive[0]
+		var ahead := -player.global_transform.basis.z
+		z.global_position = player.global_position + Vector3(ahead.x, 0.0, ahead.z).normalized() * 1.55
+		z.rotation.y = atan2(-ahead.x, -ahead.z)
+	player.set_physics_process(true)
+	player.controls_enabled = true
+	_aim_at_nearest(director, player)
+	_press(WeaponController.MELEE_ACTION, true)
+	await _wait(frames)
+	for z in director.alive_enemies():
+		if is_instance_valid(z):
+			print("[shot] after sawing: %s %.0f%s" % [z.data.id, z.health, " dead" if z.is_dead() else ""])
 
 
 func _press(action: String, down: bool) -> void:
