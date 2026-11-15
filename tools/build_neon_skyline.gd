@@ -925,9 +925,11 @@ func _build_backdrop() -> void:
 	city.name = "City"
 	level.add_child(city)
 	# Streets far below, glowing with traffic.
-	_street(city, "StreetNorth", Vector3(0, STREET_Y, (A_Z0 + N_Z1) * 0.5), 0.0, Vector2(260, 8.0))
+	# The east-west streets lie a hair above the north-south ones, so the
+	# crossings show one clean surface instead of flickering between two.
+	_street(city, "StreetNorth", Vector3(0, STREET_Y + 0.05, (A_Z0 + N_Z1) * 0.5), 0.0, Vector2(260, 8.0))
 	_street(city, "StreetEast", Vector3(28.0, STREET_Y, -10.0), 90.0, Vector2(260, 12.0))
-	_street(city, "StreetSouth", Vector3(0, STREET_Y, 22.0), 0.0, Vector2(260, 12.0))
+	_street(city, "StreetSouth", Vector3(0, STREET_Y + 0.05, 22.0), 0.0, Vector2(260, 12.0))
 	_street(city, "StreetWest", Vector3(-28.0, STREET_Y, -10.0), 90.0, Vector2(260, 12.0))
 	# Haze rising out of the canyons.
 	for entry in [[Vector3(0, -14.0, -20.0), Vector2(90, 8)], [Vector3(27.0, -14.0, -5.0), Vector2(12, 90)],
