@@ -261,10 +261,20 @@ func _build_ground() -> void:
 	geo.add_child(ground)
 	var basalt := _textured("basalt", "lava_basalt", 0.22, 0.85)
 	var rock := _textured("terrain_rock", "lava_rock", 0.08, 0.95)
-	# Plaza slab (collision and the basalt paving on top).
-	_box(ground, "PlazaSlab", Vector3(80.0, 2.0, 35.6), Vector3(0, -1.0, 8.0 - 0.2), basalt)
-	# The shelf's south face down to the beach.
-	_visual_box(dressing, "ShelfFace", Vector3(80.0, 4.0, 1.0), Vector3(0, -2.0, 26.3), rock)
+	# Plaza slab (collision and the basalt paving on top), to the beach
+	# railing; past it a lip either side of the beach stairs, which go down
+	# from the railing with nothing over them (a slab over the top step left a
+	# ledge the navmesh could not climb, cutting the stairs and the beach off).
+	var rail_z := ARENA_Z1 + 0.2
+	var lip_z := 25.6
+	var stair_w := BEACH_STAIRS_X - 2.1
+	var stair_e := BEACH_STAIRS_X + 2.1
+	_box(ground, "PlazaSlab", Vector3(80.0, 2.0, rail_z + 10.0), Vector3(0, -1.0, (rail_z - 10.0) * 0.5), basalt)
+	_box(ground, "PlazaLipW", Vector3(stair_w + 40.0, 2.0, lip_z - rail_z), Vector3((stair_w - 40.0) * 0.5, -1.0, (rail_z + lip_z) * 0.5), basalt)
+	_box(ground, "PlazaLipE", Vector3(40.0 - stair_e, 2.0, lip_z - rail_z), Vector3((stair_e + 40.0) * 0.5, -1.0, (rail_z + lip_z) * 0.5), basalt)
+	# The shelf's south face down to the beach (solid, open for the stairs).
+	_box(ground, "ShelfFaceW", Vector3(stair_w + 40.0, 4.0, 1.0), Vector3((stair_w - 40.0) * 0.5, -2.0, 26.3), rock)
+	_box(ground, "ShelfFaceE", Vector3(40.0 - stair_e, 4.0, 1.0), Vector3((stair_e + 40.0) * 0.5, -2.0, 26.3), rock)
 	# Beach: black sand running out under the sea (the stairs' landing collides).
 	var sand := _textured("sand", "lava_sand", 0.16, 0.95)
 	var beach := MeshInstance3D.new()
@@ -274,7 +284,10 @@ func _build_ground() -> void:
 	beach.rotation.x = deg_to_rad(-1.6)
 	beach.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	dressing.add_child(beach)
-	_collider(ground, "BeachLanding", Vector3(12.0, 1.0, 10.0), Vector3(BEACH_STAIRS_X, BEACH_Y - 0.5, 34.0))
+	# The sand the zombies cross from the beach entrance: wide enough that one
+	# knocked or dashing off the stairs' line lands on it (inside the navmesh)
+	# instead of falling under the shelf.
+	_collider(ground, "BeachLanding", Vector3(38.0, 1.0, 12.2), Vector3(BEACH_STAIRS_X, BEACH_Y - 0.5, 32.9))
 	# Round basalt-mosaic patio under the station and its rim of ember tiles.
 	var patio := MeshInstance3D.new()
 	patio.name = "Patio"
