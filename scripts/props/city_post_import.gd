@@ -54,7 +54,11 @@ func _swap(material: Material) -> Material:
 
 
 func _build(key: String, source: BaseMaterial3D) -> Material:
-	if source == null or key.begins_with("CityLit_") or key.begins_with("CityGlass"):
+	if source == null or key.begins_with("CityLit_"):
+		return null
+	if key == "CityGlass":
+		return _cracked_glass(key)
+	if key.begins_with("CityGlass"):
 		return null
 	if key.begins_with("CityNeon_"):
 		return _shader("city_neon", {"color": _hex(key), "strength": 3.2}, key)
@@ -107,3 +111,19 @@ func _shader(shader: String, params: Dictionary, key: String) -> ShaderMaterial:
 ## The colour encoded after the last underscore of a material name ("CityNeon_ff2fae").
 func _hex(key: String) -> Color:
 	return Color.html(key.get_slice("_", key.get_slice_count("_") - 1))
+
+
+## The broken panes left in window frames: dark tinted glass with a glossy
+## sheen and a cool rim, so a shard reads as glass against the dark rooms
+## behind it (the exported pale blue read as holes through to the sky).
+func _cracked_glass(key: String) -> Material:
+	var m := StandardMaterial3D.new()
+	m.resource_name = key
+	m.albedo_color = Color(0.1, 0.16, 0.2)
+	m.metallic = 0.7
+	m.metallic_specular = 0.8
+	m.roughness = 0.12
+	m.rim_enabled = true
+	m.rim = 0.6
+	m.rim_tint = 0.3
+	return m

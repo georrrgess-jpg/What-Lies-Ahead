@@ -1168,6 +1168,7 @@ func _block(parent: Node3D, block_name: String, r: Rect2, height: float, facing:
 	mi.position = look_centre
 	dressing.add_child(mi)
 	if shelled:
+		_shell_rooms(block_name, r, height, facing)
 		var shadow := MeshInstance3D.new()
 		shadow.name = block_name + "Shadow"
 		shadow.mesh = _box_mesh(size - Vector3(0.6, 0.0, 0.6), facade)
@@ -1185,6 +1186,45 @@ func _block(parent: Node3D, block_name: String, r: Rect2, height: float, facing:
 		# the whole block, stepped down from the core's.
 		_visual_box(dressing, block_name + "ShellRoof", Vector3(r.size.x - 0.5, 0.1, r.size.y - 0.5), Vector3(centre.x, height + 0.02, centre.z), roof).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_player_block(parent, block_name + "Cap", Vector3(r.size.x, 12.0, r.size.y), Vector3(centre.x, height + 6.0, centre.z))
+
+
+## Dark rooms behind a block's kit facades: their windows and blown-out
+## floors look into the block, and the shells are open behind, so without
+## this backdrop the sky and the void showed through them.
+func _shell_rooms(block_name: String, r: Rect2, height: float, facing: String) -> void:
+	var along_x := facing == "N" or facing == "S"
+	var length := r.size.x if along_x else r.size.y
+	var depth := r.size.y if along_x else r.size.x
+	var into := {"S": Vector3(0, 0, -1), "N": Vector3(0, 0, 1), "E": Vector3(-1, 0, 0), "W": Vector3(1, 0, 0)}[facing] as Vector3
+	var centre := Vector3(r.get_center().x, height * 0.5, r.get_center().y)
+	var face := centre - into * depth * 0.5
+	var back := minf(ROOM_DEPTH, depth - 1.0)
+	var size := Vector3(length - 0.3, height - 0.3, 0.3) if along_x else Vector3(0.3, height - 0.3, length - 0.3)
+	var mi := _visual_box(dressing, block_name + "Rooms", size, face + into * back, _room_material())
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# The ends of the room space, so a glance along the facade finds walls too.
+	for side in [-1.0, 1.0]:
+		var end_size := Vector3(0.3, height - 0.3, back) if along_x else Vector3(back, height - 0.3, 0.3)
+		var along := Vector3(1, 0, 0) if along_x else Vector3(0, 0, 1)
+		var end_at: Vector3 = face + into * back * 0.5 + along * side * (length * 0.5 - 0.3)
+		_visual_box(dressing, "%sRoomsEnd%d" % [block_name, int(side)], end_size, end_at, _room_material()).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## How far behind a facade the dark rooms stop (metres).
+const ROOM_DEPTH := 3.0
+var _room_mat: StandardMaterial3D
+
+
+## Near-black plaster with a faint warm glow: the gutted rooms behind the windows.
+func _room_material() -> StandardMaterial3D:
+	if _room_mat == null:
+		_room_mat = StandardMaterial3D.new()
+		_room_mat.albedo_color = Color(0.07, 0.055, 0.06)
+		_room_mat.roughness = 1.0
+		_room_mat.emission_enabled = true
+		_room_mat.emission = Color(0.16, 0.07, 0.04)
+		_room_mat.emission_energy_multiplier = 0.25
+	return _room_mat
 
 
 const SHELLS := ["city_building_shell_a", "city_building_shell_b", "city_building_shell_c", "city_building_corner"]
