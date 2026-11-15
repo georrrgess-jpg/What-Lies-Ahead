@@ -35,7 +35,7 @@ const CLEAR_TIME := 0.22
 ## The blossom (across the upper half): how far each petal leans out from
 ## the aim, and up.
 const PETAL := 0.42
-const PETAL_LIFT := 0.3
+const PETAL_LIFT := 0.15
 const HIT_RADIUS := 0.45
 const RETARGET := 9.0
 const FUSE := 2.6
@@ -47,7 +47,7 @@ const HEAVY_HEAD_SHARE := 0.6
 const CORKSCREW := 0.2
 const CORK_RATE := 21.0
 const CORK_CLOSE := 4.0
-const TRAIL := 18
+const TRAIL := 24
 ## Near the camera the rocket is drawn smaller and without its trail.
 const NEAR_EYE := 2.4
 const LAUNCH_SOUND := &"tm6_launch"
@@ -337,14 +337,14 @@ static func _mesh(kind: StringName) -> Mesh:
 			mesh = c
 		_:
 			var s := SphereMesh.new()
-			s.radius = 0.06
-			s.height = 0.2
+			s.radius = 0.04
+			s.height = 0.16
 			s.radial_segments = 10
 			s.rings = 5
 			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-			m.albedo_color = Color(FLAME, 0.9)
+			m.albedo_color = Color(FLAME, 0.7)
 			mesh = s
 	# The meshes stand along Y: lay them along -Z.
 	var turned := ArrayMesh.new()
@@ -377,6 +377,6 @@ func _draw_trail(cam: Camera3D, hidden: bool) -> void:
 		return
 	var color := TEAL if _seeker else FLAME
 	WeaponFx.begin_ribbons(_trail_mesh, WeaponFx.ribbon_material())
-	WeaponFx.add_ribbon(_trail_mesh, _history, 0.07, Color(color, 0.75), cam.global_position)
-	WeaponFx.add_ribbon(_trail_mesh, _history, 0.025, Color(CREAM, 0.9), cam.global_position)
+	WeaponFx.add_ribbon(_trail_mesh, _history, 0.13, Color(color, 0.7), cam.global_position)
+	WeaponFx.add_ribbon(_trail_mesh, _history, 0.045, Color(CREAM, 0.9), cam.global_position)
 	WeaponFx.end_ribbons(_trail_mesh)
