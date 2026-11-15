@@ -1524,9 +1524,9 @@ func _build_markers() -> void:
 	var points := {
 		"SpawnFiltration": [Vector3(-17.0, 0.1, Z0 - 3.0), 0.0],
 		"SpawnElevator": [Vector3(17.0, 0.1, Z0 - 1.6), 0.0],
-		# In the clear lane between the dock's two crate stacks (offsets of up
-		# to 1 m must not land inside either).
-		"SpawnLoadingBay": [Vector3(X1 + 1.1, 0.1, 7.0), -90.0],
+		# In front of the dock's two crate stacks: offsets of up to 1 m (a
+		# zombie pack) must not land inside either (tools/spawn_probe.gd).
+		"SpawnLoadingBay": [Vector3(X1 + 0.7, 0.1, 7.0), -90.0],
 		"SpawnStaffDoor": [Vector3(X0 - 2.2, 0.1, 11.5), 90.0],
 		"SpawnStockroom": [Vector3(0.0, 0.1, MEZZ_Z + 2.5), 180.0],
 	}

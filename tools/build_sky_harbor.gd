@@ -350,10 +350,12 @@ func _build_bigtop_isle() -> void:
 			var aa := deg_to_rad(half * 180.0 + 20.0 + 140.0 * k / 6.0)
 			var ab := deg_to_rad(half * 180.0 + 20.0 + 140.0 * (k + 1) / 6.0)
 			_wall_segment(isle, "Kerb%d_%d" % [half, k], BIGTOP + Vector3(cos(aa), 0, -sin(aa)) * 3.6, BIGTOP + Vector3(cos(ab), 0, -sin(ab)) * 3.6, 0.65, 0.6)
-	# Bleachers inside, between the doorways (NE and SW), facing the ring.
+	# Bleachers inside, between the doorways (NE and SW), facing the ring. Set
+	# back to r 7.4 so the aisle to the kerb is wide enough for the navmesh
+	# (it joins the east doorway and the backstage entrance to the west door).
 	for entry in [[45.0, "BleachersNE"], [225.0, "BleachersSW"]]:
 		var a := deg_to_rad(entry[0])
-		var p := BIGTOP + Vector3(cos(a), 0, -sin(a)) * 6.9
+		var p := BIGTOP + Vector3(cos(a), 0, -sin(a)) * 7.4
 		var yaw := rad_to_deg(atan2(BIGTOP.x - p.x, BIGTOP.z - p.z))
 		_solid_prop(isle, "sky_bleachers", entry[1], p, yaw, Vector3(5.2, 1.45, 2.4))
 	for entry in [[135.0, "CratesNW"], [315.0, "CratesSE"]]:
@@ -541,8 +543,10 @@ func _build_hub_props() -> void:
 	var props := Node3D.new()
 	props.name = "Props"
 	geo.add_child(props)
-	# The carousel (south-west): the base collides, the top turns.
-	var car := Vector3(-9.5, 0, 6.0)
+	# The carousel (south-west): the base collides, the top turns. It stands
+	# 2.3 m clear of the west railing so zombies from the balloon pad can walk
+	# round it (and just off the plaza rim).
+	var car := Vector3(-8.8, 0, 6.6)
 	_prop(props, "sky_carousel", "Carousel", car, 0.0, Vector3(10, 4, 10))
 	var top := _prop(dressing, "sky_carousel_top", "CarouselTop", car, 0.0, Vector3(10, 4, 10))
 	_late(top, "res://scripts/props/sky_spinner.gd", {"axis": Vector3.UP, "degrees_per_second": 14.0, "wind_response": 0.0})
@@ -565,7 +569,7 @@ func _build_hub_props() -> void:
 	_solid_prop(props, "sky_crates", "CratesW", Vector3(-12.5, 0, -3.5), 100.0, Vector3(1.9, 1.6, 1.3))
 	_solid_prop(props, "sky_crates", "CratesSE", Vector3(9.0, 0, 11.0), 250.0, Vector3(1.9, 1.6, 1.3))
 	_solid_prop(props, "sky_crates", "CratesE", Vector3(7.0, 0, -4.5), 40.0, Vector3(1.9, 1.6, 1.3))
-	_solid_prop(props, "sky_planter", "PlanterA", Vector3(-3.5, 0, 7.5), 0.0, Vector3(1.6, 0.7, 0.8))
+	_solid_prop(props, "sky_planter", "PlanterA", Vector3(-2.6, 0, 7.9), 0.0, Vector3(1.6, 0.7, 0.8))
 	_solid_prop(props, "sky_planter", "PlanterB", Vector3(4.0, 0, -8.0), 90.0, Vector3(1.6, 0.7, 0.8))
 	_solid_prop(props, "sky_planter", "PlanterC", Vector3(-6.5, 0, -6.0), 45.0, Vector3(1.6, 0.7, 0.8))
 	for entry in [["BenchA", Vector3(-14.8, 0, -6.5), 90.0], ["BenchB", Vector3(14.8, 0, -4.5), 270.0], ["BenchC", Vector3(-7.0, 0, 12.8), 0.0],
@@ -586,7 +590,7 @@ func _build_hub_props() -> void:
 		var l: Vector3 = [lamps[1], lamps[3], lamps[6], lamps[7]][i]
 		_string_bunting(l + Vector3.UP * 3.0, STATION + Vector3(0, 6.6, 0), 0.9)
 	# Pinwheels round the edges.
-	var pins := [[Vector3(-15.0, 0, 3.0), 90.0], [Vector3(15.0, 0, -2.5), 270.0], [Vector3(-6.0, 0, -14.2), 10.0], [Vector3(-13.0, 0, 11.2), 225.0],
+	var pins := [[Vector3(-15.1, 0, 0.9), 90.0], [Vector3(15.0, 0, -2.5), 270.0], [Vector3(-6.0, 0, -14.2), 10.0], [Vector3(-13.0, 0, 11.2), 225.0],
 		[Vector3(-4.5, 0, 20.0), 180.0], [Vector3(4.5, 0, 20.0), 180.0]]
 	for i in pins.size():
 		_pinwheel(props, "Pinwheel%d" % i, pins[i][0], pins[i][1])
@@ -991,11 +995,13 @@ func _build_markers() -> void:
 	var spawns := Node3D.new()
 	spawns.name = "EnemySpawns"
 	level.add_child(spawns)
+	# Each marker's 2 x 2 m pack square (RunDirector spreads zombies 1 m round
+	# it) stays clear of the basket, the wagon and the pad railings.
 	var points := {
 		"SpawnGangway": [Vector3(-48.5, UPPER_Y + 0.1, -2.0), -90.0],
 		"SpawnSkyRide": [Vector3(6.0, 0.1, -20.0), 0.0],
-		"SpawnBackstage": [Vector3(BIGTOP.x + BIGTOP_APOTHEM + 2.5, 0.1, 2.5), 90.0],
-		"SpawnBalloon": [Vector3(-18.6, 0.1, 5.2), -90.0],
+		"SpawnBackstage": [Vector3(BIGTOP.x + BIGTOP_APOTHEM + 2.3, 0.1, 2.7), 90.0],
+		"SpawnBalloon": [Vector3(-18.1, 0.1, 5.1), -90.0],
 		"SpawnCargoLift": [Vector3(7.5, 0.1, 17.0), 180.0],
 	}
 	for point_name in points:
