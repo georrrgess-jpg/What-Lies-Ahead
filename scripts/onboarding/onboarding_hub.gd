@@ -22,6 +22,10 @@ const TELLS := {
 	&"hover_courier": ["HOVER COURIER", "Boots flare, then it leaps in. High ground is not safe."],
 	&"neon_punk": ["NEON PUNK", "Hear the rattle? A headshot knocks the spray can down."],
 	&"riot_bruiser": ["RIOT BRUISER", "The shield blocks the front. Shoot over it or flank."],
+	&"riot_shield": ["RIOT SHIELD", "Baton on the shield means a rush. Sidestep, then hit it while the shield is wide."],
+	&"tunnel_crawler": ["TUNNEL CRAWLER", "It darts side to side and flattens before it pounces. Strafe during the crouch."],
+	&"firebug": ["FIREBUG", "A ring marks where the bottle lands. Step out, and stay out of the flames."],
+	&"the_wrecker": ["THE WRECKER", "The glowing fan is the ball's sweep: get out of reach, or in close under the chain."],
 }
 const HINTS := {
 	&"first_break": ["WAVE CLEARED", "Breaks are shopping time: follow the marker to the Loadout Station."],
