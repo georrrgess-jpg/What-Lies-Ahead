@@ -113,7 +113,7 @@ twist = &"frenzy"
 script = ExtResource("2")
 spawns = {
 "jelly_head": 8,
-"deep_diver": 10,
+"deep_diver": 8,
 "tourist_shambler": 6,
 "lifeguard_runner": 2,
 "mascot_inker": 2
