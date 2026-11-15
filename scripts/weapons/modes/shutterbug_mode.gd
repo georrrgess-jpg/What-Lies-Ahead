@@ -10,7 +10,7 @@ extends WeaponMode
 ## scripts/weapons/views/shutterbug_view.gd.
 
 ## Reach (m) and half-angle (degrees) of the flash at the hip and fully aimed.
-const HIP_REACH := 11.0
+const HIP_REACH := 12.0
 const AIM_REACH := 15.0
 const HIP_CONE := 30.0
 const AIM_CONE := 13.0
@@ -19,7 +19,7 @@ const AIM_BONUS := 1.3
 ## Damage share at the rim of the cone and at the far end of its reach;
 ## full damage out to FULL_RANGE.
 const RIM_SCALE := 0.6
-const FAR_SCALE := 0.6
+const FAR_SCALE := 0.7
 const FULL_RANGE := 3.0
 const MAX_TARGETS := 8
 ## Seconds a 1-mass zombie stays dazed.

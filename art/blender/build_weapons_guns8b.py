@@ -74,10 +74,11 @@ def build_shutterbug():
         # The lens: a stepped barrel, a chrome bezel, deep blue glass and a glowing ring.
         ycyl("LensMount", 0.042, 0.016, body_y1 + 0.006, z=lens_z, m=M["steel"], segs=28, bevel=0.004),
         ycyl("LensBarrel", 0.036, 0.046, body_y1 + 0.036, z=lens_z, m=M["dark"], segs=28, bevel=0.004),
-        ycyl("LensHood", 0.034, 0.012, body_y1 + 0.064, z=lens_z, m=M["steel"], segs=28, bevel=0.003, radius_top=0.039),
-        ring("LensGlow", 0.0285, 0.0028, body_y1 + 0.066, z=lens_z, m=M["cell"], segs=28),
-        ycyl("LensGlass", 0.026, 0.004, body_y1 + 0.058, z=lens_z, m=lens_m, segs=28, bevel=0.0),
-        sphere("LensGlint", 0.0055, (0.011, body_y1 + 0.061, lens_z + 0.011), scale=(1, 0.3, 1), m=M["shell"], segs=8, rings=5),
+        ycyl("LensGlass", 0.031, 0.003, body_y1 + 0.0605, z=lens_z, m=lens_m, segs=28, bevel=0.0),
+        ring("LensHood", 0.035, 0.0045, body_y1 + 0.062, z=lens_z, m=M["steel"], segs=28),
+        ring("LensHoodLip", 0.0365, 0.003, body_y1 + 0.068, z=lens_z, m=M["steel"], segs=28),
+        ring("LensGlow", 0.0298, 0.0022, body_y1 + 0.0635, z=lens_z, m=M["cell"], segs=28),
+        sphere("LensGlint", 0.0055, (0.012, body_y1 + 0.0625, lens_z + 0.012), scale=(1, 0.3, 1), m=M["shell"], segs=8, rings=5),
         # The flash wheel's arm out of the left flank, and a chrome reflector collar.
         xcyl("WheelAxle", 0.008, 0.016, (-0.048, wheel_c[1], wheel_c[2]), m=M["dark"], segs=12),
         box("WheelBracket", (0.006, 0.05, 0.03), (-0.0445, wheel_c[1], wheel_c[2]), bevel=0.003, m=M["steel"]),
@@ -92,6 +93,20 @@ def build_shutterbug():
         box("StrapStub", (0.004, 0.03, 0.012), (0.049, 0.122, 0.06), rot=rad(18, 0, 0), bevel=0.002, m=M["pink"]),
         # Right flank: a vent grille for the flash capacitor.
         box("RightPanel", (0.005, 0.07, 0.03), (0.044, 0.07, 0.024), bevel=0.003, m=M["dark"]),
+    ]
+    # The back: a glowing-framed preview screen with a record dot and a battery, two buttons below.
+    ry = body_y0 - 0.0075
+    shell += [
+        box("RearScreen", (0.056, 0.003, 0.042), (0, ry, 0.038), bevel=0.0015, m=lens_m),
+        box("ScreenTop", (0.06, 0.003, 0.003), (0, ry - 0.0015, 0.0605), bevel=0.0, m=M["cell"]),
+        box("ScreenBottom", (0.06, 0.003, 0.003), (0, ry - 0.0015, 0.0155), bevel=0.0, m=M["cell"]),
+        box("ScreenLeft", (0.003, 0.003, 0.048), (-0.0295, ry - 0.0015, 0.038), bevel=0.0, m=M["cell"]),
+        box("ScreenRight", (0.003, 0.003, 0.048), (0.0295, ry - 0.0015, 0.038), bevel=0.0, m=M["cell"]),
+        sphere("RecDot", 0.0035, (0.02, ry - 0.002, 0.051), scale=(1, 0.4, 1), m=M["pink"], segs=8, rings=5),
+        box("Battery", (0.012, 0.002, 0.006), (-0.018, ry - 0.002, 0.051), bevel=0.0, m=M["cell"]),
+        box("FrameMark", (0.016, 0.002, 0.012), (0, ry - 0.002, 0.034), bevel=0.0, m=M["steel"]),
+        cyl("RearButtonA", 0.006, 0.004, (-0.012, ry, 0.004), rot=rad(90, 0, 0), segs=12, bevel=0.0015, m=M["pink"]),
+        cyl("RearButtonB", 0.006, 0.004, (0.012, ry, 0.004), rot=rad(90, 0, 0), segs=12, bevel=0.0015, m=M["steel"]),
     ]
     for i in range(5):
         shell.append(box(f"RightSlit{i}", (0.004, 0.008, 0.022), (0.0465, 0.046 + i * 0.012, 0.024), bevel=0.0, m=M["cell"]))
@@ -121,7 +136,7 @@ def build_shutterbug():
     for i in range(6):
         a = math.tau * i / 6
         iris.append(obox(f"IrisBlade{i}", (0.02, 0.0016, 0.012),
-                         (math.cos(a) * 0.022, body_y1 + 0.0615, lens_z + math.sin(a) * 0.022),
+                         (math.cos(a) * 0.02, body_y1 + 0.0625, lens_z + math.sin(a) * 0.02),
                          (-math.sin(a + 0.5), 0, math.cos(a + 0.5)), (0, 1, 0), bevel=0.0, m=M["steel"]))
 
     # Film winder: a lever lying on the top plate, pointing back over the right.
@@ -168,7 +183,7 @@ def build_shutterbug():
         "Cell": (wheel, wheel_c, None),
         "CellHolo": (wheel_holo, wheel_c, None),
         "Focus": (focus, (0, body_y1 + 0.03, lens_z), None),
-        "Iris": (iris, (0, body_y1 + 0.0615, lens_z), None),
+        "Iris": (iris, (0, body_y1 + 0.0625, lens_z), None),
         "Winder": (winder, wind_c, None),
         "Decal": (decal, (0, 0, 0), None),
         "ArmR": (arm_r, grip_loc, None),
