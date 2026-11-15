@@ -180,7 +180,17 @@ Never the same kind twice running; Max Ammo comes first when the player is low.
 A timed one taken again restarts its clock; nothing stacks or outlives the run. The HUD shows a
 draining bar per timed power-up under the district chip.
 
-**UI**: the Play page's last carousel slot is ENDLESS (`EndlessCard`): best wave and score,
+**UI**: the game shows two modes. The Play page's header has two large tabs (`ModeTile`), STORY
+and ENDLESS (Tab or the gamepad's Y switch them; ENDLESS wears a NEW badge until the player has
+started an Endless run, `MenuPlay.endless_is_new()`); the profile's `"menu"` section keeps
+`mode`, `world` and `endless` (a save from before kept Endless as slot `worlds.size()` of
+`world` and opens in ENDLESS). STORY shows the world carousel alone; ENDLESS shows the city's board
+with its `EndlessCard` in the key art's place (the carousel only comes back with a second
+endless level). The home screen has an ENDLESS tile beside the story goal (key art, emblem,
+NEW MODE or the best wave). The mode's emblem (`EndlessEmblem`: an infinity sign over the
+burning skyline, the broken skyscraper and the radio mast, in an ember ring) is drawn in code
+and reads down to a pip; the key art `art/keyart/endless_city.jpg` (tools/capture_keyart.gd,
+fov 72) looks up the Broadcast Tower plaza from the menu camera. The board shows best wave and score,
 best on the chosen difficulty, districts opened, the districts with their prices and the reward
 track (`EndlessRewards`: every weapon and cosmetic whose requirement is ENDLESS_WAVE or
 ENDLESS_DISTRICT, read from the catalog). In a run the HUD widget (`EndlessHud`,

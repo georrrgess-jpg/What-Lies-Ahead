@@ -176,7 +176,9 @@ landing ring); **The Wrecker** (wrecking-ball sweep with a floor telegraph, bull
 charge, falling concrete) comes every 10th wave. Waves never end and scale up (every
 5th is a horde); pay to arm **fire and shock traps** in the districts, and a **supply
 crate** parachutes in every 5th break. The run ends when you fall; your best wave,
-score and districts are kept. Choose it with **ENDLESS MODE** on the Play page.
+score and districts are kept. The game has two modes: pick **STORY** or **ENDLESS** with
+the large tabs at the top of the Play page (Tab or the gamepad's Y), or the **ENDLESS** tile
+beside the story goal on the home screen (NEW until the first run, then the best wave).
 
 Spend tickets at the **Upgrade Bench** (Ashfall Square and the Broadcast Tower) to take the
 weapon in hand to Mk I (+30% damage), Mk II (bigger magazine, faster reload) and Mk III
