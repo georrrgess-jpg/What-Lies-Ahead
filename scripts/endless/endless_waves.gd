@@ -6,40 +6,55 @@ extends RefCounted
 ## always has the same kind and size (docs/ENDLESS.md has the table).
 ##
 ## The schedule: every boss_every-th wave is the boss's (with its escorts),
-## every 5th a HORDE (all entrances, a surge), and the waves between cycle
+## the wave after it a BREATHER (a small, slow wave to restock on), every 5th
+## a HORDE (three streets at once, a surge), and the waves between cycle
 ## through the kinds of the story levels, gentle for the first four.
 
-## The kinds of the waves between hordes, in turn (waves 1-4 are fixed).
-const CYCLE: Array[StringName] = [&"standard", &"rush", &"siege", &"bounty", &"ranged", &"standard", &"ambush", &"rush"]
+## The kinds of the waves between hordes, in turn (waves 1-4 are fixed). The
+## cycle lines up with the boss every 10th wave, so every ten waves read: x1
+## breather, x2 standard, x3 rush, x4 crossfire, x5 horde, x6 standard, x7
+## siege, x8 ambush, x9 bounty (a prize before the boss), x0 boss: pressure
+## rises toward each horde and boss and eases after them. (Slot 4 always
+## falls on a breather.)
+const CYCLE: Array[StringName] = [&"standard", &"siege", &"ambush", &"bounty", &"rush", &"standard", &"rush", &"ranged"]
 const OPENING: Array[StringName] = [&"standard", &"standard", &"rush", &"standard"]
 const HORDE_EVERY := 5
 
-## Banner title and hint of each kind ("horde" and "boss" are Endless's own).
+## Banner title and hint of each kind ("horde", "calm" and "boss" are Endless's own).
 const TITLES := {
 	&"standard": ["", ""],
 	&"rush": ["RUSH HOUR", "Fast ones in numbers: keep your back to a wall."],
-	&"siege": ["HEAVY TRAFFIC", "The heavies come first, one street at a time."],
+	&"siege": ["HEAVY TRAFFIC", "The heavies lead the way: drop them before the crowd arrives."],
 	&"ambush": ["AMBUSH", "They pour in from every street at once."],
 	&"ranged": ["CROSSFIRE", "Specialists from every side: take them first."],
 	&"bounty": ["THE GOLDEN COURIER", "Pop the golden runner before it gets away."],
-	&"horde": ["HORDE", "The whole city at once. Use the traps."],
+	&"horde": ["HORDE", "Three streets at once. Use the traps."],
+	&"calm": ["BREATHER", "A quiet street: restock, upgrade, open a gate."],
 	&"boss": ["", "Its escorts keep coming while it stands."],
 }
 
 ## Shares of a wave's zombies by role, per kind: regular, fast, heavy, special.
 const MIX := {
 	&"standard": [0.62, 0.22, 0.06, 0.10],
-	&"rush": [0.25, 0.62, 0.0, 0.13],
-	&"siege": [0.5, 0.12, 0.16, 0.22],
+	&"rush": [0.4, 0.47, 0.0, 0.13],
+	&"siege": [0.6, 0.12, 0.1, 0.18],
 	&"ambush": [0.55, 0.25, 0.06, 0.14],
 	&"ranged": [0.45, 0.15, 0.05, 0.35],
 	&"bounty": [0.6, 0.24, 0.06, 0.10],
 	&"horde": [0.55, 0.25, 0.08, 0.12],
+	&"calm": [0.8, 0.2, 0.0, 0.0],
 	&"boss": [0.6, 0.25, 0.0, 0.15],
 }
 ## Size and spawn interval of each kind, relative to a standard wave.
-const SIZE := {&"rush": 1.1, &"siege": 0.85, &"ambush": 1.0, &"ranged": 0.9, &"horde": 1.3, &"boss": 0.6}
-const PACE := {&"rush": 0.6, &"siege": 1.15, &"ambush": 0.75, &"horde": 0.7, &"boss": 1.1}
+const SIZE := {&"rush": 1.1, &"siege": 0.85, &"ambush": 1.0, &"ranged": 0.9, &"horde": 1.2, &"boss": 0.6, &"calm": 0.55}
+const PACE := {&"rush": 0.75, &"siege": 1.15, &"ambush": 0.75, &"horde": 0.7, &"boss": 1.1, &"calm": 1.5}
+## Crowd cap of each kind, relative to a standard wave.
+const CROWD := {&"calm": 0.6}
+## Entrances a wave works at a time (SpawnPlanner fronts): two or three
+## streets, one for a breather.
+const FRONTS := {&"ranged": 3, &"ambush": 3, &"horde": 3, &"calm": 1}
+## Banner look of the kinds with their own (HudBanner.STYLES).
+const STYLES := {&"boss": &"boss", &"horde": &"horde", &"calm": &"calm"}
 
 var rules: EndlessRules
 
@@ -50,8 +65,11 @@ func _init(endless_rules: EndlessRules) -> void:
 
 ## The kind of wave `n`: "boss", "horde" or one of WaveData.KINDS.
 func kind_of(n: int) -> StringName:
-	if rules.boss_id != &"" and rules.boss_every > 0 and n % rules.boss_every == 0:
-		return &"boss"
+	if rules.boss_id != &"" and rules.boss_every > 0:
+		if n % rules.boss_every == 0:
+			return &"boss"
+		if n > rules.boss_every and n % rules.boss_every == 1:
+			return &"calm"
 	if n % HORDE_EVERY == 0:
 		return &"horde"
 	if n <= OPENING.size():
@@ -59,6 +77,11 @@ func kind_of(n: int) -> StringName:
 	# The waves between hordes count up past the opening, skipping the 5ths.
 	var slot := n - 1 - n / HORDE_EVERY - OPENING.size()
 	return CYCLE[slot % CYCLE.size()]
+
+
+## Entrances wave `n` works at a time.
+func fronts_of(n: int) -> int:
+	return int(FRONTS.get(kind_of(n), 2))
 
 
 ## The banner title of wave `n` ("" for a plain wave).
@@ -80,19 +103,20 @@ func base_count(n: int) -> int:
 func build(n: int, pool: Dictionary) -> WaveData:
 	var kind := kind_of(n)
 	var wave := WaveData.new()
-	wave.kind = &"ambush" if kind == &"horde" else (&"finale" if kind == &"boss" else kind)
+	wave.kind = {&"horde": &"ambush", &"boss": &"finale", &"calm": &"standard"}.get(kind, kind)
+	wave.banner_style = STYLES.get(kind, &"")
 	wave.title = title_of(n)
 	wave.hint = TITLES[kind][1]
 	var count := maxi(4, int(round(base_count(n) * float(SIZE.get(kind, 1.0)))))
 	wave.spawns = _spawns(count, MIX[kind], pool, n)
 	wave.spawn_interval = maxf(rules.interval_min, rules.interval_base - rules.interval_per_wave * (n - 1)) * float(PACE.get(kind, 1.0))
-	wave.max_alive = mini(rules.crowd_max, int(round(rules.crowd_base + rules.crowd_per_wave * (n - 1))))
-	wave.burst = 2 if kind in [&"rush", &"horde", &"ambush"] and n >= 8 else 1
+	wave.max_alive = mini(rules.crowd_max, int(round((rules.crowd_base + rules.crowd_per_wave * (n - 1)) * float(CROWD.get(kind, 1.0)))))
+	wave.burst = 2 if kind in [&"rush", &"horde", &"ambush"] and n >= 12 else 1
 	wave.speed_scale = rules.speed_scale(n)
 	wave.late_types_after = 0.2 if n > 2 else 0.4
-	if kind == &"horde" or (kind == &"standard" and n >= 4):
+	if kind == &"horde" or (kind == &"standard" and n >= 6):
 		wave.surge_at = 0.45
-		wave.surge_count = mini(4 + n / 4, 9)
+		wave.surge_count = mini(3 + n / 5, 8)
 	if kind == &"boss":
 		wave.boss = rules.boss_id
 		wave.boss_at = 0.3

@@ -22,6 +22,8 @@ const STYLES := {
 	&"victory": [Color(1.0, 0.9, 0.6), UiKit.AMBER],
 	&"defeat": [Color(1.0, 0.72, 0.76), UiKit.RED],
 	&"district": [Color(1.0, 0.9, 0.76), Color(1.0, 0.48, 0.18)],
+	&"horde": [Color(1.0, 0.88, 0.7), Color(1.0, 0.4, 0.12)],
+	&"calm": [Color(0.85, 1.0, 0.92), UiKit.GREEN],
 }
 const MERGE_WINDOW := 0.4
 const HOLD := 1.9

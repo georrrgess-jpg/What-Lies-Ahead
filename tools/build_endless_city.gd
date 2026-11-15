@@ -1819,6 +1819,10 @@ func _build_features() -> void:
 		m.set_meta("district", f[1])
 		m.add_to_group("endless_feature", true)
 		holder.add_child(m)
+		if f[0] == &"upgrade_bench":
+			# The bench the director builds here is solid: the navmesh flows round it.
+			var foot := _collider(geo, "BenchFootprint_%s" % f[1], Vector3(2.4, 1.1, 1.2), f[2] + Basis(Vector3.UP, deg_to_rad(f[3])) * Vector3(0, 0.55, -0.02))
+			foot.rotation.y = deg_to_rad(f[3])
 
 
 # ---------------------------------------------------------------------------

@@ -2,8 +2,8 @@ class_name EndlessResultsSection
 extends PanelContainer
 ## Results-screen section of an Endless run (data/ui/results_endless.tres),
 ## at the top of the side column: the wave reached ("WAVE 14 · NEW BEST"),
-## the districts the run opened, the rewards it unlocked and the next one to
-## chase. Nothing is shown for a story level.
+## the districts the run opened, the bench upgrades bought and power-ups
+## taken, the rewards it unlocked and the next one to chase. Nothing is shown for a story level.
 
 const WIDTH := 344.0
 const EMBER := Color(1.0, 0.48, 0.18)
@@ -52,6 +52,7 @@ func _ready() -> void:
 		note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		head.add_child(note)
 	_districts(col, level.endless, endless)
+	_arsenal(col, endless)
 	_rewards(col, level.endless, endless, wave)
 	modulate.a = 0.0
 	var tw := create_tween()
@@ -74,6 +75,15 @@ func _districts(col: VBoxContainer, rules: EndlessRules, endless: Dictionary) ->
 		var chip := UiKit.chip(d.display_name.to_upper(), d.accent_color if open else UiKit.MUTED.darkened(0.3), 18, false)
 		chip.modulate.a = 1.0 if open else 0.55
 		flow.add_child(chip)
+
+
+## "UPGRADES 3  ·  POWER-UPS 5": what the run spent its tickets on and picked up.
+func _arsenal(col: VBoxContainer, endless: Dictionary) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	col.add_child(row)
+	row.add_child(UiKit.chip("UPGRADES  %d" % int(endless.get("upgrades", 0)), EndlessUpgrades.TIER_COLORS[2], 18, false))
+	row.add_child(UiKit.chip("POWER-UPS  %d" % int(endless.get("powerups", 0)), EndlessPowerups.KINDS[EndlessPowerups.DOUBLE][2], 18, false))
 
 
 func _rewards(col: VBoxContainer, rules: EndlessRules, endless: Dictionary, wave: int) -> void:

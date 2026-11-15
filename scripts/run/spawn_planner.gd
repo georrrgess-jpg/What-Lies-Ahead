@@ -16,6 +16,14 @@ extends RefCounted
 ##     them for an ambush) and re-reads them as the player moves;
 ##   - flankers: late in a wave the fast enemies come through whichever
 ##     entrance is most behind the player.
+##
+## A map with many entrances (Endless) turns on the strict rules
+## (set_strict()): an entrance in view or closer than `min_distance` in a
+## straight line is out like one on top of the player, only the `nearest`
+## valid entrances by walking route are in play, a wave's fronts lie in
+## different directions from the player and hold while they stay valid, and
+## spread spawns keep to the fronts, so a wave comes from two or three
+## streets, not from everywhere at once.
 
 enum Role {
 	## The wave's current fronts.
@@ -49,6 +57,12 @@ var _fronts: Array[int] = []
 var _front_count := 2
 var _age := INF
 var _front_age := 0.0
+# --- the strict rules (set_strict) ---
+var _strict := false
+var _min_distance := 0.0
+var _nearest := 0
+var _near := PackedByteArray()
+var _held: Array[int] = []
 
 
 func setup(points: Array, player: Player) -> void:
@@ -59,9 +73,12 @@ func setup(points: Array, player: Player) -> void:
 			_points.append(p)
 	_route.resize(_points.size())
 	_seen.resize(_points.size())
+	_near.resize(_points.size())
+	_near.fill(1)
 	_load.resize(_points.size())
 	_load.fill(0.0)
 	_bias.clear()
+	_held.clear()
 	_age = INF
 
 
@@ -80,6 +97,14 @@ func set_bias(values: PackedFloat32Array) -> void:
 	_bias = values if values.size() == _points.size() else PackedFloat32Array()
 
 
+## Turns on the strict rules (see the class notes): no entrance in view or
+## within `min_distance` m, and only the `nearest` valid ones by route in play.
+func set_strict(min_distance: float, nearest: int) -> void:
+	_strict = true
+	_min_distance = min_distance
+	_nearest = nearest
+
+
 func is_empty() -> bool:
 	return _points.is_empty()
 
@@ -92,6 +117,7 @@ func points() -> Array[Node3D]:
 func begin_wave(front_count: int) -> void:
 	_front_count = _points.size() if front_count <= 0 else mini(front_count, _points.size())
 	_load.fill(0.0)
+	_held.clear()
 	_refresh()
 	_pick_fronts()
 
@@ -169,7 +195,12 @@ func _score(i: int, role: Role) -> float:
 	if route < MIN_ROUTE:
 		score -= 100.0
 	if _seen[i]:
-		score -= 3.0
+		score -= 60.0 if _strict else 3.0
+	if _strict:
+		if not _near[i]:
+			score -= 6.0
+		if _points[i].global_position.distance_to(_player.global_position) < _min_distance:
+			score -= 100.0
 	score -= maxf(0.0, route - FAR_ROUTE) * 0.1
 	if not _bias.is_empty():
 		score += _bias[i]
@@ -187,6 +218,8 @@ func _score(i: int, role: Role) -> float:
 			score -= route * 0.2
 		Role.SPREAD:
 			score -= _load[i] * 2.0
+			if _strict and not _fronts.is_empty():
+				score += 2.5 if _fronts.has(i) else 0.0
 	return score
 
 
@@ -215,6 +248,26 @@ func _refresh() -> void:
 			var query := PhysicsRayQueryParameters3D.create(eye, at + Vector3.UP * 1.2, 1)
 			seen = space.intersect_ray(query).is_empty()
 		_seen[i] = 1 if seen else 0
+	if _strict:
+		_mark_nearest()
+
+
+## Strict rules: flags the `_nearest` valid entrances with the shortest routes.
+func _mark_nearest() -> void:
+	var order: Array[int] = []
+	for i in _points.size():
+		order.append(i)
+	order.sort_custom(func(a: int, b: int) -> bool: return _valid_rank(a) < _valid_rank(b))
+	_near.fill(0)
+	for k in mini(_nearest, order.size()):
+		_near[order[k]] = 1
+
+
+## Sort key: valid entrances by route first, the rest after them.
+func _valid_rank(i: int) -> float:
+	var valid := _route[i] >= MIN_ROUTE and not _seen[i] \
+		and _points[i].global_position.distance_to(_player.global_position) >= _min_distance
+	return _route[i] + (0.0 if valid else 10000.0)
 
 
 ## The best `_front_count` entrances right now: valid, hidden, not too far,
@@ -226,6 +279,11 @@ func _pick_fronts() -> void:
 	for i in _points.size():
 		order.append(i)
 	var fronts := _fronts
+	if _strict:
+		# Fronts that are still valid and near hold: a wave keeps its streets.
+		for i in _held:
+			if fronts.size() < _front_count and _near[i] and _score(i, Role.SPREAD) > -50.0:
+				fronts.append(i)
 	while fronts.size() < _front_count and fronts.size() < order.size():
 		var best := -1
 		var best_score := -INF
@@ -233,13 +291,24 @@ func _pick_fronts() -> void:
 			if fronts.has(i):
 				continue
 			var score := _score(i, Role.SPREAD) + randf() * 1.5
-			# Keep fronts apart: an entrance next to a chosen front is worth less.
+			# Keep fronts apart: an entrance next to a chosen front (or, strict,
+			# in the same direction from the player) is worth less.
 			for f in fronts:
 				if _points[i].global_position.distance_to(_points[f].global_position) < 22.0:
 					score -= 1.5
+				if _strict and _bearing(i).dot(_bearing(f)) > 0.6:
+					score -= 3.0
 			if score > best_score:
 				best_score = score
 				best = i
 		if best < 0:
 			break
 		fronts.append(best)
+	_held = fronts.duplicate()
+
+
+## The flat direction from the player to entrance `i`.
+func _bearing(i: int) -> Vector3:
+	var to := _points[i].global_position - _player.global_position
+	to.y = 0.0
+	return to.normalized() if to.length() > 0.01 else Vector3.FORWARD

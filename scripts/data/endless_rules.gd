@@ -27,15 +27,27 @@ extends Resource
 @export var trap_price := 250
 @export var trap_seconds := 15.0
 @export var trap_cooldown := 40.0
+## The Upgrade Bench: tickets for Mk I, II and III of the weapon in hand, and
+## the damage each tier deals (x; Mk II adds the magazine and reload instead).
+@export var bench_prices := PackedInt32Array([500, 1100, 1800])
+@export var bench_damage := PackedFloat32Array([1.3, 1.3, 1.7])
+## Power-ups: the chance a kill drops one (from powerup_from_wave on), the
+## least seconds between two drops, how long one lies on the ground and how
+## long a timed one (Double Tickets, Rapid Fire) runs.
+@export var powerup_chance := 0.03
+@export var powerup_from_wave := 3
+@export var powerup_gap := 35.0
+@export var powerup_life := 20.0
+@export var powerup_seconds := 20.0
 
 @export_group("Scaling")
 ## Zombies in wave 1, how many each wave adds, and the most one wave holds.
-@export var count_base := 10
+@export var count_base := 9
 @export var count_per_wave := 1.1
 @export var count_max := 50
 ## Crowd cap (zombies alive at once): wave 1, per wave, ceiling.
-@export var crowd_base := 7
-@export var crowd_per_wave := 0.35
+@export var crowd_base := 6
+@export var crowd_per_wave := 0.25
 @export var crowd_max := 18
 ## Seconds between spawns: wave 1, less per wave, floor.
 @export var interval_base := 2.0
@@ -44,22 +56,22 @@ extends Resource
 ## Enemy health: +health_growth per wave until health_knee, +health_late per
 ## wave after it, never more than health_max (death comes from pressure,
 ## not from bullet sponges).
-@export var health_growth := 0.03
+@export var health_growth := 0.025
 @export var health_knee := 15
-@export var health_late := 0.015
+@export var health_late := 0.012
 @export var health_max := 2.0
 ## Enemy damage and speed: + per wave, capped.
-@export var damage_growth := 0.01
-@export var damage_max := 1.3
+@export var damage_growth := 0.006
+@export var damage_max := 1.2
 @export var speed_growth := 0.008
 @export var speed_max := 1.15
 ## The boss's health: x boss_base on its first visit, + boss_growth for
 ## every earlier one (its first visit meets a player with half the city shut).
-@export var boss_base := 0.85
-@export var boss_growth := 0.45
+@export var boss_base := 0.6
+@export var boss_growth := 0.35
 ## Kill tickets: + per wave, capped (tougher zombies pay a little more).
-@export var tickets_growth := 0.02
-@export var tickets_max := 1.5
+@export var tickets_growth := 0.03
+@export var tickets_max := 1.8
 
 
 ## The district with `id`, or null.

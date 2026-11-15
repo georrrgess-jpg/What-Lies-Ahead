@@ -35,6 +35,16 @@ func set_boost(boost: RunDirector.Boost) -> void:
 			strength = 0.0
 
 
+## The glow's colour (an Endless Mk III weapon glows in its own).
+func set_color(color: Color) -> void:
+	_material.set_shader_parameter("glow_color", color)
+
+
+## Lays the overlay again on the next frame (another glow took the meshes).
+func reapply() -> void:
+	_model = null
+
+
 func _process(delta: float) -> void:
 	if player == null or player.view == null:
 		return

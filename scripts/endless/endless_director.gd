@@ -18,6 +18,8 @@ signal district_entered(district: EndlessDistrict)
 signal supply_changed(crate: EndlessSupply)
 ## A new best wave was reached during this run.
 signal new_best(wave: int)
+## The weapon in hand was upgraded at a bench (its new tier).
+signal upgraded(weapon: WeaponData, tier: int)
 
 ## Seconds the interact key is held to pay at a gate or arm a trap.
 const HOLD_SECONDS := 0.5
@@ -27,6 +29,12 @@ const HOME_BIAS := 2.5
 const HEAVY_GROWTH := 0.5
 ## Breaks before a boss wave are this much longer.
 const BOSS_REST := 1.4
+## The spawn planner's strict rules: no entrance within this straight-line
+## distance (m) or in view, and only the nearest few valid ones in play.
+const SPAWN_MIN_DISTANCE := 14.0
+const SPAWN_NEAREST := 5
+## Seconds a surge's warning gives (the city's streets are long).
+const SURGE_WARNING := 4.5
 
 var run: RunDirector
 var rules: EndlessRules
@@ -40,7 +48,10 @@ var best_before := 0
 ## Districts opened in earlier runs (id -> true).
 var opened_before := {}
 var supply: EndlessSupply
-## The interactable the player is at (an EndlessGate or EndlessTrap), and how
+## The Upgrade Bench tiers and Rapid Fire (weapon stats for the run).
+var upgrades: EndlessUpgrades
+var powerups: EndlessPowerups
+## The interactable the player is at (an EndlessGate, EndlessBench or EndlessTrap), and how
 ## long the interact key has been held there.
 var focus: Node3D
 var hold := 0.0
@@ -48,6 +59,9 @@ var hold := 0.0
 var _gates: Array[EndlessGate] = []
 var _areas: Array[Area3D] = []
 var _traps: Array[EndlessTrap] = []
+var _benches: Array[EndlessBench] = []
+var _glow: BoostGlow
+var _need_release := false
 var _drops: Array[Node3D] = []
 var _spawns: Array[Node3D] = []
 var _current: EndlessDistrict
@@ -69,6 +83,16 @@ func setup(director: RunDirector) -> void:
 	run = director
 	rules = run.level.endless
 	waves = EndlessWaves.new(rules)
+	upgrades = EndlessUpgrades.new(rules)
+	powerups = EndlessPowerups.new()
+	powerups.name = "PowerUps"
+	powerups.director = self
+	add_child(powerups)
+	run.planner.set_strict(SPAWN_MIN_DISTANCE, SPAWN_NEAREST)
+	run.surge_warning_seconds = SURGE_WARNING
+	run.enemy_killed.connect(func(z: Zombie, _w: StringName): powerups.on_kill(z, run.wave_number))
+	run.run_finished.connect(func(_r: Dictionary): powerups.clear())
+	run.run_started.connect(_on_run_started)
 	best_before = EndlessRecords.best_wave()
 	for d in rules.districts:
 		if EndlessRecords.has_opened(d.id):
@@ -96,6 +120,20 @@ func setup(director: RunDirector) -> void:
 
 
 # --- queries ---------------------------------------------------------------------
+
+## The middle of district `id` on the ground (its area's first box), or
+## Vector3.INF when it has no area.
+func district_centre(id: StringName) -> Vector3:
+	for area in _areas:
+		if _district_of(area) != id:
+			continue
+		for shape in area.get_children():
+			if shape is CollisionShape3D:
+				var at := (shape as CollisionShape3D).global_position
+				var map := run.player.get_world_3d().navigation_map
+				return NavigationServer3D.map_get_closest_point(map, at)
+	return Vector3.INF
+
 
 ## The districts open now, in the rules' order.
 func open_districts() -> Array[EndlessDistrict]:
@@ -180,6 +218,30 @@ func title_of(n: int) -> String:
 	return waves.title_of(n)
 
 
+## Where an entrance is, for a surge warning: its district and which way it
+## lies from the player ("PRECINCT 9, BEHIND YOU").
+func entrance_label(point: Node3D) -> String:
+	var d := rules.district(_district_of(point))
+	var to := point.global_position - run.player.global_position
+	to.y = 0.0
+	var basis := run.player.camera.global_transform.basis
+	var ahead := (-basis.z).dot(to.normalized())
+	var right := basis.x.dot(to.normalized())
+	var side := "AHEAD" if ahead > 0.7 else ("BEHIND YOU" if ahead < -0.5 else ("ON YOUR RIGHT" if right > 0.0 else "ON YOUR LEFT"))
+	return "%s, %s" % [d.display_name.to_upper() if d else "NEARBY", side]
+
+
+## Entrances wave `n` works at a time: two or three streets, never all.
+func fronts(n: int) -> int:
+	return waves.fronts_of(n)
+
+
+## The damage multiplier of the weapon in hand (its bench tier).
+func damage_scale() -> float:
+	var w := run.player.weapons.current if run.player else null
+	return upgrades.damage_scale(w.id) if w else 1.0
+
+
 # --- the run director's hooks --------------------------------------------------------
 
 ## Wave `n`, from the enemies of the districts open now.
@@ -261,6 +323,8 @@ func result() -> Dictionary:
 		"districts_total": rules.districts.size(),
 		"best_before": best_before,
 		"new_best_wave": run.wave_number > best_before,
+		"upgrades": upgrades.bought,
+		"powerups": powerups.taken,
 	}
 
 
@@ -289,6 +353,13 @@ func _tick_interaction(delta: float) -> void:
 				best = gate
 				best_d = d
 	if best == null:
+		for bench in _benches:
+			if bench.player_inside and opened.has(bench.district):
+				var d := bench.global_position.distance_to(run.player.global_position)
+				if d < best_d:
+					best = bench
+					best_d = d
+	if best == null:
 		for trap in _traps:
 			if trap.player_inside and opened.has(trap.district):
 				var d := trap.global_position.distance_to(run.player.global_position)
@@ -300,6 +371,9 @@ func _tick_interaction(delta: float) -> void:
 		hold = 0.0
 	if focus == null or not Input.is_action_pressed("interact"):
 		hold = 0.0
+		_need_release = false
+		return
+	if _need_release:
 		return
 	var p: Dictionary = focus.prompt()
 	if p.is_empty() or p.get("disabled", false):
@@ -313,6 +387,9 @@ func _tick_interaction(delta: float) -> void:
 		_buy_gate(focus)
 	elif focus is EndlessTrap:
 		_buy_trap(focus)
+	elif focus is EndlessBench:
+		# One tier per press: holding on does not buy the next one too.
+		_need_release = buy_upgrade(focus)
 
 
 func _buy_gate(gate: EndlessGate) -> void:
@@ -352,6 +429,40 @@ func open_district(d: EndlessDistrict) -> void:
 		run.notice.emit("New in the city: %s" % ", ".join(added), &"bad")
 	district_opened.emit(d)
 	_collect_unlocks()
+
+
+## Pays for the next tier of the weapon in hand at `bench`.
+func buy_upgrade(bench: EndlessBench) -> bool:
+	var w := run.player.weapons.current
+	var price := upgrades.next_price(w.id)
+	if price <= 0:
+		return false
+	if run.tickets < price:
+		Sfx.play(&"deny", -4.0)
+		run.notice.emit("Not enough tickets (%d needed)" % price, &"bad")
+		return false
+	run.spend_tickets(price)
+	upgrades.upgrade(w)
+	var t := upgrades.tier(w.id)
+	# A bigger magazine comes loaded.
+	if t == 2:
+		run.player.weapons.top_up()
+	run.refresh_damage()
+	_glow_follow()
+	bench.celebrate()
+	Sfx.play(&"prog_level_up", -3.0)
+	run.notice.emit("%s %s  ·  %s" % [w.display_name.to_upper(), EndlessUpgrades.NAMES[t], _perk_done(t)], &"good")
+	upgraded.emit(w, t)
+	return true
+
+
+func _perk_done(t: int) -> String:
+	match t:
+		1:
+			return "+%d%% DAMAGE" % int(round((rules.bench_damage[0] - 1.0) * 100.0))
+		2:
+			return "BIGGER MAGAZINE, FASTER RELOAD"
+	return "+%d%% DAMAGE, FULLY UPGRADED" % int(round((rules.bench_damage[2] - 1.0) * 100.0))
 
 
 func _buy_trap(trap: EndlessTrap) -> void:
@@ -406,6 +517,13 @@ func _build_features() -> void:
 		var kind := StringName(String(marker.get_meta(&"kind", "")))
 		if kind == &"supply_drop":
 			_drops.append(marker)
+		elif kind == &"upgrade_bench":
+			var bench := EndlessBench.new()
+			bench.name = "Bench_%s" % marker.name
+			bench.district = _district_of(marker)
+			bench.director = run
+			marker.add_child(bench)
+			_benches.append(bench)
 		elif kind in [EndlessTrap.FIRE, EndlessTrap.SHOCK]:
 			var trap := EndlessTrap.new()
 			trap.name = "Trap_%s" % marker.name
@@ -452,6 +570,33 @@ func _drop_supplies(n: int) -> void:
 	var d := rules.district(_district_of(best))
 	run.notice.emit("SUPPLY DROP INCOMING — %s" % (d.display_name.to_upper() if d else "NEARBY"), &"good")
 	supply_changed.emit(supply)
+
+
+# --- weapons ---------------------------------------------------------------------
+
+## Once the player is in: the weapon's damage and glow follow the weapon in hand.
+func _on_run_started() -> void:
+	_glow = BoostGlow.new()
+	_glow.player = run.player
+	add_child(_glow)
+	run.player.weapons.weapon_changed.connect(func(_w: WeaponData):
+		run.refresh_damage()
+		_glow_follow())
+	run.damage_boost_changed.connect(func(_b: RunDirector.Boost): _glow.reapply())
+
+
+## A Mk III weapon in hand glows in the tier's colour.
+func _glow_follow() -> void:
+	var w := run.player.weapons.current
+	var t := upgrades.tier(w.id) if w else 0
+	_glow.strength = 0.8 if t >= EndlessUpgrades.MAX_TIER else 0.0
+	_glow.set_color(EndlessUpgrades.TIER_COLORS[EndlessUpgrades.MAX_TIER])
+
+
+## Weapon stats go back to their data when the run is left.
+func _exit_tree() -> void:
+	if upgrades:
+		upgrades.restore()
 
 
 # --- helpers ---------------------------------------------------------------------

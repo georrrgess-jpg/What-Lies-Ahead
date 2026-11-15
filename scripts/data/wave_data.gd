@@ -29,6 +29,9 @@ const KINDS: Array[StringName] = [&"standard", &"rush", &"siege", &"ambush", &"r
 @export_range(0.0, 1.0) var late_types_after := 0.0
 ## Optional banner text that replaces "WAVE n — TITLE", e.g. "FINAL WAVE".
 @export var banner := ""
+## Look of the wave's banner (HudBanner.STYLES: "boss", "horde", "calm"...);
+## empty = the usual wave banner.
+@export var banner_style: StringName = &""
 
 @export_group("Identity")
 ## One of KINDS.

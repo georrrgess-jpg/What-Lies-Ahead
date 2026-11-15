@@ -625,7 +625,9 @@ func _on_wave_started(number: int, total: int, banner: String) -> void:
 		_header.set_chip("FINAL WAVE" if final else "", UiKit.PINK)
 	else:
 		_header.set_chip(title, UiKit.PINK if final else UiKit.CYAN)
-	_banner.show_banner(title, sub, kicker, &"final" if final else &"wave", HudBanner.HOLD, true)
+	var wave := director.current_wave()
+	var style: StringName = &"final" if final else (wave.banner_style if wave and wave.banner_style != &"" else &"wave")
+	_banner.show_banner(title, sub, kicker, style, HudBanner.HOLD, true)
 
 
 func _on_tickets_changed(tickets: int) -> void:
