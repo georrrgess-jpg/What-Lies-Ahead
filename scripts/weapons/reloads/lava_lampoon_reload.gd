@@ -40,6 +40,8 @@ var _start_blobs := 10.0
 var _full_blobs := 10.0
 var _skip := -1.0
 var _skip_from := 0.0
+## 0-1 through the snap back over after a skip (-1 outside it).
+var _skip_u := -1.0
 var _skip_left := 0.0
 var _missed := 0.0
 ## A press came too early: the one try of this reload is spent.
@@ -94,6 +96,7 @@ func _step(k: float) -> void:
 ## Reload time `k` to the animation's timeline: the same until a skip, then
 ## a quick run to the twist-lock and the rest at normal speed.
 func _timeline(k: float) -> float:
+	_skip_u = -1.0
 	if k >= 1.0:
 		return 1.0
 	if _skip < 0.0 and _v.has_meta(LavaLampoonMode.SKIP_META):
@@ -114,7 +117,8 @@ func _timeline(k: float) -> float:
 	var fast := LavaLampoonMode.SKIP_TIME
 	if r >= fast:
 		return minf(1.0, LavaLampoonMode.LOCK_AT + (r - fast) / _d)
-	return _hermite(_skip_from, LavaLampoonMode.LOCK_AT, fast / _d, r / fast)
+	_skip_u = r / fast
+	return _hermite(_skip_from, LavaLampoonMode.LOCK_AT, fast / _d, fast / _d, _skip_u)
 
 
 func _pose(s: float, k: float) -> void:
@@ -128,7 +132,7 @@ func _pose(s: float, k: float) -> void:
 	var drop := _drop(s)
 	var hover := _e(0.38, 0.46, s) * (1.0 - _e(0.76, 0.82, s))
 	var turn := UNSCREW_DEG * _e(0.1, 0.34, s) + HOVER_DEG * _e(0.3, 0.8, s) - (UNSCREW_DEG + HOVER_DEG) * _e(0.8, 0.92, s)
-	var flip := 180.0 * _e(0.36, 0.6, s) + 180.0 * _e(0.66, 0.8, s)
+	var flip := _snap_flip(_skip_u) if _skip_u >= 0.0 else _flip(s)
 	var bob := Vector3(0.0, sin(s * _d * 5.0) * 0.004, 0.0) * hover
 	var base := (Vector3.UP * UNSCREW_RISE * unscrew + LIFT * lift) * (1.0 - drop) + bob + Vector3.DOWN * _seat_bump(s)
 	var lamp := v.part("Lamp")
@@ -235,6 +239,18 @@ func _spark(anchor: String, amount: int) -> void:
 		_v.spark_burst(_v.model.global_transform.affine_inverse() * a.global_position, Vector3.UP, SPARKS, amount, 0.9, 0.35, 0.008)
 
 
+## The cartwheel (degrees): over to upside down, a pause, and on round upright.
+static func _flip(s: float) -> float:
+	return 180.0 * _e(0.36, 0.6, s) + 180.0 * _e(0.66, 0.8, s)
+
+
+## The skip's cartwheel: from where the flip was, at the speed it was turning,
+## straight round to upright in one whip (no pause on the way).
+func _snap_flip(u: float) -> float:
+	var rate := (_flip(_skip_from + 0.002) - _flip(_skip_from - 0.002)) / 0.004
+	return _hermite(_flip(_skip_from), 360.0, rate * LavaLampoonMode.SKIP_TIME / _d, 0.0, u)
+
+
 ## 0-1 how open the active-reload window is (eased at its edges).
 func _window(s: float) -> float:
 	return _e(LavaLampoonMode.WINDOW_START - 0.02, LavaLampoonMode.WINDOW_START + 0.02, s) * (1.0 - _e(LavaLampoonMode.WINDOW_END - 0.02, LavaLampoonMode.WINDOW_END + 0.02, s))
@@ -257,12 +273,12 @@ static func _e(a: float, b: float, s: float) -> float:
 	return t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
 
 
-## Cubic from a to b over u 0-1 that starts and ends at `slope` (timeline per
-## unit of u), so the skip leaves the flip and enters the lock at full pace.
-static func _hermite(a: float, b: float, slope: float, u: float) -> float:
+## Cubic from a to b over u 0-1 leaving a at slope m0 and arriving at b at
+## slope m1 (per unit of u), so a skip carries on at the pace it found.
+static func _hermite(a: float, b: float, m0: float, m1: float, u: float) -> float:
 	var u2 := u * u
 	var u3 := u2 * u
-	return (2.0 * u3 - 3.0 * u2 + 1.0) * a + (u3 - 2.0 * u2 + u) * slope + (-2.0 * u3 + 3.0 * u2) * b + (u3 - u2) * slope
+	return (2.0 * u3 - 3.0 * u2 + 1.0) * a + (u3 - 2.0 * u2 + u) * m0 + (-2.0 * u3 + 3.0 * u2) * b + (u3 - u2) * m1
 
 
 static func _place(node: Node3D, rest: Transform3D, offset: Vector3, rot_deg: Vector3) -> void:
