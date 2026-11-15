@@ -62,6 +62,10 @@ const DOORS := [
 	["DeliveryBay", "E", 20.5, 0.0], ["LoadingDock", "S", 12.0, 0.0], ["ForemanDoor", "E", 5.0, MEZZ_Y],
 ]
 const DOOR_W := 4.4
+const DOOR_NAMES := {"CocoaStore": "COCOA STORE", "SiloService": "SILO SERVICE", "SugarRoom": "SUGAR ROOM",
+	"DeliveryBay": "DELIVERY BAY", "LoadingDock": "LOADING DOCK", "ForemanDoor": "FOREMAN"}
+const BAY_STOCK := {"CocoaStore": "candy_sacks", "SugarRoom": "candy_sacks", "DeliveryBay": "candy_boxes", "LoadingDock": "candy_boxes"}
+const FONT := "res://art/fonts/LilitaOne-Regular.ttf"
 const DOOR_H := 4.2
 const RECESS := 6.5
 
@@ -527,8 +531,10 @@ func _build_entrances() -> void:
 		var roof := _box(e, "%sBayRoof" % d[0], Vector3(DOOR_W + 1.0, 0.5, RECESS + WALL_THICK), Vector3.ZERO, dark)
 		roof.basis = basis
 		roof.position = Vector3(c.x, y + DOOR_H + 0.25, c.z) - inward * (WALL_THICK + RECESS) * 0.5
-		# Stacked crates inside the bay, beside the way in.
-		_prop(dressing, "candy_crates", "%sBayCrates" % d[0], back + inward * 1.4 + side * (DOOR_W * 0.5 - 0.9), rad_to_deg(yaw) + 90.0, Vector3(2, 1.6, 1.2))
+		# Stock inside the bay, beside the way in: what the room holds.
+		var stock: String = BAY_STOCK.get(d[0], "candy_crates")
+		_prop(dressing, stock, "%sBayCrates" % d[0], back + inward * 1.4 + side * (DOOR_W * 0.5 - 0.9), rad_to_deg(yaw) + 90.0, Vector3(2, 1.6, 1.2))
+		_door_plaque(d[0], Vector3(c.x, y + 6.55, c.z) + inward * 0.08, basis)
 		# Keep the player out of the bay.
 		_player_wall(walls, "%sBay" % d[0], c - side * DOOR_W * 0.5 - inward * 0.3, c + side * DOOR_W * 0.5 - inward * 0.3, 8.0)
 		_omni(dressing, "%sLight" % d[0], c + inward * 1.6 + Vector3(0, DOOR_H + 0.4, 0), Color(1.0, 0.72, 0.4), 1.4, 7.5)
@@ -729,7 +735,8 @@ func _build_mezzanine() -> void:
 	geo.add_child(m)
 	var c := Vector3(MEZZ.get_center().x, 0, MEZZ.get_center().y)
 	var steel := _mat("mezz_steel", Color(0.78, 0.66, 0.95), 0.45)
-	var deck := _mat("mezz_deck", Color(1.0, 0.82, 0.9), 0.6)
+	var deck := _textured("mezz_deck", "candy_floor", 0.5, 0.6)
+	deck.albedo_color = Color(1.0, 0.8, 0.9)
 	_box(m, "Deck", Vector3(MEZZ.size.x, 0.35, MEZZ.size.y), c + Vector3(0, MEZZ_Y - 0.175, 0), steel)
 	_visual_box(m, "DeckTop", Vector3(MEZZ.size.x - 0.05, 0.04, MEZZ.size.y - 0.05), c + Vector3(0, MEZZ_Y + 0.01, 0), deck)
 	_visual_box(m, "Fascia", Vector3(0.12, 0.5, MEZZ.size.y), Vector3(MEZZ.position.x - 0.06, MEZZ_Y - 0.25, c.z), _mat("butter", Color(1.0, 0.86, 0.5), 0.5))
@@ -738,6 +745,12 @@ func _build_mezzanine() -> void:
 			_post(m, "Column%d_%d" % [int(x), int(z)], 0.22, MEZZ_Y - 0.35, Vector3(x, 0, z))
 			var col := _visual_box(m, "ColumnMesh%d_%d" % [int(x), int(z)], Vector3(0.36, MEZZ_Y - 0.35, 0.36), Vector3(x, (MEZZ_Y - 0.35) * 0.5, z), steel)
 			col.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	# Joists under the deck, so its underside reads as a built floor.
+	var joist := _mat("butter", Color(1.0, 0.86, 0.5), 0.5)
+	var jz := MEZZ.position.y + 1.6
+	while jz < MEZZ.end.y - 1.0:
+		_visual_box(m, "Joist%d" % int(jz * 10), Vector3(MEZZ.size.x - 0.2, 0.3, 0.22), Vector3(c.x, MEZZ_Y - 0.5, jz), joist)
+		jz += 2.4
 	# Ramp at the north end and stairs at the south end, both down to the west.
 	_slope(m, "Ramp", Vector3(MEZZ.position.x, MEZZ_Y, MEZZ.position.y + 2.0), Vector3.LEFT, 7.2, 3.2, MEZZ_Y, deck, false)
 	_slope(m, "Stairs", Vector3(MEZZ.position.x, MEZZ_Y, MEZZ.end.y - 2.2), Vector3.LEFT, 5.6, 3.0, MEZZ_Y, deck, true)
@@ -755,6 +768,24 @@ func _build_mezzanine() -> void:
 	_solid_prop(m, "candy_sacks", "UnderSacks", Vector3(28.5, 0, -1.5), 0.0, Vector3(1.6, 1.1, 1.2))
 	_solid_prop(m, "candy_boxes", "UnderBoxes", Vector3(29.0, 0, 9.0), 90.0, Vector3(1.5, 1.6, 1.2))
 	_omni(dressing, "UnderDeckLight", c + Vector3(1.0, 2.4, 0), Color(1.0, 0.78, 0.55), 1.0, 9.0)
+
+
+## The room's name on a butterscotch plaque above its door.
+func _door_plaque(door: String, at: Vector3, basis: Basis) -> void:
+	var plaque := _visual_box(dressing, "%sPlaque" % door, Vector3(4.2, 0.8, 0.12), at, _mat("butter", Color(1.0, 0.86, 0.5), 0.5))
+	plaque.basis = basis
+	var label := Label3D.new()
+	label.name = "%sName" % door
+	label.text = DOOR_NAMES[door]
+	label.font = load(FONT)
+	label.font_size = 96
+	label.pixel_size = 0.0055
+	label.modulate = Color(0.55, 0.16, 0.3)
+	label.outline_size = 0
+	label.shaded = false
+	label.position = at + basis.z * 0.07
+	label.basis = basis
+	dressing.add_child(label)
 
 
 # ---------------------------------------------------------------------------
