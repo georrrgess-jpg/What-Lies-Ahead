@@ -12,7 +12,7 @@ const HOLO_SHADER := "res://art/shaders/holo.gdshader"
 const RECEIPT_TINT := Color(1.0, 0.62, 0.84)
 const COINS := [Color(1.0, 0.79, 0.24), Color(1.0, 0.95, 0.7), Color(1.0, 0.31, 0.64)]
 ## The drawer's slide (model space): out along the grip's front, a touch down.
-const DRAWER_OUT := Vector3(0.0, -0.014, -0.05)
+const DRAWER_OUT := Vector3(0.0, -0.018, -0.066)
 ## Steps of the receipt's fade (the reload API has callbacks, not tweens).
 const FADE_STEPS := 8
 
@@ -24,8 +24,10 @@ func play(v: WeaponView, d: float) -> void:
 		v.register_part("Pip%d" % i)
 		_show(v, "Pip%d" % i, false)
 	_show(v, "Tag", false)
-	# Tip the drum toward the eye, hold, then back with a little settle.
-	v.track("Root", d, [[0.12, Vector3(0.0, 0.03, 0.01), Vector3(14, 10, 22)], [0.72, Vector3(0.0, 0.03, 0.01), Vector3(14, 10, 22)],
+	# Lift and roll the labeller to show the drum, then tip it up for the drawer,
+	# then back with a little settle.
+	v.track("Root", d, [[0.12, Vector3(-0.01, 0.04, 0.0), Vector3(12, 10, 20)], [0.3, Vector3(-0.01, 0.045, 0.0), Vector3(14, 10, 22)],
+		[0.38, Vector3(-0.02, 0.085, 0.0), Vector3(20, 14, 26)], [0.72, Vector3(-0.02, 0.085, 0.0), Vector3(18, 14, 24)],
 		[0.84, Vector3(0.0, 0.006, 0.0), Vector3(-5, -2, -5)], [1.0, Vector3.ZERO, Vector3.ZERO]])
 	v.glow_ramp(0.06, 0.16, d, 1.0, 0.25)
 	# The empty roll pops up out of the drum...
@@ -34,13 +36,13 @@ func play(v: WeaponView, d: float) -> void:
 	v.hide_part(0.24, d, "Cell")
 	# ...and its receipt curls off as a hologram, fluttering up and away as it fades.
 	v.at(0.23, d, _receipt_on.bind(v))
-	v.track("ReceiptHolo", d, [[0.23, Vector3(0.0, 0.07, 0.0), Vector3.ZERO, 1.0, "hold"], [0.32, Vector3(0.05, 0.12, 0.02), Vector3(10, 30, -35), 1.1],
-		[0.4, Vector3(0.1, 0.15, 0.05), Vector3(-15, 70, 20), 1.0], [0.5, Vector3(0.17, 0.2, 0.09), Vector3(25, 110, -60), 0.6]])
+	v.track("ReceiptHolo", d, [[0.23, Vector3(0.0, 0.07, 0.0), Vector3.ZERO, 1.2, "hold"], [0.32, Vector3(0.05, 0.1, 0.02), Vector3(10, 30, -35), 1.9],
+		[0.4, Vector3(0.11, 0.12, 0.05), Vector3(-15, 70, 20), 1.8], [0.5, Vector3(0.19, 0.14, 0.09), Vector3(25, 110, -60), 1.1]])
 	for i in FADE_STEPS:
 		v.at(lerpf(0.36, 0.5, float(i + 1) / FADE_STEPS), d, _receipt_fade.bind(v, 1.0 - float(i + 1) / FADE_STEPS))
 	v.hide_part(0.51, d, "ReceiptHolo")
 	# The cash drawer slides out with a ka-ching.
-	v.track("Drawer", d, [[0.3, Vector3.ZERO, Vector3.ZERO], [0.38, DRAWER_OUT, Vector3(-4, 0, 0)], [0.7, DRAWER_OUT, Vector3(-4, 0, 0)],
+	v.track("Drawer", d, [[0.3, Vector3.ZERO, Vector3.ZERO], [0.38, DRAWER_OUT, Vector3.ZERO], [0.7, DRAWER_OUT, Vector3.ZERO],
 		[0.76, Vector3.ZERO, Vector3.ZERO]], Tween.TRANS_BACK, Tween.EASE_OUT)
 	v.at(0.38, d, _coins.bind(v))
 	# A fresh hologram roll spins down into the drum and solidifies.
