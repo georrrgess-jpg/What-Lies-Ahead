@@ -589,8 +589,8 @@ func _do_break(delta: float) -> void:
 		_tap("buy_damage_boost")
 		await get_tree().physics_frame
 		await get_tree().physics_frame
-	# In Endless the bot saves for the next gate before it buys the shield.
-	var spare := _director.tickets - (_endless.saving_for() if _endless else 0)
+	# In Endless the gate errand comes first (EndlessBot); the shield keeps a small reserve.
+	var spare := _director.tickets - (EndlessBot.RESERVE if _endless else 0)
 	if spare >= waves.overshield_price and _director.overshield < waves.overshield_amount:
 		_tap("buy_overshield")
 		await get_tree().physics_frame

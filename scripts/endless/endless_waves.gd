@@ -94,7 +94,7 @@ func build(n: int, pool: Dictionary) -> WaveData:
 		wave.surge_at = 0.45
 		wave.surge_count = mini(4 + n / 4, 9)
 	if kind == &"boss":
-		wave.boss = rules.boss_id
+		wave.boss = EndlessDirector.resolve(rules.boss_id)
 		wave.boss_at = 0.3
 	if kind == &"bounty":
 		var runner := _first(pool, "fast")

@@ -19,7 +19,7 @@ script = ExtResource("3")
 id = &"precinct"
 display_name = "Precinct 9"
 blurb = "The police station and its car park of riot vans. The riot squad never clocked off."
-price = 500
+price = 600
 enemies = Array[StringName]([&"riot_shield"])
 accent_color = Color(0.25, 0.55, 1, 1)
 
@@ -28,7 +28,7 @@ script = ExtResource("3")
 id = &"metro"
 display_name = "Metro Line"
 blurb = "Down the stairs to the flooded platforms, lit by emergency lamps. Something crawls in the tunnels."
-price = 750
+price = 900
 enemies = Array[StringName]([&"tunnel_crawler"])
 accent_color = Color(0.3, 1, 0.55, 1)
 
@@ -37,7 +37,7 @@ script = ExtResource("3")
 id = &"market"
 display_name = "Neon Market"
 blurb = "A collapsed street of stalls under flickering neon. Mind the ones carrying bottles."
-price = 1000
+price = 1200
 enemies = Array[StringName]([&"firebug"])
 accent_color = Color(1, 0.25, 0.75, 1)
 
@@ -46,7 +46,7 @@ script = ExtResource("3")
 id = &"tower"
 display_name = "Broadcast Tower"
 blurb = "The foot of the broken skyscraper and its radio mast. Whatever wrecked the city sleeps here."
-price = 1500
+price = 1600
 enemies = Array[StringName]([&"city_bruiser"])
 accent_color = Color(1, 0.85, 0.3, 1)
 
