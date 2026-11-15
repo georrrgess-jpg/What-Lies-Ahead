@@ -333,6 +333,11 @@ static func trade_up_problem(picked: Array) -> String:
 	if picked.size() != series().trade_up_count:
 		return "Pick %d prints of one rarity." % series().trade_up_count
 	var r := rarity(picked[0])
+	var ids := {}
+	for p in picked:
+		ids[String(p.get("id", ""))] = true
+	if ids.size() != picked.size():
+		return "Pick five different prints."
 	for p in picked:
 		if rarity(p) != r:
 			return "All five must be the same rarity."

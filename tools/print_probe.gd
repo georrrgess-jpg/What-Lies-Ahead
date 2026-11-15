@@ -240,6 +240,7 @@ func _actions() -> void:
 		commons = Prints.trade_up_candidates(0)
 	var five := commons.slice(0, s.trade_up_count)
 	Prints.set_favourite(five[0], true)
+	_check("actions: the same print five times is refused", Prints.trade_up_problem([commons[1], commons[1], commons[1], commons[1], commons[1]]) != "")
 	_check("actions: a favourite blocks the trade-up", Prints.trade_up_problem(five) != "" and Prints.trade_up(five).is_empty())
 	Prints.set_favourite(five[0], false)
 	var count_before: int = Prints.held().size()
