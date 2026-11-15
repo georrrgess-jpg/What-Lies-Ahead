@@ -753,7 +753,7 @@ func _hall_end_walls(parent: Node3D, material: Material) -> void:
 	# West: the tunnel continues 8 m (platform level) to a collapse.
 	var xw := HALL.position.x - 8.0
 	_box(parent, "WestCollapse", Vector3(1.0, 5.4, zs - zn), Vector3(xw - 0.5, y, (zn + zs) * 0.5), material)
-	_solid_kit(parent, "city_rubble_b", "WestRubble", Vector3(xw + 1.8, METRO_Y, -36.2), 90.0, Vector3(3.0, 1.1, 2.4))
+	_solid_kit(parent, "city_rubble_a", "WestRubble", Vector3(xw + 1.8, METRO_Y, -36.4), 90.0, Vector3(3.0, 1.1, 2.4))
 	_player_wall(_player_walls(), "WestTunnel", Vector3(HALL.position.x - 2.0, METRO_Y, PLATFORM_EDGE_Z), Vector3(HALL.position.x - 2.0, METRO_Y, zs), 6.0)
 	# East: wall at x 40 with the exit opening (z -35..-29).
 	var xe := HALL.end.x + 0.5
@@ -1192,7 +1192,7 @@ const ENTRANCES := [
 	[&"market", Vector3(42.0, 0, -14.0), 180.0, Rect2(40.0, -20.0, 4.0, 12.0), 2.0, Vector2.ZERO],
 	[&"market", Vector3(56.0, 0, 14.0), 0.0, Rect2(54.0, 8.0, 4.0, 12.0), 10.0, Vector2.ZERO],
 	[&"market", Vector3(97.0, 0, -5.0), 90.0, Rect2(90.0, -8.0, 8.0, 16.0), 10.0, Vector2.ZERO],
-	[&"metro", Vector3(-23.5, METRO_Y, -33.0), -90.0, null, 0.0, Vector2.ZERO],
+	[&"metro", Vector3(-23.5, METRO_Y, -31.5), -90.0, null, 0.0, Vector2.ZERO],
 	[&"metro", Vector3(21.5, METRO_Y, -24.0), 0.0, null, 0.0, Vector2.ZERO],
 	[&"metro", Vector3(-12.0, METRO_Y, -24.0), 0.0, null, 0.0, Vector2.ZERO],
 	[&"tower", Vector3(70.0, 0, -77.0), 180.0, Rect2(66.0, -84.0, 8.0, 12.0), 6.0, Vector2(5.0, 24.0)],
