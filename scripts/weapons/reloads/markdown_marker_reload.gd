@@ -36,8 +36,8 @@ func play(v: WeaponView, d: float) -> void:
 	v.hide_part(0.24, d, "Cell")
 	# ...and its receipt curls off as a hologram, fluttering up and away as it fades.
 	v.at(0.23, d, _receipt_on.bind(v))
-	v.track("ReceiptHolo", d, [[0.23, Vector3(0.0, 0.07, 0.0), Vector3.ZERO, 1.2, "hold"], [0.32, Vector3(0.05, 0.12, 0.02), Vector3(10, 30, -35), 1.9],
-		[0.4, Vector3(0.1, 0.16, 0.05), Vector3(-15, 70, 20), 1.8], [0.5, Vector3(0.18, 0.22, 0.09), Vector3(25, 110, -60), 1.1]])
+	v.track("ReceiptHolo", d, [[0.23, Vector3(0.0, 0.07, 0.0), Vector3.ZERO, 1.2, "hold"], [0.32, Vector3(0.05, 0.1, 0.02), Vector3(10, 30, -35), 1.9],
+		[0.4, Vector3(0.11, 0.12, 0.05), Vector3(-15, 70, 20), 1.8], [0.5, Vector3(0.19, 0.14, 0.09), Vector3(25, 110, -60), 1.1]])
 	for i in FADE_STEPS:
 		v.at(lerpf(0.36, 0.5, float(i + 1) / FADE_STEPS), d, _receipt_fade.bind(v, 1.0 - float(i + 1) / FADE_STEPS))
 	v.hide_part(0.51, d, "ReceiptHolo")

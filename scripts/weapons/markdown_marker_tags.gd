@@ -31,7 +31,9 @@ const HEAVY_POP_SCALE := 0.5
 ## Tags the pop gives back to the marker's magazine.
 const POP_REFUND := 2
 ## Sticker size (m) on a zombie of body_scale 1, and the stick-on pop time.
-const TAG_SIZE := Vector2(0.3, 0.18)
+const TAG_SIZE := Vector2(0.38, 0.23)
+## Where each tag of a stack sits: turn (radians) from the side it hit, height (m).
+const SLOTS: Array[Vector2] = [Vector2(0.0, 1.2), Vector2(0.6, 1.05), Vector2(-0.6, 1.4)]
 const STICK_TIME := 0.16
 const SHADER := "res://art/shaders/markdown_marker_tag.gdshader"
 ## Sale Pink, Register Yellow, Mall Fountain Teal (one per tag in a stack).
@@ -198,20 +200,17 @@ func _peel(popped: bool) -> void:
 
 # --- looks ---------------------------------------------------------------------
 
-## A sticker on the torso where the tag hit, facing out from the body.
+## A sticker on the torso on the side the tag hit, facing out from the body.
+## Each tag of a stack has its own slot (SLOTS), so all of them show.
 func _add_sticker(point: Vector3) -> void:
 	var s := zombie.data.body_scale
 	var local := zombie.to_local(point)
 	var out := Vector3(local.x, 0.0, local.z)
 	if out.length() < 0.05:
 		out = Vector3(0, 0, 1)
-	out = out.normalized()
-	var height := clampf(local.y, 0.8 * s, 1.45 * s)
-	var anchor := out * zombie.data.capsule_radius * s * 0.85 + Vector3.UP * height
-	# Stack the tags so they never cover each other.
-	for other in _stickers:
-		if other.position.distance_to(anchor) < TAG_SIZE.y * s * 1.1:
-			anchor.y += TAG_SIZE.y * s * 1.15 * (1.0 if anchor.y < 1.25 * s else -2.0)
+	var slot: Vector2 = SLOTS[_count % SLOTS.size()]
+	out = out.normalized().rotated(Vector3.UP, slot.x)
+	var anchor := out * zombie.data.capsule_radius * s * 1.05 + Vector3.UP * slot.y * s
 	var m := MeshInstance3D.new()
 	if _quad == null:
 		_quad = QuadMesh.new()
