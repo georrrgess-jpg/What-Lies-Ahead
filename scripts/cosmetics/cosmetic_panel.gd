@@ -184,6 +184,7 @@ func show_item(it: CosmeticItem, weapon_id: StringName = &"") -> void:
 	_name.text = it.display_name.to_upper()
 	_rarity.set_text(CosmeticItem.rarity_name(it.rarity).to_upper())
 	_rarity.set_color(CosmeticItem.rarity_color(it.rarity))
+	MythicFx.dress(_rarity, it)
 	_category.text = _category_text(it)
 	_description.text = it.description
 	refresh()

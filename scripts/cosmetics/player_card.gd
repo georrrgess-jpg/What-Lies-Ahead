@@ -116,6 +116,7 @@ func refresh() -> void:
 	var title := _shown(&"title")
 	_title.text = (title.display_name if title else "Rookie").to_upper()
 	_title.add_theme_color_override("font_color", CosmeticItem.rarity_color(title.rarity).lerp(UiKit.CREAM, 0.45) if title else UiKit.CREAM)
+	MythicFx.dress(_title, title)
 	_bar.value = Progression.level_progress()
 	var op := _shown(&"avatar")
 	_operator.text = "Operator  ·  %s" % (op.display_name if op else "Boardwalk Ranger")

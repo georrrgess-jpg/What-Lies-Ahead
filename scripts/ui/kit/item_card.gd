@@ -235,6 +235,16 @@ func set_rarity(color: Color) -> void:
 	_rarity.color = color
 
 
+## The line under the picture for a cosmetic's rarity: its colour, and for a
+## Mythic item the animated red-gold flow (MythicFx) on a thicker line and
+## on the title.
+func set_item_rarity(item: CosmeticItem) -> void:
+	set_rarity(CosmeticItem.rarity_color(item.rarity))
+	MythicFx.dress(_rarity, item)
+	MythicFx.dress(_title, item)
+	_rarity.custom_minimum_size.y = 6 if MythicFx.is_mythic(item) else 4
+
+
 func _clear_status() -> void:
 	for c in _status.get_children():
 		_status.remove_child(c)
