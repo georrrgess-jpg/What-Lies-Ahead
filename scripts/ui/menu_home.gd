@@ -1,14 +1,18 @@
 class_name MenuHome
 extends MenuPage
-## The home screen: the neon logo over the live world; the next goal on a
-## plate (the world's key art, stars, best wave) over one big PLAY call to
-## action; the trailer and tutorial when they exist; small cards for what is
+## The home screen: the neon logo over the live world; the two modes side by
+## side: the story's next goal on a plate (the world's key art, stars, best
+## wave) and the ENDLESS tile (Ashfall City's key art, the Endless emblem, a
+## NEW MODE badge until the first run, then the best wave), over one big PLAY
+## call to action; the trailer and tutorial when they exist; small cards for what is
 ## new or close (next level reward, Locker, capsules to open); a rotating tip;
 ## and on the right the operator, today's featured Shop pick and the player
 ## card.
 
 ## PLAY was pressed: open the Play page on this world.
 signal play_requested(world_index: int)
+## The ENDLESS tile was pressed: open the Play page in Endless mode.
+signal endless_requested
 
 const TIPS := [
 	"Right mouse aims down sights: tighter spread and more zoom.",
@@ -23,6 +27,9 @@ const TIPS := [
 ## Size of the goal's key art.
 const GOAL_ART := Vector2(208, 117)
 const NEWS_CARD := Vector2(336, 104)
+## Width of the ENDLESS tile beside the goal (it takes the goal's height).
+const ENDLESS_TILE_W := 480.0
+const ENDLESS_EMBLEM := 96.0
 ## Accent of the Prizes page's hook.
 const PRIZES_ACCENT := Color(0.62, 0.55, 1.0)
 ## Seconds between the glints of light across PLAY (the eye's resting place).
@@ -38,6 +45,10 @@ var _goal_world_label: Label
 var _goal: Label
 var _goal_stars: HBoxContainer
 var _goal_note: Label
+var _endless: Button
+var _endless_art: TextureRect
+var _endless_chip: KitChip
+var _endless_note: Label
 ## Today's featured Shop pick, on the right over the player card.
 var _today: Button
 var _today_holder: CenterContainer
@@ -99,6 +110,7 @@ func _input(event: InputEvent) -> void:
 
 func refresh() -> void:
 	_refresh_goal()
+	_refresh_endless()
 	_refresh_news()
 	_refresh_today()
 
@@ -129,8 +141,14 @@ func _build_left() -> void:
 	_logo.size_px = 122
 	col.add_child(_logo)
 	col.add_child(UiKit.filler())
-	var goal_row := _build_goal()
+	var goal_row := HBoxContainer.new()
+	goal_row.add_theme_constant_override("separation", UiKit.GAP_M)
+	goal_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(goal_row)
+	goal_row.add_child(_build_goal())
+	if not GameData.endless_levels().is_empty():
+		_endless = _build_endless()
+		goal_row.add_child(_endless)
 	var cta := HBoxContainer.new()
 	cta.add_theme_constant_override("separation", UiKit.GAP_L)
 	cta.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -201,6 +219,72 @@ func _build_goal() -> Control:
 	_goal_note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	foot.add_child(_goal_note)
 	return _goal_panel
+
+
+## The ENDLESS tile: the city's key art behind the emblem, a NEW MODE (or
+## ENDLESS MODE) chip, the mode's name and a line about it.
+func _build_endless() -> Button:
+	var b := Button.new()
+	b.name = "EndlessTile"
+	b.custom_minimum_size = Vector2(ENDLESS_TILE_W, 0)
+	b.focus_mode = Control.FOCUS_ALL
+	b.clip_contents = true
+	b.add_theme_stylebox_override("normal", KitTex.box_copy(&"neon_plate", EndlessCard.EMBER))
+	b.add_theme_stylebox_override("hover", KitTex.box_copy(&"neon_plate", EndlessCard.EMBER.lightened(0.35)))
+	b.add_theme_stylebox_override("pressed", KitTex.box_copy(&"neon_plate", EndlessCard.EMBER.lightened(0.35)))
+	b.add_theme_stylebox_override("focus", KitTex.box(&"focus_ring"))
+	UiKit.tooltip(b, "Endless: survive waves without end in Ashfall City")
+	_endless_art = TextureRect.new()
+	_endless_art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 6)
+	_endless_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_endless_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_endless_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var m := ShaderMaterial.new()
+	m.shader = load(KeyArt.CARD_SHADER)
+	m.set_shader_parameter("radius", 10.0)
+	m.set_shader_parameter("shade", Color(0.12, 0.04, 0.1))
+	m.set_shader_parameter("shade_amount", 0.8)
+	_endless_art.material = m
+	_endless_art.resized.connect(func(): m.set_shader_parameter("rect_size", _endless_art.size))
+	b.add_child(_endless_art)
+	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 12)
+	row.offset_left = 16
+	row.add_theme_constant_override("separation", UiKit.GAP_M)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(row)
+	var emblem := EndlessEmblem.make(ENDLESS_EMBLEM)
+	emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(emblem)
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", 0)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(col)
+	_endless_chip = UiKit.chip("NEW MODE", UiKit.PINK, 22)
+	_endless_chip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	col.add_child(_endless_chip)
+	var title := UiKit.arcade_label("ENDLESS", 50)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(title)
+	_endless_note = UiKit.label("", UiKit.SIZE_SMALL, UiKit.CREAM)
+	_endless_note.add_theme_color_override("font_outline_color", Color(UiKit.INK, 0.85))
+	_endless_note.add_theme_constant_override("outline_size", 6)
+	_endless_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(_endless_note)
+	b.mouse_entered.connect(func():
+		UiSound.hover()
+		UiFx.hover(b, true, 1.03))
+	b.mouse_exited.connect(func(): if not b.has_focus(): UiFx.hover(b, false))
+	b.focus_entered.connect(func(): UiFx.hover(b, true, 1.03))
+	b.focus_exited.connect(func(): UiFx.hover(b, false))
+	b.resized.connect(func(): b.pivot_offset = b.size * 0.5)
+	b.pressed.connect(func():
+		UiSound.click()
+		UiFx.squash(b, b.scale.x)
+		endless_requested.emit())
+	return b
 
 
 ## WATCH TRAILER and TUTORIAL, when the game has them.
@@ -302,6 +386,22 @@ func _refresh_goal() -> void:
 	for i in _goal_stars.get_child_count():
 		(_goal_stars.get_child(i) as TextureRect).texture = KitTex.tex(&"icon_star" if i < count else &"icon_star_empty")
 	_goal_note.text = _goal_progress(level)
+
+
+## The ENDLESS tile's chip and line: NEW MODE and the pitch until the first
+## run, then the best wave and score.
+func _refresh_endless() -> void:
+	if _endless == null:
+		return
+	KeyArt.request(GameData.endless_levels()[0], func(art: Texture2D) -> void: _endless_art.texture = art)
+	var fresh := MenuPlay.endless_is_new()
+	_endless_chip.set_text("NEW MODE" if fresh else "ENDLESS MODE")
+	_endless_chip.set_color(UiKit.PINK if fresh else EndlessCard.EMBER)
+	var best := EndlessRecords.best_wave()
+	if best > 0:
+		_endless_note.text = "Best wave %d  ·  best %s" % [best, ScorePanel._fmt(EndlessRecords.best_score())]
+	else:
+		_endless_note.text = "Waves without end in Ashfall City"
 
 
 func _show_goal_art(art: Texture2D) -> void:

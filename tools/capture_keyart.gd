@@ -1,6 +1,7 @@
 extends SceneTree
-## Renders a key-art still of each level from its menu camera
-## (LevelData.menu_camera_from / menu_camera_to) into art/keyart/<level_id>.jpg.
+## Renders a key-art still of each level (every world's, then the endless
+## levels) from its menu camera (LevelData.menu_camera_from / menu_camera_to)
+## into art/keyart/<level_id>.jpg.
 ## The loading screen and the Play page's world cards show them (KeyArt).
 ## Re-run it whenever a level's look changes, then re-import the project.
 ##
@@ -16,16 +17,25 @@ extends SceneTree
 ##   --size=WxH         output size (default 960x540)
 ##   --frames=n         frames to let the scene settle before capturing (default 40)
 ##   --fov=deg          camera field of view (default 52, the menu backdrop's)
+##   --cam=x,y,z>tx,ty,tz   another camera than the level's (to try a framing)
+##   --out=<dir>        write there instead of art/keyart/ (trial framings)
 ##
 ## Script mode compiles this file before the autoloads exist, so it only uses
 ## untyped references to game classes.
 
 const OUT_DIR := "res://art/keyart/"
+## Levels framed wider than the menu's lens (a tall subject from close by):
+## Ashfall City looks up the Broadcast Tower plaza at the broken skyscraper
+## and the radio mast.
+const FOV := {"endless_city": 72.0}
 
 var _only: Array[String] = []
 var _size := Vector2i(960, 540)
 var _frames := 40
 var _fov := 52.0
+var _fov_set := false
+var _cam := ""
+var _out := OUT_DIR
 
 
 func _initialize() -> void:
@@ -37,6 +47,11 @@ func _initialize() -> void:
 			_frames = int(a.trim_prefix("--frames="))
 		elif a.begins_with("--fov="):
 			_fov = float(a.trim_prefix("--fov="))
+			_fov_set = true
+		elif a.begins_with("--cam="):
+			_cam = a.trim_prefix("--cam=")
+		elif a.begins_with("--out="):
+			_out = a.trim_prefix("--out=").trim_suffix("/") + "/"
 		elif not a.begins_with("--"):
 			_only.append(a)
 	# Never hang a batch run.
@@ -51,13 +66,17 @@ func _wait(frames: int) -> void:
 
 func _run() -> void:
 	await _wait(3)
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_out))
+	var data = root.get_node("GameData")
+	var levels := []
+	for world in data.worlds():
+		levels.append_array(world.levels)
+	levels.append_array(data.endless_levels())
 	var failed := 0
-	for world in root.get_node("GameData").worlds():
-		for level in world.levels:
-			if _only.is_empty() or _only.has(String(level.id)):
-				if not await _capture(level):
-					failed += 1
+	for level in levels:
+		if _only.is_empty() or _only.has(String(level.id)):
+			if not await _capture(level):
+				failed += 1
 	quit(1 if failed > 0 else 0)
 
 
@@ -74,10 +93,16 @@ func _capture(level) -> bool:
 		director.free()
 	root.add_child(scene)
 	var camera := Camera3D.new()
-	camera.fov = _fov
+	camera.fov = float(FOV.get(String(level.id), _fov)) if not _fov_set else _fov
 	camera.far = 900.0
 	scene.add_child(camera)
-	camera.look_at_from_position(level.menu_camera_from, level.menu_camera_to)
+	var from: Vector3 = level.menu_camera_from
+	var to: Vector3 = level.menu_camera_to
+	if _cam != "":
+		var ends := _cam.split(">")
+		from = _vec(ends[0])
+		to = _vec(ends[1])
+	camera.look_at_from_position(from, to)
 	camera.make_current()
 	await _wait(_frames)
 	await RenderingServer.frame_post_draw
@@ -86,10 +111,15 @@ func _capture(level) -> bool:
 	await _wait(2)
 	img.convert(Image.FORMAT_RGB8)
 	_fit(img)
-	var path := OUT_DIR + String(level.id) + ".jpg"
-	var err := img.save_jpg(ProjectSettings.globalize_path(path), 0.92)
+	var path := _out + String(level.id) + ".jpg"
+	var err := img.save_jpg(ProjectSettings.globalize_path(path) if path.begins_with("res://") else path, 0.92)
 	print("[keyart] %s -> %s (%dx%d) error=%d" % [level.id, path, img.get_width(), img.get_height(), err])
 	return err == OK
+
+
+static func _vec(text: String) -> Vector3:
+	var p := text.split(",")
+	return Vector3(float(p[0]), float(p[1]), float(p[2]))
 
 
 ## Crops the capture to the output aspect (centred) and scales it down.

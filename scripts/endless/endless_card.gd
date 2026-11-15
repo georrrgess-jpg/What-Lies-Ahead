@@ -1,9 +1,11 @@
 class_name EndlessCard
 extends WorldCard
-## The Endless entry at the end of the Play page carousel: a WorldCard for
-## an endless level (Ashfall City), captioned ENDLESS, with the best wave
-## instead of stars. Without key art it paints its own: an ember sky over a
-## broken skyline with a few windows still lit.
+## An endless level's card in the Play page's ENDLESS row: a WorldCard for
+## an endless level (Ashfall City: its key art looks up the Broadcast Tower
+## plaza at the broken skyscraper and the radio mast), captioned ENDLESS,
+## with the best wave instead of stars and the Endless emblem in the corner.
+## Without key art it paints its own: an ember sky over a broken skyline
+## with a few windows still lit.
 
 const EMBER := Color(1.0, 0.48, 0.18)
 const SKY_TOP := Color(0.16, 0.05, 0.09)
@@ -17,7 +19,7 @@ var level: LevelData
 var _sky := Gradient.new()
 
 
-## A card for endless `endless_level`, at carousel slot `slot`.
+## A card for endless `endless_level`, at slot `slot` of the ENDLESS row.
 static func make(endless_level: LevelData, slot: int) -> EndlessCard:
 	var card := EndlessCard.new()
 	card.level = endless_level
@@ -72,12 +74,7 @@ func _draw() -> void:
 	draw_rect(Rect2(r.position.x, ground - 8.0, r.size.x, 8.0), Color(EMBER, 0.6))
 
 
-## The frame, then an infinity badge in the corner.
+## The frame, then the Endless emblem in the corner.
 func _draw_frame() -> void:
 	super()
-	var at := Vector2(size.x - 50, 48)
-	_frame.draw_circle(at, 30.0, Color(UiKit.INK, 0.85))
-	_frame.draw_circle(at, 30.0, EMBER, false, 3.0, true)
-	# An infinity sign: two loops side by side.
-	for side in [-1.0, 1.0]:
-		_frame.draw_arc(at + Vector2(side * 9.0, 0), 8.5, 0.0, TAU, 24, EMBER, 4.0, true)
+	EndlessEmblem.paint(_frame, Vector2(size.x - 58, 58), 42.0)

@@ -130,8 +130,9 @@ func _build_pages() -> void:
 	add_child(_build)
 	_home = MenuHome.new()
 	_home.play_requested.connect(_on_play_requested)
+	_home.endless_requested.connect(_on_endless_requested)
 	_register("title", _home, "", Frame.FULL)
-	_later["play"] = [_new_play, "SELECT WORLD", Frame.SHELL]
+	_later["play"] = [_new_play, "PLAY", Frame.SHELL]
 	_top_bar.add_tab("play", "PLAY")
 	var extensions := GameData.ui_extensions(UiExtension.Kind.MENU_PAGE)
 	extensions.sort_custom(func(a: UiExtension, b: UiExtension): return a.order < b.order)
@@ -459,6 +460,11 @@ func _on_intro_finished() -> void:
 
 func _on_play_requested(world_index: int) -> void:
 	_play_page().select_world(world_index)
+	_show("play")
+
+
+func _on_endless_requested() -> void:
+	_play_page().select_mode(MenuPlay.ENDLESS)
 	_show("play")
 
 
