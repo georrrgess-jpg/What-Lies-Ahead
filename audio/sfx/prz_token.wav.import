@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/prz_token.wav-89956250d8082925ca20eb3d3ec70d7
 
 force/8_bit=false
 force/mono=false
-force/max_rate=true
-force/max_rate_hz=22050
+force/max_rate=false
+force/max_rate_hz=44100
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

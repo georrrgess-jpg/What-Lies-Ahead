@@ -9,8 +9,8 @@ trade-up: pods, charge, data streams, hologram and its own sting).
 
 Soft and round on purpose (the player hears them many times in a row):
 sines, plucks and pads from the band-limited helpers (bl_osc, pluck, adsr),
-gentle attacks, everything low-passed below ~8 kHz (so they import at 22.05
-kHz), no square waves, no harsh noise bursts. `prz_tick`, `prz_crank` and
+gentle attacks, the effects low-passed below ~7 kHz and the cues rolled off
+above ~10 kHz (air, never fizz), no square waves, no harsh noise bursts. `prz_tick`, `prz_crank` and
 `prz_fuse_slot` are played at rising pitches by the UI.
 """
 from gen_audio import *  # noqa: F401,F403  (tone, blip, env, place, silence, note, ...)
@@ -182,7 +182,7 @@ def prz_build():
     out += _pad((D, D + 4, D + 7), seconds, attack=3.2, gain=0.9, bright=1200.0) * (1.0 - ramp * 0.6)
     out += _pad((D + 2, D + 7, D + 11), seconds, attack=3.8, gain=0.7, bright=2600.0) * ramp
     place(out, filt(noise(seconds), low=4500, high=2000) * ramp ** 3 * 0.2, 0.0)
-    return filt(out, low=6500, slope=3)
+    return filt(out, low=10000)
 
 
 def _resolve(chord, arp, seconds, timp=True, sparkle=0, brass=()):
@@ -197,7 +197,7 @@ def _resolve(chord, arp, seconds, timp=True, sparkle=0, brass=()):
         place(out, _brass(semis, length), at, 0.9)
     for k in range(sparkle):
         place(out, _bell(note(arp[-1] + 12 + (k * 7) % 12), 0.45, bright=0.1), 0.25 + k * 0.07, 0.12)
-    return filt(out, low=6500, slope=3)
+    return filt(out, low=10000)
 
 
 def prz_reveal_0():
@@ -253,7 +253,7 @@ def prz_shine():
         place(out, _bell(note(n), 0.5, bright=0.12), 0.05 + i * 0.09, 0.22)
     swell = np.sin(np.pi * np.clip(t_axis(seconds) / seconds, 0, 1))
     place(out, filt(noise(seconds), low=7000, high=3000) * swell * 0.06, 0.0)
-    return filt(out, low=6500, slope=3)
+    return filt(out, low=10000)
 
 
 def prz_serial():
@@ -263,7 +263,7 @@ def prz_serial():
     for k in range(9):
         place(out, _bell(note(D + 24 + (k * 5) % 12 - (k // 3) * 2), 0.5, bright=0.12), k * 0.05, 0.2)
     place(out, _pad((D + 12, D + 16, D + 19), seconds, attack=0.05, gain=0.6, bright=2600.0), 0.0)
-    return filt(out, low=6500, slope=3)
+    return filt(out, low=10000)
 
 
 # ---------------------------------------------------------------------------
@@ -294,7 +294,7 @@ def prz_fuse_charge():
         place(out, bl_osc(note(D + 24), 0.05, "sine") * adsr(0.05, 0.002, 0.02, 0.0, 0.02), at, 0.08 + 0.1 * at / seconds)
         at += gap
         gap = max(0.06, gap * 0.85)
-    return filt(out, low=6500, slope=3)
+    return filt(out, low=10000)
 
 
 def prz_fuse_stream():
@@ -305,7 +305,7 @@ def prz_fuse_stream():
     for i, n in enumerate((0, 3, 7, 10, 12, 15, 19, 22, 24, 27, 31, 34, 36)):
         place(out, pluck(note(D - 3 + n), 0.25, 6, 0.08, 1.4), i * 0.075, 0.2)
     place(out, filt(noise(seconds), low=5000, high=1200) * np.sin(np.pi * t_axis(seconds) / seconds) ** 2 * 0.12, 0.0)
-    return filt(out, low=6500, slope=3)
+    return filt(out, low=10000)
 
 
 def prz_fuse_form():
@@ -319,7 +319,7 @@ def prz_fuse_form():
     shimmer = sum(bl_osc(note(n) * (1 + 0.004 * np.sin(2 * np.pi * (5 + i) * t)), None, "sine")
                   for i, n in enumerate((D + 12, D + 16, D + 19, D + 23)))
     out += shimmer * adsr(seconds, 0.5, seconds, 1.0, 0.4) * 0.12
-    return filt(out, low=6500, slope=3)
+    return filt(out, low=10000)
 
 
 def prz_fuse_sting():
@@ -332,7 +332,7 @@ def prz_fuse_sting():
     place(out, sweep(90, 45, 0.3, "sine") * env(0.3, 0.002, 0.3, power=2.0), 0.3, 0.7)
     for i, n in enumerate((D + 12, D + 16, D + 19, D + 24, D + 28, D + 31)):
         place(out, pluck(note(n), 0.6, 8, 0.25, 1.3), 0.32 + i * 0.06, 0.22)
-    return filt(out, low=6500, slope=3)
+    return filt(out, low=10000)
 
 
 SOUNDS = [prz_insert, prz_crank, prz_rattle, prz_shake, prz_pop, prz_reveal_0, prz_reveal_1, prz_reveal_2, prz_reveal_3,

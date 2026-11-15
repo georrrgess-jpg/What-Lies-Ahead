@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/prz_reveal_1.wav-6665d6e953a4c8b4bf1e91d42d63
 
 force/8_bit=false
 force/mono=false
-force/max_rate=true
-force/max_rate_hz=22050
+force/max_rate=false
+force/max_rate_hz=44100
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0
