@@ -59,6 +59,9 @@ const PRECINCT := Rect2(-74.0, -24.0, 40.0, 48.0)
 const MARKET := Rect2(34.0, -8.0, 56.0, 16.0)
 const TOWER := Rect2(46.0, -72.0, 48.0, 50.0)
 const TOWER_ALLEY := Rect2(62.0, -22.0, 8.0, 14.0)
+## The back street from the square's south-west to the Precinct (a second
+## gate, so the Precinct is a loop, not a dead end): z 12..18.
+const PRECINCT_BACK_Z := 15.0
 const SUN_DIRECTION := Vector3(0.75, 0.16, 0.62)     # toward the setting sun (low, SE)
 const WALL_H := 14.0
 const UNDERGROUND_Y := -1.6
@@ -69,6 +72,7 @@ const GROUND_TILE := 16.0
 ## gate's -Z and +Z sides (for the nav links).
 const GATES := [
 	[&"precinct", Vector3(-28.0, 0.0, 0.0), 90.0, 8.0, &"topple", "city_gate_barricade", 0.0, 0.0],
+	[&"precinct", Vector3(-28.0, 0.0, PRECINCT_BACK_Z), 90.0, 6.0, &"slide", "city_gate_fence", 0.0, 0.0],
 	[&"metro", Vector3(0.0, 0.0, STAIR_TOP_Z), 0.0, 6.0, &"shutter", "city_gate_shutter", -1.1, 0.0],
 	[&"market", Vector3(28.0, 0.0, 0.0), 90.0, 8.0, &"shutter", "city_gate_shutter", 0.0, 0.0],
 	[&"tower", Vector3(66.0, 0.0, -15.0), 0.0, 8.0, &"slide", "city_gate_fence", 0.0, 0.0],
@@ -143,6 +147,7 @@ func _initialize() -> void:
 	_build_market_glow()
 	_build_metro_life()
 	_build_rooftops()
+	_build_ambience()
 	_build_instanced()
 	_build_pools()
 	_finish_ground()
@@ -247,6 +252,7 @@ func _build_ground() -> void:
 	_slab(ground, "SquareSlabNE", Rect2(STAIR_HALF, -SQ, SQ - STAIR_HALF, SQ + STAIR_TOP_Z), asphalt)
 	_slab(ground, "PassageW", Rect2(-34.0, -4.0, 12.0, 8.0), asphalt)
 	_slab(ground, "PassageE", Rect2(SQ, -4.0, 12.0, 8.0), paving)
+	_slab(ground, "PassageSW", Rect2(-34.0, PRECINCT_BACK_Z - 3.0, 12.0, 6.0), asphalt)
 	_slab(ground, "PrecinctSlab", PRECINCT, asphalt)
 	_slab(ground, "MarketSlab", MARKET, _ground("market_paving", "city_sidewalk", Color(0.86, 0.82, 0.95), 4.0, 0.55))
 	_slab(ground, "SouthStreet", Rect2(-5.0, SQ, 10.0, 22.0), asphalt)
@@ -336,7 +342,7 @@ func _build_square() -> void:
 	_solid_kit(sq, "city_rubble_a", "RubbleNW", Vector3(-19.0, 0, -18.5), 30.0, Vector3(3.2, 1.2, 2.6))
 	_solid_kit(sq, "city_rubble_b", "RubbleSE", Vector3(19.5, 0, 18.0), 200.0, Vector3(3.0, 1.1, 2.4))
 	_solid_kit(sq, "city_dumpster", "DumpsterSW", Vector3(-12.0, 0, 20.4), 0.0, Vector3(2.0, 1.4, 1.2))
-	_solid_kit(sq, "city_newsstand", "Newsstand", Vector3(-19.6, 0, 13.0), 90.0, Vector3(2.4, 2.6, 1.6))
+	_solid_kit(sq, "city_newsstand", "Newsstand", Vector3(-20.2, 0, 20.4), 90.0, Vector3(2.4, 2.6, 1.6))
 	_solid_kit(sq, "city_bus_stop", "BusStop", Vector3(19.8, 0, -14.0), -90.0, Vector3(3.6, 2.6, 1.4))
 	_solid_kit(sq, "city_hydrant", "Hydrant", Vector3(12.0, 0, -20.2), 0.0, Vector3(0.5, 0.9, 0.5))
 	_solid_kit(sq, "city_debris", "DebrisA", Vector3(5.5, 0, -10.5), 40.0, Vector3(2.0, 0.5, 1.6))
@@ -520,28 +526,56 @@ func _fallen_slab(parent: Node3D, slab_name: String, pos: Vector3, size: Vector3
 	_player_block(holder, "Cap", Vector3(size.x, 3.0, size.z), Vector3(0, height + 1.5, 0))
 
 
-## A slab of facade torn off a building: concrete body, the facade's windows
-## on its face, rebar bent out of both broken ends (one merged mesh).
+## A slab of facade torn off a building (one merged mesh): a chunky concrete
+## body whose broken ends are jagged blocks knocked out of line, the
+## facade's window rows on its face (dark glass, a few still lit, some
+## smashed out), a lighter band where each floor's slab ran, and rebar bent
+## out of both ends.
 func _slab_mesh(size: Vector3, seed: int) -> Mesh:
 	var key := "slab_%s_%d" % [size, absi(seed) % 3]
 	if _meshes.has(key):
 		return _meshes[key]
-	var concrete := _surface("slab_concrete", ["city_concrete"], Color(0.62, 0.58, 0.56), 0.35, 0.9)
+	var concrete := _surface("slab_concrete", ["city_concrete"], Color(0.68, 0.62, 0.58), 0.35, 0.9)
+	var band := _surface("slab_band", ["city_concrete"], Color(0.86, 0.8, 0.72), 0.5, 0.85)
+	var glass := _mat("slab_glass", Color(0.08, 0.1, 0.16), 0.2)
+	var lit := _mat("slab_lit", Color(1.0, 0.75, 0.4), 0.4, Color(1.0, 0.62, 0.3), 1.6)
 	var rebar := _mat("rebar", Color(0.32, 0.17, 0.1), 0.7)
-	var body := BoxMesh.new()
-	body.size = size
-	var face := BoxMesh.new()
-	face.size = Vector3(size.x - 0.2, 0.04, size.z - 0.2)
-	var rod := BoxMesh.new()
-	rod.size = Vector3(0.05, 0.05, 1.0)
-	var parts: Array = [[body, Transform3D(), concrete], [face, Transform3D(Basis(), Vector3(0, size.y * 0.5 + 0.02, 0)), _facade_material(seed)]]
+	var body_len := size.z * 0.78
+	var parts: Array = [[_box_mesh(Vector3(size.x, size.y, body_len), concrete), Transform3D()]]
+	# Jagged ends: a few blocks each, staggered in length, knocked askew.
+	for end in [-1.0, 1.0]:
+		var pieces := 3
+		for k in pieces:
+			var w := size.x / pieces * _rng.randf_range(0.8, 1.0)
+			var length := size.z * _rng.randf_range(0.03, 0.12)
+			var x := (k - (pieces - 1) * 0.5) * size.x / pieces
+			var tilt := Basis(Vector3.RIGHT, _rng.randf_range(-0.12, 0.12)) * Basis(Vector3.UP, _rng.randf_range(-0.08, 0.08))
+			var y := _rng.randf_range(-0.12, 0.04) * size.y
+			var at := Vector3(x, y, end * (body_len * 0.5 + length * 0.5 - 0.02))
+			parts.append([_box_mesh(Vector3(w, size.y * _rng.randf_range(0.6, 0.95), length), concrete), Transform3D(tilt, at)])
+	# The face (+Y): floor bands across, window rows between them.
+	var rows := maxi(2, int(body_len / 1.4))
+	var cols := maxi(2, int(size.x / 1.1))
+	var pitch := body_len / rows
+	for r in rows + 1:
+		var z := -body_len * 0.5 + r * pitch
+		parts.append([_box_mesh(Vector3(size.x + 0.04, 0.05, 0.18), band), Transform3D(Basis(), Vector3(0, size.y * 0.5 + 0.02, z))])
+	for r in rows:
+		for c in cols:
+			if _rng.randf() < 0.15:
+				continue
+			var x := (c - (cols - 1) * 0.5) * size.x / cols
+			var z := -body_len * 0.5 + (r + 0.5) * pitch
+			var pane := _box_mesh(Vector3(size.x / cols * 0.6, 0.04, pitch * 0.55), lit if _rng.randf() < 0.12 else glass)
+			parts.append([pane, Transform3D(Basis(), Vector3(x, size.y * 0.5 + 0.015, z))])
+	var rod := _box_mesh(Vector3(0.06, 0.06, 1.0), rebar)
 	for end in [-1.0, 1.0]:
 		for k in 5:
 			var x := (k - 2) * size.x * 0.2
 			var bend := Basis(Vector3.UP, _rng.randf_range(-0.5, 0.5)) * Basis(Vector3.RIGHT, _rng.randf_range(-0.6, 0.4))
 			var length := _rng.randf_range(0.5, 1.3)
 			var tip := Vector3(x, _rng.randf_range(-0.15, 0.15), end * (size.z * 0.5 + length * 0.45))
-			parts.append([rod, Transform3D(bend.scaled_local(Vector3(1, 1, length)), tip), rebar])
+			parts.append([rod, Transform3D(bend.scaled_local(Vector3(1, 1, length)), tip)])
 	var mesh := Batch.compound(parts)
 	_meshes[key] = mesh
 	return mesh
@@ -655,6 +689,7 @@ func _neon_sign(parent: Node3D, model: String, sign_name: String, pos: Vector3, 
 	if with_light:
 		var l := _omni(fx, sign_name + "Light", pos + forward * 1.4 + Vector3(0, 2.6, 0), color, 1.4, 7.0)
 		l.add_to_group("city_neon_flicker", true)
+		_ambient(sign_name + "Buzz", pos + forward * 0.4 + Vector3(0, 1.0, 0), &"city_buzz_loop", 8.0)
 	else:
 		_reflectors.append([pos + forward * 0.4 + Vector3(0, 1.0, 0), color, 0.45, 0.65])
 
@@ -922,6 +957,10 @@ func _build_stairs(parent: Node3D) -> void:
 		_rail(parent, "TowerRail%s" % ("N" if s < 0 else "S"), Vector3(TOWER.position.x, 0, zc + s * (width * 0.5 + 0.1)), Vector3(EXIT_TOP_X, 0, zc + s * (width * 0.5 + 0.1)))
 	_player_wall(walls, "SquareStairW", Vector3(-STAIR_HALF - 0.1, 0, STAIR_TOP_Z), Vector3(-STAIR_HALF - 0.1, 0, -SQ), 4.0)
 	_player_wall(walls, "SquareStairE", Vector3(STAIR_HALF + 0.1, 0, STAIR_TOP_Z), Vector3(STAIR_HALF + 0.1, 0, -SQ), 4.0)
+	# The tower stairs' railings too (no standing on them).
+	for s in [-1.0, 1.0]:
+		var rz: float = zc + s * (width * 0.5 + 0.1)
+		_player_wall(walls, "TowerStair%s" % ("N" if s < 0 else "S"), Vector3(TOWER.position.x, 0, rz), Vector3(EXIT_TOP_X, 0, rz), 4.0)
 	# The tower stairs' street entrance (the kit's canopied stairs, fitted to the flight).
 	var entrance := _model_aabb("city_subway_entrance")
 	if entrance.size.x > 0.1:
@@ -1060,7 +1099,8 @@ func _build_blocks() -> void:
 		["SqS_W", -34.0, 22.0, -18.0, 36.0, 15.0, "N"], ["SqS_MidW", -13.0, 22.0, -5.0, 34.0, 12.0, "N"],
 		["SqS_MidE", 5.0, 22.0, 13.0, 34.0, 18.0, "N"], ["SqS_E", 18.0, 22.0, 34.0, 36.0, 13.0, "N"],
 		["SqS_Far", -12.0, 44.0, 12.0, 56.0, 20.0, "N"],
-		["SqW_N", -34.0, -22.0, -22.0, -4.0, 14.0, "E"], ["SqW_S", -34.0, 4.0, -22.0, 22.0, 17.0, "E"],
+		["SqW_N", -34.0, -22.0, -22.0, -4.0, 14.0, "E"], ["SqW_S", -34.0, 4.0, -22.0, 12.0, 17.0, "E"],
+		["SqW_SS", -34.0, 18.0, -22.0, 22.0, 15.0, "E"],
 		["SqE_N", 22.0, -22.0, 34.0, -4.0, 16.0, "W"], ["SqE_SN", 22.0, 4.0, 34.0, 11.0, 13.0, "W"],
 		["SqE_SS", 22.0, 15.0, 34.0, 22.0, 13.0, "W"],
 		# Precinct: the station (west), north and south rows.
@@ -1125,6 +1165,10 @@ func _block(parent: Node3D, block_name: String, r: Rect2, height: float, facing:
 	# Tar and gravel inside the parapet (the roofs show from the high views).
 	var roof := _surface("roof_tar", ["city_asphalt"], Color(0.95, 0.85, 0.8), 0.15, 0.95)
 	_visual_box(dressing, block_name + "Roof", Vector3(look_size.x - 0.2, 0.1, look_size.z - 0.2), Vector3(look_centre.x, height + 0.65, look_centre.z), roof).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if shelled:
+		# The shells' own tops read dark from above: a lower tar roof over
+		# the whole block, stepped down from the core's.
+		_visual_box(dressing, block_name + "ShellRoof", Vector3(r.size.x - 0.5, 0.1, r.size.y - 0.5), Vector3(centre.x, height + 0.02, centre.z), roof).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_player_block(parent, block_name + "Cap", Vector3(r.size.x, 12.0, r.size.y), Vector3(centre.x, height + 6.0, centre.z))
 
 
@@ -1539,6 +1583,144 @@ func _build_ashfall() -> void:
 
 
 # ---------------------------------------------------------------------------
+# Ambience: positional sound emitters, the police helicopter, the Broadcast
+# Tower's aircraft-warning lights (the environment script runs them all)
+# ---------------------------------------------------------------------------
+
+## A positional ambient loop (Marker3D in group "city_ambient"): the
+## environment script plays the nearest few, `sound` heard out to `reach`
+## metres, `db` louder or quieter than its mix.
+func _ambient(emitter_name: String, pos: Vector3, sound: StringName, reach: float, db := 0.0) -> void:
+	var holder := fx.get_node_or_null("Ambience") as Node3D
+	if holder == null:
+		holder = Node3D.new()
+		holder.name = "Ambience"
+		fx.add_child(holder)
+	var m := Marker3D.new()
+	m.name = emitter_name
+	m.position = pos
+	m.set_meta("sound", sound)
+	m.set_meta("reach", reach)
+	m.set_meta("db", db)
+	m.add_to_group("city_ambient", true)
+	holder.add_child(m)
+
+
+func _build_ambience() -> void:
+	# Sirens wailing over the Precinct and beyond the tower, police radios
+	# left on in the vans, a shop alarm in the Market, drips in the Metro.
+	_ambient("SirenPrecinct", Vector3(-84.0, 18.0, -12.0), &"city_siren_loop", 75.0, -3.0)
+	_ambient("SirenTower", Vector3(104.0, 26.0, -84.0), &"city_siren_loop", 70.0, -5.0)
+	for v in [Vector3(-46.0, 1.6, -12.0), Vector3(-61.0, 1.6, 14.0), Vector3(8.5, 1.6, 16.4), Vector3(62.0, 1.6, -27.5)]:
+		_ambient("Radio%d" % int(v.x), v, &"city_radio_loop", 13.0)
+	_ambient("AlarmMarket", Vector3(66.0, 3.2, 8.3), &"city_alarm_loop", 26.0)
+	_ambient("AlarmSquare", Vector3(-21.8, 3.0, -12.0), &"city_alarm_loop", 18.0, -4.0)
+	for x in [-14.0, 6.0, 30.0]:
+		_ambient("Drip%d" % int(x), Vector3(x, METRO_Y + 2.0, -34.0), &"city_drip_loop", 16.0)
+	_ambient("TubeBuzz", Vector3(9.0, HALL_CEILING - 0.8, -34.5), &"city_buzz_loop", 9.0, 2.0)
+	_build_helicopter()
+	_build_warning_lights()
+
+
+## The police helicopter circling the city (group "city_helicopter"; the
+## environment script flies it round meta "centre" at "radius", "speed"
+## rad/s): a dark body, a rotor, blinking navigation lights and a searchlight
+## sweeping the streets (hidden underground, like the skyline).
+func _build_helicopter() -> void:
+	var heli := Node3D.new()
+	heli.name = "Helicopter"
+	var centre := Vector3(14.0, 44.0, -26.0)
+	heli.position = centre + Vector3(80.0, 0, 0)
+	heli.set_meta("centre", centre)
+	heli.set_meta("radius", 80.0)
+	heli.set_meta("speed", 0.055)
+	heli.add_to_group("city_helicopter", true)
+	heli.add_to_group("city_surface", true)
+	fx.add_child(heli)
+	var body := _mat("heli_body", Color(0.16, 0.18, 0.24), 0.45)
+	var stripe := _mat("heli_stripe", Color(0.9, 0.9, 0.95), 0.4)
+	var glass := _mat("heli_glass", Color(0.5, 0.75, 1.0), 0.2, Color(0.4, 0.65, 1.0), 0.8)
+	var parts := [
+		[_box_mesh(Vector3(2.0, 1.8, 4.4), body), Transform3D(Basis(), Vector3(0, 0, 0))],
+		[_box_mesh(Vector3(1.7, 1.1, 1.4), glass), Transform3D(Basis(), Vector3(0, 0.15, -2.4))],
+		[_box_mesh(Vector3(2.05, 0.3, 4.0), stripe), Transform3D(Basis(), Vector3(0, -0.2, 0.1))],
+		[_box_mesh(Vector3(0.45, 0.5, 4.6), body), Transform3D(Basis(), Vector3(0, 0.4, 4.4))],
+		[_box_mesh(Vector3(0.15, 1.5, 0.9), body), Transform3D(Basis(), Vector3(0, 1.0, 6.5))],
+		[_box_mesh(Vector3(0.12, 0.12, 3.6), body), Transform3D(Basis(), Vector3(-0.9, -1.2, 0))],
+		[_box_mesh(Vector3(0.12, 0.12, 3.6), body), Transform3D(Basis(), Vector3(0.9, -1.2, 0))],
+	]
+	var hull := MeshInstance3D.new()
+	hull.name = "Hull"
+	hull.mesh = Batch.compound(parts)
+	hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	heli.add_child(hull)
+	var rotor := MeshInstance3D.new()
+	rotor.name = "Rotor"
+	var blade := _box_mesh(Vector3(10.0, 0.06, 0.32), _mat("heli_blade", Color(0.1, 0.1, 0.12), 0.5))
+	rotor.mesh = Batch.compound([[blade, Transform3D()], [blade, Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3.ZERO)]])
+	rotor.position = Vector3(0, 1.1, 0)
+	rotor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	heli.add_child(rotor)
+	# Navigation lights: red port, green starboard, a white strobe on the tail.
+	var lights := [[Vector3(-1.1, -0.3, 0), Color(1.0, 0.1, 0.1)], [Vector3(1.1, -0.3, 0), Color(0.1, 1.0, 0.3)],
+		[Vector3(0, 1.8, 6.6), Color(1.0, 1.0, 1.0)]]
+	var k := 0
+	for l in lights:
+		var c: Color = l[1]
+		var lamp := _visual_box(heli, "NavLight%d" % k, Vector3(0.3, 0.3, 0.3), l[0], _mat("nav_" + c.to_html(false), c, 0.3, c, 8.0))
+		lamp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if k == 2:
+			lamp.add_to_group("city_beacon", true)
+		k += 1
+	# The searchlight: a cone from under the nose, down and ahead.
+	var pivot := Node3D.new()
+	pivot.name = "Beam"
+	pivot.position = Vector3(0, -1.0, -2.0)
+	heli.add_child(pivot)
+	var aim := Node3D.new()
+	aim.name = "Aim"
+	aim.rotation = Vector3(deg_to_rad(155.0), 0, 0)
+	pivot.add_child(aim)
+	var cone := CylinderMesh.new()
+	cone.top_radius = 5.5
+	cone.bottom_radius = 0.35
+	cone.height = 56.0
+	cone.radial_segments = 16
+	cone.rings = 1
+	cone.cap_top = false
+	cone.cap_bottom = false
+	var m := ShaderMaterial.new()
+	m.shader = load(SHADERS + "city_beam.gdshader")
+	m.set_shader_parameter("strength", 0.5)
+	m.set_shader_parameter("beam_color", Color(0.85, 0.92, 1.0))
+	cone.material = m
+	var beam := MeshInstance3D.new()
+	beam.name = "Cone"
+	beam.mesh = cone
+	beam.position.y = 28.0
+	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	aim.add_child(beam)
+
+
+## Aircraft-warning lamps on the roof corners round the Broadcast Tower and
+## on the skyscraper (one MultiMesh, blinking with the mast's beacon).
+func _build_warning_lights() -> void:
+	var xforms: Array[Transform3D] = []
+	for roof in _roofs:
+		var r: Rect2 = roof[0]
+		var h: float = roof[1]
+		if r.get_center().x < 34.0 or r.get_center().y > -8.0 or h < 12.0:
+			continue
+		for corner in [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]:
+			xforms.append(Transform3D(Basis(), Vector3(corner.x, h + 1.0, corner.y)))
+	var red := Color(1.0, 0.08, 0.05)
+	var lamps := _multimesh("WarningLights", _box_mesh(Vector3(0.45, 0.45, 0.45), _mat("warning_lamp", red, 0.3, red, 12.0)), xforms)
+	lamps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	lamps.add_to_group("city_beacon", true)
+	fx.add_child(lamps)
+
+
+# ---------------------------------------------------------------------------
 # Markers: the player's spawn, the zombies' entrances
 # ---------------------------------------------------------------------------
 
@@ -1577,7 +1759,8 @@ func _build_areas() -> void:
 		&"ashfall_square": [AABB(Vector3(-SQ, -0.5, STAIR_TOP_Z), Vector3(SQ * 2.0, 14.0, SQ - STAIR_TOP_Z)),
 			AABB(Vector3(-SQ, -0.5, -SQ), Vector3(SQ - STAIR_HALF, 14.0, SQ + STAIR_TOP_Z)),
 			AABB(Vector3(STAIR_HALF, -0.5, -SQ), Vector3(SQ - STAIR_HALF, 14.0, SQ + STAIR_TOP_Z)),
-			AABB(Vector3(-28.0, -0.5, -4.0), Vector3(6.0, 14.0, 8.0)), AABB(Vector3(SQ, -0.5, -4.0), Vector3(6.0, 14.0, 8.0))],
+			AABB(Vector3(-28.0, -0.5, -4.0), Vector3(6.0, 14.0, 8.0)), AABB(Vector3(SQ, -0.5, -4.0), Vector3(6.0, 14.0, 8.0)),
+			AABB(Vector3(-28.0, -0.5, PRECINCT_BACK_Z - 3.0), Vector3(6.0, 14.0, 6.0))],
 		&"precinct": [AABB(Vector3(-90.0, -0.5, -36.0), Vector3(62.0, 14.0, 72.0))],
 		&"market": [AABB(Vector3(28.0, -0.5, -15.0), Vector3(72.0, 14.0, 35.0))],
 		&"metro": [AABB(Vector3(-28.0, -8.0, -44.0), Vector3(68.0, 7.5, 28.0)),
@@ -1781,6 +1964,7 @@ func _sparks(parent: Node3D, sparks_name: String, pos: Vector3, interval: float)
 	parent.add_child(s)
 	s.position = pos
 	s.set("interval", interval)
+	_ambient(sparks_name + "Hum", pos, &"city_sparks_loop", 12.0, -3.0)
 
 
 # ---------------------------------------------------------------------------
@@ -2171,7 +2355,7 @@ func _build_streets() -> void:
 	_litter(Rect2(-32.0, -3.5, 12.0, 7.0), 0.0, 20, 10)
 	# Bins and bags against the facades.
 	_bins(Vector3(-21.2, 0, -12.0), Vector3(-21.2, 0, -6.0), 2)
-	_bins(Vector3(21.2, 0, 13.0), Vector3(21.2, 0, 19.0), 2)
+	_bins(Vector3(21.2, 0, 5.5), Vector3(21.2, 0, 9.5), 2)
 	_bins(Vector3(-36.0, 0, -23.2), Vector3(-30.0, 0, -23.2), 2)
 	_bins(Vector3(-73.0, 0, -14.0), Vector3(-73.0, 0, -8.0), 2)
 	_bins(Vector3(36.0, 0, 7.2), Vector3(44.0, 0, 7.2), 2)
@@ -2191,8 +2375,8 @@ func _build_streets() -> void:
 	# A snapped line hanging off a facade, spitting sparks.
 	_cable(Vector3(22.0, 8.0, -14.0), Vector3(20.5, 2.6, -14.6), 0.4, 8)
 	_sparks(fx, "SnappedSquare", Vector3(20.5, 2.6, -14.6), 1.8)
-	_cable(Vector3(-34.0, 9.0, 18.0), Vector3(-35.6, 3.2, 17.0), 0.3, 8)
-	_sparks(fx, "SnappedPrecinct", Vector3(-35.6, 3.2, 17.0), 2.2)
+	_cable(Vector3(-34.0, 9.0, 21.0), Vector3(-35.4, 3.2, 20.4), 0.3, 8)
+	_sparks(fx, "SnappedPrecinct", Vector3(-35.4, 3.2, 20.4), 2.2)
 	_cable(Vector3(94.0, 9.0, -55.0), Vector3(92.0, 2.8, -55.5), 0.4, 8)
 	_sparks(fx, "SnappedTower", Vector3(92.0, 2.8, -55.5), 2.0)
 
