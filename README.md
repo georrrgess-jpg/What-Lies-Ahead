@@ -98,13 +98,18 @@ fullscreen.
   tickets, Blackout, Frenzy, Low Gravity, Whiteout, Power Cut, Monsoon, Sugar Rush,
   Eruption, Gale) and a **finale** against the world's named alpha (Big Bruno, Captain
   Lockdown, Inky the Great, Chief Burnout, Old Frostbite, The Night Manager, The Idol
-  Keeper, The Confectioner, Kahuna Krakatoa, Captain Cumulus) with its own health bar and slam. Surges announce the entrance a pack is
-  coming from. Each wave is graded S/A/B/C by the health it cost, and the grade pays
+  Keeper, The Confectioner, Kahuna Krakatoa, Captain Cumulus). Every alpha has its own
+  signature kit built from telegraphed moves (floor strikes in patterns, charges, sweeping
+  beams to jump or hide from, shockwave rings, burrows, summons, arena events such as
+  lights-out or ink at the screen edges), three phases with roars, armour plates that
+  ignore headshots and a dazed weak spot that takes extra damage; the boss bar shows its
+  epithet and phase. Boss fights last about 45 s for Big Bruno and up to 100 s later on.
+  Surges announce the entrance a pack is coming from. Each wave is graded S/A/B/C by the health it cost, and the grade pays
   tickets. Full design: **[docs/ROUNDS.md](docs/ROUNDS.md)**.
 - **Checkpoint.** Clearing wave 3 reaches the checkpoint: lose on wave 4 or later and the
   results screen offers **Continue** from wave 4 (full health, some tickets, 75% rewards).
 - **Two weapons.** You carry a primary and a secondary, each picked from its own section
-  in the **Arsenal** (8 primaries, 4 secondaries; a slot only takes its own class). Each
+  in the **Arsenal** (11 primaries, 7 secondaries; a slot only takes its own class). Each
   keeps its own ammo for the whole run. Switching cancels a reload.
 - **The loadout station** (each world has its own, with a tall beacon; a waypoint points
   to it during breaks) sells an energy top-up for both weapons, one heal per break (a
@@ -149,11 +154,8 @@ fullscreen.
 
 | Weapon | Slot | Niche | Unlock | Notes |
 | --- | --- | --- | --- | --- |
-| Pulse Pistol | Secondary | Precision | Start | Three body shots or two headshots drop a tourist; a rested shot flies dead centre |
 | Ion Carbine | Primary | Sustained fire | Start | Best sustained damage of the starters; fire in bursts or aim past 15 m |
 | Scatter Blaster | Primary | Close range | Start | Nine pellets; one shot drops a tourist inside 10 m and staggers |
-| Comet Hand Cannon | Secondary | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
-| Dunk Tank | Secondary | Soak and push | Player level 7 | Full-auto water jet (under 24 m) that pierces one zombie and pushes; soaked zombies are slowed and take +25% damage from every weapon for 3 s |
 | Arc Coil | Primary | Crowd control | Player level 4 | Chain lightning locking onto the zombie nearest the crosshair; shock slows |
 | Bumper Lobber | Primary | Area damage | Player level 6 | Bouncing gumball bombs with splash; shows its landing ring when aiming |
 | Frostbite Cryo Beam | Primary | Lockdown | Player level 9 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
@@ -163,9 +165,12 @@ fullscreen.
 | Whirligig | Primary | Crowd shredder | Player level 22 | Prize-wheel minigun: spins up for 0.4 s, then 18 rounds a second that pass through a second zombie; slows you while it spins; overheats |
 | Riptide Harpoon | Primary | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
 | Teacup Twister | Primary | Crowd gathering | Player level 34 | Lobs a spinning teacup that opens a whirl where it lands: zombies within 7 m are dragged into a spinning cluster (no attacks while they spin), take spin damage, then the cup pops and flings them out; Bruisers are pulled slowly, alphas and bosses only slowed |
+| Pulse Pistol | Secondary | Precision | Start | Three body shots or two headshots drop a tourist; a rested shot flies dead centre |
+| Comet Hand Cannon | Secondary | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
+| Dunk Tank | Secondary | Soak and push | Player level 7 | Full-auto water jet (under 24 m) that pierces one zombie and pushes; soaked zombies are slowed and take +25% damage from every weapon for 3 s |
+| Shutterbug | Secondary | Crowd stun | Player level 13 | Flash camera: each shot hits every zombie in a 12 m cone (no headshots, weaker toward the rim and far end) and dazzles it: knocked out of its swing, staggered (each zombie once per 2.5 s; heavies and alphas are only slowed) and seeing stars; aiming zooms the flash (narrower, longer, x1.3) |
 | Sparkler | Secondary | Spray and burn | Player level 18 | Full-auto firework machine pistol; every hit adds a fizz burn stack (up to six) that keeps burning; the fuse burns down with the magazine |
 | Ring Toss | Secondary | Ricochet | Player level 26 | Throws a glowing hoop that ricochets through up to four zombies and flies back to be caught; a headshot "Ringer" does double damage and refunds the hoop |
-| Shutterbug | Secondary | Crowd stun | Player level 13 | Flash camera: each shot hits every zombie in a 12 m cone (no headshots, weaker toward the rim and far end) and dazzles it: knocked out of its swing, staggered (each zombie once per 2.5 s; heavies and alphas are only slowed) and seeing stars; aiming zooms the flash (narrower, longer, x1.3) |
 | Balloon Darter | Secondary | Tag and pop | Player level 37 | Quick darts tie a balloon onto each zombie they hit (up to four); 0.9 s after the first dart the bunch pops for 28 a balloon and splashes its neighbours, setting off their balloons in a chain |
 
 `python3 tools/balance_report.py` prints each weapon's time-to-kill, sustained DPS and
@@ -201,7 +206,13 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
 
 ## Progression, Sparks and the Shop
 
-- **Prize Prints.** The **Prizes** tab holds a capsule machine. Every Prize Capsule drops
+- **Prize Prints.** The **Prizes** page has five tabs: **Capsules** (the machine, with
+  OPEN, OPEN 5 and BUY), **Collection**, **Trade-Up**, **Token Counter** and **Odds &
+  Info**. An opening plays full screen: the crank turns, the capsule wobbles longer the
+  rarer it is with coloured light leaking from its seam, bursts in a rarity reveal
+  (Legendary turns the screen gold), and the print lands on a 3D turntable while its
+  traits stamp in. A trade-up is **Prize Fusion**: five prints load into a hologram
+  chamber, dissolve into light and are rebuilt as one print of the next rarity. Every Prize Capsule drops
   a unique *print* of a weapon finish with rolled traits: a pattern seed (where the
   stripes, spots and camo fall), a shine grade (Factory, Polished or Mint), sometimes a
   rare print (Glitter 1 in 20, Holo 1 in 50, Gold-ink Misprint 1 in 100) and a serial
@@ -239,8 +250,11 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
   decals, 24 charms (a Ferris wheel and a UFO that spin), 24 gloves (with real shapes:
   gauntlets, tape, mitts, wraps, fins, studs, crystals, claws), 18 kill effects (disco
   ball, slot-machine 7s, black hole, snow globe…), 18 tracers, 52 banners (26 animated
-  scenes) and 70 titles. Weapon
-  items are equipped per weapon. Everything shows in a live preview; double-click to equip.
+  scenes) and 70 titles, grouped as CHARACTER, WEAPON, EFFECTS and PROFILE, plus a
+  **Prints** tab for your Prize Prints. Each tab has search, sort (featured, rarity up or
+  down, name, newest) and filters (owned, locked, for sale; where it comes from), kept per
+  tab. Weapon items are customised for the weapon picked at the top. Everything shows in a
+  live preview; double-click to equip.
   Earned items (level track, world sets for each first clear, mastery camos, milestones)
   are never sold.
 - **Results screen**: score count-up with breakdown, wave grades, Sparks earned with their
