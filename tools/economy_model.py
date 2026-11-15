@@ -95,6 +95,12 @@ def resource(path):
     return fields(res), subs, text
 
 
+def level_cap(eco):
+    """Progression.MAX_LEVEL at this revision (50 before the Sparks economy)."""
+    m = re.search(r'^const MAX_LEVEL := (\d+)', read('scripts/autoload/progression.gd') or '', re.M)
+    return int(m.group(1)) if m else (40 if eco else 50)
+
+
 def load():
     d = {}
     d['rules'] = resource('data/progression/rules.tres')[0]
@@ -446,7 +452,7 @@ def main():
             markdown = True
     d = load()
     eco = d['eco']
-    cap = 40 if eco else 50
+    cap = level_cap(eco)
     p = Player(d, cap)
     plan = schedule(d, 400)
     rows, cap_run, cap_clear, all_weapons = [], None, None, None

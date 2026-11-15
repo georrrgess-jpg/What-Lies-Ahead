@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+amount = 41
+
+[resource]
+script = ExtResource("1")
+id = &"finish_harlequin_tea"
+display_name = "Harlequin Tea"
+description = "Pink and mint harlequin diamonds with gold pinstripes, straight off the teacup ride."
+slot = &"weapon_finish"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(1.000, 0.478, 0.733, 1, 0.165, 0.071, 0.216, 1)
+params = {
+"shader": "res://art/shaders/finish_graphic.gdshader",
+"shader_params": {
+"pattern": 1,
+"color_b": Color(0.42, 0.95, 0.82, 1),
+"color_c": Color(1, 0.84, 0.36, 1),
+"color_d": Color(0.16, 0.07, 0.22, 1),
+"roughness": 0.35,
+"metallic": 0.05
+}
+}
+sort_order = 51
