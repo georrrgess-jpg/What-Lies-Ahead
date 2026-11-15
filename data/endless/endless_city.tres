@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/data/endless_rules.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/data/endless_district.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="4"]
 
 [sub_resource type="Resource" id="d_square"]
 script = ExtResource("3")
@@ -49,12 +50,19 @@ price = 1500
 enemies = Array[StringName]([&"city_bruiser"])
 accent_color = Color(1, 0.85, 0.3, 1)
 
+[sub_resource type="Resource" id="economy"]
+script = ExtResource("4")
+prep_seconds = 15.0
+break_seconds = 20.0
+starting_tickets = 150
+
 [sub_resource type="Resource" id="rules"]
 script = ExtResource("2")
 districts = Array[ExtResource("3")]([SubResource("d_square"), SubResource("d_precinct"), SubResource("d_metro"), SubResource("d_market"), SubResource("d_tower")])
 base_enemies = Array[StringName]([&"city_shambler", &"city_runner", &"city_bruiser"])
 boss_id = &"the_wrecker"
 boss_every = 10
+economy = SubResource("economy")
 
 [resource]
 script = ExtResource("1")

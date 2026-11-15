@@ -54,7 +54,8 @@ func _init() -> void:
 	_left_row.add_child(_bar)
 
 
-## Shows wave `number` of `total` (pops when the number changes).
+## Shows wave `number` of `total` (pops when the number changes); a total
+## of 0 (Endless) shows the number alone.
 func set_wave(number: int, total: int) -> void:
 	if number == _number and total == _total_waves:
 		return
@@ -62,7 +63,7 @@ func set_wave(number: int, total: int) -> void:
 	_number = number
 	_total_waves = total
 	title.text = "WAVE %02d" % maxi(1, number)
-	_total.text = "/ %02d" % total
+	_total.text = "/ %02d" % total if total > 0 else ""
 	if changed and is_visible_in_tree():
 		UiFx.pulse(title, 1.12)
 

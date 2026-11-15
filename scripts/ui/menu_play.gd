@@ -8,6 +8,11 @@ extends MenuPage
 ## glides between them with depth (cards shrink, fan out and fade with
 ## distance, their art slides behind the frame), and the picked world's
 ## accent pools under it.
+##
+## After the last world comes ENDLESS (an EndlessCard per endless level, open
+## from player level 1): its board shows the best wave and score, the
+## districts opened and the reward track read from the catalog
+## (EndlessRewards), and DEPLOY reads START.
 
 ## The world in the carousel changed: the shell cross-fades the backdrop.
 signal world_changed(level: LevelData)
@@ -65,13 +70,15 @@ var _plates: Array[SlotPlate] = []
 var _difficulty: KitTabs
 var _difficulty_note: Label
 var _deploy: SignButton
+var _who: Control
+var _endless_box: VBoxContainer
 
 
 func _init() -> void:
 	selected_weapon = StringName(String(Profile.data.get("last_weapon", "")))
 	if GameData.weapon(selected_weapon) == null:
 		selected_weapon = GameData.default_weapon_id()
-	world_index = clampi(int(Profile.section("menu").get("world", 0)), 0, maxi(0, GameData.worlds().size() - 1))
+	world_index = clampi(int(Profile.section("menu").get("world", 0)), 0, maxi(0, slot_count() - 1))
 
 
 ## The level the Play page opens on: the world browsed last, its first
@@ -80,11 +87,25 @@ static func remembered_level() -> LevelData:
 	var worlds := GameData.worlds()
 	if worlds.is_empty():
 		return null
-	var world := worlds[clampi(int(Profile.section("menu").get("world", 0)), 0, worlds.size() - 1)]
+	var slot := int(Profile.section("menu").get("world", 0))
+	if endless_at(slot):
+		return endless_at(slot)
+	var world := worlds[clampi(slot, 0, worlds.size() - 1)]
 	for l in world.levels:
 		if GameData.is_level_unlocked(l):
 			return l
 	return world.levels[0] if not world.levels.is_empty() else null
+
+
+## Carousel slots: every world, then every endless level.
+static func slot_count() -> int:
+	return GameData.worlds().size() + GameData.endless_levels().size()
+
+
+## The endless level in carousel slot `i`, or null for a world's slot.
+static func endless_at(i: int) -> LevelData:
+	var j := i - GameData.worlds().size()
+	return GameData.endless_levels()[j] if j >= 0 and j < GameData.endless_levels().size() else null
 
 
 func uses_shell_header() -> bool:
@@ -151,7 +172,7 @@ func _input(event: InputEvent) -> void:
 		# Held: run through the worlds at a steady pace, stopping at either end.
 		if Time.get_ticks_msec() - _last_step_ms < HOLD_STEP * 1000.0:
 			return
-		select_world(clampi(world_index + step, 0, GameData.worlds().size() - 1))
+		select_world(clampi(world_index + step, 0, slot_count() - 1))
 	else:
 		step_world(step)
 	_last_step_ms = Time.get_ticks_msec()
@@ -190,11 +211,16 @@ func _build_info() -> Control:
 	_stats.add_theme_constant_override("separation", UiKit.GAP_M)
 	v.add_child(_stats)
 	v.add_child(UiKit.spacer(2))
-	v.add_child(UiKit.section("WHO IS WAITING"))
+	_who = UiKit.section("WHO IS WAITING")
+	v.add_child(_who)
 	_enemies = HFlowContainer.new()
 	_enemies.add_theme_constant_override("h_separation", UiKit.GAP_S)
 	_enemies.add_theme_constant_override("v_separation", UiKit.GAP_S)
 	v.add_child(_enemies)
+	_endless_box = VBoxContainer.new()
+	_endless_box.add_theme_constant_override("separation", UiKit.GAP_S)
+	_endless_box.visible = false
+	v.add_child(_endless_box)
 	v.add_child(UiKit.filler())
 	return board
 
@@ -274,6 +300,10 @@ func _build_carousel() -> Control:
 		card.index = i
 		_carousel.add_child(card)
 		_cards.append(card)
+	for i in GameData.endless_levels().size():
+		var card := EndlessCard.make(GameData.endless_levels()[i], GameData.worlds().size() + i)
+		_carousel.add_child(card)
+		_cards.append(card)
 	for side in [-1, 1]:
 		var arrow := UiKit.icon_button(&"icon_arrow_left" if side < 0 else &"icon_arrow_right", "Previous world" if side < 0 else "Next world")
 		arrow.custom_minimum_size = Vector2(64, 110)
@@ -299,7 +329,7 @@ func _build_carousel() -> Control:
 # --- selection ----------------------------------------------------------------------
 
 func select_world(i: int) -> void:
-	if i < 0 or i >= GameData.worlds().size():
+	if i < 0 or i >= slot_count():
 		return
 	if i != world_index:
 		UiSound.select()
@@ -313,7 +343,7 @@ func select_world(i: int) -> void:
 
 
 func step_world(step: int) -> void:
-	var n := GameData.worlds().size()
+	var n := slot_count()
 	if n > 0:
 		select_world(posmod(world_index + step, n))
 
@@ -358,7 +388,13 @@ func _refresh_details() -> void:
 	var worlds := GameData.worlds()
 	if worlds.is_empty():
 		return
-	world_index = clampi(world_index, 0, worlds.size() - 1)
+	world_index = clampi(world_index, 0, slot_count() - 1)
+	_who.visible = endless_at(world_index) == null
+	_enemies.visible = _who.visible
+	_endless_box.visible = not _who.visible
+	if endless_at(world_index):
+		_refresh_endless(endless_at(world_index))
+		return
 	var world := worlds[world_index]
 	_resolve_level(world)
 	var level := selected_level
@@ -381,6 +417,105 @@ func _refresh_details() -> void:
 		var w := GameData.weapon(Loadout.slot(slot))
 		_plates[slot].set_value(w.display_name.to_upper() if w else "EMPTY")
 		_plates[slot].set_note("%s  ·  %s" % [w.category, UiKit.rank_name(Mastery.rank(w.id), w.max_rank()).capitalize()] if w else "")
+
+
+## The Endless board: records, districts and the reward track.
+func _refresh_endless(level: LevelData) -> void:
+	selected_level = level
+	_world_caption.text = "ENDLESS MODE  ·  OPEN FROM LEVEL 1"
+	_world_caption.add_theme_color_override("font_color", EndlessCard.EMBER)
+	_level_name.text = level.display_name.to_upper()
+	_blurb.text = level.blurb
+	_art.texture = KeyArt.texture(level)
+	_art.visible = _art.texture != null
+	(_art.material as ShaderMaterial).set_shader_parameter("saturation", 1.0)
+	_level_tabs.visible = false
+	_lock.visible = false
+	var unlocked := GameData.is_level_unlocked(level)
+	_deploy.disabled = not unlocked
+	_deploy.text = "START" if unlocked else "COMING SOON"
+	_clear(_stats)
+	_best_value = null
+	_star_row = null
+	var accent := level.accent_color
+	var rules := level.endless
+	_stats.add_child(_stat_tile("BEST WAVE", str(EndlessRecords.best_wave()), accent))
+	_stats.add_child(_stat_tile("BEST SCORE", ScorePanel._fmt(EndlessRecords.best_score()), accent))
+	var gated := rules.districts.filter(func(d: EndlessDistrict) -> bool: return d.price > 0).size()
+	_stats.add_child(_stat_tile("DISTRICTS", "%d / %d" % [EndlessRecords.opened_count(rules), gated], accent))
+	_stats.add_child(_stat_tile("ON %s" % Difficulty.label(Difficulty.current()), "WAVE %d" % EndlessRecords.best_on(Difficulty.current()), Difficulty.color(Difficulty.current())))
+	_fill_endless(rules)
+	for slot in 2:
+		var w := GameData.weapon(Loadout.slot(slot))
+		_plates[slot].set_value(w.display_name.to_upper() if w else "EMPTY")
+		_plates[slot].set_note("%s  ·  %s" % [w.category, UiKit.rank_name(Mastery.rank(w.id), w.max_rank()).capitalize()] if w else "")
+
+
+## The districts (with their prices) and the reward track.
+func _fill_endless(rules: EndlessRules) -> void:
+	_clear(_endless_box)
+	_endless_box.add_child(UiKit.section("THE CITY", "pay tickets at a gate to open a district"))
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", UiKit.GAP_S)
+	row.add_theme_constant_override("v_separation", UiKit.GAP_S)
+	_endless_box.add_child(row)
+	for d in rules.districts:
+		var note := "START" if d.price == 0 else "%d TICKETS" % d.price
+		row.add_child(_district_chip(d, note, d.price == 0 or EndlessRecords.has_opened(d.id)))
+	_endless_box.add_child(UiKit.section("REWARD TRACK", "", UiKit.AMBER))
+	var track := HFlowContainer.new()
+	track.add_theme_constant_override("h_separation", UiKit.GAP_S)
+	track.add_theme_constant_override("v_separation", UiKit.GAP_S)
+	_endless_box.add_child(track)
+	var rewards := EndlessRewards.track(rules)
+	if rewards.is_empty():
+		track.add_child(UiKit.body("Rewards arrive with the city's camos, its weapon and its Mythic finish.", 0, UiKit.SIZE_SMALL, UiKit.MUTED))
+	for e in rewards:
+		track.add_child(_reward_chip(e))
+
+
+func _district_chip(d: EndlessDistrict, note: String, opened: bool) -> Control:
+	var pill := PanelContainer.new()
+	var box := UiKit.box(Color("2c2257"), Color(d.accent_color, 0.9 if opened else 0.35), 22, 2, 0)
+	box.content_margin_left = 14
+	box.content_margin_right = 14
+	box.content_margin_top = 2
+	box.content_margin_bottom = 2
+	pill.add_theme_stylebox_override("panel", box)
+	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var r := HBoxContainer.new()
+	r.add_theme_constant_override("separation", 8)
+	pill.add_child(r)
+	r.add_child(UiKit.label(d.display_name.to_upper(), 20, d.accent_color.lerp(Color.WHITE, 0.4) if opened else UiKit.MUTED, true))
+	r.add_child(UiKit.label(note, 18, UiKit.AMBER if d.price > 0 else UiKit.GREEN, true))
+	return pill
+
+
+## One reward: what it is, in its rarity colour, and what earns it.
+func _reward_chip(e: Dictionary) -> Control:
+	var met := bool(e["met"])
+	var color: Color = e["color"]
+	var card := PanelContainer.new()
+	var box := UiKit.box(Color("2c2257") if met else Color(UiKit.INK, 0.85), Color(color, 0.95 if met else 0.45), 14, 2, 0)
+	box.content_margin_left = 12
+	box.content_margin_right = 12
+	box.content_margin_top = 4
+	box.content_margin_bottom = 4
+	card.add_theme_stylebox_override("panel", box)
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.custom_minimum_size = Vector2(196, 0)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", -6)
+	card.add_child(v)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 6)
+	v.add_child(top)
+	top.add_child(UiKit.label(String(e["goal"]), 16, UiKit.GREEN if met else UiKit.AMBER, true))
+	if met:
+		top.add_child(HudIcon.make(&"check", 18.0, UiKit.GREEN))
+	v.add_child(UiKit.label(String(e["name"]).to_upper(), 20, color.lerp(Color.WHITE, 0.35) if met else UiKit.CREAM, true))
+	v.add_child(UiKit.label(String(e["kind"]), 16, color if met else UiKit.MUTED))
+	return card
 
 
 func _fill_level_tabs(world: WorldData, level: LevelData) -> void:
@@ -542,6 +677,8 @@ func _place_cards(at: float) -> void:
 
 func _world_accent() -> Color:
 	var worlds := GameData.worlds()
+	if endless_at(world_index):
+		return endless_at(world_index).accent_color
 	return worlds[world_index].accent_color if world_index < worlds.size() else UiKit.CYAN
 
 
@@ -639,9 +776,10 @@ func _draw_carousel() -> void:
 ## ring while locked), the selected one large in its accent.
 func _draw_pips() -> void:
 	var worlds := GameData.worlds()
-	var x0 := _pips.size.x * 0.5 - PIP_STEP * (worlds.size() - 1) * 0.5
+	var n := slot_count()
+	var x0 := _pips.size.x * 0.5 - PIP_STEP * (n - 1) * 0.5
 	var y := _pips.size.y * 0.5
-	var pill := Rect2(x0 - 20.0, y - 11.0, PIP_STEP * (worlds.size() - 1) + 40.0, 22.0)
+	var pill := Rect2(x0 - 20.0, y - 11.0, PIP_STEP * (n - 1) + 40.0, 22.0)
 	_pip_box.bg_color = Color(UiKit.INK, 0.75)
 	_pip_box.set_corner_radius_all(11)
 	_pips.draw_style_box(_pip_box, pill)
@@ -656,6 +794,14 @@ func _draw_pips() -> void:
 		else:
 			var cleared := WorldCard.world_stars(worlds[i]) >= 3
 			_pips.draw_circle(at, 7.0, Wallet.COLOR if cleared else UiKit.CREAM, true, -1.0, true)
+	# The endless slots: an ember diamond each.
+	for i in range(worlds.size(), n):
+		var at := Vector2(x0 + i * PIP_STEP, y)
+		var r := 12.0 if i == world_index else 8.0
+		var diamond := PackedVector2Array([at + Vector2(0, -r), at + Vector2(r, 0), at + Vector2(0, r), at + Vector2(-r, 0)])
+		_pips.draw_colored_polygon(diamond, EndlessCard.EMBER if i == world_index else Color(EndlessCard.EMBER, 0.7))
+		if i == world_index:
+			_pips.draw_polyline(diamond + PackedVector2Array([diamond[0]]), UiKit.CREAM, 3.0, true)
 
 
 
