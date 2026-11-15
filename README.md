@@ -36,12 +36,20 @@ the **Shop**. New players start in **Boot Camp**, a short, skippable tutorial.
 
 The project uses the **Compatibility (OpenGL)** renderer, the lightest desktop option.
 
-**From a build**: zipped builds are in [`builds/`](builds/).
+**From a build**: download the latest release from the
+[Releases page](https://github.com/georrrgess-jpg/What-Lies-Ahead/releases/latest).
 
 | File | Platform | Status |
 | --- | --- | --- |
-| `WhatLiesAhead-linux-x86_64.zip` | Linux x86_64 | Smoke-tested (see *Verification*) |
-| `WhatLiesAhead-windows-x86_64.zip` | Windows x86_64 | Exported, **not run** (no Windows machine here) |
+| [`WhatLiesAhead-windows-x86_64.zip`](https://github.com/georrrgess-jpg/What-Lies-Ahead/releases/latest/download/WhatLiesAhead-windows-x86_64.zip) | Windows x86_64 | Exported, **not run** (no Windows machine here) |
+| [`WhatLiesAhead-linux-x86_64.zip`](https://github.com/georrrgess-jpg/What-Lies-Ahead/releases/latest/download/WhatLiesAhead-linux-x86_64.zip) | Linux x86_64 | Smoke-tested by the release workflow |
+
+Releases are built on GitHub's servers by `.github/workflows/release.yml` (Actions tab →
+*Release builds* → *Run workflow*, or push a tag such as `v1.2.0`): it installs Godot
+4.7.1 and its export templates, imports the project, exports both platforms, has the
+bot play two waves of the Linux build and publishes the zips. Release assets may be up
+to 2 GB, so builds ship at full quality (model LODs and shadow meshes, lossless world
+textures, Vorbis q6 music, 44.1 kHz sound effects); the old zips in `builds/` are gone.
 
 Unzip and run the single executable. On Linux you may need `chmod +x WhatLiesAhead.x86_64`.
 The Windows build is unsigned, so SmartScreen may ask for confirmation.
@@ -364,7 +372,7 @@ tools/        Level generators, texture/UI/audio generators, audits, previewers
 docs/         Content guide, economy, rounds, UI style, showreel
 media/        The rendered trailer
 references/   Art reference, in-game screenshot and the side-by-side comparison
-builds/       Zipped desktop builds
+.github/      The release workflow (builds and publishes the downloads)
 ```
 
 Persistent state lives only in the save file, never in level scenes.
@@ -470,9 +478,9 @@ name (`ImpactMarks.SKIP_NAMES`).
 warm-up draws every effect, projectile, muzzle-flash and status-effect material behind the
 loading fade, so nothing compiles mid-fight. `tools/perf_probe.gd` measures frame time,
 node and audio-player churn, draw calls and the warm-up (`--materials=1`); usage is at the
-top of the file. Builds stay lean: no shadow meshes (the import default), no LODs on
-first-person and menu models, lossy WebP world textures, Vorbis q2 music (final waves q1.5, ambience mono q0) and
-sounds with nothing above 10 kHz imported at 22.05 kHz.
+top of the file. Builds ship at full quality as GitHub Releases (no size budget): every
+model has LODs and shadow meshes, world textures are lossless, music is Vorbis q6 (stereo
+ambience q5) and sound effects import at 44.1 kHz.
 
 **Checking assets.** `tools/preview_model.gd` prints a model's node tree, bounds and clips
 and renders a contact sheet; see the comment at the top of the file.

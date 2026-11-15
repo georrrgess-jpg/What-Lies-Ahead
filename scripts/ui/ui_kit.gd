@@ -154,6 +154,25 @@ static func theme() -> Theme:
 		t.set_stylebox("grabber_highlight", bar, box(METAL.lightened(0.25), Color.TRANSPARENT, 7, 0, 7))
 		t.set_stylebox("grabber_pressed", bar, box(CYAN, Color.TRANSPARENT, 7, 0, 7))
 
+	# Text fields: a dark recess with a purple rim, cyan while typing.
+	var field := box(Color(INK, 0.92), Color("4a3b86"), 14, 3, 12)
+	field.content_margin_left = 18
+	field.content_margin_right = 18
+	var field_focus: StyleBoxFlat = field.duplicate()
+	field_focus.border_color = CYAN
+	field_focus.shadow_color = Color(CYAN, 0.3)
+	field_focus.shadow_size = 8
+	t.set_stylebox("normal", "LineEdit", field)
+	t.set_stylebox("focus", "LineEdit", field_focus)
+	t.set_stylebox("read_only", "LineEdit", field)
+	t.set_font_size("font_size", "LineEdit", SIZE_BODY)
+	t.set_color("font_color", "LineEdit", CREAM)
+	t.set_color("font_placeholder_color", "LineEdit", Color(MUTED, 0.75))
+	t.set_color("caret_color", "LineEdit", CYAN)
+	t.set_color("selection_color", "LineEdit", Color(PINK, 0.45))
+	t.set_color("clear_button_color", "LineEdit", MUTED)
+	t.set_color("clear_button_color_pressed", "LineEdit", CYAN)
+
 	t.set_stylebox("panel", "TooltipPanel", box(INK, CYAN, 12, 2, 12))
 	t.set_color("font_color", "TooltipLabel", CREAM)
 	t.set_font_size("font_size", "TooltipLabel", 22)
@@ -350,6 +369,17 @@ static func bar_fill(color: Color, height := 18.0) -> StyleBoxFlat:
 
 
 ## Vertical scroll area with the kit's scrollbar; follows keyboard focus.
+## A search field in the kit's look (a magnifier hint and a clear button).
+static func search_box(placeholder := "Search") -> LineEdit:
+	var e := LineEdit.new()
+	e.placeholder_text = placeholder
+	e.clear_button_enabled = true
+	e.right_icon = KitTex.tex(&"icon_search")
+	e.custom_minimum_size.y = 56
+	e.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return e
+
+
 static func scroll(min_size := Vector2.ZERO) -> ScrollContainer:
 	var s := ScrollContainer.new()
 	s.custom_minimum_size = min_size

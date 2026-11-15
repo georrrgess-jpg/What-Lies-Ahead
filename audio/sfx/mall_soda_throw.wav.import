@@ -14,8 +14,8 @@ dest_files=["res://.godot/imported/mall_soda_throw.wav-802dc7d43a70ee1c1fecf279a
 
 force/8_bit=false
 force/mono=false
-force/max_rate=true
-force/max_rate_hz=22050
+force/max_rate=false
+force/max_rate_hz=44100
 edit/trim=false
 edit/normalize=false
 edit/loop_mode=0

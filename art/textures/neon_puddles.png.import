@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/neon_puddles.png-70874ef0b65888b272a86bcac2d1
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0

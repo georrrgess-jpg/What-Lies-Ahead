@@ -141,6 +141,9 @@ func _add_art() -> void:
 	_art.size = SIZE + Vector2(ART_PAD * 2.0, 0.0)
 	_art.position.x = -ART_PAD
 	_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Its shader draws only the card's shape: the slack rect is not on screen
+	# (scripts/dev/ui_layout_probe.gd skips it).
+	_art.set_meta(&"layout_overhang", true)
 	_art_mat = ShaderMaterial.new()
 	_art_mat.shader = load(KeyArt.CARD_SHADER)
 	_art_mat.set_shader_parameter("rect_size", SIZE)

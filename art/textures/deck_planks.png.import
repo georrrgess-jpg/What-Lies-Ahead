@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/deck_planks.png-0a81afa88b278f46c86bc8181f3d1
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.85
 compress/uastc_level=0
