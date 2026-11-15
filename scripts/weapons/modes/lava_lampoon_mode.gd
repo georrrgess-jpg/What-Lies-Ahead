@@ -44,6 +44,11 @@ var _since := 10.0
 var _tried := false
 
 
+## The Arsenal's DPS counts the burn of the puddle the target stands in.
+func arsenal_dps(base: float) -> float:
+	return base + LavaPuddle.BURN_DPS
+
+
 func trigger(spinning: bool, delta: float) -> bool:
 	_since += delta
 	_active_reload()

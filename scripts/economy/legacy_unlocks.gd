@@ -14,6 +14,7 @@ const RULES := {
 	&"banner_lava_lamp": [[1, &"", 27]],
 	&"banner_marquee": [[1, &"", 38]],
 	&"banner_snowfall": [[1, &"", 21]],
+	&"cell_blue_raspberry": [[1, &"", 24]],
 	&"cell_bubblegum": [[1, &"", 6]],
 	&"cell_heartbeat": [[1, &"", 24]],
 	&"cell_lime": [[1, &"", 3]],
