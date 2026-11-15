@@ -81,7 +81,7 @@ static func road_card(lvl: int, current: int, thumbs: CosmeticThumbs) -> ItemCar
 	return card
 
 
-## "LEVEL 12  ·  New weapon: Rail Lancer  ·  +110 Sparks  ·  2 levels to go".
+## "LEVEL 12  ·  New weapon: Teacup Twister  ·  +110 Sparks  ·  2 levels to go".
 static func road_detail(lvl: int, current: int) -> String:
 	var parts := PackedStringArray(["LEVEL %d" % lvl])
 	var reward := Progression.reward_text(lvl)

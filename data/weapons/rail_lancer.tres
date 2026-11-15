@@ -8,12 +8,12 @@
 [sub_resource type="Resource" id="unlock"]
 script = ExtResource("2")
 kind = 1
-amount = 12
+amount = 34
 
 [resource]
 script = ExtResource("1")
 id = &"rail_lancer"
-sort_order = 80
+sort_order = 115
 category = "Railgun"
 display_name = "Rail Lancer"
 role = "Hold to charge, release to fire. A half charge drops a tourist; only a full charge pierces every zombie in a line, and a full-charge headshot drops a Bruiser. Slow to move: line them up."

@@ -204,7 +204,7 @@ per world for a clear, 1,500 for a first clear), plus contracts and milestones; 
 clear XP follow `Difficulty.reward_scale()`.
 
 Every level pays Sparks and gives exactly one thing. Weapons: Comet Hand Cannon 2, Arc
-Coil 4, Bumper Lobber 6, Frostbite Cryo Beam 9, Rail Lancer 12. Every fifth level is a
+Coil 4, Bumper Lobber 6, Frostbite Cryo Beam 9, Teacup Twister 12. Every fifth level is a
 showpiece: Pixel Burst (kill effect) 5, Chrome Cherry 10, Midway Maestro (operator) 15,
 Lifeguard 20, Marquee 25, Prize Gold (animated finish) 30, Champion's Crown 35, and at
 40 the Arcade Champion operator with the Boardwalk Legend finish and title. The full
@@ -308,7 +308,7 @@ The first twelve runs (after; "The run buys" is what that run's Sparks alone wou
 | 3 | Tidal Tunnels | defeat w5 | 2076 | 7 (+1) | 429 | 2825 | 1 common | Racing Stripes, Pier Rat, Ion r3, Scatter r2 |
 | 4 | Tidal Tunnels | clear | 12034 | 9 (+2) | 1673 | 4498 | 1 epic | High Tide, Starry Starfish, Seashell, Tidal Glass +10 more |
 | 5 | Launch Pad 9 | clear | 7870 | 11 (+2) | 1324 | 5822 | 2 rares | Deep Space, Pocket Rocket, Ringed Planet, Galaxy +8 more |
-| 6 | Summit Lodge | defeat w5 | 4832 | 12 (+1) | 722 | 6544 | 1 rare | Bullseye Cell, Ticket Taker, Rail Lancer, Bumper r2 |
+| 6 | Summit Lodge | defeat w5 | 4832 | 12 (+1) | 722 | 6544 | 1 rare | Bullseye Cell, Ticket Taker, Teacup Twister, Bumper r2 |
 | 7 | Summit Lodge | clear | 10876 | 13 (+1) | 1455 | 7999 | 2 rares | Aurora, Glacier, Snow Globe, Snowflake +9 more |
 | 8 | Prize Pier | clear | 8578 | 14 (+1) | 1158 | 9157 | 1 rare | Spotless, Sweeper, Lime Laser, Lemonade Cell +1 more |
 | 9 | Neon Skyline | defeat w5 | 3330 | 15 (+1) | 629 | 9786 | 2 commons | Midway Maestro |

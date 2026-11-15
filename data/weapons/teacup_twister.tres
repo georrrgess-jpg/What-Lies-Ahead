@@ -10,12 +10,12 @@
 [sub_resource type="Resource" id="unlock"]
 script = ExtResource("2")
 kind = 1
-amount = 34
+amount = 12
 
 [resource]
 script = ExtResource("1")
 id = &"teacup_twister"
-sort_order = 115
+sort_order = 80
 category = "Vortex Launcher"
 slot_class = "primary"
 display_name = "Teacup Twister"

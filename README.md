@@ -159,12 +159,12 @@ fullscreen.
 | Arc Coil | Primary | Crowd control | Player level 4 | Chain lightning locking onto the zombie nearest the crosshair; shock slows |
 | Bumper Lobber | Primary | Area damage | Player level 6 | Bouncing gumball bombs with splash; shows its landing ring when aiming |
 | Frostbite Cryo Beam | Primary | Lockdown | Player level 9 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
-| Rail Lancer | Primary | Anti-heavy | Player level 12 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
+| Teacup Twister | Primary | Crowd gathering | Player level 12 | Lobs a spinning teacup that opens a whirl where it lands: zombies within 7 m are dragged into a spinning cluster (no attacks while they spin), take spin damage, then the cup pops and flings them out; Bruisers are pulled slowly, alphas and bosses only slowed |
 | Gumball Drum Popper | Primary | Trick shots | Player level 15 | Semi-auto drum of bouncy gumballs: each ricochets up to twice (+25% per bounce) and bends toward a zombie, so bank shots round corners land; no splash |
 | Toxic Ripsaw | Primary | Saw shotgun | Player level 20 | Semi-auto slime shotgun whose hits splat a slowing puddle; hold MELEE (T or middle mouse) to rev the chain saw, which saws through the rank and file (heavies and alphas take a third to a half) on a fuel rack that refills while resting or on reload; slows you while sawing |
 | Whirligig | Primary | Crowd shredder | Player level 22 | Prize-wheel minigun: spins up for 0.4 s, then 18 rounds a second that pass through a second zombie; slows you while it spins; overheats |
 | Riptide Harpoon | Primary | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
-| Teacup Twister | Primary | Crowd gathering | Player level 34 | Lobs a spinning teacup that opens a whirl where it lands: zombies within 7 m are dragged into a spinning cluster (no attacks while they spin), take spin damage, then the cup pops and flings them out; Bruisers are pulled slowly, alphas and bosses only slowed |
+| Rail Lancer | Primary | Anti-heavy | Player level 34 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
 | Pulse Pistol | Secondary | Precision | Start | Three body shots or two headshots drop a tourist; a rested shot flies dead centre |
 | Comet Hand Cannon | Secondary | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
 | Dunk Tank | Secondary | Soak and push | Player level 7 | Full-auto water jet (under 24 m) that pierces one zombie and pushes; soaked zombies are slowed and take +25% damage from every weapon for 3 s |
