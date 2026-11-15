@@ -15,7 +15,7 @@ extends BossMove
 @export var thickness := 0.55
 @export var color := Color(1, 0.6, 0.2)
 @export var pound_clip: StringName = &"Attack"
-@export var pound_sound: StringName = &"boss_pound"
+@export var pound_sound: StringName = &"rounds_boss_pound"
 
 var _left := 0.0
 var _pounds := 0

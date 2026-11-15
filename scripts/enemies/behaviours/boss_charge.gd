@@ -23,7 +23,7 @@ extends BossMove
 @export_range(0.0, 1.0) var lock_fraction := 0.6
 @export var color := Color(1, 0.4, 0.3)
 @export var dash_clip: StringName = &"Run"
-@export var dash_sound: StringName = &"boss_charge"
+@export var dash_sound: StringName = &"rounds_boss_charge"
 @export_range(0.0, 1.0) var guard := 1.0
 @export var repeats := 1
 ## Wind-up of the repeat charges (the first uses `windup`).

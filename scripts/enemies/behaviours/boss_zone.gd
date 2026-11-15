@@ -51,8 +51,8 @@ var linger_dps := 0.0
 var linger_slow := 1.0
 ## Seconds a solid column stands after the hit (0 = none).
 var pillar_seconds := 0.0
-var warn_sound: StringName = &"boss_zone_warn"
-var hit_sound: StringName = &"boss_zone_hit"
+var warn_sound: StringName = &"rounds_boss_zone_warn"
+var hit_sound: StringName = &"rounds_boss_zone_hit"
 ## The alpha that placed it (damage is booked to its position).
 var source: Node3D
 

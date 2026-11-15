@@ -20,7 +20,7 @@ extends Resource
 @export var strength := 0.3
 @export var color := Color(0.4, 0.2, 0.8)
 @export var callout := ""
-@export var sound: StringName = &"boss_event"
+@export var sound: StringName = &"rounds_boss_event"
 
 const FADE := 1.2
 const GUST_SECONDS := Vector2(3.5, 5.5)
@@ -122,7 +122,7 @@ func _blow(z: Zombie, delta: float) -> void:
 		_gust = randf_range(GUST_SECONDS.x, GUST_SECONDS.y)
 		var a := randf() * TAU
 		_heading = Vector3(cos(a), 0.0, sin(a))
-		Sfx.play(&"boss_gust", -2.0, randf_range(0.9, 1.1))
+		Sfx.play(&"rounds_boss_gust", -2.0, randf_range(0.9, 1.1))
 	var player := z.target
 	if not player.alive or not player.controls_enabled:
 		return

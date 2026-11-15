@@ -6,6 +6,12 @@
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/candy_taffy_yank.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
 
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_charge.gd" id="b_charge"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_summon.gd" id="b_summon"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_strike_zones.gd" id="b_zones"]
+
 [sub_resource type="Resource" id="yank"]
 script = ExtResource("4")
 min_range = 8.0
@@ -19,9 +25,77 @@ pull_speed = 8.0
 pull_lift = 2.4
 line_color = Color(1, 0.45, 0.1, 1)
 
+[sub_resource type="Resource" id="gummy_batch"]
+script = ExtResource("b_summon")
+move_name = &"gummy_batch"
+cooldown = 15.0
+first_delay = 4.0
+windup = 1.0
+windup_clip = &"Whirl"
+callout = "GUMMY BATCH — CLEAR THE MINIONS"
+enemy = &"candy_gummy"
+count = 3
+max_alive = 4
+color = Color(1.0, 0.45, 0.75, 1.0)
+
+[sub_resource type="Resource" id="syrup_rush"]
+script = ExtResource("b_charge")
+move_name = &"syrup_rush"
+cooldown = 11.0
+first_delay = 7.0
+min_range = 6.0
+max_range = 20.0
+needs_sight = true
+callout = "SYRUP RUSH — THE TRAIL IS STICKY"
+windup = 1.0
+windup_clip = &"Whirl"
+speed = 13.0
+width = 2.4
+damage = 16.0
+color = Color(1.0, 0.45, 0.75, 1.0)
+dash_clip = &"Run"
+dazed = 2.2
+trail_every = 1.6
+trail_radius = 1.4
+trail_seconds = 5.0
+trail_dps = 3.0
+trail_slow = 0.6
+trail_color = Color(0.95, 0.6, 0.15, 1.0)
+
+[sub_resource type="Resource" id="gumball_drop"]
+script = ExtResource("b_zones")
+move_name = &"gumball_drop"
+cooldown = 9.0
+first_delay = 2.0
+max_range = 30.0
+callout = "GUMBALL DROP — KEEP MOVING!"
+windup = 0.8
+windup_clip = &"Throw"
+pattern = 0
+count = 4
+stagger = 0.5
+radius = 1.8
+telegraph = 1.2
+damage = 12.0
+color = Color(1.0, 0.45, 0.75, 1.0)
+style = 1
+prop = 4
+prop_color = Color(0.4, 0.85, 1.0, 1.0)
+hits_airborne = true
+
+[sub_resource type="Resource" id="event_0"]
+script = ExtResource("b_event")
+kind = &"frenzy"
+phase = 2
+seconds = 12.0
+strength = 1.4
+color = Color(1.0, 0.45, 0.75, 1.0)
+
 [sub_resource type="Resource" id="alpha"]
 script = ExtResource("alpha_script")
-color = Color(1, 0.45, 0.75, 1)
+color = Color(1.0, 0.45, 0.75, 1.0)
+title = "HEAD OF CANDY R&D"
+phase_callouts = PackedStringArray("A FRESH BATCH — THE CONFECTIONER SPEEDS UP", "SUGAR RUSH — THE CONFECTIONER GOES HYPER")
 slam_damage = 20.0
 slam_cooldown = 9.0
 volley_shots = 5
@@ -29,15 +103,18 @@ volley_damage = 5.0
 volley_speed = 13.0
 volley_spread_degrees = 13.0
 volley_arc = 0.35
-volley_cooldown = 10.0
+volley_cooldown = 11.0
 volley_size = 0.42
 volley_clip = &"Throw"
+expose_callout = "SHE'S DIZZY — SHOOT THE GLOW!"
+moves = Array[ExtResource("b_move")]([SubResource("gummy_batch"), SubResource("syrup_rush"), SubResource("gumball_drop")])
+events = Array[ExtResource("b_event")]([SubResource("event_0")])
 
 [resource]
 script = ExtResource("1")
 id = &"alpha_confectioner"
 display_name = "The Confectioner"
-max_health = 2350.0
+max_health = 3400.0
 move_speed = 2.0
 speed_variance = 0.0
 turn_speed = 3.5

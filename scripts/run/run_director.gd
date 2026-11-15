@@ -87,7 +87,7 @@ const BOSS_ESCORT_CAP := 0.4
 ## Zombies an alpha calls in when it reaches a new phase, and the share of
 ## reserve energy the player gets back for forcing it.
 const PHASE_PACK := 5
-const PHASE_ENERGY := 0.2
+const PHASE_ENERGY := 0.35
 ## While an alpha stands and its horde has run out, escorts keep arriving:
 ## this many every REINFORCE_SECONDS while fewer than REINFORCE_BELOW are alive.
 const REINFORCE_COUNT := 2

@@ -18,7 +18,7 @@ extends BossMove
 @export var jumpable := true
 @export var dps := 22.0
 @export var color := Color(0.3, 1, 0.6)
-@export var beam_sound: StringName = &"boss_beam"
+@export var beam_sound: StringName = &"rounds_boss_beam"
 ## A spotlight cone rides the beam (the flashlight).
 @export var light := false
 

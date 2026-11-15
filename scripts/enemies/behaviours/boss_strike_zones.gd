@@ -39,8 +39,8 @@ enum Pattern { CHASE, AROUND, LINE, SCATTER, RING_BOSS }
 @export var linger_dps := 0.0
 @export_range(0.1, 1.0) var linger_slow := 1.0
 @export var pillar_seconds := 0.0
-@export var warn_sound: StringName = &"boss_zone_warn"
-@export var hit_sound: StringName = &"boss_zone_hit"
+@export var warn_sound: StringName = &"rounds_boss_zone_warn"
+@export var hit_sound: StringName = &"rounds_boss_zone_hit"
 
 var _left := 0.0
 var _placed := 0

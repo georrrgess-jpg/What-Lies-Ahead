@@ -6,6 +6,11 @@
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/frost_snowball_throw.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
 
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_shockwave.gd" id="b_wave"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_strike_zones.gd" id="b_zones"]
+
 [sub_resource type="Resource" id="snowball"]
 script = ExtResource("4")
 min_range = 7.0
@@ -18,9 +23,80 @@ arc = 0.85
 size = 0.6
 lead = 0.55
 
+[sub_resource type="Resource" id="ice_walls"]
+script = ExtResource("b_zones")
+move_name = &"ice_walls"
+cooldown = 13.0
+first_delay = 2.5
+max_range = 30.0
+callout = "ICE WALLS — DON'T GET BOXED IN"
+windup = 0.9
+windup_clip = &"Throw"
+pattern = 1
+count = 4
+stagger = 0.15
+spread = 3.8
+radius = 1.4
+telegraph = 1.1
+damage = 12.0
+color = Color(0.55, 0.85, 1.0, 1.0)
+style = 0
+prop = 1
+prop_color = Color(0.75, 0.95, 1.0, 1.0)
+prop_height = 3.2
+pillar_seconds = 7.0
+
+[sub_resource type="Resource" id="frost_pound"]
+script = ExtResource("b_wave")
+move_name = &"frost_pound"
+cooldown = 11.0
+first_delay = 6.0
+max_range = 15.0
+callout = "FROST POUND — JUMP THE RINGS!"
+windup = 1.0
+windup_clip = &"Attack"
+waves = 2
+gap = 0.8
+speed = 7.5
+max_radius = 15.0
+damage = 11.0
+color = Color(0.55, 0.85, 1.0, 1.0)
+
+[sub_resource type="Resource" id="avalanche"]
+script = ExtResource("b_zones")
+move_name = &"avalanche"
+min_phase = 2
+cooldown = 12.0
+first_delay = 0.0
+max_range = 30.0
+windup = 0.9
+windup_clip = &"Throw"
+pattern = 3
+count = 7
+stagger = 0.3
+spread = 6.0
+radius = 1.8
+telegraph = 1.3
+damage = 12.0
+color = Color(0.55, 0.85, 1.0, 1.0)
+style = 1
+prop = 4
+prop_color = Color(0.95, 0.98, 1.0, 1.0)
+hits_airborne = true
+
+[sub_resource type="Resource" id="event_0"]
+script = ExtResource("b_event")
+kind = &"chill"
+phase = 1
+seconds = 14.0
+strength = 0.82
+color = Color(0.8, 0.93, 1.0, 1.0)
+
 [sub_resource type="Resource" id="alpha"]
 script = ExtResource("alpha_script")
-color = Color(0.55, 0.85, 1, 1)
+color = Color(0.55, 0.85, 1.0, 1.0)
+title = "THE ABOMINABLE HOST"
+phase_callouts = PackedStringArray("BLIZZARD — OLD FROSTBITE CHILLS THE AIR", "AVALANCHE — FROSTBITE BRINGS THE MOUNTAIN DOWN")
 slam_damage = 20.0
 slam_cooldown = 9.0
 volley_shots = 3
@@ -28,14 +104,16 @@ volley_damage = 6.0
 volley_speed = 13.0
 volley_spread_degrees = 15.0
 volley_arc = 0.5
-volley_cooldown = 9.5
+volley_cooldown = 11.0
 volley_size = 0.45
+moves = Array[ExtResource("b_move")]([SubResource("ice_walls"), SubResource("frost_pound"), SubResource("avalanche")])
+events = Array[ExtResource("b_event")]([SubResource("event_0")])
 
 [resource]
 script = ExtResource("1")
 id = &"alpha_yeti"
 display_name = "Old Frostbite"
-max_health = 2200.0
+max_health = 3300.0
 move_speed = 1.95
 speed_variance = 0.0
 turn_speed = 3.5

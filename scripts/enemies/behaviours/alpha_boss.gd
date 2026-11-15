@@ -256,7 +256,7 @@ func expose(z: Zombie, seconds: float) -> void:
 	_exposed_left = seconds
 	z.play_animation(&"Stagger", 0.1)
 	_set_weak_spot(z, true)
-	Sfx.play_at(&"boss_dazed", z.global_position + Vector3.UP * 2.0, 2.0, 1.0, 14.0)
+	Sfx.play_at(&"rounds_boss_dazed", z.global_position + Vector3.UP * 2.0, 2.0, 1.0, 14.0)
 	if not _exposed_told:
 		_exposed_told = true
 		_say(expose_callout)
@@ -318,7 +318,7 @@ func _begin_roar(z: Zombie) -> void:
 	_roar_left = phase_roar
 	_roar_callout = phase_callouts[_phase - 1] if _phase - 1 < phase_callouts.size() else ""
 	z.play_animation(&"Roar", 0.1)
-	Sfx.play_at(&"boss_roar", z.global_position + Vector3.UP * 2.0, 4.0, 0.9, 20.0)
+	Sfx.play_at(&"rounds_boss_roar", z.global_position + Vector3.UP * 2.0, 4.0, 0.9, 20.0)
 	_burst_ring(z, 7.0)
 	# The roar shoves a player standing close back out of reach.
 	var away := z.target.global_position - z.global_position
@@ -349,7 +349,7 @@ func _tick_entrance(z: Zombie, delta: float) -> bool:
 		_entered = true
 		_entrance = 1.5
 		z.play_animation(&"Roar", 0.1)
-		Sfx.play_at(&"boss_roar", z.global_position + Vector3.UP * 2.0, 4.0, 1.0, 24.0)
+		Sfx.play_at(&"rounds_boss_roar", z.global_position + Vector3.UP * 2.0, 4.0, 1.0, 24.0)
 		_burst_ring(z, 5.0)
 	_entrance -= delta
 	z.move_with(Vector3.ZERO)
@@ -452,7 +452,7 @@ func _update_plates(z: Zombie) -> void:
 			Fx.impact(z.get_parent(), plate.global_position, plate.global_basis.z, armour_color)
 			Fx.confetti(z.get_parent(), plate.global_position)
 			plate.queue_free()
-		Sfx.play_at(&"boss_plate_break", z.global_position + Vector3.UP * 1.5, 3.0, randf_range(0.95, 1.1), 16.0)
+		Sfx.play_at(&"rounds_boss_plate_break", z.global_position + Vector3.UP * 1.5, 3.0, randf_range(0.95, 1.1), 16.0)
 	if _armour_left <= 0.0 and not _armour_told:
 		_armour_told = true
 		_say(armour_callout)
@@ -478,7 +478,7 @@ func _defeat_moment(z: Zombie) -> void:
 		Fx.confetti(z.get_parent(), at + Vector3(cos(a), 1.2, sin(a)) * 1.6)
 	Fx.kill_burst(z.get_parent(), at + Vector3.UP * 1.5)
 	_burst_ring(z, 10.0)
-	Sfx.play_at(&"boss_defeat", at + Vector3.UP * 1.5, 4.0, 1.0, 30.0)
+	Sfx.play_at(&"rounds_boss_defeat", at + Vector3.UP * 1.5, 4.0, 1.0, 30.0)
 	Engine.time_scale = DEFEAT_TIME_SCALE
 	z.get_tree().create_timer(DEFEAT_SECONDS, true, false, true).timeout.connect(_end_slow_motion)
 

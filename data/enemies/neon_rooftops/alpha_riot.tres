@@ -5,26 +5,102 @@
 [ext_resource type="PackedScene" path="res://art/models/neon_riot.glb" id="3"]
 [ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
 
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_charge.gd" id="b_charge"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_summon.gd" id="b_summon"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_strike_zones.gd" id="b_zones"]
+
 [sub_resource type="Resource" id="shield"]
 script = ExtResource("2")
 block_fraction = 0.8
 shield_health = 500.0
 
+[sub_resource type="Resource" id="shield_charge"]
+script = ExtResource("b_charge")
+move_name = &"shield_charge"
+cooldown = 10.0
+first_delay = 4.0
+min_range = 6.0
+max_range = 20.0
+needs_sight = true
+callout = "SHIELD CHARGE — STEP OFF THE LANE, HIT HIM FROM THE SIDE"
+windup = 1.0
+windup_clip = &"Attack"
+windup_sound = &"rounds_boss_charge_windup"
+speed = 13.0
+width = 2.6
+damage = 18.0
+guard = 0.15
+color = Color(0.3, 0.92, 1.0, 1.0)
+dash_clip = &"Run"
+dazed = 2.2
+
+[sub_resource type="Resource" id="flashbangs"]
+script = ExtResource("b_zones")
+move_name = &"flashbangs"
+cooldown = 9.0
+first_delay = 2.5
+min_range = 4.0
+max_range = 30.0
+callout = "FLASHBANGS — OUT OF THE CIRCLES!"
+windup = 0.8
+windup_clip = &"Attack"
+pattern = 3
+count = 4
+stagger = 0.3
+spread = 5.0
+radius = 2.2
+telegraph = 1.3
+damage = 12.0
+color = Color(0.3, 0.92, 1.0, 1.0)
+style = 1
+prop = 4
+prop_color = Color(0.85, 0.95, 1.0, 1.0)
+hits_airborne = true
+
+[sub_resource type="Resource" id="shield_line"]
+script = ExtResource("b_summon")
+move_name = &"shield_line"
+min_phase = 1
+cooldown = 22.0
+first_delay = 0.0
+windup = 1.0
+windup_clip = &"Attack"
+windup_sound = &"neon_riot_bark_1"
+enemy = &"riot_bruiser"
+count = 2
+max_alive = 2
+color = Color(0.3, 0.92, 1.0, 1.0)
+
+[sub_resource type="Resource" id="event_0"]
+script = ExtResource("b_event")
+kind = &"darkness"
+phase = 2
+strength = 0.4
+color = Color(0.3, 0.92, 1.0, 1.0)
+
 [sub_resource type="Resource" id="alpha"]
 script = ExtResource("alpha_script")
-color = Color(0.3, 0.92, 1, 1)
+color = Color(0.3, 0.92, 1.0, 1.0)
+title = "RIOT CONTROL"
+phase_callouts = PackedStringArray("CAPTAIN LOCKDOWN CALLS A SHIELD LINE", "LOCKDOWN GOES DARK — WATCH HIS LAMP")
 slam_damage = 18.0
+slam_clip = &"Attack"
 volley_shots = 5
 volley_damage = 4.0
 volley_speed = 13.0
 volley_spread_degrees = 12.0
-volley_cooldown = 9.5
+volley_cooldown = 11.0
+expose_callout = "HIS SHIELD IS DOWN — SHOOT THE GLOW!"
+moves = Array[ExtResource("b_move")]([SubResource("shield_charge"), SubResource("flashbangs"), SubResource("shield_line")])
+events = Array[ExtResource("b_event")]([SubResource("event_0")])
 
 [resource]
 script = ExtResource("1")
 id = &"alpha_riot"
 display_name = "Captain Lockdown"
-max_health = 1900.0
+max_health = 2900.0
 move_speed = 2.05
 speed_variance = 0.0
 turn_speed = 3.6
@@ -59,8 +135,3 @@ voice_sounds = Array[StringName]([&"neon_riot_bark_1", &"neon_riot_bark_2"])
 voice_interval = Vector2(4, 7)
 voice_pitch = 0.75
 attack_sound = &"neon_riot_bash"
-charge_speed_mult = 2.5
-charge_range = Vector2(6, 16)
-charge_telegraph = 0.85
-charge_duration = 1.2
-charge_cooldown = 8.0

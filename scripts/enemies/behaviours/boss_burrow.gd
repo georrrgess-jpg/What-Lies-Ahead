@@ -15,7 +15,7 @@ extends BossMove
 @export var damage := 18.0
 @export var color := Color(0.7, 0.35, 1)
 @export var surface_clip: StringName = &"Emerge"
-@export var surface_sound: StringName = &"boss_surface"
+@export var surface_sound: StringName = &"rounds_boss_surface"
 @export_group("Ring")
 @export var ring_count := 0
 @export var ring_spread := 5.0
@@ -61,7 +61,7 @@ func tick(z: Zombie, delta: float) -> bool:
 			if _t >= travel_time or to.length() < 0.8:
 				_step = Step.TELEGRAPH
 				_t = 0.0
-				Sfx.play_at(&"boss_zone_warn", z.global_position + Vector3.UP * 0.5, 0.0, 0.8, 12.0)
+				Sfx.play_at(&"rounds_boss_zone_warn", z.global_position + Vector3.UP * 0.5, 0.0, 0.8, 12.0)
 		Step.TELEGRAPH:
 			z.move_with(Vector3.ZERO)
 			var k := clampf(_t / surface_telegraph, 0.0, 1.0)

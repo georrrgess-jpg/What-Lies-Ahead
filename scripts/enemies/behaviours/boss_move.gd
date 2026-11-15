@@ -24,7 +24,7 @@ extends Resource
 @export var callout := ""
 @export var windup := 1.0
 @export var windup_clip: StringName = &"Roar"
-@export var windup_sound: StringName = &"boss_windup"
+@export var windup_sound: StringName = &"rounds_boss_cast"
 
 ## Seconds until it can be used again.
 var cool := 0.0

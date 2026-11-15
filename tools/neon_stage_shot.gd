@@ -182,6 +182,8 @@ func _stage_boss(director) -> void:
 	if z == null or z.data.max_health < 1000.0:
 		return
 	z.set_rank(&"boss", 1.0, Color(0.16, 0.03, 0.14))
+	# The staged player is the target, not the subject: it never falls.
+	director.player.invulnerable = true
 	director.boss = z
 	director.boss_changed.emit(z)
 	for b in z.behaviours:
