@@ -765,12 +765,12 @@ func _build_train(parent: Node3D, centre: Vector3, length: float) -> void:
 func _metro_dressing(parent: Node3D) -> void:
 	var wall_z := HALL.end.y - 0.02
 	var board := _mat("metro_board", Color(0.08, 0.32, 0.2), 0.5)
-	for x in [-16.0, 8.0, 31.0]:
+	for x in [-16.0, 8.0, 27.5]:
 		_visual_box(dressing, "NameBoard%d" % int(x), Vector3(6.0, 1.0, 0.1), Vector3(x, METRO_Y + 3.2, wall_z - 0.05), board)
 		_label(dressing, "NameText%d" % int(x), "ASHFALL SQUARE", Vector3(x, METRO_Y + 3.2, wall_z - 0.11), 180.0, 64, Color(1, 1, 1))
 	var ads := ["ad0", "ad1", "ad2", "ad3"]
 	var k := 0
-	for x in [-20.0, 0.0 + 6.5, 15.5, 27.0, 35.5]:
+	for x in [-20.0, 0.0 + 6.5, 15.5, 27.0, 37.5]:
 		var m := _ad_material(ads[k % ads.size()], k)
 		_visual_box(dressing, "AdFrame%d" % k, Vector3(3.2, 1.9, 0.12), Vector3(x, METRO_Y + 1.9, wall_z - 0.06), _mat("ad_frame", Color(0.2, 0.2, 0.22), 0.4))
 		var ad := MeshInstance3D.new()
@@ -830,7 +830,7 @@ func _label(parent: Node3D, label_name: String, text: String, pos: Vector3, yaw_
 
 
 ## Service doors in the hall's south wall (entrances), centred on these x.
-const SERVICE_DOORS: Array[float] = [-12.0, 21.5]
+const SERVICE_DOORS: Array[float] = [-12.0, 21.5, 33.0]
 const SERVICE_DOOR_WIDTH := 4.0
 
 
@@ -841,17 +841,10 @@ func _hall_south_wall(parent: Node3D, material: Material) -> void:
 	var y := METRO_Y + 2.7
 	var half := SERVICE_DOOR_WIDTH * 0.5
 	# Wall pieces between the openings, west to east.
-	var cuts: Array[Vector2] = [Vector2(-STAIR_HALF, STAIR_HALF)]
-	for x in SERVICE_DOORS:
-		cuts.append(Vector2(x - half, x + half))
-	cuts.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x < b.x)
-	var from := HALL.position.x - 8.0
 	var k := 0
-	for c in cuts:
-		_box(parent, "WallSouth%d" % k, Vector3(c.x - from, 5.4, 1.0), Vector3((from + c.x) * 0.5, y, z), material)
-		from = c.y
+	for s in _south_wall_spans():
+		_box(parent, "WallSouth%d" % k, Vector3(s.y - s.x, 5.4, 1.0), Vector3((s.x + s.y) * 0.5, y, z), material)
 		k += 1
-	_box(parent, "WallSouth%d" % k, Vector3(HALL.end.x - from, 5.4, 1.0), Vector3((from + HALL.end.x) * 0.5, y, z), material)
 	var dark := _mat("metro_dark", Color(0.12, 0.12, 0.14), 0.95)
 	var depth := 5.0
 	for x in SERVICE_DOORS:
@@ -864,6 +857,22 @@ func _hall_south_wall(parent: Node3D, material: Material) -> void:
 		_box(parent, room + "Ceiling", Vector3(SERVICE_DOOR_WIDTH + 1.0, 0.6, depth), Vector3(x, HALL_CEILING + 0.3, z + depth * 0.5 - 0.5), dark)
 		_player_wall(_player_walls(), room, Vector3(x - half, METRO_Y, z + 0.3), Vector3(x + half, METRO_Y, z + 0.3), 6.0)
 		_omni(fx, room + "Glow", Vector3(x, METRO_Y + 2.5, z + 3.0), Color(1.0, 0.3, 0.15), 0.8, 5.0)
+
+
+## The x spans of the hall's south wall between its openings (the stairs
+## from the square and the service doors), west to east.
+func _south_wall_spans() -> Array[Vector2]:
+	var cuts: Array[Vector2] = [Vector2(-STAIR_HALF, STAIR_HALF)]
+	for x in SERVICE_DOORS:
+		cuts.append(Vector2(x - SERVICE_DOOR_WIDTH * 0.5, x + SERVICE_DOOR_WIDTH * 0.5))
+	cuts.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x < b.x)
+	var spans: Array[Vector2] = []
+	var from := HALL.position.x - 8.0
+	for c in cuts:
+		spans.append(Vector2(from, c.x))
+		from = c.y
+	spans.append(Vector2(from, HALL.end.x))
+	return spans
 
 
 ## The hall's ends: the west service tunnel (an entrance) and the east wall
@@ -1052,15 +1061,17 @@ func _build_blocks() -> void:
 		["SqS_MidE", 5.0, 22.0, 13.0, 34.0, 18.0, "N"], ["SqS_E", 18.0, 22.0, 34.0, 36.0, 13.0, "N"],
 		["SqS_Far", -12.0, 44.0, 12.0, 56.0, 20.0, "N"],
 		["SqW_N", -34.0, -22.0, -22.0, -4.0, 14.0, "E"], ["SqW_S", -34.0, 4.0, -22.0, 22.0, 17.0, "E"],
-		["SqE_N", 22.0, -22.0, 34.0, -4.0, 16.0, "W"], ["SqE_S", 22.0, 4.0, 34.0, 22.0, 13.0, "W"],
+		["SqE_N", 22.0, -22.0, 34.0, -4.0, 16.0, "W"], ["SqE_SN", 22.0, 4.0, 34.0, 11.0, 13.0, "W"],
+		["SqE_SS", 22.0, 15.0, 34.0, 22.0, 13.0, "W"],
 		# Precinct: the station (west), north and south rows.
 		["PrecinctHQ_N", -88.0, -24.0, -74.0, -3.0, 16.0, "E"], ["PrecinctHQ_S", -88.0, 3.0, -74.0, 24.0, 16.0, "E"],
 		["PrecN_W", -88.0, -38.0, -56.0, -24.0, 14.0, "S"], ["PrecN_E", -52.0, -38.0, -34.0, -24.0, 18.0, "S"],
-		["PrecS_W", -88.0, 24.0, -56.0, 38.0, 16.0, "N"], ["PrecS_E", -52.0, 24.0, -34.0, 38.0, 12.0, "N"],
+		["PrecS_W", -88.0, 24.0, -56.0, 38.0, 16.0, "N"], ["PrecS_E", -52.0, 24.0, -42.0, 38.0, 12.0, "N"],
+		["PrecS_EE", -38.0, 24.0, -34.0, 38.0, 12.0, "N"],
 		# Market: north row (with the tower alley and a side alley), south row.
 		["MktN_W", 34.0, -22.0, 40.0, -8.0, 13.0, "S"], ["MktN_Mid", 44.0, -22.0, 62.0, -8.0, 15.0, "S"],
-		["MktN_E", 70.0, -22.0, 98.0, -8.0, 12.0, "S"],
-		["MktS_W", 34.0, 8.0, 54.0, 22.0, 14.0, "N"], ["MktS_E", 58.0, 8.0, 98.0, 22.0, 16.0, "N"],
+		["MktN_E", 70.0, -22.0, 84.0, -8.0, 12.0, "S"], ["MktN_EE", 88.0, -22.0, 98.0, -8.0, 12.0, "S"],
+		["MktS_W", 34.0, 8.0, 54.0, 22.0, 14.0, "N"], ["MktS_E", 58.0, 8.0, 76.0, 22.0, 16.0, "N"], ["MktS_EE", 80.0, 8.0, 98.0, 22.0, 16.0, "N"],
 		# Tower plaza: west row (over the stairs), east row, and the skyscraper's base.
 		["TowW_N", 34.0, -72.0, 46.0, -58.0, 18.0, "E"], ["TowW_M", 34.0, -54.0, 46.0, -36.0, 18.0, "E"], ["TowW_S", 34.0, -28.0, 46.0, -22.0, 12.0, "E"],
 		["TowE", 94.0, -72.0, 108.0, -50.0, 16.0, "W"], ["TowE_S", 94.0, -42.0, 108.0, -22.0, 14.0, "W"],
@@ -1317,18 +1328,23 @@ const ENTRANCES := [
 	[&"ashfall_square", Vector3(15.5, 0, -27.5), 180.0, Rect2(13.0, -34.0, 5.0, 12.0), 10.0, Vector2.ZERO],
 	[&"ashfall_square", Vector3(-15.5, 0, 27.5), 0.0, Rect2(-18.0, 22.0, 5.0, 12.0), 10.0, Vector2.ZERO],
 	[&"ashfall_square", Vector3(15.5, 0, 27.5), 0.0, Rect2(13.0, 22.0, 5.0, 12.0), 10.0, Vector2.ZERO],
+	[&"ashfall_square", Vector3(27.0, 0, 13.0), 90.0, Rect2(22.0, 11.0, 8.0, 4.0), 4.0, Vector2(4.0, 13.0)],
 	[&"precinct", Vector3(-54.0, 0, -29.5), 180.0, Rect2(-56.0, -36.0, 4.0, 12.0), 10.0, Vector2.ZERO],
 	[&"precinct", Vector3(-54.0, 0, 29.5), 0.0, Rect2(-56.0, 24.0, 4.0, 12.0), 10.0, Vector2.ZERO],
 	[&"precinct", Vector3(-78.0, 0, 0.0), -90.0, Rect2(-82.0, -3.0, 8.0, 6.0), 10.0, Vector2(4.5, 16.0)],
+	[&"precinct", Vector3(-40.0, 0, 29.5), 0.0, Rect2(-42.0, 24.0, 4.0, 12.0), 10.0, Vector2.ZERO],
 	[&"market", Vector3(42.0, 0, -14.0), 180.0, Rect2(40.0, -20.0, 4.0, 12.0), 2.0, Vector2.ZERO],
 	[&"market", Vector3(56.0, 0, 14.0), 0.0, Rect2(54.0, 8.0, 4.0, 12.0), 10.0, Vector2.ZERO],
 	[&"market", Vector3(96.0, 0, -5.0), 90.0, Rect2(90.0, -8.0, 8.0, 16.0), 10.0, Vector2.ZERO],
+	[&"market", Vector3(78.0, 0, 14.0), 0.0, Rect2(76.0, 8.0, 4.0, 12.0), 10.0, Vector2(4.0, 16.0)],
 	[&"metro", Vector3(-23.5, METRO_Y, -31.5), -90.0, null, 0.0, Vector2.ZERO],
 	[&"metro", Vector3(21.5, METRO_Y, -25.0), 0.0, null, 0.0, Vector2.ZERO],
 	[&"metro", Vector3(-12.0, METRO_Y, -25.0), 0.0, null, 0.0, Vector2.ZERO],
+	[&"metro", Vector3(33.0, METRO_Y, -25.0), 0.0, null, 0.0, Vector2.ZERO],
 	[&"tower", Vector3(70.0, 0, -77.0), 180.0, Rect2(66.0, -84.0, 8.0, 12.0), 6.0, Vector2(5.0, 24.0)],
 	[&"tower", Vector3(99.0, 0, -46.0), 90.0, Rect2(94.0, -50.0, 12.0, 8.0), 10.0, Vector2.ZERO],
 	[&"tower", Vector3(40.0, 0, -56.0), -90.0, Rect2(34.0, -58.0, 12.0, 4.0), 10.0, Vector2.ZERO],
+	[&"tower", Vector3(86.0, 0, -16.5), 0.0, Rect2(84.0, -22.0, 4.0, 10.0), 4.0, Vector2.ZERO],
 ]
 
 
@@ -1374,6 +1390,8 @@ func _build_boundary() -> void:
 		[Vector3(66, 0, -72.4), Vector3(74, 0, -72.4)], [Vector3(94.4, 0, -50), Vector3(94.4, 0, -42)],
 		[Vector3(46.4, 0, -58), Vector3(46.4, 0, -54)],
 		[Vector3(-5, 0, 22.4), Vector3(5, 0, 22.4)],
+		[Vector3(22.4, 0, 11), Vector3(22.4, 0, 15)], [Vector3(-42, 0, 24.4), Vector3(-38, 0, 24.4)],
+		[Vector3(76, 0, 8.4), Vector3(80, 0, 8.4)], [Vector3(84, 0, -21.6), Vector3(88, 0, -21.6)],
 	]
 	var i := 0
 	for m in mouths:
@@ -1601,6 +1619,10 @@ func _build_features() -> void:
 		[&"supply_drop", &"precinct", Vector3(-62.0, 0, 0.0), 0.0],
 		[&"supply_drop", &"market", Vector3(46.0, 0, 4.5), 0.0],
 		[&"supply_drop", &"tower", Vector3(82.0, 0, -38.0), 0.0],
+		# Upgrade benches: the bench's front (where the player stands) faces
+		# the marker's +Z; about 2.6 x 1.2 m, 2 m clear in front.
+		[&"upgrade_bench", &"ashfall_square", Vector3(7.5, 0, 7.0), 0.0],
+		[&"upgrade_bench", &"tower", Vector3(48.0, 0, -46.0), 90.0],
 	]
 	var counts := {}
 	for f in features:
@@ -2422,10 +2444,8 @@ func _build_metro_life() -> void:
 	var trim := _mat("metro_trim", Color(0.12, 0.45, 0.32), 0.4)
 	# Tiles on the hall's south wall (between the openings) and the pillars.
 	var wall_z := HALL.end.y - 0.03
-	var spans: Array[Vector2] = [Vector2(HALL.position.x - 8.0, SERVICE_DOORS[0] - SERVICE_DOOR_WIDTH * 0.5), Vector2(SERVICE_DOORS[0] + SERVICE_DOOR_WIDTH * 0.5, -STAIR_HALF),
-		Vector2(STAIR_HALF, SERVICE_DOORS[1] - SERVICE_DOOR_WIDTH * 0.5), Vector2(SERVICE_DOORS[1] + SERVICE_DOOR_WIDTH * 0.5, HALL.end.x)]
 	var k := 0
-	for s in spans:
+	for s in _south_wall_spans():
 		_visual_box(dressing, "WallTiles%d" % k, Vector3(s.y - s.x, 2.6, 0.05), Vector3((s.x + s.y) * 0.5, y0 + 1.3, wall_z), tile)
 		_visual_box(dressing, "WallTrim%d" % k, Vector3(s.y - s.x, 0.22, 0.08), Vector3((s.x + s.y) * 0.5, y0 + 2.7, wall_z), trim)
 		k += 1
@@ -2494,7 +2514,7 @@ func _build_metro_life() -> void:
 	_omni(fx, "StairLight", Vector3(0, -1.8, -21.0), Color(1.0, 0.78, 0.52), 1.2, 8.0)
 	# Paper posters pasted on the tiles, peeling.
 	var k2 := 0
-	for x in [-23.0, -17.5, -6.0, 3.9, 11.0, 18.0, 30.5, 38.0]:
+	for x in [-23.0, -17.5, -6.0, 3.9, 11.0, 18.0, 24.4, 29.8]:
 		_poster("MetroPoster%d" % k2, Vector3(x, y0 + 1.6 + (k2 % 2) * 0.25, HALL.end.y - 0.07), Vector3(0, 0, -1), k2 + 3)
 		k2 += 1
 	# Puddled leaks under the ceiling cracks.
