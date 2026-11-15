@@ -10,6 +10,7 @@ const RULES := {
 	&"banner_checker": [[4, &"", 150]],
 	&"banner_circuit": [[1, &"", 17]],
 	&"banner_confetti": [[1, &"", 3]],
+	&"banner_ferris_glow": [[1, &"", 28]],
 	&"banner_glitch": [[4, &"", 3000]],
 	&"banner_lava_lamp": [[1, &"", 27]],
 	&"banner_marquee": [[1, &"", 38]],
