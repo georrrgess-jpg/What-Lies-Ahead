@@ -122,12 +122,14 @@ func _build_prompt() -> void:
 	_prompt.add_theme_stylebox_override("panel", _prompt_box)
 	_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_prompt.visible = false
-	add_child(_prompt)
-	_prompt.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_prompt.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_prompt.offset_top = -PROMPT_BOTTOM
-	_prompt.offset_bottom = -PROMPT_BOTTOM
+	# A band across the bottom that keeps the prompt centred whatever its width.
+	var band := CenterContainer.new()
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(band)
+	band.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	band.offset_top = -PROMPT_BOTTOM - 90.0
+	band.offset_bottom = -PROMPT_BOTTOM
+	band.add_child(_prompt)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 6)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE

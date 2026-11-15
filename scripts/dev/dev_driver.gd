@@ -12,8 +12,8 @@ extends Node
 ##                        level) until the bot falls or --max-seconds: it buys gates when it
 ##                        can keep a reserve, arms traps it stands near, picks up supply
 ##                        crates and logs every wave (scripts/dev/endless_bot.gd)
-##   --scene=<path>       play this scene in place of the level's own (the Endless grey box:
-##                        res://scenes/levels/endless_testbed.tscn)
+##   --scene=<path>       play this scene in place of the endless levels' own (the Endless
+##                        grey box: res://scenes/levels/endless_testbed.tscn), also for --shot
 ##   --weapon=<id>        weapon the bot starts with in hand (default: pulse_pistol); it goes in
 ##                        its own class's slot (a sidearm in slot 2) next to the saved other one
 ##   --level=<id>         level to play (default: the first one); locks are ignored
@@ -175,6 +175,10 @@ func _ready() -> void:
 			var kv := arg.trim_prefix("--shot-").split("=")
 			if kv.size() == 2:
 				shot_args[kv[0]] = kv[1]
+	# --scene replaces the endless levels' scene (bot runs and stills).
+	if scene_override != "":
+		for l in GameData.endless_levels():
+			l.scene_path = scene_override
 	print("[dev] mode=%s weapon=%s swap=%s god=%s" % [Mode.keys()[mode], weapon, swap_each_break, god])
 	if snap_prefix != "":
 		# The software renderer draws about a frame a second: only draw the stills.
@@ -217,8 +221,6 @@ func _physics_process(delta: float) -> void:
 				level_id = GameData.endless_levels()[0].id
 			if level_id != &"":
 				scene._selected_level = GameData.level(level_id)
-			if scene_override != "" and GameData.level(level_id):
-				GameData.level(level_id).scene_path = scene_override
 			scene._start()
 		elif _then_done and _clock > 1.0:
 			print("[dev] back at main menu after results: OK")

@@ -38,6 +38,9 @@ var _sign: Label3D
 var _lamp: MeshInstance3D
 var _glow: OmniLight3D
 var _emitters: Array[Vector3] = []
+## Fire: a flame tongue over each burner, shown while it burns.
+var _flames: Array[MeshInstance3D] = []
+var _time := 0.0
 
 
 func _ready() -> void:
@@ -78,6 +81,9 @@ func _process(delta: float) -> void:
 				_strike()
 			if _glow:
 				_glow.light_energy = (3.2 if kind == FIRE else 2.6) * randf_range(0.65, 1.2)
+			_time += delta
+			for i in _flames.size():
+				_flames[i].scale.y = 0.75 + 0.35 * sin(_time * 13.0 + i * 1.7) + randf() * 0.15
 			if _left <= 0.0:
 				_set_state(State.COOLDOWN)
 				_left = cooldown
@@ -102,9 +108,10 @@ func _strike() -> void:
 	var scale := director.endless.health_scale() if director.endless else 1.0
 	var hits := 0
 	# A copy: a kill takes the zombie out of the director's list.
-	for z: Zombie in director.alive_enemies().duplicate():
-		if not is_instance_valid(z) or z.is_dead():
+	for item in director.alive_enemies().duplicate():
+		if not is_instance_valid(item) or (item as Zombie).is_dead():
 			continue
+		var z: Zombie = item
 		var flat := Vector2(z.global_position.x - global_position.x, z.global_position.z - global_position.z)
 		if flat.length() > radius or absf(z.global_position.y - global_position.y) > 2.5:
 			continue
@@ -138,6 +145,8 @@ func _set_state(new_state: State) -> void:
 		_lamp.material_override = EndlessProps.mat(color, 3.0)
 	if _glow:
 		_glow.visible = new_state == State.ACTIVE
+	for f in _flames:
+		f.visible = new_state == State.ACTIVE
 	if _sign:
 		_sign.text = "%s TRAP\n%s" % [_noun().to_upper(), "%d TICKETS" % price if new_state == State.READY else ("ARMED" if new_state == State.ACTIVE else "RECHARGING")]
 		_sign.modulate = color.lerp(Color.WHITE, 0.2)
@@ -165,8 +174,35 @@ func _build() -> void:
 	for i in n:
 		var a := TAU * i / n
 		_emitters.append(Vector3(cos(a), 0.1, sin(a)) * radius * 0.55 if kind == FIRE else Vector3(0, 0.5, 0))
+	if kind == FIRE:
+		for e in _emitters:
+			_flames.append(_flame(e))
 	_glow = EndlessProps.light(self, _accent(), 3.0, radius * 2.4, Vector3(0, 1.2, 0))
 	_sign = EndlessProps.sign(self, "", 40, Color.WHITE, Vector3(radius + 0.6, 2.6, 0))
+
+
+## A flame tongue: an additive cone that flickers in height while it burns.
+func _flame(at: Vector3) -> MeshInstance3D:
+	var cone := CylinderMesh.new()
+	cone.top_radius = 0.0
+	cone.bottom_radius = 0.42
+	cone.height = 2.2
+	cone.radial_segments = 8
+	cone.rings = 1
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.albedo_color = Color(1.0, 0.45, 0.1, 0.75)
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	cone.material = m
+	var pivot := MeshInstance3D.new()
+	pivot.mesh = cone
+	pivot.position = at + Vector3(0, 1.1, 0)
+	pivot.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	pivot.visible = false
+	add_child(pivot)
+	return pivot
 
 
 func _build_stand_in() -> void:

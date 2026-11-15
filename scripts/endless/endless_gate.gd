@@ -40,6 +40,8 @@ var _sign: Label3D
 var _price: Label3D
 var _door_box := AABB(Vector3(-3, 0, -0.2), Vector3(6, 4.5, 0.4))
 var _door_home := Vector3.ZERO
+## Height (gate space) of the top of the frame and door: the sign hangs over it.
+var _top := 5.0
 var _shake: Tween
 
 
@@ -56,6 +58,12 @@ func _ready() -> void:
 		var box := _bounds(door, door.transform)
 		if box.size != Vector3.ZERO:
 			_door_box = box
+	_top = _door_box.end.y
+	var frame := get_node_or_null("Frame") as Node3D
+	if frame:
+		var box := _bounds(frame, frame.transform)
+		if box.size != Vector3.ZERO:
+			_top = maxf(_top, box.end.y)
 
 
 ## Called by the director with the gate's district: builds the price sign.
@@ -63,8 +71,8 @@ func bind(district_data: EndlessDistrict) -> void:
 	data = district_data
 	if data == null or _sign:
 		return
-	_sign = _label(data.display_name.to_upper(), 64, data.accent_color, 0.0)
-	_price = _label("%d TICKETS" % data.price, 44, Color(1.0, 0.82, 0.3), -0.42)
+	_sign = _label(data.display_name.to_upper(), 64, data.accent_color, 0.95)
+	_price = _label("%d TICKETS" % data.price, 48, Color(1.0, 0.82, 0.3), 0.45)
 
 
 ## What the HUD prompt says while the player stands here ({} once open).
@@ -158,7 +166,7 @@ func _burst(at: Vector3, colors: Array, amount: int, speed: float, size: float) 
 	EndlessProps.burst(get_parent(), at, Vector3.UP, colors, amount, speed, 1.1, size, 80.0)
 
 
-func _label(text: String, font_size: int, color: Color, drop: float) -> Label3D:
+func _label(text: String, font_size: int, color: Color, lift: float) -> Label3D:
 	var l := Label3D.new()
 	l.text = text
 	l.font = UiKit.display_font()
@@ -170,7 +178,7 @@ func _label(text: String, font_size: int, color: Color, drop: float) -> Label3D:
 	l.double_sided = true
 	l.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	l.modulate = color.lerp(Color.WHITE, 0.15)
-	l.position = Vector3(_door_box.get_center().x, _door_box.end.y + 0.9 + drop, _door_box.get_center().z)
+	l.position = Vector3(_door_box.get_center().x, _top + lift, _door_box.get_center().z)
 	add_child(l)
 	return l
 
