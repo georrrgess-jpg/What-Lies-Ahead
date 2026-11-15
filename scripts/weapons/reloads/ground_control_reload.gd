@@ -29,14 +29,14 @@ func play(v: WeaponView, d: float) -> void:
 		[1.0, Vector3.ZERO, Vector3.ZERO]])
 	# The signal bars drain and the meter drops off the flank.
 	v.glow_ramp(0.04, 0.14, d, 1.0, 0.1)
-	v.track("Cell", d, [[0.12, Vector3.ZERO, Vector3.ZERO], [0.26, Vector3(-0.05, -0.12, 0.03), Vector3(0, 0, 60), 0.8]],
+	v.track("Cell", d, [[0.12, Vector3.ZERO, Vector3.ZERO], [0.26, Vector3(-0.11, -0.05, -0.05), Vector3(0, 0, 70), 0.8]],
 		Tween.TRANS_QUAD, Tween.EASE_IN)
 	v.burst(0.13, d, "EjectPoint", "sparks")
 	v.at(0.12, d, func(): Sfx.play(&"reload_clunk", -7.0, 1.2))
 	v.hide_part(0.26, d, "Cell")
 	# The hologram satellite: prints in above the dish, drifts down turning and docks.
 	_satellite(v, d)
-	v.track("Dish", d, [[0.5, Vector3.ZERO, Vector3.ZERO], [0.53, Vector3(0, 0, 0.012), Vector3(-5, 0, 0)], [0.62, Vector3.ZERO, Vector3.ZERO]],
+	v.track("Dish", d, [[0.5, Vector3.ZERO, Vector3.ZERO], [0.53, Vector3(0, 0, -0.012), Vector3(-4, 0, 0)], [0.62, Vector3.ZERO, Vector3.ZERO]],
 		Tween.TRANS_BACK, Tween.EASE_OUT)
 	v.at(0.5, d, _docked.bind(v))
 	# The hologram signal bars rise over the gun and fill, then slide home.
@@ -61,8 +61,8 @@ func _satellite(v: WeaponView, d: float) -> void:
 		_sat_mat.set_shader_parameter("span", 0.05)
 	sat.material_override = _sat_mat
 	var high := Vector3(0.0, 0.14, -0.02)
-	v.track("SatHolo", d, [[0.16, high, Vector3(0, -90, 20), 1.6, "hold"], [0.32, high * 0.6, Vector3(0, 0, 10), 1.4],
-		[0.48, Vector3.ZERO, Vector3(0, 60, 0), 1.0]], Tween.TRANS_SINE, Tween.EASE_OUT)
+	v.track("SatHolo", d, [[0.16, high, Vector3(0, -90, 20), 2.4, "hold"], [0.32, high * 0.6, Vector3(0, 0, 10), 2.0],
+		[0.48, Vector3.ZERO, Vector3(0, 60, 0), 1.2]], Tween.TRANS_SINE, Tween.EASE_OUT)
 	v.at(0.16, d, func():
 		sat.visible = true
 		var tw := sat.create_tween()

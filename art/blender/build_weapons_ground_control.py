@@ -72,11 +72,11 @@ def build_ground_control():
     screen_m = mat("RadarScreen", "#103a1c", rough=0.2, emit=0.6)
     grip_loc = (0, -0.03, -0.115)
     grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.07, 0.092, 0.19), body_bottom=-0.02)
-    rail_top = 0.13
+    rail_top = 0.15
     z_line = rail_top + SIGHT_HEIGHT
     axis_z = 0.035                       # the barrel line through the dish
     dish_neck = (0, 0.215, axis_z)
-    fore = (0, 0.16, -0.07)
+    fore = (0, 0.2, -0.07)
     screen_c = (-0.047, 0.035, 0.048)
     bars_c = (-0.043, -0.075, 0.022)
     hinge_x = 0.04
@@ -89,7 +89,7 @@ def build_ground_control():
         box("Belt", (0.086, 0.2, 0.014), (0, 0.03, 0.012), bevel=0.005, m=white),
         box("Sill", (0.084, 0.19, 0.016), (0, 0.03, -0.012), bevel=0.006, m=M["dark"]),
         box("Hump", (0.06, 0.15, 0.03), (0, -0.005, 0.082), bevel=0.012, m=M["shell"]),
-        box("RailRiser", (0.032, 0.15, 0.03), (0, 0.005, rail_top - 0.024), bevel=0.005, m=M["dark"]),
+        box("RailRiser", (0.032, 0.15, 0.048), (0, 0.005, rail_top - 0.03), bevel=0.005, m=M["dark"]),
         # The neck the dish sits on, with a white collar and a lime ring light.
         ycyl("Neck", 0.024, 0.08, 0.175, z=axis_z, m=M["dark"], segs=20, bevel=0.005),
         ring("NeckCollar", 0.026, 0.005, 0.15, z=axis_z, m=white, segs=20),
@@ -106,8 +106,8 @@ def build_ground_control():
         # Radar screen housing on the left flank, tipped up toward the eye.
         cyl("RadarBezel", 0.031, 0.012, screen_c, rot=rad(0, -58, 0), segs=28, bevel=0.003, m=white),
         # Whip antenna on the back left, leaning back.
-        cyl("AntennaBase", 0.009, 0.014, (-0.028, -0.07, 0.1), segs=12, bevel=0.002, m=M["dark"]),
-        tube("Antenna", [(-0.028, -0.07, 0.104), (-0.034, -0.09, 0.118), (-0.042, -0.115, 0.128)], 0.0028, m=M["steel"], segs=8),
+        cyl("AntennaBase", 0.009, 0.014, (-0.024, 0.06, 0.098), segs=12, bevel=0.002, m=M["dark"]),
+        tube("Antenna", [(-0.024, 0.06, 0.102), (-0.034, 0.045, 0.128), (-0.05, 0.026, 0.15)], 0.0026, m=M["steel"], segs=8),
         # Signal-bar meter backplate.
         box("BarsPlate", (0.006, 0.07, 0.04), (bars_c[0] + 0.002, bars_c[1], bars_c[2] + 0.01), bevel=0.002, m=M["dark"]),
     ]
@@ -116,24 +116,25 @@ def build_ground_control():
     shell += bolts("Pin", [(-0.042, 0.11, 0.0), (0.042, 0.11, 0.0), (0.042, -0.07, 0.045)], M["steel"], radius=0.006, height=0.006)
     lug, charm_point = charm_lug(-0.026, -0.165, 0.004, M)
     shell += lug
-    sight_rear, sight_front = sights_notch(0.0, -0.06, 0.13, rail_top, 0.126, z_line, M, gap=0.016)
-    shell.append(box("FrontSightBase", (0.028, 0.026, 0.05), (0, 0.13, 0.1), bevel=0.004, m=M["dark"]))
+    sight_rear, sight_front = sights_notch(0.0, -0.06, 0.13, rail_top, 0.146, z_line, M, gap=0.016)
+    shell.append(box("FrontSightBase", (0.028, 0.026, 0.07), (0, 0.13, 0.11), bevel=0.004, m=M["dark"]))
 
     # The dish: a white parabolic bowl opening forward, a rim, three struts
     # and a pink feed-horn ball out front.
     ny = dish_neck[1]
     dish = [
-        ycyl("DishBowl", 0.026, 0.07, ny + 0.035, z=axis_z, m=white, segs=36, bevel=0.003, radius_top=0.094),
-        ring("DishRim", 0.094, 0.0075, ny + 0.07, z=axis_z, m=white, segs=36),
+        ycyl("DishBowl", 0.026, 0.085, ny + 0.042, z=axis_z, m=white, segs=40, bevel=0.003, radius_top=0.118),
         ycyl("DishBack", 0.03, 0.012, ny + 0.004, z=axis_z, m=M["dark"], segs=20, bevel=0.003),
-        sphere("Horn", 0.015, (0, ny + 0.142, axis_z), m=M["pink"], segs=16, rings=10),
-        ycyl("HornNeck", 0.007, 0.02, ny + 0.128, z=axis_z, m=M["steel"], segs=10, bevel=0.002),
+        sphere("Horn", 0.017, (0, ny + 0.165, axis_z), m=M["pink"], segs=16, rings=10),
+        ycyl("HornNeck", 0.007, 0.02, ny + 0.15, z=axis_z, m=M["steel"], segs=10, bevel=0.002),
     ]
     for i in range(3):
         a = math.radians(90 + i * 120)
-        rim = (math.cos(a) * 0.088, ny + 0.07, axis_z + math.sin(a) * 0.088)
-        dish.append(tube(f"Strut{i}", [rim, (math.cos(a) * 0.006, ny + 0.126, axis_z + math.sin(a) * 0.006)], 0.0035, m=M["steel"], segs=8))
-    dish_core = [ycyl("DishFace", 0.03, 0.06, ny + 0.042, z=axis_z, m=core, segs=36, bevel=0.0, radius_top=0.086)]
+        rim = (math.cos(a) * 0.108, ny + 0.084, axis_z + math.sin(a) * 0.108)
+        dish.append(tube(f"Strut{i}", [rim, (math.cos(a) * 0.006, ny + 0.148, axis_z + math.sin(a) * 0.006)], 0.0035, m=M["steel"], segs=8))
+    dish_core = [ycyl("DishFace", 0.03, 0.074, ny + 0.049, z=axis_z, m=core, segs=40, bevel=0.0, radius_top=0.108),
+                 ring("DishRim", 0.118, 0.008, ny + 0.085, z=axis_z, m=core, segs=40),
+                 ring("DishBackRing", 0.07, 0.0045, ny + 0.03, z=axis_z, m=core, segs=32)]
 
     # Solar wing tiles 1..3, open, each hinged on the last one's outer edge.
     wings = {}
@@ -142,7 +143,7 @@ def build_ground_control():
         centre = (hinge[0] + TILE[0] / 2, wing_y, wing_z)
         wings[f"Wing{k}"] = (solar_tile(f"Wing{k}", centre, M, blue), hinge, f"Wing{k - 1}" if k > 1 else None)
 
-    beacon = [sphere("BeaconBall", 0.0105, (-0.043, -0.118, 0.131), m=beacon_m, segs=14, rings=8)]
+    beacon = [sphere("BeaconBall", 0.0095, (-0.052, 0.023, 0.155), m=beacon_m, segs=14, rings=8)]
     sa = math.radians(-58)
     nrm = (math.sin(sa), 0.0, math.cos(sa))
     screen = [cyl("RadarGlass", 0.025, 0.003, (screen_c[0] + nrm[0] * 0.006, screen_c[1], screen_c[2] + nrm[2] * 0.006),
@@ -173,10 +174,10 @@ def build_ground_control():
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "IronSightRear": (sight_rear, (0, -0.06, rail_top), None),
-        "IronSightFront": (sight_front, (0, 0.13, 0.126), None),
+        "IronSightFront": (sight_front, (0, 0.13, 0.146), None),
         "Dish": (dish, dish_neck, None),
         "DishCore": (dish_core, dish_neck, "Dish"),
-        "Beacon": (beacon, (-0.043, -0.118, 0.131), None),
+        "Beacon": (beacon, (-0.052, 0.023, 0.155), None),
         "RadarScreen": (screen, screen_c, None),
         "Cell": (cell_base, bars_c, None),
         "CellHolo": (cell_holo, bars_c, None),
@@ -190,11 +191,11 @@ def build_ground_control():
     for name, (parts, c) in bars.items():
         groups[name] = (parts, c, "Cell")
     empties = {
-        "Muzzle": ((0, ny + 0.16, axis_z), None),
+        "Muzzle": ((0, ny + 0.185, axis_z), None),
         "SightPoint": ((0, -0.06, z_line), None),
         "SightMount": ((0, 0.005, rail_top), None),
         "EjectPoint": ((bx - 0.02, by, bz + 0.02), None),
-        "VentPoint": ((0, ny + 0.07, axis_z + 0.1), None),
+        "VentPoint": ((0, ny + 0.085, axis_z + 0.12), None),
         "CharmPoint": (charm_point, None),
         "ElbowR": (elbow_r, "ArmR"),
         "ElbowL": (elbow_l, "ArmL"),
