@@ -15,6 +15,8 @@ extends DuneLeapBehaviour
 ## Jinks only between these distances to the player.
 @export var jink_range := Vector2(3.0, 18.0)
 @export var skitter_sound: StringName = &"cz_crawler_skitter"
+## Seconds before the first pounce (it pounces on the way in).
+@export var first_pounce := Vector2(0.4, 1.4)
 
 var _jink := 0.0
 var _side := 1.0
@@ -22,6 +24,7 @@ var _side := 1.0
 
 func on_ready(z: Zombie) -> void:
 	super.on_ready(z)
+	_cool = randf_range(first_pounce.x, first_pounce.y)
 	_jink = randf_range(jink_every.x, jink_every.y)
 	_side = 1.0 if randf() < 0.5 else -1.0
 

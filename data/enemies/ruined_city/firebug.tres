@@ -9,12 +9,12 @@
 script = ExtResource("4")
 min_range = 6.0
 max_range = 22.0
-cooldown = 5.5
+cooldown = 6.0
 windup = 1.0
-damage = 9.0
-damage_per_second = 6.0
+damage = 8.0
+damage_per_second = 5.0
 radius = 1.7
-linger = 3.2
+linger = 3.0
 projectile_speed = 13.0
 lead = 0.55
 apex = 2.4

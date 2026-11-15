@@ -141,21 +141,22 @@ func _release(z: Zombie) -> void:
 	z.play_animation(z.data.move_animation, 0.3)
 
 
-## Backs away from a player who closed in, facing them, while there is
-## walkable floor behind it.
+## Backs away from a player who closed in, facing them, toward the walkable
+## floor behind it (a cornered Firebug stands and fights).
 func _back_off(z: Zombie, delta: float) -> bool:
 	if _retreat <= 0.0:
 		_retreat = retreat_seconds
 		_retreat_cool = retreat_cooldown
 	_retreat -= delta
-	var away := -BossMove.flat_to_target(z)
-	var want := z.global_position + away * 1.5
-	var spot := NavigationServer3D.map_get_closest_point(z.get_world_3d().navigation_map, want)
-	if Vector2(spot.x - want.x, spot.z - want.z).length() > 0.6:
+	var to := BossMove.flat_to_target(z)
+	var spot := NavigationServer3D.map_get_closest_point(z.get_world_3d().navigation_map, z.global_position - to * 1.5)
+	var step := spot - z.global_position
+	step.y = 0.0
+	if step.length() < 0.4 or step.normalized().dot(to) > 0.0:
 		_retreat = 0.0
 		return false
-	z.face_toward(-away, delta)
-	z.move_with(away * z.speed * 0.85)
+	z.face_toward(to, delta)
+	z.move_with(step.normalized() * z.speed * 0.85)
 	return true
 
 

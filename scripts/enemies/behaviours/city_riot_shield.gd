@@ -48,7 +48,7 @@ var _light: OmniLight3D
 
 func on_ready(z: Zombie) -> void:
 	super.on_ready(z)
-	_cool = randf_range(2.0, cooldown)
+	_cool = randf_range(1.0, 3.0)
 	_light = OmniLight3D.new()
 	_light.omni_range = 4.5
 	_light.light_energy = 2.2
