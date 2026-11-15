@@ -4,7 +4,7 @@ extends RefCounted
 ## categories (CHARACTER, WEAPON, EFFECTS, PROFILE; the WEAPON group also has
 ## the player's Prize Prints), where an item comes from (shop, prints, level,
 ## mastery, world, milestone, Endless, starter), and one filter state per tab (sort,
-## what to show, source, search text) that the page keeps while it is open.
+## what to show, source, what it fits, search text) that the page keeps while it is open.
 
 ## The tab id of the Prize Prints list (not a cosmetic slot).
 const PRINTS := &"prints"
@@ -29,6 +29,17 @@ const SHOW_NAMES := ["ALL", "OWNED", "LOCKED", "FOR SALE"]
 ## The Prints tab's own "show" choices.
 enum PrintShow { ALL, FITS, WORN, KEPT }
 const PRINT_SHOW_NAMES := ["ALL", "FITS THIS GUN", "WORN", "KEPT ♥"]
+## Weapon tabs: which of the items the weapon being customised can wear: all
+## of them, those made for every weapon (primaries and secondaries), or those
+## made for this one weapon only. The names that say "THIS" end with the
+## weapon's class (fits_name()).
+enum Fits { ANY, EVERY, THIS }
+const FITS_NAMES := ["ANY", "EVERY GUN", "THIS %s"]
+const FITS_HINTS := [
+	"Everything this %s can wear.",
+	"Only items made for every weapon, primaries and secondaries.",
+	"Only items made for this %s alone.",
+]
 
 enum Source { ANY, SHOP, PRINTS, LEVEL, MASTERY, WORLD, MILESTONE, STARTER, ENDLESS }
 const SOURCE_NAMES := ["ANY", "SHOP", "PRINTS", "LEVEL", "MASTERY", "WORLD", "MILESTONE", "STARTER", "ENDLESS"]
@@ -41,15 +52,17 @@ class State:
 	var sort := Sort.FEATURED
 	var show := 0
 	var source := Source.ANY
+	var fits := Fits.ANY
 	var search := ""
 
 	## True when anything narrows the list (the sort does not).
 	func narrows() -> bool:
-		return show != 0 or source != Source.ANY or search.strip_edges() != ""
+		return show != 0 or source != Source.ANY or fits != Fits.ANY or search.strip_edges() != ""
 
 	func clear() -> void:
 		show = 0
 		source = Source.ANY
+		fits = Fits.ANY
 		search = ""
 
 
@@ -71,6 +84,22 @@ static func all_tabs() -> Array[StringName]:
 
 static func tab_label(slot: StringName) -> String:
 	return "PRINTS" if slot == PRINTS else String(LockerCatalog.category(slot)["tab"])
+
+
+## "PRIMARY" or "SECONDARY": the class of a weapon, for labels.
+static func weapon_class_of(w: WeaponData) -> String:
+	return String(Loadout.SLOT_NAMES[Loadout.slot_for(w)]).to_upper()
+
+
+## A FITS choice as the toolbar shows it, for a weapon of `weapon_class`
+## ("PRIMARY", "SECONDARY"): "EVERY GUN", "THIS SECONDARY".
+static func fits_name(fits: Fits, weapon_class: String) -> String:
+	return FITS_NAMES[fits].replace("%s", weapon_class)
+
+
+## The PRINTS tab's SHOW choice as the toolbar shows it ("FITS THIS PRIMARY").
+static func print_show_name(show: int, weapon_class: String) -> String:
+	return PRINT_SHOW_NAMES[show].replace("GUN", weapon_class) if show == PrintShow.FITS and weapon_class != "" else PRINT_SHOW_NAMES[show]
 
 
 ## Where an item comes from.
@@ -121,6 +150,8 @@ static func items(slot: StringName, weapon_id: StringName, state: State) -> Arra
 				if st != LockerCatalog.State.FOR_SALE:
 					continue
 		if state.source != Source.ANY and source_of(it) != state.source:
+			continue
+		if state.fits == Fits.EVERY and it.weapon_id != &"" or state.fits == Fits.THIS and it.weapon_id == &"":
 			continue
 		if needle != "" and not it.display_name.to_lower().contains(needle):
 			continue
