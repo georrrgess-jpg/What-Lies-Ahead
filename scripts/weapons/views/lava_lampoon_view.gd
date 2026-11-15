@@ -32,6 +32,7 @@ var _cap: Node3D
 var _glass: MeshInstance3D
 var _mat: ShaderMaterial
 var _pips: Array[Node3D] = []
+var _prompt: Label3D
 var _heat := 0.0
 var _flare := 0.0
 var _wobble := Vector2.ZERO
@@ -58,7 +59,7 @@ func setup(v: WeaponView) -> void:
 		holo.set_shader_parameter("span", 0.01)
 		ring.material_override = holo
 		ring.visible = false
-	_build_prompt(v)
+	_prompt = _build_prompt(v)
 
 
 func fired(_v: WeaponView) -> void:
@@ -78,9 +79,7 @@ func update(v: WeaponView, delta: float) -> void:
 	_flare = maxf(0.0, _flare - delta * 7.0)
 	if v.is_reloading() or _mat == null:
 		return
-	var prompt := v.model.find_child(PROMPT, false, false) as Label3D
-	if prompt:
-		prompt.visible = false
+	_prompt.visible = false
 	var mag := w.magazine() if w else v.data.magazine_size
 	set_lamp(_mat, _glass, mag / ROUNDS_PER_BLOB, _heat, 0.0, 0.0, -1.0, _flare)
 	show_pips(_pips, ceili(mag / ROUNDS_PER_BLOB))
@@ -102,7 +101,7 @@ func _update_wobble(v: WeaponView, delta: float) -> void:
 		_cap.transform = Transform3D(cap_rest.basis, cap_rest.origin + Vector3.UP * hop)
 
 
-func _build_prompt(v: WeaponView) -> void:
+func _build_prompt(v: WeaponView) -> Label3D:
 	var label := Label3D.new()
 	label.name = PROMPT
 	label.text = prompt_text()
@@ -118,6 +117,7 @@ func _build_prompt(v: WeaponView) -> void:
 	label.outline_render_priority = 9
 	label.visible = false
 	v.model.add_child(label)
+	return label
 
 
 # --- shared with the reload ---------------------------------------------------------

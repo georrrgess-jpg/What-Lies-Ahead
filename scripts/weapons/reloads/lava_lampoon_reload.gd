@@ -42,10 +42,13 @@ var _skip := -1.0
 var _skip_from := 0.0
 var _skip_left := 0.0
 var _missed := 0.0
+## A press came too early: the one try of this reload is spent.
+var _spent := false
 var _groovy := 0.0
 var _locked := false
 var _mat: ShaderMaterial
 var _pips: Array[Node3D] = []
+var _label: Label3D
 
 
 func play(v: WeaponView, d: float) -> void:
@@ -65,6 +68,7 @@ func play(v: WeaponView, d: float) -> void:
 		full = mini(v.data.magazine_size, mag + w.reserve())
 	_start_blobs = mag / LavaLampoonView.ROUNDS_PER_BLOB
 	_full_blobs = full / LavaLampoonView.ROUNDS_PER_BLOB
+	_label = v.model.find_child(LavaLampoonView.PROMPT, false, false) as Label3D
 	var ring := v.part("LampRingHolo")
 	if ring and ring is MeshInstance3D:
 		var holo := (ring as MeshInstance3D).material_override as ShaderMaterial
@@ -97,6 +101,7 @@ func _timeline(k: float) -> float:
 		_v.remove_meta(LavaLampoonMode.SKIP_META)
 		if p < 0.0:
 			_missed = 1.0
+			_spent = true
 		else:
 			_skip = p
 			_skip_from = _s
@@ -175,14 +180,14 @@ func _pose_ring(s: float, base: Vector3) -> void:
 
 ## "TAP R" over the lamp while the flip window is open; "GROOVY!" after a skip.
 func _pose_prompt(s: float) -> void:
-	var label := _v.model.find_child(LavaLampoonView.PROMPT, false, false) as Label3D
+	var label := _label
 	if label == null:
 		return
 	var lamp := _v.part("Lamp")
 	var window := _window(s)
 	_groovy = maxf(0.0, _groovy - _v.get_process_delta_time() * 2.2) if _skip >= 0.0 else 0.0
 	_missed = maxf(0.0, _missed - _v.get_process_delta_time() * 2.5)
-	var shown := window > 0.02 and _skip < 0.0 and _missed <= 0.0 and LavaLampoonView.weapons_of(_v) != null
+	var shown := window > 0.02 and _skip < 0.0 and not _spent and LavaLampoonView.weapons_of(_v) != null
 	label.visible = shown or _groovy > 0.0
 	if not label.visible or lamp == null:
 		return

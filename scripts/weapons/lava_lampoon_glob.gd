@@ -15,6 +15,8 @@ const REACH := 0.12
 ## A wall splat finds the floor within this drop (m).
 const FLOOR_DROP := 2.6
 const TRAIL := 6
+## Metres over which a glob swells to full size after leaving the muzzle.
+const GROW_DISTANCE := 2.5
 const TRAIL_LENGTH := 0.7
 const CORE := Color(1.0, 0.86, 0.3)
 const HOT := Color(1.0, 0.42, 0.1)
@@ -86,7 +88,9 @@ func _ready() -> void:
 	_trail.top_level = true
 	_trail.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_trail)
-	_update_trail()
+	# Shown from its first move on: before that it sits on the eye.
+	_ball.visible = false
+	_trail.visible = false
 
 
 func _physics_process(delta: float) -> void:
@@ -108,10 +112,14 @@ func _physics_process(delta: float) -> void:
 	if hit.is_empty():
 		_travelled += from.distance_to(to)
 		global_position = to
-		# The glob wobbles as it flies, stretched along its path.
+		# The glob wobbles as it flies, and swells to full size over its first
+		# metres (it leaves a muzzle held right in front of the eye).
 		var w := sin(_age * 46.0) * 0.18
-		_ball.scale = Vector3(1.0 + w, 1.0 - w, 1.0 + w * 0.5) * weapon.projectile_size
-		_update_trail()
+		var grow := clampf(_travelled / GROW_DISTANCE, 0.15, 1.0)
+		_ball.scale = Vector3(1.0 + w, 1.0 - w, 1.0 + w * 0.5) * weapon.projectile_size * grow
+		_ball.visible = true
+		_trail.visible = true
+		_update_trail(grow)
 		return
 	var at: Vector3 = hit["position"]
 	_travelled += from.distance_to(at)
@@ -159,7 +167,7 @@ func _splat(at: Vector3, normal: Vector3, floor_from: Vector3) -> void:
 
 
 ## A tapering streak of hot droplets over the last frame's flight.
-func _update_trail() -> void:
+func _update_trail(grow: float) -> void:
 	var tail := _last - global_position
 	if tail.length() > TRAIL_LENGTH:
 		tail = tail.normalized() * TRAIL_LENGTH
@@ -167,5 +175,5 @@ func _update_trail() -> void:
 	var mm := _trail.multimesh
 	for i in TRAIL:
 		var k := float(i + 1) / TRAIL
-		var s := weapon.projectile_size * (1.0 - k * 0.75) * 1.1
+		var s := weapon.projectile_size * (1.0 - k * 0.75) * 1.1 * grow
 		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * s), global_position + tail * k))
