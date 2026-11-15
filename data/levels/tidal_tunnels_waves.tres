@@ -112,7 +112,7 @@ twist = &"frenzy"
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"jelly_head": 8,
+"jelly_head": 6,
 "deep_diver": 8,
 "tourist_shambler": 6,
 "lifeguard_runner": 2,
