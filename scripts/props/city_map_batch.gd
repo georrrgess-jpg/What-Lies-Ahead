@@ -59,7 +59,9 @@ static func compound(parts: Array) -> ArrayMesh:
 	var out := ArrayMesh.new()
 	for key in order:
 		var arrays := _concat(groups[key][1])
-		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		# Compressed attributes (16-bit positions, packed normals) halve the
+		# meshes saved in the level scene.
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {}, Mesh.ARRAY_FLAG_COMPRESS_ATTRIBUTES)
 		out.surface_set_material(out.get_surface_count() - 1, groups[key][0])
 	return out
 
@@ -105,6 +107,8 @@ static func _surface(arrays: Array, xf: Transform3D, tint: Color) -> Dictionary:
 	var out_v := PackedVector3Array()
 	var out_n := PackedVector3Array()
 	var out_c := PackedColorArray()
+	var out_t := PackedFloat32Array()
+	out_t.resize(verts.size() * 4)
 	out_v.resize(verts.size())
 	out_n.resize(verts.size())
 	out_c.resize(verts.size())
@@ -112,6 +116,12 @@ static func _surface(arrays: Array, xf: Transform3D, tint: Color) -> Dictionary:
 		out_v[k] = xf * verts[k]
 		out_n[k] = (nb * normals[k]).normalized() if k < normals.size() else Vector3.UP
 		out_c[k] = (colors[k] * tint) if k < colors.size() else tint
+		# Any tangent across the normal (the kit's normal maps are triplanar).
+		var t := out_n[k].cross(Vector3.UP if absf(out_n[k].y) < 0.99 else Vector3.RIGHT).normalized()
+		out_t[k * 4] = t.x
+		out_t[k * 4 + 1] = t.y
+		out_t[k * 4 + 2] = t.z
+		out_t[k * 4 + 3] = 1.0
 	if indices.is_empty():
 		indices.resize(verts.size())
 		for k in verts.size():
@@ -122,12 +132,13 @@ static func _surface(arrays: Array, xf: Transform3D, tint: Color) -> Dictionary:
 			var t := indices[k + 1]
 			indices[k + 1] = indices[k + 2]
 			indices[k + 2] = t
-	return {"v": out_v, "n": out_n, "c": out_c, "uv": uvs, "i": indices}
+	return {"v": out_v, "n": out_n, "t": out_t, "c": out_c, "uv": uvs, "i": indices}
 
 
 static func _concat(surfaces: Array) -> Array:
 	var v := PackedVector3Array()
 	var n := PackedVector3Array()
+	var t := PackedFloat32Array()
 	var c := PackedColorArray()
 	var uv := PackedVector2Array()
 	var idx := PackedInt32Array()
@@ -138,6 +149,7 @@ static func _concat(surfaces: Array) -> Array:
 		var base := v.size()
 		v.append_array(s["v"])
 		n.append_array(s["n"])
+		t.append_array(s["t"])
 		c.append_array(s["c"])
 		if any_uv:
 			var su: PackedVector2Array = s["uv"]
@@ -153,6 +165,7 @@ static func _concat(surfaces: Array) -> Array:
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = v
 	arrays[Mesh.ARRAY_NORMAL] = n
+	arrays[Mesh.ARRAY_TANGENT] = t
 	arrays[Mesh.ARRAY_COLOR] = c
 	if any_uv:
 		arrays[Mesh.ARRAY_TEX_UV] = uv
