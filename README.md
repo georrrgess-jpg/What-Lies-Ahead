@@ -219,7 +219,7 @@ for gates, traps, drops and a new best.
 | Dunk Tank | Secondary | Soak and push | Player level 7 | Full-auto water jet (under 24 m) that pierces one zombie and pushes; soaked zombies are slowed and take +25% damage from every weapon for 3 s |
 | Shutterbug | Secondary | Crowd stun | Player level 13 | Flash camera: each shot hits every zombie in a 12 m cone (no headshots, weaker toward the rim and far end) and dazzles it: knocked out of its swing, staggered (each zombie once per 2.5 s; heavies and alphas are only slowed) and seeing stars; aiming zooms the flash (narrower, longer, x1.3) |
 | Sparkler | Secondary | Spray and burn | Player level 18 | Full-auto firework machine pistol; every hit adds a fizz burn stack (up to six) that keeps burning; the fuse burns down with the magazine |
-| Ring Toss | Secondary | Ricochet | Player level 26 | Throws a glowing hoop that ricochets through up to four zombies and flies back to be caught; a headshot "Ringer" does double damage and refunds the hoop |
+| Ring Toss | Secondary | Ricochet | Player level 26 | Throws a glowing hoop that ricochets through up to three zombies (each ricochet 65% of the last; the first hit, all a lone boss takes, is full damage) and flies back to be caught; a headshot "Ringer" does double damage and refunds the hoop |
 | Balloon Darter | Secondary | Tag and pop | Player level 37 | Quick darts tie a balloon onto each zombie they hit (up to four); 0.9 s after the first dart the bunch pops for 28 a balloon and splashes its neighbours, setting off their balloons in a chain |
 
 `python3 tools/balance_report.py` prints each weapon's time-to-kill, sustained DPS and
