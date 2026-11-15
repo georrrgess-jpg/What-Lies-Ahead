@@ -19,6 +19,7 @@ const DAMAGE := {FIRE: 20.0, SHOCK: 55.0}
 const HEAVY_SHARE := 0.6
 const FLAMES := [Color(1.0, 0.85, 0.3), Color(1.0, 0.5, 0.12), Color(0.95, 0.25, 0.08)]
 const ARCS := Color(0.55, 0.85, 1.0)
+const CITY_FIRE := "res://scenes/props/city_fire.tscn"
 
 var kind: StringName = FIRE
 var district: StringName
@@ -39,7 +40,7 @@ var _lamp: MeshInstance3D
 var _glow: OmniLight3D
 var _emitters: Array[Vector3] = []
 ## Fire: a flame tongue over each burner, shown while it burns.
-var _flames: Array[MeshInstance3D] = []
+var _flames: Array[Node3D] = []
 var _time := 0.0
 
 
@@ -83,7 +84,8 @@ func _process(delta: float) -> void:
 				_glow.light_energy = (3.2 if kind == FIRE else 2.6) * randf_range(0.65, 1.2)
 			_time += delta
 			for i in _flames.size():
-				_flames[i].scale.y = 0.75 + 0.35 * sin(_time * 13.0 + i * 1.7) + randf() * 0.15
+				if _flames[i] is MeshInstance3D:
+					_flames[i].scale.y = 0.75 + 0.35 * sin(_time * 13.0 + i * 1.7) + randf() * 0.15
 			if _left <= 0.0:
 				_set_state(State.COOLDOWN)
 				_left = cooldown
@@ -119,7 +121,7 @@ func _strike() -> void:
 		var chest := z.global_position + Vector3.UP * 1.0 * z.data.body_scale
 		if kind == SHOCK:
 			if hits < 6:
-				LightningBolt.spawn(get_parent(), global_position + Vector3.UP * 0.3, chest, ARCS, 0.07, 0.2, 0.35)
+				LightningBolt.spawn(get_parent(), to_global(_emitters[hits % _emitters.size()]), chest, ARCS, 0.07, 0.2, 0.35)
 			z.interrupt()
 		hits += 1
 		z.take_hit(amount, chest, Vector3.UP, kind, false)
@@ -162,27 +164,48 @@ func _accent() -> Color:
 
 # --- looks ---------------------------------------------------------------------
 
-## The kit's prop when it exists (art/models/city_trap_fire.glb, ..._shock.glb),
-## else a hazard-ringed street grate with burners or a generator and a grid.
+## The kit's prop when it exists (art/models/city_trap_fire.glb with empties
+## Burner0-3, ..._shock.glb with Spark0-3, both with a Console), else a
+## hazard-ringed street grate with burners or a generator and a grid. Fire
+## burns as the kit's CityFire when it exists, else as flame cones.
 func _build() -> void:
+	var console := Vector3(radius + 0.6, 0, 0)
 	var prop := EndlessProps.model(String(kind))
 	if prop:
 		add_child(prop)
+		for i in 4:
+			var marker := prop.find_child(("Burner%d" if kind == FIRE else "Spark%d") % i, true, false) as Node3D
+			if marker:
+				_emitters.append(to_local(marker.global_position))
+		var c := prop.find_child("Console", true, false) as Node3D
+		if c:
+			console = to_local(c.global_position)
 	else:
 		_build_stand_in()
-	var n := 6 if kind == FIRE else 1
-	for i in n:
-		var a := TAU * i / n
-		_emitters.append(Vector3(cos(a), 0.1, sin(a)) * radius * 0.55 if kind == FIRE else Vector3(0, 0.5, 0))
+	if _emitters.is_empty():
+		var n := 6 if kind == FIRE else 1
+		for i in n:
+			var a := TAU * i / n
+			_emitters.append(Vector3(cos(a), 0.1, sin(a)) * radius * 0.55 if kind == FIRE else Vector3(0, 0.5, 0))
 	if kind == FIRE:
 		for e in _emitters:
 			_flames.append(_flame(e))
 	_glow = EndlessProps.light(self, _accent(), 3.0, radius * 2.4, Vector3(0, 1.2, 0))
-	_sign = EndlessProps.sign(self, "", 40, Color.WHITE, Vector3(radius + 0.6, 2.6, 0))
+	_sign = EndlessProps.sign(self, "", 40, Color.WHITE, console + Vector3(0, 2.6, 0))
 
 
-## A flame tongue: an additive cone that flickers in height while it burns.
-func _flame(at: Vector3) -> MeshInstance3D:
+## A flame over a burner: the kit's CityFire, else an additive cone that
+## flickers in height while it burns.
+func _flame(at: Vector3) -> Node3D:
+	if ResourceLoader.exists(CITY_FIRE):
+		var fire: Node3D = (load(CITY_FIRE) as PackedScene).instantiate()
+		fire.set("size", 0.9)
+		fire.set("with_light", false)
+		fire.set("with_smoke", false)
+		fire.position = at
+		fire.visible = false
+		add_child(fire)
+		return fire
 	var cone := CylinderMesh.new()
 	cone.top_radius = 0.0
 	cone.bottom_radius = 0.42

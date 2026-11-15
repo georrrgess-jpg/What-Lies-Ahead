@@ -82,7 +82,8 @@ func _collect(player: Player) -> void:
 
 # --- looks ---------------------------------------------------------------------
 
-## The kit's airdrop crate (art/models/city_supply_crate.glb) when it exists,
+## The kit's airdrop crate (art/models/city_supply_crate.glb: Crate and a
+## detachable Parachute) when it exists,
 ## else a hazard-striped crate under a striped canopy; a green light beam
 ## marks it from afar.
 func _build() -> void:
@@ -92,7 +93,7 @@ func _build() -> void:
 	var prop := EndlessProps.model("supply_crate")
 	if prop:
 		_crate.add_child(prop)
-		_chute = prop.find_child("*Chute*", true, false) as Node3D
+		_chute = prop.find_child("Parachute", true, false) as Node3D
 	else:
 		EndlessProps.box(_crate, Vector3(1.3, 1.0, 1.3), Vector3(0, 0.5, 0), EndlessProps.mat(Color(0.3, 0.42, 0.24)))
 		EndlessProps.box(_crate, Vector3(1.36, 0.22, 1.36), Vector3(0, 0.5, 0), EndlessProps.hazard_mat())

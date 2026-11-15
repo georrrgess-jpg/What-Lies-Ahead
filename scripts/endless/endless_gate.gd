@@ -130,6 +130,12 @@ func open(animate := true) -> void:
 func _animate_door(door: Node3D) -> void:
 	var at := global_transform * Vector3(_door_box.get_center().x, 0.2, _door_box.get_center().z)
 	Sfx.play_at(&"end_gate_open", at + Vector3.UP * 1.5, 0.0, 1.0, 14.0)
+	_burst(at, DUST, 34, 3.0, 0.14)
+	_burst(at + Vector3.UP * _door_box.size.y * 0.5, SPARKS, 28, 6.0, 0.05)
+	# The kit's doors (CityGateDoor) animate their own leaves.
+	if door.has_method("play_open"):
+		door.play_open(open_style)
+		return
 	var seconds: float = OPEN_SECONDS.get(open_style, 1.2)
 	var tw := create_tween().set_trans(Tween.TRANS_CUBIC)
 	match open_style:
@@ -150,8 +156,6 @@ func _animate_door(door: Node3D) -> void:
 			var h := _door_box.size.y
 			tw.tween_property(door, "position:y", _door_home.y + h * 0.86, seconds)
 			tw.parallel().tween_property(door, "scale:y", door.scale.y * 0.14, seconds)
-	_burst(at, DUST, 34, 3.0, 0.14)
-	_burst(at + Vector3.UP * _door_box.size.y * 0.5, SPARKS, 28, 6.0, 0.05)
 
 
 ## +1 if the player is in front of the gate (local +Z), -1 behind, 0 if unknown.

@@ -1,10 +1,11 @@
 extends RefCounted
 ## Stills of the Endless features (run by scripts/dev/screenshot.gd):
 ##   --shot-scene=kiosk --shot-run=res://scripts/dev/endless_stage.gd --shot=<x.png>
-## Saves <x>_trap.png (a fire trap armed under a crowd, a supply crate landed
-## beside it) and <x>_open.png (a district paid for: its gate opening, the
-## district banner). Use with --scene=res://scenes/levels/endless_testbed.tscn
-## for the grey box's square trap, or on the city with --shot-pos/--shot-yaw.
+## Saves <x>_open.png (a district paid for: its gate opening, the district
+## banner) and <x>_trap.png (a trap of an open district armed under a crowd,
+## a supply crate landed beside it), and prints how many of the crowd the
+## trap left standing after ~3 s. Works on the city or, with
+## --scene=res://scenes/levels/endless_testbed.tscn, on the grey box.
 
 
 func run(shot: Node, director: RunDirector) -> void:
@@ -16,6 +17,21 @@ func run(shot: Node, director: RunDirector) -> void:
 	director.kiosk.player_inside = false
 	director._set_state(RunDirector.State.WAVE)
 	var base := String(shot.path).get_basename()
+	var gate := _first_gate(endless)
+	var seen_from := director.player.global_position
+	if gate:
+		# From the side the player starts on, 9 m back.
+		var side := gate.global_transform.basis.z.normalized() * 9.0
+		var spot := gate.global_position + side
+		if (gate.global_position - side).distance_to(director._player_start) < spot.distance_to(director._player_start):
+			spot = gate.global_position - side
+		player.global_position = spot
+		var to := gate.global_position - spot
+		player.set_look(atan2(-to.x, -to.z), deg_to_rad(6.0))
+		seen_from = gate.global_position
+		await shot._wait(10)
+		endless.open_district(gate.data)
+		await _save(shot, base + "_open.png", 36)
 	var trap := _first_trap(endless)
 	if trap:
 		_crowd(director, trap.global_position, trap.radius * 0.6)
@@ -23,9 +39,12 @@ func run(shot: Node, director: RunDirector) -> void:
 		var crate := EndlessSupply.new()
 		crate.director = director
 		director.get_parent().add_child(crate)
-		crate.global_position = trap.global_position + Vector3(trap.radius + 3.0, 0, 2.0)
+		var toward := seen_from - trap.global_position
+		toward.y = 0.0
+		toward = toward.normalized() if toward.length() > 0.5 else Vector3.BACK
+		crate.global_position = trap.global_position + toward.rotated(Vector3.UP, 0.9) * (trap.radius + 2.5)
 		crate._time = EndlessSupply.FALL_SECONDS
-		var eye := trap.global_position + Vector3(2.0, 0, trap.radius + 8.0)
+		var eye := trap.global_position + toward * (trap.radius + 7.0)
 		player.global_position = eye
 		var to := trap.global_position - eye
 		player.set_look(atan2(-to.x, -to.z), deg_to_rad(-14.0))
@@ -33,16 +52,6 @@ func run(shot: Node, director: RunDirector) -> void:
 		await shot._wait(150)
 		var left := director.alive_enemies().filter(func(z) -> bool: return is_instance_valid(z) and not z.is_dead()).size()
 		print("[stage] trap %s: %d of 5 shamblers standing after %.1f s armed" % [trap.kind, left, 190.0 / 60.0])
-	var gate := _first_gate(endless)
-	if gate:
-		var spot := gate.global_position + gate.global_transform.basis.z.normalized() * 9.0
-		player.global_position = spot
-		var to := gate.global_position - spot
-		player.set_look(atan2(-to.x, -to.z), deg_to_rad(6.0))
-		director.tickets = gate.data.price + 40
-		await shot._wait(10)
-		endless.open_district(gate.data)
-		await _save(shot, base + "_open.png", 36)
 
 
 ## Saves the screen after `frames` frames (the screenshot tool's own capture quits).
