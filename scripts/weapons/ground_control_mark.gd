@@ -17,7 +17,7 @@ const FADE_TIME := 0.8
 ## The overlay is laid again this often (a hit flash takes the slot for a moment).
 const REAPPLY := 0.1
 const SHADER := "res://art/shaders/ground_control_mark.gdshader"
-const BLIP_COLOR := Color(0.66, 0.9, 0.24)
+const BLIP_COLOR := Color(0.8, 1.0, 0.35)
 
 var zombie: Zombie
 var _left := 0.0
@@ -135,7 +135,7 @@ func _set_overlay(on: bool) -> void:
 static func _blip_quad() -> QuadMesh:
 	if _blip_mesh == null:
 		_blip_mesh = QuadMesh.new()
-		_blip_mesh.size = Vector2(0.035, 0.035)
+		_blip_mesh.size = Vector2(0.34, 0.34)
 	return _blip_mesh
 
 
@@ -147,7 +147,6 @@ static func _blip_material() -> StandardMaterial3D:
 		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 		m.no_depth_test = true
 		m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-		m.fixed_size = true
 		m.albedo_texture = _diamond_texture()
 		m.albedo_color = BLIP_COLOR
 		m.render_priority = 4
