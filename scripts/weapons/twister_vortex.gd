@@ -11,7 +11,9 @@ extends Node3D
 ## spin; the catch knocks them out of any windup. Pull and swirl speed fall
 ## with the zombie's weight (1 / sqrt(mass)). Zombies heavier than
 ## CAPTURE_MASS (alphas) and bosses are never caught: the whirl only drags at
-## their feet (HEAVY_DRAG). Zombies inside CUP_RADIUS take WHIRL_TICK_DAMAGE
+## their feet (HEAVY_DRAG). A cup that lands on one of them (within
+## CUP_RADIUS) latches on and rides with it, so a big target cannot simply
+## walk out of the cup before it pops. Zombies inside CUP_RADIUS take WHIRL_TICK_DAMAGE
 ## every WHIRL_TICK, quietly like a burn (only the finishing tick is a full
 ## hit). Then the cup pops: the weapon's splash (damage, splash_radius,
 ## splash_push) through WeaponController.projectile_detonated, hurling the
@@ -54,6 +56,8 @@ var _open := false
 var _age := 0.0
 var _tick := WHIRL_TICK
 var _centre := Vector3.ZERO
+## The heavy or boss the cup latched onto (null when it sits on the floor).
+var _rider: Zombie
 var _held := {}            # zombie instance id -> Hold
 var _exclude: Array[RID] = []
 var _cup: Node3D
@@ -211,12 +215,33 @@ func _open_at(at: Vector3) -> void:
 	WeaponFx.flash(get_parent(), _centre + Vector3.UP * 0.5, CUP_COLORS[0], 1.4, 0.2)
 	WeaponFx.shockwave(get_parent(), _centre + Vector3.UP * 0.2, CUP_COLORS[1], PULL_RADIUS * 0.6)
 	Sfx.play_at(WHIRL_SOUND, _centre + Vector3.UP, 0.0, randf_range(0.97, 1.03), 14.0)
+	_rider = _latch_target()
+
+
+## The nearest uncatchable zombie (heavy or boss) within CUP_RADIUS of the
+## landing point, which the cup then rides on.
+func _latch_target() -> Zombie:
+	var best: Zombie = null
+	var best_d := CUP_RADIUS
+	for node in get_tree().get_nodes_in_group("zombies"):
+		var z := node as Zombie
+		if z == null or z.is_dead() or (z.data.mass < CAPTURE_MASS and z.rank != Zombie.RANK_BOSS):
+			continue
+		var d := Vector2(z.global_position.x - _centre.x, z.global_position.z - _centre.z).length()
+		if d <= best_d and absf(z.global_position.y - _centre.y) <= REACH_UP:
+			best = z
+			best_d = d
+	return best
 
 
 # --- the whirl -------------------------------------------------------------------
 
 func _whirl(delta: float) -> void:
 	_age += delta
+	if is_instance_valid(_rider) and not _rider.is_dead():
+		_centre.x = _rider.global_position.x
+		_centre.z = _rider.global_position.z
+		global_position = _centre
 	_tick -= delta
 	var tick := _tick <= 0.0
 	if tick:
