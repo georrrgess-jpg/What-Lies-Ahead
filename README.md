@@ -8,6 +8,8 @@ end), spend tickets between waves, then follow the exit lights to the portal and
 through. Clearing a level unlocks the next world. Every zombie carries a stolen **Spark**;
 pop it and you bank it, and Sparks buy the best skins, sights, cells, gloves and more in
 the **Shop**. New players start in **Boot Camp**, a short, skippable tutorial.
+**Endless** mode (open from player level 1) is a run that never stops, in a burnt-out
+city you buy your way through gate by gate (see [Endless](#endless-ashfall-city)).
 
 | # | World | Level | Setting | New enemies |
 | --- | --- | --- | --- | --- |
@@ -149,6 +151,37 @@ fullscreen.
   glowing ring and a whistle; Sky Divers mark their landing with a ring and float down
   under a canopy (step out of the ring), and Sky Harbor's gale leans on you (the
   railings hold).
+- **Finished maps.** Every map was audited for unfinished or illogical spots: Tidal
+  Tunnels' passages behind the fish-tank pillars and the tank shells facing the halls are
+  finished walls and the touch pool shows its sea life; Midnight Mall's back rooms (loading
+  dock, kitchen, cinema kiosks, the department store), Candy Works' named door bays and
+  Sky Harbor's ticket office are furnished; Lost Temple's trails and Lava Lagoon's jungle
+  trail continue past their gates, its lava fall pours down a rock chute and its beach
+  stairs join the plaza; flickering seams on Tidal Tunnels and Neon Skyline are gone, and
+  no entrance spawns zombies inside props or behind a railing (`tools/spawn_probe.gd`).
+
+## Endless: Ashfall City
+
+A burnt-out city at dusk under falling ash: burning wrecks, gutted buildings, police
+lights and flickering neon. Hold **Ashfall Square** around the loadout station, then
+pay tickets at its gates to open **Precinct 9**, the **Metro Line** (underground, a
+stalled train), the **Neon Market** and the **Broadcast Tower** at the foot of the broken
+skyscraper; the open city loops back on itself through the metro. Each district adds
+its own entrances and zombies: the city's Commuters, Bike Couriers and Site Foremen;
+**Riot Shields** (block frontal body shots until cracked, exposed after their rush),
+**Tunnel Crawlers** (low, jinking, pounce) and **Firebugs** (fire bottles with a marked
+landing ring); **The Wrecker** (wrecking-ball sweep with a floor telegraph, bulldoze
+charge, falling concrete) comes every 10th wave. Waves never end and scale up (every
+5th is a horde); pay to arm **fire and shock traps** in the districts, and a **supply
+crate** parachutes in every 5th break. The run ends when you fall; your best wave,
+score and districts are kept. Choose it with **ENDLESS MODE** on the Play page.
+
+Rewards: eight **Ashfall City camos** (waves 5-25 and opening each district), the
+**Road Rager** (reach wave 10) and the **Mythic** finish **Last Light** (reach wave 30),
+the rarity above Legendary, shown with an animated red-gold treatment. Rules, scaling
+and the balance table: [docs/ENDLESS.md](docs/ENDLESS.md). The city has its own industrial
+arcade theme (a heavier variant on boss waves), ruined-city ambience and its own sounds
+for gates, traps, drops and a new best.
 
 ## Weapons
 
@@ -165,6 +198,7 @@ fullscreen.
 | Whirligig | Primary | Crowd shredder | Player level 22 | Prize-wheel minigun: spins up for 0.4 s, then 18 rounds a second that pass through a second zombie; slows you while it spins; overheats |
 | Riptide Harpoon | Primary | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
 | Rail Lancer | Primary | Anti-heavy | Player level 34 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
+| Road Rager | Primary | Boomerang sweeper | Endless wave 10 | A hot-rod pitching machine: the spinning hubcap hits every zombie out and back; hip throws loop wide, aimed throws go straight out and back; a caught hubcap goes back in the magazine (a catch mid-reload cuts it short), and four hits in one throw turn it gold (+50%) |
 | Pulse Pistol | Secondary | Precision | Start | Three body shots or two headshots drop a tourist; a rested shot flies dead centre |
 | Comet Hand Cannon | Secondary | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
 | Dunk Tank | Secondary | Soak and push | Player level 7 | Full-auto water jet (under 24 m) that pierces one zombie and pushes; soaked zombies are slowed and take +25% damage from every weapon for 3 s |
