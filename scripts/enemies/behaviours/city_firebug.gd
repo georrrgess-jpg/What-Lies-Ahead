@@ -7,8 +7,9 @@ extends EnemyBehaviour
 ## land (where the player is heading) and the bottle lobs in to land exactly
 ## as the ring fills: a burst of fire, then a short-lived burning patch.
 ## Step out of the ring, and out of the flames. A headshot during the wind-up
-## makes it drop the bottle. It backs off when the player gets close, but a
-## cornered Firebug claws like any zombie.
+## makes it drop the bottle. It backs off when the player gets close (its
+## walk played in reverse, so it steps backwards), but a cornered Firebug
+## claws like any zombie.
 
 @export var min_range := 6.0
 @export var max_range := 22.0
@@ -35,6 +36,8 @@ extends EnemyBehaviour
 @export var retreat_range := 5.0
 @export var retreat_seconds := 0.9
 @export var retreat_cooldown := 3.5
+## Speed while backing off, as a fraction of its walking speed.
+@export var retreat_speed := 0.85
 
 ## Fraction of the throw clip at which the arm comes forward.
 const RELEASE_FRACTION := 21.0 / 30.0
@@ -43,6 +46,7 @@ var _cool := 3.0
 var _winding := 0.0
 var _retreat := 0.0
 var _retreat_cool := 0.0
+var _backing := false
 var _anim: AnimationPlayer
 var _bottle: Node3D
 
@@ -66,6 +70,7 @@ func on_physics(z: Zombie, delta: float) -> bool:
 			_release(z)
 		return true
 	if z.state != Zombie.State.CHASE or not z.target.alive:
+		_backing = false
 		return false
 	var d := z.distance_to_target()
 	if _cool <= 0.0 and d >= min_range and d <= max_range and z.has_line_of_sight():
@@ -73,6 +78,7 @@ func on_physics(z: Zombie, delta: float) -> bool:
 		return true
 	if _retreat > 0.0 or (_retreat_cool <= 0.0 and d < retreat_range and d > 2.2):
 		return _back_off(z, delta)
+	_stop_backing(z)
 	return false
 
 
@@ -107,6 +113,7 @@ func _begin(z: Zombie) -> void:
 	_cool = cooldown
 	_winding = windup
 	_retreat = 0.0
+	_backing = false
 	_show_bottle(true)
 	if _anim and _anim.has_animation(throw_clip):
 		_anim.play(throw_clip, 0.1)
@@ -154,10 +161,21 @@ func _back_off(z: Zombie, delta: float) -> bool:
 	step.y = 0.0
 	if step.length() < 0.4 or step.normalized().dot(to) > 0.0:
 		_retreat = 0.0
+		_stop_backing(z)
 		return false
+	if not _backing:
+		_backing = true
+		z.play_backpedal(z.speed * retreat_speed)
 	z.face_toward(to, delta)
-	z.move_with(step.normalized() * z.speed * 0.85)
+	z.move_with(step.normalized() * z.speed * retreat_speed)
 	return true
+
+
+## Hands the legs back to the walk once it stops backing off.
+func _stop_backing(z: Zombie) -> void:
+	if _backing:
+		_backing = false
+		z.play_animation(z.data.move_animation, 0.2)
 
 
 func _show_bottle(on: bool) -> void:
