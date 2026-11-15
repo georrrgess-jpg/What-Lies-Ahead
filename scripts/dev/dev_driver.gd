@@ -629,7 +629,8 @@ func _bot_range(data: WeaponData) -> float:
 		return minf(data.max_range * 0.85, 17.0)
 	if data.projectile_speed > 0.0:
 		return 21.0
-	return 26.0
+	# Short-reach weapons (the Dunk Tank's jet) wait until the target is in reach.
+	return minf(26.0, data.max_range * 0.85)
 
 
 ## Charge weapons: hold to charge, release once charged enough and on target.

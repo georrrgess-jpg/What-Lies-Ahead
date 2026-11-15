@@ -35,6 +35,9 @@ const WHIRL_TICK_DAMAGE := 13.0
 ## Zombies heavier than this, and bosses, are not caught, only slowed.
 const CAPTURE_MASS := 5.0
 const HEAVY_DRAG := 0.5
+## Seconds a zombie flung out by a pop cannot be caught by another whirl, so
+## back-to-back cups do not hold a crowd for good.
+const FREE_TIME := 1.0
 ## Height (m) above or below the centre a zombie may stand and still be caught.
 const REACH_UP := 2.5
 const SPIRAL_ARMS := 3
@@ -62,6 +65,8 @@ var _im: ImmediateMesh
 var _confetti := 0.0
 
 static var _mats := {}
+## Zombie instance id -> msec until which no whirl may catch it again.
+static var _free_until := {}
 static var _cup_mesh: CylinderMesh
 static var _saucer_mesh: CylinderMesh
 static var _rim_mesh: TorusMesh
@@ -227,7 +232,7 @@ func _whirl(delta: float) -> void:
 			continue
 		if _capturable(z):
 			_hold(z)
-		else:
+		elif not _held.has(z.get_instance_id()):
 			z.speed_multiplier *= HEAVY_DRAG
 		if tick and flat <= CUP_RADIUS:
 			_spin_damage(z)
@@ -236,7 +241,18 @@ func _whirl(delta: float) -> void:
 
 
 func _capturable(z: Zombie) -> bool:
-	return z.data.mass < CAPTURE_MASS and z.rank != Zombie.RANK_BOSS
+	if z.data.mass >= CAPTURE_MASS or z.rank == Zombie.RANK_BOSS:
+		return false
+	var key := z.get_instance_id()
+	if _held.has(key):
+		return true
+	if int(_free_until.get(key, 0)) > Time.get_ticks_msec():
+		return false
+	# One whirl at a time: a zombie another cup holds stays with it.
+	for b in z.behaviours:
+		if b is Hold and is_instance_valid((b as Hold).vortex):
+			return false
+	return true
 
 
 func _hold(z: Zombie) -> void:
@@ -259,13 +275,22 @@ func _release(z: Zombie) -> void:
 	_held.erase(key)
 
 
+## Lets go of every caught zombie; each is free of whirls for FREE_TIME.
 func _release_all() -> void:
+	var until := Time.get_ticks_msec() + int(FREE_TIME * 1000.0)
 	for key in _held.keys():
 		var entry: Array = _held[key]
-		var z := entry[0] as Zombie
-		if is_instance_valid(z):
-			z.behaviours.erase(entry[1])
+		if not is_instance_valid(entry[0]):
+			continue
+		var z: Zombie = entry[0]
+		z.behaviours.erase(entry[1])
+		_free_until[key] = until
 	_held.clear()
+	if _free_until.size() > 64:
+		var now := Time.get_ticks_msec()
+		for key in _free_until.keys():
+			if int(_free_until[key]) < now:
+				_free_until.erase(key)
 
 
 ## Where a caught zombie is dragged this frame: in along a spiral, faster
