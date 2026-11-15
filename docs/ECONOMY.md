@@ -192,23 +192,50 @@ else:
 
 ### `Progression` (autoload), additions
 
-`MAX_LEVEL` is 40. `level_rewards(lvl)` (cosmetics, never priced ones),
+`MAX_LEVEL` is 50. `level_rewards(lvl)` (cosmetics, never priced ones),
 `level_weapons(lvl)`, `level_sparks(lvl)`, `is_milestone_level(lvl)`, `reward_text(lvl)`,
 `stamp(lvl)` / `stamp_kind(lvl)` (the weapon of a weapon level).
 
 ## Player levels
 
-40 levels. XP from level L to L+1 is `1,800 + 400 (L - 1)` (`data/progression/rules.tres`),
-366,600 XP in all. XP sources are unchanged (6% of the score, wave bonuses, 1,000 + 250
+50 levels. XP from level L to L+1 is `1,800 + 400 (L - 1)` (`data/progression/rules.tres`),
+366,600 XP to level 40 and 558,600 to level 50. XP sources are unchanged (6% of the score, wave bonuses, 1,000 + 250
 per world for a clear, 1,500 for a first clear), plus contracts and milestones; wave and
 clear XP follow `Difficulty.reward_scale()`.
 
 Every level pays Sparks and gives exactly one thing. Weapons: Comet Hand Cannon 2, Arc
-Coil 4, Bumper Lobber 6, Frostbite Cryo Beam 9, Teacup Twister 12. Every fifth level is a
+Coil 4, Bumper Lobber 6, Frostbite Cryo Beam 9, ... Rail Lancer 34, Balloon Darter 37,
+Teacup Twister 43 (the full list is in the README). Every fifth level is a
 showpiece: Pixel Burst (kill effect) 5, Chrome Cherry 10, Midway Maestro (operator) 15,
 Lifeguard 20, Marquee 25, Prize Gold (animated finish) 30, Champion's Crown 35, and at
-40 the Arcade Champion operator with the Boardwalk Legend finish and title. The full
-track is printed by the model.
+40 the Arcade Champion operator with the Boardwalk Legend finish and title, Teacup Ride
+(animated finish) 45, and at 50 the Grand Finale animated finish with the Living Legend
+title. The full track is printed by the model.
+
+**Levels 41-50** (update 12). The curve is unchanged, so levels 1-40 cost exactly what
+they did. One reward per level: 41 Harlequin Tea (finish), 42 Peppermint Tea Cell, 43
+Teacup Twister (moved from 12; 12 now gives the Midway Regular title), 44 Spinning Teacup
+(charm with a spinning cup), 45 Teacup Ride (animated finish, `finish_teacups.gdshader`),
+46 Tea Swirl (banner), 47 Last Ride Home (title), 48 Hall of Fame (decal), 49 Starlight
+Cell, 50 Grand Finale (animated finish, `finish_fireworks.gdshader`) and Living Legend
+(title). Level Sparks follow the same rule (255 at 41 up to 400 at 50).
+
+| | Cap 40 | Cap 50 |
+| --- | --- | --- |
+| XP to the cap | 366,600 | 558,600 |
+| Clears to the cap (typical player) | 40 (60 runs) | 64 (95 runs) |
+| All weapons unlocked | 35 clears, level 37 | 47 clears (70 runs), level 43 |
+| Sparks earned by the cap | 55,965 | 84,697 |
+| Sparks per run, first 15 runs / after the cap | 1,126 / 744 | 1,124 / 737 |
+
+**Saves from before the cap went up** (`scripts/economy/cap_raise.gd`, once per profile,
+marked by `level_cap` in the progression section). XP is kept and XP banked past level 40
+counts: a save at 40 moves straight to the level its XP buys (a save with 17,400 or more
+spare XP is at 41 or above), the Sparks of those levels are paid once (source `level_up`,
+recorded in `cap_raise`), and their cosmetics unlock through their own requirements. A save
+that already had the Teacup Twister (XP for level 12) keeps it: `weapon:teacup_twister` is
+granted and `GameData.is_weapon_unlocked` honours it. A pre-economy save is left to
+`LegacyGrant`, whose back pay already covers every level up to 50.
 
 ## Weapon mastery
 
@@ -251,7 +278,7 @@ the game data is loaded):
    114 re-gated or now-priced items are in `scripts/economy/legacy_unlocks.gd`, and what
    they held is granted outright (equipped items stay equipped).
 2. XP is kept. The new curve is cheaper at every level, so the level only goes up (old
-   50 becomes 40); where a weapon would have been lost (old level 9, 10), XP is raised
+   50 became 40, and is 50 again since the cap went back to 50); where a weapon would have been lost (old level 9, 10), XP is raised
    to that weapon's new level.
 3. Mastery XP is kept; every new rank threshold is lower.
 4. Back pay: the Sparks the new rules pay for the levels, mastery ranks and first clears

@@ -7,7 +7,7 @@ extends Resource
 ##   level_base_xp + level_step_xp * (L-1) + level_curve_xp * (L-1)^2
 ## (rounded to 50). The curve is linear: the first session brings several
 ## levels, every weapon is unlocked within the first half-dozen clears, and
-## the cap (level 40) takes a typical player about 48 clears. Check changes
+## the cap (level 50) takes a typical player about 64 clears. Check changes
 ## with tools/economy_model.py.
 
 @export_group("Level curve")

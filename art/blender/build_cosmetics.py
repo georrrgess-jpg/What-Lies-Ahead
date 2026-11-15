@@ -659,6 +659,37 @@ def charm_cocoa(m):
     return parts
 
 
+def charm_teacup(m):
+    """The teacup ride in miniature: a striped canopy, and under it a cup on
+    its saucer that spins round the pole (the Spin part)."""
+    p = "Teacup"
+    parts = hanger(p, m)
+    parts += [
+        sphere(p + "Finial", 0.0024, (0, 0, -0.0215), m=m["gold"], segs=10, rings=6),
+        cyl(p + "Canopy", 0.0165, 0.009, (0, 0, -0.0285), segs=12, bevel=0.0, m=m["pink"], radius_top=0.0012),
+        torus(p + "CanopyTrim", 0.0163, 0.0014, (0, 0, -0.033), m=m["white"], major_segs=24, minor_segs=5),
+        cyl(p + "Pole", 0.0011, 0.019, (0, 0, -0.0425), segs=8, bevel=0.0, m=m["gold"]),
+    ]
+    for i in range(6):
+        a = math.tau * (i + 0.5) / 6
+        parts.append(sphere(f"{p}Bulb{i}", 0.0014, (math.cos(a) * 0.0163, math.sin(a) * 0.0163, -0.0345), m=m["bulb"], segs=6, rings=4))
+    spin = [
+        cyl(p + "Saucer", 0.0145, 0.0024, (0, 0, 0), segs=24, bevel=0.0008, m=m["white"]),
+        cyl(p + "Cup", 0.0095, 0.013, (0, 0, 0.0076), segs=24, bevel=0.0012, m=m["pink"], radius_top=0.0122),
+        cyl(p + "CupBase", 0.0082, 0.003, (0, 0, 0.0022), segs=20, bevel=0.0006, m=m["pink"]),
+        torus(p + "Rim", 0.0121, 0.0011, (0, 0, 0.0141), m=m["gold"], major_segs=28, minor_segs=5),
+        cyl(p + "Tea", 0.0112, 0.0008, (0, 0, 0.0132), segs=24, bevel=0.0, m=m["cream"]),
+        torus(p + "Wheel", 0.0042, 0.0009, (0, 0, 0.0152), m=m["cyan"], major_segs=16, minor_segs=4),
+        torus(p + "Handle", 0.0042, 0.0014, (0.0142, 0, 0.0078), rot=rad(90, 0, 0), m=m["pink"], major_segs=14, minor_segs=5,
+              arc=math.pi * 1.2, start=-math.pi * 0.6),
+    ]
+    for i in range(5):
+        a = math.tau * i / 5 + 0.6
+        spin.append(sphere(f"{p}Dot{i}", 0.0017, (math.cos(a) * 0.0113, math.sin(a) * 0.0113, 0.0085),
+                           m=m["white"], segs=8, rings=5))
+    return parts, (spin, Matrix.Translation((0, 0, -0.068)))
+
+
 CHARMS = {
     "Duck": charm_duck,
     "Dice": charm_dice,
@@ -684,6 +715,7 @@ CHARMS = {
     "Astronaut": charm_astronaut,
     "Penguin": charm_penguin,
     "Cocoa": charm_cocoa,
+    "Teacup": charm_teacup,
 }
 
 

@@ -120,9 +120,10 @@ func default_weapon_id() -> StringName:
 	return _weapons[0].id if not _weapons.is_empty() else &""
 
 
-## A weapon is usable if it has no requirement or the requirement is met.
+## A weapon is usable if it has no requirement, the requirement is met, or
+## the save kept it when it moved to a later level (CapRaise).
 func is_weapon_unlocked(w: WeaponData) -> bool:
-	return w != null and (w.unlock == null or w.unlock.is_met())
+	return w != null and (w.unlock == null or w.unlock.is_met() or Unlocks.is_granted(StringName("weapon:" + String(w.id))))
 
 
 func is_world_unlocked(world: WorldData) -> bool:

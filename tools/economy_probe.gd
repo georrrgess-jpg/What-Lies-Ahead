@@ -101,8 +101,8 @@ func _rules() -> void:
 	for id in [&"tourist_shambler", &"lifeguard_runner", &"deep_diver", &"boardwalk_bruiser"]:
 		kill.append(rules.kill_sparks(game_data.enemy(id).tickets))
 	_check("rules: a tourist, a runner, a diver and a bruiser drop 1, 1, 2 and 5 Sparks", kill == [1, 1, 2, 5], str(kill))
-	_check("rules: level 2 pays 60 Sparks, level 5 (milestone) 175, level 40 350",
-		[rules.level_sparks(2), rules.level_sparks(5), rules.level_sparks(40)] == [60, 175, 350])
+	_check("rules: level 2 pays 60 Sparks, level 5 (milestone) 175, level 40 350, level 50 400",
+		[rules.level_sparks(2), rules.level_sparks(5), rules.level_sparks(40), rules.level_sparks(50)] == [60, 175, 350, 400])
 	var empty := []
 	for lvl in range(2, progression.MAX_LEVEL + 1):
 		if progression.level_weapons(lvl).is_empty() and progression.level_rewards(lvl).is_empty():

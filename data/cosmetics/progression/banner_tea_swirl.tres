@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 1
+amount = 46
+
+[resource]
+script = ExtResource("1")
+id = &"banner_tea_swirl"
+display_name = "Tea Swirl"
+description = "A pink and mint swirl, stirred with a gold spoon."
+slot = &"banner"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.165, 0.063, 0.255, 1, 1.000, 0.420, 0.720, 1, 0.420, 0.950, 0.820, 1)
+params = {
+"pattern": "swirl"
+}
+sort_order = 54

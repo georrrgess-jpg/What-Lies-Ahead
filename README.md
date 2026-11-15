@@ -207,12 +207,12 @@ for gates, traps, drops and a new best.
 | Arc Coil | Primary | Crowd control | Player level 4 | Chain lightning locking onto the zombie nearest the crosshair; shock slows |
 | Bumper Lobber | Primary | Area damage | Player level 6 | Bouncing gumball bombs with splash; shows its landing ring when aiming |
 | Frostbite Cryo Beam | Primary | Lockdown | Player level 9 | Freezes zombies (they cannot attack, take +60% and shatter); passes through one |
-| Teacup Twister | Primary | Crowd gathering | Player level 12 | Lobs a spinning teacup that opens a whirl where it lands: the crowd within 7 m is dragged into a spinning cluster (no attacks while it spins, and not caught again for 2 s after a pop), takes spin damage, then the cup pops and flings it out; Bruisers, Yetis, alphas and bosses are only slowed and keep swinging, and a cup landed on one rides with it |
 | Gumball Drum Popper | Primary | Trick shots | Player level 15 | Semi-auto drum of bouncy gumballs: each ricochets up to twice (+25% per bounce) and bends toward a zombie, so bank shots round corners land; no splash |
 | Toxic Ripsaw | Primary | Saw shotgun | Player level 20 | Semi-auto slime shotgun whose hits splat a slowing puddle; hold MELEE (T or middle mouse) to rev the chain saw, which saws through the rank and file (heavies and alphas take a third to a half) on a fuel rack that refills while resting or on reload; slows you while sawing |
 | Whirligig | Primary | Crowd shredder | Player level 22 | Prize-wheel minigun: spins up for 0.4 s, then 18 rounds a second that pass through a second zombie; slows you while it spins; overheats |
 | Riptide Harpoon | Primary | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
 | Rail Lancer | Primary | Anti-heavy | Player level 34 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
+| Teacup Twister | Primary | Crowd gathering | Player level 43 | Lobs a spinning teacup that opens a whirl where it lands: the crowd within 7 m is dragged into a spinning cluster (no attacks while it spins, and not caught again for 2 s after a pop), takes spin damage, then the cup pops and flings it out; Bruisers, Yetis, alphas and bosses are only slowed and keep swinging, and a cup landed on one rides with it |
 | Road Rager | Primary | Boomerang sweeper | Endless wave 10 | A hot-rod pitching machine: the spinning hubcap hits every zombie out and back; hip throws loop wide, aimed throws go straight out and back; a caught hubcap goes back in the magazine (a catch mid-reload cuts it short), and four hits in one throw turn it gold (+50%) |
 | Pulse Pistol | Secondary | Precision | Start | Three body shots or two headshots drop a tourist; a rested shot flies dead centre |
 | Comet Hand Cannon | Secondary | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
@@ -277,9 +277,13 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
   into the counter), and waves, clears, leftover tickets, every player level, every
   mastery rank and contracts pay more. Sparks buy **cosmetics only**, never power.
   Numbers and design: **[docs/ECONOMY.md](docs/ECONOMY.md)**.
-- **Player level** (1–40): every level pays Sparks and gives exactly one thing. Weapons
-  unlock at levels 2, 4, 6, 9 and 12 (all eight in about seven runs); every fifth level is
-  a bigger reward. A first session of three runs reaches about level 7.
+- **Player level** (1–50): every level pays Sparks and gives exactly one thing (a weapon
+  or a cosmetic); every fifth level is a bigger reward. A first session of three runs
+  reaches about level 7, the cap about 64 clears. Levels 41-50 carry the Teacup Twister
+  (43) and a teacup-ride set: the Spinning Teacup charm, the animated Teacup Ride (45) and
+  Grand Finale (50) finishes, and the Living Legend title. A save from before the cap went
+  up keeps its XP (XP past 40 counts, its levels' Sparks are paid once) and keeps the
+  Teacup Twister if it already had it.
 - **Contracts** (Career page): three active goals at a time (kills with a weapon,
   headshots, waves, bounties…) that pay XP and Sparks and are replaced when done, plus
   eleven one-time milestones.
@@ -292,14 +296,14 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
   about nine. Four items a day are featured at 20% off (always a round number). Every item
   has a 3D preview and a confirm step. Station prices in tickets are multiples of 25 and
   rise world by world.
-- **Locker**: 398 cosmetics in eleven categories: 18 operators (characters that also set
-  your first-person arms), 82 weapon finishes (including 15 new animated shaders: marquee
+- **Locker**: 409 cosmetics in eleven categories: 18 operators (characters that also set
+  your first-person arms), 85 weapon finishes (including 17 new animated shaders: marquee
   bulbs, data rain, lightning, aurora, warp speed, liquid mercury, stained glass…),
-  20 sights, 40 energy cells (with moving patterns: bubbles, lava, slosh, warp…), 32
-  decals, 24 charms (a Ferris wheel and a UFO that spin), 24 gloves (with real shapes:
+  20 sights, 42 energy cells (with moving patterns: bubbles, lava, slosh, warp…), 33
+  decals, 25 charms (a Ferris wheel, a UFO and a teacup that spin), 24 gloves (with real shapes:
   gauntlets, tape, mitts, wraps, fins, studs, crystals, claws), 18 kill effects (disco
-  ball, slot-machine 7s, black hole, snow globe…), 18 tracers, 52 banners (26 animated
-  scenes) and 70 titles, grouped as CHARACTER, WEAPON, EFFECTS and PROFILE, plus a
+  ball, slot-machine 7s, black hole, snow globe…), 18 tracers, 53 banners (26 animated
+  scenes) and 73 titles, grouped as CHARACTER, WEAPON, EFFECTS and PROFILE, plus a
   **Prints** tab for your Prize Prints. Each tab has search, sort (featured, rarity up or
   down, name, newest) and filters (owned, locked, for sale; where it comes from), kept per
   tab. Weapon items are customised for the weapon picked at the top. Everything shows in a

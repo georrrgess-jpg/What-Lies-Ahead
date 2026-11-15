@@ -1,5 +1,5 @@
 extends Node
-## Player account level (1-40) and everything that pays into it.
+## Player account level (1-50) and everything that pays into it.
 ##
 ## Account XP lives in Profile.section("progression")["xp"]. Runs pay out
 ## through a RunTracker (scripts/progression/run_tracker.gd) created on
@@ -30,7 +30,7 @@ signal rewards_unlocked(items: Array[CosmeticItem])
 ## The current run was settled; `summary` is RunTracker.summary().
 signal run_settled(summary: Dictionary)
 
-const MAX_LEVEL := 40
+const MAX_LEVEL := 50
 const RULES_PATH := "res://data/progression/rules.tres"
 ## Settled runs kept in the profile's "runs" log.
 const RUN_LOG_SIZE := 12

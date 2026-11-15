@@ -28,6 +28,9 @@ var _owned_at_run_start := {}
 
 func _ready() -> void:
 	Events.run_started.connect(func(_director): _owned_at_run_start = _owned_snapshot())
+	# A save from before the level 50 cap keeps its XP and weapons (first: it
+	# leaves a pre-economy save to LegacyGrant).
+	CapRaise.apply_if_pending()
 	# A save from before the Sparks economy keeps everything it owned.
 	LegacyGrant.apply_if_pending()
 	PrizePrints.connect_hooks()
