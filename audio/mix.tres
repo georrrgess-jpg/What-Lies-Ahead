@@ -245,7 +245,16 @@ sound_category = Dictionary[StringName, StringName]({
 &"hub_throw": &"weapon",
 &"hub_strike": &"impact",
 &"hub_clang": &"impact",
-&"hub_pileup": &"impact"
+&"hub_pileup": &"impact",
+&"city_siren_loop": &"ambience",
+&"city_alarm_loop": &"ambience",
+&"city_radio_loop": &"ambience",
+&"city_drip_loop": &"ambience",
+&"city_buzz_loop": &"ambience",
+&"city_heli_loop": &"ambience",
+&"city_sparks_loop": &"ambience",
+&"city_thunder": &"ambience",
+&"city_blast_far": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -311,5 +320,8 @@ sound_trim_db = Dictionary[StringName, float]({
 &"cz_wrecker_debris": -3.0,
 &"cz_wrecker_engine": -2.0,
 &"cz_wrecker_charge": -2.0,
-&"cz_firebug_light": 3.0
+&"cz_firebug_light": 3.0,
+&"city_alarm_loop": -6.0,
+&"city_buzz_loop": -4.0,
+&"city_radio_loop": -3.0
 })

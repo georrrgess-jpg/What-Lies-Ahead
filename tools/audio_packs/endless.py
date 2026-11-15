@@ -18,6 +18,11 @@ cues (gates, districts, waves, supply drops, traps, the boss and a new best).
                                          loops it as is; start each wreck at a random offset)
     audio/sfx/end_*.wav                  gate, district, wave, supply, trap, boss and
                                          new-best cues
+    audio/sfx/city_*_loop.wav            positional ambient loops (siren, alarm, police
+                                         radio, metro drips, neon buzz, helicopter,
+                                         arcing cable); loop mode Forward like the crackle
+    audio/sfx/city_thunder.wav           thunder after the lightning behind the skyline
+    audio/sfx/city_blast_far.wav         a far explosion across the city
 """
 import numpy as np
 
@@ -450,6 +455,197 @@ def city_fire_crackle():
 
 
 # ---------------------------------------------------------------------------
+# Ambient emitters (positional loops round the city) and the sky's one-shots
+# ---------------------------------------------------------------------------
+
+def _own_rng(seed):
+    """Renders a sound with its own seeded generator and leaves the pack's
+    shared one untouched, so the sounds rendered after it stay as they were."""
+    def wrap(fn):
+        def inner():
+            shared = ga.rng
+            ga.rng = np.random.default_rng(seed)
+            try:
+                return fn()
+            finally:
+                ga.rng = shared
+        inner.__name__ = fn.__name__
+        inner.__doc__ = fn.__doc__
+        return inner
+    return wrap
+
+
+def _wrap(buf, n):
+    """Folds whatever ran past n samples back onto the start (a seamless loop)."""
+    out = np.array(buf[:n], dtype=np.float64)
+    tail = buf[n:]
+    out[: len(tail)] += tail
+    return out
+
+
+@_own_rng(301)
+def city_siren_loop():
+    """12-second loop: a police siren wailing a few streets away, rising and
+    falling twice, with a short yelp burst between (positional, on the
+    Precinct's roofs)."""
+    d = 12.0
+    n = int(SR * d)
+    t = np.arange(n) / SR
+    f = 640 + 260 * (0.5 - 0.5 * _periodic(t, d, 2, 0.0))
+    yelp = np.abs((t % 6.0) - 4.6) < 0.7
+    f = np.where(yelp, 700 + 300 * (0.5 + 0.5 * np.sin(2 * np.pi * 7.0 * t)), f)
+    turns = np.cumsum(f) / SR
+    f *= np.round(turns[-1]) / turns[-1]
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    x = np.sin(ph) + 0.35 * np.sin(2 * ph) + 0.15 * np.sin(3 * ph)
+    return filt(x, low=2200, high=300) * (0.85 + 0.15 * _periodic(t, d, 3, 0.4))
+
+
+@_own_rng(302)
+def city_alarm_loop():
+    """4-second loop: a shop's burglar alarm, a fast two-tone beep with a
+    tinny bell rattle under it (the Market)."""
+    d = 4.0
+    n = int(SR * d)
+    t = np.arange(n) / SR
+    f = np.where((t // 0.25) % 2 == 0, 1320.0, 990.0)
+    gate = ((t % 0.25) < 0.21).astype(float)
+    x = np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * 0.5 * gate
+    bell = np.sin(2 * np.pi * 2350 * t) * (0.5 + 0.5 * np.sign(np.sin(2 * np.pi * 24 * t))) * 0.25
+    return filt(x + bell, low=4200, high=500)
+
+
+@_own_rng(303)
+def city_radio_loop():
+    """10-second loop: a police radio left on in a van: squelch, garbled
+    voices through a tiny speaker, static between."""
+    r = _r()
+    d = 10.0
+    n = int(SR * d)
+    out = np.zeros(n + SR * 3)
+    out[:n] += band(r.uniform(-1, 1, n), 2400, 1600) * 0.05
+    for at, ln, base in ((0.6, 1.9, 150.0), (3.4, 1.2, 190.0), (5.8, 2.3, 140.0), (8.6, 0.9, 175.0)):
+        m = int(SR * ln)
+        tt = np.arange(m) / SR
+        syll = 0.5 + 0.5 * np.sign(np.sin(2 * np.pi * r.uniform(3.5, 5.5) * tt + r.uniform(0, 6)))
+        pitch = base * (1 + 0.15 * np.sin(2 * np.pi * 1.3 * tt))
+        voice = bl_osc(pitch, None, "saw")
+        voice = band(voice, r.uniform(700, 1000), 300) + band(voice, r.uniform(1600, 2100), 400) * 0.6
+        voice = np.tanh(voice * syll * 4.0) * adsr(ln, 0.01, ln, 1.0, 0.02)
+        place(out, voice * 0.5, at)
+        squelch = band(noise(0.18), 3000, 2000) * env(0.18, 0.001, 0.15, power=1.2)
+        place(out, squelch * 0.5, at - 0.12)
+        place(out, squelch * 0.4, at + ln)
+    return _wrap(filt(out, low=3400, high=400), n)
+
+
+@_own_rng(304)
+def city_drip_loop():
+    """9-second loop: water dripping from the Metro's broken ceiling into
+    puddles, with the hall's long echo."""
+    r = _r()
+    d = 9.0
+    n = int(SR * d)
+    dry = np.zeros(n + SR)
+    for _ in range(19):
+        at = r.uniform(0, d)
+        f = r.uniform(900, 1900)
+        tt = t_axis(0.12)
+        drop = np.sin(2 * np.pi * (f + 900 * np.exp(-tt / 0.02)) * tt) * np.exp(-tt / 0.03)
+        place(dry, drop, at, r.uniform(0.3, 1.0))
+    dry = _wrap(dry, n)
+    wet = reverb(dry, None, 2.8, 0.04, 2600, 300, seed=23).mean(axis=1)
+    hum = filt(r.uniform(-1, 1, n), low=180, high=40) * 0.08
+    return dry * 0.6 + wet * 0.9 + hum
+
+
+@_own_rng(305)
+def city_buzz_loop():
+    """3-second loop: a failing neon tube: a 100 Hz hum with buzzy harmonics
+    and the odd crackling drop-out."""
+    r = _r()
+    d = 3.0
+    n = int(SR * d)
+    t = np.arange(n) / SR
+    hum = filt(np.sign(np.sin(2 * np.pi * 100 * t)) * 0.3 + np.sin(2 * np.pi * 50 * t) * 0.4, low=1800)
+    buzz = band(r.uniform(-1, 1, n), 3200, 1500) * (0.5 + 0.5 * np.sin(2 * np.pi * 100 * t)) * 0.15
+    out = hum + buzz
+    for at in (0.7, 2.1):
+        k = int(SR * at)
+        m = int(SR * 0.18)
+        out[k:k + m] *= 0.25
+        out[k:k + m] += filt(_crackles(m, 140, r, 0.6), low=6000)[:m]
+    return out
+
+
+@_own_rng(306)
+def city_heli_loop():
+    """4-second loop: a helicopter circling the city: rotor thumps at 5 Hz,
+    the turbine whine and a wash of wind."""
+    r = _r()
+    d = 4.0
+    n = int(SR * d)
+    t = np.arange(n) / SR
+    blade = np.exp(-((t * 5.0) % 1.0) / 0.12)
+    thump = filt(r.uniform(-1, 1, n), low=240, high=30) * blade * 2.2
+    slap = band(r.uniform(-1, 1, n), 900, 500) * blade ** 3 * 0.4
+    whine = np.sin(2 * np.pi * 1850 * t + 0.3 * np.sin(2 * np.pi * 0.25 * t)) * 0.035
+    wash = filt(r.uniform(-1, 1, n), low=1200, high=150) * 0.18
+    return thump + slap + whine + wash
+
+
+@_own_rng(307)
+def city_sparks_loop():
+    """5-second loop: a torn cable arcing: bursts of electric crackle and a
+    snapping zap over a live hum."""
+    r = _r()
+    d = 5.0
+    n = int(SR * d)
+    t = np.arange(n) / SR
+    out = np.sin(2 * np.pi * 120 * t) * 0.06
+    for at in (0.3, 1.9, 2.4, 4.1):
+        ln = r.uniform(0.12, 0.35)
+        m = int(SR * ln)
+        zap = band(r.uniform(-1, 1, m), 4200, 3000) * np.abs(np.sin(2 * np.pi * 60 * t_axis(ln)))[:m] * env(ln, 0.002, ln, power=1.5)[:m]
+        zap += filt(_crackles(m, 300, r, 0.8), low=8000)[:m] * 0.6
+        place(out, zap * 1.3, at)
+    return out
+
+
+@_own_rng(308)
+def city_thunder():
+    """Rolling thunder far behind the skyline: a crack softened by distance,
+    then a long low rumble that rolls and fades."""
+    r = _r()
+    d = 5.5
+    out = filt(noise(d), low=160, high=25) * env(d, 0.25, d, power=1.3) * 1.4
+    for k in range(6):
+        at = 0.15 + k * r.uniform(0.35, 0.8)
+        ln = r.uniform(0.8, 1.6)
+        roll = filt(noise(ln), low=380, high=40) * env(ln, 0.05, ln, power=1.6)
+        place(out, roll, at, r.uniform(0.4, 0.9))
+    crack = filt(noise(0.6), low=1600, high=200) * env(0.6, 0.004, 0.5, power=2.2)
+    place(out, crack, 0.05, 0.6)
+    return out
+
+
+@_own_rng(309)
+def city_blast_far():
+    """A distant explosion across the city: a dull thump, a rolling boom and
+    debris pattering down."""
+    r = _r()
+    d = 3.6
+    out = np.zeros(int(SR * d))
+    place(out, _thud(90, 28, 1.6, 1.2), 0.0, 1.4)
+    place(out, filt(noise(d), low=260, high=30) * env(d, 0.02, d, power=1.5), 0.0, 1.2)
+    for _ in range(25):
+        at = r.uniform(0.8, 3.0)
+        grain = band(noise(0.03), r.uniform(700, 2000), 600) * env(0.03, 0.001, power=2.0)
+        place(out, grain, at, r.uniform(0.05, 0.25))
+    return filt(out, low=2600)
+
+
+# ---------------------------------------------------------------------------
 # Gates and districts
 # ---------------------------------------------------------------------------
 
@@ -666,12 +862,21 @@ def end_new_best():
 SOUNDS = [
     end_gate_open, end_gate_denied, end_gate_sting, end_district_enter, end_wave_horn,
     end_supply_incoming, end_supply_land, end_trap_ready, end_trap_fire, end_trap_shock,
-    end_boss_siren, end_new_best,
+    end_boss_siren, end_new_best, city_thunder, city_blast_far,
 ]
 
 VARIANTS = []
 
-LOOPS = {"city_fire_crackle": city_fire_crackle}
+LOOPS = {
+    "city_fire_crackle": city_fire_crackle,
+    "city_siren_loop": city_siren_loop,
+    "city_alarm_loop": city_alarm_loop,
+    "city_radio_loop": city_radio_loop,
+    "city_drip_loop": city_drip_loop,
+    "city_buzz_loop": city_buzz_loop,
+    "city_heli_loop": city_heli_loop,
+    "city_sparks_loop": city_sparks_loop,
+}
 
 MUSIC = {
     "city_endless_loop": city_endless_loop,

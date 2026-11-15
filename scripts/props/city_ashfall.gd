@@ -4,7 +4,10 @@ extends MultiMeshInstance3D
 ## MultiMesh of tiny quads (no particles node, which the Compatibility renderer
 ## does not draw). The flakes are placed once; the city_ash shader moves them
 ## and wraps them round a box that follows the camera, so the ash surrounds the
-## view anywhere on the map. The script only swings the wind in slow gusts.
+## view anywhere on the map. The script swings the wind in slow gusts and
+## integrates the drift and the fall (so a speed change never jumps the
+## flakes); `storm` (0..1, set by the level's environment script) drives the
+## ash storm: faster wind and fall.
 
 const SHADER := preload("res://art/shaders/city_ash.gdshader")
 
@@ -14,6 +17,17 @@ const SHADER := preload("res://art/shaders/city_ash.gdshader")
 ## Base wind (world XZ, m/s) and how far gusts swing it.
 @export var wind := Vector2(0.8, 0.3)
 @export var gust := 0.9
+@export var fall_speed := 0.55
+## How much faster wind and fall are at the height of the ash storm.
+const STORM_WIND := 2.2
+const STORM_FALL := 0.9
+const P_DRIFT := &"drift"
+const P_FALL := &"fall"
+
+## The ash storm's strength now (0 calm .. 1 at its height).
+var storm := 0.0
+var _drift := Vector2.ZERO
+var _fall := 0.0
 
 var _material: ShaderMaterial
 var _time := 0.0
@@ -52,4 +66,7 @@ func apply_graphics_preset(low: bool) -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	var g := sin(_time * 0.17) * 0.6 + sin(_time * 0.41 + 1.7) * 0.4
-	_material.set_shader_parameter("wind", wind + Vector2(g, g * 0.4) * gust)
+	_drift += (wind + Vector2(g, g * 0.4) * gust) * (1.0 + storm * STORM_WIND) * delta
+	_fall += fall_speed * (1.0 + storm * STORM_FALL) * delta
+	_material.set_shader_parameter(P_DRIFT, _drift)
+	_material.set_shader_parameter(P_FALL, _fall)

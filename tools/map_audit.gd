@@ -9,6 +9,7 @@ extends SceneTree
 ##     cam  <name> <x,y,z> <tx,ty,tz> [fov]   free camera looking at a point
 ##     pano <name> <x,y,z>                    4 views (N, E / S, W) from feet x,y,z
 ##     top  <name> <cx,cz> <size> [height]    orthographic top view, north up
+##   --gates=1 opens every Endless gate first (captures and the probe).
 ##   --collision=1 draws every world collision shape as red lines (player-only
 ##   walls in yellow), to compare what is solid with what looks solid.
 ##   Draw calls and primitives of every `cam` shot are printed.
@@ -80,6 +81,10 @@ func _run() -> void:
 	if _opt("open", "0") == "1":
 		for k in get_nodes_in_group("kiosk"):
 			k.set_open(true)
+	if _opt("gates", "0") == "1":
+		for g in get_nodes_in_group("endless_gate"):
+			g.open(false)
+		await _wait(2)
 	if _opt("probe", "") != "":
 		await physics_frame
 		await physics_frame
