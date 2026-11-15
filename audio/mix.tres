@@ -221,7 +221,26 @@ sound_category = Dictionary[StringName, StringName]({
 &"city_endless_loop": &"music",
 &"city_endless_final": &"music",
 &"city_ambience": &"ambience",
-&"city_fire_crackle": &"ambience"
+&"city_fire_crackle": &"ambience",
+&"cz_": &"enemy_voice",
+&"cz_riot_block": &"impact",
+&"cz_riot_shield_break": &"enemy_special",
+&"cz_riot_drum": &"enemy_telegraph",
+&"cz_riot_rush": &"enemy_telegraph",
+&"cz_riot_bash": &"enemy_attack",
+&"cz_crawler_pounce": &"enemy_telegraph",
+&"cz_crawler_land": &"enemy_special",
+&"cz_crawler_skitter": &"enemy_special",
+&"cz_firebug_light": &"enemy_telegraph",
+&"cz_firebug_throw": &"enemy_telegraph",
+&"cz_bottle_smash": &"enemy_attack",
+&"cz_wrecker_roar": &"enemy_telegraph",
+&"cz_wrecker_chain": &"enemy_telegraph",
+&"cz_wrecker_swing": &"enemy_attack",
+&"cz_wrecker_impact": &"enemy_attack",
+&"cz_wrecker_engine": &"enemy_telegraph",
+&"cz_wrecker_charge": &"enemy_telegraph",
+&"cz_wrecker_debris": &"enemy_attack"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -283,5 +302,9 @@ sound_trim_db = Dictionary[StringName, float]({
 &"end_supply_incoming": -3.5,
 &"end_supply_land": -0.5,
 &"end_trap_ready": -5.0,
-&"end_trap_shock": 0.5
+&"end_trap_shock": 0.5,
+&"cz_wrecker_debris": -3.0,
+&"cz_wrecker_engine": -2.0,
+&"cz_wrecker_charge": -2.0,
+&"cz_firebug_light": 3.0
 })

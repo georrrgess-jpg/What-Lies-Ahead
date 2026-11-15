@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/zombie_city_crowd.glb" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"city_shambler"
+display_name = "Commuter"
+max_health = 100.0
+move_speed = 2.2
+speed_variance = 0.15
+turn_speed = 5.0
+tickets = 10
+score = 100
+xp = 10
+damage = 20.0
+attack_range = 1.7
+attack_reach = 2.4
+attack_windup = 0.75
+attack_recover = 0.9
+lunge_speed = 3.0
+mass = 1.0
+flank_degrees = 60.0
+model_scene = ExtResource("2")
+outfit = &"Commuter"
+body_scale = 0.93
+capsule_radius = 0.5
+capsule_height = 1.9
+head_height = 1.2
+shirt_colors = Array[Color]([Color(0.29, 0.31, 0.4, 1), Color(0.2, 0.27, 0.48, 1), Color(0.46, 0.33, 0.24, 1), Color(0.34, 0.44, 0.58, 1), Color(0.52, 0.2, 0.26, 1)])
+skin_colors = Array[Color]([Color(0.6, 0.77, 0.43, 1), Color(0.55, 0.74, 0.5, 1), Color(0.65, 0.75, 0.47, 1), Color(0.52, 0.72, 0.56, 1)])
+accessory_slots = PackedStringArray("Acc_Commuter_Glasses||", "Acc_Commuter_Case|Acc_Commuter_Coffee||Acc_Commuter_Case+Acc_Commuter_Coffee", "Acc_Commuter_Combover|")
+move_animation = &"Walk"
+animation_reference_speed = 2.2
+avoidance_radius = 0.6
+voice_sounds = Array[StringName]([&"cz_commuter_groan_1", &"cz_commuter_groan_2", &"zombie_groan_2"])
+voice_interval = Vector2(3, 7)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"
