@@ -59,6 +59,9 @@ const PRECINCT := Rect2(-74.0, -24.0, 40.0, 48.0)
 const MARKET := Rect2(34.0, -8.0, 56.0, 16.0)
 const TOWER := Rect2(46.0, -72.0, 48.0, 50.0)
 const TOWER_ALLEY := Rect2(62.0, -22.0, 8.0, 14.0)
+## The back street from the square's south-west to the Precinct (a second
+## gate, so the Precinct is a loop, not a dead end): z 12..18.
+const PRECINCT_BACK_Z := 15.0
 const SUN_DIRECTION := Vector3(0.75, 0.16, 0.62)     # toward the setting sun (low, SE)
 const WALL_H := 14.0
 const UNDERGROUND_Y := -1.6
@@ -69,6 +72,7 @@ const GROUND_TILE := 16.0
 ## gate's -Z and +Z sides (for the nav links).
 const GATES := [
 	[&"precinct", Vector3(-28.0, 0.0, 0.0), 90.0, 8.0, &"topple", "city_gate_barricade", 0.0, 0.0],
+	[&"precinct", Vector3(-28.0, 0.0, PRECINCT_BACK_Z), 90.0, 6.0, &"slide", "city_gate_fence", 0.0, 0.0],
 	[&"metro", Vector3(0.0, 0.0, STAIR_TOP_Z), 0.0, 6.0, &"shutter", "city_gate_shutter", -1.1, 0.0],
 	[&"market", Vector3(28.0, 0.0, 0.0), 90.0, 8.0, &"shutter", "city_gate_shutter", 0.0, 0.0],
 	[&"tower", Vector3(66.0, 0.0, -15.0), 0.0, 8.0, &"slide", "city_gate_fence", 0.0, 0.0],
@@ -247,6 +251,7 @@ func _build_ground() -> void:
 	_slab(ground, "SquareSlabNE", Rect2(STAIR_HALF, -SQ, SQ - STAIR_HALF, SQ + STAIR_TOP_Z), asphalt)
 	_slab(ground, "PassageW", Rect2(-34.0, -4.0, 12.0, 8.0), asphalt)
 	_slab(ground, "PassageE", Rect2(SQ, -4.0, 12.0, 8.0), paving)
+	_slab(ground, "PassageSW", Rect2(-34.0, PRECINCT_BACK_Z - 3.0, 12.0, 6.0), asphalt)
 	_slab(ground, "PrecinctSlab", PRECINCT, asphalt)
 	_slab(ground, "MarketSlab", MARKET, _ground("market_paving", "city_sidewalk", Color(0.86, 0.82, 0.95), 4.0, 0.55))
 	_slab(ground, "SouthStreet", Rect2(-5.0, SQ, 10.0, 22.0), asphalt)
@@ -336,7 +341,7 @@ func _build_square() -> void:
 	_solid_kit(sq, "city_rubble_a", "RubbleNW", Vector3(-19.0, 0, -18.5), 30.0, Vector3(3.2, 1.2, 2.6))
 	_solid_kit(sq, "city_rubble_b", "RubbleSE", Vector3(19.5, 0, 18.0), 200.0, Vector3(3.0, 1.1, 2.4))
 	_solid_kit(sq, "city_dumpster", "DumpsterSW", Vector3(-12.0, 0, 20.4), 0.0, Vector3(2.0, 1.4, 1.2))
-	_solid_kit(sq, "city_newsstand", "Newsstand", Vector3(-19.6, 0, 13.0), 90.0, Vector3(2.4, 2.6, 1.6))
+	_solid_kit(sq, "city_newsstand", "Newsstand", Vector3(-20.2, 0, 20.4), 90.0, Vector3(2.4, 2.6, 1.6))
 	_solid_kit(sq, "city_bus_stop", "BusStop", Vector3(19.8, 0, -14.0), -90.0, Vector3(3.6, 2.6, 1.4))
 	_solid_kit(sq, "city_hydrant", "Hydrant", Vector3(12.0, 0, -20.2), 0.0, Vector3(0.5, 0.9, 0.5))
 	_solid_kit(sq, "city_debris", "DebrisA", Vector3(5.5, 0, -10.5), 40.0, Vector3(2.0, 0.5, 1.6))
@@ -922,6 +927,10 @@ func _build_stairs(parent: Node3D) -> void:
 		_rail(parent, "TowerRail%s" % ("N" if s < 0 else "S"), Vector3(TOWER.position.x, 0, zc + s * (width * 0.5 + 0.1)), Vector3(EXIT_TOP_X, 0, zc + s * (width * 0.5 + 0.1)))
 	_player_wall(walls, "SquareStairW", Vector3(-STAIR_HALF - 0.1, 0, STAIR_TOP_Z), Vector3(-STAIR_HALF - 0.1, 0, -SQ), 4.0)
 	_player_wall(walls, "SquareStairE", Vector3(STAIR_HALF + 0.1, 0, STAIR_TOP_Z), Vector3(STAIR_HALF + 0.1, 0, -SQ), 4.0)
+	# The tower stairs' railings too (no standing on them).
+	for s in [-1.0, 1.0]:
+		var rz: float = zc + s * (width * 0.5 + 0.1)
+		_player_wall(walls, "TowerStair%s" % ("N" if s < 0 else "S"), Vector3(TOWER.position.x, 0, rz), Vector3(EXIT_TOP_X, 0, rz), 4.0)
 	# The tower stairs' street entrance (the kit's canopied stairs, fitted to the flight).
 	var entrance := _model_aabb("city_subway_entrance")
 	if entrance.size.x > 0.1:
@@ -1060,7 +1069,8 @@ func _build_blocks() -> void:
 		["SqS_W", -34.0, 22.0, -18.0, 36.0, 15.0, "N"], ["SqS_MidW", -13.0, 22.0, -5.0, 34.0, 12.0, "N"],
 		["SqS_MidE", 5.0, 22.0, 13.0, 34.0, 18.0, "N"], ["SqS_E", 18.0, 22.0, 34.0, 36.0, 13.0, "N"],
 		["SqS_Far", -12.0, 44.0, 12.0, 56.0, 20.0, "N"],
-		["SqW_N", -34.0, -22.0, -22.0, -4.0, 14.0, "E"], ["SqW_S", -34.0, 4.0, -22.0, 22.0, 17.0, "E"],
+		["SqW_N", -34.0, -22.0, -22.0, -4.0, 14.0, "E"], ["SqW_S", -34.0, 4.0, -22.0, 12.0, 17.0, "E"],
+		["SqW_SS", -34.0, 18.0, -22.0, 22.0, 15.0, "E"],
 		["SqE_N", 22.0, -22.0, 34.0, -4.0, 16.0, "W"], ["SqE_SN", 22.0, 4.0, 34.0, 11.0, 13.0, "W"],
 		["SqE_SS", 22.0, 15.0, 34.0, 22.0, 13.0, "W"],
 		# Precinct: the station (west), north and south rows.
@@ -1577,7 +1587,8 @@ func _build_areas() -> void:
 		&"ashfall_square": [AABB(Vector3(-SQ, -0.5, STAIR_TOP_Z), Vector3(SQ * 2.0, 14.0, SQ - STAIR_TOP_Z)),
 			AABB(Vector3(-SQ, -0.5, -SQ), Vector3(SQ - STAIR_HALF, 14.0, SQ + STAIR_TOP_Z)),
 			AABB(Vector3(STAIR_HALF, -0.5, -SQ), Vector3(SQ - STAIR_HALF, 14.0, SQ + STAIR_TOP_Z)),
-			AABB(Vector3(-28.0, -0.5, -4.0), Vector3(6.0, 14.0, 8.0)), AABB(Vector3(SQ, -0.5, -4.0), Vector3(6.0, 14.0, 8.0))],
+			AABB(Vector3(-28.0, -0.5, -4.0), Vector3(6.0, 14.0, 8.0)), AABB(Vector3(SQ, -0.5, -4.0), Vector3(6.0, 14.0, 8.0)),
+			AABB(Vector3(-28.0, -0.5, PRECINCT_BACK_Z - 3.0), Vector3(6.0, 14.0, 6.0))],
 		&"precinct": [AABB(Vector3(-90.0, -0.5, -36.0), Vector3(62.0, 14.0, 72.0))],
 		&"market": [AABB(Vector3(28.0, -0.5, -15.0), Vector3(72.0, 14.0, 35.0))],
 		&"metro": [AABB(Vector3(-28.0, -8.0, -44.0), Vector3(68.0, 7.5, 28.0)),
