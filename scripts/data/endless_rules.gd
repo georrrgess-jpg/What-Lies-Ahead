@@ -53,7 +53,9 @@ extends Resource
 @export var damage_max := 1.3
 @export var speed_growth := 0.008
 @export var speed_max := 1.15
-## The boss's health: x(1 + boss_growth) for every earlier visit.
+## The boss's health: x boss_base on its first visit, + boss_growth for
+## every earlier one (its first visit meets a player with half the city shut).
+@export var boss_base := 0.85
 @export var boss_growth := 0.45
 ## Kill tickets: + per wave, capped (tougher zombies pay a little more).
 @export var tickets_growth := 0.02
@@ -97,4 +99,4 @@ func ticket_scale(n: int) -> float:
 
 ## Health multiplier of the boss on wave `n`, relative to its own data.
 func boss_scale(n: int) -> float:
-	return 1.0 + boss_growth * maxi(0, n / maxi(1, boss_every) - 1)
+	return boss_base + boss_growth * maxi(0, n / maxi(1, boss_every) - 1)

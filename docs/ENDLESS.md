@@ -23,10 +23,10 @@ fixed: saves, data and scenes refer to them.
 | District id | Name | Price (tickets, tunable) | Adds |
 | --- | --- | --- | --- |
 | `ashfall_square` | Ashfall Square (start: loadout station) | 0 | `city_shambler`, `city_runner`, `city_bruiser` |
-| `precinct` | Precinct 9 | 500 | `riot_shield` |
-| `metro` | Metro Line | 750 | `tunnel_crawler` |
-| `market` | Neon Market | 1000 | `firebug` |
-| `tower` | Broadcast Tower | 1500 | more `city_bruiser`; the boss's lair |
+| `precinct` | Precinct 9 | 600 | `riot_shield` |
+| `metro` | Metro Line | 1000 | `tunnel_crawler` |
+| `market` | Neon Market | 1400 | `firebug` |
+| `tower` | Broadcast Tower | 1800 | more `city_bruiser`; the boss's lair |
 
 Boss: `the_wrecker`, every `boss_every` (10) waves.
 
@@ -75,7 +75,7 @@ unlocks land mid-run (Progression collects them at once).
 
 **Waves** (`EndlessWaves`, deterministic per wave number): every `boss_every`-th (10th) wave is
 the boss's (`the_wrecker`, kind `finale`: the alpha with its escorts and reinforcements, the
-`city_endless_final` loop); every 5th is a **HORDE** (all entrances, 1.45x size, a surge);
+`city_endless_final` loop); every 5th is a **HORDE** (all entrances, 1.3x size, a surge);
 waves 1-4 are standard, standard, rush, standard; the rest cycle standard, rush, siege, bounty,
 ranged, standard, ambush, rush. A wave's zombies are split by role (regular, fast, heavy,
 special = the open districts' own) by its kind's mix; a role with nothing open hands its share
@@ -86,22 +86,25 @@ difficulty's own multipliers:
 
 | | wave 1 | wave 5 | wave 10 | wave 15 | wave 20 | wave 30 | cap |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| zombies (standard wave) | 10 | 18 | 28 | 38 | 48 | 60 | 60 |
-| alive at once | 7 | 9 | 11 | 13 | 16 | 18 | 18 (`crowd_max`, the director's CROWD_LIMIT) |
-| spawn interval (s) | 2.0 | 1.72 | 1.37 | 1.02 | 0.8 | 0.8 | 0.8 |
-| health | x1.0 | x1.28 | x1.63 | x1.98 | x2.11 | x2.36 | x2.6 (+7%/wave to 15, +2.5% after) |
-| damage | x1.0 | x1.08 | x1.18 | x1.28 | x1.38 | x1.5 | x1.5 |
-| speed | x1.0 | x1.04 | x1.09 | x1.14 | x1.19 | x1.2 | x1.2 |
+| zombies (standard wave) | 10 | 14 | 20 | 25 | 31 | 42 | 50 |
+| alive at once | 7 | 8 | 10 | 12 | 14 | 17 | 18 (`crowd_max`, the director's CROWD_LIMIT) |
+| spawn interval (s) | 2.0 | 1.8 | 1.55 | 1.3 | 1.05 | 0.85 | 0.85 |
+| health | x1.0 | x1.12 | x1.27 | x1.42 | x1.5 | x1.65 | x2.0 (+3%/wave to 15, +1.5% after) |
+| damage | x1.0 | x1.04 | x1.09 | x1.14 | x1.19 | x1.29 | x1.3 |
+| speed | x1.0 | x1.03 | x1.07 | x1.11 | x1.15 | x1.15 | x1.15 |
 | kill tickets | x1.0 | x1.08 | x1.18 | x1.28 | x1.38 | x1.5 | x1.5 |
 
-The boss has its own curve: its data health x `boss_health` (difficulty) x (1 + 0.45 per earlier
-visit). Crowd, speed and health all flatten, so late waves press with numbers and tempo, never
+Heavies (`EnemyData.heavy`: bruisers, riot shields) take half the health and damage growth:
+they are already the tanks. A district's heavy joins the heavies' share of a wave, its other
+enemies the specials' share. The boss has its own curve: its data health (The Wrecker: 3400) x `boss_health` (difficulty) x
+(0.85 + 0.45 per earlier visit): 2890 on wave 10, 4420 on 20, 5950 on 30 (Standard). Crowd, speed and health all flatten, so late waves press with numbers and tempo, never
 with bullet sponges. Breaks are 20 s (28 s before a boss), skippable as usual.
 
 **Districts and gates** (`EndlessGate`): standing in a gate's `Zone` shows the HUD prompt
 "HOLD E · OPEN PRECINCT 9 · 500" (red, with what is missing, when short). Holding interact for
 0.5 s pays; short of tickets the door shakes with `end_gate_denied`. Paying opens every gate of
-the district (its `open_style`: shutter rolls up, slide, topple), removes the blockers, enables
+the district (its `open_style`: shutter rolls up, slide, topple; a kit door with
+`play_open()`, `CityGateDoor`, animates itself), removes the blockers, enables
 the NavLinks, wakes its `enemy_spawn` markers (`SpawnPlanner.set_points`), adds its enemies to
 the pool and shows the district banner (`end_gate_sting`). The planner prefers the entrances of
 the district the player stands in (`endless_district_area`, +2.5 score), and far entrances
@@ -112,7 +115,9 @@ hold interact to pay `trap_price` (250); it burns or shocks every zombie inside 
 (marker meta `radius`, default 4.5 m) for `trap_seconds` (15), then recharges for
 `trap_cooldown` (40). Fire: 20 x wave health per 0.3 s; shock: 55 x wave health per 0.75 s plus
 an interrupt; heavies take 60%. It never hurts the player. The kit's `city_trap_fire.glb` /
-`city_trap_shock.glb` are used when present. `supply_drop` (`EndlessSupply`): after every 5th
+`city_trap_shock.glb` are used when present (flames, the kit's `CityFire`, on `Burner0-3`; arcs from
+`Spark0-3`; the sign over `Console`); a crowd of five shamblers in an armed fire trap is gone
+in about 3 s. `supply_drop` (`EndlessSupply`): after every 5th
 wave a crate parachutes onto a drop marker in an open district (the player's own if it has
 one); walking into it fills both weapons, heals 50 and pays 150 + 10 per wave tickets. A HUD
 marker follows it.
@@ -129,7 +134,7 @@ run unlocked and the next one.
 **Testing**: `tools/build_endless_testbed.gd` builds `scenes/levels/endless_testbed.tscn`, a
 grey box of the five districts with every contract marker (a dev tool, not in the game).
 `--autoplay=endless` (scripts/dev/endless_bot.gd) plays until it falls or `--max-seconds`,
-buys a gate in a break when it can keep 250 tickets, arms a trap with 4+ zombies in it, picks up
+buys a gate in a break when it can keep 150 tickets (and the overshield whenever it has 300 + 150), arms a trap with 4+ zombies in it, picks up
 crates and logs `[dev] ENDLESS wave=..` per wave and `[dev] ENDLESS RESULT wave=..` at the end;
 `--scene=<path>` plays another scene for the endless level (the testbed), and `--god`,
 `--difficulty`, `--start-wave` work as usual.
