@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/yoyo_loco.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/yoyo_loco_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/yoyo_loco_view.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/yoyo_loco_mode.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 27
+
+[resource]
+script = ExtResource("1")
+id = &"yoyo_loco"
+sort_order = 102
+category = "Yo-Yo Launcher"
+slot_class = "secondary"
+display_name = "Yo-Yo Loco"
+role = "Snaps a yo-yo out on a glowing string (14 m) and zips it back: two body hits drop a tourist, one headshot does. Hold the trigger through a hit for a Sleeper: it grinds that one zombie harder and harder and slows it. Aim down the sights to Walk the Dog: it rolls along the floor and trips every zombie it passes."
+unlock = SubResource("unlock")
+magazine_size = 10
+reserve_start = 50
+reserve_max = 80
+reload_time = 1.8
+emergency_recharge_interval = 1.2
+automatic = false
+fire_interval = 0.2
+damage = 56.0
+pellets = 1
+spread_degrees = 0.25
+spread_bloom = 0.25
+spread_bloom_max = 1.0
+spread_recovery = 4.0
+max_range = 14.0
+falloff_start = 14.0
+falloff_end = 20.0
+falloff_min_scale = 1.0
+headshot_multiplier = 2.0
+knockback = 1.6
+ads_fov_scale = 0.84
+ads_time = 0.15
+ads_spread_scale = 0.3
+ads_depth = 0.08
+first_shot_accurate = true
+reticle_style = "dot"
+recoil_kick = 0.9
+recoil_yaw = 0.25
+view_kick = 0.05
+shake = 0.08
+tracer_color = Color(0.78, 1, 0.25, 1)
+tracer_width = 0.04
+viewmodel = ExtResource("3")
+view_position = Vector3(0.22, -0.22, -0.56)
+view_rotation_degrees = Vector3(0, 0, -2.5)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"yoyo_throw"
+reload_sound = &"yoyo_reload"
+empty_sound = &"empty_click"
+equip_sound = &"yoyo_equip"
+fire_pitch_variance = 0.05
+move_speed_scale = 1.0
+equip_time = 0.28
+catch_sound = &"yoyo_catch"
+tracer_style = &"none"
+mode_script = ExtResource("6")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
