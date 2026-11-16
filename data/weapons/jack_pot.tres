@@ -1,0 +1,76 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/jack_pot.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/jack_pot_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/jack_pot_view.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/jack_pot_mode.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 16
+
+[resource]
+script = ExtResource("1")
+id = &"jack_pot"
+sort_order = 86
+category = "Mine Launcher"
+slot_class = "secondary"
+display_name = "Jack Pot"
+role = "Lobs spring-loaded jack-in-the-box mines, up to three out at once (one more pops the oldest). Each one lands, winds up its tune and arms: the first zombie within 2.5 m sets it off, and a clown on a spring pops out with a boxing-glove punch that knocks it into the air, stuns it and hits everything around it. A box that hits a zombie in flight pops at once. Heavies only hop and bosses are only nudged. Seed a choke point, then switch guns; aim down sights to see where it lands."
+unlock = SubResource("unlock")
+magazine_size = 4
+reserve_start = 24
+reserve_max = 48
+reload_time = 2.1
+emergency_recharge_interval = 2.0
+automatic = false
+fire_interval = 0.5
+damage = 80.0
+pellets = 1
+spread_degrees = 0.5
+spread_bloom = 0.0
+spread_bloom_max = 0.0
+max_range = 40.0
+falloff_start = 40.0
+falloff_end = 40.0
+falloff_min_scale = 1.0
+headshot_multiplier = 1.0
+knockback = 0.0
+ads_fov_scale = 0.84
+ads_time = 0.2
+ads_spread_scale = 0.5
+ads_depth = 0.1
+first_shot_accurate = true
+reticle_style = "circle"
+recoil_kick = 2.0
+recoil_yaw = 0.3
+view_kick = 0.07
+shake = 0.16
+tracer_color = Color(1, 0.42, 0.84, 1)
+tracer_width = 0.04
+viewmodel = ExtResource("3")
+view_position = Vector3(0.25, -0.23, -0.58)
+view_rotation_degrees = Vector3(0, 0, -2.5)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"jp_fire"
+reload_sound = &"jp_reload"
+empty_sound = &"empty_click"
+equip_sound = &"jp_equip"
+fire_pitch_variance = 0.05
+move_speed_scale = 0.98
+equip_time = 0.32
+projectile_speed = 17.0
+projectile_gravity = 15.0
+projectile_loft = 3.0
+projectile_fuse = 3.0
+projectile_size = 0.15
+splash_radius = 2.6
+splash_edge_scale = 0.45
+splash_push = 5.5
+tracer_style = &"none"
+mode_script = ExtResource("6")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
