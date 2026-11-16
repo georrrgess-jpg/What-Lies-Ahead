@@ -1,23 +1,27 @@
 extends RefCounted
 ## Yo-Yo Loco "Around the World": the gun rolls over to show its spool; the
 ## worn string frays (the coil flickers, shrinks and spits sparks) and
-## unspools; the yo-yo pops out of the fork on its string and swings one big
-## loop out in front of the gun, forward, down, back under and up over the
-## top, while a hologram string rewinds onto the spinning spool and turns
-## solid; the yo-yo swoops back into the fork with a clack and the gun
-## settles.
+## unspools; the gun swings in towards the middle of the view and the yo-yo
+## pops out of the fork on its string and swings one big loop up and round
+## in front of it (out to the left, over the top and down the right), turning
+## its starred face to the player, while a hologram string rewinds onto the
+## spinning spool and turns solid; the yo-yo swoops back into the fork with a
+## clack and the gun settles.
 ##
 ## Every part is posed each frame from one timeline (WeaponView.drive) on
 ## smooth curves: the yo-yo's whole path is one spiral (its radius and
 ## centre swell and shrink on sines, its angle on the same eased clock), so it
 ## leaves the fork and lands back in it at rest with no snap anywhere.
 
-const ROOT_POS := Vector3(-0.012, 0.03, 0.01)
-const ROOT_ROT := Vector3(6.0, -8.0, 20.0)
+const ROOT_POS := Vector3(-0.03, 0.02, 0.01)
+const ROOT_ROT := Vector3(4.0, 14.0, 16.0)
+## Extra swing in while the yo-yo loops, so the loop sits in the middle of the view.
+const LOOP_ROOT_ROT := Vector3(6.0, 8.0, -12.0)
 ## The loop: its centre moves this far from the fork (model space, -Z
-## forward) and its radius swells to LOOP_RADIUS.
-const LOOP_CENTRE := Vector3(0.02, 0.07, -0.15)
-const LOOP_RADIUS := 0.12
+## forward), up and to the left, and its radius swells to LOOP_RADIUS; it is
+## drawn across the view (in the model's X-Y plane) so it reads as a circle.
+const LOOP_CENTRE := Vector3(-0.05, 0.12, -0.07)
+const LOOP_RADIUS := 0.105
 const LOOP_START := 0.17
 const LOOP_END := 0.84
 const YOYO_SPIN := 2.4
@@ -76,8 +80,10 @@ func _step(k: float) -> void:
 ## The gun rolls its spool side up, holds, and settles back with a nod at the catch.
 func _pose_root(s: float) -> void:
 	var show := _e(0.0, 0.14, s) * (1.0 - _e(0.8, 0.97, s))
+	var loop := sin(PI * _e(LOOP_START - 0.05, LOOP_END, s))
 	var bump := sin(PI * _e(LOOP_END, 0.95, s))
-	_place(_v.part("Root"), _v.rest_transform("Root"), ROOT_POS * show + Vector3(0.0, -0.006, 0.01) * bump, ROOT_ROT * show + LAND_BUMP * bump)
+	_place(_v.part("Root"), _v.rest_transform("Root"), ROOT_POS * show + Vector3(0.0, -0.006, 0.01) * bump,
+		ROOT_ROT * show + LOOP_ROOT_ROT * loop + LAND_BUMP * bump)
 
 
 ## The spool unwinds the frayed string, then rewinds the new one fast and settles.
@@ -113,12 +119,14 @@ func _pose_yoyo(s: float) -> void:
 	var u := _e(LOOP_START, LOOP_END, s)
 	var swell := sin(PI * u)
 	var a := TAU * u
-	# Forward, down, back under and up over the top, in front of the gun.
-	var around := Vector3(0.0, -sin(a), -cos(a)) * LOOP_RADIUS * swell
+	# Out to the left, over the top and down the right, across the view.
+	var around := Vector3(-sin(a), -cos(a), 0.0) * LOOP_RADIUS * swell
 	var centre := LOOP_CENTRE * swell
 	var at := rest.origin + centre + around
+	# It turns its starred face to the player as the loop opens.
+	var face := Basis(Vector3.UP, deg_to_rad(80.0) * swell)
 	var spin := Basis(Vector3.RIGHT, -YOYO_SPIN * TAU * s * (1.0 + 2.0 * swell))
-	yoyo.transform = Transform3D(rest.basis * spin, at)
+	yoyo.transform = Transform3D(rest.basis * face * spin, at)
 	_pose_tether(at)
 
 

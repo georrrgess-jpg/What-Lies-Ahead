@@ -35,11 +35,11 @@ const HOME_DISTANCE := 0.5
 ## Extra reach (m) beyond a zombie's capsule at which a passing yo-yo still hits.
 const GRAZE := 0.12
 const SLEEP_TICK := 0.1
-const SLEEP_DPS_START := 70.0
-const SLEEP_DPS_TOP := 175.0
-const SLEEP_RAMP := 1.4
+const SLEEP_DPS_START := 85.0
+const SLEEP_DPS_TOP := 210.0
+const SLEEP_RAMP := 1.1
 const SLEEP_MAX := 3.0
-const SLEEP_ROUND_TIME := 0.42
+const SLEEP_ROUND_TIME := 0.4
 ## Speed multiplier on a 1-mass zombie being ground (heavier ones slow less).
 const SLEEP_SLOW := 0.55
 const STRING_MAX := 17.0
@@ -442,8 +442,8 @@ func _draw_string(cam: Camera3D, muzzle: Vector3) -> void:
 		_points[i] = p
 	var col := STRING_COLD.lerp(STRING_HOT, h).lerp(STRING_WHITE, maxf(0.0, h - 0.7) / 0.3)
 	WeaponFx.begin_ribbons(_string_mesh, WeaponFx.ribbon_material())
-	WeaponFx.add_ribbon(_string_mesh, _points, 0.05 + 0.05 * h, Color(col, 0.3 + 0.2 * h), cam.global_position)
-	WeaponFx.add_ribbon(_string_mesh, _points, 0.014 + 0.01 * h, Color(col.lerp(Color.WHITE, 0.4), 0.95), cam.global_position)
+	WeaponFx.add_ribbon(_string_mesh, _points, 0.04 + 0.05 * h, Color(col, 0.3 + 0.2 * h), cam.global_position)
+	WeaponFx.add_ribbon(_string_mesh, _points, 0.012 + 0.01 * h, Color(col.lerp(Color.WHITE, 0.4), 0.95), cam.global_position)
 	WeaponFx.end_ribbons(_string_mesh)
 
 

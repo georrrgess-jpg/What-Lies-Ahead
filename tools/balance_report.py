@@ -92,6 +92,8 @@ MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
 # The Lava Lampoon: its warm-up groove (mode) and the lava puddle its globs leave.
 LAVA_MODE = gd_consts("scripts/weapons/modes/lava_lampoon_mode.gd")
 LAVA_PUDDLE = gd_consts("scripts/weapons/lava_lampoon_puddle.gd")
+# The Yo-Yo Loco: its yo-yo's flight, Sleeper and Walk the Dog (scripts/weapons/yoyo_loco_shot.gd).
+YOYO = gd_consts("scripts/weapons/yoyo_loco_shot.gd")
 # Share of the pop a gathered zombie takes (they spin near the cup's centre).
 VORTEX_POP_SHARE = 0.8
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
@@ -182,6 +184,8 @@ def mode_kind(w):
 		return "marker"
 	if mode.endswith("t_minus_six_mode.gd"):
 		return "tminus"
+	if mode.endswith("yoyo_loco_mode.gd"):
+		return "yoyo"
 	return ""
 
 
@@ -312,6 +316,11 @@ def pull_damage(w, e, d, head):
 		n, _ = marker_cycle()
 		marked = sum(1.0 + c["TAG_BONUS"] * i for i in range(n)) / n
 		return w["damage"] * falloff(w, d) * head_mix * marked + c["POP_DAMAGE"] / n, w["fire_interval"]
+	if mode_kind(w) == "yoyo":
+		# A tap: one hit (headshots count), paced by the yo-yo's round trip to the target.
+		if d > w["max_range"]:
+			return 0.0, w["fire_interval"]
+		return w["damage"] * head_mix, max(w["fire_interval"], yoyo_trip(d))
 	if w["ricochet_count"] > 0:
 		# A thrown ring (RingShot) flies straight at its first target and can headshot.
 		return w["damage"] * head_mix, w["fire_interval"]
@@ -472,6 +481,26 @@ def ammo_damage(w, head):
 	return dmg * stock
 
 
+def yoyo_trip(d):
+	"""Seconds for a Yo-Yo Loco tap at a target d metres away: out, and home (YoyoLocoShot.round_trip)."""
+	out = d / YOYO["OUT_SPEED"]
+	accel = (YOYO["BACK_START"] + YOYO["BACK_TOP"]) * 0.5 * YOYO["BACK_ACCEL"]
+	if d > accel:
+		return out + YOYO["BACK_ACCEL"] + (d - accel) / YOYO["BACK_TOP"]
+	return out + math.sqrt(2.0 * d / ((YOYO["BACK_TOP"] - YOYO["BACK_START"]) / YOYO["BACK_ACCEL"]))
+
+
+def yoyo_sleeper(w, seconds):
+	"""Yo-Yo Loco Sleeper on one zombie for `seconds` after the hit: (damage of
+	the hit and the grind, rounds of string wear)."""
+	dealt, t, tick = w["damage"], 0.0, YOYO["SLEEP_TICK"]
+	while t + tick <= seconds + 1e-6:
+		t += tick
+		k = min(1.0, t / YOYO["SLEEP_RAMP"]) ** (1.0 / 0.7)
+		dealt += (YOYO["SLEEP_DPS_START"] + (YOYO["SLEEP_DPS_TOP"] - YOYO["SLEEP_DPS_START"]) * k) * tick
+	return dealt, 1 + int(seconds / YOYO["SLEEP_ROUND_TIME"])
+
+
 def tminus_swarm(w, heavy=False):
 	"""T-Minus Six aimed: (single-target DPS of full paints, damage of one full
 	swarm spread over a pack of four standing close, seconds per volley)."""
@@ -521,6 +550,19 @@ def main():
 			n = int(min(TMINUS["MAX_LOCKS"], w["magazine_size"]))
 			print(f"\n{w['display_name']} aimed: a full paint of {n} in {volley:.2f} s, {int(TMINUS_SEEK_HEAD * 100)}% of the rockets "
 				f"on the head: {single:.0f} DPS on one light zombie, {boss:.0f} on a heavy or boss; one swarm over a pack of four {crowd:.0f}")
+	for w in ws.values():
+		if mode_kind(w) == "yoyo":
+			full, rounds = yoyo_sleeper(w, YOYO["SLEEP_MAX"])
+			short, short_rounds = yoyo_sleeper(w, 1.0)
+			heavy = es["boardwalk_bruiser"]["max_health"]
+			t = 0.0
+			while yoyo_sleeper(w, t)[0] < heavy and t < YOYO["SLEEP_MAX"]:
+				t += YOYO["SLEEP_TICK"]
+			dog_cycle = 2.0 * (w["max_range"] - YOYO["DOG_DROP"]) / YOYO["DOG_SPEED"] + 0.3
+			print(f"\n{w['display_name']} Sleeper (hold through a hit): {short:.0f} in the first second ({short_rounds} rounds), "
+				f"{full:.0f} over a full {YOYO['SLEEP_MAX']:g} s ({rounds} rounds, top {YOYO['SLEEP_DPS_TOP']:.0f} DPS); "
+				f"a Bruiser ({heavy:.0f}) drops {t + yoyo_trip(dist):.2f} s after the throw. Walk the Dog: "
+				f"{w['damage'] * YOYO['DOG_SCALE']:.0f} and a trip to every zombie it rolls past, one walk {dog_cycle:.2f} s")
 	tags = gd_consts("scripts/weapons/markdown_marker_tags.gd")
 	own = {"Marker tags": tags["TAG_BONUS"] * tags["MAX_TAGS"], "Ground Control mark": MARK["DAMAGE_BONUS"] - 1.0,
 		"Dunk Tank soak": SOAK["DAMAGE_BONUS"] - 1.0}

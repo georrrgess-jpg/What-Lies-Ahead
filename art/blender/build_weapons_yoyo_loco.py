@@ -1,7 +1,7 @@
 """First-person viewmodel of the Yo-Yo Loco (update 13 secondary): a stubby
 grape-purple wrist launcher whose rear guard arches back over the wrist, a
 lime yo-yo riding in a fork on its nose and a glowing string spool on its
-right flank. Also writes the thrown yo-yo on its own
+left flank (the side the player sees). Also writes the thrown yo-yo on its own
 (art/models/yoyo_loco_yoyo.glb, used by scripts/weapons/yoyo_loco_shot.gd).
 
 Same conventions and node contract as build_weapons.py (documented at the top
@@ -12,7 +12,7 @@ scripts/weapons/views/yoyo_loco_view.gd and
 scripts/weapons/reloads/yoyo_loco_reload.gd:
 
   Yoyo        the loaded yo-yo in the fork (pivot at its axle, axle along X)
-  Spool       the string reel on the right flank (pivot at its axle, along X) >
+  Spool       the string reel on the left flank (pivot at its axle, along X) >
               Cell      the glowing string wound on it (the magazine)
               CellHolo  the hologram string the reload rewinds
   Tether      the string from the port in the nose to the yo-yo (pivot at the
@@ -28,11 +28,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from weapon_kit import *  # noqa: F401,F403
 from weapon_kit import _save  # noqa: E402
 
-YOYO_C = (0.0, 0.192, 0.026)       # the loaded yo-yo's axle centre
-YOYO_R = 0.04
-PORT = (0.0, 0.137, 0.026)         # where the string leaves the nose
+YOYO_C = (0.0, 0.2, 0.046)       # the loaded yo-yo's axle centre
+YOYO_R = 0.048
+PORT = (0.0, 0.137, 0.046)         # where the string leaves the nose
 TETHER = YOYO_C[1] - PORT[1]
-SPOOL_C = (0.05, 0.03, 0.026)
+SPOOL_C = (-0.05, 0.03, 0.026)
 
 
 def palette():
@@ -63,6 +63,20 @@ def yoyo(prefix, radius, lime, rim, core, glow, sticker, centre=(0, 0, 0)):
     return parts
 
 
+def wrist_mount(arm, elbow, M):
+    """The launcher's strap-on cuff round the firing forearm, just behind the
+    glove's cuff: a purple band with a lime light and a string guide on top."""
+    heel = next(p for p in arm if p.name == "RHeel")
+    c = heel.location.copy()
+    d = (Vector(elbow) - c).normalized()
+    up = (Vector((0, 0, 1)) - d * d.z).normalized()
+    return [
+        tube("MountBand", [c + d * 0.235, c + d * 0.292], 0.072, m=M["shell"], segs=18),
+        tube("MountLight", [c + d * 0.256, c + d * 0.27], 0.0745, m=M["cell"], segs=18),
+        sphere("MountGuide", 0.011, c + d * 0.263 + up * 0.074, m=M["trim"], segs=10, rings=6),
+    ]
+
+
 def build_yoyo_loco():
     reset_scene()
     palette()
@@ -82,10 +96,6 @@ def build_yoyo_loco():
         box("Frame", (0.068, 0.17, 0.026), (0, 0.03, -0.022), bevel=0.01, m=M["dark"]),
         box("BodyStripe", (0.066, 0.15, 0.012), (0, 0.04, 0.034), bevel=0.003, m=M["trim"]),
         box("RailRiser", (0.03, 0.12, 0.018), (0, 0.01, rail_top - 0.015), bevel=0.004, m=M["dark"]),
-        # The wrist guard: a plate arching back over the back of the hand, a lime light along it.
-        obox("WristGuard", (0.076, 0.11, 0.014), (0.004, -0.112, 0.042), (1, 0, 0), (0, 1, -0.32), bevel=0.006, m=M["shell"]),
-        obox("WristGuardLight", (0.05, 0.08, 0.004), (0.004, -0.112, 0.0505), (1, 0, 0), (0, 1, -0.32), bevel=0.0015, m=M["cell"]),
-        obox("WristGuardLip", (0.08, 0.012, 0.02), (0.004, -0.166, 0.022), (1, 0, 0), (0, 1, -0.32), bevel=0.005, m=M["dark"]),
         # The nose: a dark collar round the string port, and the fork that holds the yo-yo.
         ycyl("Nose", 0.024, 0.016, 0.136, z=yz, m=M["dark"], segs=20, bevel=0.004),
         ycyl("PortRing", 0.011, 0.006, 0.145, z=yz, m=M["steel"], segs=16, bevel=0.002),
@@ -93,40 +103,39 @@ def build_yoyo_loco():
     for side in (-1, 1):
         px = side * (YOYO_R * 0.42 * 2 + YOYO_R * 0.16 / 2 + 0.012)
         shell += [
-            box(f"Prong{side}", (0.01, 0.07, 0.022), (px, 0.162, yz), bevel=0.004, m=M["shell"]),
-            box(f"ProngTip{side}", (0.012, 0.022, 0.03), (px, 0.196, yz), bevel=0.005, m=M["trim"]),
+            box(f"Prong{side}", (0.01, 0.085, 0.024), (px, 0.166, yz), bevel=0.004, m=M["shell"]),
+            box(f"ProngTip{side}", (0.012, 0.026, 0.034), (px, 0.204, yz), bevel=0.005, m=M["trim"]),
             xcyl(f"AxleCup{side}", 0.009, 0.008, (px - side * 0.009, yy, yz), m=M["steel"], segs=14, bevel=0.002),
         ]
-    # Lime hazard chevrons down the left flank, the spool's housing on the right.
-    for i in range(4):
-        shell.append(obox(f"Chevron{i}", (0.004, 0.022, 0.008), (-0.0325, -0.02 + i * 0.03, 0.006), (0, 0.6, 1), (1, 0, 0), bevel=0.0, m=M["trim"]))
+    # The spool's housing on the left flank (the side the player sees).
     shell += [
-        xcyl("SpoolBack", 0.033, 0.006, (0.034, sy, sz), m=M["dark"], segs=28, bevel=0.002),
-        torus("SpoolGuard", 0.034, 0.0035, (sx + 0.004, sy, sz), rot=rad(0, 90, 0), m=M["steel"], major_segs=28, minor_segs=5),
+        xcyl("SpoolBack", 0.033, 0.006, (-0.034, sy, sz), m=M["dark"], segs=28, bevel=0.002),
+        torus("SpoolGuard", 0.034, 0.0035, (sx - 0.004, sy, sz), rot=rad(0, 90, 0), m=M["steel"], major_segs=28, minor_segs=5),
     ]
     shell += top_rail("TopRail", -0.045, 0.065, rail_top, M, width=0.03)
     shell += bolts("Pin", [(-0.033, 0.09, 0.0), (0.033, 0.09, -0.006), (-0.033, -0.05, 0.04)], M["steel"], radius=0.005, height=0.006)
-    lug, charm_point = charm_lug(-0.032, -0.03, -0.004, M)
+    lug, charm_point = charm_lug(0.032, -0.03, -0.004, M, out=1.0)
     shell += lug
     sight_rear, sight_front = sights_notch(0.0, -0.052, 0.112, rail_top, 0.08, z_line, M, gap=0.016)
 
     loaded = yoyo("Yoyo", YOYO_R, lime, M["shell"], M["dark"], M["cell"], star_m, YOYO_C)
     # The string reel: a steel drum with lime spokes; the wound string (Cell) and its hologram.
     spool = [xcyl("SpoolDrum", 0.012, 0.016, SPOOL_C, m=M["steel"], segs=18, bevel=0.002),
-             xcyl("SpoolFace", 0.031, 0.004, (sx + 0.009, sy, sz), m=M["trim"], segs=28, bevel=0.0015),
-             xcyl("SpoolKnob", 0.007, 0.012, (sx + 0.016, sy, sz), m=M["pink"], segs=12, bevel=0.002)]
+             xcyl("SpoolFace", 0.031, 0.004, (sx - 0.009, sy, sz), m=M["trim"], segs=28, bevel=0.0015),
+             xcyl("SpoolKnob", 0.007, 0.012, (sx - 0.016, sy, sz), m=M["pink"], segs=12, bevel=0.002)]
     for i in range(3):
         a = math.tau * i / 3
-        spool.append(obox(f"SpoolSpoke{i}", (0.004, 0.044, 0.006), (sx + 0.012, sy + math.cos(a) * 0.013, sz + math.sin(a) * 0.013),
+        spool.append(obox(f"SpoolSpoke{i}", (0.004, 0.044, 0.006), (sx - 0.012, sy + math.cos(a) * 0.013, sz + math.sin(a) * 0.013),
                           (0, math.cos(a), math.sin(a)), (1, 0, 0), bevel=0.001, m=M["dark"]))
-    wound = [xcyl("StringCoil", 0.024, 0.013, (sx - 0.001, sy, sz), m=M["cell"], segs=24, bevel=0.003)]
-    wound_holo = holo_copy([xcyl("StringCoilShape", 0.027, 0.015, (sx - 0.001, sy, sz), segs=24, bevel=0.003)])
+    wound = [xcyl("StringCoil", 0.024, 0.013, (sx + 0.001, sy, sz), m=M["cell"], segs=24, bevel=0.003)]
+    wound_holo = holo_copy([xcyl("StringCoilShape", 0.027, 0.015, (sx + 0.001, sy, sz), segs=24, bevel=0.003)])
     tether = [ycyl("TetherLine", 0.0022, TETHER, PORT[1] + TETHER / 2, z=PORT[2], m=M["cell"], segs=6, bevel=0.0)]
-    # The string runs back from the port along the right side into the spool.
-    shell.append(tube("StringRun", [(0.006, 0.134, yz), (0.026, 0.11, yz + 0.002), (sx - 0.006, sy + 0.022, sz + 0.012)], 0.0018, m=M["cell"], segs=6))
+    # The string runs back from the port along the left side into the spool.
+    shell.append(tube("StringRun", [(-0.006, 0.134, yz), (-0.026, 0.11, yz + 0.002), (sx + 0.006, sy + 0.022, sz + 0.012)], 0.0018, m=M["cell"], segs=6))
 
-    decal = [side_emblem("Emblem", star_outline(0.016, 0.007), -0.0325, 0.05, 0.05, M["decal"])]
+    decal = [side_emblem("Emblem", star_outline(0.014, 0.006), -0.0325, -0.042, 0.052, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.42, -0.5, -0.36))
+    arm_r += wrist_mount(arm_r, elbow_r, M)
     arm_l, elbow_l = cup_hand(G, M, (-0.55, -0.32, -0.32))
     groups = {
         "Shell": (shell, (0, 0, 0), None),
@@ -145,7 +154,7 @@ def build_yoyo_loco():
         "Muzzle": ((0, yy + 0.05, yz), None),
         "SightPoint": ((0, -0.052, z_line), None),
         "SightMount": ((0, 0.01, rail_top), None),
-        "EjectPoint": ((sx + 0.012, sy, sz + 0.03), None),
+        "EjectPoint": ((sx - 0.012, sy, sz + 0.03), None),
         "VentPoint": ((0, 0.145, yz), None),
         "CharmPoint": (charm_point, None),
         "ElbowR": (elbow_r, "ArmR"),
