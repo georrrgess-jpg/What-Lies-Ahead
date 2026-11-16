@@ -24,6 +24,7 @@ extends Node
 ##                         the scene is staged (scripts/dev/ui_layout_probe.gd)
 ##   --shot-stress=1       with --shot-scene=results or defeat: every weapon used, an alpha and two
 ##                         bounties (capsules), a big score: the fullest results screen
+##   --shot-grant=a,b,...  with --shot-stress=1: also a results row for each of these weapon ids
 ##   --shot-pos=x,y,z      player feet position
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
 ##   --shot-pitch=deg
@@ -223,6 +224,8 @@ func _run() -> void:
 		if _arg("stress", "0") == "1":
 			for w in GameData.weapons().slice(2, 6):
 				director._grant(w.id, 2600, 48)
+			for id in _arg("grant", "").split(",", false):
+				director._grant(StringName(id), 2600, 48)
 			director._bosses_defeated = 1
 			director._bounties_claimed = 2
 			director.score.score = 78090

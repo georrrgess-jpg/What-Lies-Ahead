@@ -24,6 +24,15 @@ const TITLE_TWO_LINE_MIN := 18
 ## Line spacing at TITLE_SIZE (tight, as the titles are capitals); it scales
 ## with the font size so smaller titles do not overlap.
 const TITLE_LINE_SPACING := -8.0
+## Space the card keeps free on each side of its contents (the column's inset).
+const INSET := 10.0
+## The line under the name shrinks to at most this fraction of its size to fit a narrow card.
+## The inset, and the card width under which it is used, for the narrow Arsenal cards.
+const NARROW_INSET := 5.0
+const NARROW_WIDTH := 120.0
+const STATUS_MIN_SCALE := 0.5
+## Past this much shrinking the padlock goes, so the text can stay bigger.
+const STATUS_ICON_SCALE := 0.8
 
 ## Whether this card is the selected one of its group.
 var selected: bool:
@@ -42,12 +51,14 @@ var title_size := TITLE_SIZE:
 		title_size = value
 		if _title:
 			_fit_title()
+var _col: VBoxContainer
 var _title: Label
 var _status: HBoxContainer
 var _tag: KitChip
 var _new: KitChip
 var _rarity: ColorRect
 var _lifted := false
+var _inset := INSET
 
 
 static func make(title: String, card_size := Vector2(220, 250)) -> ItemCard:
@@ -66,8 +77,9 @@ func _build(title: String) -> void:
 	add_theme_stylebox_override("hover_pressed", KitTex.box(&"card_selected"))
 	add_theme_stylebox_override("disabled", KitTex.box(&"card"))
 	add_theme_stylebox_override("focus", KitTex.box(&"focus_ring"))
-	var col := VBoxContainer.new()
-	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 10)
+	_col = VBoxContainer.new()
+	var col := _col
+	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, int(INSET))
 	col.add_theme_constant_override("separation", 0)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(col)
@@ -93,6 +105,7 @@ func _build(title: String) -> void:
 	# instead of breaking ("SHUTTERBU / G").
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD
 	_title.resized.connect(_fit_title)
+	resized.connect(_on_resized)
 	_title.max_lines_visible = 2
 	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_title)
@@ -185,6 +198,7 @@ func set_status(text: String, color := UiKit.MUTED) -> void:
 	if text != "":
 		_status.add_child(UiKit.label(text, 20, color))
 		_status.visible = true
+		_fit_status()
 
 
 ## Padlock and a short requirement ("Lv 5") under the name; dims the picture.
@@ -194,6 +208,7 @@ func set_locked(requirement: String) -> void:
 	_status.add_child(UiKit.icon(&"icon_lock", 26.0))
 	_status.add_child(UiKit.label(requirement, 22, UiKit.AMBER, true))
 	_status.visible = true
+	_fit_status()
 
 
 ## Spark icon and a price under the name; red when the player cannot pay.
@@ -202,6 +217,7 @@ func set_price(amount: int, affordable := true) -> void:
 	_holder.modulate = Color.WHITE
 	_status.add_child(UiKit.price_tag(amount, 22, affordable))
 	_status.visible = true
+	_fit_status()
 
 
 ## Corner tag at the top left ("EQUIPPED", "1ST"). "" hides it.
@@ -243,6 +259,55 @@ func set_item_rarity(item: CosmeticItem) -> void:
 	MythicFx.dress(_rarity, item)
 	MythicFx.dress(_title, item)
 	_rarity.custom_minimum_size.y = 6 if MythicFx.is_mythic(item) else 4
+
+
+## Cards narrower than NARROW_WIDTH trim the column's inset so names and the
+## line under them get the room.
+func _on_resized() -> void:
+	_inset = NARROW_INSET if size.x < NARROW_WIDTH else INSET
+	_col.offset_left = _inset
+	_col.offset_right = -_inset
+	_fit_status()
+
+
+## Shrinks the line under the name (text and icons together) until it fits
+## inside the card, so "Wave 10" on a narrow card never runs off its edge.
+func _fit_status() -> void:
+	if not _status.visible or size.x <= 0.0:
+		return
+	var room := size.x - 2.0 * _inset
+	var icons := _status.get_children().filter(func(c: Node) -> bool: return c is TextureRect)
+	for icon: Control in icons:
+		icon.visible = true
+	var factor := _shrink_status(room, STATUS_ICON_SCALE)
+	if factor < STATUS_ICON_SCALE:
+		# Too narrow for the padlock and a readable line: keep the line.
+		for icon: Control in icons:
+			icon.visible = false
+		_shrink_status(room, STATUS_MIN_SCALE)
+
+
+## Scales the line down in steps until it fits `room` or reaches `floor_scale`;
+## returns the scale it ended on.
+func _shrink_status(room: float, floor_scale: float) -> float:
+	var factor := 1.0
+	_scale_status(factor)
+	while _status.get_combined_minimum_size().x > room and factor > floor_scale:
+		factor -= 0.05
+		_scale_status(factor)
+	return factor
+
+
+func _scale_status(factor: float) -> void:
+	for node in _status.find_children("*", "", true, false):
+		if node is Label:
+			if not node.has_meta(&"base_size"):
+				node.set_meta(&"base_size", node.get_theme_font_size(&"font_size"))
+			node.add_theme_font_size_override(&"font_size", roundi(node.get_meta(&"base_size") * factor))
+		elif node is TextureRect:
+			if not node.has_meta(&"base_size"):
+				node.set_meta(&"base_size", node.custom_minimum_size)
+			node.custom_minimum_size = (node.get_meta(&"base_size") as Vector2) * factor
 
 
 func _clear_status() -> void:
