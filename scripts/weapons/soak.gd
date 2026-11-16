@@ -4,8 +4,7 @@ extends Node3D
 ## is hit (Soak.of(zombie)). A soaked zombie drips and squelches, walks
 ## SLOW slower (heavies resist: the slow shrinks with sqrt(mass)) and takes
 ## DAMAGE_BONUS more damage from every hit, whatever weapon it comes from
-## (an EnemyBehaviour added to the zombie for as long as it is wet, so armour
-## still sees the hit first). The soak lasts SOAK_TIME after the last hit,
+## (through the DamageStack, so armour still sees the hit first). The soak lasts SOAK_TIME after the last hit,
 ## then dries off. tools/balance_report.py reads these constants.
 
 const NODE_NAME := "Soak"
@@ -20,16 +19,9 @@ const WET_SHADER := "res://art/shaders/weapon_frost.gdshader"
 var zombie: Zombie
 var _left := 0.0
 var _drip := 0.0
-var _bonus: Soaked
 var _meshes: Array[MeshInstance3D] = []
 
 static var _sheen: ShaderMaterial
-
-
-## The extra damage a soaked zombie takes (an armour-like on_hit filter, last in line).
-class Soaked extends EnemyBehaviour:
-	func on_hit(_z: Zombie, amount: float, _hit_position: Vector3, _headshot: bool) -> float:
-		return amount * DAMAGE_BONUS
 
 
 ## The soak on `z`, created on first use.
@@ -69,8 +61,7 @@ func soak() -> void:
 	if zombie.is_dead():
 		return
 	if not is_wet():
-		_bonus = Soaked.new()
-		zombie.behaviours.append(_bonus)
+		DamageStack.ensure(zombie)
 		_drip = 0.0
 		_set_sheen(true)
 		set_physics_process(true)
@@ -100,9 +91,6 @@ func _dry() -> void:
 	_left = 0.0
 	set_physics_process(false)
 	_set_sheen(false)
-	if _bonus and is_instance_valid(zombie):
-		zombie.behaviours.erase(_bonus)
-	_bonus = null
 
 
 ## A wet sheen over the zombie (the frost overlay shader, light and tinted

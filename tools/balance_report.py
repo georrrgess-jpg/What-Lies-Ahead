@@ -87,6 +87,7 @@ TMINUS = gd_consts("scripts/weapons/modes/t_minus_six_mode.gd")
 TMINUS.update(gd_consts("scripts/weapons/t_minus_rocket.gd"))
 # Share of a painted swarm's rockets that land on the head they seek.
 TMINUS_SEEK_HEAD = 0.85
+STACK = gd_consts("scripts/weapons/damage_stack.gd")
 MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
 # The Lava Lampoon: its warm-up groove (mode) and the lava puddle its globs leave.
 LAVA_MODE = gd_consts("scripts/weapons/modes/lava_lampoon_mode.gd")
@@ -520,6 +521,14 @@ def main():
 			n = int(min(TMINUS["MAX_LOCKS"], w["magazine_size"]))
 			print(f"\n{w['display_name']} aimed: a full paint of {n} in {volley:.2f} s, {int(TMINUS_SEEK_HEAD * 100)}% of the rockets "
 				f"on the head: {single:.0f} DPS on one light zombie, {boss:.0f} on a heavy or boss; one swarm over a pack of four {crowd:.0f}")
+	tags = gd_consts("scripts/weapons/markdown_marker_tags.gd")
+	own = {"Marker tags": tags["TAG_BONUS"] * tags["MAX_TAGS"], "Ground Control mark": MARK["DAMAGE_BONUS"] - 1.0,
+		"Dunk Tank soak": SOAK["DAMAGE_BONUS"] - 1.0}
+	raw = sum(own.values())
+	print("\nMark-down stack (they add up, capped; the cap is lower on heavies and bosses): "
+		+ ", ".join(f"{k} +{v * 100:.0f}%" for k, v in own.items())
+		+ f"; all three +{raw * 100:.0f}% -> +{min(raw, STACK['CAP']) * 100:.0f}% on a zombie,"
+		f" +{min(raw, STACK['HEAVY_CAP']) * 100:.0f}% on a heavy or boss")
 
 
 if __name__ == "__main__":
