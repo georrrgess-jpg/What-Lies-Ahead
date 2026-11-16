@@ -3,10 +3,9 @@ extends Node3D
 ## The Markdown Marker's price tags on one zombie (a child added by the first
 ## tag that sticks, PriceTags.of(zombie)). Every tag marks the zombie down:
 ## it takes TAG_BONUS more damage per tag (up to MAX_TAGS) from every hit,
-## whatever weapon it comes from (an EnemyBehaviour added while tagged, last in
-## line, so armour still sees the hit first). The tags show as big bright
-## stickers on its body; a full stack pulses. They peel off TAG_TIME after the
-## last one stuck.
+## whatever weapon it comes from (through the DamageStack, so armour still sees
+## the hit first). The tags show as big bright stickers on its body; a full
+## stack pulses. They peel off TAG_TIME after the last one stuck.
 ##
 ## A marker hit on a zombie that already carries a full stack sets off a
 ## Clearance Pop (clearance()): the tags burst in confetti and coins, the
@@ -48,21 +47,12 @@ var zombie: Zombie
 var _count := 0
 var _left := 0.0
 var _age := 0.0
-var _bonus: MarkedDown
 var _stickers: Array[MeshInstance3D] = []
 var _born: Array[float] = []
 
 static var _quad: QuadMesh
 ## [colour index][ready 0/1] -> ShaderMaterial
 static var _mats: Array = []
-
-
-## The extra damage a tagged zombie takes (an armour-like on_hit filter, last in line).
-class MarkedDown extends EnemyBehaviour:
-	var tags: PriceTags
-
-	func on_hit(_z: Zombie, amount: float, _hit_position: Vector3, _headshot: bool) -> float:
-		return amount * (1.0 + TAG_BONUS * tags.count())
 
 
 ## The tags on `z`, created on first use.
@@ -106,10 +96,7 @@ func stick(point: Vector3) -> void:
 	_left = TAG_TIME
 	if _count >= MAX_TAGS:
 		return
-	if _bonus == null:
-		_bonus = MarkedDown.new()
-		_bonus.tags = self
-		zombie.behaviours.append(_bonus)
+	DamageStack.ensure(zombie)
 	_add_sticker(point)
 	_count += 1
 	if _count >= MAX_TAGS:
@@ -192,9 +179,6 @@ func _peel(popped: bool) -> void:
 	_stickers.clear()
 	_born.clear()
 	_count = 0
-	if _bonus and is_instance_valid(zombie):
-		zombie.behaviours.erase(_bonus)
-	_bonus = null
 	set_physics_process(false)
 
 

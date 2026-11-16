@@ -4,8 +4,8 @@ extends Node3D
 ## a ping ring passes through it (GroundControlMark.of(zombie)). A marked
 ## zombie wears a lime outline drawn through walls (an additive rim overlay)
 ## and a radar blip over its head, and takes DAMAGE_BONUS more from every
-## hit, whatever weapon it comes from (an EnemyBehaviour on_hit filter, last
-## in line, like the Dunk Tank's soak). The mark lasts MARK_TIME after the
+## hit, whatever weapon it comes from (through the DamageStack, with the
+## Dunk Tank's soak and the Markdown Marker's tags). The mark lasts MARK_TIME after the
 ## last ring. tools/balance_report.py reads these constants.
 
 const NODE_NAME := "GroundControlMark"
@@ -22,7 +22,6 @@ const BLIP_COLOR := Color(0.8, 1.0, 0.35)
 var zombie: Zombie
 var _left := 0.0
 var _reapply := 0.0
-var _bonus: Marked
 var _meshes: Array[MeshInstance3D] = []
 var _overlay: ShaderMaterial
 var _blip: MeshInstance3D
@@ -31,10 +30,9 @@ static var _blip_mesh: QuadMesh
 static var _blip_mat: StandardMaterial3D
 
 
-## The extra damage a marked zombie takes.
-class Marked extends EnemyBehaviour:
-	func on_hit(_z: Zombie, amount: float, _hit_position: Vector3, _headshot: bool) -> float:
-		return amount * DAMAGE_BONUS
+## Damage multiplier of a hit on `z` (the DamageStack adds it to the other bonuses).
+static func damage_scale(z: Zombie) -> float:
+	return DAMAGE_BONUS if is_marked(z) else 1.0
 
 
 ## The mark on `z`, created on first use.
@@ -82,8 +80,7 @@ func mark() -> void:
 	if zombie.is_dead():
 		return
 	if not is_on():
-		_bonus = Marked.new()
-		zombie.behaviours.append(_bonus)
+		DamageStack.ensure(zombie)
 		_blip.visible = true
 		_reapply = 0.0
 		set_physics_process(true)
@@ -114,9 +111,6 @@ func _clear() -> void:
 	_set_overlay(false)
 	if _blip:
 		_blip.visible = false
-	if _bonus and is_instance_valid(zombie):
-		zombie.behaviours.erase(_bonus)
-	_bonus = null
 
 
 ## Lays the outline on every mesh whose overlay slot is free (or free again
