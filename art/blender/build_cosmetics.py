@@ -690,6 +690,202 @@ def charm_teacup(m):
     return parts, (spin, Matrix.Translation((0, 0, -0.068)))
 
 
+def charm_pinwheel(m):
+    """A paper pinwheel on a striped stick; the four-coloured wheel spins (the Spin part)."""
+    p = "Pinwheel"
+    hub = (0, -0.006, -0.046)
+    parts = hanger(p, m)
+    for i in range(5):
+        parts.append(cyl(f"{p}Stick{i}", 0.0018, 0.0105, (0, 0.0, -0.025 - i * 0.0105), segs=8, bevel=0.0,
+                         m=m["white"] if i % 2 == 0 else m["red"]))
+    parts.append(sphere(p + "StickEnd", 0.0022, (0, 0, -0.078), m=m["red"], segs=8, rings=5))
+    parts.append(cyl(p + "Pin", 0.0009, 0.007, (0, -0.0028, hub[2]), rot=rad(90, 0, 0), segs=6, bevel=0.0, m=m["silver"]))
+    spin = [sphere(p + "Hub", 0.0032, (0, 0, 0.0015), m=m["gold"], segs=10, rings=6)]
+    colours = (m["pink"], m["yellow"], m["cyan"], m["green"])
+    for i in range(4):
+        a = math.tau * i / 4
+        # Euler XYZ: stood flat in the wheel's plane (X), then turned to its place round the hub (Z).
+        spin.append(prism(f"{p}Blade{i}", [(0.0, 0.0), (0.019, 0.0), (0.019, 0.019)], 0.0012, (0, 0, 0), rot=(math.pi / 2, 0, a), m=colours[i]))
+        spin.append(sphere(f"{p}Fold{i}", 0.0019, (math.cos(a) * 0.012 - math.sin(a) * 0.007, math.sin(a) * 0.012 + math.cos(a) * 0.007, 0.001),
+                           m=colours[i], segs=6, rings=4))
+    matrix = Matrix.Translation(hub) @ Matrix.Rotation(math.radians(90), 4, "X")
+    return parts, (spin, matrix)
+
+
+def charm_bowling(m):
+    """A glossy bowling ball with finger holes, and a pin leaning on it."""
+    p = "Bowl"
+    r = 0.0145
+    c = (-0.004, 0, -0.022 - r)
+    parts = hanger(p, m)
+    parts += [
+        sphere(p + "Ball", r, c, m=m["purple"], segs=20, rings=12),
+        sphere(p + "Swirl", r * 1.004, c, scale=(1.0, 1.0, 0.25), rot=rad(0, 30, 0), m=m["navy"], segs=20, rings=6),
+    ]
+    for i, (dx, dz) in enumerate(((-0.0045, 0.004), (0.0045, 0.004), (0.0, -0.0045))):
+        parts.append(sphere(f"{p}Hole{i}", 0.0026, (c[0] + dx, c[1] - r * 0.92, c[2] + dz), scale=(1, 0.5, 1), m=m["black"], segs=8, rings=5))
+    px, pz = 0.017, -0.064
+    parts += [
+        sphere(p + "PinBelly", 0.0075, (px, 0.002, pz + 0.012), scale=(1.0, 1.0, 1.5), m=m["white"], segs=12, rings=8),
+        cyl(p + "PinNeck", 0.0042, 0.012, (px, 0.002, pz + 0.027), segs=10, bevel=0.0, m=m["white"], radius_top=0.0032),
+        torus(p + "PinStripeA", 0.0039, 0.0011, (px, 0.002, pz + 0.025), m=m["red"], major_segs=12, minor_segs=4),
+        torus(p + "PinStripeB", 0.0036, 0.0009, (px, 0.002, pz + 0.029), m=m["red"], major_segs=12, minor_segs=4),
+        sphere(p + "PinHead", 0.0046, (px, 0.002, pz + 0.036), scale=(1, 1, 1.15), m=m["white"], segs=10, rings=7),
+        tube(p + "PinCord", [(0.0, 0.0, -0.0205), (px * 0.6, 0.002, -0.03), (px, 0.002, pz + 0.04)], 0.0008, m=m["ring"], segs=5),
+    ]
+    return parts
+
+
+def charm_cotton_candy(m):
+    """A big pink cloud of cotton candy on a striped paper cone."""
+    p = "Cotton"
+    top = -0.02
+    parts = hanger(p, m)
+    cloud = [(0, 0, -0.012), (0.009, 0.002, -0.016), (-0.009, 0.001, -0.016), (0.004, -0.007, -0.008), (-0.005, 0.006, -0.008),
+             (0.0, -0.004, -0.022), (0.011, -0.003, -0.025), (-0.011, -0.002, -0.025), (0.0, 0.006, -0.026)]
+    for i, (x, y, z) in enumerate(cloud):
+        parts.append(sphere(f"{p}Fluff{i}", 0.0095 - (i % 3) * 0.001, (x, y, top + z), m=m["pink"] if i % 4 else m["jelly"], segs=12, rings=8))
+    cone = cyl(p + "Cone", 0.0075, 0.03, (0, 0, top - 0.046), segs=16, bevel=0.0, m=m["white"], radius_top=0.0005)
+    cone.rotation_euler = rad(180, 0, 0)
+    parts.append(cone)
+    for i in range(3):
+        parts.append(torus(f"{p}Stripe{i}", 0.0064 - i * 0.0019, 0.0009, (0, 0, top - 0.036 - i * 0.007), m=m["blue"], major_segs=16, minor_segs=4))
+    return parts
+
+
+def charm_rubber_chicken(m):
+    """The classic rubber chicken, hung by its feet: long neck, floppy comb and a squawking beak."""
+    p = "Chicken"
+    parts = hanger(p, m)
+    parts += [
+        tube(p + "LegL", [(-0.003, 0, -0.02), (-0.004, 0, -0.03)], 0.0012, m=m["orange"], segs=6),
+        tube(p + "LegR", [(0.003, 0, -0.02), (0.005, 0, -0.03)], 0.0012, m=m["orange"], segs=6),
+        sphere(p + "Body", 0.011, (0, 0, -0.04), scale=(1.0, 0.85, 1.25), m=m["yellow"], segs=14, rings=9),
+        tube(p + "Neck", [(0, 0, -0.05), (0.002, -0.001, -0.058), (0.0, -0.002, -0.066)], 0.0042, m=m["yellow"], segs=10, radius_end=0.0036),
+        sphere(p + "Head", 0.0058, (0.0, -0.002, -0.07), m=m["yellow"], segs=12, rings=8),
+        sphere(p + "Beak", 0.0032, (0.0, -0.007, -0.074), scale=(1.0, 1.3, 0.8), rot=rad(-25, 0, 0), m=m["orange"], segs=8, rings=5),
+        sphere(p + "Wattle", 0.0022, (0.0, -0.006, -0.0705), scale=(0.8, 0.6, 1.4), m=m["red"], segs=6, rings=4),
+    ]
+    for i in range(3):
+        parts.append(sphere(f"{p}Comb{i}", 0.0024, (0.0, -0.001 + i * 0.002, -0.0755 - (i % 2) * 0.0015), m=m["red"], segs=8, rings=5))
+    for side in (-1, 1):
+        parts += [
+            sphere(f"{p}Wing{side}", 0.0065, (side * 0.0105, 0.0, -0.041), scale=(0.35, 0.8, 1.2), rot=rad(0, side * 15, 0), m=m["yellow"], segs=8, rings=6),
+            sphere(f"{p}Eye{side}", 0.0014, (side * 0.003, -0.0052, -0.0675), m=m["black"], segs=6, rings=4),
+        ]
+        for k in range(3):
+            parts.append(tube(f"{p}Toe{side}{k}", [(side * 0.003, 0, -0.0205), (side * 0.003 + (k - 1) * 0.003, -0.002, -0.0175)],
+                              0.0007, m=m["orange"], segs=5))
+    return parts
+
+
+def charm_hot_air_balloon(m):
+    """A striped hot-air balloon with a wicker basket hanging under it on ropes."""
+    p = "Balloon"
+    c = (0, 0, -0.038)
+    r = 0.016
+    parts = hanger(p, m)
+    parts.append(sphere(p + "Envelope", r, c, scale=(1, 1, 1.12), m=m["red"], segs=20, rings=12))
+    for i in range(4):
+        parts.append(sphere(f"{p}Gore{i}", r * 1.012, c, scale=(0.28, 1.0, 1.12), rot=(0, 0, math.pi * i / 4), m=m["yellow"], segs=16, rings=12))
+    parts += [
+        cyl(p + "Skirt", 0.0062, 0.006, (0, 0, c[2] - r * 1.08), segs=14, bevel=0.0, m=m["red"], radius_top=0.009),
+        box(p + "Basket", (0.011, 0.011, 0.008), (0, 0, c[2] - 0.032), bevel=0.002, m=m["waffle"]),
+        box(p + "BasketRim", (0.0125, 0.0125, 0.002), (0, 0, c[2] - 0.0275), bevel=0.0008, m=m["waffle_dark"]),
+        sphere(p + "Flame", 0.0022, (0, 0, c[2] - 0.022), scale=(1, 1, 1.6), m=m["flame"], segs=8, rings=5),
+    ]
+    for i, (x, y) in enumerate(((-1, -1), (1, -1), (1, 1), (-1, 1))):
+        parts.append(tube(f"{p}Rope{i}", [(x * 0.005, y * 0.005, c[2] - r * 1.1), (x * 0.0055, y * 0.0055, c[2] - 0.027)], 0.0005, m=m["cream"], segs=4))
+    return parts
+
+
+def charm_lava_lamp(m):
+    """A lava lamp: a glass bottle between a silver base and cap; the glowing blobs inside turn slowly (Spin)."""
+    p = "LavaLamp"
+    parts = hanger(p, m)
+    parts += [
+        cyl(p + "Cap", 0.0035, 0.008, (0, 0, -0.025), segs=16, bevel=0.0008, m=m["silver"], radius_top=0.0028),
+        cyl(p + "Glass", 0.0072, 0.03, (0, 0, -0.044), segs=20, bevel=0.0, m=m["glass"], radius_top=0.0042),
+        cyl(p + "Base", 0.0088, 0.016, (0, 0, -0.067), segs=20, bevel=0.0012, m=m["silver"], radius_top=0.0062),
+        torus(p + "Band", 0.0072, 0.0012, (0, 0, -0.0595), m=m["purple"], major_segs=20, minor_segs=4),
+        cyl(p + "Liquid", 0.0052, 0.026, (0, 0, -0.045), segs=16, bevel=0.0, m=m["purple"], radius_top=0.0034),
+    ]
+    spin = [
+        sphere(p + "BlobA", 0.0034, (0.0018, 0, 0.007), scale=(1, 1, 1.3), m=m["flame"], segs=10, rings=6),
+        sphere(p + "BlobB", 0.0028, (-0.002, 0.001, -0.004), m=m["flame"], segs=10, rings=6),
+        sphere(p + "BlobC", 0.0042, (0.0, -0.0012, -0.0105), scale=(1.2, 1.2, 0.8), m=m["flame"], segs=10, rings=6),
+    ]
+    return parts, (spin, Matrix.Translation((0, 0, -0.044)))
+
+
+def charm_jack_box(m):
+    """A jack-in-the-box held by its clown: hat, grinning face and ruffle on a spring over a striped box."""
+    p = "JackBox"
+    parts = hanger(p, m)
+    parts += [
+        cyl(p + "Hat", 0.0048, 0.009, (0, 0, -0.0255), segs=12, bevel=0.0, m=m["purple"], radius_top=0.0006),
+        sphere(p + "Pompom", 0.0018, (0, 0, -0.0205), m=m["yellow"], segs=8, rings=5),
+        sphere(p + "Face", 0.0068, (0, 0, -0.035), m=m["white"], segs=14, rings=9),
+        sphere(p + "Nose", 0.0022, (0, -0.0068, -0.0355), m=m["red"], segs=8, rings=5),
+        torus(p + "Smile", 0.0034, 0.0007, (0, -0.0058, -0.0378), rot=rad(90, 0, 0), m=m["red"], major_segs=12, minor_segs=4,
+              arc=math.pi * 0.8, start=math.pi * 1.1),
+        torus(p + "Ruffle", 0.0062, 0.0022, (0, 0, -0.0425), m=m["cyan"], major_segs=16, minor_segs=6),
+        box(p + "Box", (0.024, 0.024, 0.022), (0, 0, -0.068), bevel=0.0025, m=m["red"]),
+        box(p + "Lid", (0.025, 0.003, 0.02), (0, 0.0135, -0.047), rot=rad(-12, 0, 0), bevel=0.001, m=m["yellow"]),
+        box(p + "Crank", (0.002, 0.002, 0.008), (0.0135, 0, -0.068), bevel=0.0, m=m["gold"]),
+        sphere(p + "CrankKnob", 0.0022, (0.0145, 0, -0.064), m=m["gold"], segs=8, rings=5),
+        prism(p + "Star", star_outline(0.0065, 0.003, 5, 90), 0.0012, (0, -0.0124, -0.068), m=m["yellow"], bevel=0.0003),
+    ]
+    for side in (-1, 1):
+        parts += [
+            sphere(f"{p}Eye{side}", 0.0011, (side * 0.0024, -0.0062, -0.0328), m=m["black"], segs=6, rings=4),
+            sphere(f"{p}Hair{side}", 0.0034, (side * 0.0066, 0.0, -0.0335), m=m["orange"], segs=8, rings=5),
+        ]
+    for k in range(4):
+        parts.append(box(f"{p}Trim{k}", (0.0255, 0.0255, 0.0018), (0, 0, -0.0575 - k * 0.007), bevel=0.0004, m=m["yellow"]))
+    coil = [(math.cos(t * 0.9) * 0.0038, math.sin(t * 0.9) * 0.0038, -0.0445 - t * 0.00045) for t in range(0, 25)]
+    parts.append(tube(p + "Spring", coil, 0.0007, m=m["silver"], segs=5))
+    return parts
+
+
+def charm_disco_ball(m):
+    """A faceted mirror ball on a little cap; it turns (the Spin part) and throws coloured glints."""
+    p = "Disco"
+    c = (0, 0, -0.04)
+    parts = hanger(p, m)
+    parts.append(cyl(p + "Cap", 0.003, 0.004, (0, 0, -0.0225), segs=10, bevel=0.0006, m=m["gold"]))
+    ball = sphere(p + "Ball", 0.0165, (0, 0, 0), m=m["silver"], segs=16, rings=10)
+    ball.data.polygons.foreach_set("use_smooth", [False] * len(ball.data.polygons))
+    spin = [ball]
+    glints = (m["neon"], m["cyan_neon"], m["bulb"])
+    for i in range(9):
+        a = math.tau * i / 9
+        z = (i % 3 - 1) * 0.008
+        rr = math.sqrt(0.0165 ** 2 - z ** 2)
+        spin.append(sphere(f"{p}Glint{i}", 0.0018, (math.cos(a) * rr, math.sin(a) * rr, z), m=glints[i % 3], segs=6, rings=4))
+    return parts, (spin, Matrix.Translation(c))
+
+
+def charm_trophy(m):
+    """A gold winner's cup with two handles and a star, on a black plinth with a gold "1"."""
+    p = "Trophy"
+    parts = hanger(p, m)
+    parts += [
+        cyl(p + "Cup", 0.0062, 0.018, (0, 0, -0.033), segs=24, bevel=0.0, m=m["gold"], radius_top=0.0125),
+        torus(p + "Lip", 0.0124, 0.0013, (0, 0, -0.024), m=m["gold_dark"], major_segs=28, minor_segs=5),
+        cyl(p + "Stem", 0.0022, 0.009, (0, 0, -0.0465), segs=12, bevel=0.0, m=m["gold"]),
+        sphere(p + "Knot", 0.0036, (0, 0, -0.045), m=m["gold_dark"], segs=10, rings=6),
+        cyl(p + "Foot", 0.0075, 0.003, (0, 0, -0.0525), segs=20, bevel=0.0008, m=m["gold"], radius_top=0.0055),
+        box(p + "Plinth", (0.02, 0.016, 0.01), (0, 0, -0.059), bevel=0.0018, m=m["black"]),
+        box(p + "Plate", (0.011, 0.002, 0.0055), (0, -0.0082, -0.059), bevel=0.0006, m=m["gold"]),
+        prism(p + "Star", star_outline(0.0045, 0.002, 5, 90), 0.0016, (0, -0.0095, -0.031), m=m["gem_red"], bevel=0.0003),
+    ]
+    for side in (-1, 1):
+        parts.append(torus(f"{p}Handle{side}", 0.0055, 0.0013, (side * 0.012, 0, -0.03), rot=rad(90, 0, 0), m=m["gold"],
+                           major_segs=14, minor_segs=5, arc=math.pi * 1.1, start=(-math.pi * 0.55 if side > 0 else math.pi * 0.45)))
+    return parts
+
+
 CHARMS = {
     "Duck": charm_duck,
     "Dice": charm_dice,
@@ -716,6 +912,15 @@ CHARMS = {
     "Penguin": charm_penguin,
     "Cocoa": charm_cocoa,
     "Teacup": charm_teacup,
+    "Pinwheel": charm_pinwheel,
+    "Bowling": charm_bowling,
+    "CottonCandy": charm_cotton_candy,
+    "RubberChicken": charm_rubber_chicken,
+    "HotAirBalloon": charm_hot_air_balloon,
+    "LavaLamp": charm_lava_lamp,
+    "JackBox": charm_jack_box,
+    "DiscoBall": charm_disco_ball,
+    "Trophy": charm_trophy,
 }
 
 

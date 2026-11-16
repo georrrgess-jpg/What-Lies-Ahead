@@ -9,7 +9,7 @@ shader_type canvas_item;
 //  12 wave scales   13 argyle        14 kaleidoscope 15 picnic plaid
 //  16 memphis       17 equalizer     18 pixel hills  19 balloon sky
 //  20 prize wheel   21 ticket storm  22 thunderhead  23 desert mirage
-//  24 spiral galaxy 25 blossom drift
+//  24 spiral galaxy 25 blossom drift 26 strike night
 uniform int style = 0;
 uniform vec3 color_a : source_color = vec3(1.0, 0.48, 0.35);
 uniform vec3 color_b : source_color = vec3(1.0, 0.25, 0.62);
@@ -805,6 +805,72 @@ vec3 blossom_drift(vec2 uv, vec2 p, float t, float ar, float fx, float aa) {
 	return col;
 }
 
+// A bowling pin standing on its base at the origin (y down), `s` tall.
+float sd_pin(vec2 q, float s) {
+	float body = (length((q - vec2(0.0, -0.28 * s)) / vec2(0.2 * s, 0.3 * s)) - 1.0) * 0.2 * s;
+	float head = length(q - vec2(0.0, -0.82 * s)) - 0.11 * s;
+	float neck = sd_box(q - vec2(0.0, -0.62 * s), vec2(0.07 * s, 0.16 * s));
+	return min(min(body, head), neck);
+}
+
+vec3 strike_night(vec2 uv, vec2 p, float t, float ar, float fx, float aa) {
+	float horizon = 0.42;
+	vec3 col = mix(color_a * 0.7, color_a * 1.6, uv.y);
+	col = mix(col, color_b * 0.6, (0.5 + 0.5 * sin(p.y * 80.0 - t * 2.0)) * 0.12 * step(uv.y, horizon));
+	// The lane in perspective: gutters, boards, neon edges and arrows.
+	float depth = clamp((uv.y - horizon) / (1.0 - horizon), 0.0, 1.0);
+	float half_w = mix(0.14, 0.62, depth);
+	float lane = abs(p.x - fx) - half_w;
+	if (uv.y > horizon) {
+		col = mix(col, color_a * 0.45, fill(lane - mix(0.02, 0.09, depth), aa));
+		vec3 wood = mix(vec3(0.93, 0.62, 0.34), vec3(1.0, 0.8, 0.52), step(0.5, fract((p.x - fx) / half_w * 4.0 + 0.5)));
+		col = mix(col, wood, fill(lane, aa));
+		col = mix(col, color_c * 1.3, fill(abs(lane) - 0.006, aa));
+		for (int i = -2; i <= 2; i++) {
+			vec2 a = vec2(fx + float(i) * mix(0.14, 0.62, 0.55) * 0.36, horizon + 0.55 * (1.0 - horizon));
+			col = mix(col, color_b, fill(sd_tri((p - a) * vec2(1.0, 0.8), 0.022), aa));
+		}
+	}
+	// Every 3.2 s: the ball rolls down, the pins fly, a burst of light.
+	float cyc = mod(t, 3.2);
+	float hit = cyc - 1.3;
+	for (int row = 3; row >= 0; row--) {
+		for (int k = 0; k <= row; k++) {
+			float fr = float(row);
+			float fk = float(k);
+			vec2 base = vec2(fx + (fk - fr * 0.5) * 0.075, horizon + 0.05 - fr * 0.016);
+			float h = hash(vec2(fr, fk));
+			vec2 q = p - base;
+			if (hit > 0.0) {
+				q -= vec2((fk - fr * 0.5 + h - 0.5) * 0.5 * hit, -0.9 * hit + 1.6 * hit * hit);
+				q = rot(q, (h - 0.5) * 14.0 * hit);
+			}
+			float pin = sd_pin(q, 0.13 - fr * 0.012);
+			float show = 1.0 - smoothstep(0.7, 1.0, hit);
+			col = mix(col, INK, fill(pin - 0.006, aa) * show);
+			col = mix(col, CREAM, fill(pin, aa) * show);
+			col = mix(col, color_b, fill(max(pin, abs(q.y + (0.13 - fr * 0.012) * 0.6) - 0.007), aa) * show);
+		}
+	}
+	float roll = clamp(cyc / 1.3, 0.0, 1.0);
+	float bd = 1.0 - roll * 0.92;
+	float br = mix(0.03, 0.14, bd);
+	vec2 bc = vec2(fx + sin(roll * 3.0) * 0.08 * bd, horizon + bd * (1.0 - horizon) - br * 0.9);
+	float ball = length(p - bc) - br;
+	float shown = step(cyc, 1.36);
+	col = mix(col, INK, fill(ball - 0.008, aa) * shown);
+	col = mix(col, mix(color_c * 0.6, color_c * 1.2, smoothstep(br, -br, (p - bc).y + (p - bc).x)), fill(ball, aa) * shown);
+	vec2 spin_q = rot(p - bc, -roll * 18.0);
+	for (int i = 0; i < 3; i++) {
+		vec2 hole = vec2(cos(float(i) * 2.1), sin(float(i) * 2.1)) * br * 0.38;
+		col = mix(col, INK, fill(length(spin_q - hole) - br * 0.14, aa) * shown);
+	}
+	float flash = smoothstep(0.45, 0.0, hit) * step(0.0, hit);
+	col = mix(col, CREAM, fill(sd_star(p - vec2(fx, horizon - 0.02), 0.08 + 0.25 * (1.0 - flash), 8.0, 3.0), aa) * flash);
+	col += color_b * flash * 0.25;
+	return col;
+}
+
 void fragment() {
 	float t = TIME * speed;
 	vec2 uv = UV;
@@ -839,7 +905,8 @@ void fragment() {
 	else if (style == 22) { col = thunderhead(uv, p, t, ar, fx, aa); }
 	else if (style == 23) { col = desert_mirage(uv, p, t, ar, fx, aa); }
 	else if (style == 24) { col = spiral_galaxy(uv, p, t, ar, fx, aa); }
-	else { col = blossom_drift(uv, p, t, ar, fx, aa); }
+	else if (style == 25) { col = blossom_drift(uv, p, t, ar, fx, aa); }
+	else { col = strike_night(uv, p, t, ar, fx, aa); }
 	// Rounded corners.
 	vec2 half_size = rect_size * 0.5;
 	vec2 q = abs(uv * rect_size - half_size) - (half_size - vec2(radius));

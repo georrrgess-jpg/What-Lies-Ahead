@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"charmx_jack_box"
+display_name = "Jack-in-the-Box"
+description = "A grinning clown on a spring, popped out of a striped box with a crank."
+slot = &"weapon_charm"
+rarity = 2
+price = 1500
+params = {
+"charm": "JackBox"
+}
+sort_order = 5224

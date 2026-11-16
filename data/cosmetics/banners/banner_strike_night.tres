@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_strike_night"
+display_name = "Strike Night"
+description = "A bowling ball thunders down a neon lane and the pins fly: STRIKE!"
+slot = &"banner"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.16, 0.08, 0.32, 1, 1, 0.3, 0.7, 1, 0.3, 0.9, 1, 1)
+params = {
+"style": 40
+}
+sort_order = 9229
