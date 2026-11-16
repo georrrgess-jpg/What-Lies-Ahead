@@ -7,7 +7,9 @@ extends Control
 const CELL_ICON_SHADER := "res://art/shaders/cell_icon.gdshader"
 ## Kill effects and tracers drawn as one picture of their main prop or pattern.
 const PROP_EFFECTS := ["balloon", "disco", "jackpot", "voxel", "ghost", "snow_globe", "black_hole", "tickets", "pinata"]
-const PATTERN_TRACERS := ["ribbon", "morse", "heartbeat", "fence", "bubbles", "neon", "tickets", "chevrons", "candy"]
+## The update-13 kill effects (drawn by _draw_party_effect).
+const PARTY_EFFECTS := ["party_popper", "popcorn", "scuffle", "brain_freeze", "strike", "ko", "balloon_lift", "thunder", "rainbow", "ufo"]
+const PATTERN_TRACERS :=["ribbon", "morse", "heartbeat", "fence", "bubbles", "neon", "tickets", "chevrons", "candy"]
 
 var item: CosmeticItem
 var _time := 0.0
@@ -84,6 +86,9 @@ func _draw_kill_effect() -> void:
 	var r := minf(size.x, size.y) * 0.32
 	if effect in PROP_EFFECTS:
 		_draw_prop_effect(effect, cols, mid, r)
+		return
+	if effect in PARTY_EFFECTS:
+		_draw_party_effect(effect, cols, mid, r)
 		return
 	draw_circle(mid, r * 0.35, Color(cols[0], 0.35))
 	draw_circle(mid, r * 0.18, Color(1, 1, 1, 0.8))
@@ -300,6 +305,101 @@ func _draw_prop_effect(effect: String, cols: Array, mid: Vector2, r: float) -> v
 				draw_colored_polygon(PackedVector2Array([p2 + Vector2(-r * 0.2, 0), p2 + Vector2(-r * 0.45, -r * 0.15), p2 + Vector2(-r * 0.45, r * 0.15)]), c.lightened(0.2))
 				draw_colored_polygon(PackedVector2Array([p2 + Vector2(r * 0.2, 0), p2 + Vector2(r * 0.45, -r * 0.15), p2 + Vector2(r * 0.45, r * 0.15)]), c.lightened(0.2))
 				draw_circle(p2, r * 0.24, c)
+
+
+## The update-13 kill effects: their main prop, drawn flat.
+func _draw_party_effect(effect: String, cols: Array, mid: Vector2, r: float) -> void:
+	var c0: Color = cols[0]
+	var c1: Color = cols[1 % cols.size()]
+	match effect:
+		"party_popper":
+			for i in 7:
+				var a := -2.3 + i * 0.22
+				var d := Vector2(cos(a), sin(a))
+				draw_line(mid + Vector2(-r * 0.35, r * 0.35) + d * r * 0.5, mid + Vector2(-r * 0.35, r * 0.35) + d * r * 1.35, cols[i % cols.size()], 4.0)
+				_confetti_piece(mid + Vector2(-r * 0.35, r * 0.35) + d * r * 1.5, r * 0.1, cols[(i + 1) % cols.size()], a)
+			var cone := PackedVector2Array([mid + Vector2(-r * 0.9, r * 0.9), mid + Vector2(-r * 0.62, r * 0.02), mid + Vector2(r * 0.02, r * 0.62)])
+			draw_colored_polygon(cone, c0)
+			draw_line(cone[0].lerp(cone[1], 0.5), cone[0].lerp(cone[2], 0.5), c1, r * 0.12)
+			draw_line(cone[1], cone[2], Color(1.0, 0.78, 0.25), r * 0.1)
+		"popcorn":
+			for k in 5:
+				var p := mid + Vector2(cos(k * 1.3) * r * 0.62, sin(k * 1.3) * r * 0.5)
+				for j in 4:
+					draw_circle(p + Vector2(cos(j * 1.6), sin(j * 1.6)) * r * 0.13, r * 0.17, cols[j % cols.size()])
+				draw_circle(p + Vector2(0, r * 0.1), r * 0.08, Color(1.0, 0.8, 0.3))
+		"scuffle":
+			for k in 9:
+				var a := TAU * k / 9.0
+				draw_circle(mid + Vector2(cos(a), sin(a) * 0.7) * r * 0.55, r * 0.36, cols[k % 3])
+			draw_circle(mid, r * 0.5, c0)
+			for k in 5:
+				var a := -0.4 + k * 0.7
+				_star(mid + Vector2(cos(a), sin(a)) * r * 1.12, r * 0.16, cols[3 % cols.size()])
+		"brain_freeze":
+			for k in 8:
+				var a := TAU * k / 8.0 + 0.3
+				var p := mid + Vector2(cos(a), sin(a)) * r * 1.15
+				draw_colored_polygon(PackedVector2Array([p, p + Vector2(cos(a + 1.9), sin(a + 1.9)) * r * 0.1,
+					p + Vector2(cos(a), sin(a)) * r * 0.3]), c1)
+			var box := Rect2(mid - Vector2(r, r) * 0.72, Vector2(r, r) * 1.44)
+			draw_rect(box, Color(c0, 0.45))
+			draw_rect(box, Color.WHITE, false, 4.0)
+			draw_line(box.position + Vector2(r * 0.25, r * 0.95), box.position + Vector2(r * 0.7, r * 0.3), Color(1, 1, 1, 0.8), 5.0)
+		"strike":
+			_star(mid + Vector2(0, -r * 0.2), r * 1.0, Color(c0, 0.45))
+			for k in 3:
+				_pin(mid + Vector2((k - 1) * r * 0.62, r * 0.1 + absf(k - 1) * r * 0.1), r * 1.5, (k - 1) * 0.4)
+		"ko":
+			var font := ThemeDB.fallback_font
+			var fs := int(r * 1.05)
+			var at := mid + Vector2(-r * 1.2, r * 0.38)
+			draw_string_outline(font, at + Vector2(3, 3), "K.O.!", HORIZONTAL_ALIGNMENT_LEFT, -1, fs, int(r * 0.3), Color(0.3, 0.06, 0.32))
+			draw_string_outline(font, at, "K.O.!", HORIZONTAL_ALIGNMENT_LEFT, -1, fs, int(r * 0.18), c1)
+			draw_string(font, at, "K.O.!", HORIZONTAL_ALIGNMENT_LEFT, -1, fs, c0)
+		"balloon_lift":
+			var hand := mid + Vector2(0, r * 0.45)
+			for k in 3:
+				var b := mid + Vector2((k - 1) * r * 0.5, -r * (0.55 + 0.15 * float(k == 1)))
+				draw_line(hand, b, Color(1, 1, 1, 0.8), 2.0)
+				draw_set_transform(b, 0.0, Vector2(1.0, 1.2))
+				draw_circle(Vector2.ZERO, r * 0.3, cols[k % cols.size()])
+				draw_circle(Vector2(-r * 0.1, -r * 0.1), r * 0.07, Color(1, 1, 1, 0.6))
+				draw_set_transform(Vector2.ZERO)
+			draw_circle(hand + Vector2(0, r * 0.2), r * 0.22, Color(0.5, 0.85, 0.4))
+			for side in [-1.0, 1.0]:
+				draw_circle(hand + Vector2(side * r * 0.09, r * 0.18), r * 0.06, Color.WHITE)
+		"thunder":
+			var bolt := PackedVector2Array([Vector2(0.15, -1.05), Vector2(-0.35, 0.05), Vector2(0.0, 0.05), Vector2(-0.2, 1.05),
+				Vector2(0.4, -0.15), Vector2(0.05, -0.15), Vector2(0.35, -1.05)])
+			for i in bolt.size():
+				bolt[i] = mid + bolt[i] * r
+			draw_colored_polygon(bolt, c0)
+			draw_polyline(bolt + PackedVector2Array([bolt[0]]), c1, 4.0, true)
+		"rainbow":
+			for k in cols.size():
+				draw_arc(mid + Vector2(0, r * 0.4), r * (1.05 - k * 0.12), PI, TAU, 32, cols[k], r * 0.13, true)
+			for side in [-1.0, 1.0]:
+				for j in 3:
+					draw_circle(mid + Vector2(side * r * (0.75 + j * 0.15), r * (0.45 - (j % 2) * 0.1)), r * 0.2, Color.WHITE)
+		"ufo":
+			draw_colored_polygon(PackedVector2Array([mid + Vector2(-r * 0.3, -r * 0.1), mid + Vector2(r * 0.3, -r * 0.1),
+				mid + Vector2(r * 0.75, r * 1.1), mid + Vector2(-r * 0.75, r * 1.1)]), Color(c0, 0.4))
+			draw_circle(mid + Vector2(0, -r * 0.35), r * 0.35, Color(0.6, 0.92, 1.0))
+			draw_set_transform(mid + Vector2(0, -r * 0.2), 0.0, Vector2(1.0, 0.3))
+			draw_circle(Vector2.ZERO, r * 0.95, Color(0.85, 0.88, 0.95))
+			draw_set_transform(Vector2.ZERO)
+			for k in 5:
+				draw_circle(mid + Vector2((k - 2) * r * 0.36, -r * 0.18), r * 0.07, cols[k % cols.size()])
+
+
+func _pin(p: Vector2, h: float, angle: float) -> void:
+	draw_set_transform(p, angle)
+	draw_circle(Vector2(0, h * 0.18), h * 0.2, Color(0.98, 0.97, 0.95))
+	draw_rect(Rect2(-h * 0.08, -h * 0.25, h * 0.16, h * 0.4), Color(0.98, 0.97, 0.95))
+	draw_circle(Vector2(0, -h * 0.3), h * 0.12, Color(0.98, 0.97, 0.95))
+	draw_rect(Rect2(-h * 0.085, -h * 0.13, h * 0.17, h * 0.05), Color(0.92, 0.12, 0.2))
+	draw_set_transform(Vector2.ZERO)
 
 
 func _ticket(p: Vector2, w: float, angle: float, c: Color) -> void:

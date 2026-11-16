@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_rainbow"
+display_name = "Over the Rainbow"
+description = "A rainbow arcs over the body between two puffy clouds, sparkles rain from it and a pot of gold spills at its end."
+slot = &"kill_effect"
+rarity = 3
+price = 3000
+params = {
+"effect": "rainbow"
+}
+sort_order = 7310

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_balloon_lift"
+display_name = "Up, Up and Away"
+description = "A bunch of balloons carries a little plush zombie up into the sky, where they all pop into confetti."
+slot = &"kill_effect"
+rarity = 2
+price = 1500
+params = {
+"effect": "balloon_lift"
+}
+sort_order = 7214

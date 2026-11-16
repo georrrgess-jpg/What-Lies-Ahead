@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_scuffle"
+display_name = "Scuffle Cloud"
+description = "A cartoon fight cloud boils up with stars flying out, then little dizzy stars circle where it was."
+slot = &"kill_effect"
+rarity = 1
+price = 750
+params = {
+"effect": "scuffle"
+}
+sort_order = 7113

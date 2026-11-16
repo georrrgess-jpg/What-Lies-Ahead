@@ -360,6 +360,128 @@ def cos_kill_pinata():
     return out
 
 
+def cos_kill_party_popper():
+    """A papery pop and a fizz of streamers."""
+    d = 0.7
+    out = silence(d)
+    place(out, sweep(260, 80, 0.1, "sine") * env(0.1, 0.001, 0.09) * 0.7, 0.08)
+    place(out, filt(noise(0.05), low=3500, high=300) * env(0.05, 0.0005, 0.04, power=3.0) * 0.9, 0.08)
+    place(out, whoosh(0.45, 1500, 6000, 0.25), 0.1)
+    place(out, shimmer(0.45, 7000, gain=0.3), 0.15)
+    return out
+
+
+def cos_kill_popcorn():
+    """A run of soft kernel pops speeding up, over a little sizzle."""
+    d = 0.9
+    out = silence(d)
+    at = 0.0
+    for i in range(9):
+        pop = filt(noise(0.03), low=rand(2500, 4000), high=400) * env(0.03, 0.0005, 0.025, power=3.0)
+        place(out, pop, at, rand(0.5, 0.9))
+        at += max(0.025, 0.09 - i * 0.008) * rand(0.7, 1.3)
+    place(out, filt(noise(0.7), low=6000, high=2500) * env(0.7, 0.05, 0.7, power=1.5) * 0.06, 0.0)
+    return out
+
+
+def cos_kill_scuffle():
+    """Cartoon brawl: soft thumps in a dust whoosh, then a dizzy twinkle."""
+    d = 1.0
+    out = silence(d)
+    place(out, whoosh(0.5, 300, 2500, 0.35), 0.0)
+    for i in range(4):
+        place(out, sweep(rand(150, 220), 60, 0.08, "sine") * env(0.08, 0.001, 0.07) * 0.55, 0.03 + i * rand(0.07, 0.1))
+    for i, s in enumerate((24, 28, 24, 28, 31)):
+        place(out, filt(bell(note(s), 0.18, gain=0.18, ratios=(1.0, 3.0), weights=(1.0, 0.2)), low=5000), 0.42 + i * 0.09)
+    return out
+
+
+def cos_kill_brain_freeze():
+    """A frosty crackle as the ice forms, then a glassy shatter."""
+    d = 1.0
+    out = silence(d)
+    place(out, whoosh(0.45, 3000, 9000, 0.2), 0.0)
+    place(out, filt(bell(note(26), 0.4, gain=0.25, ratios=(1.0, 2.9, 5.1), weights=(1.0, 0.3, 0.15)), low=6000), 0.08)
+    place(out, filt(noise(0.12), low=7000, high=1200) * env(0.12, 0.0005, 0.1, power=2.0) * 0.6, 0.55)
+    for i in range(7):
+        place(out, filt(bell(rand(2200, 3400), 0.2, gain=0.2, ratios=(1.0, 2.6), weights=(1.0, 0.3)), low=6500), 0.56 + i * rand(0.02, 0.05))
+    return out
+
+
+def cos_kill_strike():
+    """A clattering crash of wooden pins."""
+    d = 0.9
+    out = silence(d)
+    place(out, sweep(120, 50, 0.15, "sine") * env(0.15, 0.001, 0.13) * 0.7, 0.0)
+    for i in range(10):
+        knock = filt(tone(rand(500, 900), 0.06, "tri") * env(0.06, 0.0005, 0.05, power=2.5) + noise(0.06) * env(0.06, 0.0005, 0.02) * 0.3,
+                     low=3500, high=250)
+        place(out, knock, 0.01 + i * rand(0.02, 0.06), rand(0.35, 0.6))
+    return out
+
+
+def cos_kill_ko():
+    """An 8-bit punch and a falling 'K.O.' arcade jingle."""
+    d = 1.0
+    out = silence(d)
+    place(out, filt(noise(0.06), low=2500) * env(0.06, 0.0005, 0.05, power=2.5) * 0.7, 0.0)
+    place(out, sweep(300, 70, 0.12, "square") * env(0.12, 0.001, 0.11) * 0.3, 0.0)
+    place(out, arpeggio([12, 7], 0.12, 0.11, "square", 0.45, low=3500), 0.08)
+    place(out, arpeggio([19, 15, 12, 7, 0], 0.035, 0.04, "square", 0.3, low=3500), 0.6)
+    return out
+
+
+def cos_kill_balloon_lift():
+    """Rubbery balloon squeaks drifting up, then a ripple of pops."""
+    d = 1.6
+    out = silence(d)
+    for i in range(3):
+        squeak = tone(480 + i * 90, 0.18, "tri", vibrato=0.05, vib_rate=20.0) * env(0.18, 0.03, 0.18, power=1.2)
+        place(out, filt(squeak, low=2400) * 0.3, 0.05 + i * 0.12)
+    place(out, filt(bell(note(19), 0.6, gain=0.15, ratios=(1.0, 2.0), weights=(1.0, 0.2)), low=4000), 0.3)
+    for i in range(4):
+        place(out, filt(noise(0.06), low=3000, high=200) * env(0.06, 0.0005, 0.05, power=3.0), 1.26 + i * rand(0.025, 0.05), 0.6)
+    return out
+
+
+def cos_kill_thunder():
+    """A sharp crack, a buzzing arc and a rolling rumble (kept soft and low)."""
+    d = 1.2
+    out = silence(d)
+    place(out, filt(noise(0.08), low=5000, high=600) * env(0.08, 0.0005, 0.07, power=2.0) * 0.8, 0.0)
+    buzz = tone(110, 0.3, "saw") * (0.5 + 0.5 * np.sign(np.sin(2 * np.pi * 17 * t_axis(0.3)))) * env(0.3, 0.005, 0.3, power=1.5)
+    place(out, filt(buzz, low=2200) * 0.25, 0.02)
+    rumble = filt(noise(1.0), low=180) * env(1.0, 0.08, 1.0, power=1.4)
+    place(out, rumble * 0.9, 0.1)
+    return out
+
+
+def cos_kill_rainbow():
+    """A rising harp-like sweep up a major scale and a sparkle."""
+    d = 1.2
+    out = silence(d)
+    for i, s in enumerate((0, 4, 7, 12, 16, 19, 24)):
+        place(out, filt(bell(note(s + 3), 0.5, gain=0.22, ratios=(1.0, 2.0, 3.0), weights=(1.0, 0.25, 0.1)), low=5000), i * 0.06)
+    place(out, shimmer(0.7, 8000, gain=0.35), 0.35)
+    for i in range(4):
+        place(out, filt(bell(rand(1800, 2500), 0.2, gain=0.22, ratios=(1.0, 2.4), weights=(1.0, 0.4)), low=5000), 0.4 + i * 0.07)
+    return out
+
+
+def cos_kill_ufo():
+    """A wobbling theremin swoop down, a warbling beam, a zip away."""
+    d = 1.3
+    out = silence(d)
+    t = t_axis(0.5)
+    pitch = 900 - 500 * (t / 0.5) + 40 * np.sin(2 * np.pi * 7 * t)
+    swoop = np.sin(2 * np.pi * np.cumsum(pitch) / SR) * env(0.5, 0.05, 0.5, power=1.0)
+    place(out, filt(swoop, low=2500) * 0.35, 0.0)
+    beam = tone(330, 0.6, "tri", vibrato=0.08, vib_rate=9.0) * env(0.6, 0.08, 0.6, power=1.0, release=0.1)
+    place(out, filt(beam, low=2000) * 0.25, 0.25)
+    place(out, sweep(500, 2400, 0.25, "sine", 0.6) * env(0.25, 0.005, 0.25, power=0.8) * 0.3, 0.9)
+    return out
+
+
 SOUNDS = [
     cos_select, cos_unequip, cos_unlock,
     cos_equip_operator, cos_equip_finish, cos_equip_charm, cos_equip_cell, cos_equip_decal, cos_equip_gloves,
@@ -368,6 +490,8 @@ SOUNDS = [
     cos_kill_firework, cos_kill_firework_pop, cos_kill_hearts,
     cos_kill_balloon, cos_kill_disco, cos_kill_jackpot, cos_kill_voxel, cos_kill_ghost, cos_kill_snow_globe,
     cos_kill_black_hole, cos_kill_tickets, cos_kill_pinata,
+    cos_kill_party_popper, cos_kill_popcorn, cos_kill_scuffle, cos_kill_brain_freeze, cos_kill_strike, cos_kill_ko,
+    cos_kill_balloon_lift, cos_kill_thunder, cos_kill_rainbow, cos_kill_ufo,
 ]
 
 VARIANTS = [(cos_kill_bubbles, (0.92, 1.08)), (cos_kill_coins, (0.94, 1.06)), (cos_kill_pixel, (0.95, 1.05))]

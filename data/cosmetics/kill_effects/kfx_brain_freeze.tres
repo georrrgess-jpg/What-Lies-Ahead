@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_brain_freeze"
+display_name = "Brain Freeze"
+description = "The body freezes solid in a sparkling block of ice that shatters into shards and snowflakes."
+slot = &"kill_effect"
+rarity = 1
+price = 750
+params = {
+"effect": "brain_freeze"
+}
+sort_order = 7114

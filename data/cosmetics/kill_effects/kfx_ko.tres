@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_ko"
+display_name = "K.O.!"
+description = "A chunky arcade K.O.! in pixel blocks wobbles over the body, then bursts into a shower of pixels."
+slot = &"kill_effect"
+rarity = 2
+price = 2000
+params = {
+"effect": "ko"
+}
+sort_order = 7213

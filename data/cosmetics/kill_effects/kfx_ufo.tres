@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_ufo"
+display_name = "Close Encounter"
+description = "A flying saucer swoops down, beams the body up in a shower of sparkles and zips away."
+slot = &"kill_effect"
+rarity = 3
+price = 4750
+params = {
+"effect": "ufo"
+}
+sort_order = 7311
