@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_holo_tiger"
+display_name = "Holo Tiger"
+description = "Tiger stripes in holographic foil on black velvet: the foil shifts through the rainbow as the weapon turns, scanlines crawl up it and a glint prowls along. Rainbow-chrome trim."
+slot = &"weapon_finish"
+rarity = 2
+price = 2000
+colors = PackedColorArray(0.04, 0.03, 0.06, 1, 0.8, 0.82, 0.9, 1)
+params = {
+"shader": "res://art/shaders/finish_holo_tiger.gdshader"
+}
+sort_order = 2245

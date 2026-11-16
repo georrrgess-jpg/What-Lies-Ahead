@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 20
+target = &"gold_standard"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_kintsugi"
+display_name = "Kintsugi"
+description = "Midnight raku glaze, broken and mended with gold. Pulses of molten light run through the seams, each break on its own beat. Earned with the Gold Standard milestone."
+slot = &"weapon_finish"
+rarity = 3
+requirement = SubResource("req")
+colors = PackedColorArray(0.05, 0.08, 0.2, 1, 1, 0.74, 0.3, 1)
+params = {
+"shader": "res://art/shaders/finish_kintsugi.gdshader"
+}
+sort_order = 2346

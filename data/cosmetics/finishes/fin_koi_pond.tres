@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_koi_pond"
+display_name = "Koi Pond"
+description = "A garden pond seen from above: koi swim along the weapon over dappled light, lily pads and lotus flowers drift, raindrops ring the surface. Black lacquer trim dusted with gold."
+slot = &"weapon_finish"
+rarity = 3
+price = 6750
+colors = PackedColorArray(0.05, 0.42, 0.45, 1, 0.07, 0.06, 0.08, 1)
+params = {
+"shader": "res://art/shaders/finish_koi_pond.gdshader"
+}
+sort_order = 2347
