@@ -114,7 +114,8 @@ def build_yoyo_loco():
     ]
     shell += top_rail("TopRail", -0.045, 0.065, rail_top, M, width=0.03)
     shell += bolts("Pin", [(-0.033, 0.09, 0.0), (0.033, 0.09, -0.006), (-0.033, -0.05, 0.04)], M["steel"], radius=0.005, height=0.006)
-    lug, charm_point = charm_lug(0.032, -0.03, -0.004, M, out=1.0)
+    # On the outer face of the right prong: nothing else on that side stands out within a charm's reach.
+    lug, charm_point = charm_lug(YOYO_R * 0.42 * 2 + YOYO_R * 0.16 / 2 + 0.017, 0.166, yz - 0.006, M, out=1.0)
     shell += lug
     sight_rear, sight_front = sights_notch(0.0, -0.052, 0.112, rail_top, 0.08, z_line, M, gap=0.016)
 
