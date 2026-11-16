@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_koi"
+display_name = "Koi Circle"
+description = "Two koi chase each other round and round in a little glowing pond, rings spreading behind them. Pairs with the Koi Pond finish."
+slot = &"weapon_cell"
+rarity = 2
+price = 2000
+colors = PackedColorArray(0.1, 0.8, 0.85, 1, 0.2, 0.75, 0.85, 1)
+params = {
+"fx": "koi"
+}
+sort_order = 3228

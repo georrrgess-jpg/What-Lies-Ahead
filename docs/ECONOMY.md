@@ -70,8 +70,10 @@ effects and tracers, then cells, sights and charms, then decals, banners and tit
 | 9,000 | Quicksilver | animated finish |
 | 8,500 | Holo Foil | animated finish |
 | 8,000 | Lava Flow | animated finish |
+| 7,750 | Insert Coin | animated finish (arcade screen; set with the Extra Life cell and Pixel Stream tracer) |
 | 7,500 | Prism Shards | gloves (crystal model, hologram) |
 | 7,000 | Event Horizon | kill effect |
+| 6,750 | Koi Pond | animated finish (set with the Koi Circle cell and Koi Dash tracer) |
 | 6,500 | Coin Shower | kill effect |
 | 6,000 | Golden Touch | gloves |
 | 5,500 | Marquee Lights | animated finish |
@@ -81,11 +83,11 @@ effects and tracers, then cells, sights and charms, then decals, banners and tit
 | 3,750 | Solar Flare | animated finish |
 | 3,500 | Spectrum Rush | energy cell |
 | 3,250 | Corrupted | animated finish |
-| 3,000 | the other legendaries | Prism Core, Gemcut, Golden Ticket, Champion, Holo Diamond, Holo Heart, Signal Lost, Spiral Galaxy, The Final Boss, Ticket Roll |
+| 3,000 | the other legendaries | Prism Core, Gemcut, Golden Ticket, Champion, Holo Diamond, Holo Heart, Signal Lost, Spiral Galaxy, The Final Boss, Ticket Roll, Pixel Stream |
 
 Below that: epic showpieces at 2,500 (Stunt Ace, Ferris Wheel, Starburst, Rainbow Road,
-Neon Tube, Heartbeat, Plush Zombie, 8-Bit, Zombie Eye) and 2,000 (Lava Lamp, Main
-Character), the epic ladder at 1,500; Halfpipe (operator) 1,250, Prize Hoarder 1,000,
+Neon Tube, Heartbeat, Plush Zombie, 8-Bit, Zombie Eye, Hot Rod, Koi Dash) and 2,000 (Lava Lamp, Main
+Character, Holo Tiger, Extra Life, Koi Circle), the epic ladder at 1,500; Halfpipe (operator) 1,250, Prize Hoarder 1,000,
 the rare ladder at 750; Top Dog (operator) 500, the common ladder at 250. Operators
 always cost more than anything else of their rarity. `tools/economy_probe.gd` checks the
 rule, the non-overlapping rarities, that the 15 dearest items each have their own price
@@ -93,15 +95,31 @@ and that the dearest is an operator. An item is in the shop when its
 `CosmeticItem.price` is above 0; it is owned once bought. A `requirement` on a priced
 item only gates the purchase (sights that open at a mastery rank).
 
-For sale (194 items, 283,250 Sparks, sights included; 277,350 before the price rule):
-the original 69 plus 27 new weapon finishes,
+For sale (206 items, 315,000 Sparks, sights included; 198 items and 286,500 Sparks before
+the update 13 showpieces; 277,350 before the price rule):
+the original 69 plus 31 new weapon finishes,
 5 operators, 9 gloves, and the new cells, charms, decals, sights, kill effects, tracers,
 banners and titles that are not earned. New earned items use the item's own
 `requirement` (lifetime kills, weapon mastery rank, best score, world clears). Earned, never sold: the
 level track, the world sets (on the first clear of each of the ten levels, and World
 Tourist for clearing the first five), mastery camos, cells and decals, milestone rewards, and quiet
-goals for lifetime kills (15 items, 50 to 10,000 kills) and best score on Prize Pier
+goals for lifetime kills (44 items, 50 to 20,000 kills) and best score on Prize Pier
 (5 items).
+
+**Update 13 showpieces** (animated, `art/shaders/finish_*.gdshader`; three sets with a
+matching cell, `cell_fx.gdshaderinc` patterns 17-19, and tracer, `tracer_pattern.gdshader`
+styles 8-10):
+
+| Item | Rarity | How |
+| --- | --- | --- |
+| Insert Coin (finish), Extra Life (cell), Pixel Stream (tracer) | Legendary, Epic, Legendary | Shop: 7,750, 2,000, 3,000 |
+| Koi Pond (finish), Koi Circle (cell), Koi Dash (tracer) | Legendary, Epic, Epic | Shop: 6,750, 2,000, 2,500 |
+| Kintsugi (finish) | Legendary | the Gold Standard milestone (with its banner) |
+| Golden Repair (Kintsugi cell) | Legendary | 15,000 lifetime kills |
+| Gold Seam (Kintsugi tracer) | Legendary | Endless wave 35 |
+| Clockwork (finish) | Legendary | 17,500 lifetime kills |
+| Hot Rod (finish) | Epic | Shop: 2,500 |
+| Holo Tiger (finish) | Epic | Shop: 2,000 |
 
 **Featured.** Four items a day are 20% off (`featured_count`, `featured_discount`).
 On the 250 rule a 20% cut is always a round number: 200, 600, 1,200, 2,400, and 2,600 to

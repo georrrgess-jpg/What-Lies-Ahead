@@ -19,6 +19,9 @@ extends RefCounted
 ##   tickets    a slowly curling roll of prize tickets
 ##   chevrons   arrows streaming to the target
 ##   candy      a candy-stripe tube with spiralling stripes
+##   pixels     chunky 8-bit blocks marching to the target (Insert Coin)
+##   gold_seam  a jagged seam of molten gold with a white-hot pulse (Kintsugi)
+##   koi        a koi swimming to the target, side to side (Koi Pond)
 ## params.flakes = true swaps sparkle glitter for snowflakes.
 ##
 ## The coloured ribbons are drawn with normal (mix) blending: added light
@@ -38,6 +41,9 @@ const PATTERNS := {
 	"tickets": [5, "strip", 8.0, 0.3, 0.08, false],
 	"chevrons": [6, "cross", 9.0, 0.2, 0.04, true],
 	"candy": [7, "tube", 3.0, 0.2, 0.04, false],
+	"pixels": [8, "cross", 7.5, 0.24, 0.05, true],
+	"gold_seam": [9, "cross", 2.4, 0.3, 0.06, false],
+	"koi": [10, "cross", 4.5, 0.26, 0.06, false],
 }
 ## Segments along the shared unit meshes (the heartbeat bends along them).
 const UNIT_SEGMENTS := 400

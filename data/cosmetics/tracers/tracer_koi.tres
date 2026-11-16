@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_koi"
+display_name = "Koi Dash"
+description = "Each shot is a koi darting to the target, swishing side to side in orange and white. Pairs with the Koi Pond finish."
+slot = &"tracer"
+rarity = 2
+price = 2500
+colors = PackedColorArray(1, 0.4, 0.08, 1, 0.98, 0.95, 0.9, 1)
+params = {
+"style": "koi"
+}
+sort_order = 8211

@@ -4,14 +4,14 @@ shader_type spatial;
 // (each tick snaps forward with a little overshoot, the small gears turning
 // the other way and faster). Ruby jewels sit in their hubs; behind them is a
 // blued plate with perlage (rings of circular graining) and the gears' cast
-// shadows. Trim is heat-blued steel engraved with guilloche waves.
+// shadows. Trim is polished rose gold engraved with guilloche waves.
 #include "res://art/shaders/finish_common.gdshaderinc"
 
 uniform vec3 shell_color : source_color = vec3(0.95, 0.7, 0.32);
-uniform vec3 trim_color : source_color = vec3(0.12, 0.2, 0.62);
+uniform vec3 trim_color : source_color = vec3(0.95, 0.6, 0.42);
 uniform bool is_trim = false;
 // Pitch radius of the big gear; the small one meshes with it.
-uniform float big_r = 0.04;
+uniform float big_r = 0.05;
 uniform float ticks_per_second = 2.0;
 
 varying vec3 lp;
@@ -87,21 +87,18 @@ void fragment() {
 	if (is_trim) {
 		// Guilloche: two families of fine engraved waves crossing.
 		// They fade to a satin sheen where they are too fine to draw.
-		float ph = uv.y * 600.0;
-		float g1 = sin(ph + sin(uv.x * 110.0) * 6.0);
-		float g2 = sin(ph - sin(uv.x * 110.0 + 1.6) * 6.0);
-		float fine = clamp(fwidth(ph) * 0.5, 0.0, 1.0);
-		float lines = mix(smoothstep(0.6, 1.0, max(g1, g2)), 0.2, fine);
+		float a1 = uv.y * 280.0 + sin(uv.x * 55.0) * 3.0;
+		float a2 = uv.y * 280.0 - sin(uv.x * 55.0 + 1.6) * 3.0;
+		float fine = clamp(max(fwidth(a1), fwidth(a2)) * 0.45, 0.0, 1.0);
+		float lines = mix(smoothstep(0.5, 1.0, max(sin(a1), sin(a2))), 0.25, fine);
 		vec3 n = fbump(VERTEX, NORMAL, lines, 0.004);
 		NORMAL = n;
 		vec3 r = reflect(-VIEW, n);
 		float fres = ffres(n, VIEW, 2.5);
-		// Heat bluing runs from straw gold through purple to deep blue.
-		vec3 sheen = mix(trim_color, vec3(0.55, 0.25, 0.75), fres * 0.7);
 		ALBEDO = trim_color * 0.6;
 		METALLIC = 1.0;
 		ROUGHNESS = 0.22;
-		EMISSION = fstudio(r, sheen) * (0.45 + lines * 0.2) + trim_color * 0.08;
+		EMISSION = fstudio(r, trim_color) * (0.5 + lines * 0.2) + trim_color * 0.1;
 		PRINT_LAYER
 	} else {
 		vec3 m = movement(uv);
@@ -111,7 +108,8 @@ void fragment() {
 		vec2 pc = uv / 0.012;
 		vec2 pid = floor(pc);
 		float perlage = 0.5 + 0.5 * sin(length(fract(pc) - 0.5) * 38.0 + fh21(pid) * 6.0);
-		vec3 plate = vec3(0.1, 0.13, 0.3) * (0.75 + 0.35 * perlage) * (1.0 - shade.z * 0.55 * (1.0 - solid));
+		perlage = mix(perlage, 0.5, clamp(fwidth(pc.x) * 4.0, 0.0, 1.0));
+		vec3 plate = vec3(0.12, 0.2, 0.55) * (0.75 + 0.35 * perlage) * (1.0 - shade.z * 0.55 * (1.0 - solid));
 		// Gears: brass with a bevel on every edge and a ruby in the hub.
 		float h = smoothstep(0.0, -0.002, m.x);
 		vec3 n = fbump(VERTEX, NORMAL, h * solid + solid, 0.0025);

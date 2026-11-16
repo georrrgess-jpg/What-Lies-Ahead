@@ -10,7 +10,8 @@
 //
 // Patterns (WeaponCosmetics.CELL_FX): 1 bubbles, 2 lava, 3 stripes,
 // 4 rainbow, 5 siren, 6 scan, 7 sparkle, 8 caustics, 9 slosh, 10 warp,
-// 11 plasma, 12 snow, 13 chase, 14 pixels, 15 arcs, 16 curtains.
+// 11 plasma, 12 snow, 13 chase, 14 pixels, 15 arcs, 16 curtains,
+// 17 arcade, 18 kintsugi, 19 koi.
 
 float cfx_hash(vec2 q) {
 	return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453);
@@ -43,7 +44,99 @@ vec4 cfx_rising(vec2 p, float t, float rise, float cell, vec3 col, bool ring) {
 // How far the glow under a pattern is dimmed so light marks on it stand out
 // (bubbles, glints, snow, streaks, arcs, ripples, a scanning band, bulbs).
 float cell_fx_dim(int fx) {
+	if (fx == 17 || fx == 18) {
+		return 0.85;
+	}
 	return (fx == 1 || fx == 6 || fx == 7 || fx == 8 || fx == 10 || fx == 12 || fx == 13 || fx == 15) ? 0.55 : 0.0;
+}
+
+// Arcade: a pixel chomper eats its way along a row of pellets, a ghost on
+// its tail; the pellets come back once both have passed.
+vec4 cfx_arcade(float along, float across, float len, float wide, float t) {
+	float px = wide / 7.0;
+	float gx = floor(along / px);
+	float gy = floor(across / px) - 3.0;
+	float run = len / px + 16.0;
+	float head = mod(t * 9.0, run) - 4.0;
+	float ghost = head - 7.0;
+	float dx = gx - head;
+	// The chomper: a pixel disc with a mouth that opens and shuts.
+	float open = step(0.5, fract(t * 6.0));
+	bool chomp = dx * dx + gy * gy <= 7.0 && !(open > 0.5 && dx > 0.0 && abs(gy) <= dx);
+	// The ghost: a dome and a wavy skirt, with two eyes.
+	float gdx = gx - ghost;
+	bool body = abs(gdx) <= 2.0 && gy <= 2.0 && gy >= -2.0 && !(gy == 2.0 && abs(gdx) == 2.0)
+		&& !(gy == -2.0 && mod(gdx + floor(t * 6.0), 2.0) < 1.0);
+	bool eye = gy == 1.0 && (gdx == -1.0 || gdx == 1.0);
+	bool pellet = gy == 0.0 && mod(gx, 2.0) < 1.0 && (gx > head + 2.0 || gx < ghost - 3.0);
+	vec2 f = fract(vec2(along, across) / px) - 0.5;
+	float sq = cfx_fill(max(abs(f.x), abs(f.y)) - 0.42, 0.08);
+	if (chomp) {
+		return vec4(vec3(1.0, 0.92, 0.15), sq);
+	} else if (eye) {
+		return vec4(vec3(1.0), sq);
+	} else if (body) {
+		return vec4(vec3(0.3, 0.95, 1.0), sq);
+	} else if (pellet) {
+		return vec4(vec3(1.0, 0.85, 0.75), cfx_fill(max(abs(f.x), abs(f.y)) - 0.22, 0.08));
+	}
+	return vec4(0.0);
+}
+
+// Kintsugi: dark glaze cracked by gold seams, molten light running through them.
+vec4 cfx_kintsugi(vec2 p, float t, vec3 b) {
+	vec2 q = p * 3.2 + vec2(sin(p.y * 9.0), cos(p.x * 8.0)) * 0.06;
+	vec2 i = floor(q);
+	vec2 f = fract(q);
+	float d1 = 8.0;
+	float d2 = 8.0;
+	float id = 0.0;
+	for (int y = -1; y <= 1; y++) {
+		for (int x = -1; x <= 1; x++) {
+			vec2 g = vec2(float(x), float(y));
+			vec2 o = vec2(cfx_hash(i + g), cfx_hash(i + g + 7.3));
+			vec2 r = g + o - f;
+			float d = dot(r, r);
+			if (d < d1) {
+				d2 = d1;
+				d1 = d;
+				id = cfx_hash(i + g + 2.1);
+			} else if (d < d2) {
+				d2 = d;
+			}
+		}
+	}
+	float edge = sqrt(d2) - sqrt(d1);
+	float seam = cfx_fill(edge - 0.07, 0.05);
+	float molten = pow(max(sin(p.y * 5.0 + p.x * 2.0 - t * 2.4 + id * 6.283), 0.0), 8.0);
+	vec3 gold = mix(b, vec3(1.0, 0.95, 0.75), molten);
+	vec3 glaze = vec3(0.04, 0.06, 0.16) + vec3(0.05, 0.08, 0.2) * cfx_hash(i + 4.0);
+	return vec4(mix(glaze, gold, seam), 0.9 + seam * 0.1);
+}
+
+// Koi: two koi circling each other round the middle of the cell, ripples
+// spreading behind them.
+vec4 cfx_koi(vec2 p, vec2 span, float t, vec3 b) {
+	vec2 c = span * 0.5;
+	float rad = min(span.x, span.y) * 0.3;
+	vec4 o = vec4(0.0);
+	for (int i = 0; i < 2; i++) {
+		float a = t * 1.1 + float(i) * 3.14159;
+		vec2 at = c + vec2(cos(a), sin(a)) * rad;
+		vec2 fwd = vec2(-sin(a), cos(a));
+		vec2 d = p - at;
+		vec2 l = vec2(dot(d, fwd), dot(d, vec2(-fwd.y, fwd.x)));
+		l.y -= sin(l.x * 9.0 + t * 8.0) * 0.04 * step(l.x, 0.0);
+		float body = cfx_fill(length(l / vec2(0.3, 0.1)) - 1.0, 0.25);
+		float tail = cfx_fill(abs(l.y) - (-0.28 - l.x) * 0.7, 0.03) * step(-0.46, l.x) * step(l.x, -0.26);
+		vec3 col = i == 0 ? mix(vec3(1.0, 0.97, 0.92), vec3(1.0, 0.38, 0.08), step(0.0, l.x) * step(abs(l.y), 0.07)) : vec3(1.0, 0.62, 0.12);
+		float k = max(body, tail * 0.8);
+		o = mix(o, vec4(col, 1.0), k);
+	}
+	float ring = cfx_fill(abs(length(p - c) - fract(t * 0.4) * rad * 2.2) - 0.015, 0.03) * (1.0 - fract(t * 0.4));
+	vec3 water = mix(b * 0.35, b * 0.8, 0.5 + 0.5 * sin(p.x * 7.0 + p.y * 5.0 + t));
+	vec3 rgb = mix(water + vec3(0.6, 0.9, 1.0) * ring * 0.5, o.rgb, o.a);
+	return vec4(rgb, 0.85 + o.a * 0.15);
 }
 
 vec4 cell_fx(int fx, vec2 p, vec2 span, float t, vec3 a, vec3 b) {
@@ -158,6 +251,12 @@ vec4 cell_fx(int fx, vec2 p, vec2 span, float t, vec3 a, vec3 b) {
 		float wave = sin(along * 5.0 + sin(t * 0.7 + along * 2.0) * 2.0 + t * 0.9);
 		float curtain = smoothstep(0.2, 1.0, wave) * (0.6 + 0.4 * sin(across * 9.0 + t * 2.0));
 		return vec4(mix(b, vec3(1.0), curtain * 0.3), curtain * 0.85);
+	} else if (fx == 17) {
+		return cfx_arcade(along, across, len, tall ? span.x : span.y, t);
+	} else if (fx == 18) {
+		return cfx_kintsugi(p, t, b);
+	} else if (fx == 19) {
+		return cfx_koi(p, span, t, b);
 	}
 	return vec4(0.0);
 }

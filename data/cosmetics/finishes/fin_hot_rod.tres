@@ -6,11 +6,11 @@
 script = ExtResource("1")
 id = &"fin_hot_rod"
 display_name = "Hot Rod"
-description = "Black-cherry candy paint full of metal flake, with hot-rod flames licking back along the weapon: they flicker, ripple and glow white-hot at the root. Pinstriped in blue, black-chrome trim."
+description = "Black-cherry candy paint full of metal flake, with hot-rod flames licking back along the weapon: they flicker, ripple and glow white-hot at the root. Pinstriped in blue, candy-apple red trim."
 slot = &"weapon_finish"
 rarity = 2
 price = 2500
-colors = PackedColorArray(0.18, 0.03, 0.22, 1, 0.3, 0.28, 0.34, 1)
+colors = PackedColorArray(0.18, 0.03, 0.22, 1, 0.62, 0.04, 0.08, 1)
 params = {
 "shader": "res://art/shaders/finish_hot_rod.gdshader"
 }

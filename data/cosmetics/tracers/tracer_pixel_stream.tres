@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_pixel_stream"
+display_name = "Pixel Stream"
+description = "Every shot is a stream of chunky 8-bit blocks marching to the target. Pairs with the Insert Coin finish."
+slot = &"tracer"
+rarity = 3
+price = 3000
+colors = PackedColorArray(1, 0.3, 0.85, 1, 0.3, 0.95, 1, 1)
+params = {
+"style": "pixels"
+}
+sort_order = 8310

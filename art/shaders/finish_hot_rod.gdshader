@@ -3,11 +3,11 @@ shader_type spatial;
 // coat, with classic hot-rod flames licking back along the weapon. The tongues
 // flicker in length, ripple in the wind and roll from white-hot yellow at the
 // root through orange to red tips, outlined by a pale-blue pinstripe; a heat
-// shimmer runs back through them. Trim is black chrome.
+// shimmer runs back through them. Trim is candy-apple red flake.
 #include "res://art/shaders/finish_common.gdshaderinc"
 
 uniform vec3 shell_color : source_color = vec3(0.18, 0.03, 0.22);
-uniform vec3 trim_color : source_color = vec3(0.3, 0.28, 0.34);
+uniform vec3 trim_color : source_color = vec3(0.62, 0.04, 0.08);
 uniform bool is_trim = false;
 uniform vec3 pinstripe : source_color = vec3(0.45, 0.85, 1.0);
 // One set of flames repeats this often along the barrel, and up the sides.
@@ -45,10 +45,14 @@ void fragment() {
 	vec3 r = reflect(-VIEW, NORMAL);
 	float fres = ffres(NORMAL, VIEW, 3.0);
 	if (is_trim) {
-		ALBEDO = trim_color * 0.5;
-		METALLIC = 1.0;
-		ROUGHNESS = 0.08;
-		EMISSION = fstudio(r, trim_color) * 0.6 + vec3(1.0, 0.45, 0.15) * pow(fres, 3.0) * 0.25;
+		vec3 g = lp * 320.0;
+		vec3 fh = fh33(floor(g));
+		float flake = smoothstep(0.35, 0.1, length(fract(g) - 0.5)) * pow(0.5 + 0.5 * sin(fh.x * 40.0 + dot(VIEW, fh - 0.5) * 14.0), 8.0);
+		ALBEDO = trim_color * (0.75 + 0.5 * fres);
+		METALLIC = 0.35;
+		ROUGHNESS = 0.12;
+		SPECULAR = 0.8;
+		EMISSION = fstudio(r, vec3(1.0)) * (0.03 + fres * 0.45) + trim_color * 0.15 + vec3(1.0, 0.7, 0.6) * flake * 0.5;
 		PRINT_LAYER
 	} else {
 		vec2 uv = fplane(lp, ln);

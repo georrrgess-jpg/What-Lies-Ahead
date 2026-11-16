@@ -12,11 +12,11 @@ amount = 17500
 script = ExtResource("1")
 id = &"fin_clockwork"
 display_name = "Clockwork"
-description = "An open watch movement: brass gears mesh along the weapon and tick round together over a blued, perlage-grained plate, with rubies in their hubs. Guilloche-engraved blued-steel trim. For 17,500 zombies popped."
+description = "An open watch movement: brass gears mesh along the weapon and tick round together over a blue enamel plate grained with perlage, with rubies in their hubs. Rose-gold trim engraved with guilloche. For 17,500 zombies popped."
 slot = &"weapon_finish"
 rarity = 3
 requirement = SubResource("req")
-colors = PackedColorArray(0.95, 0.7, 0.32, 1, 0.12, 0.2, 0.62, 1)
+colors = PackedColorArray(0.95, 0.7, 0.32, 1, 0.95, 0.6, 0.42, 1)
 params = {
 "shader": "res://art/shaders/finish_clockwork.gdshader"
 }

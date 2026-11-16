@@ -70,7 +70,8 @@ void fragment() {
 		ALBEDO = mix(leaf, vec3(0.08, 0.05, 0.04), seam * 0.85);
 		METALLIC = 1.0 - seam * 0.8;
 		ROUGHNESS = mix(0.26, 0.6, seam);
-		EMISSION = fstudio(r, trim_color) * (0.4 + fres * 0.3) * (1.0 - seam) + hot * seam * molten * 1.6;
+		// Some of the leaf's own colour glows, so it stays gold under any sky.
+		EMISSION = (fstudio(r, trim_color) * (0.4 + fres * 0.3) + trim_color * 0.22) * (1.0 - seam) + hot * seam * molten * 1.6;
 	} else {
 		float mottle = ffbm3(lp * 14.0);
 		vec3 glaze = mix(shell_color * 0.7, shell_color * 1.6 + vec3(0.0, 0.05, 0.06), mottle);
@@ -81,7 +82,7 @@ void fragment() {
 		METALLIC = seam;
 		ROUGHNESS = mix(0.1, 0.22, seam);
 		SPECULAR = 0.7;
-		EMISSION = fstudio(r, gold) * seam * 0.55 + gold * seam * 0.12
+		EMISSION = fstudio(r, gold) * seam * 0.55 + gold * seam * 0.25
 			+ fstudio(r, vec3(0.7, 0.8, 1.0)) * fres * 0.18 * (1.0 - seam)
 			+ (hot * 2.2 + vec3(0.6)) * seam * molten + hot * halo * 0.6;
 	}

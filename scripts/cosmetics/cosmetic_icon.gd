@@ -119,6 +119,8 @@ func _draw_tracer() -> void:
 	if style in PATTERN_TRACERS:
 		_draw_pattern_tracer(style, c0, c1, y, x0, x1)
 		return
+	if _draw_set_tracer(style, c0, c1, y, x0, x1):
+		return
 	var pts := PackedVector2Array()
 	match style:
 		"helix":
@@ -374,3 +376,38 @@ func _draw_pattern_tracer(style: String, c0: Color, c1: Color, y: float, x0: flo
 			while x2 < x1 - r:
 				draw_colored_polygon(PackedVector2Array([Vector2(x2, y + r), Vector2(x2 + r, y + r), Vector2(minf(x2 + r * 2.0, x1), y - r), Vector2(minf(x2 + r, x1), y - r)]), c0)
 				x2 += r * 2.6
+
+
+## The tracers that match a finish (Insert Coin, Kintsugi, Koi Pond). False
+## for any other style.
+func _draw_set_tracer(style: String, c0: Color, c1: Color, y: float, x0: float, x1: float) -> bool:
+	var h := size.y
+	match style:
+		"pixels":
+			var s := h * 0.09
+			var n := int((x1 - x0) / s)
+			for i in n:
+				for row in 3:
+					var keep := row == 1 and i % 7 != 3 or row != 1 and (i * 5 + row * 3) % 7 < 2
+					if keep:
+						draw_rect(Rect2(x0 + i * s + 1.0, y + (row - 1.5) * s + 1.0, s - 2.0, s - 2.0), c0 if (i + row) % 3 else c1)
+		"gold_seam":
+			var pts := PackedVector2Array()
+			for i in 9:
+				pts.append(Vector2(lerpf(x0, x1, i / 8.0), y + (h * 0.1 if i % 2 else -h * 0.08) * (0.4 + 0.6 * float(i % 3) / 2.0)))
+			draw_polyline(pts, Color(c1, 0.5), 10.0, true)
+			draw_polyline(pts, c0, 5.0, true)
+			draw_polyline(pts, Color(1.0, 0.97, 0.85), 2.0, true)
+		"koi":
+			var pts := PackedVector2Array()
+			for i in 25:
+				var t := i / 24.0
+				pts.append(Vector2(lerpf(x0, x1 - h * 0.1, t), y + sin(t * TAU * 1.5) * h * 0.1))
+			for i in 24:
+				draw_line(pts[i], pts[i + 1], c0 if i % 8 < 4 else c1, h * 0.09 * (0.5 + 0.5 * sin(PI * minf(1.0, (i + 2) / 20.0))))
+			var head := pts[24]
+			draw_circle(head, h * 0.05, c0)
+			draw_colored_polygon(PackedVector2Array([pts[0], pts[0] + Vector2(-h * 0.08, -h * 0.07), pts[0] + Vector2(-h * 0.08, h * 0.07)]), c1)
+		_:
+			return false
+	return true

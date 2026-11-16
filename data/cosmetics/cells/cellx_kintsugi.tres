@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 15000
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_kintsugi"
+display_name = "Golden Repair"
+description = "A cell of midnight glaze mended with gold, molten light pulsing through the seams. Pairs with the Kintsugi finish. For 15,000 zombies popped."
+slot = &"weapon_cell"
+rarity = 3
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.62, 0.18, 1, 1, 0.78, 0.3, 1)
+params = {
+"fx": "kintsugi"
+}
+sort_order = 3322
