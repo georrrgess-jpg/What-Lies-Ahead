@@ -393,7 +393,7 @@ func _refresh_goal() -> void:
 func _refresh_endless() -> void:
 	if _endless == null:
 		return
-	KeyArt.request(GameData.endless_levels()[0], func(art: Texture2D) -> void: _endless_art.texture = art)
+	KeyArt.request(GameData.endless_levels()[0], _show_endless_art)
 	var fresh := MenuPlay.endless_is_new()
 	_endless_chip.set_text("NEW MODE" if fresh else "ENDLESS MODE")
 	_endless_chip.set_color(UiKit.PINK if fresh else EndlessCard.EMBER)
@@ -407,6 +407,10 @@ func _refresh_endless() -> void:
 func _show_goal_art(art: Texture2D) -> void:
 	_goal_art.texture = art
 	_goal_art.visible = art != null
+
+
+func _show_endless_art(art: Texture2D) -> void:
+	_endless_art.texture = art
 
 
 ## "Best wave 3 / 8", "Cleared  ·  best 48,210" or "Not played yet".

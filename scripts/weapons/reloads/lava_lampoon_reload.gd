@@ -2,8 +2,9 @@ extends RefCounted
 ## Lava Lampoon "groove flip": the gun rolls over to show the lamp; the cap
 ## pops; the lamp unscrews and lifts out on a spinning teal hologram ring;
 ## it does a slow cartwheel upside down while the spent wax sinks into one
-## lump; the lump splits into fresh blobs as it carries on round and rights
-## itself; it drops back and twist-locks into the socket with a clunk, and a
+## lump, and carries on round to right itself; it drops back and twist-locks
+## into the socket with a clunk, the lump bursts into fresh blobs (the
+## refill shows with the lock, a beat before the magazine counts it), and a
 ## ripple of glow runs from the base to the cap.
 ##
 ## Every part is posed each frame from one timeline (WeaponView.drive) on
@@ -24,6 +25,10 @@ const FLIP_CENTRE := Vector3(0.0, 0.05, 0.0)
 const ROOT_POS := Vector3(-0.01, 0.025, 0.0)
 const ROOT_ROT := Vector3(9.0, -7.0, -17.0)
 const RING_SPIN := 520.0
+## Timeline point where the pooled lump splits into fresh blobs and the pips
+## relight: at the twist-lock, so the lamp never shows a full magazine long
+## before the reload ends (after a skip the lamp whips round still pooled).
+const WAX_SPLIT := 0.9
 const HOT := Color(1.0, 0.25, 0.62)
 const GOOD := Color(1.0, 0.9, 0.35)
 const MISS := Color(0.55, 0.55, 0.62)
@@ -207,19 +212,20 @@ func _pose_prompt(s: float) -> void:
 
 
 ## The wax: the spent blobs slump and pool, the lump slides to the cap as the
-## lamp turns over, then splits into a full lamp of fresh blobs; the display
-## goes dark and refills; the glow ripple after the lock.
+## lamp turns over and back, then splits into a full lamp of fresh blobs as
+## it locks (WAX_SPLIT); the display goes dark and refills; the glow ripple
+## after the lock.
 func _pose_wax(s: float, k: float) -> void:
-	var pool := (0.7 * _e(0.12, 0.4, s) + 0.3 * _e(0.4, 0.55, s)) * (1.0 - _e(0.6, 0.84, s))
-	var blobs := _start_blobs if s < 0.6 else _full_blobs
-	var swirl := sin(PI * _e(0.34, 0.82, s)) * 0.6
+	var pool := (0.7 * _e(0.12, 0.4, s) + 0.3 * _e(0.4, 0.55, s)) * (1.0 - _e(WAX_SPLIT - 0.06, WAX_SPLIT + 0.03, s))
+	var blobs := _start_blobs if s < WAX_SPLIT else _full_blobs
+	var swirl := sin(PI * _e(0.34, WAX_SPLIT + 0.03, s)) * 0.6
 	var ripple := lerpf(-0.1, 1.15, _e(0.915, 1.0, s)) if s > 0.915 and k < 1.0 else -1.0
 	var flare := 1.0 - _e(0.915, 1.0, s) if s > 0.915 else 0.0
 	if _mat:
 		LavaLampoonView.set_lamp(_mat, _v.part("LampGlass"), blobs, 0.0, pool, swirl, ripple, flare + _groovy)
 	var lit := ceili(_start_blobs)
 	if s > 0.12:
-		lit = 0 if s < 0.84 else ceili(_full_blobs * _e(0.84, 0.92, s))
+		lit = 0 if s < WAX_SPLIT else ceili(_full_blobs * _e(WAX_SPLIT, WAX_SPLIT + 0.07, s))
 	LavaLampoonView.show_pips(_pips, lit)
 
 

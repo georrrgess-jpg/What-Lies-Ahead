@@ -137,6 +137,12 @@ func level_weapons(lvl: int) -> Array[WeaponData]:
 	return out
 
 
+## True when the save already holds `w` before its level: kept when it moved
+## to a later level (CapRaise, MovedRewards), so reaching it is not news.
+func is_weapon_kept(w: WeaponData) -> bool:
+	return Unlocks.is_granted(StringName("weapon:" + String(w.id)))
+
+
 ## Sparks paid for reaching `lvl`.
 func level_sparks(lvl: int) -> int:
 	return Wallet.rules.level_sparks(lvl)
@@ -152,7 +158,8 @@ func is_milestone_level(lvl: int) -> bool:
 func stamp(lvl: int) -> PackedStringArray:
 	var weapons := level_weapons(lvl)
 	if not weapons.is_empty():
-		return PackedStringArray([weapons[0].display_name, "New weapon: %s" % weapons[0].category])
+		var kept := is_weapon_kept(weapons[0])
+		return PackedStringArray([weapons[0].display_name, ("Already yours: %s" if kept else "New weapon: %s") % weapons[0].category])
 	return rules.stamp(lvl)
 
 
@@ -165,7 +172,7 @@ func stamp_kind(lvl: int) -> String:
 func reward_text(lvl: int) -> String:
 	var weapons := level_weapons(lvl)
 	if not weapons.is_empty():
-		return "New weapon: %s" % weapons[0].display_name
+		return ("%s: already yours" if is_weapon_kept(weapons[0]) else "New weapon: %s") % weapons[0].display_name
 	var items := level_rewards(lvl)
 	if not items.is_empty():
 		return "%s: %s" % [items[0].slot_label(), items[0].display_name]
