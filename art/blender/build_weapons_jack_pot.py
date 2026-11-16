@@ -40,6 +40,9 @@ from weapon_kit import *  # noqa: F401,F403
 BULBS = 3
 # The launch cup leans up this far (degrees) from the barrel line.
 CUP_TILT = 22.0
+# The crank's throw: its knob turns on this radius round the hub
+# (scripts/weapons/reloads/jack_pot_reload.gd KNOB).
+CRANK_R = 0.044
 # The mine's spring and arm at rest (metres, at the world box's scale).
 BOX_SIZE = 0.34
 
@@ -55,6 +58,7 @@ def palette():
 
 def transform_parts(parts, matrix):
     """Moves built parts by a 4x4 matrix (their mesh stays in their own space)."""
+    bpy.context.view_layer.update()
     for p in parts:
         p.matrix_world = matrix @ p.matrix_world
     return parts
@@ -158,10 +162,12 @@ def build_jack_pot():
     side = 0.035
 
     shell = grip_parts + [
-        side_profile("Body", [(-0.09, -0.03), (0.16, -0.03), (0.16, 0.02), (0.12, 0.07), (0.075, 0.09), (-0.09, 0.09)],
+        side_profile("Body", [(-0.062, -0.03), (0.16, -0.03), (0.16, 0.02), (0.12, 0.07), (0.075, 0.09), (-0.062, 0.09)],
                      side * 2, (0, 0, 0), M["shell"], bevel=0.01),
+        # The back is a narrow neck, so the sight picture stays clear.
+        side_profile("BodyRear", [(-0.092, -0.03), (-0.055, -0.03), (-0.055, 0.09), (-0.075, 0.09), (-0.092, 0.07)],
+                     0.042, (0, 0, 0), M["trim"], bevel=0.008),
         box("Frame", (0.072, 0.2, 0.026), (0, 0.035, -0.021), bevel=0.01, m=M["dark"]),
-        box("RearCap", (0.064, 0.012, 0.1), (0, -0.092, 0.03), bevel=0.005, m=M["trim"]),
         # The launch cup: a fat candy-striped mortar leaning up, a gold lip and a dark bore.
         cyl("Cup", cup_r, cup_len, tuple(cup_c), rot=cup_rot, segs=40, bevel=0.008, m=M["shell"]),
         torus("CupLip", cup_r + 0.001, 0.0055, tuple(cup_top), rot=cup_rot, m=M["steel"], major_segs=40, minor_segs=8),
@@ -184,7 +190,7 @@ def build_jack_pot():
     for i in range(BULBS):
         shell.append(sphere(f"BulbSocket{i}", 0.0058, (-0.026, -0.044 + 0.024 * i, 0.091), scale=(1, 1, 0.7), m=M["dark"], segs=10, rings=6))
     # Candy stripes: slanted across both flanks, and spiralling round the cup.
-    shell += body_stripes("StripeL", -side, -0.085, 0.07, -0.02, 0.078, 0.011, 0.034, M["trim"])
+    shell += body_stripes("StripeL", -side, -0.058, 0.07, -0.02, 0.078, 0.011, 0.034, M["trim"])
     for k in range(4):
         pts = []
         for j in range(13):
@@ -211,15 +217,15 @@ def build_jack_pot():
 
     # The launch ring round the cup's foot glows (the energy cell).
     cell = [torus("LaunchRing", cup_r + 0.002, 0.004, tuple(cup_base + axis * 0.012), rot=cup_rot, m=M["cell"], major_segs=40, minor_segs=6),
-            box("RearLamp", (0.03, 0.004, 0.014), (0, -0.0985, 0.058), bevel=0.002, m=M["cell"])]
+            box("RearLamp", (0.022, 0.004, 0.01), (0, -0.0915, 0.045), bevel=0.0015, m=M["cell"])]
 
     # The music-box crank: a hub, an arm and a long knob sticking out to the left.
     hx, hy, hz = crank_hub
     crank = [cyl("CrankHub", 0.011, 0.016, (hx - 0.012, hy, hz), rot=rad(0, 90, 0), segs=16, bevel=0.003, m=M["steel"]),
-             obox("CrankArm", (0.006, 0.012, 0.044), (hx - 0.02, hy, hz + 0.016), (1, 0, 0), (0, 1, 0), bevel=0.003, m=M["steel"]),
-             cyl("CrankKnobStem", 0.0045, 0.022, (hx - 0.031, hy, hz + 0.032), rot=rad(0, 90, 0), segs=10, bevel=0.0, m=M["steel"]),
-             cyl("CrankKnob", 0.008, 0.026, (hx - 0.052, hy, hz + 0.032), rot=rad(0, 90, 0), segs=14, bevel=0.003, m=M["trim"]),
-             sphere("CrankKnobEnd", 0.0095, (hx - 0.066, hy, hz + 0.032), m=M["trim"], segs=12, rings=8)]
+             obox("CrankArm", (0.006, 0.012, 0.056), (hx - 0.02, hy, hz + 0.022), (1, 0, 0), (0, 1, 0), bevel=0.003, m=M["steel"]),
+             cyl("CrankKnobStem", 0.0045, 0.022, (hx - 0.031, hy, hz + CRANK_R), rot=rad(0, 90, 0), segs=10, bevel=0.0, m=M["steel"]),
+             cyl("CrankKnob", 0.008, 0.026, (hx - 0.052, hy, hz + CRANK_R), rot=rad(0, 90, 0), segs=14, bevel=0.003, m=M["trim"]),
+             sphere("CrankKnobEnd", 0.0095, (hx - 0.066, hy, hz + CRANK_R), m=M["trim"], segs=12, rings=8)]
     # The pinned brass drum.
     dx, dy, dz = drum_c
     drum = [ycyl("DrumCore", 0.0105, 0.07, dy, z=dz, x=dx, m=M["steel"], segs=18, bevel=0.002)]

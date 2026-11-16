@@ -48,7 +48,7 @@ const SPLASH_LIFT := 0.5
 const HEAVY_MASS := 2.5
 const HEAVY_HOP := 0.16
 const BOSS_MASS := 5.0
-const BOSS_SCALE := 0.4
+const BOSS_SCALE := 0.6
 const BOSS_PUSH := 1.5
 ## Seconds of stars (Dazzle) after the punch (scaled down by weight there).
 const STUN := 1.4
@@ -213,10 +213,10 @@ func _physics_process(delta: float) -> void:
 				_punch()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	match phase:
 		Phase.FLY:
-			_model.rotate_object_local(Vector3.RIGHT, FLY_SPIN * get_process_delta_time())
+			_model.rotate_object_local(Vector3.RIGHT, FLY_SPIN * delta)
 		Phase.SETTLE:
 			_pose_settle()
 		Phase.WIND:
@@ -490,7 +490,7 @@ func _pose_glove(t: float) -> void:
 	var back := clampf((t - 0.16) / 0.3, 0.0, 1.0)
 	var ext := _reach * out * (1.0 - back) + 0.12 * sin(back * PI * 3.0) * (1.0 - back) * float(back > 0.0)
 	var arm := _parts.get("Arm") as Node3D
-	var arm_len := 0.31 * BOX_SIZE
+	var arm_len := 0.3 * BOX_SIZE
 	if arm:
 		var rest: Transform3D = _rest["Arm"]
 		arm.transform = Transform3D(rest.basis.scaled(Vector3(1.0, 1.0, (arm_len + ext) / arm_len)), rest.origin)

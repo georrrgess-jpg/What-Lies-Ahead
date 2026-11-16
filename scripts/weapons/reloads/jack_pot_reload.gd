@@ -15,11 +15,15 @@ extends RefCounted
 const TURNS := 3.0
 const WIND_START := 0.2
 const WIND_END := 0.72
-## The crank knob's centre relative to the crank's hub at rest (model space).
-const KNOB := Vector3(-0.052, 0.032, 0.0)
-## The support hand's pose on the knob: offset from the knob's centre and turn.
-const GRAB := Vector3(-0.012, -0.004, 0.0)
-const GRAB_ROT := Vector3(0.0, 0.0, 90.0)
+## The crank knob's centre relative to the crank's hub at rest (model space;
+## art/blender/build_weapons_jack_pot.py CRANK_R).
+const KNOB := Vector3(-0.052, 0.044, 0.0)
+## The support hand's pose on the knob: its offset from the knob's centre, and
+## the turn (axis, degrees) that lays its fist round the knob from behind with
+## the forearm coming up from below-left.
+const GRAB := Vector3(-0.02, 0.0, 0.0)
+const GRAB_AXIS := Vector3(0.642, 0.523, -0.56)
+const GRAB_DEG := 134.6
 ## The hand's path bulges out this way on its way to the crank and back.
 const HAND_ARC := Vector3(-0.05, -0.02, 0.03)
 const ROOT_POS := Vector3(-0.03, 0.03, 0.02)
@@ -91,7 +95,7 @@ func _pose_hand(s: float, angle: float) -> void:
 	var hub := _v.rest_transform("Crank").origin
 	var knob := hub + Basis(Vector3.RIGHT, -angle) * KNOB + GRAB
 	var arc := HAND_ARC * (sin(PI * grab) * (1.0 - free) + sin(PI * free))
-	var turn := Basis.from_euler(GRAB_ROT * (PI / 180.0) * w)
+	var turn := Basis(GRAB_AXIS.normalized(), deg_to_rad(GRAB_DEG) * w)
 	hand.transform = Transform3D(rest.basis * turn, rest.origin.lerp(knob, w) + arc)
 
 
