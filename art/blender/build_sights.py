@@ -20,7 +20,9 @@ Optics: Reflex (open hoop), Holo (boxy hood), Tube (short tube), Prism
 (chunky 2x), Scope (long scope), Periscope (tube with a periscope head), Gem
 (crystal crown), Gallery (bulb-ringed hoop), Eye (eyeball), Hex (hexagonal
 hood), Brass (vintage 1.4x), Burst (star bezel), Ranger (twin-window box),
-Frost (iced tube) and Porthole (bolted brass ring). scripts/weapons/sights/weapon_sights.gd
+Frost (iced tube), Porthole (bolted brass ring), Arcade (mini cabinet), Idol (temple
+idol face), Magma (lava-rock ring), TenPin (ring on two bowling pins), Radar (tube
+with a radar dish) and Hazard (striped hood with a police light bar). scripts/weapons/sights/weapon_sights.gd
 fits them to weapons; data/cosmetics/sights/*.tres are the items using them.
 
     python art/blender/build_sights.py
@@ -46,6 +48,17 @@ def sight_mats():
         vein=mat("SightVein", "#e8263a", rough=0.4),
         brass=mat("SightBrass", "#d4a03a", rough=0.28, metal=0.85),
         ice=mat("SightIce", "#bfefff", rough=0.15, metal=0.1),
+        marquee=mat("SightMarquee", "#ffd23d", rough=0.3, emit=2.0),
+        stone=mat("SightStone", "#9a937c", rough=0.85),
+        moss=mat("SightMoss", "#5a9a3c", rough=0.8),
+        jade=mat("SightJade", "#3fe08a", rough=0.2, emit=1.4),
+        basalt=mat("SightBasalt", "#3a2f38", rough=0.75),
+        lava=mat("SightLava", "#ff6a1a", rough=0.4, emit=3.0),
+        ball=mat("SightBall", "#4a2fd0", rough=0.12, metal=0.25),
+        ink=mat("SightInk", "#1c1830", rough=0.4),
+        hazard=mat("SightHazard", "#ffcc1a", rough=0.4),
+        siren_red=mat("SightSirenRed", "#ff2a3a", rough=0.2, emit=2.6),
+        siren_blue=mat("SightSirenBlue", "#2a8cff", rough=0.2, emit=2.6),
     )
     for material in m.values():
         material.use_backface_culling = True
@@ -502,6 +515,171 @@ def porthole(m):
     return optic("Porthole", body, (0.0255, 0.0255), (0, y - 0.003, axis), (0, -0.21, axis), m)
 
 
+def arcade(m):
+    """A mini arcade cabinet: side panels, a lit marquee roof, a joystick and buttons below the screen."""
+    axis = 0.048
+    y = -0.012
+    body = [
+        box("ArcBase", (0.054, 0.09, 0.018), (0, 0.008, 0.009), bevel=0.005, m=m["body"]),
+        box("ArcRoof", (0.082, 0.05, 0.012), (0, y + 0.008, axis + 0.031), bevel=0.004, m=m["body"]),
+        box("ArcMarquee", (0.06, 0.004, 0.012), (0, y - 0.0175, axis + 0.031), bevel=0.0015, m=m["marquee"]),
+        box("ArcPanel", (0.07, 0.034, 0.008), (0, y - 0.024, axis - 0.031), rot=(math.radians(-22), 0, 0), bevel=0.003, m=m["steel"]),
+        cyl("ArcStick", 0.0018, 0.012, (-0.02, y - 0.028, axis - 0.024), segs=8, bevel=0.0, m=m["steel"]),
+        sphere("ArcKnob", 0.0048, (-0.02, y - 0.028, axis - 0.0175), m=m["siren_red"], segs=10, rings=6),
+        cyl("ArcButtonA", 0.0036, 0.004, (0.01, y - 0.03, axis - 0.026), rot=(math.radians(-22), 0, 0), segs=10, bevel=0.0008, m=m["glow"]),
+        cyl("ArcButtonB", 0.0036, 0.004, (0.02, y - 0.026, axis - 0.027), rot=(math.radians(-22), 0, 0), segs=10, bevel=0.0008, m=m["marquee"]),
+        box("ArcStand", (0.03, 0.03, 0.012), (0, y + 0.012, 0.022), bevel=0.004, m=m["body"]),
+    ]
+    for side in (-1, 1):
+        body += [
+            box(f"ArcSide{side}", (0.01, 0.062, 0.078), (side * 0.034, y + 0.008, axis), bevel=0.003, m=m["accent"]),
+            box(f"ArcStripe{side}", (0.003, 0.05, 0.006), (side * 0.0395, y + 0.008, axis + 0.012), bevel=0.001, m=m["marquee"]),
+            box(f"ArcStripeB{side}", (0.003, 0.05, 0.006), (side * 0.0395, y + 0.008, axis - 0.004), bevel=0.001, m=m["glow"]),
+        ]
+    body += clamp_bolts("ArcBolt", (0.004, 0.032), 0.062, 0.009, m["steel"])
+    return optic("Arcade", body, (0.026, 0.021), (0, y - 0.006, axis), (0, -0.21, axis), m)
+
+
+def idol(m):
+    """A temple idol's stone face round the window: a spiked headdress, jade eyes, a brow and fangs."""
+    axis = 0.048
+    y = -0.01
+    body = [
+        box("IdolBase", (0.05, 0.08, 0.016), (0, 0.008, 0.008), bevel=0.005, m=m["stone"]),
+        box("IdolChin", (0.034, 0.018, 0.016), (0, y, 0.02), bevel=0.004, m=m["stone"]),
+        torus("IdolRing", 0.032, 0.0062, (0, y, axis), rot=rad(90, 0, 0), m=m["stone"], major_segs=32, minor_segs=8),
+        torus("IdolMoss", 0.0322, 0.0035, (0, y + 0.003, axis), rot=rad(90, 0, 0), m=m["moss"], major_segs=20, minor_segs=6,
+              arc=math.radians(110), start=math.radians(200)),
+        box("IdolBrow", (0.056, 0.012, 0.008), (0, y - 0.004, axis + 0.036), bevel=0.003, m=m["stone"]),
+    ]
+    for side in (-1, 1):
+        body += [
+            sphere(f"IdolEye{side}", 0.0052, (side * 0.019, y - 0.008, axis + 0.026), scale=(1.3, 0.7, 1.0), m=m["jade"], segs=12, rings=7),
+            cyl(f"IdolFang{side}", 0.0036, 0.009, (side * 0.008, y - 0.007, axis - 0.032), segs=6, bevel=0.0, m=m["white"], radius_top=0.0004),
+            box(f"IdolEar{side}", (0.008, 0.016, 0.026), (side * 0.041, y, axis), bevel=0.003, m=m["stone"]),
+            sphere(f"IdolEarring{side}", 0.004, (side * 0.044, y - 0.004, axis - 0.016), m=m["jade"], segs=10, rings=6),
+        ]
+    for i in range(5):
+        a = math.radians(50 + i * 20)
+        d = (math.cos(a), math.sin(a))
+        n = (-d[1], d[0])
+        r0 = 0.036
+        length = 0.016 if i == 2 else (0.012 if i % 2 else 0.009)
+        pts = [(d[0] * r0 + n[0] * 0.006, axis + d[1] * r0 + n[1] * 0.006), (d[0] * (r0 + length), axis + d[1] * (r0 + length)),
+               (d[0] * r0 - n[0] * 0.006, axis + d[1] * r0 - n[1] * 0.006)]
+        body.append(prism(f"IdolPlume{i}", pts, 0.008, (0, y + 0.002, 0), m=m["jade"] if i == 2 else m["accent"], bevel=0.001))
+    body += clamp_bolts("IdolBolt", (0.004, 0.03), 0.058, 0.008, m["steel"])
+    return optic("Idol", body, (0.0262, 0.0262), (0, y - 0.004, axis), (0, -0.21, axis), m)
+
+
+def magma(m):
+    """A ring of dark lava rock with a molten seam glowing inside it and drips below."""
+    axis = 0.048
+    y = -0.01
+    body = [
+        box("MagmaBase", (0.05, 0.08, 0.016), (0, 0.008, 0.008), bevel=0.005, m=m["basalt"]),
+        box("MagmaNeck", (0.026, 0.02, 0.014), (0, y, 0.019), bevel=0.004, m=m["basalt"]),
+        torus("MagmaSeam", 0.0292, 0.0024, (0, y - 0.004, axis), rot=rad(90, 0, 0), m=m["lava"], major_segs=36, minor_segs=6),
+        torus("MagmaCore", 0.0335, 0.0045, (0, y + 0.002, axis), rot=rad(90, 0, 0), m=m["basalt"], major_segs=28, minor_segs=6),
+        sphere("MagmaEmber", 0.004, (0.006, y - 0.002, axis + 0.047), m=m["lava"], segs=10, rings=6),
+    ]
+    for i in range(12):
+        a = math.tau * i / 12 + 0.2
+        s = 0.0078 + 0.0017 * ((i * 7) % 3) / 2
+        body.append(sphere(f"MagmaRock{i}", s, (math.cos(a) * 0.037, y + (i % 3) * 0.002, axis + math.sin(a) * 0.037),
+                           scale=(1.1, 0.9, 0.85 + 0.1 * (i % 2)), rot=(0, a, 0), m=m["basalt"], segs=8, rings=5))
+    for i, (a, length) in enumerate(((math.radians(-70), 0.01), (math.radians(-115), 0.007), (math.radians(-28), 0.006))):
+        base = (math.cos(a) * 0.04, y - 0.006, axis + math.sin(a) * 0.04)
+        drip = cyl(f"MagmaDrip{i}", 0.0028, length, (base[0], base[1], base[2] - length * 0.5), segs=8, bevel=0.0, m=m["lava"], radius_top=0.0028)
+        body += [drip, sphere(f"MagmaDripTip{i}", 0.0032, (base[0], base[1], base[2] - length), m=m["lava"], segs=8, rings=5)]
+    for i, x in enumerate((-0.014, 0.012)):
+        body.append(sphere(f"MagmaCrack{i}", 0.0022, (x, y - 0.01, 0.014), scale=(2.5, 0.6, 0.8), m=m["lava"], segs=8, rings=4))
+    body += clamp_bolts("MagmaBolt", (0.004, 0.03), 0.058, 0.008, m["steel"])
+    return optic("Magma", body, (0.0258, 0.0258), (0, y - 0.006, axis), (0, -0.21, axis), m)
+
+
+def pin_part(prefix, x, z0, m):
+    """A bowling pin standing at (x, z0), about 0.05 tall."""
+    return [
+        sphere(prefix + "Belly", 0.0085, (x, 0.0, z0 + 0.016), scale=(1.0, 1.0, 1.55), m=m["white"], segs=12, rings=8),
+        cyl(prefix + "Neck", 0.0046, 0.014, (x, 0.0, z0 + 0.034), segs=10, bevel=0.0, m=m["white"], radius_top=0.0034),
+        torus(prefix + "Stripe", 0.0042, 0.0012, (x, 0.0, z0 + 0.033), m=m["vein"], major_segs=12, minor_segs=4),
+        sphere(prefix + "Head", 0.0052, (x, 0.0, z0 + 0.044), scale=(1.0, 1.0, 1.15), m=m["white"], segs=10, rings=7),
+    ]
+
+
+def ten_pin(m):
+    """A lane-arrow ring held up by two bowling pins, a bowling ball on top."""
+    axis = 0.046
+    y = -0.01
+    body = [
+        box("PinBase", (0.104, 0.07, 0.014), (0, 0.006, 0.007), bevel=0.005, m=m["body"]),
+        box("PinPost", (0.018, 0.018, 0.016), (0, y, 0.021), bevel=0.004, m=m["body"]),
+        torus("PinRing", 0.0305, 0.0045, (0, y, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=32, minor_segs=6),
+        torus("PinRingLine", 0.0305, 0.0016, (0, y - 0.0042, axis), rot=rad(90, 0, 0), m=m["white"], major_segs=32, minor_segs=4),
+        sphere("PinBall", 0.0118, (0, y + 0.002, axis + 0.044), m=m["ball"], segs=16, rings=10),
+        box("PinCradle", (0.014, 0.01, 0.006), (0, y + 0.002, axis + 0.033), bevel=0.002, m=m["body"]),
+    ]
+    for i, (dx, dz) in enumerate(((-0.004, 0.004), (0.004, 0.004), (0.0, -0.002))):
+        body.append(sphere(f"PinHole{i}", 0.0024, (dx, y - 0.0085, axis + 0.046 + dz), m=m["ink"], segs=8, rings=5))
+    for side in (-1, 1):
+        for ob in pin_part(f"Pin{side}", side * 0.043, 0.012, m):
+            ob.location.y += y
+            body.append(ob)
+        body.append(prism(f"PinArrow{side}", [(-0.004, 0.0), (0.004, 0.0), (0.0, 0.009)], 0.002, (side * 0.026, -0.024, 0.0145),
+                          rot=rad(-90, 0, 0), m=m["glow"]))
+    body += clamp_bolts("PinBolt", (0.004, 0.03), 0.058, 0.008, m["steel"])
+    return optic("TenPin", body, (0.0262, 0.0262), (0, y - 0.004, axis), (0, -0.21, axis), m)
+
+
+def radar(m):
+    """Mission control: a stubby tube with a tilted radar dish on a mast, an antenna and status lights."""
+    axis = 0.05
+    profile = [(-0.03, 0.031), (-0.022, 0.031), (-0.018, 0.0285), (0.022, 0.0285), (0.026, 0.031), (0.03, 0.031)]
+    dish_at = (0.0, 0.006, axis + 0.05)
+    body = [
+        box("RadarBase", (0.042, 0.06, 0.016), (0, 0, 0.008), bevel=0.005, m=m["body"]),
+        box("RadarSaddle", (0.028, 0.03, 0.012), (0, 0, 0.019), bevel=0.004, m=m["body"]),
+        lathe("RadarTube", profile, axis, m["steel"], 0.0255, 0.0255, segs=24, inner_wall=True),
+        torus("RadarRingA", 0.031, 0.0032, (0, -0.027, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=24, minor_segs=6),
+        torus("RadarRingB", 0.031, 0.0032, (0, 0.027, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=24, minor_segs=6),
+        cyl("RadarMast", 0.0028, 0.022, (0, 0.006, axis + 0.036), segs=8, bevel=0.0, m=m["body"]),
+        cyl("RadarDish", 0.0035, 0.008, dish_at, rot=(math.radians(-35), 0, 0), segs=20, bevel=0.0, m=m["white"], radius_top=0.019),
+        cyl("RadarFeed", 0.0009, 0.016, (0, dish_at[1] - 0.005, dish_at[2] + 0.009), rot=(math.radians(-35), 0, 0), segs=6, bevel=0.0, m=m["steel"]),
+        sphere("RadarFeedTip", 0.0024, (0, dish_at[1] - 0.0095, dish_at[2] + 0.0155), m=m["glow"], segs=8, rings=5),
+        cyl("RadarAntenna", 0.0011, 0.03, (0.022, 0.014, axis + 0.04), rot=(0, math.radians(15), 0), segs=6, bevel=0.0, m=m["steel"]),
+        sphere("RadarAntennaTip", 0.0028, (0.026, 0.014, axis + 0.055), m=m["siren_red"], segs=8, rings=5),
+    ]
+    for i, mm in enumerate((m["glow"], m["marquee"], m["jade"])):
+        body.append(sphere(f"RadarLed{i}", 0.0022, (-0.031, -0.01 + i * 0.008, axis + 0.006), m=mm, segs=8, rings=5))
+    body += clamp_bolts("RadarBolt", (-0.018, 0.018), 0.05, 0.009, m["steel"])
+    return optic("Radar", body, (0.0262, 0.0262), (0, -0.012, axis), (0, -0.2, axis), m)
+
+
+def hazard(m):
+    """Ashfall City: a boxy hood in hazard stripes with a police light bar on the roof."""
+    axis = 0.047
+    y = -0.014
+    body = [
+        box("HazBase", (0.058, 0.1, 0.022), (0, 0.008, 0.011), bevel=0.006, m=m["ink"]),
+        box("HazRoof", (0.082, 0.052, 0.011), (0, y, 0.0735), bevel=0.004, m=m["ink"]),
+        box("HazBar", (0.058, 0.016, 0.006), (0, y + 0.004, 0.082), bevel=0.002, m=m["ink"]),
+        sphere("HazSirenRed", 0.0085, (-0.016, y + 0.004, 0.085), scale=(1.4, 1.0, 0.75), m=m["siren_red"], segs=14, rings=8),
+        sphere("HazSirenBlue", 0.0085, (0.016, y + 0.004, 0.085), scale=(1.4, 1.0, 0.75), m=m["siren_blue"], segs=14, rings=8),
+        box("HazButton", (0.012, 0.004, 0.007), (0, -0.0425, 0.012), bevel=0.0015, m=m["glow"]),
+    ]
+    for side in (-1, 1):
+        body.append(box(f"HazWall{side}", (0.011, 0.052, 0.056), (side * 0.0345, y, 0.047), bevel=0.004, m=m["ink"]))
+        for k in range(4):
+            body.append(box(f"HazStripe{side}_{k}", (0.0035, 0.012, 0.024), (side * 0.0405, y - 0.018 + k * 0.012, 0.047),
+                            rot=(math.radians(35 * side), 0, 0), bevel=0.0008, m=m["hazard"]))
+    for k in range(6):
+        body.append(box(f"HazBrow{k}", (0.009, 0.004, 0.009), (-0.03 + k * 0.012, y - 0.0275, 0.0735), rot=(0, math.radians(35), 0),
+                        bevel=0.0008, m=m["hazard"] if k % 2 == 0 else m["ink"]))
+    body += clamp_bolts("HazBolt", (0.004, 0.03), 0.068, 0.009, m["steel"])
+    return optic("Hazard", body, (0.03, 0.022), (0, y, axis), (0, -0.21, axis), m)
+
+
 def check_clear_axis(objects):
     """The middle of every window must be free of housing: no vertex inside 60% of the lens."""
     dg = bpy.context.evaluated_depsgraph_get()
@@ -527,7 +705,7 @@ def build_sights():
     m = sight_mats()
     exports = []
     for build in (reflex, holo, tube_dot, prism_scope, scope, periscope, gem, gallery, zombie_eye, hex_hood, brass_scope, starburst,
-                  rangefinder, frost, porthole):
+                  rangefinder, frost, porthole, arcade, idol, magma, ten_pin, radar, hazard):
         exports += build(m)
     bpy.context.view_layer.update()
     check_clear_axis(exports)

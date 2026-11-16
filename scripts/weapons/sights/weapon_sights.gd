@@ -24,6 +24,7 @@ const PATTERNS := {
 	"dot": 0, "ring": 1, "chevron": 2, "circle_dot": 3, "star": 4, "heart": 5, "pixel": 6,
 	"horseshoe": 7, "scope": 8, "periscope": 9, "diamond": 10, "marquee": 11, "slit": 12, "hex": 13,
 	"post": 14, "burst": 15, "ranger": 16, "snowflake": 17, "quarters": 18,
+	"invader": 19, "sun": 20, "flame": 21, "strike": 22, "radar": 23, "hazard": 24,
 }
 ## Per optic: `round` window, `fill` (the window's half-height as a share of
 ## the aimed view's half-height: sets how close the eye sits), `edge_shadow`
@@ -46,6 +47,12 @@ const OPTICS := {
 	"Ranger": {"round": false, "fill": 0.36, "edge_shadow": 0.25, "vignette": 0.34},
 	"Frost": {"round": true, "fill": 0.28, "edge_shadow": 0.35, "vignette": 0.3},
 	"Porthole": {"round": true, "fill": 0.26, "edge_shadow": 0.2, "vignette": 0.28},
+	"Arcade": {"round": false, "fill": 0.24, "vignette": 0.26},
+	"Idol": {"round": true, "fill": 0.25, "edge_shadow": 0.2, "vignette": 0.28},
+	"Magma": {"round": true, "fill": 0.25, "edge_shadow": 0.25, "vignette": 0.28},
+	"TenPin": {"round": true, "fill": 0.24, "vignette": 0.26},
+	"Radar": {"round": true, "fill": 0.28, "edge_shadow": 0.35, "vignette": 0.3},
+	"Hazard": {"round": false, "fill": 0.24, "vignette": 0.26},
 }
 ## Choices of the "Sight reticle colour" setting ("auto" keeps each sight's own).
 const COLORS := {
