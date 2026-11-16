@@ -1,0 +1,73 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/popcorn_popper.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/popcorn_popper_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/popcorn_popper_mode.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/views/popcorn_popper_view.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 19
+
+[resource]
+script = ExtResource("1")
+id = &"popcorn_popper"
+sort_order = 92
+category = "Kettle Cannon"
+display_name = "Popcorn Popper"
+role = "Full-auto kettle cannon that heats as it fires. Cold, it shoots single kernels; warm, they pop in flight and land in small splash puffs; hot, they fly as big buttered popcorn that bursts wide and slows. Overheat it and the kettle jams for a moment: short bursts keep it hot without jamming. The glass dome shows the popcorn left."
+unlock = SubResource("unlock")
+slot_class = "primary"
+magazine_size = 50
+reserve_start = 250
+reserve_max = 400
+reload_time = 2.4
+emergency_recharge_interval = 1.0
+automatic = true
+fire_interval = 0.085
+damage = 20.0
+pellets = 1
+spread_degrees = 1.0
+spread_bloom = 0.1
+spread_bloom_max = 1.6
+spread_recovery = 7.0
+max_range = 55.0
+falloff_start = 16.0
+falloff_end = 36.0
+falloff_min_scale = 0.6
+headshot_multiplier = 1.5
+knockback = 0.4
+ads_fov_scale = 0.82
+ads_time = 0.2
+ads_spread_scale = 0.45
+ads_depth = 0.14
+first_shot_accurate = false
+reticle_style = "circle"
+recoil_kick = 0.5
+recoil_yaw = 0.25
+view_kick = 0.03
+shake = 0.07
+tracer_color = Color(1, 0.82, 0.3, 1)
+tracer_width = 0.04
+view_position = Vector3(0.27, -0.27, -0.66)
+view_rotation_degrees = Vector3(0, 0, -3)
+viewmodel = ExtResource("3")
+reload_script = ExtResource("4")
+view_script = ExtResource("6")
+fire_sound = &"pcp_fire"
+reload_sound = &"pcp_unlatch"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.08
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
+move_speed_scale = 0.95
+equip_time = 0.42
+equip_sound = &"pcp_equip"
+projectile_speed = 72.0
+projectile_fuse = 0.9
+projectile_size = 0.06
+explosion_sound = &"pcp_butter"
+tracer_style = &"none"
+mode_script = ExtResource("5")
