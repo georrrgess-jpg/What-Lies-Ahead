@@ -8,8 +8,8 @@ extends RefCounted
 ## "arm_pattern": "stripes", ...}; its `colors` are its arm scheme
 ## [glove, plate, cuff, sleeve, accent] (see WeaponCosmetics.apply_arms).
 ## Models follow the material naming contract in art/blender/build_operators.py:
-## OpBody (vertex-coloured body), FxHolo*, FxGold* and FxGlass* surfaces get
-## shaders here.
+## OpBody (vertex-coloured body), FxHolo*, FxGold*, FxGlass*, FxBulb* (chasing
+## marquee bulbs) and FxStar* (night sky) surfaces get shaders here.
 ##
 ## Clips: Idle, Run, AimIdle (loops), Pose, Fire, Victory, Wave (one-shots);
 ## play() takes the name with or without "-loop". Sockets: WeaponSocket (right
@@ -24,6 +24,8 @@ const BODY_SHADER := "res://art/shaders/operator_body.gdshader"
 const OP_HOLO_SHADER := "res://art/shaders/operator_hologram.gdshader"
 const OP_GOLD_SHADER := "res://art/shaders/operator_gold.gdshader"
 const OP_GLASS_SHADER := "res://art/shaders/operator_glass.gdshader"
+const OP_BULB_SHADER := "res://art/shaders/operator_bulbs.gdshader"
+const OP_STAR_SHADER := "res://art/shaders/operator_starfield.gdshader"
 ## Speed (m/s) at which the Run clip's planted feet do not slide; scale the
 ## clip by move_speed / RUN_SPEED.
 const RUN_SPEED := 2.8
@@ -79,6 +81,10 @@ static func _operator_material(base: BaseMaterial3D) -> Material:
 		path = OP_GOLD_SHADER
 	elif mat_name.begins_with("FxGlass"):
 		path = OP_GLASS_SHADER
+	elif mat_name.begins_with("FxBulb"):
+		path = OP_BULB_SHADER
+	elif mat_name.begins_with("FxStar"):
+		path = OP_STAR_SHADER
 	if path == "":
 		return null
 	var key := "op|%s|%s|%s" % [path, mat_name, base.albedo_color.to_html()]

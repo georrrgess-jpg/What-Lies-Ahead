@@ -8,7 +8,8 @@ extends Resource
 ## (null = owned by default), or from the shop: an item with a `price` is
 ## bought with Sparks (see Cosmetics.buy) once its requirement, if any, is met.
 
-## MYTHIC (above Legendary) is earned, never sold: Endless rewards.
+## MYTHIC (above Legendary): the Endless rewards, and one Shop showpiece
+## (Madame Fortuna, the dearest item; never discounted).
 enum Rarity { COMMON, RARE, EPIC, LEGENDARY, MASTERY, MYTHIC }
 
 ## Stable ID saved in the profile. Never rename once shipped.

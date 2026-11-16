@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"op_fortuna"
+display_name = "Madame Fortuna"
+description = "The fortune teller from the booth at the end of the pier stepped out of the glass. She already knows what lies ahead: you, winning."
+slot = &"avatar"
+rarity = 5
+price = 20000
+colors = PackedColorArray(0.1451, 0.102, 0.3882, 1, 1, 0.7608, 0.2392, 1, 1, 0.851, 0.4157, 1, 0.8706, 0.1216, 0.3098, 1, 1, 0.851, 0.4157, 1, 0.2078, 0.9412, 1, 1)
+params = {
+"model": "res://art/models/operator_fortuna.glb",
+"kit": ["Frill", "Crystal"],
+"pattern": "stars",
+"pattern_on": ["Glove"],
+"shader": "res://art/shaders/skin_gold.gdshader",
+"shader_on": ["GlovePlate", "Cuff"],
+"scale": 0.8,
+"aura": "fortune"
+}
+sort_order = 1400

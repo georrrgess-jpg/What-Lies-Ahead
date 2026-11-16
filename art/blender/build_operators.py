@@ -35,6 +35,7 @@ from operator_kit import *  # noqa: F401,F403
 from operator_kit import HEAD_C, SHOULDER, ELBOW, WRIST, HIP, KNEE, Kit, sx
 from operator_anim import Rig, build_clips, bake_clips, curve
 from operators_more import OPERATORS_MORE
+from operators_mythic import OPERATORS_MYTHIC
 
 
 # Operators in bulky costumes hold the weapon a little further out to the
@@ -738,6 +739,7 @@ OPERATORS = {
     "glitch": op_glitch,
     "arcade_champion": op_arcade_champion,
     **OPERATORS_MORE,
+    **OPERATORS_MYTHIC,
 }
 
 

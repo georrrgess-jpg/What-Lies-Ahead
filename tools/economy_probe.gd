@@ -211,6 +211,9 @@ func _featured() -> void:
 		for id in ids:
 			seen[id] = true
 	_check("featured: the selection rotates every day (14 of 14 days differ, %d different items in two weeks)" % seen.size(), changes == 14 and seen.size() >= 20)
+	var mythic = Shop.spotlight()
+	_check("featured: the Mythic spotlight (%s, %d) is never among the picks" % [mythic.display_name, mythic.price],
+		mythic.price == 20000 and not seen.has(String(mythic.id)) and Shop.discount(mythic) == 0.0)
 	var it = Shop.featured()[0]
 	var cut: int = roundi(it.price * (1.0 - wallet.rules.featured_discount))
 	_check("featured: %s costs %d instead of %d" % [it.display_name, cut, it.price], Shop.price(it) == cut and cosmetics.price_of(it) == cut and Shop.discount(it) > 0.0 and Shop.base_price(it) == it.price)

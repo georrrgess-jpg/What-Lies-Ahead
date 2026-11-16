@@ -404,7 +404,10 @@ def victory_keys(idle0):
 
 
 def pose_keys(style, idle0):
-    """The signature flourish of each operator: (keys, length)."""
+    """The signature flourish of each operator: (keys, length). A builder may
+    pass its own function of idle0 instead of a style name."""
+    if callable(style):
+        return style(idle0)
     rest_l = arm(1, 0.28, 0.02, -1.0, bend=24, twist=14)
     rest_r = arm(-1, 0.28, 0.02, -1.0, bend=24, twist=14)
     if style == "tip_hat":            # Boardwalk Ranger: two fingers to the hat brim and a nod
