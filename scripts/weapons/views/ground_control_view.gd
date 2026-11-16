@@ -20,6 +20,8 @@ const BLINK_IDLE := 1.2
 const BLINK_FULL := 7.0
 const BLINK_OVER := 14.0
 const KICK_TIME := 0.32
+## Size of the dish while aiming, against its hip size.
+const AIM_DISH_SCALE := 0.62
 const RADAR_SHADER := "res://art/shaders/ground_control_radar.gdshader"
 const RADAR_RANGE := 30.0
 const RADAR_REFRESH := 0.2
@@ -135,6 +137,8 @@ func _pose_dish(v: WeaponView, delta: float, over: float, stall: float) -> void:
 	var jitter := Vector3(sin(Time.get_ticks_msec() * 0.083) * shiver, 0.0, sin(Time.get_ticks_msec() * 0.061) * shiver)
 	var droop := clampf(stall * 2.0, 0.0, 1.0)
 	var basis := Basis.from_euler(Vector3(deg_to_rad(-6.0 * k - 14.0 * droop), 0.0, 0.0))
+	# Aiming draws the dish in, so the big disc does not hide the view down the sights.
+	basis = basis.scaled(Vector3.ONE * lerpf(1.0, AIM_DISH_SCALE, smoothstep(0.0, 1.0, v.player.ads) if v.player else 0.0))
 	_dish.transform = v.rest_transform("Dish") * Transform3D(basis, Vector3(0.0, -0.004 * droop, 0.03 * k) + jitter)
 	if _core_mat:
 		var flicker := 0.75 + 0.25 * sin(Time.get_ticks_msec() * 0.05)

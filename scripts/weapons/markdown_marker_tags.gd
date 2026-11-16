@@ -34,6 +34,8 @@ const TAG_SIZE := Vector2(0.38, 0.23)
 ## Where each tag of a stack sits: turn (radians) from the side it hit, height (m).
 const SLOTS: Array[Vector2] = [Vector2(0.0, 1.2), Vector2(0.6, 1.05), Vector2(-0.6, 1.4)]
 const STICK_TIME := 0.16
+## How far out a sticker sits, as a share of the capsule radius (the capsule is wider than the torso: arms, ring).
+const SURFACE := 0.8
 const SHADER := "res://art/shaders/markdown_marker_tag.gdshader"
 ## Sale Pink, Register Yellow, Mall Fountain Teal (one per tag in a stack).
 const COLORS: Array[Color] = [Color(1.0, 0.31, 0.64), Color(1.0, 0.82, 0.25), Color(0.13, 0.85, 0.85)]
@@ -194,7 +196,7 @@ func _add_sticker(point: Vector3) -> void:
 		out = Vector3(0, 0, 1)
 	var slot: Vector2 = SLOTS[_count % SLOTS.size()]
 	out = out.normalized().rotated(Vector3.UP, slot.x)
-	var anchor := out * zombie.data.capsule_radius * s * 1.05 + Vector3.UP * slot.y * s
+	var anchor := out * zombie.data.capsule_radius * s * SURFACE + Vector3.UP * slot.y * s
 	var m := MeshInstance3D.new()
 	if _quad == null:
 		_quad = QuadMesh.new()
