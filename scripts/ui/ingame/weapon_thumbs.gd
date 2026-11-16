@@ -48,6 +48,10 @@ func bake(weapons: Array[WeaponData]) -> void:
 func _run() -> void:
 	_busy = true
 	_build_stage()
+	# The stage's camera takes effect a frame after it enters the tree; a picture
+	# rendered sooner is taken from inside the first weapon.
+	await get_tree().process_frame
+	await get_tree().process_frame
 	while not _queue.is_empty():
 		var weapon: WeaponData = _queue.pop_front()
 		_pose(weapon)
