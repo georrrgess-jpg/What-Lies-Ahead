@@ -83,13 +83,16 @@ def build_t_minus_six():
     screen_y = -0.073
 
     shell = grip_parts + [
-        side_profile("Body", [(-0.07, -0.03), (0.152, -0.03), (0.152, 0.074), (0.124, 0.088), (-0.05, 0.088), (-0.07, 0.07)],
+        side_profile("Body", [(-0.025, -0.03), (0.152, -0.03), (0.152, 0.074), (0.124, 0.088), (-0.025, 0.088)],
                      0.066, (0, 0, 0), M["shell"], bevel=0.01),
+        # The back of the body is a narrow neck, so aiming down the sights is not blocked by it.
+        side_profile("BodyRear", [(-0.07, -0.03), (-0.02, -0.03), (-0.02, 0.088), (-0.04, 0.066), (-0.07, 0.056)],
+                     0.04, (0, 0, 0), M["shell"], bevel=0.008),
         box("Frame", (0.07, 0.17, 0.03), (0, 0.04, -0.02), bevel=0.011, m=M["dark"]),
-        box("BodyStripe", (0.068, 0.17, 0.012), (0, 0.04, 0.03), bevel=0.003, m=M["trim"]),
+        box("BodyStripe", (0.068, 0.145, 0.012), (0, 0.0525, 0.03), bevel=0.003, m=M["trim"]),
         side_profile("Tail", [(-0.03, 0.02), (-0.03, -0.024), (-0.06, -0.024), (-0.084, -0.006), (-0.084, 0.008), (-0.062, 0.02)],
-                     0.054, (0, 0, 0), M["shell"], bevel=0.006),
-        box("RearBlock", (0.044, 0.026, 0.014), (0, -0.058, 0.095), bevel=0.004, m=M["dark"]),
+                     0.04, (0, 0, 0), M["shell"], bevel=0.006),
+        box("RearBlock", (0.03, 0.026, 0.044), (0, -0.058, 0.08), bevel=0.004, m=M["dark"]),
         # The pod: a fat red drum with a cream mouth, a hazard band and a breech ring.
         ycyl("Pod", pod_r, pod_y1 - pod_y0, (pod_y0 + pod_y1) / 2, z=pod_c[2], m=M["trim"], segs=36, bevel=0.008),
         ycyl("PodMouth", pod_r - 0.004, 0.008, pod_y1 + 0.002, z=pod_c[2], m=cream, segs=36, bevel=0.003),
@@ -105,16 +108,16 @@ def build_t_minus_six():
         box("TubeClampR", (0.022, 0.01, 0.014), (tube_c[0], tube_c[1] - 0.06, tube_c[2]), bevel=0.003, m=M["dark"]),
         box("TubeClampF", (0.022, 0.01, 0.014), (tube_c[0], tube_c[1] + 0.06, tube_c[2]), bevel=0.003, m=M["dark"]),
         # The lock screen at the back: a framed dark glass with a teal ring and a crosshair.
-        box("ScreenFrame", (0.05, 0.006, 0.04), (0, screen_y + 0.004, 0.046), bevel=0.003, m=M["dark"]),
-        box("ScreenGlass", (0.043, 0.004, 0.033), (0, screen_y, 0.046), bevel=0.0015, m=glass),
-        torus("ScreenRing", 0.012, 0.0014, (0, screen_y - 0.0022, 0.052), rot=rad(90, 0, 0), m=M["cell"], major_segs=24, minor_segs=4),
-        box("ScreenCrossH", (0.03, 0.0015, 0.0012), (0, screen_y - 0.0022, 0.052), bevel=0.0, m=M["cell"]),
-        box("ScreenCrossV", (0.0012, 0.0015, 0.03), (0, screen_y - 0.0022, 0.052), bevel=0.0, m=M["cell"]),
+        box("ScreenFrame", (0.034, 0.006, 0.026), (0, screen_y + 0.004, 0.036), bevel=0.003, m=M["dark"]),
+        box("ScreenGlass", (0.029, 0.004, 0.021), (0, screen_y, 0.036), bevel=0.0015, m=glass),
+        torus("ScreenRing", 0.0064, 0.0012, (0, screen_y - 0.0022, 0.0395), rot=rad(90, 0, 0), m=M["cell"], major_segs=24, minor_segs=4),
+        box("ScreenCrossH", (0.019, 0.0015, 0.001), (0, screen_y - 0.0022, 0.0395), bevel=0.0, m=M["cell"]),
+        box("ScreenCrossV", (0.001, 0.0015, 0.019), (0, screen_y - 0.0022, 0.0395), bevel=0.0, m=M["cell"]),
         # Countdown strip on the left flank: a dark bezel for three lamps.
         box("CountBezel", (0.004, 0.016, 0.056), (-0.034, 0.1, 0.024), bevel=0.0015, m=M["dark"]),
     ]
     for i in range(ROCKETS):
-        shell.append(sphere(f"PipBase{i}", 0.0027, (-0.0175 + i * 0.007, screen_y - 0.0015, 0.034), scale=(1, 0.5, 1), m=M["dark"], segs=8, rings=4))
+        shell.append(sphere(f"PipBase{i}", 0.002, (-0.0125 + i * 0.005, screen_y - 0.0015, 0.0285), scale=(1, 0.5, 1), m=M["dark"], segs=8, rings=4))
     # Hazard stripes slanted round the band.
     for i in range(12):
         a = math.tau * i / 12
@@ -178,8 +181,8 @@ def build_t_minus_six():
     # Lit lock pips on the screen.
     pips = {}
     for i in range(ROCKETS):
-        at = (-0.0175 + i * 0.007, screen_y - 0.0026, 0.034)
-        pips[i] = ([sphere(f"PipLit{i}", 0.0025, at, scale=(1, 0.6, 1), m=M["cell"], segs=8, rings=4)], at)
+        at = (-0.0125 + i * 0.005, screen_y - 0.0026, 0.0285)
+        pips[i] = ([sphere(f"PipLit{i}", 0.0019, at, scale=(1, 0.6, 1), m=M["cell"], segs=8, rings=4)], at)
     # Countdown lamps, bottom (Count0) to top.
     lamps = {}
     for i in range(COUNT):
