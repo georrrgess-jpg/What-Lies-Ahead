@@ -264,7 +264,6 @@ func _build_board() -> Control:
 	v.add_child(_chip)
 	_role = UiKit.body("", BOARD_WIDTH - 90.0, UiKit.SIZE_BODY)
 	_role.max_lines_visible = 2
-	_role.text_overrun_behavior = TextServer.OVERRUN_TRIM_WORD_ELLIPSIS
 	_role.add_theme_constant_override("line_spacing", -6)
 	_role.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_role.mouse_filter = Control.MOUSE_FILTER_STOP
