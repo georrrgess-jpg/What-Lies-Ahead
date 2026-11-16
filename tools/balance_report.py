@@ -487,7 +487,8 @@ def yoyo_trip(d):
 	accel = (YOYO["BACK_START"] + YOYO["BACK_TOP"]) * 0.5 * YOYO["BACK_ACCEL"]
 	if d > accel:
 		return out + YOYO["BACK_ACCEL"] + (d - accel) / YOYO["BACK_TOP"]
-	return out + math.sqrt(2.0 * d / ((YOYO["BACK_TOP"] - YOYO["BACK_START"]) / YOYO["BACK_ACCEL"]))
+	a = (YOYO["BACK_TOP"] - YOYO["BACK_START"]) / YOYO["BACK_ACCEL"]
+	return out + (math.sqrt(YOYO["BACK_START"] ** 2 + 2.0 * a * d) - YOYO["BACK_START"]) / a
 
 
 def yoyo_sleeper(w, seconds):

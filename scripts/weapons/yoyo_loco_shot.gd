@@ -29,7 +29,7 @@ const MASK_ENEMIES := 4
 const OUT_SPEED := 46.0
 ## The return speeds up from BACK_START to BACK_TOP over BACK_ACCEL seconds.
 const BACK_START := 16.0
-const BACK_TOP := 52.0
+const BACK_TOP := 58.0
 const BACK_ACCEL := 0.22
 const HOME_DISTANCE := 0.5
 ## Extra reach (m) beyond a zombie's capsule at which a passing yo-yo still hits.
@@ -121,9 +121,10 @@ static func launch(parent: Node, from: Vector3, dir: Vector3, eye: Vector3, w: W
 static func round_trip(distance: float) -> float:
 	var out := distance / OUT_SPEED
 	var accel_dist := (BACK_START + BACK_TOP) * 0.5 * BACK_ACCEL
-	var back := BACK_ACCEL + maxf(0.0, distance - accel_dist) / BACK_TOP if distance > accel_dist \
-		else sqrt(2.0 * distance / ((BACK_TOP - BACK_START) / BACK_ACCEL))
-	return out + back
+	if distance > accel_dist:
+		return out + BACK_ACCEL + (distance - accel_dist) / BACK_TOP
+	var a := (BACK_TOP - BACK_START) / BACK_ACCEL
+	return out + (sqrt(BACK_START * BACK_START + 2.0 * a * distance) - BACK_START) / a
 
 
 
