@@ -11,6 +11,8 @@ import numpy as np
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
 
+import _sidearm_fx as fx
+
 
 def _whoosh(d, f0=500, f1=1600, gain=1.0):
     return band(noise(d), (f0 + f1) * 0.5, abs(f1 - f0) + 200) * env(d, d * 0.4, d, power=0.8, release=d * 0.4) * gain
@@ -53,7 +55,7 @@ def gn8b_shutter_fire():
     out = whump + thump + sigh
     place(out, snap, 0.0, 0.9)
     place(out, click(0.016, 1500, 0.5), 0.045, 1.0)
-    return crush(filt(out, low=6500), 1.3)
+    return fx.fire(out, 8301, 2800, 0.6, (110, 45, 0.12, 1.0), 0.3, 0.055, 0.3, 1.3, 6500)
 
 
 def gn8b_shutter_daze():
@@ -98,6 +100,8 @@ def gn8b_shutter_equip():
     place(out, clunk(300, 0.06), 0.1, 0.6)
     place(out, click(0.02, 2000, 0.5), 0.18, 1.0)
     place(out, sweep(500, 1100, 0.22, "tri", 0.7) * env(0.22, 0.03, power=1.2) * 0.12, 0.2, 1.0)
+    fx.place_at(out, fx.tick(8341, 2400, gain=0.4), 0.1)
+    fx.place_at(out, fx.holo(0.16, 700, 1500, 8342, 0.15), 0.2)
     return filt(out, low=7500)
 
 
@@ -109,6 +113,9 @@ def gn8b_shutter_reload():
     place(out, _whoosh(0.15, 600, 1700, 0.35), 0.5, 1.0)                            # flicked away
     place(out, band(noise(0.2), 2100, 800) * env(0.2, 0.04, power=1.0), 0.8, 0.28)  # new one prints in
     place(out, clunk(320, 0.09), 1.18, 0.85)                                        # pressed home
+    fx.place_at(out, fx.tick(8331, 2300), 0.3)
+    fx.place_at(out, fx.holo(0.34, 600, 1700, 8332, 0.22), 0.8)
+    fx.place_at(out, fx.latch(8333, 260), 1.18)
     return filt(out, low=8500)
 
 
@@ -123,7 +130,7 @@ def gn8b_dart_fire():
     thock = _sub_thump(260, 120, d, 0.05) * 1.1
     knock = filt(noise(d), low=3000, high=400) * env(d, 0.0005, 0.015, power=2.0) * 0.8
     whizz = sweep(1400, 900, d, "tri", 0.6) * env(d, 0.01, 0.12, power=2.0) * 0.1
-    return crush(filt(pfft + thock + knock + whizz, low=7000), 1.25)
+    return fx.fire(pfft + thock + knock + whizz, 8401, 2600, 0.6, (130, 55, 0.07, 0.9), 0.16, 0.04, 0.22, 1.25, 7000)
 
 
 def gn8b_dart_pump():
@@ -142,6 +149,8 @@ def gn8b_dart_equip():
     place(out, _whoosh(0.1, 400, 1300, 0.3), 0.0, 1.0)
     place(out, clunk(340, 0.06), 0.1, 0.6)
     place(out, band(noise(0.2), 2300, 800) * env(0.2, 0.02, power=1.5) * 0.3, 0.16, 1.0)
+    fx.place_at(out, fx.tick(8441, 2500, gain=0.8), 0.1)
+    fx.place_at(out, fx.holo(0.14, 650, 1400, 8442, 0.14), 0.16)
     return filt(out, low=7500)
 
 
@@ -154,6 +163,9 @@ def gn8b_dart_reload():
         place(out, click(0.02, 1800 + i * 200, 0.25), 0.76 + i * 0.07, 1.0)
     place(out, band(noise(0.16), 2000, 700) * env(0.16, 0.03, power=1.0), 0.78, 0.28)
     place(out, clunk(270, 0.11), 1.1, 0.9)                                          # slapped home
+    fx.place_at(out, fx.tick(8431, 2200), 0.28)
+    fx.place_at(out, fx.holo(0.32, 560, 1600, 8432, 0.2), 0.76)
+    fx.place_at(out, fx.latch(8433, 240, 0.6), 1.1)
     return filt(out, low=8500)
 
 
@@ -170,7 +182,7 @@ def gn8b_balloon_pop():
     tail = filt(noise(d), low=2500, high=200) * env(d, 0.004, 0.2, power=2.0) * 0.3
     patter = band((np.random.default_rng(5).uniform(0, 1, int(SR * d)) < 0.012).astype(float), 2400, 900) * 3.0
     patter *= env(d, 0.05, d, power=1.5) * 0.25
-    return crush(filt(bang + thump + tail + patter, low=7000), 1.4)
+    return fx.fire(bang + thump + tail + patter, 8411, 3000, 0.6, (120, 45, 0.1, 0.9), 0.25, 0.05, 0.28, 1.4, 7000, 0.3)
 
 
 SOUNDS = [

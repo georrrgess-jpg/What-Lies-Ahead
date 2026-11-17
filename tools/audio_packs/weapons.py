@@ -46,7 +46,8 @@ def weap_cannon_fire():
     sub = _sub_thump(150, 40, d, 0.16) * 1.4
     body = filt(noise(d), low=1400) * env(d, 0.001, 0.08, power=2.0) * 0.8
     tail = _shimmer(d, 0.22, 4800) * 0.18
-    return crush(snap + zing + sub + body + tail, 1.6)
+    import _sidearm_fx as fx  # the sidearms' shared layers, imported here: other weapons share this pack
+    return fx.fire(snap + zing + sub + body + tail, 8601, 2600, 0.9, (110, 38, 0.16, 1.3), 0.38, 0.06, 0.34, 1.6, 9500, 0.4)
 
 
 def weap_cannon_reload():
@@ -61,6 +62,12 @@ def weap_cannon_reload():
     place(out, clunk(300, 0.1), 1.23, 0.9)                                          # loader seats
     place(out, clunk(180, 0.14), 1.45, 1.0)                                         # snap shut
     place(out, charge(0.22, 600, 2200), 1.5, 0.35)
+    import _sidearm_fx as fx  # the sidearms' shared layers, imported here: other weapons share this pack
+    fx.place_at(out, fx.tick(8631, 2200), 0.17)
+    fx.place_at(out, fx.holo(0.26, 700, 1900, 8632, 0.2), 0.95)
+    fx.place_at(out, fx.latch(8633, 260), 1.23)
+    fx.place_at(out, fx.latch(8634, 150, 1.1), 1.45)
+    fx.place_at(out, fx.ready(784.0, 0.2), 1.55)
     return out
 
 

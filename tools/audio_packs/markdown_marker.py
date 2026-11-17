@@ -13,6 +13,8 @@ import numpy as np
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
 
+import _sidearm_fx as fx
+
 
 def _clack(freq, d=0.06, gain=1.0):
     """A hard plastic lever snapping shut: a hollow knock and a tick."""
@@ -59,7 +61,7 @@ def mdm_fire():
     place(out, _clack(520, 0.07, 0.9), 0.0, 1.0)
     place(out, _thwip(0.13, 3000, 1100, 0.6), 0.008, 1.0)
     place(out, blip(1400, 0.05, "sine", gain=0.25), 0.0, 1.0)
-    return crush(filt(out, low=7000), 1.2)
+    return fx.fire(out, 8701, 3200, 0.5, (140, 60, 0.06, 0.7), 0.18, 0.045, 0.22, 1.2, 7000)
 
 
 def mdm_stick():
@@ -69,7 +71,7 @@ def mdm_stick():
     chirp = sweep(1500, 2100, 0.05, "sine") * env(0.05, 0.002, 0.05, power=1.5) * 0.3
     out = smack + _sub_thump(160, 90, d, 0.03) * 0.5
     place(out, chirp, 0.012, 1.0)
-    return filt(out, low=6500)
+    return fx.fire(out, 8711, 2600, 0.3, (140, 70, 0.04, 0.5), 0.12, 0.04, 0.18, 1.1, 6500, 0.15)
 
 
 def mdm_pop():
@@ -82,7 +84,7 @@ def mdm_pop():
     place(out, _bell(1568, 0.6, 0.55), 0.07, 1.0)               # the "ching"
     place(out, _bell(2093, 0.5, 0.3), 0.07, 1.0)
     place(out, _coins(0.6, 8, 0.8), 0.14, 1.0)
-    return filt(out, low=8000)
+    return fx.fire(out, 8721, 3000, 0.5, (110, 45, 0.1, 0.9), 0.3, 0.06, 0.25, 1.15, 8000, 0.25)
 
 
 def mdm_equip():
@@ -92,6 +94,7 @@ def mdm_equip():
     place(out, _clack(560, 0.06, 0.7), 0.1, 1.0)
     for i in range(3):
         place(out, click(0.012, 2200 + 300 * i, 0.35), 0.18 + i * 0.03, 1.0)
+    fx.place_at(out, fx.holo(0.14, 700, 1500, 8741, 0.14), 0.16)
     return filt(out, low=7500)
 
 
@@ -113,6 +116,10 @@ def mdm_reload():
     place(out, clunk(260, 0.1, 0.8), 1.07, 1.0)                                     # roll seats
     place(out, _clack(540, 0.07, 0.9), 1.22, 1.0)                                   # drawer snaps shut
     place(out, _thwip(0.1, 2400, 1200, 0.3), 1.25, 1.0)                             # first tag out
+    fx.place_at(out, fx.tick(8731, 2600), 0.17)
+    fx.place_at(out, fx.holo(0.3, 650, 1700, 8732, 0.16), 0.68)
+    fx.place_at(out, fx.latch(8733, 240), 1.07)
+    fx.place_at(out, fx.tick(8734, 3000), 1.22)
     return filt(out, low=8000)
 
 

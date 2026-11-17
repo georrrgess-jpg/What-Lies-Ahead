@@ -11,6 +11,8 @@ import numpy as np
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _laser_layer, _shimmer, _sub_thump
 
+import _sidearm_fx as fx
+
 
 def _fizz(d, density=0.04, centre=3200, seed=11):
     """Firework fizz: sparse crackles through a soft band, no hiss on top."""
@@ -39,7 +41,7 @@ def gn2_sparkler_fire():
     zip_ = _laser_layer(1900, 520, d, 0.5, "tri") * env(d, 0.0008, 0.05, power=2.0) * 0.32
     sub = _sub_thump(190, 80, d, 0.045) * 0.9
     crackle = _fizz(d, 0.06, 2800, seed=3) * env(d, 0.003, 0.1, power=1.6) * 0.3
-    return crush(filt(pop + zip_ + sub + crackle, low=7500), 1.35)
+    return fx.fire(pop + zip_ + sub + crackle, 8101, 3600, 0.5, (130, 65, 0.035, 0.6), 0.07, 0.03, 0.12, 1.35, 7500, 0.2)
 
 
 def gn2_sparkler_equip():
@@ -49,6 +51,7 @@ def gn2_sparkler_equip():
     place(out, filt(_fizz(0.08, 0.2, 2400, seed=5), low=6000) * env(0.08, 0.002, power=1.2), 0.1, 0.5)
     place(out, clunk(300, 0.06), 0.16, 0.5)
     place(out, _fizz(0.22, 0.05, 3000, seed=6) * env(0.22, 0.03, power=1.4), 0.18, 0.35)
+    fx.place_at(out, fx.tick(8141, 2800, gain=0.8), 0.16)
     return filt(out, low=8000)
 
 
@@ -60,6 +63,9 @@ def gn2_sparkler_reload():
     place(out, band(noise(0.2), 2200, 800) * env(0.2, 0.04, power=1.0), 0.6, 0.3)  # new one prints in
     place(out, clunk(320, 0.09), 0.86, 0.85)                                       # seats
     place(out, _whoosh(0.12, 300, 900, 0.3), 1.36, 1.0)                            # match flicked away
+    fx.place_at(out, fx.tick(8131, 2600), 0.2)
+    fx.place_at(out, fx.holo(0.26, 650, 1700, 8132, 0.2), 0.6)
+    fx.place_at(out, fx.latch(8133, 280), 0.86)
     return filt(out, low=9000)
 
 
@@ -95,7 +101,7 @@ def gn2_ring_fire():
     thump = _sub_thump(160, 60, d, 0.1) * 1.2
     whirr = sweep(260, 520, d, "tri", 0.8) * (0.6 + 0.4 * np.sin(2 * np.pi * 34 * t_axis(d))) * env(d, 0.01, 0.38, power=1.6) * 0.3
     air = band(noise(d), 1500, 700) * env(d, 0.01, 0.3, power=1.5) * 0.35
-    return crush(filt(slap + thump + whirr + air, low=8000), 1.3)
+    return fx.fire(slap + thump + whirr + air, 8201, 2400, 0.7, (120, 48, 0.1, 1.0), 0.26, 0.05, 0.3, 1.3, 8000)
 
 
 def gn2_ring_ricochet():
@@ -104,7 +110,7 @@ def gn2_ring_ricochet():
     thud = filt(noise(d), low=1200) * env(d, 0.001, 0.05, power=2.0) * 0.8
     ring = _ting(1180, d, 0.45)
     zing = sweep(1500, 2300, d, "sine", 0.5) * env(d, 0.002, 0.12, power=2.0) * 0.12
-    return filt(thud + ring + zing, low=8500)
+    return fx.fire(thud + ring + zing, 8211, 2800, 0.4, (130, 60, 0.06, 0.7), 0.22, 0.05, 0.28, 1.15, 8500, 0.2)
 
 
 def gn2_ring_bounce():
@@ -112,7 +118,7 @@ def gn2_ring_bounce():
     d = 0.18
     bonk = sweep(520, 300, d, "tri", 0.5) * env(d, 0.001, 0.09, power=2.0) * 0.6
     knock = filt(noise(d), low=2500, high=300) * env(d, 0.0005, 0.03, power=2.0) * 0.7
-    return filt(bonk + knock, low=7000)
+    return fx.fire(bonk + knock, 8221, 2400, 0.3, (150, 80, 0.04, 0.5), 0.12, 0.04, 0.2, 1.1, 7000, 0.15)
 
 
 def gn2_ring_catch():
@@ -142,6 +148,7 @@ def gn2_ring_equip():
     out = roll.copy()
     place(out, clunk(300, 0.06), 0.3, 0.6)
     place(out, _ting(1320, 0.12, 0.15), 0.31, 1.0)
+    fx.place_at(out, fx.tick(8241, 2600, gain=0.8), 0.3)
     return filt(out, low=8000)
 
 
@@ -154,6 +161,9 @@ def gn2_ring_reload():
         place(out, _ting(990 + i * 130, 0.08, 0.08), 0.75 + i * 0.07, 1.0)
     place(out, band(noise(0.16), 2000, 700) * env(0.16, 0.03, power=1.0), 0.8, 0.3)
     place(out, clunk(260, 0.11), 1.14, 0.9)                                         # shoved home
+    fx.place_at(out, fx.tick(8231, 2200), 0.28)
+    fx.place_at(out, fx.holo(0.3, 600, 1600, 8232, 0.2), 0.78)
+    fx.place_at(out, fx.latch(8233, 220, 0.6), 1.14)
     return filt(out, low=8500)
 
 

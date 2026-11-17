@@ -13,6 +13,8 @@ import numpy as np
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
 
+import _sidearm_fx as fx
+
 
 def _clack(freq, d, gain=1.0):
     """Two hard plastic halves knocking: a short hollow pitched knock."""
@@ -41,7 +43,7 @@ def yoyo_throw():
     place(out, _clack(700, 0.06, 0.7), 0.0, 1.0)
     place(out, _zing(500, 1400, 0.22, 0.5), 0.01, 1.0)
     place(out, click(0.015, 2200, 0.5), 0.0, 1.0)
-    return filt(out, low=7000)
+    return fx.fire(out, 9001, 2600, 0.5, (120, 55, 0.07, 0.8), 0.18, 0.045, 0.22, 1.15, 7000)
 
 
 def yoyo_hit():
@@ -50,7 +52,7 @@ def yoyo_hit():
     thock = filt(noise(d), low=1500, high=100) * env(d, 0.001, 0.04, power=2.0) * 0.9
     out = _sub_thump(170, 70, d, 0.06) + thock
     place(out, _clack(560, 0.1, 0.6), 0.0, 1.0)
-    return crush(filt(out, low=6500), 1.3)
+    return fx.fire(out, 9011, 2400, 0.5, (110, 45, 0.08, 0.9), 0.15, 0.04, 0.2, 1.3, 6500, 0.2)
 
 
 def yoyo_snap():
@@ -82,7 +84,7 @@ def yoyo_trip():
     place(out, _zing(900, 500, 0.12, 0.45), 0.0, 1.0)
     place(out, _sub_thump(140, 60, 0.2, 0.05) * 0.8, 0.04, 1.0)
     place(out, _clack(480, 0.07, 0.4), 0.02, 1.0)
-    return filt(out, low=6000)
+    return fx.fire(out, 9021, 2200, 0.3, (120, 50, 0.07, 0.6), 0.15, 0.04, 0.2, 1.1, 6000, 0.15)
 
 
 def yoyo_equip():
@@ -91,6 +93,7 @@ def yoyo_equip():
     for i in range(4):
         place(out, click(0.012, 2400 - i * 150, 0.35), 0.03 + i * 0.045, 1.0)
     place(out, _clack(760, 0.07, 0.6), 0.24, 1.0)
+    fx.place_at(out, fx.holo(0.14, 650, 1400, 9041, 0.12), 0.05)
     return filt(out, low=7000)
 
 
@@ -99,6 +102,7 @@ def yoyo_reload():
     d = 0.18
     out = band(noise(d), 1800, 900) * env(d, 0.02, d, power=1.2) * 0.25
     place(out, click(0.015, 1600, 0.35), 0.0, 1.0)
+    fx.place_at(out, fx.tick(9051, 2200, gain=0.3), 0.0)
     return filt(out, low=6000)
 
 

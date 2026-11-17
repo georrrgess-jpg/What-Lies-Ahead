@@ -13,6 +13,8 @@ import numpy as np
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
 
+import _sidearm_fx as fx
+
 C5 = 523.25
 
 
@@ -37,7 +39,7 @@ def jp_fire():
     place(out, band(noise(0.06), 900, 700) * env(0.06, 0.0005, 0.05, power=2.0) * 0.8, 0.0, 1.0)
     place(out, _spring(260, 520, 0.3, wobble=28.0, depth=0.25, gain=0.35), 0.01, 1.0)
     place(out, click(0.02, 2200, 0.5), 0.0, 1.0)
-    return crush(filt(out, low=7000), 1.3)
+    return fx.fire(out, 8801, 2000, 0.6, (100, 40, 0.14, 1.1), 0.32, 0.055, 0.3, 1.3, 7000)
 
 
 def jp_land():
@@ -79,7 +81,7 @@ def jp_boing():
     t = t_axis(0.4)
     crackle = band(noise(0.4), 5000, 3000) * (np.random.default_rng(13).random(len(t)) > 0.97) * 2.0
     place(out, crackle * env(0.4, 0.01, 0.4, power=1.5), 0.05, 0.5)
-    return crush(filt(out, low=8500), 1.2)
+    return fx.fire(out, 8811, 2400, 0.5, (100, 40, 0.12, 1.0), 0.3, 0.06, 0.25, 1.2, 8500, 0.25)
 
 
 def jp_punch():
@@ -88,7 +90,7 @@ def jp_punch():
     out = _sub_thump(120, 50, d, 0.05) * 1.4
     place(out, band(noise(0.05), 1100, 900) * env(0.05, 0.0005, 0.04, power=2.2) * 1.2, 0.0, 1.0)
     place(out, band(noise(0.03), 3200, 1600) * env(0.03, 0.0005, 0.02, power=2.0) * 0.4, 0.0, 1.0)
-    return crush(filt(out, low=7000), 1.5)
+    return fx.fire(out, 8821, 2200, 0.5, (100, 40, 0.08, 0.9), 0.15, 0.04, 0.2, 1.5, 7000, 0.2)
 
 
 def jp_poof():
@@ -128,6 +130,7 @@ def jp_reload():
     """The reload's start: the gun turns over with a clack."""
     out = silence(0.3)
     place(out, clunk(200, 0.09, 0.6), 0.0, 1.0)
+    fx.place_at(out, fx.tick(8851, 2200), 0.0)
     return filt(out, low=7000)
 
 
@@ -137,6 +140,8 @@ def jp_equip():
     for i in range(3):
         place(out, click(0.014, 2800, 0.35), i * 0.06, 1.0)
     place(out, _spring(240, 360, 0.2, wobble=30.0, depth=0.2, gain=0.3), 0.2, 1.0)
+    fx.place_at(out, fx.tick(8841, 2600, gain=0.8), 0.0)
+    fx.place_at(out, fx.holo(0.16, 600, 1300, 8842, 0.14), 0.16)
     return filt(out, low=6500)
 
 
