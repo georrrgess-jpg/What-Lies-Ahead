@@ -45,6 +45,7 @@ var _timer_rows := {}
 var _tier: Label
 var _tier_key := ""
 var _shown_key := ""
+var _prompt_key: Label
 var _best_shown := -1
 
 
@@ -179,8 +180,8 @@ func _build_prompt() -> void:
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(row)
 	row.add_child(UiKit.label("HOLD", 24, UiKit.MUTED, true))
-	var key := Loadout.key_hint(&"interact").get_slice(" / ", 0).to_upper()
-	row.add_child(UiKit.key_glyph(key, 42.0))
+	_prompt_key = UiKit.key_glyph(KeyGlyph.action_key(&"interact"), 42.0).get_child(0) as Label
+	row.add_child(_prompt_key.get_parent())
 	_prompt_text = UiKit.label("", 30, Color.WHITE, true)
 	row.add_child(_prompt_text)
 	_ticket_icon = HudIcon.make(&"ticket", 30.0, UiKit.AMBER)
@@ -209,9 +210,10 @@ func _update_prompt() -> void:
 	var price := int(p.get("price", 0))
 	var disabled := bool(p.get("disabled", false))
 	var short := price > _director.tickets
-	var key := "%s|%d|%s|%s|%s" % [p["action"], price, p.get("note", ""), short, disabled]
+	var key := "%s|%d|%s|%s|%s|%s" % [p["action"], price, p.get("note", ""), short, disabled, GamepadInput.in_use]
 	if key != _shown_key:
 		_shown_key = key
+		_prompt_key.text = KeyGlyph.action_key(&"interact")
 		var accent: Color = p.get("accent", UiKit.AMBER)
 		_prompt_box.border_color = UiKit.RED if short and not disabled else accent
 		_prompt_text.text = String(p["action"]).to_upper()

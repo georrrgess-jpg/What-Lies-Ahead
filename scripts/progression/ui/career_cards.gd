@@ -159,9 +159,8 @@ static func milestone_tile(ch: Challenge) -> CareerTile:
 	var pay := "%s XP" % Wallet.format(ch.xp)
 	if ch.sparks > 0:
 		pay = "%d %s and %s" % [ch.sparks, Wallet.CURRENCY, pay]
-	var rewards := ChallengeBook.rewards(ch)
-	if not rewards.is_empty():
-		pay += " and the %s %s" % [rewards[0].display_name, rewards[0].slot_label().to_lower()]
+	for reward in ChallengeBook.rewards(ch):
+		pay += " and the %s %s" % [reward.display_name, reward.slot_label().to_lower()]
 	var count := "reached" if done else "%s / %s" % [Wallet.format(ChallengeBook.progress(ch)), Wallet.format(ch.goal)]
 	tile.detail = "%s  ·  %s  ·  %s  ·  pays %s" % [ch.display_name.to_upper(), ch.describe(), count, pay]
 	return tile

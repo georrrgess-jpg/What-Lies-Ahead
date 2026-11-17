@@ -29,6 +29,7 @@ var _last_heat := -1.0
 var _last_pips := -1
 var _last_gauge := -1.0
 var _melee_key := ""
+var _melee_pad := false
 var _drawn := false
 
 
@@ -156,8 +157,9 @@ func _draw_gauge(fill: float, data: WeaponData) -> void:
 	_heat_fill.bg_color = col
 	for i in int(ceil(fill * HEAT_SEGMENTS - 0.01)):
 		draw_style_box(_heat_fill, Rect2(bar.position.x, bar.end.y - (i + 1) * step + 2.0, bar.size.x, step - 4.0))
-	if _melee_key == "":
-		_melee_key = Loadout.key_hint(WeaponController.MELEE_ACTION)
+	if _melee_key == "" or _melee_pad != GamepadInput.in_use:
+		_melee_pad = GamepadInput.in_use
+		_melee_key = KeyGlyph.action_key(WeaponController.MELEE_ACTION, Loadout.key_hint(WeaponController.MELEE_ACTION))
 	var font := get_theme_default_font()
 	var at := Vector2(bar.position.x - 20.0, bar.end.y + 24.0)
 	draw_string_outline(font, at, _melee_key, HORIZONTAL_ALIGNMENT_CENTER, bar.size.x + 40.0, 16, 5, Color(UiKit.INK, 0.85))

@@ -231,9 +231,17 @@ func show_station(parts: Array[bool]) -> void:
 
 func _key_name(token: String) -> String:
 	match token:
-		"WASD", "MOUSE", "LMB", "RMB", "WHEEL":
-			return token
-	return Loadout.key_hint(StringName(token)).get_slice(" / ", 0).to_upper()
+		"WASD":
+			return KeyGlyph.action_key(&"move_forward", token)
+		"MOUSE":
+			return KeyGlyph.action_key(&"look_left", token)
+		"LMB":
+			return KeyGlyph.action_key(&"fire", token)
+		"RMB":
+			return KeyGlyph.action_key(&"aim", token)
+		"WHEEL":
+			return KeyGlyph.action_key(&"weapon_next", token)
+	return KeyGlyph.action_key(StringName(token))
 
 
 # --- skip prompt ----------------------------------------------------------------------

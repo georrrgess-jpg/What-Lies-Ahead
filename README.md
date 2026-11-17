@@ -76,6 +76,7 @@ The Windows build is unsigned, so SmartScreen may ask for confirmation.
 | At the loadout station: overshield / damage boost | G / B |
 | At the loadout station: swap the held weapon | Z / X (or ← / →) |
 | Pause | Esc or P |
+| Gamepad | Left stick move, right stick look, RT fire, LT aim, A jump, B slide, X reload, Y switch weapon, L3 sprint, R3 chain saw, RB dash, LB next station weapon, D-pad station purchases, Start pause, Back start the wave early; hits rumble the pad, an unplugged pad pauses the run, and the key prompts show pad buttons while a pad is in use (`scripts/player/gamepad_input.gd`) |
 
 All of these are Godot InputMap actions (*Project → Project Settings → Input Map*); the
 station swap and purchase actions and the dash are added at start-up (`scripts/weapons/loadout.gd`,
