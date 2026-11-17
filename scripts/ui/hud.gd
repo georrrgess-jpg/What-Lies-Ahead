@@ -96,6 +96,8 @@ var _custom_objective := ""
 var _objective_key := -1
 var _station_key := -1
 var _station_weapon: WeaponData
+var _controls_row: HBoxContainer
+var _pad_seen := false
 var _shown_tickets := -1
 var _clear_award := ""
 
@@ -404,19 +406,38 @@ func _build_controls(level: LevelData) -> void:
 	row.add_theme_constant_override("separation", 22)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	plate.add_child(row)
-	for entry in [["WASD", "Move"], ["SHIFT", "Sprint"], ["LMB", "Fire"], ["RMB", "Aim"], [_short_key(&"reload"), "Reload"],
-			["1 / 2", "Switch"], [_short_key(&"start_wave"), "Start wave"], [_short_key(&"pause"), "Pause"]]:
-		row.add_child(UiKit.key_prompt(entry[0], entry[1]))
+	_controls_row = row
+	_fill_controls()
 	plate.visible = false
 	plate.tooltip_text = level.display_name
 	_controls = plate
 	_anchor(plate, Control.PRESET_CENTER_BOTTOM, Vector2(0, -134), Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_BEGIN)
 
 
-## The first key bound to `action`, for prompts ("Escape" becomes "ESC").
+## The key caps of the reminder, as the keyboard or the pad in use names them.
+func _fill_controls() -> void:
+	for child in _controls_row.get_children():
+		child.queue_free()
+	for entry in [[&"move_forward", "WASD", "Move"], [&"sprint", "SHIFT", "Sprint"], [&"fire", "LMB", "Fire"], [&"aim", "RMB", "Aim"],
+			[&"reload", "", "Reload"], [&"weapon_next", "1 / 2", "Switch"], [&"start_wave", "", "Start wave"], [&"pause", "", "Pause"]]:
+		_controls_row.add_child(UiKit.key_prompt(KeyGlyph.action_key(entry[0], entry[1]), entry[2]))
+
+
+## The first key bound to `action` (or its pad button while a pad is in use), for prompts.
 func _short_key(action: StringName) -> String:
-	var key := Loadout.key_hint(action).get_slice(" / ", 0)
-	return "ESC" if key == "Escape" else key.to_upper()
+	return KeyGlyph.action_key(action)
+
+
+## When the last input switches between keyboard and pad, every key prompt is redrawn.
+func _sync_pad_prompts() -> void:
+	if GamepadInput.in_use == _pad_seen:
+		return
+	_pad_seen = GamepadInput.in_use
+	_fill_controls()
+	_station.configure(_station_offers())
+	_status_key.get_child(0).text = _short_key(&"reload")
+	_objective_key = -1
+	_station_key = -1
 
 
 ## The four purchases of the station, in the order of their keys.
@@ -438,6 +459,7 @@ func _station_offers() -> Array:
 func _process(delta: float) -> void:
 	if director == null or player == null:
 		return
+	_sync_pad_prompts()
 	_feed_reticle()
 	_update_vignette(delta)
 	_update_weapon_status()

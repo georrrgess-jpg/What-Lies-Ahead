@@ -247,9 +247,9 @@ static func _fit_name(label: Label, text: String, width: float, size: int, min_s
 
 ## The footer: what the start key does and the seconds left in the break.
 func set_next_wave(text: String, seconds: int, key := "F") -> void:
+	_next_key.text = key
 	if _next.text != text:
 		_next.text = text
-		_next_key.text = key
 	if seconds == _shown_seconds:
 		return
 	_shown_seconds = seconds

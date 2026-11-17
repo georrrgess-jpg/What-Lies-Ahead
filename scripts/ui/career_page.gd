@@ -163,7 +163,8 @@ func _build_goals() -> Control:
 	_goal_detail = _detail_line()
 	_goal_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_goal_detail.max_lines_visible = 2
-	_goal_detail.custom_minimum_size.y = 56
+	_goal_detail.clip_text = false
+	_goal_detail.custom_minimum_size.y = 64
 	col.add_child(_goal_detail)
 	return board
 

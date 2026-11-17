@@ -76,6 +76,7 @@ The Windows build is unsigned, so SmartScreen may ask for confirmation.
 | At the loadout station: overshield / damage boost | G / B |
 | At the loadout station: swap the held weapon | Z / X (or ← / →) |
 | Pause | Esc or P |
+| Gamepad | Left stick move, right stick look, RT fire, LT aim, A jump, B slide, X reload, Y switch weapon, L3 sprint, R3 chain saw, RB dash, LB next station weapon, D-pad station purchases, Start pause, Back start the wave early; hits rumble the pad, an unplugged pad pauses the run, and the key prompts show pad buttons while a pad is in use (`scripts/player/gamepad_input.gd`) |
 
 All of these are Godot InputMap actions (*Project → Project Settings → Input Map*); the
 station swap and purchase actions and the dash are added at start-up (`scripts/weapons/loadout.gd`,
@@ -297,11 +298,13 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
   eleven one-time milestones.
 - **Weapon mastery**: 10 ranks per weapon in Bronze, Silver, Gold, Diamond and Prismatic
   tiers, earned by using that weapon. Ranks unlock mastery camos and badges and pay Sparks.
-- **Shop**: 194 items, every price a multiple of 250: Common 250, Rare 750, Epic 1,500,
-  Legendary 3,000, and the best items each on their own price up to Wind-Up Wally at
-  10,000 (operators, then animated finishes, gloves and kill effects). A common or rare is
-  affordable after a run, a legendary after about four, the most expensive item after
-  about nine. Four items a day are featured at 20% off (always a round number). Every item
+- **Shop**: 239 items (376,500 Sparks in all), every price a multiple of 250: Common 250,
+  Rare 750, Epic 1,500, Legendary 3,000, and the best items each on their own price up to
+  Wind-Up Wally at 10,000 (operators, then animated finishes, gloves and kill effects).
+  The Mythic operator **Madame Fortuna** costs 20,000, twice Wind-Up Wally: she has her own
+  spotlight above today's picks and is never discounted. A common or rare is
+  affordable after a run, a legendary after about four, Wind-Up Wally after about nine and
+  Madame Fortuna after about eighteen. Four items a day are featured at 20% off (always a round number). Every item
   has a 3D preview and a confirm step. Station prices in tickets are multiples of 25 and
   rise world by world.
 - **Locker**: 472 cosmetics in eleven categories: 19 operators (characters that also set

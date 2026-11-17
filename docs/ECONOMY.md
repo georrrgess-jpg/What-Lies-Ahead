@@ -97,8 +97,9 @@ among the picks. An item is in the shop when its
 `CosmeticItem.price` is above 0; it is owned once bought. A `requirement` on a priced
 item only gates the purchase (sights that open at a mastery rank).
 
-For sale (206 items, 315,000 Sparks, sights included; 198 items and 286,500 Sparks before
-the update 13 showpieces; 277,350 before the price rule):
+For sale (239 items, 376,500 Sparks, sights included and Madame Fortuna's 20,000; 206 items
+and 315,000 Sparks before the update 13 cosmetics and the Mythic operator; 277,350 before the
+price rule):
 the original 69 plus 31 new weapon finishes,
 5 operators, 9 gloves, and the new cells, charms, decals, sights, kill effects, tracers,
 banners and titles that are not earned. New earned items use the item's own
@@ -341,8 +342,8 @@ headshots, combo multiplier 1.35, the first two waves flawless, half the tickets
 | Runs as a main to mastery rank 10 | 19 | 14 |
 | Goals on the Career page | 52 | 14 (3 contracts + 11 milestones) |
 | Currency | none | Sparks: 55,700 earned by the cap |
-| Items for sale | 0 | 194, 283,250 Sparks (69 and 47,150 before the price rise and the new cosmetics) |
-| Clears to buy everything | - | 259 (388 runs) |
+| Items for sale | 0 | 239, 376,500 Sparks (69 and 47,150 before the price rise and the new cosmetics) |
+| Clears to buy everything | - | about 344 (516 runs): the 259 (388 runs) of the 283,250-Sparks shop, scaled to 376,500 |
 | Runs of saving from a new profile to afford | - | a common or a rare 1, an epic 2, a legendary 4, the cheapest showpiece above the ladder (3,250) 4, a 6,500 showpiece 7, the dearest Legendary (Wind-Up Wally, 10,000) 9, the Mythic Madame Fortuna (20,000) about 18 |
 | Sparks per run | - | 1,137 in the first 15 runs, 723 after the cap |
 | Sparks per session of three runs | - | 3,412 in the first five sessions, 2,170 after the cap |
