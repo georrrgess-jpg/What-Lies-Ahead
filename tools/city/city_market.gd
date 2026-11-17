@@ -20,9 +20,23 @@ const FACE_N := -8.0
 const FACE_S := 8.0
 ## Stall islands (x centres): two stalls back to back at each end of one.
 const ISLANDS := [40.0, 52.0, 72.0, 82.0]
-## How far a stall's origin sits off the island's centre line (its counter's
-## back on the line, its front toward the lane).
-const STALL_Z := 1.15
+## How far a stall's origin sits off the island's centre line: its back on
+## the line, touching the other stall's (no notch between the colliders to
+## snag on), its front toward the lane.
+const STALL_Z := 1.09
+## The stall's solid part in its own frame (counter, posts, the crates
+## stacked on its +X side, the awning; not the scorch on the paving in
+## front, which the kit's bounds include): centre and size.
+const STALL_BODY := [Vector3(0.2815, 1.415, 0.18), Vector3(3.963, 2.83, 2.54)]
+## The kit stall reaches further on +X (its crate stack) than on -X: a stall
+## turned to face the other lane moves this far east so both line up.
+const STALL_SKEW := 0.563
+## Island ends with a solid stack of crates across them (the ones facing the
+## entrance and the open middle; the crossings between islands stay clear):
+## [island x, side].
+const CRATE_ENDS := [[40.0, -1.0], [52.0, 1.0], [72.0, -1.0], [82.0, 1.0]]
+## Half the island's length (the stall pairs' outer ends).
+const ISLAND_HALF := 3.96
 ## Where the lantern strings cross: only where both sides have a wall to
 ## hook them to (the side alleys and the tower alley have none).
 const LANTERN_X := [46.0, 53.5, 61.5, 75.0, 88.5]
@@ -88,9 +102,10 @@ func _init(builder: Variant) -> void:
 static func stall_spots() -> Array:
 	var spots := []
 	for x: float in ISLANDS:
-		for dx in [-2.0, 2.0]:
-			spots.append([Vector3(x + dx, 0, -STALL_Z), 180.0])
-			spots.append([Vector3(x + dx, 0, STALL_Z), 0.0])
+		for dx: float in [-1.98, 1.98]:
+			var at: float = x + dx - STALL_SKEW * 0.5
+			spots.append([Vector3(at + STALL_SKEW, 0, -STALL_Z), 180.0])
+			spots.append([Vector3(at, 0, STALL_Z), 0.0])
 	return spots
 
 
@@ -99,10 +114,16 @@ static func stall_spots() -> Array:
 static func stalls(builder: Variant, parent: Node3D) -> void:
 	var i := 0
 	for spot in stall_spots():
-		builder._solid_kit(parent, "city_market_stall", "Stall%d" % i, spot[0], spot[1], Vector3(3.6, 2.8, 2.4))
+		var yaw: float = spot[1]
+		builder._kit(parent, "city_market_stall", "Stall%d" % i, spot[0], yaw, Vector3(3.6, 2.8, 2.4))
+		var body: StaticBody3D = builder._collider(parent, "Stall%dCollision" % i, STALL_BODY[1], spot[0])
+		body.position = spot[0] + Basis(Vector3.UP, deg_to_rad(yaw)) * STALL_BODY[0]
+		body.rotation.y = deg_to_rad(yaw)
+		body.set_meta("top", STALL_BODY[1].y)
 		i += 1
 	for k in ISLANDS.size():
-		builder._player_block(parent, "Stall%dCap" % k, Vector3(8.0, 3.0, 5.2), Vector3(ISLANDS[k], 4.5, 0.0))
+		# Over the whole island, awning rims included (nobody stands on a stall).
+		builder._player_block(parent, "Stall%dCap" % k, Vector3(8.6, 3.0, 6.6), Vector3(ISLANDS[k], 4.5, 0.0))
 
 
 func build() -> void:
@@ -277,14 +298,22 @@ func _wares(origin: Vector3, yaw: float, ware: Array, index: int) -> void:
 				_add("ball", Transform3D(Basis().scaled(Vector3.ONE * 0.12), q), c0)
 
 
-## Crates stacked at each island's two ends (out of the lanes), one knocked off.
+## Crates stacked across some island ends (solid, flush with the stalls).
 func _island_crates() -> void:
-	for x: float in ISLANDS:
-		for s in [-1.0, 1.0]:
-			var base := Vector3(x + s * 4.35, 0, 0.0)
-			_add("crate", Transform3D(Basis().scaled(Vector3(0.6, 0.45, 0.45)), base + Vector3(0, 0.225, -0.35)), WOOD)
-			_add("crate", Transform3D(Basis(Vector3.UP, 0.25).scaled(Vector3(0.6, 0.45, 0.45)), base + Vector3(0, 0.225, 0.3)), WOOD.darkened(0.15))
-			_add("crate", Transform3D(Basis(Vector3.UP, -0.2).scaled(Vector3(0.6, 0.45, 0.45)), base + Vector3(0, 0.675, -0.05)), WOOD.lightened(0.1))
+	var solid := Node3D.new()
+	solid.name = "MarketCrates"
+	b.geo.add_child(solid)
+	for end in CRATE_ENDS:
+		var s: float = end[1]
+		var base := Vector3(end[0] + s * (ISLAND_HALF + 0.42), 0, 0.0)
+		b._collider(solid, "Crates%d%s" % [int(end[0]), "W" if s < 0.0 else "E"], Vector3(0.9, 0.9, 5.0), base + Vector3(-s * 0.05, 0.45, 0))
+		for k in 7:
+			var z := -2.1 + k * 0.7
+			var tall := k % 3 != 1
+			var tint := WOOD.darkened(0.12 * (k % 3))
+			_add("crate", Transform3D(Basis(Vector3.UP, 0.12 * (k % 3) - 0.1).scaled(Vector3(0.8, 0.45, 0.62)), base + Vector3(0, 0.225, z)), tint)
+			if tall:
+				_add("crate", Transform3D(Basis(Vector3.UP, 0.2 - 0.1 * (k % 2)).scaled(Vector3(0.7, 0.45, 0.6)), base + Vector3(0, 0.675, z)), tint.lightened(0.1))
 
 
 ## Strings of paper lanterns across the street, between the bulb cables,
