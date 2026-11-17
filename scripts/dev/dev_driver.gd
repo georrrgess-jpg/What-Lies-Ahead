@@ -509,7 +509,8 @@ var _pause_busy := false
 ## Pause -> resume, pause -> restart run, pause -> main menu. Checks tree pause
 ## state and mouse capture at each step.
 func _pause_test() -> void:
-	if _pause_busy:
+	# After "main menu" the level stays up under the menu curtain for a moment.
+	if _pause_busy or _pause_step > 2:
 		return
 	_pause_busy = true
 	await get_tree().create_timer(0.5, true, false, true).timeout
