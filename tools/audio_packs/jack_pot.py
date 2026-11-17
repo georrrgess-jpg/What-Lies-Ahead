@@ -87,10 +87,10 @@ def jp_boing():
 def jp_punch():
     """The glove lands: a padded thwack."""
     d = 0.25
-    out = _sub_thump(120, 50, d, 0.05) * 1.4
+    out = _sub_thump(130, 64, d, 0.05) * 1.2
     place(out, band(noise(0.05), 1100, 900) * env(0.05, 0.0005, 0.04, power=2.2) * 1.2, 0.0, 1.0)
     place(out, band(noise(0.03), 3200, 1600) * env(0.03, 0.0005, 0.02, power=2.0) * 0.4, 0.0, 1.0)
-    return fx.fire(out, 8821, 2200, 0.5, (100, 40, 0.08, 0.9), 0.15, 0.04, 0.2, 1.5, 7000, 0.2)
+    return fx.fire(out, 8821, 2200, 0.5, (115, 62, 0.07, 0.7), 0.15, 0.04, 0.2, 1.5, 7000, 0.2)
 
 
 def jp_poof():

@@ -50,9 +50,9 @@ def yoyo_hit():
     """The yo-yo cracking into a zombie: a meaty thock and a plastic clack."""
     d = 0.26
     thock = filt(noise(d), low=1500, high=100) * env(d, 0.001, 0.04, power=2.0) * 0.9
-    out = _sub_thump(170, 70, d, 0.06) + thock
+    out = _sub_thump(170, 78, d, 0.06) + thock
     place(out, _clack(560, 0.1, 0.6), 0.0, 1.0)
-    return fx.fire(out, 9011, 2400, 0.5, (110, 45, 0.08, 0.9), 0.15, 0.04, 0.2, 1.3, 6500, 0.2)
+    return fx.fire(out, 9011, 2400, 0.5, (120, 62, 0.07, 0.7), 0.15, 0.04, 0.2, 1.3, 6500, 0.2)
 
 
 def yoyo_snap():
