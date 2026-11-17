@@ -46,7 +46,7 @@ Toy-arcade, warm and punchy, never piercing. Levels are `eff` (dB at the output)
 | kill_effect (cosmetics) | -23 .. -17 | |
 | enemy_voice | -21 .. -16 | groans sit under the guns |
 | enemy_attack / telegraph / special | -18 .. -11 | warnings must cut through; still under -9 |
-| cue (waves, gates, bosses, Endless events) | -18 .. -10 | boss slams and the boss defeat may reach -9 |
+| cue (waves, gates, bosses, Endless events) | -18 .. -10 | boss slams, the Wrecker's impact and the boss defeat may reach -9 |
 | player (steps, hurt, dash) | -27 .. -17 | |
 | ui | -22 .. -14 | hover/tick micro-sounds -30 .. -24 |
 | ambience emitters (loops in the world) | -26 .. -16 | |
@@ -346,3 +346,59 @@ Most important for the weapon lanes:
   sounds; `weap_lava_lift` -10.7, `gc_sat`, `pcp_holo`, `sz_rail`, `sz_clunk` are handling
   sounds louder than most shots; `tm6_launch` -25.9, `pcp_pop` -31, `pcp_puff`, `mdm_stick`,
   `gn8_dunk_pump` -33 are lost.
+
+## Final weapon check (after merging u15-snd_wpn_a and u15-snd_wpn_b)
+
+Both weapon branches merged into this branch; `audio/mix.tres` conflict resolved by keeping
+every trim from both sides (`empty_click` from snd_wpn_b, its owner). Re-audited
+(`docs/sound_audit/after.csv`, `after/` sheets include the new weapon sounds) and only
+weapon **trims** adjusted:
+
+| sound | eff before trim | new trim | why |
+|---|---|---|---|
+| weap_cryo_start | -15.2 | -2.0 | an auto's start over the -17 auto ceiling |
+| weap_rail_fire | -13.4 | -2.0 (was -1.5) | over -14 |
+| weap_rip_fire | -13.7 | -1.5 (was -1.0) | over -14 |
+| mdm_fire | -20.8 | +1.0 | under the -20 floor |
+| yoyo_throw | -21.0 | -2.5 (was -3.5) | under the -20 floor |
+| gc_sat, pcp_holo, sz_clunk, sz_rail, weap_lava_lift | -10.7 .. -12.4 | -3.0 .. -5.0 | handling cues louder than the guns; now -15.5 |
+| weap_lava_flip, weap_lava_ripple, gc_ready, sz_roll_up, hub_spin_loop, weap_ripsaw_idle | -14.2 .. -15.4 | -0.5 .. -3.5 | over the -16 handling ceiling |
+| gn8_twister_pop | -11.8 | -5.0 (was -4.0) | over the -13 impact ceiling |
+
+Every weapon fire sound now sits inside its band (`tools/sound_audit_weapons.py`):
+
+| weapon | fire sound | ceiling | eff | crest | % >4 kHz | % <80 Hz |
+|---|---|---|---|---|---|---|
+| arc_coil | weap_arc_fire | -17 | -17.5 -> -17.1 | 12.2 -> 9.9 | 13.6 -> 6.3 | 0 -> 1 |
+| balloon_darter | gn8b_dart_fire | -14 | -19.7 -> -19.1 | 11.0 -> 12.3 | 0.0 -> 0.0 | 0 -> 6 |
+| bumper_lobber | weap_lobber_fire | -11 | -13.5 -> -13.6 | 6.0 -> 6.8 | 0.0 -> 0.0 | 0 -> 0 |
+| comet_cannon | weap_cannon_fire | -11 | -13.6 -> -13.7 | 6.6 -> 9.3 | 1.2 -> 0.6 | 14 -> 28 |
+| cryo_beam | weap_cryo_start | -17 | -17.3 -> -17.2 | 14.3 -> 12.3 | 9.5 -> 5.4 | 0 -> 0 |
+| drum_popper | weap_popper_fire | -14 | -15.7 -> -15.7 | 7.7 -> 9.5 | 0.0 -> 0.0 | 5 -> 6 |
+| dunk_tank | gn8_dunk_fire | -17 | -21.9 -> -22.0 | 12.5 -> 12.3 | 0.7 -> 0.6 | 0 -> 3 |
+| ground_control | gc_fire | -14 | -17.3 -> -16.8 | 15.1 -> 12.8 | 0.0 -> 0.0 | 0 -> 0 |
+| hubcap_boomerang | hub_throw | -11 | -17.2 -> -16.4 | 13.5 -> 12.6 | 0.3 -> 0.2 | 0 -> 0 |
+| ion_carbine | carbine_fire | -17 | -18.4 -> -18.2 | 10.2 -> 10.5 | 4.8 -> 3.8 | 0 -> 0 |
+| jack_pot | jp_fire | -11 | -16.3 -> -15.4 | 11.7 -> 11.1 | 0.0 -> 0.0 | 0 -> 23 |
+| lava_lampoon | weap_lava_fire | -17 | -15.5 -> -17.2 | 8.9 -> 7.7 | 0.4 -> 0.2 | 0 -> 0 |
+| markdown_marker | mdm_fire | -14 | -21.4 -> -19.8 | 14.5 -> 15.3 | 0.2 -> 0.1 | 0 -> 0 |
+| popcorn_popper | pcp_fire | -17 | -17.8 -> -18.9 | 9.0 -> 8.1 | 0.1 -> 0.0 | 0 -> 0 |
+| pulse_pistol | pistol_fire | -14 | -15.8 -> -15.2 | 9.7 -> 11.0 | 4.2 -> 1.5 | 0 -> 1 |
+| rail_lancer | weap_rail_fire | -14 | -12.6 -> -13.9 | 6.0 -> 8.0 | 0.4 -> 0.3 | 77 -> 21 |
+| ring_toss | gn2_ring_fire | -11 | -16.6 -> -15.2 | 12.9 -> 12.0 | 0.0 -> 0.0 | 0 -> 4 |
+| riptide | weap_rip_fire | -14 | -13.7 -> -14.2 | 8.0 -> 8.5 | 0.0 -> 0.0 | 0 -> 1 |
+| scatter_blaster | scatter_fire | -11 | -12.4 -> -13.1 | 6.1 -> 6.3 | 3.8 -> 2.5 | 5 -> 7 |
+| shutterbug | gn8b_shutter_fire | -11 | -15.7 -> -14.7 | 11.4 -> 11.5 | 0.0 -> 0.0 | 0 -> 9 |
+| sparkler | gn2_sparkler_fire | -17 | -21.0 -> -21.6 | 12.1 -> 13.2 | 2.5 -> 2.0 | 0 -> 1 |
+| strike_zone | sz_fire | -14 | -14.5 -> -14.0 | 12.2 -> 11.4 | 0.0 -> 0.0 | 11 -> 13 |
+| t_minus_six | tm6_fire | -14 | -17.3 -> -16.4 | 13.7 -> 12.7 | 5.6 -> 1.2 | 0 -> 1 |
+| teacup_twister | gn8_twister_fire | -11 | -13.7 -> -13.3 | 9.9 -> 10.0 | 0.0 -> 0.0 | 0 -> 1 |
+| toxic_ripsaw | weap_ripsaw_fire | -11 | -12.4 -> -12.7 | 7.6 -> 8.7 | 0.0 -> 0.0 | 1 -> 2 |
+| whirligig | weap_whirl_fire | -17 | -21.3 -> -21.0 | 7.7 -> 6.8 | 0.0 -> 0.0 | 0 -> 0 |
+| yoyo_loco | yoyo_throw | -14 | -23.1 -> -20.0 | 18.0 -> 13.1 | 0.4 -> 0.1 | 0 -> 2 |
+
+Still open for the weapon sounds (generator work, not trims): loop seams that click
+(`sz_roll_loop` 70 %, `hub_spin_loop` 65 %, `yoyo_roll_loop` 25 %, `weap_cryo_loop` 9 %,
+`weap_ripsaw_idle` 8 %, `yoyo_grind_loop` 7 %) and single-tone "whistles" on ready/lock
+cues (`weap_rip_ready` 76 %, `tm6_lock` 78 %, `gn2_ring_catch` 72 %, `jp_poof` 72 %,
+`mdm_pop` 74 %, `weap_rail_ready` 65 % at 2.6 kHz).
