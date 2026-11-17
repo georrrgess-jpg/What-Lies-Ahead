@@ -92,7 +92,11 @@ func _build_stage() -> void:
 
 
 func _frame_camera() -> void:
-	if framing == Framing.PORTRAIT:
+	if framing == Framing.PORTRAIT and item != null and item.params.has("aura"):
+		# An aura's halo (and a tall hat) needs headroom: pull back and aim higher.
+		_camera.position = Vector3(0, 1.78, 2.7)
+		_camera.look_at(Vector3(0, 1.74, 0))
+	elif framing == Framing.PORTRAIT:
 		_camera.position = Vector3(0, 1.7, 2.2)
 		_camera.look_at(Vector3(0, 1.63, 0))
 	else:
