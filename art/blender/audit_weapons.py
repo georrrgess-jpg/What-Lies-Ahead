@@ -87,6 +87,8 @@ JOINTS["popcorn_popper"] = [("Lid", "Shell"), ("PourHolo", "Shell"), ("PourHolo"
 # The kicker's rod slides into the body; the balls sit on their rails.
 WEAPONS.append("strike_zone")
 CELLS["strike_zone"] = ["Cell", "SpareHolo", "RailHolo"]
+# Hand poses that hold a part by design (the glove closes on it).
+HOLDS = {"jack_pot": [("ArmLFist", "Crank")]}
 JOINTS["strike_zone"] = [("Kicker", "Shell"), ("Ball", "Shell"), ("Spare", "Cell"), ("Spare", "Shell")]
 
 
@@ -152,6 +154,8 @@ def audit(name, poses, verbose=True):
     mount = objs["SightMount"].matrix_world.translation
     for k, (_t, verts, _p) in trees.items():
         top = max(v.z for v in verts)
+        if k.endswith("Fist"):      # hidden at rest: a reload-only hand pose
+            continue
         if k.startswith("IronSight"):
             near = [v for v in verts if abs(v.y - mount.y) < RAIL_FLAT / 2 and abs(v.x - mount.x) < 0.03 and v.z > mount.z + 0.0005]
             if near:
@@ -184,7 +188,7 @@ def audit(name, poses, verbose=True):
         return len(cache[a][0].overlap(cache[b][0]))
 
 
-    arms = [k for k in solid if k.startswith("Arm")]
+    arms = [k for k in solid if k.startswith("Arm") and not k.endswith("Fist")]
     others = [k for k in solid if not k.startswith("Arm")]
     for arm in arms:
         for k in others:
@@ -233,7 +237,7 @@ def audit(name, poses, verbose=True):
         for arm in [k for k in live if k.startswith("Arm")]:
             for k in live:
                 # A hand's glove shapes sit on it by design: only the other hand counts.
-                if k == arm or (k.startswith("Arm") and (k < arm or k[:4] == arm[:4])):
+                if k == arm or (k.startswith("Arm") and (k < arm or k[:4] == arm[:4])) or (arm, k) in HOLDS.get(name, []):
                     continue
                 n, spot = where(posed[arm], posed[k])
                 if n:

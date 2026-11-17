@@ -141,8 +141,8 @@ def crank_fist(M, knob):
     along the top), its forearm coming up from below and behind. Built round the
     handle's centre `knob`; the reload swaps it for ArmL while the hand is out of
     sight (hidden otherwise, like the glove shapes it has none of)."""
-    kx, ky, kz = knob
-    k = Vector(knob)
+    # A touch outward, so the thumb clears the drum while it winds.
+    k = Vector(knob) + Vector((-0.008, 0, 0))
     finger_r, pitch = 0.0105, 0.0185
     wrap = KNOB_R + GAP + finger_r
     palm_z = KNOB_R + GAP + 0.0135
@@ -265,7 +265,7 @@ def build_jack_pot():
              obox("CrankArm", (0.006, 0.012, 0.056), (hx - 0.02, hy, hz + 0.022), (1, 0, 0), (0, 1, 0), bevel=0.003, m=M["steel"]),
              cyl("CrankKnobStem", 0.0045, 0.022, (hx - 0.031, hy, hz + CRANK_R), rot=rad(0, 90, 0), segs=10, bevel=0.0, m=M["steel"]),
              cyl("CrankKnob", KNOB_R, KNOB_LEN, (hx - KNOB_OUT, hy, hz + CRANK_R), rot=rad(0, 90, 0), segs=14, bevel=0.003, m=M["trim"]),
-             sphere("CrankKnobEnd", KNOB_R + 0.003, (hx - KNOB_OUT - KNOB_LEN / 2, hy, hz + CRANK_R), m=M["trim"], segs=12, rings=8)]
+             ]
     # The pinned brass drum.
     dx, dy, dz = drum_c
     drum = [ycyl("DrumCore", 0.0105, 0.07, dy, z=dz, x=dx, m=M["steel"], segs=18, bevel=0.002)]
