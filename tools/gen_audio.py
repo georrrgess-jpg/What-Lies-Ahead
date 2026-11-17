@@ -383,16 +383,29 @@ def _shimmer(d, decay, centre=6500):
     return (n + filt(sparkle, low=9000) * 2.0) * env(d, 0.002, decay, power=2.5)
 
 
+def _fx():
+    """The sidearms' shared layers (tools/audio_packs/_sidearm_fx.py)."""
+    packs = os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio_packs")
+    if packs not in sys.path:
+        sys.path.insert(0, packs)
+    import _sidearm_fx
+    return _sidearm_fx
+
+
 def pistol_fire():
-    """Pulse Pistol: crisp snap, mid 'pew', tight sub punch and a sparkly tail
-    (band-limited to ~10 kHz, so the snap cracks without hissing)."""
-    d = 0.32
-    snap = filt(noise(d), high=2600, low=9500) * env(d, 0.0003, 0.02, power=2.0) * 1.1
-    pew = _laser_layer(2400, 380, d, 0.45) * env(d, 0.0008, 0.16, power=2.0) * 0.5
-    body = sweep(620, 150, d, "square", 0.5) * env(d, 0.0008, 0.09, power=2.2) * 0.4
-    sub = _sub_thump(170, 48, d, 0.12) * 1.1
-    tail = _shimmer(d, 0.22, 5500) * 0.15
-    return crush(filt(snap + pew + body + sub + tail, low=10000), 1.3)
+    """Pulse Pistol: a 2 ms crack, the mid "pew" over a squarer body, a tight
+    90 Hz punch that ducks the body, and a short slap-back room tail
+    (band-limited to ~9.5 kHz, so the crack snaps without hissing)."""
+    fx = _fx()
+    d = 0.3
+    crack = fx.snap(d, 7101, 3400, ms=2.0, gain=0.9)
+    pew = _laser_layer(2200, 360, d, 0.45) * env(d, 0.0008, 0.15, power=2.0) * 0.45
+    body = sweep(560, 140, d, "square", 0.5) * env(d, 0.0008, 0.1, power=2.2) * 0.36
+    mid = band(fx.hiss(d, 7102), 900, 380) * env(d, 0.001, 0.05, power=2.0) * 0.9
+    punch = fx.punch(d, 150, 52, 0.11, 1.15)
+    tail = _shimmer(d, 0.18, 5200) * 0.1
+    dry = crack + fx.duck(pew + body + mid + tail, 0.006, 0.35, 0.05) + punch
+    return fx.glue(fx.room(dry, 7103, size=0.24, slap=0.048, wet=0.36), 1.35)
 
 
 def carbine_fire():
@@ -434,12 +447,19 @@ def charge(seconds, f0=300, f1=1400, gain=1.0):
 
 
 def pistol_reload():
-    out = silence(1.25)
-    place(out, clunk(190, 0.1), 0.08, 0.8)                                   # cell drops
-    place(out, band(noise(0.16), 2200, 900) * env(0.16, 0.03, power=1.0), 0.3, 0.5)   # hand moves
-    place(out, clunk(230, 0.12), 0.68, 1.0)                                  # cell seats
-    place(out, click(0.03, 3200), 0.95, 0.9)                                 # slide
-    place(out, charge(0.22, 500, 1500), 1.0, 0.45)
+    """Pulse Pistol "holo print" (1.1 s, scripts/player/weapon_view.gd): the
+    slide racks back, the spent cell drops, a hologram cell prints in, seats,
+    the slide snaps home and the hammer falls with a "ready" ping."""
+    fx = _fx()
+    out = silence(1.3)
+    fx.place_at(out, fx.tick(7201, 2400, gain=0.9), 0.1)                   # slide racks back
+    fx.place_at(out, fx.latch(7202, 170, 0.9), 0.16)                       # cell released
+    fx.place_at(out, band(fx.hiss(0.14, 7203), 1800, 700) * env(0.14, 0.02, power=1.2), 0.24, 0.18)  # cell slides out
+    fx.place_at(out, fx.holo(0.3, 520, 1500, 7204, 0.16), 0.48)            # hologram prints
+    fx.place_at(out, fx.latch(7205, 230, 1.0), 0.82)                       # cell seats
+    fx.place_at(out, fx.tick(7206, 3000, gain=1.0), 0.95)                  # slide snaps home
+    fx.place_at(out, fx.tick(7207, 2000, 0.01, 0.6), 0.99)                 # hammer
+    fx.place_at(out, fx.ready(1046.5, 0.11), 1.0)                          # ready
     return out
 
 
@@ -468,9 +488,14 @@ def scatter_reload():
 
 
 def empty_click():
-    out = silence(0.22)
-    place(out, click(0.025, 3000), 0.0, 1.0)
-    place(out, sweep(520, 300, 0.14, "square") * env(0.14, 0.002, power=1.5), 0.03, 0.3)
+    """Dry fire: a hammer click and a short, hollow "nope" knock (soft
+    triangle, no buzz: every weapon plays it, sometimes several times a second)."""
+    fx = _fx()
+    out = silence(0.2)
+    fx.place_at(out, fx.tick(7301, 2600, 0.012, 1.0), 0.0)
+    knock = sweep(420, 260, 0.12, "tri") * env(0.12, 0.002, 0.1, power=1.8)
+    fx.place_at(out, filt(knock, low=2500), 0.025, 0.45)
+    fx.place_at(out, fx.punch(0.08, 180, 110, 0.05, 0.25), 0.0)
     return out
 
 

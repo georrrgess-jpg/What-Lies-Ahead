@@ -127,7 +127,8 @@ def gn8_dunk_fire():
     psh = filt(noise(d), high=500, low=3600) * env(d, 0.002, 0.06, power=1.5) * 0.7
     push = _sub_thump(170, 90, d, 0.04) * 0.8
     gurgle = _bloop(380, 520, d, 0.12)
-    return crush(filt(psh + push + gurgle, low=5500), 1.2)
+    import _sidearm_fx as fx  # the sidearms' shared layers, imported here: other weapons share this pack
+    return fx.fire(psh + push + gurgle, 8501, 2200, 0.35, (120, 70, 0.035, 0.5), 0.07, 0.03, 0.12, 1.2, 5500, 0.15)
 
 
 def gn8_dunk_pump():
@@ -146,6 +147,8 @@ def gn8_dunk_equip():
     place(out, _splash(0.25, 0.4, seed=7), 0.0, 1.0)
     place(out, _bloop(300, 600, 0.12, 0.3), 0.05, 1.0)
     place(out, clunk(380, 0.05), 0.24, 0.5)
+    import _sidearm_fx as fx  # the sidearms' shared layers, imported here: other weapons share this pack
+    fx.place_at(out, fx.tick(8541, 2400, gain=0.4), 0.24)
     return filt(out, low=6500)
 
 
@@ -165,6 +168,10 @@ def gn8_dunk_reload():
     place(out, gn8_dunk_pump(), 1.26, 0.6)
     place(out, filt(noise(0.25), high=500, low=3500) * env(0.25, 0.01, 0.2, power=1.4) * 0.5, 1.46, 1.0)  # squirt
     place(out, _ting(1397, 0.3, 0.3), 1.5, 1.0)                                  # bell
+    import _sidearm_fx as fx  # the sidearms' shared layers, imported here: other weapons share this pack
+    fx.place_at(out, fx.tick(8531, 2200), 0.24)
+    fx.place_at(out, fx.holo(0.32, 520, 1500, 8532, 0.2), 0.65)
+    fx.place_at(out, fx.latch(8533, 250), 1.02)
     return filt(out, low=8000)
 
 
