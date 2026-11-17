@@ -111,7 +111,7 @@ fullscreen.
 - **Checkpoint.** Clearing wave 3 reaches the checkpoint: lose on wave 4 or later and the
   results screen offers **Continue** from wave 4 (full health, some tickets, 75% rewards).
 - **Two weapons.** You carry a primary and a secondary, each picked from its own section
-  in the **Arsenal** (11 primaries, 7 secondaries; a slot only takes its own class). Each
+  in the **Arsenal** (16 primaries, 11 secondaries; a slot only takes its own class). Each
   keeps its own ammo for the whole run. Switching cancels a reload.
 - **The loadout station** (each world has its own, with a tall beacon; a waypoint points
   to it during breaks) sells an energy top-up for both weapons, one heal per break (a
@@ -304,14 +304,20 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
   about nine. Four items a day are featured at 20% off (always a round number). Every item
   has a 3D preview and a confirm step. Station prices in tickets are multiples of 25 and
   rise world by world.
-- **Locker**: 409 cosmetics in eleven categories: 18 operators (characters that also set
-  your first-person arms), 85 weapon finishes (including 17 new animated shaders: marquee
-  bulbs, data rain, lightning, aurora, warp speed, liquid mercury, stained glass…),
-  20 sights, 42 energy cells (with moving patterns: bubbles, lava, slosh, warp…), 33
-  decals, 25 charms (a Ferris wheel, a UFO and a teacup that spin), 24 gloves (with real shapes:
-  gauntlets, tape, mitts, wraps, fins, studs, crystals, claws), 18 kill effects (disco
-  ball, slot-machine 7s, black hole, snow globe…), 18 tracers, 53 banners (26 animated
-  scenes) and 73 titles, grouped as CHARACTER, WEAPON, EFFECTS and PROFILE, plus a
+- **Locker**: 472 cosmetics in eleven categories: 19 operators (characters that also set
+  your first-person arms; the Mythic **Madame Fortuna** wears an animated aura of a floor
+  sigil, a crystal ball, orbiting fortune cards and sparkles wherever she is shown),
+  103 weapon finishes (including 23 animated shaders: marquee bulbs, data rain, lightning,
+  aurora, warp speed, liquid mercury, stained glass, Insert Coin's arcade screen, Kintsugi's
+  gold seams, a Koi Pond, ticking Clockwork, Hot Rod flames, Holo Tiger foil…), 26 sights
+  (Mission Control's radar reticle sweeps), 45 energy cells (with moving patterns: bubbles,
+  lava, slosh, warp, a pixel chomper, circling koi…), 35 decals, 34 charms (a Ferris wheel,
+  a UFO, a teacup, a pinwheel and a disco ball that spin), 24 gloves (with real shapes:
+  gauntlets, tape, mitts, wraps, fins, studs, crystals, claws), 28 kill effects (disco
+  ball, slot-machine 7s, black hole, snow globe, an arcade K.O.!, balloons that lift the
+  zombie away, a rainbow with a pot of gold, a flying-saucer abduction…), 21 tracers, 57
+  banners (many with animated scenes) and 80 titles, grouped as CHARACTER, WEAPON, EFFECTS
+  and PROFILE, plus a
   **Prints** tab for your Prize Prints. Each tab has search, sort (featured, rarity up or
   down, name, newest) and filters (owned, locked, for sale; where it comes from), kept per
   tab. Weapon items are customised for the weapon picked at the top. Everything shows in a
