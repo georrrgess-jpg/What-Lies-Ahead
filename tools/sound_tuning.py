@@ -11,6 +11,9 @@ TUNING maps a sound name (its _b/_c takes inherit it) to:
     pitch   playback-rate factor (1.12 = about two semitones up, and shorter)
     drive   soft saturation (tanh) before the EQ: gives a pure sub sine the
             harmonics that let small speakers play it
+    seam    loops only: crossfade (ms) of the loop's last stretch into its
+            start, so the end flows into the start without a click (the loop
+            gets that much shorter)
 Volume is not set here (write_wav normalises the peak): it lives in the
 per-sound trims of audio/mix.tres.
 
@@ -31,6 +34,12 @@ _DEEP_PUNCH = {"drive": 3.0, "hp": 70.0, "bells": ((120.0, 4.0, 0.8), (300.0, 2.
 _FOURTH = 2 ** (5 / 12)
 
 TUNING = {
+    # The Strike Zone's rolling loop clicked at its seam (the jump at the wrap
+    # was larger than 93 % of the loop's own sample steps; now 23 %). The
+    # audit's seam "click" also flags hub_spin_loop, yoyo_roll_loop and
+    # weap_cryo_loop, but their wraps are ordinary steps (20-55th percentile).
+    "sz_roll_loop": {"seam": 40.0},
+    "hub_spin_loop": {"seam": 40.0},
     # Mud -> punch (audit: > 35 % of the energy below 80 Hz).
     "rounds_boss_pound": dict(_DEEP_PUNCH, pitch=_FOURTH),     # a 75 Hz sine thump -> 100 Hz
     "rounds_boss_defeat": dict(_DEEP_PUNCH, pitch=_FOURTH),    # (a fourth keeps the fanfare on the A440 grid)
@@ -128,4 +137,20 @@ def apply(name, x, loop=False):
         g = _gain(n, t)
         spec *= g if x.ndim == 1 else g[:, None]
         x = np.fft.irfft(spec, n, axis=0)[pad:pad + len(x) if pad else None]
+    if loop and t.get("seam"):
+        x = _seam(x, int(t["seam"] * SR / 1000.0))
     return x
+
+
+def _seam(x, k):
+    """Fades the last `k` samples into the first `k` and drops them: the new
+    last sample is the one that came just before them, so the wrap is smooth."""
+    if k <= 0 or 2 * k >= len(x):
+        return x
+    n = len(x)
+    r = 0.5 - 0.5 * np.cos(np.linspace(0.0, np.pi, k))
+    if x.ndim > 1:
+        r = r[:, None]
+    out = x[:n - k].copy()
+    out[:k] = x[:k] * r + x[n - k:] * (1.0 - r)
+    return out
