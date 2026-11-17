@@ -1666,6 +1666,7 @@ func _build_ambience() -> void:
 	_ambient("TubeBuzz", Vector3(9.0, HALL_CEILING - 0.8, -34.5), &"city_buzz_loop", 9.0, -2.0)
 	_build_helicopter()
 	_build_warning_lights()
+	load("res://tools/city/city_life.gd").build(self)
 
 
 ## The police helicopter circling the city (group "city_helicopter"; the
