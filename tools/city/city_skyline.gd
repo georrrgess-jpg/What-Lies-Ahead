@@ -14,9 +14,8 @@ const SHADERS := "res://art/shaders/"
 const CENTRE := Vector3(10.0, 0.0, -24.0)
 ## The districts' footprint: its own floors and blocks (kept clear).
 const CITY := Rect2(-100.0, -104.0, 222.0, 168.0)
-## The generator's PRECINCT and MARKET district rects.
+## The generator's PRECINCT district rect.
 const PRECINCT := Rect2(-74.0, -24.0, 40.0, 48.0)
-const MARKET := Rect2(34.0, -8.0, 56.0, 16.0)
 ## Openings in the street the fill must not cover: the subway stairs and the
 ## Tower stairs.
 const HOLES := [Rect2(-4.0, -28.0, 8.0, 13.0), Rect2(40.0, -37.0, 16.0, 10.0)]
@@ -199,11 +198,13 @@ func _in_arena(p: Vector3) -> bool:
 	return false
 
 
-## Neon along the parapet edge each Market and Precinct block turns to its
-## district (pink and cyan, police blue and red).
+## Neon along the parapet edge each Precinct block turns to its district
+## (police blue and red). Not the Market's: from its street those long tubes
+## read as loose lines across the sky; its neon is on the shops
+## (tools/city/city_market.gd).
 func _trim(r: Rect2, h: float, k: int) -> void:
-	var district := MARKET if r.get_center().x > 30.0 else PRECINCT
-	var colors := [Color(1.0, 0.2, 0.7), Color(0.2, 0.9, 1.0)] if district == MARKET else [Color(0.25, 0.4, 1.0), Color(1.0, 0.12, 0.12)]
+	var district := PRECINCT
+	var colors := [Color(0.25, 0.4, 1.0), Color(1.0, 0.12, 0.12)]
 	if not r.grow(1.0).intersects(district):
 		return
 	var y := h - 0.05

@@ -66,6 +66,9 @@ const EXIT_FOOT_X := 42.0
 const EXIT_TOP_X := 54.0
 const PRECINCT := Rect2(-74.0, -24.0, 40.0, 48.0)
 const MARKET := Rect2(34.0, -8.0, 56.0, 16.0)
+## The Market's bulb cables (x): only where both facades have a wall.
+const MARKET_CABLES_X := [37.0, 50.0, 59.0, 71.0, 80.5]
+const MarketKit := preload("res://tools/city/city_market.gd")
 const TOWER := Rect2(46.0, -72.0, 48.0, 50.0)
 const TOWER_ALLEY := Rect2(62.0, -22.0, 8.0, 14.0)
 ## The back street from the square's south-west to the Precinct (a second
@@ -611,32 +614,21 @@ func _build_market() -> void:
 	var m := Node3D.new()
 	m.name = "Market"
 	geo.add_child(m)
-	# Stall islands down the middle: lanes either side, crossings between them.
-	var islands := [40.0, 52.0, 72.0, 82.0]
-	var i := 0
-	for x in islands:
-		for k in 2:
-			_solid_kit(m, "city_market_stall", "Stall%d%d" % [i, k], Vector3(x - 2.0 + k * 4.0, 0, 0.0), k * 180.0, Vector3(3.6, 2.8, 2.4))
-		_player_block(m, "Stall%dCap" % i, Vector3(8.0, 3.0, 2.8), Vector3(x, 4.5, 0.0))
-		i += 1
+	# Stall islands down the middle (stalls back to back, one facing each
+	# lane): lanes either side, crossings between them.
+	MarketKit.stalls(self, m)
 	# The fire-trap gas line crosses the open middle (x 58..66).
 	_solid_kit(m, "city_debris", "DebrisA", Vector3(62.0, 0, 5.5), 30.0, Vector3(2.0, 0.5, 1.6))
 	_solid_kit(m, "city_dumpster", "DumpsterN", Vector3(46.0, 0, -6.8), 0.0, Vector3(2.0, 1.4, 1.2))
 	_solid_kit(m, "city_dumpster", "DumpsterS", Vector3(76.0, 0, 6.8), 180.0, Vector3(2.0, 1.4, 1.2))
 	_wreck(m, "city_car_burnt_b", "MarketCar", Vector3(64.0, 0, -5.4), 8.0, true)
 	_wreck(m, "city_truck_jackknifed", "EastTruck", Vector3(91.0, 0, 1.5), 60.0, true)
-	# Neon signs on both facades (flickering), and a cable of bulbs over the street.
-	# Blade signs (a) stand out from the wall, panels (b) hang on it; both
-	# models have their origin at street level under the wall.
-	var signs := [[Vector3(38.0, 2.6, -8.0), 0.0, "city_neon_sign_a"], [Vector3(55.0, 2.4, 8.0), 180.0, "city_neon_sign_b"],
-		[Vector3(68.0, 2.0, -8.0), 0.0, "city_neon_sign_b"], [Vector3(86.0, 2.8, 8.0), 180.0, "city_neon_sign_a"],
-		[Vector3(48.0, 2.4, 8.0), 180.0, "city_neon_sign_a"], [Vector3(79.0, 3.2, -8.0), 0.0, "city_neon_sign_a"]]
-	var colors := [Color(1.0, 0.2, 0.7), Color(0.2, 0.9, 1.0), Color(1.0, 0.75, 0.2), Color(0.5, 0.35, 1.0)]
-	i = 0
-	for s in signs:
-		var c: Color = colors[i % colors.size()]
-		_neon_sign(dressing, s[2], "Neon%d" % i, s[0], s[1], c)
-		i += 1
+	# The kit's two neon signs, once each: the hotel's blade sign (it stands
+	# out from the wall) and the noodle bar's panel over its door; both
+	# models have their origin at street level under the wall. The other
+	# shops' signs are tools/city/city_market.gd's.
+	_neon_sign(dressing, "city_neon_sign_a", "NeonHotel", Vector3(71.0, 4.4, -8.0), 0.0, Color(1.0, 0.2, 0.7))
+	_neon_sign(dressing, "city_neon_sign_b", "NeonNoodles", Vector3(70.6, 2.4, 8.0), 180.0, Color(1.0, 0.75, 0.2))
 	_market_canopy()
 	_fire_at(fx, "MarketBarrel", Vector3(57.0, 0, -6.6), 0.8, true)
 	_smoke(fx, "SmokeMarket", Vector3(110.0, 14.0, 20.0), 1.3)
@@ -649,9 +641,13 @@ func _market_canopy() -> void:
 	var bulbs: Array[Array] = [[], [], []]
 	var cable: Array[Transform3D] = []
 	var k := 0
-	for x in range(38, 90, 6):
-		var a := Vector3(float(x), 6.2 + (k % 2) * 0.6, MARKET.position.y)
-		var b := Vector3(float(x) + 3.0, 6.0 + ((k + 1) % 2) * 0.5, MARKET.end.y)
+	# Straight across, only where both sides have a wall to hook onto (not
+	# over the side alleys), each end on a bracket.
+	for x in MARKET_CABLES_X:
+		var a := Vector3(x, 6.2 + (k % 2) * 0.6, MARKET.position.y)
+		var b := Vector3(x, 6.0 + ((k + 1) % 2) * 0.5, MARKET.end.y)
+		for e in [a, b]:
+			_visual_box(dressing, "CableHook%d%s" % [int(x), "N" if e.z < 0.0 else "S"], Vector3(0.12, 0.2, 0.22), Vector3(e.x, e.y, e.z * 0.9975), _mat("hook", Color(0.2, 0.2, 0.22), 0.6))
 		var n := 12
 		for i in n + 1:
 			var t := float(i) / n
@@ -677,8 +673,8 @@ func _market_canopy() -> void:
 		var mm := _multimesh("MarketBulbs%d" % c, sphere, xforms)
 		mm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		dressing.add_child(mm)
-	# Two banners across the street.
-	for entry in [[40.0, "NEON MARKET", colors[0]], [80.0, "OPEN ALL NIGHT", colors[1]]]:
+	# Two banners across the street (between walls, not over the alleys).
+	for entry in [[38.5, "NEON MARKET", colors[0]], [83.0, "LUCKY LANE", colors[1]]]:
 		var x: float = entry[0]
 		var col: Color = entry[2]
 		_visual_box(dressing, "Banner%d" % int(x), Vector3(0.25, 1.1, 9.0), Vector3(x, 7.6, 0.0), _mat("banner_back", Color(0.08, 0.06, 0.1), 0.6))
@@ -2616,40 +2612,13 @@ func _roof_spot(inner: Rect2, h: float) -> Vector3:
 # The Neon Market's glow and the Metro's life
 # ---------------------------------------------------------------------------
 
-## More signs up the facades, neon tubes along the shopfronts, lit stalls,
+## Lit stalls, the shops and signs (tools/city/city_market.gd),
 ## steam from the drains, the colours pooling on the wet paving.
 func _build_market_glow() -> void:
-	var colors := [Color(1.0, 0.2, 0.7), Color(0.2, 0.9, 1.0), Color(1.0, 0.75, 0.2), Color(0.5, 0.35, 1.0), Color(0.4, 1.0, 0.45)]
-	var more := [[46.0, 4.6, -1.0], [52.0, 6.2, -1.0], [59.0, 4.0, -1.0], [74.0, 6.0, -1.0], [84.5, 4.2, -1.0],
-		[41.0, 5.0, 1.0], [50.5, 3.8, 1.0], [61.0, 5.6, 1.0], [70.0, 3.6, 1.0], [76.5, 6.4, 1.0], [88.0, 4.4, 1.0]]
-	var i := 0
-	for s in more:
-		var side: float = s[2]
-		var model := "city_neon_sign_a" if i % 2 == 0 else "city_neon_sign_b"
-		_neon_sign(dressing, model, "NeonUpper%d" % i, Vector3(s[0], s[1], MARKET.position.y if side < 0.0 else MARKET.end.y), 0.0 if side < 0.0 else 180.0, colors[(i + 1) % colors.size()], false)
-		i += 1
-	# Tubes along both shopfronts at awning height, broken into runs.
-	i = 0
-	for side in [-1.0, 1.0]:
-		var z: float = (MARKET.position.y + 0.12) if side < 0.0 else (MARKET.end.y - 0.12)
-		var x := MARKET.position.x + 1.0
-		while x < MARKET.end.x - 2.0:
-			var run := _rng.randf_range(2.5, 5.5)
-			var skip: bool = (side < 0.0 and x + run > 39.5 and x < 44.5) or (side < 0.0 and x + run > 61.5 and x < 70.5) or (side > 0.0 and x + run > 53.5 and x < 58.5)
-			if not skip:
-				var c: Color = colors[i % colors.size()]
-				var y := 3.1 + (i % 2) * 0.35
-				_instance("tube", Transform3D(Basis().scaled(Vector3(run, 1, 1)), Vector3(x + run * 0.5, y, z)), c)
-				if i % 3 == 0:
-					_instance("tube", Transform3D(Basis().scaled(Vector3(run * 0.7, 1, 1)), Vector3(x + run * 0.5, y + 0.5, z)), colors[(i + 2) % colors.size()])
-				_wall_glow(Vector3(x + run * 0.5, y, z - side * 0.12), Vector3(0, 0, -side), run * 0.6, c, 0.3)
-				_pool(Vector3(x + run * 0.5, 0, z - side * 1.6), run * 0.55, c, false, 0.28)
-				i += 1
-			x += run + _rng.randf_range(1.0, 3.0)
 	# The stalls' own light under their awnings.
-	for x in [40.0, 52.0, 72.0, 82.0]:
+	for x in MarketKit.ISLANDS:
 		for side in [-1.0, 1.0]:
-			_pool(Vector3(x, 0, side * 2.6), 3.2, Color(1.0, 0.72, 0.38), false, 0.4)
+			_pool(Vector3(x, 0, side * 3.6), 3.2, Color(1.0, 0.72, 0.38), false, 0.4)
 	_omni(fx, "StallLightW", Vector3(46.0, 2.6, 0.0), Color(1.0, 0.7, 0.4), 1.2, 9.0)
 	_omni(fx, "StallLightE", Vector3(77.0, 2.6, 0.0), Color(1.0, 0.7, 0.4), 1.2, 9.0)
 	# Steam out of the drains, lit by the signs.
@@ -2659,11 +2628,12 @@ func _build_market_glow() -> void:
 	_steam(Vector3(57.0, 0, -7.4), Color(0.9, 0.55, 0.85), 0.3)
 	_steam(Vector3(79.0, 0, 7.4), Color(0.5, 0.8, 1.0), 0.3)
 	# Bulb strings cast their warm glow down the lanes.
-	for x in range(40, 90, 6):
-		_pool(Vector3(float(x) + 1.5, 0, 0.0), 3.6, Color(1.0, 0.68, 0.4), false, 0.22)
+	for x in MARKET_CABLES_X:
+		_pool(Vector3(x, 0, 0.0), 3.6, Color(1.0, 0.68, 0.4), false, 0.22)
 	# Lanterns hanging in the side alleys beyond the zombie entrances.
 	_tape_line(Vector3(40.0, 0, -8.4), Vector3(44.0, 0, -8.4), 1)
 	_tape_line(Vector3(54.0, 0, 8.4), Vector3(58.0, 0, 8.4), 2)
+	MarketKit.new(self).build()
 
 
 ## The Metro's furniture beyond the benches: tiled walls, a ceiling of panels
