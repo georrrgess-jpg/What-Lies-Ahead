@@ -65,7 +65,8 @@ effects and tracers, then cells, sights and charms, then decals, banners and tit
 
 | Price | Item | |
 | --- | --- | --- |
-| 10,000 | Wind-Up Wally | operator (the dearest item of the shop) |
+| 20,000 | Madame Fortuna | Mythic operator (the dearest item of the shop, never discounted) |
+| 10,000 | Wind-Up Wally | operator (the dearest Legendary) |
 | 9,500 | Pixel Pal | operator |
 | 9,000 | Quicksilver | animated finish |
 | 8,500 | Holo Foil | animated finish |
@@ -89,7 +90,8 @@ Character), the epic ladder at 1,500; Halfpipe (operator) 1,250, Prize Hoarder 1
 the rare ladder at 750; Top Dog (operator) 500, the common ladder at 250. Operators
 always cost more than anything else of their rarity. `tools/economy_probe.gd` checks the
 rule, the non-overlapping rarities, that the 15 dearest items each have their own price
-and that the dearest is an operator. An item is in the shop when its
+and that the dearest is an operator, the Mythic spotlight at 20,000 that is never
+among the picks. An item is in the shop when its
 `CosmeticItem.price` is above 0; it is owned once bought. A `requirement` on a priced
 item only gates the purchase (sights that open at a mastery rank).
 
@@ -111,6 +113,17 @@ each rarity where possible. The selection depends only on the day and on what th
 player did not own when the day's selection was first asked for; it is stored for the
 day, so buying a featured item does not pull another one into the discount. It changes
 at local midnight.
+
+**Mythic.** Mythic (`CosmeticItem.Rarity.MYTHIC`, above Legendary) is earned in
+Endless, with one exception sold in the shop: **Madame Fortuna**, the fortune-teller
+operator, at 20,000 Sparks, twice Wind-Up Wally and the dearest item. She has no ladder
+price (the rule's floor for Mythic is 0) and stays out of the daily picks: the Shop
+shows her in its own spotlight before today's picks (`ShopCatalog.spotlight()`,
+`scripts/ui/shop_spotlight.gd`: a glowing red-gold frame under a MYTHIC ribbon), always
+at full price. Saving for her takes about 18 runs from a new profile (1,137 Sparks a
+run in the first 15) or 28 after the level cap (723 a run). Everywhere she is shown
+in 3D (Locker, Shop, home menu, player card) she wears her animated Mythic aura
+(`scripts/cosmetics/operator_aura.gd`).
 
 **NEW.** An item is flagged new in the shop while it is for sale, open, not looked at
 yet, and either belongs to a slot listed in `EconomyRules.new_slots` (sights) or has a
@@ -312,7 +325,7 @@ headshots, combo multiplier 1.35, the first two waves flawless, half the tickets
 | Currency | none | Sparks: 55,700 earned by the cap |
 | Items for sale | 0 | 194, 283,250 Sparks (69 and 47,150 before the price rise and the new cosmetics) |
 | Clears to buy everything | - | 259 (388 runs) |
-| Runs of saving from a new profile to afford | - | a common or a rare 1, an epic 2, a legendary 4, the cheapest showpiece above the ladder (3,250) 4, a 6,500 showpiece 7, the dearest item (Wind-Up Wally, 10,000) 9 |
+| Runs of saving from a new profile to afford | - | a common or a rare 1, an epic 2, a legendary 4, the cheapest showpiece above the ladder (3,250) 4, a 6,500 showpiece 7, the dearest Legendary (Wind-Up Wally, 10,000) 9, the Mythic Madame Fortuna (20,000) about 18 |
 | Sparks per run | - | 1,137 in the first 15 runs, 723 after the cap |
 | Sparks per session of three runs | - | 3,412 in the first five sessions, 2,170 after the cap |
 

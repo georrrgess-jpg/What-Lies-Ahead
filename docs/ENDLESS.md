@@ -48,7 +48,8 @@ Boss: `the_wrecker`, every `boss_every` (10) waves.
 
 Rewards: the city camos (weapon finishes, `fin_city_*`), the Endless primary weapon
 (`hubcap_boomerang`, reach wave 10) and the **Mythic** finish (`CosmeticItem.Rarity.MYTHIC`,
-reach wave 30). Mythic is the rarity above Legendary; it is earned, never sold.
+reach wave 30). Mythic is the rarity above Legendary; it is earned, never sold, with one
+exception: the Shop's Mythic operator, Madame Fortuna (docs/ECONOMY.md).
 
 ## The map's scene contract
 
