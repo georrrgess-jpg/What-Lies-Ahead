@@ -381,7 +381,8 @@ def popcorn_cycle(w):
 	per = m["HEAT_PER_SHOT"]
 	warm = (m["HOT_AT"] - m["WARM_AT"]) / per
 	hot = max(0.0, w["magazine_size"] - warm)
-	rest = per / m["COOL_RATE"]
+	# Each burst (the heat between the bot's rest and resume lines) also waits out the cooling delay.
+	rest = per / m["COOL_RATE"] + m["COOL_DELAY"] * per / (m["BOT_REST"] - m["BOT_RESUME"])
 	time = warm * m["WARM_INTERVAL"] + hot * (w["fire_interval"] + rest)
 	return time / w["magazine_size"], warm / w["magazine_size"], hot / w["magazine_size"]
 
