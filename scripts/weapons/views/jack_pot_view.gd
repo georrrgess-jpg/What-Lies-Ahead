@@ -38,8 +38,9 @@ var _time := 0.0
 
 
 func setup(v: WeaponView) -> void:
-	for part in ["Box", "Lid", "Crank", "Drum", "Trigger"]:
+	for part in ["Box", "Lid", "Crank", "Drum", "Trigger", "ArmLFist"]:
 		v.register_part(part)
+	v.part("ArmLFist").visible = false
 	for i in BULBS:
 		v.register_part("Bulb%d" % i)
 		_bulbs.append(v.part("Bulb%d" % i))

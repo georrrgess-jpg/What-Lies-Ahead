@@ -173,8 +173,9 @@ static func flash(parent: Node, at: Vector3, color: Color, radius: float, life :
 
 ## A ring racing out along the floor under `at`. It lies on the ground (found
 ## with a ray), so it reads as a ring from any angle instead of a band across
-## the screen; an airburst with no floor close below has no ring.
-static func shockwave(parent: Node, at: Vector3, color: Color, radius: float) -> void:
+## the screen; an airburst with no floor close below has no ring. `strength`
+## (0-1) dims the ring and keeps it inside `radius` the lower it is.
+static func shockwave(parent: Node, at: Vector3, color: Color, radius: float, strength := 1.0) -> void:
 	if parent == null or not parent.is_inside_tree():
 		return
 	var space := (parent as Node3D).get_world_3d().direct_space_state if parent is Node3D else parent.get_viewport().world_3d.direct_space_state
@@ -192,8 +193,9 @@ static func shockwave(parent: Node, at: Vector3, color: Color, radius: float) ->
 		basis = Basis(Quaternion(Vector3.UP, normal.normalized()))
 	r.global_transform = Transform3D(basis, Vector3(hit["position"]) + normal * 0.04)
 	r.scale = Vector3.ONE * radius * 0.25
+	r.transparency = 1.0 - strength
 	var tw := r.create_tween().set_parallel(true)
-	tw.tween_property(r, "scale", Vector3.ONE * radius * 1.1, 0.36).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tw.tween_property(r, "scale", Vector3.ONE * radius * lerpf(0.6, 1.1, strength), 0.36).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 	tw.tween_property(r, "transparency", 1.0, 0.36).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.chain().tween_callback(r.queue_free)
 

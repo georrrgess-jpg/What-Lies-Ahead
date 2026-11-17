@@ -70,6 +70,7 @@ def build_t_minus_six():
     for p in trig:
         p.data.materials[0] = hazard
         p.scale = (1.5, 1.25, 1.1)
+        p.name = "Fat" + p.name     # the export node takes the name "Trigger"
     y_trig = G["trigger"][0]
 
     rail_top = 0.1

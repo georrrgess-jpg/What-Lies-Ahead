@@ -36,6 +36,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from weapon_kit import *  # noqa: F401,F403
+from weapon_kit import _digit, _forearm  # noqa: E402
 
 BULBS = 3
 # The launch cup leans up this far (degrees) from the barrel line.
@@ -43,6 +44,11 @@ CUP_TILT = 22.0
 # The crank's throw: its knob turns on this radius round the hub
 # (scripts/weapons/reloads/jack_pot_reload.gd KNOB).
 CRANK_R = 0.044
+# The crank's handle: a fat bar, long enough for a whole fist, centred this far
+# out from the hub (the reload's hand follows it: jack_pot_reload.gd KNOB).
+KNOB_OUT = 0.071
+KNOB_LEN = 0.062
+KNOB_R = 0.0085
 # The mine's spring and arm at rest (metres, at the world box's scale).
 BOX_SIZE = 0.34
 
@@ -127,6 +133,36 @@ def body_stripes(prefix, side_x, y0, y1, z0, z1, width, pitch, m, depth=0.002):
             i += 1
         c += pitch
     return parts
+
+
+def crank_fist(M, knob):
+    """The support hand's other pose, for winding: an overhand fist closed round
+    the crank's handle (palm on top, four fingers curled down its far side, thumb
+    along the top), its forearm coming up from below and behind. Built round the
+    handle's centre `knob`; the reload swaps it for ArmL while the hand is out of
+    sight (hidden otherwise, like the glove shapes it has none of)."""
+    # A touch outward, so the thumb clears the drum while it winds.
+    k = Vector(knob) + Vector((-0.008, 0, 0))
+    finger_r, pitch = 0.0105, 0.0185
+    wrap = KNOB_R + GAP + finger_r
+    palm_z = KNOB_R + GAP + 0.0135
+    parts = [obox("FistPalm", (4 * pitch + 0.012, 0.072, 0.027), tuple(k + Vector((0, -0.036, palm_z))), (1, 0, 0), (0, 1, 0.0),
+                  bevel=0.011, segs=3, m=M["glove"])]
+    for i in range(4):
+        x = (1.5 - i) * pitch
+        pts = []
+        for j in range(9):
+            a = math.radians(14 + j * 24)
+            pts.append(tuple(k + Vector((x, wrap * math.sin(a), wrap * math.cos(a)))))
+        parts += _digit(f"FistFinger{i}", [Vector(p) for p in pts], finger_r, M, segs=8)
+    thumb = [k + Vector(p) for p in ((0.046, -0.06, 0.026), (0.047, -0.028, 0.034), (0.046, 0.0, 0.034), (0.042, 0.022, 0.026))]
+    parts += _digit("FistThumb", thumb, 0.0135, M, segs=10) + [sphere("FistThumbBase", 0.0138, thumb[0], m=M["glove"], segs=10, rings=6)]
+    back = k + Vector((0, -0.03, palm_z + 0.0135))
+    parts += [obox("FistPlate", (0.05, 0.05, 0.006), tuple(back), (1, 0, 0), (0, 1, 0), bevel=0.003, m=M["plate"]),
+              sphere("FistPlateLight", 0.006, tuple(back + Vector((0, 0, 0.004))), m=M["cell"], segs=8, rings=5)]
+    wrist = k + Vector((0, -0.085, palm_z))
+    arm, _elbow = _forearm("Fist", wrist, wrist + Vector((-0.75, -0.15, -1.0)), M)
+    return [p for p in parts + arm if "glove_kit" not in p]
 
 
 def build_jack_pot():
@@ -228,8 +264,8 @@ def build_jack_pot():
     crank = [cyl("CrankHub", 0.011, 0.016, (hx - 0.012, hy, hz), rot=rad(0, 90, 0), segs=16, bevel=0.003, m=M["steel"]),
              obox("CrankArm", (0.006, 0.012, 0.056), (hx - 0.02, hy, hz + 0.022), (1, 0, 0), (0, 1, 0), bevel=0.003, m=M["steel"]),
              cyl("CrankKnobStem", 0.0045, 0.022, (hx - 0.031, hy, hz + CRANK_R), rot=rad(0, 90, 0), segs=10, bevel=0.0, m=M["steel"]),
-             cyl("CrankKnob", 0.008, 0.026, (hx - 0.052, hy, hz + CRANK_R), rot=rad(0, 90, 0), segs=14, bevel=0.003, m=M["trim"]),
-             sphere("CrankKnobEnd", 0.0095, (hx - 0.066, hy, hz + CRANK_R), m=M["trim"], segs=12, rings=8)]
+             cyl("CrankKnob", KNOB_R, KNOB_LEN, (hx - KNOB_OUT, hy, hz + CRANK_R), rot=rad(0, 90, 0), segs=14, bevel=0.003, m=M["trim"]),
+             ]
     # The pinned brass drum.
     dx, dy, dz = drum_c
     drum = [ycyl("DrumCore", 0.0105, 0.07, dy, z=dz, x=dx, m=M["steel"], segs=18, bevel=0.002)]
@@ -246,6 +282,8 @@ def build_jack_pot():
     decal = [prism("Emblem", star_outline(0.016, 0.007), 0.01, (side + 0.001, 0.0, 0.03), rot=rad(0, 0, 90), m=M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.42, -0.5, -0.36))
     arm_l, elbow_l = cup_hand(G, M, (-0.55, -0.32, -0.32))
+    knob_c = (crank_hub[0] - KNOB_OUT, crank_hub[1], crank_hub[2] + CRANK_R)
+    fist = crank_fist(M, knob_c)
     box_pivot = tuple(box_c)
     groups = {
         "Shell": (shell, (0, 0, 0), None),
@@ -261,6 +299,7 @@ def build_jack_pot():
         "Decal": (decal, (0, 0, 0), None),
         "ArmR": (arm_r, grip_loc, None),
         "ArmL": (arm_l, grip_loc, None),
+        "ArmLFist": (fist, knob_c, None),
     }
     for i, (parts, at) in bulbs.items():
         groups[f"Bulb{i}"] = (parts, at, None)

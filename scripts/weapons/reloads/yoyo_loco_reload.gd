@@ -6,7 +6,8 @@ extends RefCounted
 ## in front of it (out to the left, over the top and down the right), turning
 ## its starred face to the player, while a hologram string rewinds onto the
 ## spinning spool and turns solid; the yo-yo swoops back into the fork with a
-## clack and the gun settles.
+## clack and the gun settles. (If the yo-yo is still out on its string when the
+## reload starts, the loop is skipped: the one in the world is the only one.)
 ##
 ## Every part is posed each frame from one timeline (WeaponView.drive) on
 ## smooth curves: the yo-yo's whole path is one spiral (its radius and
@@ -41,6 +42,7 @@ var _s := 0.0
 var _landed := false
 var _flickered := false
 var _tether_len := 0.055
+var _thrown_out := false
 
 
 func play(v: WeaponView, d: float) -> void:
@@ -52,6 +54,9 @@ func play(v: WeaponView, d: float) -> void:
 	var yoyo := v.part("Yoyo")
 	if tether and yoyo:
 		_tether_len = maxf(0.01, v.rest_transform("Yoyo").origin.distance_to(v.rest_transform("Tether").origin))
+	var player := v.player
+	_thrown_out = player != null and player.weapons != null and player.weapons.mode is YoyoLocoMode \
+		and (player.weapons.mode as YoyoLocoMode).is_out()
 	v.burst(0.1, d, "EjectPoint", "sparks")
 	v.hide_part(0.27, d, "Cell")
 	v.holo_build("CellHolo", 0.28, 0.58, d)
@@ -115,6 +120,9 @@ func _pose_yoyo(s: float) -> void:
 	var yoyo := _v.part("Yoyo")
 	if yoyo == null:
 		return
+	yoyo.visible = not _thrown_out
+	if _v.part("Tether"):
+		_v.part("Tether").visible = not _thrown_out
 	var rest := _v.rest_transform("Yoyo")
 	var u := _e(LOOP_START, LOOP_END, s)
 	var swell := sin(PI * u)

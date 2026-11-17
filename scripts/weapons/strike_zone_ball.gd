@@ -32,6 +32,8 @@ const DROP_SPEED := 3.5
 ## bowling over every zombie within LAND_RADIUS (m) of it.
 const HOP_SPEED := 4.0
 const LAND_RADIUS := 1.8
+## How strong the landing's ring looks (WeaponFx.shockwave): a quiet ring just inside the radius.
+const LAND_RING := 0.5
 ## Reach (m) beyond a zombie's capsule at which the ball bowls it over.
 const REACH := 0.15
 const PIN_FALLOFF := 0.95
@@ -237,7 +239,7 @@ func _land(at: Vector3, impact: float) -> void:
 	if _thudded:
 		return
 	_thudded = true
-	WeaponFx.shockwave(get_parent(), at, weapon.tracer_color, LAND_RADIUS)
+	WeaponFx.shockwave(get_parent(), at, weapon.tracer_color, LAND_RADIUS, LAND_RING)
 	for node in get_tree().get_nodes_in_group("zombies"):
 		var z := node as Zombie
 		if z == null or z.is_dead() or _struck.has(z.get_instance_id()):

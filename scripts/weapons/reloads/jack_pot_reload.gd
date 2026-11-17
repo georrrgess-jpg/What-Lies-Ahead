@@ -15,17 +15,11 @@ extends RefCounted
 const TURNS := 2.0
 const WIND_START := 0.2
 const WIND_END := 0.72
-## The crank knob's centre relative to the crank's hub at rest (model space;
-## art/blender/build_weapons_jack_pot.py CRANK_R).
-const KNOB := Vector3(-0.052, 0.044, 0.0)
-## The support hand's pose on the knob: its offset from the knob's centre, and
-## the turn (axis, degrees) that lays its fist round the knob from behind with
-## the forearm coming up from below-left.
-const GRAB := Vector3(-0.03, -0.022, -0.01)
-const GRAB_AXIS := Vector3(0.642, 0.523, -0.56)
-const GRAB_DEG := 134.6
-## The hand's path bulges out this way on its way to the crank and back.
-const HAND_ARC := Vector3(-0.07, -0.04, 0.03)
+## The crank handle's centre relative to the crank's hub at rest (model space;
+## art/blender/build_weapons_jack_pot.py KNOB_OUT, CRANK_R).
+const KNOB := Vector3(-0.071, 0.044, 0.0)
+## Where each hand waits, out of sight, while the other is on the crank.
+const HAND_AWAY := Vector3(-0.1, -0.3, 0.08)
 const ROOT_POS := Vector3(-0.05, 0.035, 0.05)
 const ROOT_ROT := Vector3(10.0, 24.0, -12.0)
 ## The hologram box hovers this far above and ahead of the cup (model space) and spins down into it.
@@ -52,7 +46,7 @@ var _teased := false
 func play(v: WeaponView, d: float) -> void:
 	_v = v
 	_d = d
-	for part in ["Box", "Lid", "Crank", "Drum"]:
+	for part in ["Box", "Lid", "Crank", "Drum", "ArmLFist"]:
 		v.register_part(part)
 	_had_box = v.data.magazine_size > 0
 	if v.player and v.player.weapons:
@@ -83,22 +77,22 @@ func _pose_crank(angle: float) -> void:
 	_place(_v.part("Drum"), _v.rest_transform("Drum"), Vector3.ZERO, Vector3(0.0, 0.0, rad_to_deg(angle) * 1.5))
 
 
-## The hand leaves the grip on an arc, rides the knob round, and goes back.
+## The support hand ducks out of sight (the grip hand is a wrapped pistol grip),
+## and its other pose, a fist, comes up from below, closes on the crank handle
+## and rides it round; then they swap back.
 func _pose_hand(s: float, angle: float) -> void:
-	var hand := _v.part("ArmL")
-	if hand == null:
+	var grip := _v.part("ArmL")
+	var fist := _v.part("ArmLFist")
+	if grip == null or fist == null:
 		return
+	var out := _e(0.0, 0.1, s) * (1.0 - _e(0.84, 0.97, s))
+	grip.visible = out < 0.999
 	var rest := _v.rest_transform("ArmL")
-	var grab := _e(0.03, 0.18, s)
-	var free := _e(0.73, 0.88, s)
-	var w := grab * (1.0 - free)
-	var hub := _v.rest_transform("Crank").origin
-	var knob := hub + Basis(Vector3.RIGHT, -angle) * KNOB + GRAB
-	var arc := HAND_ARC * (sin(PI * grab) * (1.0 - free) + sin(PI * free))
-	# The wrist turns while the hand is out to the side, clear of the firing hand.
-	var twist := _e(0.03, 0.16, s) * (1.0 - _e(0.72, 0.84, s))
-	var turn := Basis(GRAB_AXIS.normalized(), deg_to_rad(GRAB_DEG) * twist)
-	hand.transform = Transform3D(rest.basis * turn, rest.origin.lerp(knob, w) + arc)
+	grip.transform = Transform3D(rest.basis, rest.origin + HAND_AWAY * out)
+	var reach := _e(0.08, 0.2, s) * (1.0 - _e(0.73, 0.85, s))
+	fist.visible = s > 0.07 and reach > 0.001
+	var knob := _v.rest_transform("Crank").origin + Basis(Vector3.RIGHT, -angle) * KNOB
+	fist.transform = Transform3D(_v.rest_transform("ArmLFist").basis, knob + HAND_AWAY * (1.0 - reach))
 
 
 ## A note each time the crank passes a quarter turn.

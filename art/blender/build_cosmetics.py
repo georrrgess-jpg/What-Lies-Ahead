@@ -42,8 +42,8 @@ def charm_mats():
         cream=mat("CharmCream", "#fff0d4", rough=0.5),
         waffle=mat("CharmWaffle", "#d9934a", rough=0.6),
         waffle_dark=mat("CharmWaffleDark", "#a8652e", rough=0.6),
-        gold=mat("CharmGold", "#ffc23d", rough=0.22, metal=0.9),
-        gold_dark=mat("CharmGoldDark", "#d18a1c", rough=0.3, metal=0.85),
+        gold=mat("CharmGold", "#ffd23a", rough=0.18, metal=0.15, emit=0.55),
+        gold_dark=mat("CharmGoldDark", "#e8a423", rough=0.28, metal=0.15, emit=0.3),
         green=mat("CharmGreen", "#8fd14a", rough=0.6),
         green_dark=mat("CharmGreenDark", "#4f8f2f", rough=0.6),
         blue=mat("CharmBlue", "#3a7be0", rough=0.3),
@@ -67,6 +67,12 @@ def charm_mats():
         cyan_neon=mat("CharmCyanNeon", "#3ff4ff", rough=0.3, emit=2.2),
         bulb=mat("CharmBulb", "#ffe27a", rough=0.3, emit=2.6),
         alien=mat("CharmAlien", "#7dff6a", rough=0.4, emit=0.4),
+        wax=mat("CharmWax", "#ff3fae", rough=0.25, emit=1.1),
+        wax_hot=mat("CharmWaxHot", "#ffb02e", rough=0.3, emit=3.4),
+        mirror_a=mat("CharmMirrorA", "#f4f8ff", rough=0.08, metal=0.2, emit=0.9),
+        mirror_b=mat("CharmMirrorB", "#8fe6ff", rough=0.08, metal=0.2, emit=1.2),
+        mirror_c=mat("CharmMirrorC", "#ffa6e8", rough=0.08, metal=0.2, emit=1.1),
+        mirror_core=mat("CharmMirrorCore", "#3d4276", rough=0.4),
     )
 
 
@@ -805,15 +811,14 @@ def charm_lava_lamp(m):
     parts = hanger(p, m)
     parts += [
         cyl(p + "Cap", 0.0035, 0.008, (0, 0, -0.025), segs=16, bevel=0.0008, m=m["silver"], radius_top=0.0028),
-        cyl(p + "Glass", 0.0072, 0.03, (0, 0, -0.044), segs=20, bevel=0.0, m=m["glass"], radius_top=0.0042),
         cyl(p + "Base", 0.0088, 0.016, (0, 0, -0.067), segs=20, bevel=0.0012, m=m["silver"], radius_top=0.0062),
         torus(p + "Band", 0.0072, 0.0012, (0, 0, -0.0595), m=m["purple"], major_segs=20, minor_segs=4),
-        cyl(p + "Liquid", 0.0052, 0.026, (0, 0, -0.045), segs=16, bevel=0.0, m=m["purple"], radius_top=0.0034),
+        cyl(p + "Liquid", 0.0072, 0.03, (0, 0, -0.044), segs=20, bevel=0.0, m=m["wax"], radius_top=0.0042),
     ]
     spin = [
-        sphere(p + "BlobA", 0.0034, (0.0018, 0, 0.007), scale=(1, 1, 1.3), m=m["flame"], segs=10, rings=6),
-        sphere(p + "BlobB", 0.0028, (-0.002, 0.001, -0.004), m=m["flame"], segs=10, rings=6),
-        sphere(p + "BlobC", 0.0042, (0.0, -0.0012, -0.0105), scale=(1.2, 1.2, 0.8), m=m["flame"], segs=10, rings=6),
+        sphere(p + "BlobA", 0.0036, (0.0042, 0, 0.007), scale=(1, 1, 1.3), m=m["wax_hot"], segs=10, rings=6),
+        sphere(p + "BlobB", 0.0032, (-0.0046, 0.001, -0.002), m=m["wax_hot"], segs=10, rings=6),
+        sphere(p + "BlobC", 0.0048, (0.0, -0.0052, -0.0105), scale=(1.2, 1.2, 0.8), m=m["wax_hot"], segs=10, rings=6),
     ]
     return parts, (spin, Matrix.Translation((0, 0, -0.044)))
 
@@ -854,15 +859,20 @@ def charm_disco_ball(m):
     c = (0, 0, -0.04)
     parts = hanger(p, m)
     parts.append(cyl(p + "Cap", 0.003, 0.004, (0, 0, -0.0225), segs=10, bevel=0.0006, m=m["gold"]))
-    ball = sphere(p + "Ball", 0.0165, (0, 0, 0), m=m["silver"], segs=16, rings=10)
-    ball.data.polygons.foreach_set("use_smooth", [False] * len(ball.data.polygons))
-    spin = [ball]
-    glints = (m["neon"], m["cyan_neon"], m["bulb"])
-    for i in range(9):
-        a = math.tau * i / 9
-        z = (i % 3 - 1) * 0.008
-        rr = math.sqrt(0.0165 ** 2 - z ** 2)
-        spin.append(sphere(f"{p}Glint{i}", 0.0018, (math.cos(a) * rr, math.sin(a) * rr, z), m=glints[i % 3], segs=6, rings=4))
+    spin = [sphere(p + "Core", 0.0158, (0, 0, 0), m=m["mirror_core"], segs=14, rings=9)]
+    tiles = (m["mirror_a"], m["mirror_b"], m["mirror_a"], m["mirror_c"])
+    r = 0.0165
+    k = 0
+    for lat in (-67.0, -45.0, -22.5, 0.0, 22.5, 45.0, 67.0):
+        la = math.radians(lat)
+        count = max(5, round(11 * math.cos(la)))
+        for i in range(count):
+            lo = math.tau * (i + 0.5 * (k % 2)) / count
+            n = Vector((math.cos(la) * math.cos(lo), math.cos(la) * math.sin(lo), math.sin(la)))
+            tile = box(f"{p}Tile{k}", (0.0062, 0.0062, 0.0016), tuple(n * r), bevel=0.0, m=tiles[(i + k) % 4])
+            tile.rotation_euler = n.to_track_quat("Z", "Y").to_euler()
+            spin.append(tile)
+            k += 1
     return parts, (spin, Matrix.Translation(c))
 
 
