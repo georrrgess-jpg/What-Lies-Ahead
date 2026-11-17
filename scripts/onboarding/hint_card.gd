@@ -24,8 +24,13 @@ static func show_hint(scene: Node, title: String, text: String) -> void:
 	card.push(title, text)
 
 
+## Group of the tip cards, so the pause menu can hide them with the HUD.
+const GROUP := &"hint_card"
+
+
 func _ready() -> void:
 	layer = 25
+	add_to_group(GROUP)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var root := Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

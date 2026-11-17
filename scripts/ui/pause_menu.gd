@@ -32,6 +32,7 @@ func open(director: RunDirector) -> void:
 	Game.capture_mouse(false)
 	if director.hud:
 		director.hud.visible = false
+	_show_hints(false)
 	_root = Control.new()
 	UiKit.apply(_root)
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -202,8 +203,15 @@ func _resume() -> void:
 	get_tree().paused = false
 	if _director.hud:
 		_director.hud.visible = true
+	_show_hints(true)
 	Game.capture_mouse(true)
 	queue_free()
+
+
+## Tip cards are their own layer under the menu: hidden with the HUD while paused.
+func _show_hints(on: bool) -> void:
+	for card in get_tree().get_nodes_in_group(HintCard.GROUP):
+		(card as CanvasLayer).visible = on
 
 
 func _leave(retry: bool) -> void:
