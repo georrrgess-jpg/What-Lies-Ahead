@@ -136,7 +136,7 @@ def build_jack_pot():
     blue = mat("JackBlue", "#3270ff", rough=0.35)
     yellow = M["pink"]
     white = mat("JackWhite", "#fff8ee", rough=0.4)
-    lamp = mat("BulbLit", "#ffe65a", rough=0.3, emit=3.0)
+    lamp = mat("BulbLit", "#ffe65a", rough=0.3, emit=4.5)
     grip_loc = (0, -0.022, -0.104)
     grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.07, 0.094, 0.185), body_bottom=-0.03)
     trig = [p for p in grip_parts if p.name in ("Trigger", "TriggerToe")]
@@ -183,13 +183,13 @@ def build_jack_pot():
         # The crank's gear boss on the flank.
         cyl("CrankBoss", 0.016, 0.006, (crank_hub[0] - 0.001, crank_hub[1], crank_hub[2]), rot=rad(0, 90, 0), segs=20, bevel=0.002, m=M["dark"]),
         # Bulb sockets on the top-left edge, a pink accent stripe down the top.
-        box("BulbBed", (0.014, 0.07, 0.006), (-0.026, -0.02, 0.089), bevel=0.002, m=M["dark"]),
+        box("BulbBed", (0.017, 0.074, 0.006), (-0.025, -0.02, 0.089), bevel=0.002, m=M["dark"]),
     ]
     for k in range(9):
         shell.append(box(f"CombTooth{k}", (0.003, 0.0045, 0.012), (drum_c[0], drum_c[1] - 0.028 + k * 0.007, drum_c[2] + 0.017),
                          bevel=0.0008, m=M["steel"]))
     for i in range(BULBS):
-        shell.append(sphere(f"BulbSocket{i}", 0.0058, (-0.026, -0.044 + 0.024 * i, 0.091), scale=(1, 1, 0.7), m=M["dark"], segs=10, rings=6))
+        shell.append(sphere(f"BulbSocket{i}", 0.0075, (-0.025, -0.044 + 0.024 * i, 0.091), scale=(1, 1, 0.7), m=M["dark"], segs=10, rings=6))
     # Candy stripes: slanted across both flanks, and spiralling round the cup.
     shell += body_stripes("StripeL", -side, -0.058, 0.07, -0.02, 0.078, 0.011, 0.034, M["trim"])
     for k in range(4):
@@ -201,9 +201,10 @@ def build_jack_pot():
         shell.append(tube(f"CupStripe{k}", pts, 0.0045, m=M["trim"], segs=8))
     shell += top_rail("TopRail", -0.052, 0.062, rail_top, M, width=0.03)
     shell += bolts("Pin", [(-0.036, -0.06, 0.0), (0.036, -0.06, 0.0), (0.036, 0.12, 0.0)], M["steel"], radius=0.005, height=0.006)
-    lug, charm_point = charm_lug(0.044, 0.13, 0.035, M, out=1.0)
+    # The charm hangs beside the launch tube, ahead of the firing hand's trigger finger.
+    lug, charm_point = charm_lug(0.044, 0.168, 0.035, M, out=1.0)
     shell += lug
-    shell.append(box("CharmLugFoot", (0.016, 0.02, 0.016), (0.037, 0.13, 0.039), bevel=0.004, m=M["dark"]))
+    shell.append(box("CharmLugFoot", (0.016, 0.02, 0.016), (0.037, 0.168, 0.039), bevel=0.004, m=M["dark"]))
     # The front post stands at the front of the rail: the box rides below the sight line ahead of it.
     front_at = (0, 0.075, 0.088)
     sight_rear, sight_front = sights_notch(0.0, -0.075, front_at[1], 0.09, front_at[2], z_line, M, gap=0.016)
@@ -239,8 +240,8 @@ def build_jack_pot():
 
     bulbs = {}
     for i in range(BULBS):
-        at = (-0.026, -0.044 + 0.024 * i, 0.0915)
-        bulbs[i] = ([sphere(f"BulbGlow{i}", 0.0052, at, scale=(1, 1, 0.75), m=lamp, segs=10, rings=6)], at)
+        at = (-0.025, -0.044 + 0.024 * i, 0.0915)
+        bulbs[i] = ([sphere(f"BulbGlow{i}", 0.0069, at, scale=(1, 1, 0.7), m=lamp, segs=10, rings=6)], at)
 
     decal = [prism("Emblem", star_outline(0.016, 0.007), 0.01, (side + 0.001, 0.0, 0.03), rot=rad(0, 0, 90), m=M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.42, -0.5, -0.36))

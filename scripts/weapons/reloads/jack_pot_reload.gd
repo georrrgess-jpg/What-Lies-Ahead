@@ -1,6 +1,6 @@
 extends RefCounted
 ## Jack Pot "wind-up": the gun turns its left flank to the eye, the support
-## hand takes the crank and winds it three turns (speeding up, then easing
+## hand takes the crank and winds it two turns (speeding up, then easing
 ## to a stop), the brass drum turns with it and the comb plucks a music-box
 ## tune, one note per quarter turn. Meanwhile the box in the cup (if any)
 ## sinks into the magazine, and a fresh box prints in as a hologram above the
@@ -12,7 +12,7 @@ extends RefCounted
 ## smootherstep curves, so the moves blend into each other with no stops
 ## between keys; the hand follows the crank's knob exactly while it winds.
 
-const TURNS := 3.0
+const TURNS := 2.0
 const WIND_START := 0.2
 const WIND_END := 0.72
 ## The crank knob's centre relative to the crank's hub at rest (model space;
@@ -25,7 +25,7 @@ const GRAB := Vector3(-0.03, -0.022, -0.01)
 const GRAB_AXIS := Vector3(0.642, 0.523, -0.56)
 const GRAB_DEG := 134.6
 ## The hand's path bulges out this way on its way to the crank and back.
-const HAND_ARC := Vector3(-0.05, -0.02, 0.03)
+const HAND_ARC := Vector3(-0.07, -0.04, 0.03)
 const ROOT_POS := Vector3(-0.05, 0.035, 0.05)
 const ROOT_ROT := Vector3(10.0, 24.0, -12.0)
 ## The hologram box hovers this far above and ahead of the cup (model space) and spins down into it.
@@ -37,7 +37,7 @@ const SINK := 0.075
 ## The launch cup's axis in model space (as in jack_pot_view.gd): the box slides along it.
 const CUP_AXIS := Vector3(0.0, 0.375, -0.927)
 ## The comb's tune: one note per quarter turn of the crank (pitch ratios of the pluck).
-const TUNE: Array[float] = [1.0, 1.26, 1.5, 1.26, 1.68, 1.5, 1.26, 1.12, 1.0, 1.12, 1.26, 2.0]
+const TUNE: Array[float] = [1.0, 1.26, 1.5, 1.26, 1.68, 1.5, 1.26, 2.0]
 const SPARKS := [Color(1.0, 0.82, 0.23), Color(0.35, 0.96, 0.75), Color(1.0, 0.42, 0.84), Color(1.0, 1.0, 1.0)]
 
 var _v: WeaponView
@@ -95,7 +95,9 @@ func _pose_hand(s: float, angle: float) -> void:
 	var hub := _v.rest_transform("Crank").origin
 	var knob := hub + Basis(Vector3.RIGHT, -angle) * KNOB + GRAB
 	var arc := HAND_ARC * (sin(PI * grab) * (1.0 - free) + sin(PI * free))
-	var turn := Basis(GRAB_AXIS.normalized(), deg_to_rad(GRAB_DEG) * w)
+	# The wrist turns while the hand is out to the side, clear of the firing hand.
+	var twist := _e(0.03, 0.16, s) * (1.0 - _e(0.72, 0.84, s))
+	var turn := Basis(GRAB_AXIS.normalized(), deg_to_rad(GRAB_DEG) * twist)
 	hand.transform = Transform3D(rest.basis * turn, rest.origin.lerp(knob, w) + arc)
 
 
@@ -139,10 +141,11 @@ func _pose_box(s: float) -> void:
 
 
 ## The hologram box hovers out over the cup, spins down into it and is gone
-## when it turns solid (WeaponView.solidify).
+## when it turns solid (WeaponView.solidify). It waits at its start, unseen,
+## until it prints in.
 func _pose_holo(s: float) -> void:
 	var holo := _v.part("CellHolo")
-	if holo == null or s < HOLO_IN or s >= SOLID_AT:
+	if holo == null or s >= SOLID_AT:
 		return
 	var u := _e(HOLO_IN, SOLID_AT - 0.02, s)
 	var rest := _v.rest_transform("CellHolo")
