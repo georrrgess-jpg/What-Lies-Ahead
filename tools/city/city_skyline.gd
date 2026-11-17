@@ -143,8 +143,45 @@ func build_boundary(mouths: Array) -> void:
 		_box(board, Vector3(1.3, 0.42, 0.04), atan2(-along.z, along.x), Color(0.95, 0.75, 0.12))
 		b._label(parent, "CordonSign%d" % k, sign_text, board + Vector3(0, 0.21, 0) + face * 0.04, rad_to_deg(atan2(face.x, face.z)), 52, Color(0.08, 0.06, 0.05)).outline_size = 0
 		b._steam(mid + out * 5.0, Color(0.5, 0.42, 0.4), 0.85)
+		# A fire escape up one of the alley's walls (alternating sides).
+		if k % 2 == 0:
+			_fire_escape(a, out, along)
+		else:
+			_fire_escape(to, out, -along)
 		k += 1
 	_emit("Cordons")
+
+
+## A fire escape on the wall through `wall` (facing `normal`), running
+## `into` the alley: three landings, rails, a stair between each, the drop
+## ladder under the first (visual only, above the zombies' heads).
+func _fire_escape(wall: Vector3, into: Vector3, normal: Vector3) -> void:
+	var yaw := atan2(-into.z, into.x)
+	var iron := Color(0.2, 0.15, 0.13)
+	var length := 6.0
+	var depth := 1.1
+	var centre := wall + into * 4.6 + normal * depth * 0.5
+	for f in 3:
+		var y := 3.4 + f * 3.2
+		_box(centre + Vector3(0, y, 0), Vector3(length, 0.08, depth), yaw, iron)
+		for rail_y: float in [0.45, 0.95]:
+			_box(centre + normal * depth * 0.5 + Vector3(0, y + rail_y, 0), Vector3(length, 0.05, 0.05), yaw, iron)
+		for end: float in [-0.5, 0.5]:
+			_box(centre + into * length * end + normal * depth * 0.5 + Vector3(0, y, 0), Vector3(0.06, 0.95, 0.06), yaw, iron)
+		if f < 2:
+			var foot := centre - into * 1.8 + Vector3(0, y + 0.05, 0)
+			var head := centre + into * 1.8 + Vector3(0, y + 3.2, 0)
+			var run := head - foot
+			var x := run.normalized()
+			var zx := normal.normalized()
+			var up := zx.cross(x).normalized()
+			if up.y < 0.0:
+				up = -up
+			_boxes.append(Transform3D(Basis(run, up * 0.1, zx * 0.75), (foot + head) * 0.5))
+			_tints.append(iron)
+			_custom.append(Color(0, 0, 0, 0))
+	for side: float in [-0.3, 0.3]:
+		_box(centre + into * (length * 0.5 - 0.6 + side) + Vector3(0, 1.4, 0), Vector3(0.05, 2.0, 0.05), yaw, iron)
 
 
 ## Open ground the player fights on (the square, the districts): the side of
