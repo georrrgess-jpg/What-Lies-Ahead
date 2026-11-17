@@ -50,6 +50,11 @@ const BRIDGE_LENGTH := 560.0
 const BRIDGE_DECK_Y := 26.0
 const PYLON_H := 100.0
 const PYLON_SPAN := 120.0
+## The river under the bridge: where it starts (metres out from the centre)
+## and its half width.
+const RIVER_START := 215.0
+const RIVER_HALF := 85.0
+const FAR_SHORE := 660.0
 ## The fallen stretch of the bridge's main span (metres along it from the middle).
 const GAP := Vector2(18.0, 50.0)
 
@@ -80,6 +85,7 @@ func _init(builder: Object, into: Node3D) -> void:
 func build(towers: Array[Transform3D]) -> void:
 	_fill_ground()
 	_bridge()
+	_river()
 	for xf in towers:
 		_tower(xf)
 	_ring(NEAR_CELL, CITY.grow(5.0), NEAR_RADIUS, 0.0)
@@ -478,7 +484,7 @@ func _blocked(pos: Vector3, radius: float) -> bool:
 	for t in _taken:
 		if Vector2(t.x - pos.x, t.y - pos.z).length() < t.z + radius:
 			return true
-	return _near_bridge(pos, radius)
+	return _near_bridge(pos, radius) or _near_river(pos, radius)
 
 
 ## The last ring, deep in the haze: tall blocks shoulder to shoulder, so
@@ -492,6 +498,11 @@ func _horizon() -> void:
 			var w := TAU * radius / count * rng.randf_range(1.0, 1.25)
 			var h := rng.randf_range(55.0, 95.0) + layer * 25.0
 			var base := CENTRE + Vector3(cos(a), 0, sin(a)) * (radius + rng.randf_range(-12.0, 12.0))
+			if _near_river(base, w * 0.3):
+				# Across the river: the far shore's towers, taller (they close
+				# the horizon over the water).
+				base = CENTRE + (base - CENTRE) * (FAR_SHORE / (base - CENTRE).length())
+				h += 60.0
 			_box(base, Vector3(w, h, rng.randf_range(20.0, 40.0)), -a + PI * 0.5, _tint() * 0.8, rng.randf_range(0.03, 0.08), 0.02, 4.4)
 			if rng.randf() < 0.25:
 				_box(base + Vector3(0, h, 0), Vector3(w * 0.5, h * rng.randf_range(0.2, 0.6), 18.0), -a + PI * 0.5, _tint() * 0.8, 0.05, 0.0, 4.4)
@@ -512,7 +523,34 @@ func _near_bridge(pos: Vector3, radius: float) -> bool:
 	var rel: Vector3 = pos - frame[0]
 	var along: float = rel.dot(frame[1])
 	var off: float = absf(rel.dot(BRIDGE_DIR))
-	return absf(along) < BRIDGE_LENGTH * 0.5 + radius and off < 24.0 + radius
+	return absf(along) < BRIDGE_LENGTH * 0.5 + radius and off < 12.0 + radius
+
+
+## The river the bridge crosses: from RIVER_START out along BRIDGE_DIR.
+func _near_river(pos: Vector3, radius: float) -> bool:
+	var rel := pos - CENTRE
+	var across := Vector3(-BRIDGE_DIR.z, 0, BRIDGE_DIR.x)
+	return rel.dot(BRIDGE_DIR) > RIVER_START - radius and absf(rel.dot(across)) < RIVER_HALF + radius
+
+
+## Dark water under the bridge's main span, out past the horizon, between
+## concrete quays (the sun glints on it behind the bridge's silhouette).
+func _river() -> void:
+	var across := Vector3(-BRIDGE_DIR.z, 0, BRIDGE_DIR.x)
+	var yaw := atan2(-across.z, across.x)
+	var water := StandardMaterial3D.new()
+	water.albedo_color = Color(0.05, 0.06, 0.08)
+	water.metallic = 0.7
+	water.roughness = 0.12
+	var length := FAR_SHORE - RIVER_START
+	var mid := CENTRE + BRIDGE_DIR * (RIVER_START + length * 0.5)
+	var mi: MeshInstance3D = b._visual_box(parent, "River", Vector3(RIVER_HALF * 2.0, 0.2, length), mid + Vector3(0, 0.1, 0), water)
+	mi.rotation.y = yaw
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var quay := Color(0.36, 0.33, 0.32)
+	for side: float in [-1.0, 1.0]:
+		_box(mid + across * (RIVER_HALF + 1.0) * side - Vector3(0, 0.1, 0), Vector3(2.0, 1.4, length), yaw, quay)
+	_box(CENTRE + BRIDGE_DIR * (RIVER_START - 1.0) - Vector3(0, 0.1, 0), Vector3(RIVER_HALF * 2.0 + 4.0, 1.4, 2.0), yaw, quay)
 
 
 ## A suspension bridge across the sunset: deck on piers, two tall pylons,
