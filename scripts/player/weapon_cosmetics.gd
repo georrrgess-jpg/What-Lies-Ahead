@@ -86,12 +86,12 @@ static func apply(model: Node3D, _weapon: WeaponData, loadout: Dictionary) -> vo
 
 
 ## Gets a freshly instantiated weapon model ready for a menu preview: hides
-## the hologram copies of the cell and (unless `with_arms`) the first-person
-## arms, wherever they are parented.
+## the hologram copies of the cell, the reload-only hand poses ("...Fist") and
+## (unless `with_arms`) the first-person arms, wherever they are parented.
 static func prepare_preview(model: Node3D, with_arms := false) -> void:
 	for node in model.find_children("*", "Node3D", true, false):
 		var node_name := String(node.name)
-		if node_name.ends_with("Holo") or (not with_arms and node_name.begins_with("Arm")):
+		if node_name.ends_with("Holo") or node_name.ends_with("Fist") or (not with_arms and node_name.begins_with("Arm")):
 			(node as Node3D).visible = false
 
 

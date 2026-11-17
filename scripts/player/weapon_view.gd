@@ -548,7 +548,7 @@ func _reset_parts() -> void:
 		var node: Node3D = entry["node"]
 		if is_instance_valid(node):
 			node.transform = entry["transform"]
-			node.visible = not String(key).ends_with("Holo")
+			node.visible = not (String(key).ends_with("Holo") or String(key).ends_with("Fist"))
 	_set_glow(1.0)
 
 

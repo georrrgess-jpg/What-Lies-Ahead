@@ -11,7 +11,8 @@ extends SceneTree
 ##   --mode=hands     close-ups of the hands on the weapon: player's eye, left, right, below
 ##                    (--view=0..3 renders just one of them, full size)
 ##   --mode=reload    first person at six moments of the reload (--times=0.15,0.3,...,
-##                    --tile=640x540 for bigger tiles, --cols=2)
+##                    --tile=640x540 for bigger tiles, --cols=2, --cam=-0.34,0.03,-0.03 to
+##                    look from that offset from the grip instead of from the eye)
 ##   --mode=charm     first person while the weapon is shaken, to stress the charm (--charm=<id>)
 ##   --weapons=a,b    weapon ids (default: all)
 ##   --finish=<id> --charm=<id> --decal=<id> --arms=<id>   cosmetics to wear (item ids)
@@ -294,7 +295,25 @@ func _sheet_reload(w) -> void:
 		var tween: Tween = view._reload_tween
 		tween.pause()
 		tween.custom_step(float(t))
+		if opts.has("cam"):
+			_view_from(rig, w, _vec(String(opts["cam"])))
 	await process_frame
+
+
+## Looks at the weapon's grip from `offset` metres away (player space), for a reload tile.
+func _view_from(rig: Dictionary, w, offset: Vector3) -> void:
+	var grip: Vector3 = rig.cam.position + w.view_position * VIEW_SCALE
+	var side := Camera3D.new()
+	side.fov = 40.0
+	side.near = 0.01
+	rig.vp.add_child(side)
+	side.look_at_from_position(grip + offset, grip + Vector3(0.0, -0.01, -0.035))
+	side.current = true
+
+
+func _vec(text: String) -> Vector3:
+	var p := text.split(",")
+	return Vector3(float(p[0]), float(p[1]), float(p[2]))
 
 
 func _sheet_charm(w) -> void:
