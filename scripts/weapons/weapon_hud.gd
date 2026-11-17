@@ -28,6 +28,11 @@ var _last_charge := -1.0
 var _last_heat := -1.0
 var _last_pips := -1
 var _last_gauge := -1.0
+## The held weapon and where the ammo digits start when last drawn: a switch
+## or a wider number must clear or move the side gauge, even when no gauge
+## value changes (else the old weapon's gauge stays on the digits).
+var _last_weapon: WeaponData
+var _last_digits := -1.0
 var _melee_key := ""
 var _melee_pad := false
 var _drawn := false
@@ -64,7 +69,10 @@ func _needs_redraw() -> bool:
 		return false
 	var w := player.weapons
 	var data := w.current
-	var changed := false
+	var digits := (ammo_label as HudAmmo).digits_left() if ammo_label is HudAmmo else 0.0
+	var changed := data != _last_weapon or digits != _last_digits
+	_last_weapon = data
+	_last_digits = digits
 	if data.charge_time > 0.0:
 		var k := w.shown_charge()
 		changed = changed or k != _last_charge or k >= 1.0
