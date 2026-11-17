@@ -503,16 +503,19 @@ def city_siren_loop():
 
 @_own_rng(302)
 def city_alarm_loop():
-    """4-second loop: a shop's burglar alarm, a fast two-tone beep with a
-    tinny bell rattle under it (the Market)."""
+    """4-second loop: a shop's burglar alarm ringing behind glass a street
+    away: a muffled two-tone beep (rounded, not a raw square wave) with soft
+    edges on every beep and a short gap after each pair (the Market)."""
     d = 4.0
     n = int(SR * d)
     t = np.arange(n) / SR
-    f = np.where((t // 0.25) % 2 == 0, 1320.0, 990.0)
-    gate = ((t % 0.25) < 0.21).astype(float)
-    x = np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * 0.5 * gate
-    bell = np.sin(2 * np.pi * 2350 * t) * (0.5 + 0.5 * np.sign(np.sin(2 * np.pi * 24 * t))) * 0.25
-    return filt(x + bell, low=4200, high=500)
+    f = np.where((t // 0.3) % 2 == 0, 880.0, 660.0)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    tone = np.sin(ph) + 0.22 * np.sin(2 * ph) + 0.08 * np.sin(3 * ph)
+    tt = t % 0.3
+    edge = np.clip(tt / 0.012, 0, 1) * np.clip((0.24 - tt) / 0.02, 0, 1)
+    pair = ((t % 1.0) < 0.6).astype(float)
+    return filt(tone * edge * pair * 0.5, low=1800, high=400)
 
 
 @_own_rng(303)
@@ -561,27 +564,27 @@ def city_drip_loop():
 
 @_own_rng(305)
 def city_buzz_loop():
-    """3-second loop: a failing neon tube: a 100 Hz hum with buzzy harmonics
-    and the odd crackling drop-out."""
+    """3-second loop: a failing neon tube: a low 100 Hz hum with a soft buzz
+    on top and the odd crackling drop-out (kept dark, never a whine)."""
     r = _r()
     d = 3.0
     n = int(SR * d)
     t = np.arange(n) / SR
-    hum = filt(np.sign(np.sin(2 * np.pi * 100 * t)) * 0.3 + np.sin(2 * np.pi * 50 * t) * 0.4, low=1800)
-    buzz = band(r.uniform(-1, 1, n), 3200, 1500) * (0.5 + 0.5 * np.sin(2 * np.pi * 100 * t)) * 0.15
+    hum = filt(np.sign(np.sin(2 * np.pi * 100 * t)) * 0.2 + np.sin(2 * np.pi * 50 * t) * 0.5, low=650)
+    buzz = band(r.uniform(-1, 1, n), 1300, 700) * (0.5 + 0.5 * np.sin(2 * np.pi * 100 * t)) * 0.08
     out = hum + buzz
     for at in (0.7, 2.1):
         k = int(SR * at)
         m = int(SR * 0.18)
         out[k:k + m] *= 0.25
-        out[k:k + m] += filt(_crackles(m, 140, r, 0.6), low=6000)[:m]
+        out[k:k + m] += filt(_crackles(m, 140, r, 0.4), low=3000)[:m]
     return out
 
 
 @_own_rng(306)
 def city_heli_loop():
     """4-second loop: a helicopter circling the city: rotor thumps at 5 Hz,
-    the turbine whine and a wash of wind."""
+    a low turbine rush (broadband, never a pure whistle) and a wash of wind."""
     r = _r()
     d = 4.0
     n = int(SR * d)
@@ -589,9 +592,9 @@ def city_heli_loop():
     blade = np.exp(-((t * 5.0) % 1.0) / 0.12)
     thump = filt(r.uniform(-1, 1, n), low=240, high=30) * blade * 2.2
     slap = band(r.uniform(-1, 1, n), 900, 500) * blade ** 3 * 0.4
-    whine = np.sin(2 * np.pi * 1850 * t + 0.3 * np.sin(2 * np.pi * 0.25 * t)) * 0.035
-    wash = filt(r.uniform(-1, 1, n), low=1200, high=150) * 0.18
-    return thump + slap + whine + wash
+    turbine = band(r.uniform(-1, 1, n), 620, 260) * (0.85 + 0.15 * np.sin(2 * np.pi * 0.25 * t)) * 0.07
+    wash = filt(r.uniform(-1, 1, n), low=1000, high=150) * 0.18
+    return filt(thump + slap + turbine + wash, low=2400)
 
 
 @_own_rng(307)

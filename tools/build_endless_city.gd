@@ -1663,16 +1663,16 @@ func _ambient(emitter_name: String, pos: Vector3, sound: StringName, reach: floa
 
 func _build_ambience() -> void:
 	# Sirens wailing over the Precinct and beyond the tower, police radios
-	# left on in the vans, a shop alarm in the Market, drips in the Metro.
-	_ambient("SirenPrecinct", Vector3(-84.0, 18.0, -12.0), &"city_siren_loop", 75.0, -3.0)
-	_ambient("SirenTower", Vector3(104.0, 26.0, -84.0), &"city_siren_loop", 70.0, -5.0)
+	# left on in the vans, a shop alarm in the Market (none in the Square,
+	# where the player spends the most time), drips in the Metro.
+	_ambient("SirenPrecinct", Vector3(-84.0, 18.0, -12.0), &"city_siren_loop", 70.0, -8.0)
+	_ambient("SirenTower", Vector3(104.0, 26.0, -84.0), &"city_siren_loop", 65.0, -10.0)
 	for v in [Vector3(-46.0, 1.6, -12.0), Vector3(-61.0, 1.6, 14.0), Vector3(8.5, 1.6, 16.4), Vector3(62.0, 1.6, -27.5)]:
 		_ambient("Radio%d" % int(v.x), v, &"city_radio_loop", 13.0)
-	_ambient("AlarmMarket", Vector3(66.0, 3.2, 8.3), &"city_alarm_loop", 26.0)
-	_ambient("AlarmSquare", Vector3(-21.8, 3.0, -12.0), &"city_alarm_loop", 18.0, -4.0)
+	_ambient("AlarmMarket", Vector3(66.0, 3.2, 8.3), &"city_alarm_loop", 20.0, -8.0)
 	for x in [-14.0, 6.0, 30.0]:
 		_ambient("Drip%d" % int(x), Vector3(x, METRO_Y + 2.0, -34.0), &"city_drip_loop", 16.0)
-	_ambient("TubeBuzz", Vector3(9.0, HALL_CEILING - 0.8, -34.5), &"city_buzz_loop", 9.0, 2.0)
+	_ambient("TubeBuzz", Vector3(9.0, HALL_CEILING - 0.8, -34.5), &"city_buzz_loop", 9.0, -2.0)
 	_build_helicopter()
 	_build_warning_lights()
 

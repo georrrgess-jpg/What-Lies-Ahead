@@ -310,9 +310,9 @@ func _find_helicopter() -> void:
 		p.name = "RotorSound"
 		p.stream = s
 		p.bus = Sfx.MIX.bus_of(HELI)
-		p.volume_db = Sfx.mix_db(HELI) + 4.0
-		p.unit_size = 30.0
-		p.max_distance = 220.0
+		p.volume_db = Sfx.mix_db(HELI) - 2.0
+		p.unit_size = 20.0
+		p.max_distance = 180.0
 		p.autoplay = true
 		_heli.add_child(p)
 

@@ -361,7 +361,7 @@ sound_trim_db = Dictionary[StringName, float]({
 &"cz_wrecker_charge": -2.0,
 &"cz_firebug_light": 3.0,
 &"city_alarm_loop": -6.0,
-&"city_buzz_loop": -4.0,
+&"city_buzz_loop": -7.0,
 &"city_radio_loop": -3.0,
 &"gc_strike": -3.0,
 &"sz_roll_loop": -2.0

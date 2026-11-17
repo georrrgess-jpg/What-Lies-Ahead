@@ -12297,14 +12297,14 @@ metadata/db = -3.0
 [node name="SirenPrecinct" type="Marker3D" parent="Effects/Ambience" unique_id=1503899938 groups=["city_ambient"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -84, 18, -12)
 metadata/sound = &"city_siren_loop"
-metadata/reach = 75.0
-metadata/db = -3.0
+metadata/reach = 70.0
+metadata/db = -8.0
 
 [node name="SirenTower" type="Marker3D" parent="Effects/Ambience" unique_id=1651551795 groups=["city_ambient"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 104, 26, -84)
 metadata/sound = &"city_siren_loop"
-metadata/reach = 70.0
-metadata/db = -5.0
+metadata/reach = 65.0
+metadata/db = -10.0
 
 [node name="Radio-46" type="Marker3D" parent="Effects/Ambience" unique_id=440866273 groups=["city_ambient"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46, 1.6, -12)
@@ -12333,14 +12333,8 @@ metadata/db = 0.0
 [node name="AlarmMarket" type="Marker3D" parent="Effects/Ambience" unique_id=1969979272 groups=["city_ambient"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 3.2, 8.3)
 metadata/sound = &"city_alarm_loop"
-metadata/reach = 26.0
-metadata/db = 0.0
-
-[node name="AlarmSquare" type="Marker3D" parent="Effects/Ambience" unique_id=338249899 groups=["city_ambient"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.8, 3, -12)
-metadata/sound = &"city_alarm_loop"
-metadata/reach = 18.0
-metadata/db = -4.0
+metadata/reach = 20.0
+metadata/db = -8.0
 
 [node name="Drip-14" type="Marker3D" parent="Effects/Ambience" unique_id=1779428341 groups=["city_ambient"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, -4, -34)
@@ -12364,7 +12358,7 @@ metadata/db = 0.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -1.4, -34.5)
 metadata/sound = &"city_buzz_loop"
 metadata/reach = 9.0
-metadata/db = 2.0
+metadata/db = -2.0
 
 [node name="Wreck0Smoke" type="Node3D" parent="Effects" unique_id=768988466 instance=ExtResource("36_t4kxm")]
 transform = Transform3D(0.2516, 0, 0, 0, 0.2516, 0, 0, 0, 0.2516, -16.30437, 1.5, -10.041582)
