@@ -119,7 +119,7 @@ bounty_tickets = 225
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 6,
-"mall_walker": 7,
+"mall_walker": 6,
 "mall_flinger": 3,
 "lifeguard_runner": 2
 }
