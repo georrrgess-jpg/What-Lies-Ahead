@@ -192,6 +192,20 @@ skyline, a police helicopter sweeps the streets, and sirens, radios, alarms, buz
 and dripping tunnels play where they are. Every district is a loop (Precinct 9 has a
 second gate), with 21 entrances in all.
 
+The city reads as one place out to the horizon: layered blocks and towers with lit and
+burning windows, cranes, blinking beacons on the spires and a broken suspension bridge over
+a river towards the sunset. District roofs glow in their colours, blocked alleys are police
+cordons with signs, haze and fire escapes, and the rooms behind broken windows flicker with
+lamps, TVs and fires. Every district has its own street life and story: a field-triage post
+in Precinct 9, a noodle bar in the Neon Market, luggage left on the Metro platform, a
+crashed KWLA news van and its camera crew at the Tower. And it moves: flags, banners and
+laundry flap in the ash wind, traffic signals still cycle and abandoned cars flash their
+hazards, video walls loop the emergency broadcast, crows wheel overhead, pigeons burst away
+when you come near, paper blows down the streets, rats dart through the Metro, a burst
+hydrant sprays the Square, and tracer fire and flares light the sky beyond the skyline.
+(Generator: `tools/build_endless_city.gd` with `tools/city/city_skyline.gd`,
+`city_streets.gd` and `city_life.gd`.)
+
 Rewards: eight **Ashfall City camos** (waves 5-25 and opening each district), the
 **Road Rager** (reach wave 10) and the **Mythic** finish **Last Light** (reach wave 30),
 the rarity above Legendary, shown with an animated red-gold treatment. Rules, scaling
@@ -200,6 +214,12 @@ arcade theme (a heavier variant on boss waves), ruined-city ambience and its own
 for gates, traps, drops and a new best.
 
 ## Weapons
+
+Every weapon's sounds are layered for punch: a sharp snap, the weapon's own body (its
+gimmick: a popcorn pop, a bowling thunk, a rail crack), a low thump and a short slap-back
+and room tail, with variants so autofire never repeats one sample; heavy weapons get more
+sub and a longer tail, fast autos stay tight and sit under the big single shots
+(`tools/weapon_punch.py` for primaries, `tools/audio_packs/_sidearm_fx.py` for sidearms).
 
 | Weapon | Slot | Niche | Unlock | Notes |
 | --- | --- | --- | --- | --- |
@@ -525,6 +545,7 @@ python tools/gen_audio.py neon aqua dune frost weapons progression cosmetics mov
     economy ui rounds onboarding showreel mall jungle candy lava sky               # packs
 python tools/gen_ui_textures.py              # the UI kit's 9-slice frames and icons
 python tools/audio_mix_report.py             # every sound and loop as heard in game
+python3 tools/sound_audit.py                 # measure every sound + spectrogram sheets (docs/SOUND_AUDIT.md)
 python tools/audio_mix_report.py --mixdown neon_skyline out.wav   # 20 s listen-proxy
 ```
 
