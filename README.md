@@ -93,8 +93,11 @@ fullscreen.
 - **Preparation → Wave → Break → … → Extraction**, with **Defeat** reachable from any wave.
   Prize Pier has 6 waves, the other worlds 7; a run takes about 6–9 minutes.
 - **Difficulty** (chosen on the Play page): **Casual** (weaker, slower enemies, health
-  back at every wave clear, 80% rewards), **Standard**, or **Hard** (more, faster and
-  angrier, 130% rewards). The score is never scaled.
+  back at every wave clear, 80% rewards), **Standard**, **Hard** (more, faster and
+  angrier, 130% rewards) or **Last Ride** (opens at player level 20: zombies 30% tougher,
+  20% harder-hitting and faster, bigger hordes that never let up, frequent specials, no
+  healing, no relief and no checkpoints, so a fallen run is over; **double XP and
+  Sparks**). The score is never scaled.
 - **Rounds with a purpose.** Each wave has a kind and a name on its banner: standard,
   rush, siege (heavies first), ambush (every entrance at once), ranged, a **bounty**
   (a golden runner that flees with a ticket prize), a world **twist** (Jackpot double

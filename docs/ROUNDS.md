@@ -234,20 +234,22 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 
 ## Difficulty (`Difficulty.TABLE`)
 
-| | Casual | Standard | Hard |
-|---|---|---|---|
-| Enemy health | 80% | 100% | 114% |
-| Alpha health | 70% | 100% | 100% |
-| Enemy damage | 60% | 100% | 108% |
-| Enemy speed | 95% | 100% | 105% |
-| Crowd cap | 80% | 100% | 105% |
-| Spawn interval | 120% | 100% | 95% |
-| Special-attack cooldowns | 145% | 100% | 90% |
-| Pace bounds (min-max) | 0.55-1.0 | 0.7-1.35 | 0.85-1.4 |
-| Spawn pause for a player in trouble | 6 s per wave | 3.5 s | none |
-| Health back at every wave clear | +20 | - | - |
-| Ticket income | +25% (paid at the wave clear) | - | - |
-| Rewards (`reward_scale()`: account XP, Sparks) | 80% | 100% | 130% |
+| | Casual | Standard | Hard | Last Ride |
+|---|---|---|---|---|
+| Enemy health | 80% | 100% | 114% | 130% |
+| Alpha health | 70% | 100% | 100% | 110% |
+| Enemy damage | 60% | 100% | 108% | 120% |
+| Enemy speed | 95% | 100% | 105% | 108% |
+| Crowd cap | 80% | 100% | 105% | 115% |
+| Spawn interval | 120% | 100% | 95% | 90% |
+| Special-attack cooldowns | 145% | 100% | 90% | 80% |
+| Pace bounds (min-max) | 0.55-1.0 | 0.7-1.35 | 0.85-1.4 | 0.9-1.45 |
+| Spawn pause for a player in trouble | 6 s per wave | 3.5 s | none | none |
+| Health back at every wave clear | +20 | - | - | - |
+| Ticket income | +25% (paid at the wave clear) | - | - | - |
+| Rewards (`reward_scale()`: account XP, Sparks) | 80% | 100% | 130% | 200% |
+| Continue from a checkpoint | yes | yes | yes | no |
+| Unlocks at | - | - | - | player level 20 |
 
 Casual never presses, eases early, and tops the player up between waves: a
 first-time player can make mistakes in every wave and still finish. Hard is
@@ -257,6 +259,15 @@ harder) and its hits are only 8% heavier: the extra crowd is the threat, and a
 player who dodges and dashes can still clear every world. The run score is not scaled, so
 best scores stay comparable. The tier is shown on the HUD chip and is in the
 result (`difficulty`, `difficulty_label`).
+
+**Last Ride** is the skill tier: every lever turned past Hard and nothing to
+lean on (no relief, no healing, no checkpoint continue), for double XP and Sparks.
+Tuned with the bot (level-40 profile): at the bot's precise aim (1.2 degrees) it
+clears Prize Pier with ~80 health left and wins about half of its Lava Lagoon runs
+with a strong weapon (the rest fall at the finale), while at an average aim (2.5
+degrees) it dies even on Prize Pier; Hard at precise aim clears Lava Lagoon with
+~40 health left. Endless (`ENDLESS_TABLE`: health 125%, damage 130%, pace up to
+1.4) at average aim reaches about wave 10 (Hard ~22, Standard ~26).
 
 `Difficulty.effects(id)` returns the headline changes as short lines for a
 menu; `Difficulty.color(id)` is the tier's accent.
@@ -329,7 +340,7 @@ cleared wave), `bosses_defeated`, `bounties_claimed`. Existing keys and the
 ## Testing with the bot
 
 ```
---difficulty=casual|standard|hard
+--difficulty=casual|standard|hard|last_ride
 --start-wave=N            jump to wave N
 --continue                lose on purpose, continue from the checkpoint, play on (use with --start-wave=4 or later)
 --snap=<prefix> [--snap-until=<event>]   stills of banner, surge, boss, slam, bounty, clear, continue (needs a renderer)

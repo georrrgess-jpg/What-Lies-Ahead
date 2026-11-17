@@ -368,7 +368,11 @@ func _build_side() -> Control:
 	v.add_child(UiKit.section("DIFFICULTY"))
 	_difficulty = UiKit.tabs(26)
 	for id in Difficulty.IDS:
-		_difficulty.add_tab(id, Difficulty.label(id)).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var tab := _difficulty.add_tab(id, Difficulty.label(id))
+		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if not Difficulty.is_unlocked(id):
+			tab.modulate.a = 0.5
+			tab.tooltip_text = Difficulty.lock_reason(id)
 	_difficulty.tab_changed.connect(_on_difficulty)
 	v.add_child(_difficulty)
 	_difficulty_note = UiKit.body("", 520, UiKit.SIZE_SMALL, UiKit.MUTED)
@@ -539,6 +543,12 @@ func start() -> void:
 
 
 func _on_difficulty(id: StringName) -> void:
+	if not Difficulty.is_unlocked(id):
+		# Stay on the current tier; say how to open this one.
+		_difficulty.select(Difficulty.current())
+		_difficulty_note.text = Difficulty.lock_reason(id)
+		UiSound.deny()
+		return
 	Difficulty.set_current(id)
 	_difficulty_note.text = Difficulty.description(id)
 
