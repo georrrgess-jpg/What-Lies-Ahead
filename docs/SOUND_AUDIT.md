@@ -63,6 +63,178 @@ Toy-arcade, warm and punchy, never piercing. Levels are `eff` (dB at the output)
   enemy voices between ~80 and ~1,000 Hz fundamental, chimes 500 Hz - 2.5 kHz.
 - **Clean edges**: 3 ms fade in, 10 ms fade out on every one-shot; loops seamless.
 
+## What the audit found
+
+Run on all 745 effects and 35 loops (`docs/sound_audit/before.csv`, sheets in
+`docs/sound_audit/before/`). The music and the ambience beds were already in band
+(every loop within 1 dB, mastered by `gen_audio.master`) and no one-shot clipped or
+clicked at its edges (`write_wav` fades them). What stood out:
+
+1. **A broken pack.** `tools/audio_packs/bosses.py` called `filt(x, lo, hi)` meaning a
+   band-pass, but `filt` takes the low-pass corner first: every band became a sub
+   low-pass plus a high high-pass. `rounds_boss_defeat` was **completely silent**
+   (peak -inf: the alpha died without a sound), `rounds_boss_roar` was 100 % below 80 Hz
+   (a felt-not-heard rumble, inaudible on laptop speakers yet the loudest cue at -7.7),
+   `rounds_boss_thunder` was only its 4.5 kHz crack (84 % above 4 kHz, its rumble gone),
+   and stone/charge/geyser/splash/zone-hit/plate-break lost their bodies.
+   Sheet: `before/cue_1.jpg` (the boss row) vs `after/cue_1.jpg`.
+2. **Too loud for the game**: the Endless siren loop at -9.3 (the loudest loop, 11 dB over
+   the other emitters), the Ashfall Wrecker's impact -5.9 and the riot bash -7.3 (louder
+   than any gun), the alpha's beam/slam/pound/roar/surface at -7.4 .. -7.9, the Mall
+   walker's whistle -7.7, prize-capsule shake/shine -9.5/-10 in a menu, the tutorial dings
+   -10.3.
+3. **Mud** (energy below 80 Hz that small speakers cannot play): the alpha pound 85 %,
+   the surge hit 68 %, the lava eruption 98 %, the far city blast 98 %, the wrecker engine
+   75 % / charge 57 %, Endless trap fire 60 % / supply drop 55 % / boss siren 44 %, the
+   heartbeat 98 %, the heavy landing 46 %, the city buzz loop (a 54 Hz drone).
+4. **Harsh**: jungle thunder 36 % above 8 kHz, Dune's ambience bed 18 %, the Dune jet 16 %,
+   the cosmetics charm 12 %, the frost shatter 9 %, the Dune cadet radio 8 %, soda
+   shake/splash 52 %/43 % above 4 kHz.
+5. **Whistles**: the Mall walker's whistle is a pure 2.9 kHz tone (93 % of its energy) at
+   the loudest level in the game; the frost ice chip a 2.5 kHz ping (91 %).
+6. **Lost**: crawler skitter -28.8, popcorn kill effect -28.4, gummy wobble -23.3, the UI
+   tab/select/tick/hover -26 .. -37, tutorial blip -26.8.
+7. **Does not match**: the boss family (sub rumbles among bright, toy cues), the city buzz
+   (a drone among crackles), the prize-print sounds in no category (`misc`).
+
+Weapon sounds are listed for the weapon lanes in "Weapons" below.
+
+## What changed
+
+- **Generator fix**: `bosses.py` uses `_bp(x, lo, hi)` (a real band-pass); the whole pack
+  was regenerated (the 13 sounds that used it changed; the 6 without filters are
+  byte-identical).
+- **House tuning** (`tools/sound_tuning.py`, applied by `gen_audio.write_wav`,
+  `write_loop_wav` and `write_music` before normalising/mastering, so it survives any
+  regeneration): 37 entries. Sub thumps get `drive` (tanh saturation, harmonics a small
+  speaker can play) + a 70-75 Hz high-pass + a 120-140 Hz lift, and the pure-sine ones a
+  pitch of a fourth (75 Hz -> 100 Hz; a fourth keeps tonal ones on the A440 grid);
+  harsh ones a 6-9 kHz low-pass and a -2 .. -4 dB shelf; the whistle a quarter lower.
+- **Volume**: 43 per-sound trims (new or changed) in `audio/mix.tres` set each outlier into its family band;
+  `prz_` (prize capsule / prints) categorised as `ui` (same bus gain, so level-neutral).
+- `python3 tools/gen_audio.py <pack> --only=a,b` and `--tuned` rewrite just the named /
+  tuned sounds (everything is still generated in order, so no other sound's random stream
+  shifts and nothing else is rewritten).
+
+### Families, before -> after (base sounds; eff = in-game dB)
+
+| family | n | median eff before -> after | p10-p90 spread | flagged before -> after |
+|---|---|---|---|---|
+| ambience | 11 | -20.0 -> -18.1 | 14.8 -> 9.4 | 6 -> 4 |
+| ambience_bed | 11 | -32.0 -> -31.9 | 0.2 -> 0.1 | 4 -> 2 |
+| confirm | 4 | -19.0 -> -19.0 | 2.9 -> 2.9 | 0 -> 0 |
+| cue | 69 | -14.3 -> -14.1 | 8.5 -> 7.5 | 26 -> 17 |
+| enemy_attack | 18 | -14.1 -> -14.1 | 10.4 -> 7.7 | 10 -> 6 |
+| enemy_special | 12 | -13.4 -> -13.4 | 10.2 -> 5.2 | 6 -> 6 |
+| enemy_telegraph | 44 | -14.8 -> -14.8 | 6.2 -> 5.7 | 20 -> 14 |
+| enemy_voice | 74 | -18.6 -> -18.6 | 3.3 -> 3.3 | 7 -> 5 |
+| handling | 123 | -20.2 -> -20.2 | 10.0 -> 10.0 | 50 -> 50 |
+| impact | 40 | -16.8 -> -16.8 | 15.2 -> 15.2 | 19 -> 19 |
+| kill_effect | 28 | -20.2 -> -19.9 | 7.9 -> 6.4 | 9 -> 8 |
+| music | 25 | -27.1 -> -27.1 | 1.0 -> 1.0 | 1 -> 1 |
+| player | 14 | -23.2 -> -23.2 | 11.1 -> 11.1 | 9 -> 8 |
+| ui | 62 | -17.2 -> -17.2 | 10.4 -> 9.8 | 15 -> 9 |
+| weapon | 42 | -17.2 -> -17.2 | 9.1 -> 9.1 | 12 -> 12 |
+
+Weapon, handling and impact are the weapon lanes' (unchanged here). The remaining flags
+are mostly the "bright"/"dull" hints on sounds that are meant to be (boss rumbles, chimes,
+hisses) and the micro UI ticks inside their -30 .. -24 band.
+
+### Every change, before -> after
+
+| sound | change | eff | % >4k / >8k | % <80 Hz | strongest tone |
+|---|---|---|---|---|---|
+| aqua_ambience | hp+eq | -31.9 -> -31.9 | 0/0 -> 0/0 | 65 -> 49 | 66% @ 54 -> 50% @ 54 Hz |
+| aqua_jelly_charge | lp | -16.5 -> -16.8 | 34/7 -> 28/2 | 0 -> 0 | 5% @ 452 -> 6% @ 452 Hz |
+| candy_gummy_wobble | trim | -23.3 -> -18.3 | 0/0 -> 0/0 | 0 -> 0 | 57% @ 118 -> 57% @ 118 Hz |
+| city_blast_far | drive+hp+eq, trim | -15.7 -> -17.0 | 0/0 -> 0/0 | 98 -> 77 | 99% @ 65 -> 79% @ 65 Hz |
+| city_buzz_loop | pitch | -20.3 -> -18.1 | 0/0 -> 0/0 | 77 -> 0 | 78% @ 54 -> 77% @ 97 Hz |
+| city_siren_loop | trim | -9.3 -> -16.8 | 0/0 -> 0/0 | 0 -> 0 | 24% @ 646 -> 24% @ 646 Hz |
+| city_sparks_loop | shelf, trim | -26.7 -> -23.8 | 28/2 -> 21/1 | 0 -> 0 | 27% @ 118 -> 32% @ 118 Hz |
+| city_thunder | trim | -11.9 -> -12.9 | 0/0 -> 0/0 | 27 -> 27 | 38% @ 65 -> 38% @ 65 Hz |
+| cos_equip_charm | lp+shelf, trim | -15.1 -> -16.1 | 19/12 -> 7/1 | 0 -> 0 | 29% @ 3951 -> 32% @ 3951 Hz |
+| cos_kill_coins | lp+shelf | -20.2 -> -19.6 | 18/3 -> 12/0 | 0 -> 0 | 28% @ 2412 -> 30% @ 2412 Hz |
+| cos_kill_ghost | trim | -15.9 -> -17.9 | 0/0 -> 0/0 | 0 -> 0 | 60% @ 398 -> 60% @ 398 Hz |
+| cos_kill_popcorn | trim | -28.4 -> -21.9 | 5/0 -> 5/0 | 0 -> 0 | 4% @ 1421 -> 4% @ 1421 Hz |
+| cos_kill_snow | lp+shelf | -17.2 -> -17.0 | 9/5 -> 3/1 | 0 -> 0 | 24% @ 3951 -> 25% @ 3521 Hz |
+| cos_kill_thunder | trim | -24.8 -> -20.8 | 1/0 -> 1/0 | 15 -> 15 | 51% @ 108 -> 51% @ 108 Hz |
+| cz_crawler_hiss_1 | lp | -19.2 -> -19.3 | 34/1 -> 27/0 | 0 -> 0 | 3% @ 700 -> 3% @ 700 Hz |
+| cz_crawler_hiss_2 | trim | -14.0 -> -17.0 | 24/0 -> 24/0 | 0 -> 0 | 3% @ 3262 -> 3% @ 3262 Hz |
+| cz_crawler_skitter | trim | -28.8 -> -22.8 | 10/0 -> 10/0 | 0 -> 0 | 6% @ 2616 -> 6% @ 2616 Hz |
+| cz_riot_bash | trim | -7.3 -> -10.8 | 0/0 -> 0/0 | 4 -> 4 | 63% @ 129 -> 63% @ 129 Hz |
+| cz_wrecker_charge | pitch+drive+hp+eq, trim | -10.0 -> -10.9 | 0/0 -> 0/0 | 57 -> 0 | 83% @ 75 -> 88% @ 108 Hz |
+| cz_wrecker_debris | trim | -8.8 -> -10.8 | 2/1 -> 2/1 | 25 -> 25 | 95% @ 97 -> 95% @ 97 Hz |
+| cz_wrecker_engine | pitch+hp | -13.2 -> -12.8 | 0/0 -> 0/0 | 75 -> 44 | 77% @ 43 -> 56% @ 65 Hz |
+| cz_wrecker_impact | trim | -5.9 -> -9.4 | 0/0 -> 0/0 | 35 -> 35 | 68% @ 86 -> 68% @ 86 Hz |
+| dune_ambience | lp | -32.1 -> -31.9 | 19/18 -> 2/0 | 50 -> 61 | 50% @ 43 -> 61% @ 43 Hz |
+| dune_cadet_radio_1 | hp+lp | -18.2 -> -17.3 | 11/8 -> 1/0 | 0 -> 0 | 22% @ 657 -> 24% @ 657 Hz |
+| dune_cadet_radio_2 | hp+lp | -18.0 -> -17.7 | 9/7 -> 1/0 | 0 -> 0 | 24% @ 689 -> 26% @ 689 Hz |
+| dune_jet_burn | hp+lp | -12.7 -> -13.6 | 19/16 -> 3/1 | 32 -> 26 | 32% @ 65 -> 26% @ 65 Hz |
+| end_boss_siren | hp | -15.8 -> -16.4 | 0/0 -> 0/0 | 44 -> 18 | 45% @ 65 -> 19% @ 65 Hz |
+| end_supply_land | pitch+drive+hp+eq, trim | -15.7 -> -13.6 | 0/0 -> 0/0 | 55 -> 6 | 75% @ 75 -> 81% @ 97 Hz |
+| end_trap_fire | drive+hp+eq, trim | -14.4 -> -13.6 | 0/0 -> 1/0 | 60 -> 24 | 67% @ 65 -> 31% @ 75 Hz |
+| frost_ice_chip | pitch | -18.3 -> -17.5 | 9/1 -> 9/0 | 0 -> 0 | 91% @ 2476 -> 91% @ 1981 Hz |
+| frost_ice_shatter | lp+shelf | -13.4 -> -13.2 | 26/9 -> 16/1 | 1 -> 1 | 29% @ 129 -> 38% @ 129 Hz |
+| heartbeat | pitch+drive+hp+eq | -22.5 -> -20.1 | 0/0 -> 0/0 | 98 -> 65 | 99% @ 54 -> 97% @ 75 Hz |
+| jungle_thunder | lp+shelf | -14.4 -> -16.6 | 46/36 -> 4/0 | 19 -> 33 | 23% @ 86 -> 39% @ 86 Hz |
+| lava_bomb_whistle | trim | -9.6 -> -11.1 | 0/0 -> 0/0 | 0 -> 0 | 12% @ 1292 -> 12% @ 1292 Hz |
+| lava_eruption_rumble | pitch+drive+hp+eq, trim | -13.2 -> -12.0 | 1/1 -> 0/0 | 98 -> 33 | 98% @ 54 -> 96% @ 86 Hz |
+| mall_soda_shake | lp+shelf | -17.9 -> -18.4 | 52/3 -> 41/0 | 0 -> 0 | 3% @ 4091 -> 3% @ 4091 Hz |
+| mall_soda_splash | lp+shelf | -18.9 -> -19.4 | 43/4 -> 30/0 | 0 -> 0 | 18% @ 926 -> 24% @ 926 Hz |
+| mall_walker_whistle | pitch+lp, trim | -7.7 -> -12.4 | 0/0 -> 0/0 | 0 -> 0 | 93% @ 2896 -> 94% @ 2175 Hz |
+| move_land_heavy | pitch+drive+hp+eq | -22.0 -> -19.5 | 0/0 -> 1/0 | 46 -> 2 | 98% @ 86 -> 97% @ 108 Hz |
+| neon_spray_hiss | lp | -17.3 -> -16.0 | 73/7 -> 69/1 | 0 -> 0 | 3% @ 4694 -> 4% @ 4694 Hz |
+| onb_blip | trim | -26.8 -> -21.8 | 2/0 -> 2/0 | 0 -> 0 | 54% @ 1378 -> 54% @ 1378 Hz |
+| onb_complete | trim | -10.6 -> -13.1 | 7/0 -> 7/0 | 0 -> 0 | 17% @ 2218 -> 17% @ 2218 Hz |
+| onb_ding | trim | -10.3 -> -13.3 | 3/0 -> 3/0 | 0 -> 0 | 84% @ 1755 -> 84% @ 1755 Hz |
+| onb_step | trim | -13.0 -> -15.0 | 2/0 -> 2/0 | 0 -> 0 | 21% @ 2638 -> 21% @ 2638 Hz |
+| prog_xp_tick | trim | -32.0 -> -28.0 | 0/0 -> 0/0 | 0 -> 0 | 92% @ 2218 -> 92% @ 2218 Hz |
+| prz_shake | trim | -9.5 -> -14.0 | 0/0 -> 0/0 | 0 -> 0 | 80% @ 614 -> 80% @ 614 Hz |
+| prz_shine | trim | -10.0 -> -14.0 | 0/0 -> 0/0 | 0 -> 0 | 19% @ 1174 -> 19% @ 1174 Hz |
+| rounds_boss_beam | trim | -7.4 -> -10.4 | 0/0 -> 0/0 | 0 -> 0 | 17% @ 237 -> 17% @ 237 Hz |
+| rounds_boss_charge | band-pass fix, drive+hp+eq, trim | -9.2 -> -10.7 | 0/0 -> 1/0 | 70 -> 41 | 100% @ 75 -> 60% @ 75 Hz |
+| rounds_boss_charge_windup | band-pass fix | -13.4 -> -12.7 | 0/0 -> 0/0 | 0 -> 5 | 7% @ 474 -> 59% @ 97 Hz |
+| rounds_boss_dazed | trim | -9.1 -> -11.1 | 0/0 -> 0/0 | 0 -> 0 | 23% @ 1184 -> 23% @ 1184 Hz |
+| rounds_boss_defeat | band-pass fix, pitch+drive+hp+eq, trim | -120.3 -> -9.0 | 0/0 -> 0/0 | 0 -> 33 | 0% @ 0 -> 94% @ 86 Hz |
+| rounds_boss_geyser | band-pass fix, drive+hp+eq | -13.8 -> -11.3 | 0/0 -> 13/2 | 39 -> 20 | 68% @ 75 -> 39% @ 86 Hz |
+| rounds_boss_plate_break | band-pass fix | -13.8 -> -14.1 | 0/0 -> 1/0 | 0 -> 0 | 57% @ 1249 -> 56% @ 1249 Hz |
+| rounds_boss_pound | band-pass fix, pitch+drive+hp+eq, trim | -7.7 -> -9.7 | 0/0 -> 0/0 | 85 -> 19 | 100% @ 75 -> 97% @ 97 Hz |
+| rounds_boss_roar | band-pass fix, drive+hp+eq, trim | -7.7 -> -10.2 | 0/0 -> 0/0 | 100 -> 17 | 100% @ 65 -> 47% @ 86 Hz |
+| rounds_boss_slam | trim | -7.5 -> -9.4 | 1/1 -> 1/1 | 52 -> 52 | 94% @ 86 -> 94% @ 86 Hz |
+| rounds_boss_splash | band-pass fix | -10.7 -> -11.5 | 0/0 -> 1/0 | 0 -> 0 | 65% @ 226 -> 46% @ 226 Hz |
+| rounds_boss_stone | band-pass fix, pitch+drive+hp+eq, trim | -12.7 -> -11.8 | 0/0 -> 0/0 | 47 -> 2 | 98% @ 86 -> 93% @ 108 Hz |
+| rounds_boss_surface | band-pass fix, trim | -7.9 -> -10.5 | 0/0 -> 1/0 | 0 -> 0 | 85% @ 129 -> 78% @ 129 Hz |
+| rounds_boss_thunder | band-pass fix, lp+shelf | -13.3 -> -14.0 | 84/39 -> 14/1 | 0 -> 13 | 2% @ 4554 -> 24% @ 183 Hz |
+| rounds_boss_zone_hit | band-pass fix | -9.8 -> -11.0 | 0/0 -> 1/0 | 5 -> 5 | 95% @ 118 -> 94% @ 118 Hz |
+| rounds_surge_hit | pitch+drive+hp+eq, trim | -10.3 -> -11.2 | 0/0 -> 0/0 | 68 -> 2 | 100% @ 75 -> 98% @ 97 Hz |
+| rounds_wave_siege | drive+hp+eq | -13.7 -> -11.6 | 0/0 -> 0/0 | 39 -> 20 | 79% @ 86 -> 81% @ 86 Hz |
+| sky_dive_whistle | trim | -9.0 -> -11.0 | 0/0 -> 0/0 | 0 -> 0 | 8% @ 1174 -> 8% @ 1174 Hz |
+| sky_gale_horn | trim | -8.9 -> -10.9 | 0/0 -> 0/0 | 16 -> 16 | 88% @ 108 -> 88% @ 108 Hz |
+| ui_hover | trim | -31.5 -> -28.0 | 0/0 -> 0/0 | 0 -> 0 | 99% @ 1314 -> 99% @ 1314 Hz |
+| ui_select | trim | -25.9 -> -21.9 | 0/0 -> 0/0 | 0 -> 0 | 99% @ 1174 -> 99% @ 1174 Hz |
+| ui_tab | trim | -27.8 -> -23.8 | 0/0 -> 0/0 | 0 -> 0 | 99% @ 991 -> 99% @ 991 Hz |
+| ui_tick | trim | -37.1 -> -30.1 | 15/3 -> 15/3 | 0 -> 0 | 6% @ 2713 -> 6% @ 2713 Hz |
+
+Accepted on purpose: `player_hurt` (-15.2) sits above the player band (it must cut
+through a fight); `mall_walker_whistle` and `frost_ice_chip` remain single tones (that is
+what they are) but lower and quieter; `cine_startup` is the showreel's intro, not
+gameplay; `heartbeat` keeps a low body (65 % below 80 Hz, now with audible harmonics).
+
+### Sheets
+
+Every family, before and after: `docs/sound_audit/before/<family>_<page>.jpg` and
+`docs/sound_audit/after/<family>_<page>.jpg` (log frequency 30 Hz - 18 kHz upwards, time
+left to right, -80 .. 0 dBFS; label: name, length, in-game level; red label = flagged).
+Changed families: `cue_1`, `cue_2`, `enemy_attack_1`, `enemy_special_1`,
+`enemy_telegraph_1`, `enemy_voice_*`, `ambience_1`, `ambience_bed_1`, `kill_effect_1`,
+`player_1`, `ui_*`, `impact_1` (frost chip).
+
+### Re-running
+
+    python3 tools/sound_audit.py --csv docs/sound_audit/after.csv --sheets docs/sound_audit/after
+    python3 tools/audio_mix_report.py --all      # the per-call-site mix report the audit builds on
+
+
 ## Weapons (hand-off to snd_wpn_a / snd_wpn_b)
 
 Weapon-owned sounds the audit flags (before). `eff` dB, centroid Hz, % above 4/8 kHz,
