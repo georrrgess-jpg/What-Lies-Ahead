@@ -11,6 +11,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
+from weapon_punch import HANDLE, HEAVY, punched
 
 MUSIC = {}
 LOOPS = {}
@@ -42,6 +43,7 @@ def _splash(d, gain=1.0, seed=4):
 # Teacup Twister
 # ---------------------------------------------------------------------------
 
+@punched(HEAVY)
 def gn8_twister_fire():
     """A hollow mortar 'thoonk' and the cup whirring off."""
     d = 0.5
@@ -69,6 +71,7 @@ def gn8_twister_whirl():
     return filt(out, low=6500)
 
 
+@punched(HEAVY, thump_hz=(110.0, 50.0), hp=55.0)
 def gn8_twister_pop():
     """The cup bursting: a round boom, a china crack and a puff of confetti."""
     d = 0.9
@@ -82,6 +85,7 @@ def gn8_twister_pop():
     return crush(filt(out, low=7500), 1.5)
 
 
+@punched(HANDLE)
 def gn8_twister_equip():
     """Raised: the carousel ratchets round a step and the cup chimes."""
     out = silence(0.45)
@@ -92,6 +96,7 @@ def gn8_twister_equip():
     return filt(out, low=8000)
 
 
+@punched(HANDLE)
 def gn8_twister_reload():
     """2.3 s: roll-over clunk, four cups popping out, cups printing in and
     seating, the flick whirr slowing to a click and a china ding."""
@@ -165,4 +170,4 @@ def gn8_dunk_reload():
 
 SOUNDS = [gn8_twister_fire, gn8_twister_whirl, gn8_twister_pop, gn8_twister_equip, gn8_twister_reload,
           gn8_dunk_fire, gn8_dunk_pump, gn8_dunk_equip, gn8_dunk_reload]
-VARIANTS = [(gn8_dunk_fire, (0.94, 1.06)), (gn8_twister_pop, (0.95, 1.05))]
+VARIANTS = [(gn8_dunk_fire, (0.94, 1.06)), (gn8_twister_pop, (0.95, 1.05)), (gn8_twister_fire, (0.95, 1.05))]

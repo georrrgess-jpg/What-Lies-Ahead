@@ -10,6 +10,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
+from weapon_punch import CUE, HANDLE, HEAVY, HIT, MID, punched
 
 
 def _ping(freq, d, gain=1.0, decay=1.6):
@@ -24,16 +25,18 @@ def _whoomp(d, f0, f1, gain=1.0):
     return (_sub_thump(f0, f1, d, d * 0.45) * 1.2 + rush) * gain
 
 
+@punched(MID)
 def gc_fire():
     """A ping: the dish thumps and a bright sonar note rings away."""
     d = 0.55
     out = _whoomp(0.3, 220, 90, 0.9)
     out = np.concatenate([out, silence(d - 0.3)])
-    place(out, _ping(1320, 0.5, 0.55), 0.0, 1.0)
-    place(out, _ping(990, 0.4, 0.25), 0.03, 1.0)
+    place(out, _ping(1320, 0.5, 0.4, decay=2.2), 0.0, 1.0)                      # the ping rings, never whistles
+    place(out, _ping(990, 0.4, 0.3), 0.03, 1.0)
     return filt(out, low=7500)
 
 
+@punched(HEAVY)
 def gc_fire_big():
     """The full charge on top of the ping: a deep, wide sonar boom."""
     d = 0.9
@@ -67,6 +70,7 @@ def gc_charge():
     return filt(whine * pulse * env(d, 0.04, d, power=0.5, release=0.04), low=5000)
 
 
+@punched(CUE)
 def gc_ready():
     """Full charge: a two-note lock-on chirp."""
     out = silence(0.25)
@@ -100,6 +104,7 @@ def gc_stall():
     return filt(out, low=7000)
 
 
+@punched(HIT, thump_gain=0.2)
 def gc_bounce():
     """A ring echoing off a wall: a glassy reflected ping with a tail."""
     d = 0.5
@@ -108,6 +113,7 @@ def gc_bounce():
     return filt(out, low=6500)
 
 
+@punched(HIT)
 def gc_strike():
     """A ring passing through a zombie: a soft thud and a blip."""
     d = 0.22
@@ -115,6 +121,7 @@ def gc_strike():
     return filt(thud + _ping(1760, d, 0.22, decay=3.0), low=6500)
 
 
+@punched(HANDLE)
 def gc_equip():
     """Raised: the dish clacks, the radar beeps twice."""
     out = silence(0.4)
@@ -149,6 +156,7 @@ def gc_chime():
     return out
 
 
+@punched(HANDLE)
 def gc_reload():
     """The reload bed: the meter drops, the satellite hums down, the bars tick in."""
     out = silence(2.0)
