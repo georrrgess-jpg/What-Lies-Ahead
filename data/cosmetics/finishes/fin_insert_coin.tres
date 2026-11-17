@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_insert_coin"
+display_name = "Insert Coin"
+description = "The weapon is an arcade screen: ghosts, invaders, pixel zombies and chompers march along it a pixel at a time, behind CRT scanlines and a rolling refresh bar. Cabinet-purple trim with a blinking coin light."
+slot = &"weapon_finish"
+rarity = 3
+price = 7750
+colors = PackedColorArray(0.03, 0.03, 0.08, 1, 0.32, 0.1, 0.62, 1)
+params = {
+"shader": "res://art/shaders/finish_insert_coin.gdshader"
+}
+sort_order = 2345

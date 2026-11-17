@@ -59,6 +59,7 @@ const CELL_FX := {
 	"bubbles": 1, "lava": 2, "stripes": 3, "rainbow": 4, "siren": 5, "scan": 6, "sparkle": 7,
 	"caustics": 8, "slosh": 9, "warp": 10, "plasma": 11, "snow": 12, "chase": 13, "pixels": 14,
 	"arcs": 15, "curtains": 16,
+	"arcade": 17, "kintsugi": 18, "koi": 19,
 }
 const DECAL_ART_SHADER := "res://art/shaders/decal_art.gdshader"
 const PATTERNS := {

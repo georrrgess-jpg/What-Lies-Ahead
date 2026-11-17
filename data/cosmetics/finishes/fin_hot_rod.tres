@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_hot_rod"
+display_name = "Hot Rod"
+description = "Black-cherry candy paint full of metal flake, with hot-rod flames licking back along the weapon: they flicker, ripple and glow white-hot at the root. Pinstriped in blue, candy-apple red trim."
+slot = &"weapon_finish"
+rarity = 2
+price = 2500
+colors = PackedColorArray(0.18, 0.03, 0.22, 1, 0.62, 0.04, 0.08, 1)
+params = {
+"shader": "res://art/shaders/finish_hot_rod.gdshader"
+}
+sort_order = 2244

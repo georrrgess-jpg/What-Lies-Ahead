@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_insert_coin"
+display_name = "Extra Life"
+description = "A pixel chomper eats its way along the cell with a ghost on its tail, on a dark arcade screen. Pairs with the Insert Coin finish."
+slot = &"weapon_cell"
+rarity = 2
+price = 2000
+colors = PackedColorArray(0.55, 0.25, 1, 1, 1, 0.92, 0.2, 1)
+params = {
+"fx": "arcade"
+}
+sort_order = 3227

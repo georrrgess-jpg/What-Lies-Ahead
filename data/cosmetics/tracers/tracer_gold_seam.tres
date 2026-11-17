@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 21
+amount = 35
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_gold_seam"
+display_name = "Gold Seam"
+description = "Shots crack the air with a jagged seam of molten gold, a white-hot pulse racing along it. Pairs with the Kintsugi finish. Reach wave 35 in Endless."
+slot = &"tracer"
+rarity = 3
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.74, 0.25, 1, 0.75, 0.32, 0.08, 1)
+params = {
+"style": "gold_seam"
+}
+sort_order = 8311

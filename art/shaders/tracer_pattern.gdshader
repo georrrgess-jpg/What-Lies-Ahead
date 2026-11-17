@@ -6,6 +6,7 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabl
 // here in metres, so no mesh is built per shot.
 //   0 gift ribbon   1 morse code   2 heartbeat   3 laser fence
 //   4 neon tube     5 ticket roll  6 chevrons    7 candy stripe
+//   8 pixel stream  9 gold seam    10 koi
 // Normal (mix) blending with a light core and a darker rim keeps the colour
 // readable against bright skies.
 uniform int style = 0;
@@ -49,6 +50,18 @@ float morse(float x, float u) {
 	return d;
 }
 
+// 0-1 noise for the per-shot shapes (seeded per shot).
+float shot_hash(float n) {
+	return fract(sin(n * 12.9898 + seed * 78.233) * 43758.5453);
+}
+
+// The gold seam's crack: a jagged line, one kink every 0.6 m.
+float seam_jag(float a, float k) {
+	float s = a / 0.6;
+	float i = floor(s);
+	return mix(shot_hash(i + k), shot_hash(i + 1.0 + k), fract(s)) - 0.5;
+}
+
 void vertex() {
 	v_along = UV.y * length_m;
 	float width_m = length(MODEL_MATRIX[0].xyz);
@@ -63,6 +76,17 @@ void vertex() {
 	} else if (style == 2) {
 		// Flat at the muzzle, full height from about 6 m out.
 		VERTEX.y += heartbeat(v_along) * clamp((v_along - 1.0) / 5.0, 0.0, 1.0) / max(width_m, 0.001);
+		v_shade = 1.0;
+	} else if (style == 9 || style == 10) {
+		// The seam jags in both directions across the shot; the koi swims
+		// side to side. Both settle down near the muzzle.
+		float settle = clamp((v_along - 1.0) / 4.0, 0.0, 1.0) / max(width_m, 0.001);
+		if (style == 9) {
+			VERTEX.x += seam_jag(v_along, 0.0) * 0.32 * settle;
+			VERTEX.y += seam_jag(v_along, 31.0) * 0.32 * settle;
+		} else {
+			VERTEX.x += sin(v_along * 1.7 - TIME * 16.0 + seed * 6.28) * 0.16 * settle;
+		}
 		v_shade = 1.0;
 	} else {
 		// Round the tube: lit from above.
@@ -128,9 +152,39 @@ void fragment() {
 		float on = smoothstep(0.5, 0.53, f) * smoothstep(0.88, 0.85, f);
 		col = mix(color_a.rgb * 0.55, mix(color_a.rgb, color_b.rgb, smoothstep(0.75, 0.86, f)), on);
 		alpha = max(on, smoothstep(0.2, 0.0, au) * 0.35);
-	} else {
+	} else if (style == 7) {
 		float stripe = step(0.5, fract(UV.x * 2.0 + v_along * 1.4 - t * 3.0));
 		col = mix(color_a.rgb, color_b.rgb, stripe) * v_shade;
+	} else if (style == 8) {
+		// Chunky 8-bit blocks marching to the target in three rows: the middle
+		// row nearly solid, the outer ones sparse.
+		float block = 0.24;
+		float a = (v_along - t * 30.0) / block;
+		float id = floor(a);
+		float row = floor((u + 1.0) * 1.5 - 0.001);
+		float on = row == 1.0 ? step(0.12, shot_hash(id)) : step(0.62, shot_hash(id + row * 17.0));
+		vec2 f = vec2(fract(a), fract((u + 1.0) * 1.5));
+		float gap = step(0.1, f.x) * step(f.x, 0.92) * step(0.08, f.y) * step(f.y, 0.92);
+		col = mix(color_a.rgb, color_b.rgb, step(0.5, shot_hash(id + 5.0 + row)));
+		col = mix(col, vec3(1.0), step(f.x, 0.3) * step(0.7, f.y) * 0.5);
+		alpha = on * gap;
+	} else if (style == 9) {
+		// Molten gold in a jagged seam, a white-hot pulse racing along it.
+		float blip = mod(t * 60.0, length_m + 12.0) - 6.0;
+		float hot = exp(-abs(v_along - blip) * 0.8);
+		float glow = 0.5 + 0.5 * sin(v_along * 9.0 - t * 40.0);
+		col = mix(color_b.rgb * 0.55, color_a.rgb, smoothstep(1.0, 0.35, au));
+		col = mix(col, vec3(1.0, 0.97, 0.85), smoothstep(0.35, 0.0, au) * (0.35 + glow * 0.25) + hot * 0.7);
+		alpha = smoothstep(1.0, 0.55, au);
+	} else {
+		// A koi: scales in orange and white patches, a darker line down its back.
+		float patch = step(0.0, sin(v_along * 1.1 + seed * 6.28) + sin(v_along * 2.7 + seed * 3.0) * 0.6);
+		col = mix(color_b.rgb, color_a.rgb, patch);
+		float scales = smoothstep(0.3, 0.5, abs(fract(v_along * 5.0 + au * 1.2) - 0.5));
+		col *= 0.82 + 0.18 * scales;
+		col = mix(col, col * 0.6, smoothstep(0.25, 0.0, au) * 0.4);
+		col = mix(col, vec3(1.0), smoothstep(0.75, 0.55, au) * smoothstep(0.4, 0.55, au) * 0.25);
+		alpha = smoothstep(1.0, 0.75, au);
 	}
 	ALBEDO = col;
 	ALPHA = alpha * (1.0 - fade) * smoothstep(0.4, 1.8, v_along);
