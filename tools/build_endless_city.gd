@@ -2416,8 +2416,8 @@ func _build_streets() -> void:
 	# Bins and bags against the facades.
 	_bins(Vector3(-21.2, 0, -12.0), Vector3(-21.2, 0, -6.0), 2)
 	_bins(Vector3(21.2, 0, 5.5), Vector3(21.2, 0, 9.5), 2)
-	_bins(Vector3(-36.0, 0, -23.2), Vector3(-30.0, 0, -23.2), 2)
-	_bins(Vector3(-73.0, 0, -14.0), Vector3(-73.0, 0, -8.0), 2)
+	_bins(Vector3(-41.0, 0, -23.2), Vector3(-35.0, 0, -23.2), 2)
+	_bins(Vector3(-72.3, 0, -14.0), Vector3(-72.3, 0, -8.0), 2)
 	_bins(Vector3(36.0, 0, 7.2), Vector3(44.0, 0, 7.2), 2)
 	_bins(Vector3(74.0, 0, -7.2), Vector3(84.0, 0, -7.2), 3)
 	_bins(Vector3(47.0, 0, -70.0), Vector3(47.0, 0, -64.0), 2)

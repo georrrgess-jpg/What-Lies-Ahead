@@ -59,11 +59,11 @@ func build() -> void:
 ## Ashfall Square's pavements: a phone booth, newspaper boxes, a bench
 ## between planters, parking meters, a bike rack; potholes in the ring road.
 func _square() -> void:
-	_put("phone_booth", Vector3(-21.3, 0, 8.0), 90.0, Vector3(1.1, 2.6, 1.1))
-	_put("news_boxes", Vector3(6.9, 0, 21.5), 180.0, Vector3(1.7, 1.0, 0.5))
-	_put("planter", Vector3(-12.0, 0, -21.0), 0.0, Vector3(1.6, 0.6, 1.6))
-	_put("planter", Vector3(-5.2, 0, -21.0), 0.0, Vector3(1.6, 0.6, 1.6))
-	_put("bench", Vector3(-8.6, 0, -21.45), 180.0, Vector3(2.4, 0.5, 0.6))
+	_put("phone_booth", Vector3(-21.45, 0, 8.0), 90.0, Vector3(1.1, 2.6, 1.1))
+	_put("news_boxes", Vector3(6.9, 0, 21.75), 180.0, Vector3(1.7, 1.0, 0.5))
+	_put("planter", Vector3(-12.0, 0, -21.2), 0.0, Vector3(1.6, 0.6, 1.6))
+	_put("planter", Vector3(-5.2, 0, -21.2), 0.0, Vector3(1.6, 0.6, 1.6))
+	_put("bench", Vector3(-8.6, 0, -21.7), 180.0, Vector3(2.4, 0.5, 0.6))
 	_put("bike_rack", Vector3(21.2, 0, -8.5), 90.0, Vector3(2.4, 0.9, 0.6))
 	for x in [9.5, 12.0]:
 		_meter(Vector3(x, 0, 19.85), 180.0)
@@ -116,10 +116,10 @@ func _precinct() -> void:
 func _market() -> void:
 	_put("table_set", Vector3(68.6, 0, 6.2), 15.0, Vector3(0.9, 0.78, 0.9))
 	_put("table_set", Vector3(71.6, 0, 6.4), -20.0, Vector3(0.9, 0.78, 0.9))
-	_put("vending", Vector3(73.8, 0, 7.45), 180.0, Vector3(1.0, 1.9, 0.8))
-	_put("crates", Vector3(37.4, 0, -7.4), 0.0, Vector3(1.3, 0.9, 0.5))
-	_put("crates", Vector3(59.8, 0, -7.4), 180.0, Vector3(1.3, 0.9, 0.5))
-	_put("crates", Vector3(49.0, 0, 7.4), 0.0, Vector3(1.3, 0.9, 0.5))
+	_put("vending", Vector3(73.8, 0, 7.6), 180.0, Vector3(1.0, 1.9, 0.8))
+	_put("crates", Vector3(37.4, 0, -7.75), 0.0, Vector3(1.3, 0.9, 0.5))
+	_put("crates", Vector3(59.8, 0, -7.75), 180.0, Vector3(1.3, 0.9, 0.5))
+	_put("crates", Vector3(49.0, 0, 7.75), 0.0, Vector3(1.3, 0.9, 0.5))
 	_put("trolley", Vector3(50.4, 0, -6.8), 80.0)
 	_put("trolley", Vector3(86.4, 0, 6.5), 30.0, Vector3.ZERO, Basis(Vector3.FORWARD, PI * 0.5), 0.3)
 	_put("spill", Vector3(46.5, 0, 2.6), 200.0)
@@ -134,8 +134,8 @@ func _metro() -> void:
 			[Vector3(29.5, y, -34.8), 80.0], [Vector3(-15.5, y, -30.0), 200.0], [Vector3(36.5, y, -31.2), 330.0],
 			[Vector3(13.8, y, -36.4), 45.0]]:
 		_put("luggage", p[0], p[1])
-	_put("vending", Vector3(-4.0, y, -28.45), 180.0, Vector3(1.0, 1.9, 0.8))
-	_put("vending", Vector3(13.0, y, -28.45), 180.0, Vector3(1.0, 1.9, 0.8))
+	_put("vending", Vector3(-4.0, y, -28.4), 180.0, Vector3(1.0, 1.9, 0.8))
+	_put("vending", Vector3(13.0, y, -28.4), 180.0, Vector3(1.0, 1.9, 0.8))
 
 
 ## The Broadcast Tower plaza: the KWLA news van crashed at the alley's foot,
@@ -151,18 +151,23 @@ func _tower() -> void:
 		var yaw := -8.0 + (0.0 if s > 0.0 else 180.0)
 		b._label(b.dressing, "NewsVanLogo%s" % ("S" if s > 0.0 else "N"), "KWLA", face + Vector3(0, 1.75, 0), yaw, 150, Color(1.0, 0.2, 0.18))
 		b._label(b.dressing, "NewsVanLine%s" % ("S" if s > 0.0 else "N"), "NEWS 7  LIVE", face + Vector3(0, 0.75, 0), yaw, 64, Color(0.1, 0.1, 0.14))
+	# It ran into a planter: the engine smoulders, the planter knocked askew.
+	var nose: Vector3 = van + side * Vector3(2.6, 1.0, 0)
+	b._fire_at(b.fx, "NewsVanEngine", nose, 0.8, false, 0.0, true)
+	b._smoke(b.fx, "NewsVanSmoke", nose + Vector3(0, 0.5, 0), 0.12)
+	_put("planter", Vector3(82.9, 0, -26.4), 22.0, Vector3(1.6, 0.6, 1.6), Basis(Vector3.FORWARD, 0.16), 0.12)
 	_put("dish", Vector3(82.6, 0, -24.0), 35.0, Vector3.ZERO, Basis(Vector3.RIGHT, deg_to_rad(-62.0)), 0.55)
 	b._cable(van + side * Vector3(-1.5, 2.5, 0), Vector3(82.4, 0.3, -24.2), 0.2, 6)
 	_put("tv_camera", Vector3(67.6, 0, -41.4), -45.0)
 	# The crew's generator feeding the floodlight by the mast.
 	_put("generator", Vector3(64.6, 0, -39.2), 30.0, Vector3(1.4, 1.0, 0.9))
 	b._cable(Vector3(65.2, 0.4, -39.6), Vector3(67.0, 0.03, -43.0), 0.0, 4)
-	_put("planter", Vector3(51.0, 0, -23.2), 0.0, Vector3(1.6, 0.6, 1.6))
-	_put("planter", Vector3(56.5, 0, -23.2), 0.0, Vector3(1.6, 0.6, 1.6))
-	_put("bench", Vector3(53.75, 0, -23.35), 0.0, Vector3(2.4, 0.5, 0.6))
-	_put("planter", Vector3(92.8, 0, -66.0), 0.0, Vector3(1.6, 0.6, 1.6))
-	_put("planter", Vector3(92.8, 0, -59.2), 0.0, Vector3(1.6, 0.6, 1.6))
-	_put("bench", Vector3(93.35, 0, -62.6), 90.0, Vector3(2.4, 0.5, 0.6))
+	_put("planter", Vector3(51.0, 0, -22.8), 0.0, Vector3(1.6, 0.6, 1.6))
+	_put("planter", Vector3(56.5, 0, -22.8), 0.0, Vector3(1.6, 0.6, 1.6))
+	_put("bench", Vector3(53.75, 0, -22.3), 0.0, Vector3(2.4, 0.5, 0.6))
+	_put("planter", Vector3(93.2, 0, -66.0), 0.0, Vector3(1.6, 0.6, 1.6))
+	_put("planter", Vector3(93.2, 0, -59.2), 0.0, Vector3(1.6, 0.6, 1.6))
+	_put("bench", Vector3(93.7, 0, -62.6), 90.0, Vector3(2.4, 0.5, 0.6))
 	_pothole(Vector3(66.2, 0, -18.4), 0.8)
 
 
@@ -172,7 +177,7 @@ func _tower() -> void:
 func _back_streets() -> void:
 	# Back street to the Precinct (x -34..-22, z 12..18; the gate at x -28).
 	b._solid_kit(_solid, "city_dumpster", "BackStreetDumpster", Vector3(-24.6, 0, 12.75), 0.0, Vector3(2.0, 1.4, 1.2))
-	_put("crates", Vector3(-32.4, 0, 17.45), 180.0, Vector3(1.3, 0.9, 0.5))
+	_put("crates", Vector3(-32.4, 0, 17.75), 180.0, Vector3(1.3, 0.9, 0.5))
 	_tag("LOOTERS WILL BE SHOT", Vector3(-31.0, 2.7, 12.06), 0.0, Color(1.0, 0.85, 0.2), 64)
 	_tag("KEEP OUT", Vector3(-24.6, 2.9, 17.94), 180.0, Color(1.0, 0.3, 0.25), 90)
 	for p in [[Vector3(-30.6, 4.4, 12.5), 0.0], [Vector3(-25.0, 6.8, 12.5), 0.0], [Vector3(-31.5, 5.2, 17.5), 180.0]]:
