@@ -48,6 +48,7 @@ func build() -> void:
 	_metro()
 	_tower()
 	_back_streets()
+	_road_paint()
 	_flush()
 
 
@@ -105,6 +106,9 @@ func _precinct() -> void:
 	_pothole(Vector3(-42.0, 0, 10.8), 1.0)
 	b._solid_kit(_solid, "city_hydrant", "HydrantPrecinct", Vector3(-46.0, 0, 23.2), 0.0, Vector3(0.5, 0.9, 0.5))
 	_put("bike_rack", Vector3(-62.0, 0, 23.3), 0.0, Vector3(2.4, 0.9, 0.6))
+	# A police barrier knocked flat in the rush.
+	var fallen: Node3D = b._kit(b.dressing, "city_police_barrier", "FallenBarrier", Vector3(-62.6, 0.32, -7.4), 64.0, Vector3(2.8, 1.1, 0.5))
+	fallen.rotation.x = deg_to_rad(-84.0)
 
 
 ## Neon Market: a noodle bar (tables, stools, bowls) by a lit vending
@@ -118,6 +122,8 @@ func _market() -> void:
 	_put("crates", Vector3(49.0, 0, 7.4), 0.0, Vector3(1.3, 0.9, 0.5))
 	_put("trolley", Vector3(50.4, 0, -6.8), 80.0)
 	_put("trolley", Vector3(86.4, 0, 6.5), 30.0, Vector3.ZERO, Basis(Vector3.FORWARD, PI * 0.5), 0.3)
+	_put("spill", Vector3(46.5, 0, 2.6), 200.0)
+	_put("spill", Vector3(77.6, 0, -2.4), 20.0)
 
 
 ## The Metro platform: luggage dropped in the rush for the trains, vending
@@ -148,6 +154,9 @@ func _tower() -> void:
 	_put("dish", Vector3(82.6, 0, -24.0), 35.0, Vector3.ZERO, Basis(Vector3.RIGHT, deg_to_rad(-62.0)), 0.55)
 	b._cable(van + side * Vector3(-1.5, 2.5, 0), Vector3(82.4, 0.3, -24.2), 0.2, 6)
 	_put("tv_camera", Vector3(67.6, 0, -41.4), -45.0)
+	# The crew's generator feeding the floodlight by the mast.
+	_put("generator", Vector3(64.6, 0, -39.2), 30.0, Vector3(1.4, 1.0, 0.9))
+	b._cable(Vector3(65.2, 0.4, -39.6), Vector3(67.0, 0.03, -43.0), 0.0, 4)
 	_put("planter", Vector3(51.0, 0, -23.2), 0.0, Vector3(1.6, 0.6, 1.6))
 	_put("planter", Vector3(56.5, 0, -23.2), 0.0, Vector3(1.6, 0.6, 1.6))
 	_put("bench", Vector3(53.75, 0, -23.35), 0.0, Vector3(2.4, 0.5, 0.6))
@@ -177,6 +186,31 @@ func _back_streets() -> void:
 	_pipe(Vector3(32.4, 0, 3.9), 11.0)
 	for p in [[Vector3(-31.8, 5.6, -3.5), 180.0], [Vector3(29.6, 4.8, 3.5), 0.0], [Vector3(25.0, 7.4, -3.5), 180.0]]:
 		b._instance("ac", Transform3D(Basis(Vector3.UP, deg_to_rad(p[1])), p[0]), Color.WHITE)
+
+
+## Road paint: stop lines before the square's crossings (both lanes, traffic
+## on the right) with STOP on one approach of each, the Precinct's bays.
+func _road_paint() -> void:
+	for c in [[Vector3(-16.5, 0, 0), Vector3(0, 0, -1)], [Vector3(16.5, 0, 0), Vector3(0, 0, 1)],
+			[Vector3(-8.5, 0, -16.5), Vector3(1, 0, 0)], [Vector3(0, 0, 16.5), Vector3(-1, 0, 0)]]:
+		var centre: Vector3 = c[0]
+		for d: Vector3 in [c[1], -c[1]]:
+			var right := Vector3(-d.z, 0, d.x)
+			var bar := Basis(Vector3.UP, atan2(-d.x, -d.z)).scaled_local(Vector3(3.0, 1.0, 0.35))
+			b._instance("paint", Transform3D(bar, centre - d * 2.5 + right * 1.6 + Vector3(0, 0.025, 0)), Color(0.55, 0.53, 0.48))
+			if d == c[1]:
+				_floor_text("STOP", centre - d * 4.8 + right * 1.6, d, 190)
+	_floor_text("POLICE ONLY", Vector3(-67.5, 0, -10.6), Vector3(0, 0, 1), 110)
+	_floor_text("POLICE ONLY", Vector3(-41.0, 0, 10.6), Vector3(0, 0, -1), 110)
+
+
+## Worn paint lettering lying on the road, its top toward `up` (the way
+## the traffic it speaks to drives).
+func _floor_text(text: String, pos: Vector3, up: Vector3, font_size: int) -> void:
+	var l: Label3D = b._label(b.dressing, "Road_%s_%d" % [text.replace(" ", ""), int(pos.x * 10 + pos.z)], text, pos + Vector3(0, 0.03, 0), 0.0, font_size, Color(0.62, 0.6, 0.54))
+	l.basis = Basis(Vector3.UP, atan2(-up.x, -up.z)) * Basis(Vector3.RIGHT, -PI * 0.5)
+	l.outline_size = 0
+	l.shaded = true
 
 
 # ---------------------------------------------------------------------------
@@ -302,6 +336,10 @@ func _mesh(kind: String) -> Mesh:
 				[_bx(Vector3(0.06, 0.06, 0.8)), Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0, 0.45, 0)), _m("van_dark", Color(0.12, 0.12, 0.13), 0.5)]]
 		"tv_camera":
 			parts = _tv_camera()
+		"spill":
+			parts = _spill()
+		"generator":
+			parts = _generator()
 		"pipe":
 			parts = [[_cyl(0.07, 0.07, 1.0, 8), _at(0, 0, 0), _m("pipe", Color(0.24, 0.27, 0.25), 0.5)]]
 	var mesh := Batch.compound(parts)
@@ -500,6 +538,30 @@ func _news_van() -> Array:
 			parts.append([_cyl(0.42, 0.42, 0.3, 14), Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(x, 0.42, z)), tyre])
 	# The front left tyre burst: the nose dips, a crumpled bumper.
 	parts.append([_bx(Vector3(0.5, 0.35, 0.25)), Transform3D(Basis(Vector3.UP, 0.5), Vector3(2.95, 0.4, 0.75)), dark])
+	return parts
+
+
+## A crate of fruit knocked off a stall, rolled out across the paving.
+func _spill() -> Array:
+	var parts: Array = [[_bx(Vector3(0.6, 0.44, 0.45)), Transform3D(Basis(Vector3.UP, 0.3) * Basis(Vector3.FORWARD, PI * 0.5), Vector3(0, 0.3, 0)), _m("crate", Color(0.56, 0.38, 0.2), 0.85)]]
+	var fruit := [_m("fruit_orange", Color(1.0, 0.5, 0.08), 0.5), _m("fruit_red", Color(0.8, 0.1, 0.08), 0.4), _m("fruit_green", Color(0.45, 0.7, 0.15), 0.5)]
+	for k in 11:
+		var a := k * 2.4
+		var r := 0.45 + k * 0.11
+		parts.append([_sphere(0.075), _at(0.4 + cos(a) * r * 0.6, 0.065, sin(a) * r), fruit[k % 3]])
+	return parts
+
+
+## A portable generator on wheels (yellow, the crew's).
+func _generator() -> Array:
+	var dark := _m("van_dark", Color(0.12, 0.12, 0.13), 0.5)
+	var parts: Array = [[_bx(Vector3(1.2, 0.7, 0.75)), _at(0, 0.55, 0), _m("generator", Color(0.95, 0.68, 0.1), 0.5)],
+		[_bx(Vector3(0.5, 0.35, 0.02)), _at(-0.2, 0.6, 0.38), dark],
+		[_cyl(0.06, 0.06, 0.35, 8), Transform3D(Basis(Vector3.FORWARD, PI * 0.5), Vector3(0.45, 0.98, 0.0)), dark],
+		[_bx(Vector3(0.05, 0.05, 0.8)), _at(-0.62, 0.95, 0), dark]]
+	for z in [-0.4, 0.4]:
+		parts.append([_cyl(0.2, 0.2, 0.1, 12), Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0.35, 0.2, z)), _m("tyre", Color(0.06, 0.06, 0.06), 0.8)])
+	parts.append([_bx(Vector3(0.08, 0.2, 0.6)), _at(-0.45, 0.1, 0), dark])
 	return parts
 
 
