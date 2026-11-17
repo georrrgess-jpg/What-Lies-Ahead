@@ -21,26 +21,27 @@ const KNOB := Vector3(-0.052, 0.044, 0.0)
 ## The support hand's pose on the knob: its offset from the knob's centre, and
 ## the turn (axis, degrees) that lays its fist round the knob from behind with
 ## the forearm coming up from below-left.
-const GRAB := Vector3(-0.02, 0.0, 0.0)
+const GRAB := Vector3(-0.03, -0.022, -0.01)
 const GRAB_AXIS := Vector3(0.642, 0.523, -0.56)
 const GRAB_DEG := 134.6
 ## The hand's path bulges out this way on its way to the crank and back.
 const HAND_ARC := Vector3(-0.05, -0.02, 0.03)
 const ROOT_POS := Vector3(-0.05, 0.035, 0.05)
 const ROOT_ROT := Vector3(10.0, 24.0, -12.0)
-## The hologram box hovers this far out of the cup (along its own up axis) and spins down.
-const HOLO_LIFT := 0.11
+## The hologram box hovers this far above and ahead of the cup (model space) and spins down into it.
+const HOLO_FROM := Vector3(0.0, 0.085, -0.03)
 const HOLO_SPIN := 360.0
 const HOLO_IN := 0.42
 const SOLID_AT := 0.8
 const SINK := 0.075
+## The launch cup's axis in model space (as in jack_pot_view.gd): the box slides along it.
+const CUP_AXIS := Vector3(0.0, 0.375, -0.927)
 ## The comb's tune: one note per quarter turn of the crank (pitch ratios of the pluck).
 const TUNE: Array[float] = [1.0, 1.26, 1.5, 1.26, 1.68, 1.5, 1.26, 1.12, 1.0, 1.12, 1.26, 2.0]
 const SPARKS := [Color(1.0, 0.82, 0.23), Color(0.35, 0.96, 0.75), Color(1.0, 0.42, 0.84), Color(1.0, 1.0, 1.0)]
 
 var _v: WeaponView
 var _d := 1.0
-var _s := 0.0
 var _had_box := false
 var _note := 0
 var _solid := false
@@ -67,7 +68,6 @@ func play(v: WeaponView, d: float) -> void:
 func _step(s: float) -> void:
 	if _v == null or not is_instance_valid(_v.model):
 		return
-	_s = s
 	var show := _e(0.0, 0.12, s) * (1.0 - _e(0.86, 1.0, s))
 	_place(_v.part("Root"), _v.rest_transform("Root"), ROOT_POS * show, ROOT_ROT * show)
 	var angle := TAU * TURNS * _e(WIND_START, WIND_END, s)
@@ -116,7 +116,7 @@ func _pose_box(s: float) -> void:
 	if s < SOLID_AT:
 		var sink := _e(0.28, 0.4, s)
 		box.visible = _had_box and sink < 0.99
-		box.transform = _v.rest_transform("Box") * Transform3D(Basis.IDENTITY, Vector3(0.0, -SINK * sink, 0.0))
+		box.transform = _v.rest_transform("Box") * Transform3D(Basis.IDENTITY, CUP_AXIS * -SINK * sink)
 		return
 	if not _solid:
 		_solid = true
@@ -127,7 +127,7 @@ func _pose_box(s: float) -> void:
 		_spark(16)
 	box.visible = true
 	var settle := 0.006 * sin(PI * _e(SOLID_AT, 0.86, s))
-	box.transform = _v.rest_transform("Box") * Transform3D(Basis.IDENTITY, Vector3(0.0, -settle, 0.0))
+	box.transform = _v.rest_transform("Box") * Transform3D(Basis.IDENTITY, CUP_AXIS * -settle)
 	var tease := sin(PI * _e(0.86, 0.94, s))
 	if s >= 0.86 and not _teased:
 		_teased = true
@@ -148,7 +148,7 @@ func _pose_holo(s: float) -> void:
 	var rest := _v.rest_transform("CellHolo")
 	var spin := Basis(Vector3.UP, deg_to_rad(HOLO_SPIN * (1.0 - u)))
 	var bob := 0.004 * sin((s - HOLO_IN) * _d * 9.0) * (1.0 - u)
-	holo.transform = rest * Transform3D(spin.scaled(Vector3.ONE * lerpf(0.75, 1.0, u)), Vector3(0.0, HOLO_LIFT * (1.0 - u) + bob, 0.0))
+	holo.transform = Transform3D(rest.basis * spin.scaled(Vector3.ONE * lerpf(0.75, 1.0, u)), rest.origin + HOLO_FROM * (1.0 - u) + Vector3.UP * bob)
 
 
 func _spark(amount: int) -> void:

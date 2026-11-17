@@ -14,8 +14,11 @@ const BULBS := 3
 const THROW := 0.07
 const LOAD_START := 0.14
 const LOAD_TIME := 0.24
+## The launch cup's axis in model space (it leans up 22 degrees; the box's
+## mesh is built along it, its node is not turned).
+const CUP_AXIS := Vector3(0.0, 0.375, -0.927)
 ## How far the box flies out of the cup before it vanishes, and how deep the
-## next one starts (along the box's own up axis, model units).
+## next one starts (along the cup's axis, model units).
 const THROW_DEPTH := 0.09
 const LOAD_DEPTH := 0.07
 const CRANK_KICK := -90.0
@@ -86,12 +89,12 @@ func _pose_box(v: WeaponView) -> void:
 		_box.visible = loaded
 		var u := clampf((_since_shot - LOAD_START) / LOAD_TIME, 0.0, 1.0)
 		depth = LOAD_DEPTH * (1.0 - _spring(u))
-		squash = 1.0 + 0.12 * sin(PI * clampf(u * 1.6, 0.0, 1.0)) * (1.0 - u)
+		squash = 1.0 + 0.08 * sin(PI * clampf(u * 1.6, 0.0, 1.0)) * (1.0 - u)
 	var quiver := 0.0
 	var peek := fmod(_time, PEEK_EVERY)
 	if peek < PEEK_TIME:
 		quiver = sin(peek * 90.0) * 1.2 * sin(PI * peek / PEEK_TIME)
-	var pose := Transform3D(Basis(Vector3.FORWARD, deg_to_rad(quiver)).scaled(Vector3(1.0 / sqrt(squash), squash, 1.0 / sqrt(squash))), Vector3(0.0, -depth, 0.0))
+	var pose := Transform3D(Basis(CUP_AXIS, deg_to_rad(quiver)).scaled(Vector3.ONE * squash), CUP_AXIS * -depth)
 	_box.transform = v.rest_transform("Box") * pose
 	if _lid:
 		var lift := PEEK_DEG * sin(PI * clampf(peek / PEEK_TIME, 0.0, 1.0)) if _since_shot > LOAD_START + LOAD_TIME else 0.0
