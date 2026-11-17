@@ -48,7 +48,7 @@ const SPLASH_LIFT := 0.5
 const HEAVY_MASS := 2.5
 const HEAVY_HOP := 0.16
 const BOSS_MASS := 5.0
-const BOSS_SCALE := 0.75
+const BOSS_SCALE := 0.9
 const BOSS_PUSH := 1.5
 ## Seconds of stars (Dazzle) after the punch (scaled down by weight there).
 const STUN := 1.4
