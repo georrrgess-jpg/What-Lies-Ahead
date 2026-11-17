@@ -32,7 +32,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 WEAPONS = ["pulse_pistol", "ion_carbine", "scatter_blaster", "comet_cannon", "arc_coil", "bumper_lobber", "cryo_beam", "rail_lancer",
            "sparkler", "ring_toss", "drum_popper", "whirligig", "riptide", "toxic_ripsaw",
            "shutterbug", "balloon_darter", "teacup_twister", "dunk_tank", "ground_control", "t_minus_six",
-           "markdown_marker", "lava_lampoon", "yoyo_loco", "jack_pot"]
+           "markdown_marker", "lava_lampoon", "yoyo_loco", "jack_pot", "popcorn_popper"]
 REQUIRED = ["Shell", "ArmL", "ArmR", "Decal", "IronSightRear", "IronSightFront",
             "Muzzle", "SightPoint", "SightMount", "EjectPoint", "VentPoint", "CharmPoint", "ElbowL", "ElbowR"]
 # The energy cell and its hologram copy (the Scatter Blaster loads two capsules instead).
@@ -81,6 +81,9 @@ JOINTS["yoyo_loco"] = [("Yoyo", "Shell"), ("Tether", "Shell"), ("Tether", "Yoyo"
 # The box sits in the launch cup (its lid on its hinge), the crank and the drum turn on the flank.
 JOINTS["jack_pot"] = [("Box", "Shell"), ("Lid", "Box"), ("Lid", "Shell"), ("Crank", "Shell"), ("Drum", "Shell"), ("Trigger", "Shell"), ("Cell", "Shell"),
                       ("Cell", "Box")] + [(f"Bulb{i}", "Shell") for i in range(3)]
+# The lid turns on its hinge knuckles; the kernel stream and the butter drizzle run into the kettle.
+JOINTS["popcorn_popper"] = [("Lid", "Shell"), ("PourHolo", "Shell"), ("PourHolo", "Kernels"), ("DrizzleHolo", "Shell"),
+                            ("DrizzleHolo", "Kernels")]
 
 
 def world_tree(ob, matrix=None):
