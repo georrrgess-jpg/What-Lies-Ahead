@@ -242,7 +242,7 @@ func _fill_ground() -> void:
 		zs.append_array([(h as Rect2).position.y, (h as Rect2).end.y])
 	xs.sort()
 	zs.sort()
-	var material: Material = b._mat("far_ground", Color(0.16, 0.13, 0.13), 1.0)
+	var material: Material = b._surface("far_ground", ["city_asphalt"], Color(0.3, 0.25, 0.25), 0.12, 1.0)
 	var k := 0
 	for i in xs.size() - 1:
 		var x0: float = xs[i]
@@ -297,7 +297,7 @@ func _tint() -> Color:
 func _building(base: Vector3, w: float, d: float, h: float, yaw: float, burning: float) -> void:
 	var tint := _tint()
 	var cell := 3.2 if h < 40.0 else 3.8
-	var lit := rng.randf_range(0.03, 0.12)
+	var lit := rng.randf_range(0.04, 0.14)
 	_box(base, Vector3(w, h, d), yaw, tint, lit, burning, cell)
 	var basis := Basis(Vector3.UP, yaw)
 	_box(base + Vector3(0, h, 0), Vector3(w + 0.8, 0.7, d + 0.8), yaw, tint * 0.7)

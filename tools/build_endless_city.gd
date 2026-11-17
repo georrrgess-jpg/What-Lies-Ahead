@@ -1554,7 +1554,7 @@ func _build_skyline() -> void:
 	# The ground out to the horizon round the city's footprint (the districts
 	# have their own floors; the stairwells must stay open), and a dark floor
 	# deep under everything.
-	var ground := _mat("far_ground", Color(0.16, 0.13, 0.13), 1.0)
+	var ground := _surface("far_ground", ["city_asphalt"], Color(0.3, 0.25, 0.25), 0.12, 1.0)
 	var city := Rect2(-100.0, -104.0, 222.0, 168.0)
 	var far := 700.0
 	var pieces := [Rect2(-far, -far, far * 2.0, far + city.position.y), Rect2(-far, city.end.y, far * 2.0, far - city.end.y),
