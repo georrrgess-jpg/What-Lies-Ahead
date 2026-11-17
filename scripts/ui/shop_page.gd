@@ -2,7 +2,8 @@ class_name ShopPage
 extends MenuPage
 ## The Shop: the prize counter where Sparks become cosmetics.
 ##   - Today's picks under the awning: the featured items at a discount, with
-##     the time left until they change.
+##     the time left until they change, after the Mythic spotlight
+##     (ShopSpotlight: the Mythic item in a red-gold frame, never discounted).
 ##   - A shelf per section of ShopCatalog (tabs in the header row, with a count
 ##     of what is new), items as cards with their price, OWNED, or what still
 ##     locks them.
@@ -16,7 +17,7 @@ const BOUGHT_TEXT := "SOLD!  IT IS IN YOUR LOCKER"
 const SIDE_WIDTH := 744.0
 const CARD_GAP := 12
 const GRID_MARGIN := 14
-const FEATURED_CARD := Vector2(200, 190)
+const FEATURED_CARD := Vector2(184, 190)
 const SHELF_CARD := Vector2(176, 196)
 const PREVIEW_DELAY := 0.09
 
@@ -28,6 +29,7 @@ var _header: Control
 var _sign: KitChip
 var _featured_row: HBoxContainer
 var _featured_cards: Array[LockerCard] = []
+var _spotlight: ShopSpotlight
 var _tabs: KitTabs
 var _caption: Label
 var _caption_note: Label
@@ -114,7 +116,7 @@ func refresh() -> void:
 		_select(_first_item(), false)
 	else:
 		_select(_selected, false)
-	UiFx.stagger_in(_featured_cards.filter(_is_shown) + _cards.filter(_is_shown))
+	UiFx.stagger_in(_shown_picks() + _cards.filter(_is_shown))
 
 
 func first_focus() -> Control:
@@ -171,6 +173,8 @@ func _build_featured() -> Control:
 	awning.add_child(_sign)
 	_featured_row = HBoxContainer.new()
 	_featured_row.add_theme_constant_override("separation", CARD_GAP)
+	_spotlight = ShopSpotlight.new(_new_card(ShopSpotlight.CARD_SIZE))
+	_featured_row.add_child(_spotlight)
 	var pad := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		pad.add_theme_constant_override("margin_" + side, 8)
@@ -245,6 +249,8 @@ func _fit_columns() -> void:
 # --- content --------------------------------------------------------------------
 
 func _fill_featured() -> void:
+	var mythic := ShopCatalog.spotlight()
+	_spotlight.show_item(mythic, _weapon_for(mythic) if mythic else null, _thumbs)
 	var picks := ShopCatalog.featured()
 	while _featured_cards.size() < picks.size():
 		var card := _new_card(FEATURED_CARD)
@@ -296,10 +302,19 @@ func _weapon_for(it: CosmeticItem) -> WeaponData:
 func _card_of(it: CosmeticItem) -> LockerCard:
 	if it == null:
 		return null
-	for card in _cards + _featured_cards:
+	for card in _cards + _shown_picks():
 		if card.visible and card.item == it:
 			return card
 	return null
+
+
+## The visible cards under the awning: the spotlight's, then today's picks.
+func _shown_picks() -> Array[LockerCard]:
+	var out: Array[LockerCard] = []
+	if _spotlight.visible:
+		out.append(_spotlight.card)
+	out.append_array(_featured_cards.filter(_is_shown))
+	return out
 
 
 ## What to select when nothing is: the first pick still for sale, else the
@@ -419,7 +434,7 @@ func _focus_selected() -> void:
 
 
 func _refresh_states() -> void:
-	for card in _cards + _featured_cards:
+	for card in _cards + _shown_picks():
 		if card.visible:
 			card.refresh_state()
 

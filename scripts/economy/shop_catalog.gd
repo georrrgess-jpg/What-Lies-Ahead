@@ -8,6 +8,7 @@ extends RefCounted
 ##   sections()   the shop by category, in display order
 ##   featured()   today's featured items, sold at a discount; the selection is
 ##                the same for the whole day and changes at local midnight
+##   spotlight()  the Mythic item on the Shop's spotlight (never discounted)
 ##   price() / base_price() / discount()   what an item costs right now
 ##   can_buy() / buy() / lock_text()       buying without weapon bookkeeping
 ##   is_new() / mark_seen()                NEW flags
@@ -117,9 +118,10 @@ static func featured() -> Array[CosmeticItem]:
 ## The selection for `day_number`: deterministic for a day and a set of owned
 ## items. One item per rarity from the top down (so there is always a
 ## showpiece and something cheap), then the rest by the day's shuffle; items
-## the player could not buy yet (locked by a requirement) are left out.
+## the player could not buy yet (locked by a requirement) are left out, and so
+## are Mythic items: they have the spotlight and are never discounted.
 static func pick_featured(day_number: int) -> Array[CosmeticItem]:
-	var pool: Array[CosmeticItem] = for_sale().filter(func(it): return is_open(it))
+	var pool: Array[CosmeticItem] = for_sale().filter(func(it): return is_open(it) and it.rarity != CosmeticItem.Rarity.MYTHIC)
 	pool.sort_custom(func(a, b): return _shuffle_key(day_number, a) < _shuffle_key(day_number, b))
 	var count := mini(Wallet.rules.featured_count, pool.size())
 	var out: Array[CosmeticItem] = []
@@ -134,6 +136,16 @@ static func pick_featured(day_number: int) -> Array[CosmeticItem]:
 		if not out.has(it):
 			out.append(it)
 	return out
+
+
+## The Mythic item the Shop puts in its spotlight: the dearest one for sale,
+## else the dearest one owned (null if the shop sells none).
+static func spotlight() -> CosmeticItem:
+	var mythic := items().filter(func(it): return it.rarity == CosmeticItem.Rarity.MYTHIC)
+	if mythic.is_empty():
+		return null
+	var open: Array = mythic.filter(func(it): return Cosmetics.is_for_sale(it))
+	return (open if not open.is_empty() else mythic).back()
 
 
 static func is_featured(it: CosmeticItem) -> bool:

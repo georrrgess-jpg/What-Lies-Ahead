@@ -25,6 +25,7 @@ var _viewport: SubViewport
 var _camera: Camera3D
 var _pivot: Node3D
 var _model: Node3D
+var _aura: OperatorAura
 var _yaw := 18.0
 var _dragging := false
 var _drag_idle := 0.0
@@ -181,6 +182,18 @@ func _spawn(flourish: bool) -> void:
 			anim.speed_scale = 0.6
 	if flourish:
 		Operators.play_pose(_model)
+	_spawn_aura()
+
+
+## A Mythic operator's aura (OperatorAura), outside the turntable so it stays
+## framed; it makes its entrance every time the operator appears.
+func _spawn_aura() -> void:
+	if _aura:
+		_aura.queue_free()
+	_aura = OperatorAura.create(item, framing == Framing.PORTRAIT)
+	if _aura:
+		_viewport.add_child(_aura)
+		_aura.reveal()
 
 
 func _on_equipped_changed(slot: StringName, _weapon_id: StringName) -> void:
