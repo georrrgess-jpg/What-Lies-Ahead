@@ -11,6 +11,8 @@ import numpy as np
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
 
+import _sidearm_fx as fx
+
 
 def _fizz(d, centre=3200, width=2600, gain=1.0):
     """A rocket motor's hiss with a fast crackle."""
@@ -27,11 +29,11 @@ def _beep(freq, d, gain=1.0):
 def tm6_fire():
     """The trigger: a punchy tube 'fwoomp', a snap and the rocket fizzing off."""
     d = 0.42
-    out = _sub_thump(190, 60, d, 0.07) * 1.4
+    out = _sub_thump(190, 70, d, 0.07) * 1.3
     place(out, filt(noise(0.05), high=900, low=6000) * env(0.05, 0.0004, 0.02, power=2.0) * 0.9, 0.0, 1.0)
     place(out, sweep(900, 260, 0.12, "tri", 0.7) * env(0.12, 0.002, 0.1, power=1.8) * 0.4, 0.0, 1.0)
     place(out, _fizz(0.36, 3000, 2400, 0.4), 0.02, 1.0)
-    return crush(filt(out, low=8000), 1.3)
+    return fx.fire(out, 8901, 2600, 0.7, (125, 62, 0.12, 1.0), 0.4, 0.06, 0.32, 1.3, 8000)
 
 
 def tm6_launch():
@@ -39,8 +41,8 @@ def tm6_launch():
     d = 0.3
     out = _sub_thump(240, 110, d, 0.04) * 0.6
     place(out, sweep(1300, 600, 0.1, "tri", 0.6) * env(0.1, 0.001, 0.08, power=1.8) * 0.3, 0.0, 1.0)
-    place(out, _fizz(0.26, 3600, 2200, 0.45), 0.01, 1.0)
-    return filt(out, low=8500)
+    place(out, _fizz(0.26, 2600, 1800, 0.4), 0.01, 1.0)
+    return fx.fire(out, 8911, 2600, 0.3, (140, 70, 0.04, 0.5), 0.15, 0.04, 0.2, 1.1, 6000)
 
 
 def tm6_lock():
@@ -65,7 +67,7 @@ def tm6_pop():
     t = t_axis(0.3)
     sparkle = band(noise(0.3), 5000, 3000) * (np.random.default_rng(7).random(len(t)) > 0.985) * 3.0
     place(out, sparkle * env(0.3, 0.01, 0.3, power=1.5), 0.03, 0.5)
-    return crush(filt(out, low=8500), 1.4)
+    return fx.fire(out, 8921, 3000, 0.6, (130, 64, 0.1, 0.8), 0.32, 0.06, 0.3, 1.4, 8500, 0.3)
 
 
 def tm6_count():
@@ -79,6 +81,7 @@ def tm6_ready():
     place(out, clunk(300, 0.06, 0.6), 0.0, 1.0)
     for i, f in enumerate((880, 1175, 1568)):
         place(out, _beep(f, 0.07, 0.6), 0.03 + i * 0.06, 1.0)
+    fx.place_at(out, fx.punch(0.12, 160, 70, 0.05, 0.3), 0.0)
     return filt(out, low=8000)
 
 
@@ -97,6 +100,7 @@ def tm6_rail():
     out = slide.copy()
     place(out, click(0.02, 2600, 0.8), 0.1, 1.0)
     place(out, clunk(420, 0.05, 0.4), 0.1, 1.0)
+    fx.place_at(out, fx.tick(8931, 2800, gain=0.6), 0.1)
     return filt(out, low=8000)
 
 
@@ -106,6 +110,8 @@ def tm6_equip():
     place(out, sweep(300, 900, 0.22, "tri", 0.7) * env(0.22, 0.01, 0.22, power=1.0) * 0.25, 0.0, 1.0)
     place(out, clunk(280, 0.06, 0.6), 0.2, 1.0)
     place(out, _beep(1175, 0.06, 0.5), 0.26, 1.0)
+    fx.place_at(out, fx.tick(8941, 2600, gain=0.7), 0.2)
+    fx.place_at(out, fx.holo(0.16, 700, 1600, 8942, 0.14), 0.05)
     return filt(out, low=8000)
 
 
