@@ -20,6 +20,8 @@ extends WeaponMode
 
 ## Aim blend at the throw from which it is a Walk the Dog.
 const DOG_AIM := 0.5
+## Share of the throws that find a zombie (the Arsenal's DPS).
+const TAP_HITS := 0.8
 
 var shot: YoyoLocoShot
 ## The trigger has stayed down since the last throw (a Sleeper if it hits).
@@ -100,7 +102,29 @@ func dispose() -> void:
 
 
 ## Taps at a target: a hit on the way out, the round trip sets the pace
-## (about 8 m out and back), and the magazine's reloads.
+## (about 8 m out and back), and the magazine's reloads; TAP_HITS of the
+## throws find a zombie.
 func arsenal_dps(_base: float) -> float:
 	var cycle := maxf(data.fire_interval, YoyoLocoShot.round_trip(8.0))
-	return data.damage * data.magazine_size / (cycle * data.magazine_size + data.reload_time)
+	return TAP_HITS * data.damage * data.magazine_size / (cycle * data.magazine_size + data.reload_time)
+
+
+# --- the bot (scripts/dev/dev_driver.gd) ---------------------------------------
+
+## The bot throws from the hip, like it does with every other gun.
+func bot_aim() -> bool:
+	return false
+
+
+## The bot throws whenever the yo-yo is home.
+func bot_fire(_nearest: float) -> bool:
+	return true
+
+
+## The bot keeps the trigger down through a throw at a heavy or boss for a
+## Sleeper, and taps at everything else.
+func bot_hold(target: Zombie) -> bool:
+	if not is_out() or not holding():
+		return false
+	var victim: Zombie = shot.target if is_instance_valid(shot.target) else target
+	return victim.data.heavy

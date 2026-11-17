@@ -664,6 +664,8 @@ func _do_fight(delta: float) -> void:
 		_fire_charge(w, target, aligned, in_range, dist)
 	elif paints and not w.mode.bot_fire(nearest):
 		_release("fire")
+	elif paints and w.mode.has_method("bot_hold") and w.mode.bot_hold(target):
+		_press("fire")
 	elif aligned and in_range and not w.is_reloading():
 		if w.current.automatic or w.current.beam:
 			_press("fire")

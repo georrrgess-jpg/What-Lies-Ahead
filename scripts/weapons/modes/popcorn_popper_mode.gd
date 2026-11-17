@@ -26,16 +26,18 @@ const HOT_AT := 0.7
 const HEAT_PER_SHOT := 0.025
 ## Heat lost per second once the trigger has rested COOL_DELAY seconds.
 const COOL_RATE := 1.2
-const COOL_DELAY := 0.05
+const COOL_DELAY := 0.08
 ## Seconds between shots per stage (the hot rate is WeaponData.fire_interval).
 const COLD_INTERVAL := 0.12
 const WARM_INTERVAL := 0.1
-const JAM_TIME := 1.4
+const JAM_TIME := 1.0
 ## Heat the kettle has vented down to when a jam clears (it comes back warm).
 const JAM_VENT_TO := 0.45
 ## The playtest bot rests the trigger at BOT_REST heat until it is back to BOT_RESUME.
-const BOT_REST := 0.94
-const BOT_RESUME := 0.76
+const BOT_REST := 0.96
+const BOT_RESUME := 0.82
+## Share of a fight the kettle spends hot (the Arsenal's DPS counts only that).
+const HOT_UPTIME := 0.7
 const STOWED_META := &"popcorn_heat"
 const JAM_SOUND := &"pcp_jam"
 const UNJAM_SOUND := &"pcp_unjam"
@@ -53,10 +55,11 @@ var _hud: PopcornHeatHud
 
 
 ## The Arsenal's DPS: kernels at the hot rate, paced by the rests that keep
-## it hot, and the reload.
+## it hot, and the reload, over the HOT_UPTIME of a fight (the rest is
+## warming up after a reload or a pause).
 func arsenal_dps(_base: float) -> float:
 	var per_shot := data.fire_interval + HEAT_PER_SHOT / COOL_RATE
-	return data.damage * data.magazine_size / (data.magazine_size * per_shot + data.reload_time)
+	return HOT_UPTIME * data.damage * data.magazine_size / (data.magazine_size * per_shot + data.reload_time)
 
 
 func stage() -> Stage:
