@@ -285,7 +285,15 @@ sound_category = Dictionary[StringName, StringName]({
 &"pcp_fire": &"weapon",
 &"pcp_pop": &"impact",
 &"pcp_puff": &"impact",
-&"pcp_butter": &"impact"
+&"pcp_butter": &"impact",
+&"sz_": &"handling",
+&"sz_fire": &"weapon",
+&"sz_roll_loop": &"weapon",
+&"sz_pin": &"impact",
+&"sz_strike": &"impact",
+&"sz_bonk": &"impact",
+&"sz_thud": &"impact",
+&"sz_gutter": &"impact"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -355,5 +363,6 @@ sound_trim_db = Dictionary[StringName, float]({
 &"city_alarm_loop": -6.0,
 &"city_buzz_loop": -4.0,
 &"city_radio_loop": -3.0,
-&"gc_strike": -3.0
+&"gc_strike": -3.0,
+&"sz_roll_loop": -2.0
 })

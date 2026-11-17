@@ -84,6 +84,10 @@ JOINTS["jack_pot"] = [("Box", "Shell"), ("Lid", "Box"), ("Lid", "Shell"), ("Cran
 # The lid turns on its hinge knuckles; the kernel stream and the butter drizzle run into the kettle.
 JOINTS["popcorn_popper"] = [("Lid", "Shell"), ("PourHolo", "Shell"), ("PourHolo", "Kernels"), ("DrizzleHolo", "Shell"),
                             ("DrizzleHolo", "Kernels")]
+# The kicker's rod slides into the body; the balls sit on their rails.
+WEAPONS.append("strike_zone")
+CELLS["strike_zone"] = ["Cell", "SpareHolo", "RailHolo"]
+JOINTS["strike_zone"] = [("Kicker", "Shell"), ("Ball", "Shell"), ("Spare", "Cell"), ("Spare", "Shell")]
 
 
 def world_tree(ob, matrix=None):

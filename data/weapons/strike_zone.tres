@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/strike_zone.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/strike_zone_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/strike_zone_view.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/strike_zone_mode.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 38
+
+[resource]
+script = ExtResource("1")
+id = &"strike_zone"
+sort_order = 115
+category = "Ball Launcher"
+slot_class = "primary"
+display_name = "Strike Zone"
+role = "Bowls a heavy ball that drops with a thud (knocking over anything close), then rolls along the ground, follows slopes and bounces off one wall, bowling over every zombie in its lane: each one is knocked flat for a moment (Bruisers and other heavies only stagger, and a boss stops the ball dead). Aim up at a ledge and it is lobbed onto it. Hold to wind up a faster, harder roll. Five or more in one roll is a STRIKE: the ball comes straight back. After about three seconds the ball sinks into the gutter."
+unlock = SubResource("unlock")
+magazine_size = 2
+reserve_start = 24
+reserve_max = 40
+reload_time = 1.6
+emergency_recharge_interval = 3.0
+automatic = false
+fire_interval = 0.38
+damage = 195.0
+pellets = 1
+spread_degrees = 0.0
+spread_bloom = 0.0
+spread_bloom_max = 0.0
+max_range = 40.0
+falloff_start = 40.0
+falloff_end = 40.0
+falloff_min_scale = 1.0
+headshot_multiplier = 1.0
+knockback = 2.5
+ads_fov_scale = 0.84
+ads_time = 0.18
+ads_spread_scale = 0.0
+ads_depth = 0.1
+first_shot_accurate = true
+reticle_style = "chevron"
+recoil_kick = 2.2
+recoil_yaw = 0.3
+view_kick = 0.09
+shake = 0.2
+tracer_color = Color(0.22, 0.95, 1, 1)
+tracer_width = 0.05
+viewmodel = ExtResource("3")
+view_position = Vector3(0.25, -0.26, -0.64)
+view_rotation_degrees = Vector3(0, 0, -3)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"sz_fire"
+reload_sound = &"sz_reload"
+empty_sound = &"empty_click"
+equip_sound = &"sz_equip"
+fire_pitch_variance = 0.04
+move_speed_scale = 0.93
+equip_time = 0.4
+charge_time = 0.45
+charge_min_fraction = 0.0
+charge_min_damage_scale = 0.7
+charge_move_scale = 0.8
+charge_sound = &"sz_charge"
+charge_ready_sound = &"sz_ready"
+projectile_speed = 19.0
+projectile_fuse = 3.0
+projectile_size = 0.25
+bounce_sound = &"sz_bonk"
+ricochet_sound = &"sz_pin"
+tracer_style = &"none"
+impact_style = &"spark"
+mode_script = ExtResource("6")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
