@@ -55,7 +55,9 @@ static func texture(level: LevelData) -> Texture2D:
 
 ## Calls `done(texture)` with the still for `level` (null if it has none):
 ## at once when it is loaded, else once the loader thread has read it, so a
-## screen that opens with key art does not wait on the disk.
+## screen that opens with key art does not wait on the disk. A late answer is
+## dropped when the object behind `done` is gone (the menu was left): checked
+## by its instance id, as a lambda's own is_valid() can read freed memory.
 static func request(level: LevelData, done: Callable) -> void:
 	if level == null or _cache.has(level.id):
 		done.call(texture(level))
@@ -67,9 +69,10 @@ static func request(level: LevelData, done: Callable) -> void:
 	if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 		ResourceLoader.load_threaded_request(path)
 	var tree := Engine.get_main_loop() as SceneTree
+	var owner_id := done.get_object_id()
 	var poll := func(again: Callable) -> void:
 		if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 			tree.process_frame.connect(again.bind(again), CONNECT_ONE_SHOT)
-		elif done.is_valid():
+		elif owner_id == 0 or is_instance_id_valid(owner_id):
 			done.call(texture(level))
 	tree.process_frame.connect(poll.bind(poll), CONNECT_ONE_SHOT)

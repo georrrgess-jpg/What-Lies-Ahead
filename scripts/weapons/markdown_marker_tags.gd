@@ -4,8 +4,10 @@ extends Node3D
 ## tag that sticks, PriceTags.of(zombie)). Every tag marks the zombie down:
 ## it takes TAG_BONUS more damage per tag (up to MAX_TAGS) from every hit,
 ## whatever weapon it comes from (through the DamageStack, so armour still sees
-## the hit first). The tags show as big bright stickers on its body; a full
-## stack pulses. They peel off TAG_TIME after the last one stuck.
+## the hit first). The tags show as big bright stickers on its torso, sized
+## to it and riding its Spine bone (a hunched Bruiser, a leaning Lifeguard
+## and a Yeti wear them on the chest, not in the air or over the face); a
+## full stack pulses. They peel off TAG_TIME after the last one stuck.
 ##
 ## A marker hit on a zombie that already carries a full stack sets off a
 ## Clearance Pop (clearance()): the tags burst in confetti and coins, the
@@ -29,13 +31,19 @@ const POP_EDGE := 0.55
 const HEAVY_POP_SCALE := 0.5
 ## Tags the pop gives back to the marker's magazine.
 const POP_REFUND := 2
-## Sticker size (m) on a zombie of body_scale 1, and the stick-on pop time.
+## Sticker size (m) on a torso FIT_WIDTH wide (a Tourist's), and the stick-on pop time.
 const TAG_SIZE := Vector2(0.38, 0.23)
-## Where each tag of a stack sits: turn (radians) from the side it hit, height (m).
-const SLOTS: Array[Vector2] = [Vector2(0.0, 1.2), Vector2(0.6, 1.05), Vector2(-0.6, 1.4)]
+## Stickers scale with the torso's width (rest pose, before body_scale), within FIT_RANGE.
+const FIT_WIDTH := 0.75
+const FIT_RANGE := Vector2(0.75, 1.3)
+## Where each tag of a stack sits: turn (radians) from the side it hit, and
+## height from the torso's middle as a share of the torso's height.
+const SLOTS: Array[Vector2] = [Vector2(0.0, 0.05), Vector2(0.6, -0.14), Vector2(-0.6, 0.2)]
 const STICK_TIME := 0.16
-## How far out a sticker sits, as a share of the capsule radius (the capsule is wider than the torso: arms, ring).
-const SURFACE := 0.8
+## How far out a sticker sits, as a share of the torso box's half-depth in its
+## direction (the box's corners are wider than the rounded body), plus a lift.
+const SURFACE := 0.9
+const LIFT := 0.02
 const SHADER := "res://art/shaders/markdown_marker_tag.gdshader"
 ## Sale Pink, Register Yellow, Mall Fountain Teal (one per tag in a stack).
 const COLORS: Array[Color] = [Color(1.0, 0.31, 0.64), Color(1.0, 0.82, 0.25), Color(0.13, 0.85, 0.85)]
@@ -51,6 +59,15 @@ var _left := 0.0
 var _age := 0.0
 var _stickers: Array[MeshInstance3D] = []
 var _born: Array[float] = []
+## Where the stickers live: a BoneAttachment3D on the Spine bone, or this node
+## for a model without one; the torso box (skeleton rest space, or this
+## node's) and the rest transform that maps it into the frame.
+var _frame: Node3D
+var _torso := AABB()
+var _rest := Transform3D.IDENTITY
+var _skeleton: Skeleton3D
+var _bone := -1
+var _fit := 1.0
 
 static var _quad: QuadMesh
 ## [colour index][ready 0/1] -> ShaderMaterial
@@ -157,12 +174,11 @@ func _physics_process(delta: float) -> void:
 		_peel(false)
 		return
 	var fading := _left < 1.0
-	var s := zombie.data.body_scale
 	for i in _stickers.size():
 		var t := clampf((_age - _born[i]) / STICK_TIME, 0.0, 1.0)
 		# Slapped on: overshoots, then settles flat.
 		var k := 1.0 + sin(t * PI) * 0.45 - (1.0 - t) * 0.6
-		_stickers[i].scale = Vector3.ONE * maxf(0.05, k) * s
+		_stickers[i].scale = Vector3.ONE * maxf(0.05, k) * _fit
 		_stickers[i].visible = not fading or fmod(_left * 9.0, 1.0) > 0.35
 
 
@@ -189,14 +205,18 @@ func _peel(popped: bool) -> void:
 ## A sticker on the torso on the side the tag hit, facing out from the body.
 ## Each tag of a stack has its own slot (SLOTS), so all of them show.
 func _add_sticker(point: Vector3) -> void:
-	var s := zombie.data.body_scale
-	var local := zombie.to_local(point)
-	var out := Vector3(local.x, 0.0, local.z)
-	if out.length() < 0.05:
+	if _frame == null:
+		_setup_frame()
+	var local := _torso_point(point)
+	var centre := _torso.get_center()
+	var out := Vector3(local.x - centre.x, 0.0, local.z - centre.z)
+	if out.length() < 0.01:
 		out = Vector3(0, 0, 1)
 	var slot: Vector2 = SLOTS[_count % SLOTS.size()]
 	out = out.normalized().rotated(Vector3.UP, slot.x)
-	var anchor := out * zombie.data.capsule_radius * s * SURFACE + Vector3.UP * slot.y * s
+	var half := _torso.size * 0.5
+	var reach := 1.0 / sqrt(pow(out.x / maxf(0.01, half.x), 2.0) + pow(out.z / maxf(0.01, half.z), 2.0))
+	var anchor := Vector3(centre.x, centre.y + slot.y * _torso.size.y, centre.z) + out * (reach * SURFACE + LIFT)
 	var m := MeshInstance3D.new()
 	if _quad == null:
 		_quad = QuadMesh.new()
@@ -205,11 +225,42 @@ func _add_sticker(point: Vector3) -> void:
 	m.material_override = _material(_count, false)
 	m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var roll := randf_range(-0.45, 0.45)
-	m.transform = Transform3D(Basis.looking_at(-out, Vector3.UP) * Basis(Vector3.BACK, roll), anchor + out * 0.02)
+	m.transform = _rest.affine_inverse() * Transform3D(Basis.looking_at(-out, Vector3.UP) * Basis(Vector3.BACK, roll), anchor)
 	m.scale = Vector3.ONE * 0.05
-	add_child(m)
+	_frame.add_child(m)
 	_stickers.append(m)
 	_born.append(_age)
+
+
+## Picks the stickers' frame and torso box: the outfit on the Spine bone, or
+## (no skeleton) a box from the body capsule on the zombie itself.
+func _setup_frame() -> void:
+	_skeleton = zombie.skeleton()
+	_bone = _skeleton.find_bone("Spine") if _skeleton else -1
+	_torso = zombie.torso_rest_box() if _bone >= 0 else AABB()
+	if _torso.size == Vector3.ZERO:
+		var s := zombie.data.body_scale
+		var r := zombie.data.capsule_radius * s * 0.8
+		_bone = -1
+		_frame = self
+		_torso = AABB(Vector3(-r, 0.85 * s, -r), Vector3(2.0 * r, 0.6 * s, 2.0 * r))
+		_fit = s
+		return
+	var attach := BoneAttachment3D.new()
+	attach.bone_name = "Spine"
+	_skeleton.add_child(attach)
+	_frame = attach
+	_rest = _skeleton.get_bone_global_rest(_bone)
+	_fit = clampf(_torso.size.x / FIT_WIDTH, FIT_RANGE.x, FIT_RANGE.y)
+
+
+## `point` (world) in the torso box's space: the bone's rest pose for a
+## skinned body (so a leaning or hunched pose maps back onto the box).
+func _torso_point(point: Vector3) -> Vector3:
+	if _bone < 0:
+		return to_local(point)
+	var in_skeleton := _skeleton.global_transform.affine_inverse() * point
+	return _rest * _skeleton.get_bone_global_pose(_bone).affine_inverse() * in_skeleton
 
 
 static func _material(index: int, ready_state: bool) -> ShaderMaterial:

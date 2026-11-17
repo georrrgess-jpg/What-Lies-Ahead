@@ -10,8 +10,11 @@ extends Node3D
 ##   dumb    no paint: one straight, fast, unguided rocket.
 ##
 ## The flight path is exact; only the drawn rocket corkscrews round it
-## (CORKSCREW, tightening onto the target), and its teal ribbon trail spirals
-## with it. A rocket strikes the first zombie its path meets (head or body,
+## (CORKSCREW, tightening onto the target), and it leaves a soft teal smoke
+## ribbon behind it that coils round its track in a tight spiral (SPIRAL_*,
+## laid by distance flown, so it keeps its shape at any frame rate): it
+## widens and fades towards its tail and is shaded lighter where the coil
+## passes in front of the track, with a short glow at the nozzle. A rocket strikes the first zombie its path meets (head or body,
 ## where it hits; headshots per head_scale) or the painted head once within
 ## HIT_RADIUS of it, and pops with a small splash
 ## (SPLASH_DAMAGE within SPLASH_RADIUS); scenery or the end of its FUSE pops
@@ -48,6 +51,21 @@ const CORKSCREW := 0.2
 const CORK_RATE := 21.0
 const CORK_CLOSE := 4.0
 const TRAIL := 24
+## Smoke ribbon width at the nozzle and at the tail (it billows out), and its
+## opacity at the nozzle (it fades to nothing at the tail).
+const SMOKE_WIDTH := Vector2(0.06, 0.19)
+const SMOKE_ALPHA := 0.92
+## How much lighter / darker the smoke is where the coil faces the eye / turns away.
+const SMOKE_TWIST := 0.3
+## The smoke coil: radians per metre flown (a turn every 1.6 m), its radius
+## at the nozzle and at the tail, and the points laid per frame of history.
+const SPIRAL_TWIST := 3.9
+const SPIRAL_RADIUS := Vector2(0.02, 0.16)
+const SPIRAL_STEPS := 3
+## Trail points the additive nozzle glow covers, and its width.
+const GLOW_POINTS := 5
+const GLOW_WIDTH := 0.1
+const SMOKE_SHADER := "res://art/shaders/t_minus_smoke.gdshader"
 ## Near the camera the rocket is drawn smaller and without its trail.
 const NEAR_EYE := 2.4
 const LAUNCH_SOUND := &"tm6_launch"
@@ -76,11 +94,19 @@ var _body: Node3D
 var _trail: MeshInstance3D
 var _trail_mesh: ImmediateMesh
 var _history := PackedVector3Array()
+## Per trail point: the metres flown when it was laid.
+var _laid := PackedFloat32Array()
+## The smoke coil built from the history each frame (reused buffers): its
+## points, their metres flown and their offset direction from the track.
+var _coil := PackedVector3Array()
+var _coil_d := PackedFloat32Array()
+var _coil_out := PackedVector3Array()
 var _query: PhysicsRayQueryParameters3D
 var _launched := false
 var _cast_from := Vector3.ZERO
 
 static var _meshes := {}
+static var _smoke_mat: ShaderMaterial
 
 
 ## Fires a rocket from `from` along `dir` under `parent`. With a `seek`
@@ -369,14 +395,92 @@ func _draw_trail(cam: Camera3D, hidden: bool) -> void:
 	if _history.is_empty() or hidden:
 		_history.resize(TRAIL)
 		_history.fill(_drawn)
+		_laid.resize(TRAIL)
+		_laid.fill(_flown)
 	for i in range(TRAIL - 1, 0, -1):
 		_history[i] = _history[i - 1]
+		_laid[i] = _laid[i - 1]
 	_history[0] = _drawn
+	_laid[0] = _flown
+	_trail_mesh.clear_surfaces()
 	if cam == null or hidden:
-		_trail_mesh.clear_surfaces()
 		return
+	_build_coil()
 	var color := TEAL if _seeker else FLAME
-	WeaponFx.begin_ribbons(_trail_mesh, WeaponFx.ribbon_material())
-	WeaponFx.add_ribbon(_trail_mesh, _history, 0.13, Color(color, 0.7), cam.global_position)
-	WeaponFx.add_ribbon(_trail_mesh, _history, 0.045, Color(CREAM, 0.9), cam.global_position)
-	WeaponFx.end_ribbons(_trail_mesh)
+	_trail_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES, _smoke_material())
+	_strip(cam.global_position, _coil.size(), color.lerp(CREAM, 0.3), true)
+	_trail_mesh.surface_end()
+	_trail_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES, WeaponFx.ribbon_material())
+	_strip(cam.global_position, GLOW_POINTS * SPIRAL_STEPS, color, false)
+	_trail_mesh.surface_end()
+
+
+## Lays the smoke coil round the history: SPIRAL_STEPS points per frame of
+## track, each turned by the distance flown, opening out from the nozzle.
+func _build_coil() -> void:
+	var count := (TRAIL - 1) * SPIRAL_STEPS + 1
+	_coil.resize(count)
+	_coil_d.resize(count)
+	_coil_out.resize(count)
+	for n in count:
+		var i := mini(n / SPIRAL_STEPS, TRAIL - 2)
+		var t := float(n - i * SPIRAL_STEPS) / SPIRAL_STEPS
+		var a := _history[i]
+		var b := _history[i + 1]
+		var along := (a - b).normalized() if a.distance_squared_to(b) > 0.000001 else velocity.normalized()
+		var side := along.cross(Vector3.UP)
+		side = side.normalized() if side.length_squared() > 0.0025 else Vector3.RIGHT
+		var up := side.cross(along).normalized()
+		var d := lerpf(_laid[i], _laid[i + 1], t)
+		var turn := d * SPIRAL_TWIST * _cork_side + _slot
+		var out := side * cos(turn) + up * sin(turn)
+		var f := float(n) / float(count - 1)
+		_coil[n] = a.lerp(b, t) + out * lerpf(SPIRAL_RADIUS.x, SPIRAL_RADIUS.y, sqrt(f))
+		_coil_d[n] = d
+		_coil_out[n] = out
+
+
+## A camera-facing strip through the first `count` coil points: the smoke
+## (widening, fading, twist-shaded) or the nozzle glow (narrowing to the tail).
+func _strip(eye: Vector3, count: int, color: Color, smoke: bool) -> void:
+	var prev_l := Vector3.ZERO
+	var prev_r := Vector3.ZERO
+	var prev_c := Color()
+	for i in count:
+		var p := _coil[i]
+		var f := float(i) / float(count - 1)
+		var tangent := (_coil[mini(i + 1, count - 1)] - _coil[maxi(i - 1, 0)]).normalized()
+		var to_eye := (eye - p).normalized()
+		var width := lerpf(SMOKE_WIDTH.x, SMOKE_WIDTH.y, f) if smoke else GLOW_WIDTH * (1.0 - f)
+		var side := tangent.cross(to_eye).normalized() * width * 0.5
+		var c := color
+		if smoke:
+			var shade := 1.0 + SMOKE_TWIST * _coil_out[i].dot(to_eye)
+			c = Color(color.r * shade, color.g * shade, color.b * shade, SMOKE_ALPHA * pow(1.0 - f, 1.4))
+		else:
+			c.a = 0.8 * (1.0 - f)
+		var l := p - side
+		var r := p + side
+		if i > 0:
+			_vert(prev_l, _coil_d[i - 1], 0.0, prev_c)
+			_vert(prev_r, _coil_d[i - 1], 1.0, prev_c)
+			_vert(r, _coil_d[i], 1.0, c)
+			_vert(prev_l, _coil_d[i - 1], 0.0, prev_c)
+			_vert(r, _coil_d[i], 1.0, c)
+			_vert(l, _coil_d[i], 0.0, c)
+		prev_l = l
+		prev_r = r
+		prev_c = c
+
+
+func _vert(at: Vector3, u: float, v: float, color: Color) -> void:
+	_trail_mesh.surface_set_color(color)
+	_trail_mesh.surface_set_uv(Vector2(u, v))
+	_trail_mesh.surface_add_vertex(at)
+
+
+static func _smoke_material() -> ShaderMaterial:
+	if _smoke_mat == null:
+		_smoke_mat = ShaderMaterial.new()
+		_smoke_mat.shader = load(SMOKE_SHADER)
+	return _smoke_mat

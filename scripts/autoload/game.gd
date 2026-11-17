@@ -3,6 +3,8 @@ extends Node
 ## place that decides whether the mouse is captured.
 
 const MENU_SCENE := "res://scenes/ui/main_menu.tscn"
+## Seconds the screen takes to dim before the menu replaces a level.
+const MENU_DIM := 0.2
 
 var level: LevelData
 var weapon_id: StringName
@@ -98,11 +100,21 @@ func continue_run() -> void:
 	retry()
 
 
+## Back to the main menu (opening `page`). Building the menu holds the frame
+## for about half a second, so the screen dims first (SceneCurtain) and the
+## level stays paused under it; headless runs switch at once.
 func to_menu(page := "") -> void:
 	menu_page = page
 	tutorial_active = false
-	get_tree().paused = false
 	capture_mouse(false)
+	if DisplayServer.get_name() == "headless":
+		_switch_to_menu()
+		return
+	SceneCurtain.close(get_tree(), MENU_DIM, _switch_to_menu)
+
+
+func _switch_to_menu() -> void:
+	get_tree().paused = false
 	get_tree().change_scene_to_file(MENU_SCENE)
 
 

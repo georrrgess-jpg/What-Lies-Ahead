@@ -198,6 +198,7 @@ func _ready() -> void:
 	waves = EndlessDirector.make_wave_set(level) if level.is_endless() else level.wave_set
 	difficulty = Difficulty.current()
 	ensure_station_actions()
+	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	_zombie_scene = load(ZOMBIE_SCENE)
 	_begin.call_deferred()
 
@@ -325,6 +326,13 @@ func _notification(what: int) -> void:
 	# Closing the window mid-run keeps what was earned, like quitting from the pause menu.
 	elif what == NOTIFICATION_WM_CLOSE_REQUEST and player != null:
 		_settle_abandoned()
+
+
+## A gamepad that drops out mid-run (flat battery, cable) pauses the run, as
+## alt-tabbing away does, instead of leaving the player standing in a wave.
+func _on_joy_connection_changed(_device: int, connected: bool) -> void:
+	if not connected and player != null and not _finished:
+		pause()
 
 
 func _unhandled_input(event: InputEvent) -> void:
