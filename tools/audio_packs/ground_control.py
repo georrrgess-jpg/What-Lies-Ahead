@@ -121,6 +121,7 @@ def gc_strike():
     return filt(thud + _ping(1760, d, 0.22, decay=3.0), low=6500)
 
 
+@punched(HANDLE)
 def gc_equip():
     """Raised: the dish clacks, the radar beeps twice."""
     out = silence(0.4)

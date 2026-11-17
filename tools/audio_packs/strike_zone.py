@@ -189,6 +189,7 @@ def sz_spin():
     return filt(whirr, low=4000)
 
 
+@punched(HANDLE)
 def sz_equip():
     """Raised: the kicker clacks, the balls shuffle and the lane lights ding."""
     out = silence(0.5)

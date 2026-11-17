@@ -189,6 +189,7 @@ def pcp_popping():
     return filt(out, low=9500)
 
 
+@punched(HANDLE)
 def pcp_equip():
     """Raised: a tin clink and a couple of pops in the kettle."""
     d = 0.4

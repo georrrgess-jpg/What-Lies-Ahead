@@ -85,6 +85,7 @@ def gn8_twister_pop():
     return crush(filt(out, low=7500), 1.5)
 
 
+@punched(HANDLE)
 def gn8_twister_equip():
     """Raised: the carousel ratchets round a step and the cup chimes."""
     out = silence(0.45)

@@ -100,6 +100,7 @@ def hub_flip():
     return filt(out, low=6000)
 
 
+@punched(HANDLE)
 def hub_equip():
     """Raised: the tyres spin up with a rev and the magnet clacks."""
     out = silence(0.45)

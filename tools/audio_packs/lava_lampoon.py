@@ -149,6 +149,7 @@ def weap_lava_miss():
     return filt(out, low=5000)
 
 
+@punched(HANDLE)
 def weap_lava_equip():
     """Raised: a glass clink and the lamp bubbling awake."""
     d = 0.45

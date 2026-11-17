@@ -116,6 +116,7 @@ def weap_ripsaw_sputter():
     return filt(out, low=2600)
 
 
+@punched(HANDLE)
 def weap_ripsaw_start():
     """Raised: the pull-cord zips out, the engine coughs, catches and revs once."""
     d = 0.85
