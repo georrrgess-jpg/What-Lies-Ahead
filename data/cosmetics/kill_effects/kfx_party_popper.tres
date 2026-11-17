@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_party_popper"
+display_name = "Party Popper"
+description = "A striped party popper kicks up out of the body and blasts streamers and confetti sky-high."
+slot = &"kill_effect"
+rarity = 0
+price = 250
+params = {
+"effect": "party_popper"
+}
+sort_order = 7003

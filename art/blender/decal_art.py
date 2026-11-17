@@ -471,6 +471,58 @@ def draw_champion(c):
     ribbon(c, -0.5, 0.56, 0.3, (232, 38, 58), "CHAMP", 0.26)
 
 
+def draw_strike(c):
+    """A bowling ball smashing into the pins on a lane, with a STRIKE! ribbon."""
+    c.gradient([(40, 30, 110), (90, 50, 170)], -1.0, 1.0)
+    c.poly([(-0.55, -1.0), (0.55, -1.0), (0.25, 0.75), (-0.25, 0.75)], fill=(240, 185, 110))
+    for i in range(5):
+        x = -0.16 + i * 0.08
+        c.poly([(x, -0.52), (x - 0.045, -0.62), (x + 0.045, -0.62)], fill=(232, 38, 58))
+    for x, z, tilt in ((-0.3, 0.38, 25), (0.32, 0.42, -30), (0.05, 0.6, 8), (-0.1, 0.25, -12)):
+        dx = math.sin(math.radians(tilt))
+        c.ellipse(x, z, 0.09, 0.15, fill=WHITE, outline=INK, width=0.025)
+        c.circle(x + dx * 0.17, z + 0.17, 0.06, fill=WHITE, outline=INK, width=0.02)
+        c.line([(x + dx * 0.09 - 0.06, z + 0.09), (x + dx * 0.09 + 0.06, z + 0.09)], (232, 38, 58), 0.03)
+    c.circle(0.08, 0.02, 0.3, fill=(120, 70, 230), outline=INK, width=0.045)
+    c.arc(0.08, 0.02, 0.22, 100, 170, (190, 160, 255), 0.04)
+    for x, z in ((0.0, 0.1), (0.14, 0.12), (0.08, -0.04)):
+        c.circle(x, z, 0.045, fill=INK)
+    for i in range(6):
+        a = math.radians(30 + i * 22)
+        c.line([(0.08 + math.cos(a) * 0.38, 0.02 + math.sin(a) * 0.38), (0.08 + math.cos(a) * 0.5, 0.02 + math.sin(a) * 0.5)],
+               (255, 217, 59), 0.035)
+    ribbon(c, -0.62, 0.62, 0.32, (232, 38, 58), "STRIKE!", 0.26)
+
+
+def draw_close_encounter(c):
+    """A flying saucer beaming a startled little zombie up into a starry sky."""
+    c.gradient([(20, 14, 60), (70, 30, 120), (30, 90, 140)], -1.0, 1.0)
+    for i in range(14):
+        x = -0.85 + (i * 0.37) % 1.7
+        z = 0.95 - (i * 0.53) % 1.0
+        c.poly(star_pts(x, z, 0.05 + 0.02 * (i % 2)), fill=(255, 240, 190))
+    c.poly([(-0.18, 0.28), (0.18, 0.28), (0.6, -0.95), (-0.6, -0.95)], fill=(110, 255, 150))
+    c.poly([(-0.1, 0.28), (0.1, 0.28), (0.36, -0.95), (-0.36, -0.95)], fill=(180, 255, 200))
+    c.ellipse(0.0, 0.52, 0.26, 0.24, fill=(160, 230, 255), outline=INK, width=0.035)
+    c.circle(0.0, 0.52, 0.09, fill=(125, 255, 106))
+    c.circle(-0.035, 0.54, 0.025, fill=INK)
+    c.circle(0.035, 0.54, 0.025, fill=INK)
+    c.ellipse(0.0, 0.33, 0.7, 0.16, fill=(215, 220, 235), outline=INK, width=0.04)
+    for i in range(7):
+        x = -0.5 + i * (1.0 / 6)
+        c.circle(x, 0.31, 0.04, fill=[(255, 79, 176), (63, 244, 255), (255, 217, 59)][i % 3], outline=INK, width=0.012)
+    # The zombie floats up, arms flailing.
+    c.rect(-0.12, -0.55, 0.12, -0.28, fill=(140, 100, 230), outline=INK, width=0.025, radius=0.05)
+    c.circle(0.0, -0.16, 0.14, fill=(130, 214, 92), outline=INK, width=0.03)
+    c.circle(-0.05, -0.13, 0.035, fill=WHITE, outline=INK, width=0.012)
+    c.circle(0.05, -0.12, 0.045, fill=WHITE, outline=INK, width=0.012)
+    c.ellipse(0.0, -0.23, 0.04, 0.03, fill=INK)
+    c.line([(-0.12, -0.33), (-0.3, -0.18)], (130, 214, 92), 0.06)
+    c.line([(0.12, -0.33), (0.28, -0.14)], (130, 214, 92), 0.06)
+    c.line([(-0.06, -0.55), (-0.1, -0.74)], (60, 60, 140), 0.07)
+    c.line([(0.06, -0.55), (0.12, -0.72)], (60, 60, 140), 0.07)
+
+
 def outline_popcorn():
     """A bucket with a bumpy heap of popcorn on top."""
     bumps = ((0.55, 0.45, 0.32), (0.2, 0.62, 0.36), (-0.2, 0.62, 0.36), (-0.55, 0.45, 0.32), (0.0, 0.85, 0.2))
@@ -525,6 +577,8 @@ ART_STICKERS = {
     "RocketPop": (outline_rocket_pop(), draw_rocket_pop),
     "BiteHazard": ([(0.0, 1.0), (1.0, 0.0), (0.0, -1.0), (-1.0, 0.0)], draw_bite_hazard),
     "Champion": (radial(lambda a: 0.92 + 0.07 * math.cos(16 * a), 96), draw_champion),
+    "Strike": (circle_pts(0.98, 56), draw_strike),
+    "CloseEncounter": ([(math.cos(math.tau * i / 56) * 0.86, math.sin(math.tau * i / 56)) for i in range(56)], draw_close_encounter),
 }
 
 

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_arcade"
+display_name = "Arcade Cabinet"
+description = "A mini arcade cabinet with a lit marquee, a joystick and buttons, and a pixel space invader for a reticle."
+slot = &"weapon_sight"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.45, 1, 0.4, 1, 1, 0.3, 0.7, 1)
+params = {
+"optic": "Arcade",
+"reticle": "invader",
+"reticle_degrees": 1.0
+}
+sort_order = 6210

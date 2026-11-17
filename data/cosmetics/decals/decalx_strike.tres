@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_strike"
+display_name = "Strike!"
+description = "A bowling ball smashing into the pins on a gleaming lane, under a STRIKE! ribbon."
+slot = &"weapon_decal"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.4706, 0.2745, 0.902, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "Strike",
+"art": "res://art/textures/decals/decal_strike.png"
+}
+sort_order = 4129

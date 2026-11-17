@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 3
+amount = 4
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_hazard"
+display_name = "Hazard Lamp"
+description = "An Ashfall City hood in hazard stripes with a police light bar on the roof, around a warning-triangle reticle. Sold at weapon rank 4."
+slot = &"weapon_sight"
+rarity = 2
+requirement = SubResource("req")
+price = 1500
+colors = PackedColorArray(1, 0.85, 0.2, 1, 1, 0.8, 0.1, 1)
+params = {
+"optic": "Hazard",
+"reticle": "hazard",
+"reticle_degrees": 1.1
+}
+sort_order = 6260

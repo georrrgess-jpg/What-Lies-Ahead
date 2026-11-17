@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_ten_pin"
+display_name = "Ten Pin"
+description = "A lane-striped ring held up by two bowling pins with a ball on top; the reticle is a strike on a scoresheet."
+slot = &"weapon_sight"
+rarity = 1
+price = 750
+colors = PackedColorArray(1, 0.3, 0.4, 1, 0.1, 0.75, 0.9, 1)
+params = {
+"optic": "TenPin",
+"reticle": "strike",
+"reticle_degrees": 1.0
+}
+sort_order = 6240

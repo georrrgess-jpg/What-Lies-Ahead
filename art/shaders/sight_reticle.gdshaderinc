@@ -10,7 +10,8 @@
 // Patterns (WeaponSights.PATTERNS): 0 dot, 1 ring, 2 chevron, 3 circle dot,
 // 4 star, 5 heart, 6 pixel, 7 horseshoe, 8 scope cross, 9 periscope,
 // 10 diamond, 11 marquee, 12 slit, 13 hex, 14 post, 15 burst, 16 ranger,
-// 17 snowflake, 18 quarters.
+// 17 snowflake, 18 quarters, 19 invader, 20 sun, 21 flame, 22 strike,
+// 23 radar (its sweep turns with TIME), 24 hazard.
 
 float sr_fill(float d, vec2 aa) {
 	return clamp(0.5 - (d - aa.y) / aa.x, 0.0, 1.0);
@@ -187,6 +188,82 @@ float sr_quarters(vec2 p, vec2 aa) {
 	return max(c, sr_disc(p, 0.1, aa));
 }
 
+// A pixel space invader round the point of aim, with a hole and a dot at its heart.
+float sr_invader(vec2 p, vec2 aa) {
+	const int rows[8] = int[](260, 136, 508, 886, 2047, 1533, 1285, 216);
+	float cell = 0.2;
+	vec2 g = p / cell + vec2(5.5, 4.0);
+	int col = int(floor(g.x));
+	int row = 7 - int(floor(g.y));
+	float c = sr_disc(p, 0.1, aa);
+	if (col < 0 || col > 10 || row < 0 || row > 7 || (abs(col - 5) <= 1 && (row == 3 || row == 4))) {
+		return c;
+	}
+	if (((rows[row] >> (10 - col)) & 1) == 0) {
+		return c;
+	}
+	vec2 centre = (vec2(float(col), float(7 - row)) + 0.5 - vec2(5.5, 4.0)) * cell;
+	return max(c, sr_box(p, centre, vec2(cell * 0.44), aa));
+}
+
+// A sun: a ring with eight tapered rays and a dot.
+float sr_sun(vec2 p, vec2 aa) {
+	float c = sr_ring(p, 0.5, 0.07, aa);
+	vec2 q = sr_fold(p, 8.0);
+	q.x = abs(q.x);
+	c = max(c, sr_seg(q, vec2(0.0, 0.7), vec2(0.0, 1.05), 0.08, aa));
+	c = max(c, sr_seg(q, vec2(0.06, 0.7), vec2(0.0, 1.05), 0.04, aa));
+	return max(c, sr_disc(p, 0.1, aa));
+}
+
+// A flame outline round a dot.
+float sr_flame(vec2 p, vec2 aa) {
+	vec2 q = vec2(abs(p.x), p.y);
+	float c = sr_seg(q, vec2(0.0, 1.2), vec2(0.24, 0.78), 0.07, aa);
+	c = max(c, sr_seg(q, vec2(0.24, 0.78), vec2(0.5, 0.32), 0.07, aa));
+	c = max(c, sr_seg(q, vec2(0.5, 0.32), vec2(0.56, -0.1), 0.07, aa));
+	c = max(c, sr_seg(q, vec2(0.56, -0.1), vec2(0.4, -0.46), 0.07, aa));
+	c = max(c, sr_seg(q, vec2(0.4, -0.46), vec2(0.0, -0.64), 0.07, aa));
+	return max(c, sr_disc(p, 0.11, aa));
+}
+
+// A bowling scoresheet box with a strike's X (open at the middle) and a dot.
+float sr_strike(vec2 p, vec2 aa) {
+	vec2 q = abs(p);
+	float c = sr_seg(q, vec2(0.0, 0.95), vec2(0.95, 0.95), 0.06, aa);
+	c = max(c, sr_seg(q, vec2(0.95, 0.0), vec2(0.95, 0.95), 0.06, aa));
+	c = max(c, sr_seg(q, vec2(0.3, 0.3), vec2(0.75, 0.75), 0.08, aa));
+	return max(c, sr_disc(p, 0.1, aa));
+}
+
+// A radar scope: rings, ticks, a sweep that turns with a fading wake, a blip.
+float sr_radar(vec2 p, vec2 aa) {
+	float r = length(p);
+	float c = sr_ring(p, 1.0, 0.05, aa);
+	c = max(c, sr_ring(p, 0.5, 0.03, aa) * 0.6);
+	vec2 q = sr_fold(p, 12.0);
+	c = max(c, sr_seg(q, vec2(0.0, 0.86), vec2(0.0, 1.0), 0.04, aa));
+	float sweep = TIME * 2.4;
+	vec2 dir = vec2(sin(sweep), cos(sweep));
+	c = max(c, sr_seg(p, dir * 0.16, dir * 0.98, 0.04, aa));
+	// The wake is only part of the mark itself (aa.y = 0), not of its outline or halo.
+	float behind = mod(sweep - atan(p.x, p.y), 6.2831853);
+	c = max(c, (1.0 - smoothstep(0.0, 1.1, behind)) * 0.3 * step(0.16, r) * step(r, 0.98) * step(aa.y, 0.0));
+	float blip = 1.0 - smoothstep(0.0, 2.5, mod(sweep - atan(0.55, 0.42), 6.2831853));
+	c = max(c, sr_disc(p - vec2(0.55, 0.42), 0.07, aa) * blip);
+	return max(c, sr_disc(p, 0.09, aa));
+}
+
+// A hazard triangle (point up) round a dot.
+float sr_hazard(vec2 p, vec2 aa) {
+	vec2 a = vec2(0.0, 1.0);
+	vec2 b = vec2(0.866, -0.5);
+	vec2 d = vec2(-0.866, -0.5);
+	float c = max(sr_seg(p, a, b, 0.08, aa), max(sr_seg(p, b, d, 0.08, aa), sr_seg(p, d, a, 0.08, aa)));
+	c = max(c, sr_seg(p, vec2(0.0, 0.2), vec2(0.0, 0.55), 0.06, aa));
+	return max(c, sr_disc(p, 0.09, aa));
+}
+
 float sight_reticle(vec2 p, int pattern, vec2 aa) {
 	float c = 0.0;
 	if (pattern == 1) {
@@ -249,6 +326,18 @@ float sight_reticle(vec2 p, int pattern, vec2 aa) {
 		c = sr_snowflake(p, aa);
 	} else if (pattern == 18) {
 		c = sr_quarters(p, aa);
+	} else if (pattern == 19) {
+		c = sr_invader(p, aa);
+	} else if (pattern == 20) {
+		c = sr_sun(p, aa);
+	} else if (pattern == 21) {
+		c = sr_flame(p, aa);
+	} else if (pattern == 22) {
+		c = sr_strike(p, aa);
+	} else if (pattern == 23) {
+		c = sr_radar(p, aa);
+	} else if (pattern == 24) {
+		c = sr_hazard(p, aa);
 	} else {
 		c = sr_disc(p, 0.2, aa);
 	}

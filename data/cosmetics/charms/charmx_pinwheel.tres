@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"charmx_pinwheel"
+display_name = "Pinwheel"
+description = "A paper pinwheel on a candy-striped stick whose four-coloured wheel never stops spinning."
+slot = &"weapon_charm"
+rarity = 1
+price = 750
+params = {
+"charm": "Pinwheel",
+"spin": 300
+}
+sort_order = 5127

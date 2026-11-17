@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_close_encounter"
+display_name = "Close Encounter"
+description = "A flying saucer beaming a startled little zombie up into a starry sky."
+slot = &"weapon_decal"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.4314, 1, 0.5882, 1, 1, 1, 1, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "CloseEncounter",
+"art": "res://art/textures/decals/decal_closeencounter.png"
+}
+sort_order = 4223
