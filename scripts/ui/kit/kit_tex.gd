@@ -34,6 +34,7 @@ const BUTTONS := {
 
 static var _textures := {}
 static var _boxes := {}
+static var _scaled := {}
 
 
 ## The texture art/ui/<name>.png (null if it does not exist).
@@ -42,6 +43,72 @@ static func tex(name: StringName) -> Texture2D:
 		var path := DIR + String(name) + ".png"
 		_textures[name] = load(path) if ResourceLoader.exists(path) else null
 	return _textures[name]
+
+
+## `box` at `scale` (0.5: half): the same frame drawn smaller, for a control
+## shorter or narrower than the frame's texture. A 9-slice drawn below its
+## texture size squeezes its middle rows (and below its borders squashes its
+## corners), which smears a thin band across the control; a smaller copy of
+## the frame stretches instead. Cached; content margins stay as they are, so
+## the control keeps its size and padding.
+static func scaled_box(box: StyleBoxTexture, scale: float) -> StyleBoxTexture:
+	var key := "%d@%.2f" % [box.get_instance_id(), scale]
+	if _scaled.has(key):
+		return _scaled[key]
+	var img := box.texture.get_image()
+	if img.is_compressed():
+		img.decompress()
+	img.clear_mipmaps()
+	img.resize(maxi(1, roundi(img.get_width() * scale)), maxi(1, roundi(img.get_height() * scale)), Image.INTERPOLATE_LANCZOS)
+	img.generate_mipmaps()
+	var sb: StyleBoxTexture = box.duplicate()
+	sb.texture = ImageTexture.create_from_image(img)
+	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		sb.set_texture_margin(side, roundf(box.get_texture_margin(side) * scale))
+		sb.set_expand_margin(side, roundf(box.get_expand_margin(side) * scale))
+	sb.set_meta(&"kit_base", box)
+	_scaled[key] = sb
+	return sb
+
+
+## Fits every frame state of `c` (normal, hover, pressed...) to its size: a
+## smaller copy of the frame while the control is smaller than the frame's
+## texture, the full frame again when it grows (see scaled_box). Kit buttons
+## and tiles call it when they resize and after they change a frame.
+static func fit_frames(c: Control) -> void:
+	for state: StringName in [&"normal", &"hover", &"pressed", &"hover_pressed", &"disabled", &"panel"]:
+		if not c.has_theme_stylebox_override(state):
+			continue
+		var sb := c.get_theme_stylebox(state) as StyleBoxTexture
+		if sb == null or sb.texture == null:
+			continue
+		var base: StyleBoxTexture = sb.get_meta(&"kit_base", sb)
+		var scale := fit_scale(base, c.size)
+		var want := base if scale >= 1.0 else scaled_box(base, scale)
+		if want != sb:
+			c.add_theme_stylebox_override(state, want)
+
+
+## The largest of 1, 1/2 and 1/4 at which `box` fits a control of `size`
+## (with the frame's expand margins): its borders fit and at least half of
+## the texture's middle rows and columns survive (min_frame_size). A mild
+## squeeze of a plain middle is invisible; a heavy one smears a band.
+static func fit_scale(box: StyleBoxTexture, size: Vector2) -> float:
+	for scale: float in [1.0, 0.5, 0.25]:
+		var w: float = size.x + (box.expand_margin_left + box.expand_margin_right) * scale
+		var h: float = size.y + (box.expand_margin_top + box.expand_margin_bottom) * scale
+		var need := min_frame_size(box) * scale
+		if need.x <= w + 0.5 and need.y <= h + 0.5:
+			return scale
+	return 0.25
+
+
+## The smallest drawn size (expand margins included) at which `box` looks
+## right: its borders plus half of its middle, on each axis.
+static func min_frame_size(box: StyleBoxTexture) -> Vector2:
+	var tex := box.texture.get_size()
+	var borders := Vector2(box.texture_margin_left + box.texture_margin_right, box.texture_margin_top + box.texture_margin_bottom)
+	return borders + (tex - borders) * 0.5
 
 
 ## A shared 9-slice box for `name` (see SPECS). Do not modify the result;

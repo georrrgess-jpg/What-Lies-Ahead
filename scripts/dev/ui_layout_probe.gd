@@ -127,6 +127,7 @@ func _check(where: String, window: Vector2i) -> void:
 			blocks.append(c)
 		if c is BaseButton and rect.get_area() > 1.0:
 			buttons.append([c, rect.intersection(clip), _layer(c)])
+		_check_slices(where, window, c)
 		if _covers(rect, view) or c.has_meta(&"layout_overhang"):
 			continue
 		if not view.grow(SLACK).encloses(rect) and clip == view:
@@ -151,6 +152,40 @@ func _check(where: String, window: Vector2i) -> void:
 			if overlap.size.x > SLACK and overlap.size.y > SLACK:
 				_fail(where, window, "buttons overlap: %s and %s (%s)" % [_name(a), _name(b), _r(overlap)])
 	_check_blocks(where, window, blocks)
+
+
+## A 9-slice frame (StyleBoxTexture) drawn too small: a button's frame below
+## KitTex.min_frame_size (its middle rows squeeze into a band), any frame below its own
+## fixed borders (the corners squash and the middle row smears out past them as
+## a thin line: the Locker's PRIMARIES/SECONDARIES and tab buttons).
+func _check_slices(where: String, window: Vector2i, c: Control) -> void:
+	var names: Array = []
+	if c is Button and (c as Button).flat:
+		return
+	if c is BaseButton:
+		names = ["normal", "hover", "pressed", "hover_pressed"]
+	elif c is PanelContainer or c is Panel:
+		names = ["panel"]
+	for n in names:
+		var sb := c.get_theme_stylebox(n) as StyleBoxTexture
+		if sb == null or sb.texture == null:
+			continue
+		var h := c.size.y + sb.expand_margin_top + sb.expand_margin_bottom
+		var w := c.size.x + sb.expand_margin_left + sb.expand_margin_right
+		var need_h := sb.texture_margin_top + sb.texture_margin_bottom
+		var need_w := sb.texture_margin_left + sb.texture_margin_right
+		if c is BaseButton:
+			var need := KitTex.min_frame_size(sb)
+			need_w = need.x
+			need_h = need.y
+		if h + 0.5 < need_h or w + 0.5 < need_w:
+			_fail(where, window, "%s frame '%s' squashed: drawn %dx%d, its texture needs %dx%d (%s in %s)" % [_name(c), n, w, h, need_w, need_h, _script_of(c), _script_of(c.get_parent())])
+			return
+
+
+func _script_of(n: Node) -> String:
+	var sc: Script = n.get_script() if n else null
+	return sc.resource_path.get_file() if sc else (n.get_class() if n else "-")
 
 
 ## Any two HUD blocks drawing over each other (neither inside the other).

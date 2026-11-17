@@ -65,6 +65,7 @@ static func make_toggle(text_value: String, group: ButtonGroup = null, font_size
 	b.button_group = group
 	b.add_theme_stylebox_override("pressed", KitTex.button(&"btn", &"pink", &"normal"))
 	b.add_theme_stylebox_override("hover_pressed", KitTex.button(&"btn", &"pink", &"hover"))
+	b._fit_frames()
 	return b
 
 
@@ -79,6 +80,7 @@ static func make_tab(text_value: String, group: ButtonGroup = null, font_size :=
 	b.add_theme_stylebox_override("hover", _tab_boxes[&"hover"])
 	b.add_theme_stylebox_override("pressed", _tab_boxes[&"on_normal"])
 	b.add_theme_stylebox_override("hover_pressed", _tab_boxes[&"on_hover"])
+	b._fit_frames()
 	return b
 
 
@@ -102,6 +104,16 @@ func _init() -> void:
 	pressed.connect(_on_pressed)
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		_fit_frames()
+
+
+## Keeps the frame from squeezing on compact buttons (KitTex.fit_frames).
+func _fit_frames() -> void:
+	KitTex.fit_frames(self)
+
+
 ## Applies the textures and text colours of `kind`.
 func _style() -> void:
 	var family: StringName = &"btn"
@@ -123,6 +135,7 @@ func _style() -> void:
 		add_theme_constant_override("outline_size", 4)
 	if kind == Kind.ICON:
 		add_theme_constant_override("icon_max_width", 36)
+	_fit_frames()
 
 
 func _update_lift(entering: bool) -> void:

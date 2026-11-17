@@ -27,7 +27,10 @@ func _build(padding: int) -> void:
 	add_theme_stylebox_override("normal", KitTex.box(&"card"))
 	add_theme_stylebox_override("hover", KitTex.box(&"card_hover"))
 	add_theme_stylebox_override("pressed", KitTex.box(&"card_hover"))
+	# Held down while hovered: the card too (not the theme's pink pill).
+	add_theme_stylebox_override("hover_pressed", KitTex.box(&"card_hover"))
 	add_theme_stylebox_override("focus", KitTex.box(&"focus_ring"))
+	KitTex.fit_frames(self)
 	body = VBoxContainer.new()
 	body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, padding)
 	body.add_theme_constant_override("separation", UiKit.GAP_XS)
@@ -43,6 +46,12 @@ func _build(padding: int) -> void:
 ## finished contract).
 func set_marked(on: bool) -> void:
 	add_theme_stylebox_override("normal", KitTex.box(&"card_selected" if on else &"card"))
+	KitTex.fit_frames(self)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		KitTex.fit_frames(self)
 
 
 func _update_lift(entering: bool) -> void:
