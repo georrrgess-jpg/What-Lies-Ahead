@@ -11,7 +11,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
-from weapon_punch import CUE, FAST, HIT, punched
+from weapon_punch import CUE, FAST, HANDLE, HIT, punched
 
 
 def _bloop(f0, f1, d, gain=1.0):
@@ -61,6 +61,7 @@ def weap_lava_splat():
     return filt(out, low=8000)
 
 
+@punched(HANDLE)
 def weap_lava_pop():
     """The reload starts: the cap pops off like a cork, the glass rings."""
     d = 0.35

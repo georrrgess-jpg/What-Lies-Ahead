@@ -7,7 +7,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _laser_layer, _shimmer, _sub_thump
-from weapon_punch import punch
+from weapon_punch import HANDLE, punch, punched
 
 
 def _arc(d, density=0.03, centre=3500):
@@ -87,9 +87,10 @@ def weap_arc_chain():
     tick = sweep(3800, 1600, d, "square", 0.5) * env(d, 0.0005, 0.03, power=2.0) * 0.25
     return punch(filt(crush(snap * 0.5 + tick, 1.3), low=7000), snap_gain=0.0, thump_gain=0.25, thump_hz=(160, 80),
                  thump_decay=0.025, duck=0.1, slap=(0.021,), slap_gain=0.1, room_gain=0.05, room_s=0.1,
-                 shelf_hz=4200, shelf_db=-4.0, seed="arc_chain")
+                 shelf_hz=3200, shelf_db=-7.0, low=6000, seed="arc_chain")
 
 
+@punched(HANDLE)
 def weap_arc_reload():
     """Vents hiss, the capsule pops, a new one hums in, the claws snap with a crackle."""
     out = silence(1.9)
@@ -139,11 +140,12 @@ def weap_lobber_boom():
     out = boom + blast + crackle
     for i, n in enumerate((19, 23, 26, 31)):
         place(out, blip(note(n), 0.18, "sine", 0.14), 0.08 + i * 0.05, 0.12)
-    return punch(crush(out, 1.5), snap_gain=0.3, snap_hz=2400, snap_ms=4.0, thump_gain=0.35, thump_hz=(95, 38),
-                 thump_decay=0.16, duck=0.3, slap=(0.06, 0.12), slap_gain=0.16, room_gain=0.18, room_s=0.45,
+    return punch(crush(out, 1.5), snap_gain=0.3, snap_hz=2400, snap_ms=4.0, thump_gain=0.35, thump_hz=(110, 50),
+                 thump_decay=0.16, duck=0.3, slap=(0.06, 0.12), slap_gain=0.16, room_gain=0.18, room_s=0.45, hp=55,
                  seed="lobber_boom")
 
 
+@punched(HANDLE)
 def weap_lobber_reload():
     """Lid pops, shells rattle out, gumballs tumble in, crank ratchets twice, lid slaps shut."""
     out = silence(2.4)
@@ -192,8 +194,8 @@ def weap_cryo_freeze():
     crackle = filt((np.random.default_rng(5).uniform(0, 1, int(SR * d)) > 0.985).astype(float), high=4000) * env(d, 0.2, 0.5, power=0.8)
     out = crackle * 1.4
     place(out, sweep(1200, 3200, 0.3, "sine", 0.6) * env(0.3, 0.01, 0.35, power=1.0) * 0.3, 0.0, 1.0)
-    place(out, blip(note(36), 0.3, "sine", 0.28), 0.28, 0.5)
-    place(out, blip(note(43), 0.25, "sine", 0.22), 0.3, 0.3)
+    place(out, blip(note(24), 0.3, "sine", 0.28), 0.28, 0.32)                      # glassy ping, an octave
+    place(out, blip(note(31), 0.25, "sine", 0.22), 0.3, 0.3)                       # down: no whistle
     return punch(out, snap_gain=0.0, thump_gain=0.2, thump_hz=(150, 70), thump_decay=0.05, duck=0.0,
                  slap=(0.03,), slap_gain=0.1, room_gain=0.12, room_s=0.3, shelf_hz=4500, shelf_db=-4.0,
                  seed="cryo_freeze")
@@ -208,10 +210,11 @@ def weap_cryo_shatter():
     for i in range(14):
         place(out, blip(rng.uniform(2400, 6200), 0.12, "sine", 0.1) * 0.3, 0.02 + rng.uniform(0, 0.5), 1.0)
     return punch(out, snap_gain=0.2, snap_hz=3000, thump_gain=0.4, thump_hz=(130, 50), thump_decay=0.07,
-                 duck=0.2, slap=(0.032,), slap_gain=0.12, room_gain=0.14, room_s=0.3, shelf_hz=4500, shelf_db=-5.0,
-                 seed="cryo_shatter")
+                 duck=0.2, slap=(0.032,), slap_gain=0.12, room_gain=0.14, room_s=0.3, shelf_hz=2800, shelf_db=-9.0,
+                 low=8000, seed="cryo_shatter")
 
 
+@punched(HANDLE)
 def weap_cryo_vent():
     """Overheat vent / canister swap: big hiss, clamps, a tank clunk and a frosty re-pressurise."""
     out = silence(1.6)
@@ -258,13 +261,14 @@ def weap_rail_fire():
     crack = filt(noise(d), high=2500) * env(d, 0.0002, 0.03, power=1.8) * 1.6
     zing = _laser_layer(5200, 900, d, 0.35, "saw") * env(d, 0.0005, 0.35, power=1.6) * 0.3
     ring = (tone(1850, d, "sine") * 0.4 + tone(2790, d, "sine") * 0.25) * env(d, 0.001, 0.8, power=2.2)
-    boom = _sub_thump(110, 28, d, 0.6) * 1.7
+    boom = _sub_thump(125, 44, d, 0.45) * 1.5                                    # chest, not rumble
     body = crush(crack + zing + ring * 0.3 + boom, 1.6)                        # the ring stays a tint, not a whistle
-    return punch(body, snap_gain=0.4, snap_hz=3000, snap_ms=4.0, thump_gain=0.3, thump_hz=(90, 36), thump_decay=0.18,
+    return punch(body, snap_gain=0.4, snap_hz=3000, snap_ms=4.0, thump_gain=0.3, thump_hz=(110, 50), thump_decay=0.18, hp=55,
                  duck=0.3, slap=(0.07, 0.15), slap_gain=0.2, room_gain=0.2, room_s=0.6, shelf_hz=4500, shelf_db=-3.0,
                  seed="rail")
 
 
+@punched(HANDLE)
 def weap_rail_reload():
     """Rails slide out and vent three times, capacitor drops, a new one slots in, rails slam home."""
     out = silence(2.2)

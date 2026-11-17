@@ -9,7 +9,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
-from weapon_punch import HEAVY, HIT, punched
+from weapon_punch import HANDLE, HEAVY, HIT, punched
 
 
 def _engine(d, f0, f1, curve=1.0, grit=0.5):
@@ -133,6 +133,7 @@ def weap_ripsaw_start():
 # Reload
 # ---------------------------------------------------------------------------
 
+@punched(HANDLE)
 def weap_ripsaw_reload():
     """Rack latch, the new rack printing in and seating (the glugs and the pump are their own sounds)."""
     out = silence(1.5)

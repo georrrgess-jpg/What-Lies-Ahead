@@ -7,7 +7,7 @@ in the house weapon recipe:
     body       the weapon's own sound, ducked a little under the thump
     thump      a short 60-150 Hz sine drop (the chest punch)
     tail       two dark slap-back taps and a small-room bloom (mono-safe)
-    voicing    a 35 Hz high-pass (no rumble/DC), a high-shelf cut above
+    voicing    a high-pass at `hp` (35 Hz: no rumble/DC), a high-shelf cut above
                `shelf_hz` (never piercing) and a soft clip
 
 Everything here draws from its own seeded generator, never from gen_audio's
@@ -63,7 +63,7 @@ def room(x, seconds=0.22, dark=2600.0, seed="room"):
 def punch(x, *, snap_gain=0.35, snap_hz=3200.0, snap_ms=3.0,
           thump_gain=0.6, thump_hz=(140.0, 55.0), thump_decay=0.07, duck=0.3,
           slap=(0.028, 0.047), slap_gain=0.16, room_gain=0.12, room_s=0.2,
-          shelf_hz=5000.0, shelf_db=-3.0, low=11000.0, drive=1.25, seed="w"):
+          shelf_hz=5000.0, shelf_db=-3.0, low=11000.0, hp=35.0, drive=1.25, seed="w"):
     """Wraps a weapon sound in the house recipe (see the module doc). Gains are
     relative to the body's own peak, so callers can wrap any generator."""
     body = np.asarray(x, dtype=np.float64)
@@ -86,7 +86,7 @@ def punch(x, *, snap_gain=0.35, snap_hz=3200.0, snap_ms=3.0,
     if room_gain:
         out += room(dry, room_s, seed=seed + ":room")[:len(out)] * room_gain
     pad = int(SR * 0.1)                 # FFT filters ring both ways: keep that ringing out of the sound
-    out = _shelf(filt(np.concatenate([out, np.zeros(pad)]), low=low, high=35.0), shelf_hz, shelf_db)[:len(out)]
+    out = _shelf(filt(np.concatenate([out, np.zeros(pad)]), low=low, high=hp), shelf_hz, shelf_db)[:len(out)]
     return np.tanh(out * drive) / np.tanh(drive)
 
 
@@ -101,6 +101,9 @@ HIT = dict(snap_gain=0.15, thump_gain=0.35, thump_hz=(150.0, 60.0), thump_decay=
            slap=(0.028,), slap_gain=0.1, room_gain=0.1, room_s=0.2)                 # the weapon's own impacts
 CUE = dict(snap_gain=0.0, thump_gain=0.2, thump_hz=(180.0, 90.0), thump_decay=0.04, duck=0.0,
            slap=(0.03,), slap_gain=0.1, room_gain=0.14, room_s=0.28, shelf_hz=4500.0, shelf_db=-4.0)  # ready/lock cues
+
+HANDLE = dict(snap_gain=0.0, thump_gain=0.0, duck=0.0, slap=(0.026,), slap_gain=0.08, room_gain=0.1, room_s=0.2,
+              shelf_hz=3500.0, shelf_db=-5.0, low=8000.0, drive=1.1)                 # reloads: a room, no fizz
 
 
 def punched(preset=None, **kw):

@@ -11,7 +11,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
-from weapon_punch import CUE, HEAVY, HIT, punched
+from weapon_punch import CUE, HANDLE, HEAVY, HIT, punched
 
 
 def _rumble(d, f=70.0, gain=1.0):
@@ -85,7 +85,7 @@ def sz_roll_loop():
     return loopable(filt(_rumble(d + 0.1, 66.0), low=2600), 0.1)
 
 
-@punched(HIT)
+@punched(HIT, hp=60.0)
 def sz_thud():
     """The ball lands on the floor: a deep thud and a wooden knock."""
     d = 0.35
@@ -136,6 +136,7 @@ def sz_gutter():
     return filt(rattle + drop + fizz, low=6000)
 
 
+@punched(HANDLE)
 def sz_reload():
     """The ball return opens: a mechanical whir and a latch."""
     out = silence(0.4)

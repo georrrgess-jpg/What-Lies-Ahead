@@ -11,7 +11,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
-from weapon_punch import CUE, HIT, MID, punched
+from weapon_punch import CUE, HANDLE, HIT, MID, punched
 
 
 def _whoosh(d, f0=500, f1=1600, gain=1.0):
@@ -109,6 +109,7 @@ def hub_equip():
     return filt(out, low=7000)
 
 
+@punched(HANDLE)
 def hub_reload():
     """Pit stop: the rack wrenched off, a new one printed in and slammed home, the tyres rev."""
     out = silence(1.9)

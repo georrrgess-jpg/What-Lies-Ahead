@@ -444,16 +444,18 @@ def pistol_reload():
 
 
 def carbine_reload():
+    from weapon_punch import HANDLE, punch
     out = silence(1.75)
     place(out, clunk(160, 0.12), 0.25, 0.8)
     place(out, band(noise(0.3), 1500, 700) * env(0.3, 0.08, power=1.0), 0.42, 0.55)   # cell slides out
     place(out, band(noise(0.26), 2000, 800) * env(0.26, 0.1, power=1.0), 0.86, 0.5)   # new cell slides in
     place(out, clunk(210, 0.14), 1.1, 1.0)
     place(out, charge(0.42, 350, 1700), 1.25, 0.5)
-    return out
+    return punch(out, seed="carbine_reload", **HANDLE)
 
 
 def scatter_reload():
+    from weapon_punch import HANDLE, punch
     out = silence(2.3)
     place(out, clunk(110, 0.18), 0.2, 1.0)                                   # break open
     place(out, click(0.03, 1500), 0.32, 0.6)
@@ -462,7 +464,7 @@ def scatter_reload():
     for at in (1.72, 2.02):                                                  # two pumps
         place(out, band(noise(0.09), 1200, 600) * env(0.09, 0.01, power=1.2), at, 0.7)
         place(out, clunk(170, 0.1), at + 0.09, 0.9)
-    return out
+    return punch(out, seed="scatter_reload", **HANDLE)
 
 
 def empty_click():

@@ -10,7 +10,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
-from weapon_punch import punch
+from weapon_punch import HANDLE, punch, punched
 
 MUSIC = {}
 
@@ -58,6 +58,7 @@ def weap_popper_pop():
                  slap=(0.03,), slap_gain=0.12, room_gain=0.1, room_s=0.15, seed="popper_pop")
 
 
+@punched(HANDLE)
 def weap_popper_reload():
     """Drum release and a gumball rattle as it spins out (the rest is shared reload sounds)."""
     out = silence(0.9)
@@ -115,6 +116,7 @@ def weap_whirl_windup():
     return out
 
 
+@punched(HANDLE)
 def weap_whirl_reload():
     """Overheat vent: a hiss, then the spent canister pops out."""
     out = silence(0.75)
@@ -193,6 +195,7 @@ def weap_rip_reel():
     return out
 
 
+@punched(HANDLE)
 def weap_rip_reload():
     """The air tank unscrews on a ratchet and lets go with a hiss."""
     out = silence(0.75)

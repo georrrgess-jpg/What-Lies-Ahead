@@ -11,7 +11,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
-from weapon_punch import HEAVY, punched
+from weapon_punch import HANDLE, HEAVY, punched
 
 MUSIC = {}
 LOOPS = {}
@@ -71,7 +71,7 @@ def gn8_twister_whirl():
     return filt(out, low=6500)
 
 
-@punched(HEAVY, thump_hz=(95.0, 38.0))
+@punched(HEAVY, thump_hz=(110.0, 50.0), hp=55.0)
 def gn8_twister_pop():
     """The cup bursting: a round boom, a china crack and a puff of confetti."""
     d = 0.9
@@ -95,6 +95,7 @@ def gn8_twister_equip():
     return filt(out, low=8000)
 
 
+@punched(HANDLE)
 def gn8_twister_reload():
     """2.3 s: roll-over clunk, four cups popping out, cups printing in and
     seating, the flick whirr slowing to a click and a china ding."""

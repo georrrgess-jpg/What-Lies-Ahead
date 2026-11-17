@@ -10,7 +10,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
-from weapon_punch import CUE, HEAVY, HIT, MID, punched
+from weapon_punch import CUE, HANDLE, HEAVY, HIT, MID, punched
 
 
 def _ping(freq, d, gain=1.0, decay=1.6):
@@ -31,8 +31,8 @@ def gc_fire():
     d = 0.55
     out = _whoomp(0.3, 220, 90, 0.9)
     out = np.concatenate([out, silence(d - 0.3)])
-    place(out, _ping(1320, 0.5, 0.55), 0.0, 1.0)
-    place(out, _ping(990, 0.4, 0.25), 0.03, 1.0)
+    place(out, _ping(1320, 0.5, 0.4, decay=2.2), 0.0, 1.0)                      # the ping rings, never whistles
+    place(out, _ping(990, 0.4, 0.3), 0.03, 1.0)
     return filt(out, low=7500)
 
 
@@ -155,6 +155,7 @@ def gc_chime():
     return out
 
 
+@punched(HANDLE)
 def gc_reload():
     """The reload bed: the meter drops, the satellite hums down, the bars tick in."""
     out = silence(2.0)

@@ -12,7 +12,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
-from weapon_punch import FAST, HIT, punched
+from weapon_punch import FAST, HANDLE, HIT, punched
 
 
 def _pop(pitch=1.0, gain=1.0):
@@ -118,6 +118,7 @@ def pcp_unjam():
     return filt(out, low=9000)
 
 
+@punched(HANDLE)
 def pcp_unlatch():
     """The reload starts: the lid's latch clicks open."""
     d = 0.2
