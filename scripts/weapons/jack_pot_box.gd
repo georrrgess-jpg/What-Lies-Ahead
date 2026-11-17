@@ -48,15 +48,20 @@ const SPLASH_LIFT := 0.5
 const HEAVY_MASS := 2.5
 const HEAVY_HOP := 0.16
 const BOSS_MASS := 5.0
-const BOSS_SCALE := 0.6
+const BOSS_SCALE := 0.75
 const BOSS_PUSH := 1.5
 ## Seconds of stars (Dazzle) after the punch (scaled down by weight there).
 const STUN := 1.4
 ## The spring at full stretch (m above the box floor) and the glove's reach.
-const SPRING_UP := 0.95
-const REACH_MIN := 0.35
-const REACH_MAX := 2.2
+const SPRING_UP := 0.8
+## The clown (and its glove) is drawn this much bigger than built, a proper
+## jack-in-the-box head on its spring.
+const CLOWN_SCALE := 1.5
+const REACH_MIN := 0.25
+const REACH_MAX := 1.6
 const BOX_SIZE := 0.34
+## The box model is drawn at this scale (it is built at BOX_SIZE).
+const MODEL_SCALE := 0.9
 const FLY_SPIN := 9.0
 const LAND_SOUND := &"jp_land"
 const TUNE_SOUND := &"jp_tune"
@@ -187,7 +192,7 @@ func _ready() -> void:
 		_show(part, false)
 	for node in _model.find_children("*", "GeometryInstance3D", true, false):
 		(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_model.scale = Vector3.ONE * 0.75
+	_model.scale = Vector3.ONE * MODEL_SCALE
 
 
 func _exit_tree() -> void:
@@ -290,7 +295,7 @@ func _pose_settle() -> void:
 	_model.quaternion = _land_from.slerp(Quaternion.IDENTITY, _ease_out_back(u))
 	_model.position.y = 0.16 * sin(PI * u)
 	var squash := 0.18 * sin(PI * clampf((u - 0.75) / 0.25, 0.0, 1.0))
-	_model.scale = Vector3(1.0 + squash, 1.0 - squash, 1.0 + squash) * 0.75
+	_model.scale = Vector3(1.0 + squash, 1.0 - squash, 1.0 + squash) * MODEL_SCALE
 	if u >= 1.0:
 		phase = Phase.WIND
 		_t = 0.0
@@ -302,7 +307,7 @@ func _pose_wind() -> void:
 	var u := clampf(_t / ARM_TIME, 0.0, 1.0)
 	_model.position.y = 0.0
 	_model.quaternion = Quaternion.IDENTITY
-	_model.scale = Vector3.ONE * 0.75
+	_model.scale = Vector3.ONE * MODEL_SCALE
 	_turn_crank(TAU * 2.0 * _smooth(u))
 	_show("Lamp", fmod(_t, 0.2) < 0.1)
 	var quiver := 0.03 * u * sin(_t * 70.0)
@@ -357,7 +362,7 @@ func _pop(target: Zombie) -> void:
 	_target = target
 	_model.quaternion = Quaternion.IDENTITY
 	_model.position = Vector3.ZERO
-	_model.scale = Vector3.ONE * 0.75
+	_model.scale = Vector3.ONE * MODEL_SCALE
 	_reach = REACH_MIN
 	var clown := _parts.get("Clown") as Node3D
 	if target and clown:
@@ -366,7 +371,7 @@ func _pop(target: Zombie) -> void:
 		var face := atan2(-local.x, -local.z)
 		clown.transform = _rest["Clown"] * Transform3D(Basis(Vector3.UP, face), Vector3.ZERO)
 		_rest["ClownAim"] = clown.transform
-		_reach = clampf(Vector2(to.x, to.z).length() / 0.75 - 0.55, REACH_MIN, REACH_MAX)
+		_reach = clampf((Vector2(to.x, to.z).length() / MODEL_SCALE - 0.6) / CLOWN_SCALE, REACH_MIN, REACH_MAX)
 	else:
 		_rest["ClownAim"] = _rest.get("Clown", Transform3D.IDENTITY)
 	_show("Spring", true)
@@ -473,11 +478,11 @@ func _pose_pop() -> void:
 	if clown:
 		var aim: Transform3D = _rest["ClownAim"]
 		var base: Vector3 = _rest["Spring"].origin
-		clown.transform = Transform3D(tilt * aim.basis, base + tilt * Vector3.UP * (h + 0.005))
+		clown.transform = Transform3D((tilt * aim.basis).scaled_local(Vector3.ONE * CLOWN_SCALE), base + tilt * Vector3.UP * (h + 0.005))
 	_pose_glove(t)
 	var shrink := clampf((t - (POP_TIME - SHRINK_TIME)) / SHRINK_TIME, 0.0, 1.0)
 	if shrink > 0.0:
-		_model.scale = Vector3.ONE * 0.75 * (1.0 - _ease_in_back(shrink))
+		_model.scale = Vector3.ONE * MODEL_SCALE * (1.0 - _ease_in_back(shrink))
 	if t >= POP_TIME:
 		Sfx.play_at(POOF_SOUND, global_position + Vector3.UP * 0.3, -6.0, randf_range(0.95, 1.05), 9.0)
 		WeaponFx.burst(get_parent(), global_position + Vector3.UP * 0.3, Vector3.UP, CONFETTI, 14, 2.5, 0.6, 0.05, 90.0, Vector3(0, -3.0, 0))

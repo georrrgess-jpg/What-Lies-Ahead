@@ -26,8 +26,8 @@ const GRAB_AXIS := Vector3(0.642, 0.523, -0.56)
 const GRAB_DEG := 134.6
 ## The hand's path bulges out this way on its way to the crank and back.
 const HAND_ARC := Vector3(-0.05, -0.02, 0.03)
-const ROOT_POS := Vector3(-0.03, 0.03, 0.02)
-const ROOT_ROT := Vector3(8.0, 18.0, -14.0)
+const ROOT_POS := Vector3(-0.05, 0.035, 0.05)
+const ROOT_ROT := Vector3(10.0, 24.0, -12.0)
 ## The hologram box hovers this far out of the cup (along its own up axis) and spins down.
 const HOLO_LIFT := 0.11
 const HOLO_SPIN := 360.0

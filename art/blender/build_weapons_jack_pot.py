@@ -152,8 +152,8 @@ def build_jack_pot():
     tilt = math.radians(CUP_TILT)
     axis = Vector((0, math.cos(tilt), math.sin(tilt)))
     up_n = Vector((0, -math.sin(tilt), math.cos(tilt)))
-    cup_base = Vector((0, 0.148, 0.03))
-    cup_len, cup_r = 0.075, 0.054
+    cup_base = Vector((0, 0.15, 0.03))
+    cup_len, cup_r = 0.06, 0.035
     cup_c = cup_base + axis * (cup_len / 2)
     cup_top = cup_base + axis * cup_len
     cup_rot = rad(-(90 - CUP_TILT), 0, 0)
@@ -166,7 +166,8 @@ def build_jack_pot():
                      side * 2, (0, 0, 0), M["shell"], bevel=0.01),
         # The back is a narrow neck, so the sight picture stays clear.
         side_profile("BodyRear", [(-0.092, -0.03), (-0.055, -0.03), (-0.055, 0.09), (-0.075, 0.09), (-0.092, 0.07)],
-                     0.042, (0, 0, 0), M["trim"], bevel=0.008),
+                     0.042, (0, 0, 0), M["shell"], bevel=0.008),
+        prism("RearStar", star_outline(0.013, 0.006), 0.004, (0, -0.0925, 0.022), rot=rad(0, 0, 0), m=M["trim"]),
         box("Frame", (0.072, 0.2, 0.026), (0, 0.035, -0.021), bevel=0.01, m=M["dark"]),
         # The launch cup: a fat candy-striped mortar leaning up, a gold lip and a dark bore.
         cyl("Cup", cup_r, cup_len, tuple(cup_c), rot=cup_rot, segs=40, bevel=0.008, m=M["shell"]),
@@ -197,19 +198,21 @@ def build_jack_pot():
             t = j / 12
             a = math.tau * k / 4 + t * math.pi * 0.9
             pts.append(tuple(cup_base + axis * (0.006 + t * (cup_len - 0.013)) + (Vector((1, 0, 0)) * math.cos(a) + up_n * math.sin(a)) * (cup_r + 0.0005)))
-        shell.append(tube(f"CupStripe{k}", pts, 0.0062, m=M["trim"], segs=8))
+        shell.append(tube(f"CupStripe{k}", pts, 0.0045, m=M["trim"], segs=8))
     shell += top_rail("TopRail", -0.052, 0.062, rail_top, M, width=0.03)
     shell += bolts("Pin", [(-0.036, -0.06, 0.0), (0.036, -0.06, 0.0), (0.036, 0.12, 0.0)], M["steel"], radius=0.005, height=0.006)
-    lug, charm_point = charm_lug(0.064, 0.13, 0.035, M, out=1.0)
+    lug, charm_point = charm_lug(0.044, 0.13, 0.035, M, out=1.0)
     shell += lug
-    shell.append(box("CharmLugFoot", (0.034, 0.02, 0.016), (0.046, 0.13, 0.039), bevel=0.004, m=M["dark"]))
-    rim_top = cup_top + up_n * cup_r
-    sight_rear, sight_front = sights_notch(0.0, -0.075, rim_top.y, 0.09, rim_top.z - 0.002, z_line, M, gap=0.016)
+    shell.append(box("CharmLugFoot", (0.016, 0.02, 0.016), (0.037, 0.13, 0.039), bevel=0.004, m=M["dark"]))
+    # The front post stands at the front of the rail: the box rides below the sight line ahead of it.
+    front_at = (0, 0.075, 0.088)
+    sight_rear, sight_front = sights_notch(0.0, -0.075, front_at[1], 0.09, front_at[2], z_line, M, gap=0.016)
 
-    # The mini box in the cup: lid first, along the cup's axis.
+    # The mini box perched in the cup's mouth: lid first, along the cup's axis,
+    # wider than the cup so it sits on top in plain view.
     s = 0.058
     body, lid, crank_mini, _lamp, hinge, _hub = jack_box("Mini", s, (blue, M["trim"], yellow, white, M["steel"]))
-    box_c = cup_base + axis * 0.0735
+    box_c = cup_base + axis * (cup_len - 0.008 + s * 0.47)
     place_box = Matrix.Translation(box_c) @ Matrix.Rotation(-(math.pi / 2 - tilt), 4, "X") @ Matrix.Translation((0, 0, -s * 0.47))
     transform_parts(body + crank_mini + lid, place_box)
     hinge_at = place_box @ Vector(hinge)
@@ -246,7 +249,7 @@ def build_jack_pot():
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "IronSightRear": (sight_rear, (0, -0.075, rail_top), None),
-        "IronSightFront": (sight_front, tuple(rim_top), None),
+        "IronSightFront": (sight_front, front_at, None),
         "Box": (body + crank_mini, box_pivot, None),
         "Lid": (lid, tuple(hinge_at), "Box"),
         "CellHolo": (holo, box_pivot, None),
