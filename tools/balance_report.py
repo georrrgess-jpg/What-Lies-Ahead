@@ -32,7 +32,9 @@ damage bonus a status lends every other weapon. Ground Control's full-charge rin
 zombie it has passed, and its mark (scripts/weapons/ground_control_mark.gd) adds its bonus
 to every hit after the first. Armour behaviours (helmets, shields, ice
 shells) are approximated as extra health. Numbers are for comparison
-between weapons, not exact in-game times.
+between weapons, not exact in-game times. The Jack Pot's boxes (scripts/weapons/jack_pot_box.gd)
+punch the zombie that sets them off for the full damage and splash the rest; bosses and the
+heaviest alphas take only BOSS_SCALE of it; its field of boxes is printed below the tables.
 """
 import glob
 import math
@@ -96,6 +98,7 @@ LAVA_PUDDLE = gd_consts("scripts/weapons/lava_lampoon_puddle.gd")
 YOYO = gd_consts("scripts/weapons/yoyo_loco_shot.gd")
 # Share of the pop a gathered zombie takes (they spin near the cup's centre).
 VORTEX_POP_SHARE = 0.8
+JACKPOT = gd_consts("scripts/weapons/jack_pot_box.gd")
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
 	"capsule_height": 1.9, "mass": 1.0, "move_speed": 2.0}
 # Extra effective health from armour behaviours (helmet, riot shield, ice shell).
@@ -186,6 +189,8 @@ def mode_kind(w):
 		return "tminus"
 	if mode.endswith("yoyo_loco_mode.gd"):
 		return "yoyo"
+	if mode.endswith("jack_pot_mode.gd"):
+		return "jackpot"
 	return ""
 
 
@@ -321,6 +326,10 @@ def pull_damage(w, e, d, head):
 		if d > w["max_range"]:
 			return 0.0, w["fire_interval"]
 		return w["damage"] * head_mix, max(w["fire_interval"], yoyo_trip(d))
+	if mode_kind(w) == "jackpot":
+		# The punch on the zombie that sets the box off; bosses are only nudged.
+		boss = e.get("mass", 1.0) >= JACKPOT["BOSS_MASS"]
+		return w["damage"] * (JACKPOT["BOSS_SCALE"] if boss else 1.0), w["fire_interval"]
 	if w["ricochet_count"] > 0:
 		# A thrown ring (RingShot) flies straight at its first target and can headshot.
 		return w["damage"] * head_mix, w["fire_interval"]
@@ -564,6 +573,12 @@ def main():
 				f"{full:.0f} over a full {YOYO['SLEEP_MAX']:g} s ({rounds} rounds, top {YOYO['SLEEP_DPS_TOP']:.0f} DPS); "
 				f"a Bruiser ({heavy:.0f}) drops {t + yoyo_trip(dist):.2f} s after the throw. Walk the Dog: "
 				f"{w['damage'] * YOYO['DOG_SCALE']:.0f} and a trip to every zombie it rolls past, one walk {dog_cycle:.2f} s")
+		if mode_kind(w) == "jackpot":
+			edge = w["damage"] * (1 + w["splash_edge_scale"]) / 2
+			field = int(JACKPOT["MAX_BOXES"]) * (w["damage"] + 3 * edge)
+			print(f"\n{w['display_name']} field: {int(JACKPOT['MAX_BOXES'])} boxes armed {JACKPOT['ARM_TIME']:g} s after landing, "
+				f"each {w['damage']:.0f} to the zombie that sets it off and {edge:.0f} on average to the rest within {w['splash_radius']:g} m; "
+				f"a pack of four walking into the field takes {field:.0f}; a boss {w['damage'] * JACKPOT['BOSS_SCALE']:.0f} a box")
 	tags = gd_consts("scripts/weapons/markdown_marker_tags.gd")
 	own = {"Marker tags": tags["TAG_BONUS"] * tags["MAX_TAGS"], "Ground Control mark": MARK["DAMAGE_BONUS"] - 1.0,
 		"Dunk Tank soak": SOAK["DAMAGE_BONUS"] - 1.0}
