@@ -26,10 +26,10 @@ const GRAVITY := 3.0
 ## Touching distance to a zombie's body (m), on top of the kernel's size.
 const REACH := 0.14
 const POP_DISTANCE := 4.0
-const PUFF_RADIUS := 1.5
-const PUFF_DAMAGE := 10.0
-const BURST_RADIUS := 2.5
-const BURST_DAMAGE := 15.0
+const PUFF_RADIUS := 1.8
+const PUFF_DAMAGE := 18.0
+const BURST_RADIUS := 2.8
+const BURST_DAMAGE := 28.0
 const SPLASH_EDGE := 0.45
 ## Radius per stage: a kernel, warm popcorn, hot buttered popcorn (m).
 const SIZES: Array[float] = [0.03, 0.055, 0.072]
