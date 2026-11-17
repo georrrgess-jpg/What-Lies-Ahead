@@ -11,6 +11,14 @@ extends RefCounted
 ##   # --shot-stress=1 fills the results with every section:
 ##   godot --headless --path . -- --profile=<copy> --shot=/tmp/x.png --shot-scene=results \
 ##       --shot-stress=1 --shot-run=res://scripts/dev/ui_layout_probe.gd
+##   # the in-run HUD with every widget up (Endless: --shot-level=endless_city), at the
+##   # station (kiosk), paused there (pause) or away from it (level):
+##   godot --headless --path . -- --profile=<copy> --shot=/tmp/x.png --shot-scene=kiosk \
+##       --shot-level=endless_city --shot-stress=1 --shot-run=res://scripts/dev/ui_layout_probe.gd
+##
+## Blocks marked with the meta `hud_block` (the HUD's corner columns, chips,
+## station board, world-marker labels, the pause menu's content) must not
+## overlap one another, whatever layer they are drawn in.
 ##
 ## Prints "[layout] FAIL <where> <size>: ..." per problem and a summary line
 ## "[layout] DONE <screens> screens, <n> problems".
@@ -25,6 +33,7 @@ extends RefCounted
 const SIZES: Array[Vector2i] = [
 	Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2000, 1092),
 	Vector2i(1920, 1200), Vector2i(1366, 768), Vector2i(2560, 1080), Vector2i(1024, 768),
+	Vector2i(1280, 1024),
 ]
 ## Pixels a rectangle may stick out before it counts (outlines, rounding).
 const SLACK := 2.0
@@ -108,11 +117,14 @@ func _check(where: String, window: Vector2i) -> void:
 	_screens += 1
 	var view := _tree.root.get_visible_rect()
 	var buttons: Array = []
+	var blocks: Array[Control] = []
 	for c in _visible_controls(_tree.root):
 		var rect := _rect(c)
 		var clip := _clip_rect(c, view)
 		if not clip.intersects(rect):
 			continue
+		if c.has_meta(&"hud_block"):
+			blocks.append(c)
 		if c is BaseButton and rect.get_area() > 1.0:
 			buttons.append([c, rect.intersection(clip), _layer(c)])
 		if _covers(rect, view) or c.has_meta(&"layout_overhang"):
@@ -138,6 +150,20 @@ func _check(where: String, window: Vector2i) -> void:
 			var overlap: Rect2 = (buttons[i][1] as Rect2).intersection(buttons[j][1])
 			if overlap.size.x > SLACK and overlap.size.y > SLACK:
 				_fail(where, window, "buttons overlap: %s and %s (%s)" % [_name(a), _name(b), _r(overlap)])
+	_check_blocks(where, window, blocks)
+
+
+## Any two HUD blocks drawing over each other (neither inside the other).
+func _check_blocks(where: String, window: Vector2i, blocks: Array[Control]) -> void:
+	for i in blocks.size():
+		for j in range(i + 1, blocks.size()):
+			var a := blocks[i]
+			var b := blocks[j]
+			if a.is_ancestor_of(b) or b.is_ancestor_of(a):
+				continue
+			var overlap := _rect(a).intersection(_rect(b))
+			if overlap.size.x > SLACK and overlap.size.y > SLACK:
+				_fail(where, window, "HUD blocks overlap: %s and %s (%s)" % [_name(a), _name(b), _r(overlap)])
 
 
 ## Each problem once per screen (the same one at several sizes is listed once

@@ -2,26 +2,26 @@ class_name EndlessHud
 extends Control
 ## In-run Endless overlay (registered by data/ui/hud_endless.tres), only
 ## shown in an endless run:
-##   - under the wave header: the district the player stands in, in its
-##     colour, and the best wave so far;
+##   - in the HUD's left column, under the wave header (see hud_left): the
+##     district the player stands in, in its colour, and the best wave so far;
 ##   - at the bottom centre: the prompt of the gate or trap the player stands
 ##     at ("HOLD [E]  OPEN PRECINCT 9   500 tickets"), with the hold filling
 ##     a bar, in red with what is missing when the tickets are short;
 ##   - a marker on a supply crate until it is picked up, on a power-up
 ##     while it lies on the ground, and in the middle of a district just
 ##     opened (until the player walks in or REVEAL_SECONDS pass);
-##   - under the district chip, a timer bar for every timed power-up running
-##     (Double Tickets, Rapid Fire), and the weapon in hand's bench tier.
+##   - under the district chip, also in the left column, the weapon in
+##     hand's bench tier and a timer bar for every timed power-up running
+##     (Double Tickets, Rapid Fire).
 
-const DISTRICT_POS := Vector2(48, 152)
 const PROMPT_BOTTOM := 250.0
 const SUPPLY_COLOR := Color(0.35, 1.0, 0.45)
-const TIMERS_POS := Vector2(48, 206)
 const REVEAL_SECONDS := 12.0
 
 var _director: RunDirector
 var _endless: EndlessDirector
 var _player: Player
+var _district_row: HBoxContainer
 var _district: PanelContainer
 var _district_name: Label
 var _district_box: StyleBoxFlat
@@ -82,6 +82,16 @@ func hud_slot() -> StringName:
 	return &"overlay"
 
 
+## The chips the HUD stacks in its left column, under the wave header.
+func hud_left() -> Array[Control]:
+	return [_district_row, _timers]
+
+
+func _show_chips(on: bool) -> void:
+	_district_row.visible = on
+	_timers.visible = on
+
+
 func bind(director: RunDirector, player: Player) -> void:
 	_director = director
 	_endless = director.endless
@@ -90,6 +100,7 @@ func bind(director: RunDirector, player: Player) -> void:
 		set_process(false)
 		return
 	visible = true
+	_show_chips(true)
 	_supply.camera = player.camera
 	_powerup.camera = player.camera
 	_reveal.camera = player.camera
@@ -100,7 +111,9 @@ func bind(director: RunDirector, player: Player) -> void:
 	_endless.district_opened.connect(func(_d): _shown_key = "")
 	_endless.supply_changed.connect(_on_supply)
 	_endless.new_best.connect(func(_w): UiFx.pulse(_best, 1.2))
-	director.run_finished.connect(func(_r): visible = false)
+	director.run_finished.connect(func(_r):
+		visible = false
+		_show_chips(false))
 	_show_district(_endless.current_district(), false)
 
 
@@ -124,10 +137,11 @@ func _process(delta: float) -> void:
 
 func _build_district() -> void:
 	var row := HBoxContainer.new()
-	row.position = DISTRICT_POS
 	row.add_theme_constant_override("separation", 14)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.visible = false
 	add_child(row)
+	_district_row = row
 	_district = PanelContainer.new()
 	_district_box = UiKit.box(Color(UiKit.INK, 0.74), UiKit.AMBER, 20, 2, 4)
 	_district_box.content_margin_left = 14
@@ -163,6 +177,7 @@ func _build_prompt() -> void:
 	_prompt.add_theme_stylebox_override("panel", _prompt_box)
 	_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_prompt.visible = false
+	_prompt.set_meta(&"hud_block", true)
 	# A band across the bottom that keeps the prompt centred whatever its width.
 	var band := CenterContainer.new()
 	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -236,9 +251,9 @@ func _update_prompt() -> void:
 
 func _build_timers() -> void:
 	_timers = VBoxContainer.new()
-	_timers.position = TIMERS_POS
 	_timers.add_theme_constant_override("separation", 6)
 	_timers.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_timers.visible = false
 	add_child(_timers)
 	_tier = UiKit.label("", 22, UiKit.MUTED, true)
 	_timers.add_child(_tier)

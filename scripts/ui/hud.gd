@@ -3,12 +3,15 @@ extends CanvasLayer
 ## arcade lettering over the play area, kit panels only for the loadout
 ## station. Zones on the 1920x1080 canvas:
 ##
-##   upper left    wave header: WAVE 03 / 08, round chip, zombies left
+##   upper left    one column (_left) inside the margin: the wave header
+##                 (WAVE 03 / 08, round chip, zombies left), under it the
+##                 "left" slot (Endless district and power-up chips, the
+##                 contracts) and, while the player stands at it, the loadout
+##                 station panel, which takes the slot's place
 ##   top centre    objective pill (what to do now, countdown, portal distance),
 ##                 under it the "top" widget slot, under that the banner zone
 ##   upper right   score, combo meter, the "right" widget slot, award feed;
 ##                 below them the notice stack (notices, unlocks: at most 3)
-##   left          the loadout station panel (only while standing at it)
 ##   centre        reticle, reload ring, weapon aids, damage and threat arcs
 ##   lower left    health cells with the overshield strip (the level badge of
 ##                 the progression widget sits right above them)
@@ -20,13 +23,17 @@ extends CanvasLayer
 ##                   bar: up to about 900 x 70)
 ##       &"right"    stacked under the combo meter, right-aligned (a Sparks
 ##                   counter: a chip up to about 420 x 56)
-##       &"overlay"  full screen; the widget places itself
+##       &"overlay"  full screen; the widget places itself, drawn under the
+##                   left column. Its pieces that belong in the upper left
+##                   (`func hud_left() -> Array[Control]`) are moved into the
+##                   left column's slot, in widget order, so they stack under
+##                   the wave header instead of on top of each other
 ##   * a widget without hud_slot() that anchors itself in _init/_ready (the
 ##     progression widget covers the whole screen) is an overlay;
 ##   * anything else gets a default place: "top" if it is at least
 ##     WIDE_WIDGET wide, otherwise "right".
-##   Keep overlays out of the zones above; the free areas are the left edge
-##   between y 190 and 880 while the station is closed, and the bottom centre.
+##   Keep overlays out of the zones above (the free area is the bottom
+##   centre); world markers (Waypoint) are kept clear of the corner blocks.
 ##
 ## What the run director's `notice(text, kind)` does here:
 ##   &"info" / &"good" / &"bad"   a line in the notice stack
@@ -56,6 +63,11 @@ var _root: Control
 ## Everything that belongs to play; faded out when the run ends.
 var _play: Control
 var _header: HudWave
+## The upper-left column: header, slot, station panel.
+var _left: VBoxContainer
+var _left_slot: VBoxContainer
+## Corner blocks the world markers keep clear of.
+var _keep_out: Array[Control] = []
 ## The header's "WAVE 03" label and a stand-in for the newest notice; the
 ## staging tools (scripts/dev/screenshot.gd, tools/neon_stage_shot.gd) set
 ## their text.
@@ -170,6 +182,7 @@ func add_widget(widget: Control) -> void:
 		# Let the widget set itself up, then see whether it took a place.
 		_play.add_child(widget)
 		if widget.anchor_right > 0.0 or widget.anchor_bottom > 0.0 or widget.position != Vector2.ZERO:
+			_add_overlay(widget)
 			return
 		slot = &"top" if widget.get_combined_minimum_size().x >= WIDE_WIDGET else &"right"
 		_play.remove_child(widget)
@@ -182,6 +195,21 @@ func add_widget(widget: Control) -> void:
 			_score_panel.extras.add_child(widget)
 		_:
 			_play.add_child(widget)
+			_add_overlay(widget)
+
+
+## An overlay widget (already in _play): under the left column, its upper-left
+## pieces moved into the column's slot, its world markers kept clear of the
+## corner blocks.
+func _add_overlay(widget: Control) -> void:
+	_play.move_child(widget, _left.get_index())
+	if widget.has_method("hud_left"):
+		for item: Control in widget.hud_left():
+			item.reparent(_left_slot, false)
+			item.position = Vector2.ZERO
+			item.set_meta(&"hud_block", true)
+	for marker in widget.find_children("*", "Waypoint", true, false):
+		(marker as Waypoint).avoid = _keep_out
 
 
 ## Shows a card (an unlock toast, a challenge card) in the notice stack.
@@ -248,7 +276,10 @@ func _build() -> void:
 	_build_bottom()
 	_build_centre()
 	_station = StationPanel.new()
-	_anchor(_station, Control.PRESET_TOP_LEFT, Vector2(MARGIN - 6.0, 190))
+	_left.add_child(_station)
+	_keep_out.assign([_left, _score_panel, _stack])
+	_kiosk_marker.avoid = _keep_out
+	_portal_marker.avoid = _keep_out
 	_thumbs = WeaponThumbs.new()
 	add_child(_thumbs)
 	# The banner stays up after play has faded (level cleared, defeat).
@@ -299,18 +330,29 @@ func _build_markers() -> void:
 	_play.add_child(_portal_marker)
 
 
-## Upper left: wave. Top centre: objective and the "top" widget slot.
-## Upper right: score, combo, the "right" widget slot, awards, notices.
+## Upper left: the column (wave header, "left" slot, station panel). Top
+## centre: objective and the "top" widget slot. Upper right: score, combo,
+## the "right" widget slot, awards, notices.
 func _build_top() -> void:
+	_left = VBoxContainer.new()
+	_left.add_theme_constant_override("separation", 12)
+	_anchor(_left, Control.PRESET_TOP_LEFT, Vector2(MARGIN, 10))
 	_header = HudWave.new()
 	_wave = _header.title
-	_anchor(_header, Control.PRESET_TOP_LEFT, Vector2(MARGIN, 10))
+	_header.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_header.set_meta(&"hud_block", true)
+	_left.add_child(_header)
+	_left_slot = VBoxContainer.new()
+	_left_slot.add_theme_constant_override("separation", 8)
+	_left_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_left.add_child(_left_slot)
 	var top := VBoxContainer.new()
 	top.add_theme_constant_override("separation", 10)
 	_anchor(top, Control.PRESET_CENTER_TOP, Vector2(0, 22), Control.GROW_DIRECTION_BOTH)
 	_objective = HudObjective.new()
 	_objective.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_objective.visible = false
+	_objective.set_meta(&"hud_block", true)
 	top.add_child(_objective)
 	_top_slot = VBoxContainer.new()
 	_top_slot.add_theme_constant_override("separation", 8)
@@ -318,6 +360,7 @@ func _build_top() -> void:
 	top.add_child(_top_slot)
 	_score_panel = ScorePanel.new()
 	_score_panel.custom_minimum_size = Vector2(420, 0)
+	_score_panel.set_meta(&"hud_block", true)
 	_anchor(_score_panel, Control.PRESET_TOP_RIGHT, Vector2(-MARGIN, 6), Control.GROW_DIRECTION_BEGIN)
 	_stack = HudStack.new()
 	_anchor(_stack, Control.PRESET_TOP_RIGHT, Vector2(-MARGIN, 396), Control.GROW_DIRECTION_BEGIN)
@@ -327,9 +370,11 @@ func _build_top() -> void:
 func _build_bottom() -> void:
 	_health = SegmentBar.new()
 	_health.custom_minimum_size = Vector2(450, 70)
+	_health.set_meta(&"hud_block", true)
 	_anchor(_health, Control.PRESET_BOTTOM_LEFT, Vector2(MARGIN, -MARGIN), Control.GROW_DIRECTION_END, Control.GROW_DIRECTION_BEGIN)
 	var corner := VBoxContainer.new()
 	corner.add_theme_constant_override("separation", 8)
+	corner.set_meta(&"hud_block", true)
 	_anchor(corner, Control.PRESET_BOTTOM_RIGHT, Vector2(-MARGIN, -MARGIN + 14.0), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_BEGIN)
 	var chips := HBoxContainer.new()
 	chips.alignment = BoxContainer.ALIGNMENT_END
@@ -571,8 +616,11 @@ func _update_station(show: bool) -> void:
 	if not show:
 		_station.close()
 		_station_key = -1
+		# The slot's chips and contracts come back once the panel has slid away.
+		_left_slot.visible = not _station.visible
 		return
 	_station.open()
+	_left_slot.visible = false
 	var w := player.weapons
 	var waves := director.waves
 	var tickets := director.tickets

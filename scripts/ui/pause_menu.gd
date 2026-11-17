@@ -4,7 +4,9 @@ extends CanvasLayer
 ## wave, the current objective and the stats. CONTROLS swaps that board for
 ## the key reference; SETTINGS opens the shared SettingsPanel in place.
 ## Restart and Main menu ask first (kit dialog, focus on the safe answer).
-## Frees the mouse while open and recaptures it on resume.
+## Frees the mouse while open and recaptures it on resume. The in-run HUD
+## (its station panel, chips and world markers) is hidden while it is open,
+## so nothing of it shows through beside or under the menu.
 
 const BOARD_WIDTH := 640.0
 
@@ -28,6 +30,8 @@ func open(director: RunDirector) -> void:
 	_director = director
 	get_tree().paused = true
 	Game.capture_mouse(false)
+	if director.hud:
+		director.hud.visible = false
 	_root = Control.new()
 	UiKit.apply(_root)
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -40,6 +44,7 @@ func open(director: RunDirector) -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(center)
 	_main = VBoxContainer.new()
+	_main.set_meta(&"hud_block", true)
 	_main.add_theme_constant_override("separation", UiKit.GAP_L)
 	center.add_child(_main)
 	var sign := UiKit.marquee("PAUSED", 72)
@@ -195,6 +200,8 @@ func _close_settings() -> void:
 
 func _resume() -> void:
 	get_tree().paused = false
+	if _director.hud:
+		_director.hud.visible = true
 	Game.capture_mouse(true)
 	queue_free()
 

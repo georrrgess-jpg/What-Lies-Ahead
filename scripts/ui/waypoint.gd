@@ -18,6 +18,9 @@ var color := UiKit.AMBER
 ## "kiosk" or "portal".
 var icon := "kiosk"
 var camera: Camera3D
+## Screen blocks (the HUD's corner columns) the marker moves below instead of
+## drawing over them; shared with the HUD, which owns the array.
+var avoid: Array[Control] = []
 
 var _time := 0.0
 var _text: Label
@@ -36,6 +39,7 @@ func _ready() -> void:
 	_text.custom_minimum_size = Vector2(260, 0)
 	_text.add_theme_constant_override("line_spacing", -8)
 	_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_text.set_meta(&"hud_block", true)
 	add_child(_text)
 	visibility_changed.connect(_on_visibility_changed)
 	_on_visibility_changed()
@@ -51,7 +55,7 @@ func _process(delta: float) -> void:
 		_text.visible = false
 		return
 	var distance := camera.global_position.distance_to(target.global_position)
-	_at = _project(target.global_position + offset)
+	_at = _keep_clear(_project(target.global_position + offset))
 	_text.visible = distance > 4.0
 	var metres := int(distance)
 	if metres != _metres:
@@ -64,6 +68,20 @@ func _process(delta: float) -> void:
 	else:
 		_text.position = _at + Vector2(-130.0, BADGE + 24.0)
 	queue_redraw()
+
+
+## Moves a marker that would land on one of the `avoid` blocks to just below
+## it (the arrow still points the same way).
+func _keep_clear(at: Vector2) -> Vector2:
+	var mark := Rect2(at - Vector2(130.0, BADGE + 8.0), Vector2(260.0, BADGE * 2.0 + 100.0))
+	for block in avoid:
+		if not block.is_visible_in_tree():
+			continue
+		var r := block.get_global_rect().grow(12.0)
+		if r.intersects(mark):
+			at.y = r.end.y + BADGE + 8.0
+			mark.position.y = at.y - BADGE - 8.0
+	return at
 
 
 ## Projects to the screen, clamping to an inset border when off-screen/behind.

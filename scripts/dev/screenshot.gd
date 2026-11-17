@@ -24,6 +24,9 @@ extends Node
 ##                         the scene is staged (scripts/dev/ui_layout_probe.gd)
 ##   --shot-stress=1       with --shot-scene=results or defeat: every weapon used, an alpha and two
 ##                         bounties (capsules), a big score: the fullest results screen
+##                         with --shot-scene=kiosk, pause or level: every in-run widget at once
+##                         (a break; Endless chips, a bench tier, two power-up timers, a notice;
+##                         kiosk/pause at the station, level away from it: contracts and its marker)
 ##   --shot-grant=a,b,...  with --shot-stress=1: also a results row for each of these weapon ids
 ##   --shot-pos=x,y,z      player feet position
 ##   --shot-yaw=deg        0 looks down -Z, positive turns left
@@ -70,6 +73,31 @@ func _ready() -> void:
 
 func _arg(key: String, default_value: String) -> String:
 	return String(args.get(key, default_value))
+
+
+## A break with the station open; `inside`: the player stands at it with a boost loaded.
+func _stage_station(director: RunDirector, player: Player, inside: bool) -> void:
+	director.wave_number = 3
+	director.countdown = 18.0
+	director._set_state(RunDirector.State.BREAK)
+	director.kiosk.set_open(true)
+	director.kiosk.player_inside = inside
+	director.tickets = 260
+	director.tickets_changed.emit(260)
+	director._set_damage_boost(RunDirector.Boost.READY)
+	player.health = 60.0
+	player.health_changed.emit(60.0, 100.0)
+
+
+## Fills the HUD: a notice and, in Endless, a bench tier and two power-up timers.
+func _stress_hud(director: RunDirector, player: Player) -> void:
+	director.notice.emit("DOUBLE TICKETS  ·  20 s", &"good")
+	var endless := director.endless
+	if endless == null:
+		return
+	endless.upgrades.upgrade(player.weapons.current)
+	endless.powerups._begin(EndlessPowerups.DOUBLE)
+	endless.powerups._begin(EndlessPowerups.RAPID)
 
 
 func _vec(text: String) -> Vector3:
@@ -206,18 +234,11 @@ func _run() -> void:
 	player._apply_settings()
 	player.camera.fov = fov
 
+	var stress := _arg("stress", "0") == "1"
 	if scene_kind == "kiosk":
-		# A break at the station: the player stands in it with a boost loaded.
-		director.wave_number = 3
-		director.countdown = 18.0
-		director._set_state(RunDirector.State.BREAK)
-		director.kiosk.set_open(true)
-		director.kiosk.player_inside = true
-		director.tickets = 260
-		director.tickets_changed.emit(260)
-		director._set_damage_boost(RunDirector.Boost.READY)
-		player.health = 60.0
-		player.health_changed.emit(60.0, 100.0)
+		_stage_station(director, player, true)
+		if stress:
+			_stress_hud(director, player)
 	elif scene_kind in ["results", "defeat"]:
 		director._grant(&"ion_carbine", 880, 61)
 		director._grant(&"pulse_pistol", 420, 30)
@@ -242,7 +263,16 @@ func _run() -> void:
 		director.hud.visible = false
 	elif scene_kind == "pause":
 		director.wave_number = 3
+		if stress:
+			# Paused at the station with every chip up: the HUD must not show through.
+			_stage_station(director, player, true)
+			_stress_hud(director, player)
+			await _wait(30)
 		director.pause()
+	elif stress:
+		# A break away from the station: contracts, chips, timers and the station marker at once.
+		_stage_station(director, player, false)
+		_stress_hud(director, player)
 	else:
 		director.wave_number = 3
 		director._set_state(RunDirector.State.WAVE)

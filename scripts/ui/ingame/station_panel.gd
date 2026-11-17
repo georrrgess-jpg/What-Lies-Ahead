@@ -1,6 +1,6 @@
 class_name StationPanel
 extends Control
-## The loadout station's panel (left side of the HUD, shown while the player
+## The loadout station's panel (in the HUD's left column, shown while the player
 ## stands at the station between waves): a signboard with the tickets
 ## balance, the four purchases as cards, the free weapon swap as a row of
 ## weapon cards and a footer with the key that starts the next wave and the
@@ -51,6 +51,9 @@ func _init() -> void:
 	_board = UiKit.signboard()
 	_board.set_padding(30, 24)
 	_board.custom_minimum_size.x = WIDTH
+	_board.set_meta(&"hud_block", true)
+	# The HUD's left column lays the panel out by the board's size.
+	_board.minimum_size_changed.connect(update_minimum_size)
 	add_child(_board)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
@@ -255,6 +258,10 @@ func set_next_wave(text: String, seconds: int, key := "F") -> void:
 	_shown_seconds = seconds
 	_timer.text = "%d:%02d" % [seconds / 60, seconds % 60]
 	_timer.add_theme_color_override("font_color", UiKit.RED if seconds <= 5 else UiKit.CYAN)
+
+
+func _get_minimum_size() -> Vector2:
+	return _board.get_combined_minimum_size()
 
 
 ## A purchase was refused: the tickets shake.
