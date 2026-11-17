@@ -31,27 +31,34 @@ from gen_audio import *  # noqa: F401,F403
 from gen_audio import SR
 
 
+def _bp(x, lo, hi):
+    """Band-pass lo..hi Hz (filt takes the low-pass corner first: filt(x, 60, 2400)
+    was a 60 Hz low-pass that left the alphas' roars as sub rumble and their
+    defeat silent)."""
+    return filt(x, low=hi, high=lo)
+
+
 def _thump(f0=110, f1=40, seconds=0.35, gain=1.0):
     return sweep(f0, f1, seconds, "sine", 0.6) * env(seconds, 0.002, seconds, power=2.4) * gain
 
 
 def _hiss(seconds, low=2000, high=9000, gain=1.0, attack=0.01):
-    return filt(noise(seconds), low, high) * env(seconds, attack, seconds, power=1.8) * gain
+    return _bp(noise(seconds), low, high) * env(seconds, attack, seconds, power=1.8) * gain
 
 
 def _growl(base, seconds, rasp=0.35):
     t = t_axis(seconds)
     f = base * (1.0 + 0.25 * np.sin(2 * np.pi * 1.3 * t) - 0.3 * t / seconds)
     body = np.sin(2 * np.pi * np.cumsum(f) / SR) + 0.5 * np.sign(np.sin(2 * np.pi * np.cumsum(f * 2.01) / SR))
-    grit = filt(noise(seconds), 200, 1600) * rasp * (1.0 + np.sin(2 * np.pi * 31 * t))
-    return filt(body * 0.6 + grit, 60, 2400) * env(seconds, 0.08, seconds, sustain=0.6, release=0.4, power=1.3)
+    grit = _bp(noise(seconds), 200, 1600) * rasp * (1.0 + np.sin(2 * np.pi * 31 * t))
+    return _bp(body * 0.6 + grit, 60, 2400) * env(seconds, 0.08, seconds, sustain=0.6, release=0.4, power=1.3)
 
 
 def rounds_boss_cast():
     out = silence(1.0)
     place(out, sweep(180, 420, 0.9, "saw", 1.4) * env(0.9, 0.5, 0.9, power=1.2) * 0.35, 0.0)
     place(out, sweep(270, 630, 0.9, "square", 1.4) * env(0.9, 0.5, 0.9, power=1.2) * 0.15, 0.0)
-    return filt(out, 80, 5000)
+    return _bp(out, 80, 5000)
 
 
 def rounds_boss_zone_warn():
@@ -79,7 +86,7 @@ def rounds_boss_crate_smash():
 
 def rounds_boss_charge_windup():
     out = silence(1.0)
-    place(out, filt(noise(0.35), 300, 1800) * env(0.35, 0.02, 0.35, power=1.5) * 0.8, 0.0)
+    place(out, _bp(noise(0.35), 300, 1800) * env(0.35, 0.02, 0.35, power=1.5) * 0.8, 0.0)
     place(out, _growl(90, 0.7, 0.5) * 0.7, 0.25)
     return out
 
@@ -87,7 +94,7 @@ def rounds_boss_charge_windup():
 def rounds_boss_charge():
     out = silence(0.9)
     t = t_axis(0.85)
-    sweep_band = filt(noise(0.85), 300, 3000) * (0.4 + 0.6 * np.sin(np.pi * t / 0.85))
+    sweep_band = _bp(noise(0.85), 300, 3000) * (0.4 + 0.6 * np.sin(np.pi * t / 0.85))
     place(out, sweep_band * env(0.85, 0.1, 0.85, power=1.2), 0.0)
     place(out, _thump(90, 50, 0.6, 0.6), 0.0)
     return out
@@ -105,7 +112,7 @@ def rounds_boss_beam():
     t = t_axis(seconds)
     f = 220 + 160 * t / seconds
     buzz = np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * 0.3 + np.sin(2 * np.pi * np.cumsum(f * 3) / SR) * 0.3
-    return filt(buzz * (0.8 + 0.2 * np.sin(2 * np.pi * 14 * t)), 100, 4000) * env(seconds, 0.05, seconds, sustain=0.8, release=0.3, power=1.0)
+    return _bp(buzz * (0.8 + 0.2 * np.sin(2 * np.pi * 14 * t)), 100, 4000) * env(seconds, 0.05, seconds, sustain=0.8, release=0.3, power=1.0)
 
 
 def rounds_boss_surface():
@@ -128,14 +135,14 @@ def rounds_boss_event():
     place(out, sweep(55, 75, 1.6, "saw", 1.0) * env(1.6, 0.8, 1.6, power=1.0) * 0.4, 0.0)
     gong = sum(tone(f, 1.6, "sine") * 0.3 / (k + 1) for k, f in enumerate((110, 167, 232, 341)))
     place(out, gong * env(1.6, 0.003, 1.6, power=2.0), 0.7)
-    return filt(out, 40, 6000)
+    return _bp(out, 40, 6000)
 
 
 def rounds_boss_gust():
     seconds = 1.6
     t = t_axis(seconds)
     swell = np.sin(np.pi * t / seconds) ** 2
-    return filt(noise(seconds), 250, 2200) * swell * 0.8
+    return _bp(noise(seconds), 250, 2200) * swell * 0.8
 
 
 def rounds_boss_roar():
@@ -172,13 +179,13 @@ def rounds_boss_defeat():
     for i, n in enumerate((0, 4, 7, 12)):
         place(out, (tone(note(n), 1.4, "saw") * 0.4 + tone(note(n + 12), 1.4, "square") * 0.15) * env(1.4, 0.01, 1.4, power=1.6) * 0.3, 0.05 + 0.06 * i)
     place(out, _hiss(1.2, 3000, 11000, 0.25, 0.01), 0.05)
-    return filt(out, 30, 9000)
+    return _bp(out, 30, 9000)
 
 
 def rounds_boss_stone():
     out = silence(1.0)
     t = t_axis(0.8)
-    grind = filt(noise(0.8), 80, 900) * (0.6 + 0.4 * np.sin(2 * np.pi * 23 * t))
+    grind = _bp(noise(0.8), 80, 900) * (0.6 + 0.4 * np.sin(2 * np.pi * 23 * t))
     place(out, grind * env(0.8, 0.05, 0.8, power=1.3), 0.0)
     place(out, _thump(100, 40, 0.35, 0.8), 0.05)
     return out
@@ -196,7 +203,7 @@ def rounds_boss_thunder():
     out = silence(2.0)
     place(out, _hiss(0.12, 2500, 12000, 1.0, 0.0005), 0.0)
     t = t_axis(1.8)
-    rumble = filt(noise(1.8), 40, 300) * (0.7 + 0.3 * np.sin(2 * np.pi * 3.0 * t))
+    rumble = _bp(noise(1.8), 40, 300) * (0.7 + 0.3 * np.sin(2 * np.pi * 3.0 * t))
     place(out, rumble * env(1.8, 0.05, 1.8, power=1.6) * 1.2, 0.05)
     return out
 
