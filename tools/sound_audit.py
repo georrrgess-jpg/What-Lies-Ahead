@@ -328,6 +328,7 @@ COLS = ("seconds", "peak", "rms", "lufs", "crest", "cent", "hf4", "hf8", "tone_h
 
 
 def write_csv(rows, path):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w") as f:
         f.write("name,kind,family,pack,owner," + ",".join(COLS) + ",flags\n")
         for r in sorted(rows.values(), key=lambda r: (r["family"], r["name"])):
