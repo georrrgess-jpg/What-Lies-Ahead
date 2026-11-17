@@ -38,6 +38,8 @@ void fragment() {
 	float win = step(0.22, f.x) * step(f.x, 0.78) * step(0.28, f.y) * step(f.y, 0.8) * step(1.0, id.y);
 	float grain = hash(floor(vec2(u, world_pos.y) * 1.3));
 	vec3 wall = wall_color * (0.82 + 0.18 * grain) * mix(0.55, 1.0, smoothstep(0.0, 5.0, world_pos.y));
+	// A cornice band every fourth floor, like the skyline's (one city).
+	wall *= 1.0 - 0.3 * step(3.0, mod(id.y, 4.0)) * step(f.y, 0.14);
 	// Soot streaks above the burnt-out windows.
 	float burnt = step(1.0 - fire_fraction * 4.0, h);
 	wall *= 1.0 - burnt * step(0.8, f.y) * 0.6;

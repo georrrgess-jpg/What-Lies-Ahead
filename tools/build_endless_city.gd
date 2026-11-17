@@ -1212,18 +1212,15 @@ func _shell_rooms(block_name: String, r: Rect2, height: float, facing: String) -
 
 ## How far behind a facade the dark rooms stop (metres).
 const ROOM_DEPTH := 3.0
-var _room_mat: StandardMaterial3D
+var _room_mat: ShaderMaterial
 
 
-## Near-black plaster with a faint warm glow: the gutted rooms behind the windows.
-func _room_material() -> StandardMaterial3D:
+## The gutted rooms behind the windows: near-black, a few still lit or
+## burning (art/shaders/city_rooms.gdshader).
+func _room_material() -> ShaderMaterial:
 	if _room_mat == null:
-		_room_mat = StandardMaterial3D.new()
-		_room_mat.albedo_color = Color(0.07, 0.055, 0.06)
-		_room_mat.roughness = 1.0
-		_room_mat.emission_enabled = true
-		_room_mat.emission = Color(0.16, 0.07, 0.04)
-		_room_mat.emission_energy_multiplier = 0.25
+		_room_mat = ShaderMaterial.new()
+		_room_mat.shader = load(SHADERS + "city_rooms.gdshader")
 	return _room_mat
 
 
@@ -1497,6 +1494,8 @@ func _build_boundary() -> void:
 		_player_wall(walls, "Mouth%d" % i, m[0], m[1], WALL_H)
 		_tape_line(m[0], m[1], i)
 		i += 1
+	# Sawhorses, signs and smoke make each cordon read (tools/city/city_skyline.gd).
+	preload("res://tools/city/city_skyline.gd").new(self, dressing).build_boundary(mouths)
 
 
 func _player_walls() -> Node3D:
@@ -1534,14 +1533,6 @@ func _build_skyline() -> void:
 	var back := Node3D.new()
 	back.name = "Skyline"
 	dressing.add_child(back)
-	var m := ShaderMaterial.new()
-	m.shader = load(SHADERS + "city_sky_skyline.gdshader")
-	m.set_shader_parameter("far_fade", 1.0)
-	m.set_shader_parameter("window_size", Vector2(4.0, 4.4))
-	m.set_shader_parameter("wall_color", Color(0.3, 0.24, 0.26))
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3.ONE
-	mesh.material = m
 	var xforms: Array[Transform3D] = []
 	var centre := Vector3(10.0, 0, -24.0)
 	for ring in 3:
@@ -1557,14 +1548,13 @@ func _build_skyline() -> void:
 			var pos := centre + Vector3(cos(a) * r, h * 0.5 - 2.0, sin(a) * r)
 			var basis := Basis(Vector3.UP, -a + _rng.randf_range(-0.2, 0.2)).scaled(Vector3(w, h, _rng.randf_range(12.0, 26.0)))
 			xforms.append(Transform3D(basis, pos))
-	var mmi := _multimesh("Towers", mesh, xforms)
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	back.add_to_group("city_surface", true)
-	back.add_child(mmi)
+	# The towers dressed as one city, the outer blocks, landmarks (tools/city/city_skyline.gd).
+	preload("res://tools/city/city_skyline.gd").new(self, back).build(xforms)
 	# The ground out to the horizon round the city's footprint (the districts
 	# have their own floors; the stairwells must stay open), and a dark floor
 	# deep under everything.
-	var ground := _mat("far_ground", Color(0.16, 0.13, 0.13), 1.0)
+	var ground := _surface("far_ground", ["city_asphalt"], Color(0.3, 0.25, 0.25), 0.12, 1.0)
 	var city := Rect2(-100.0, -104.0, 222.0, 168.0)
 	var far := 700.0
 	var pieces := [Rect2(-far, -far, far * 2.0, far + city.position.y), Rect2(-far, city.end.y, far * 2.0, far - city.end.y),
@@ -2611,6 +2601,8 @@ func _build_rooftops() -> void:
 		if i % 4 == 0:
 			_instance("antenna", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU), _roof_spot(inner, h)), Color.WHITE)
 		i += 1
+	# Stair houses, masts, district neon, billboards and fires (tools/city/city_skyline.gd).
+	preload("res://tools/city/city_skyline.gd").new(self, dressing).build_roofs(_roofs)
 
 
 func _roof_spot(inner: Rect2, h: float) -> Vector3:
