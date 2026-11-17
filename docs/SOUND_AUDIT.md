@@ -238,6 +238,10 @@ Changed families: `cue_1`, `cue_2`, `enemy_attack_1`, `enemy_special_1`,
 
 ## Weapons (hand-off to snd_wpn_a / snd_wpn_b)
 
+`python3 tools/sound_audit_weapons.py [audit.csv]` checks each weapon's fire sound
+against its ceiling (-17 for a fast auto, -14, -11 for a big shot every 0.4 s or slower)
+and floor (-20, -22 for a fast auto).
+
 Weapon-owned sounds the audit flags (before). `eff` dB, centroid Hz, % above 4/8 kHz,
 % below 80 Hz.
 
