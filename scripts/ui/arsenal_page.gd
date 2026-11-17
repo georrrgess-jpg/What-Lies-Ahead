@@ -14,14 +14,14 @@ extends MenuPage
 ## Card size at its widest; cards share the tray's width (the longer section
 ## fills it) and narrow, down to CARD_MIN_WIDTH, so every card stays on screen.
 const CARD_SIZE := Vector2(150, 196)
-const CARD_MIN_WIDTH := 96.0
+const CARD_MIN_WIDTH := 80.0
 const SECTION_NAMES := ["PRIMARIES", "SECONDARIES"]
 ## Shown in the empty part of a section's row when the other has more weapons.
 const SECTION_NOTES := [
 	"Primaries ride in slot 1: the weapon you fight with.",
 	"Secondaries ride in slot 2: press 2 or roll the wheel to draw one while the primary reloads.",
 ]
-const SECTION_TAB_WIDTH := 236.0
+const SECTION_TAB_WIDTH := 208.0
 ## How far the cards slide when the section changes (px).
 const SECTION_SLIDE := 90.0
 const THUMB_SIZE := Vector2i(252, 104)
