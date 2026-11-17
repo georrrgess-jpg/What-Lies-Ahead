@@ -1,11 +1,12 @@
 extends RefCounted
-## Strike Zone "ball return": the gun rolls over to show its left flank and
-## the kicker cocks back. A ball still in the chamber hops back into the side
-## return. A hologram ball-return rail curls up from under the gun, round
-## the flank and over the deck's front edge; a fresh ball comes rolling up
-## it from below, slows over the crest and drops into the chamber with a
-## clunk and a little bounce, then spins on the spot until its finger holes
-## come round to face the player. With the side return empty, a hologram
+## Strike Zone "ball return": the gun swings its nose in and rolls over to
+## show its left flank and the chamber, and the kicker cocks back. A ball
+## still in the chamber hops back into the side return. A hologram
+## ball-return rail curls up from under the gun, past the hood and back over
+## the deck's front edge; a fresh ball comes rolling up it from below, slows
+## over the crest and drops into the chamber with a clunk and a little
+## bounce, still spinning: the spin winds down as it rights itself until its
+## finger holes face the player. With the side return empty, a hologram
 ## spare prints into it and turns solid. The rail dissolves back down, the
 ## lane arrows chase on, and the kicker and the gun settle.
 ##
@@ -15,18 +16,18 @@ extends RefCounted
 ## turns by exactly the distance it rolls.
 
 ## The ball's centre along the rail, model space (build_weapons_strike_zone.py RAIL_PATH).
-const RAIL: Array[Vector3] = [Vector3(-0.12, -0.28, -0.24), Vector3(-0.16, -0.16, -0.235), Vector3(-0.165, -0.04, -0.23),
-	Vector3(-0.135, 0.07, -0.225), Vector3(-0.07, 0.14, -0.215), Vector3(-0.015, 0.13, -0.21), Vector3(0.0, 0.06, -0.245),
+const RAIL: Array[Vector3] = [Vector3(-0.12, -0.27, -0.34), Vector3(-0.16, -0.15, -0.345), Vector3(-0.17, -0.03, -0.33),
+	Vector3(-0.14, 0.08, -0.29), Vector3(-0.075, 0.145, -0.23), Vector3(-0.015, 0.13, -0.205), Vector3(0.0, 0.06, -0.245),
 	Vector3(0.0, 0.044, -0.258)]
 const BALL_R := 0.05
-const ROOT_POS := Vector3(-0.012, 0.03, 0.0)
-const ROOT_ROT := Vector3(10.0, -6.0, -19.0)
+const ROOT_POS := Vector3(-0.04, 0.045, 0.02)
+const ROOT_ROT := Vector3(14.0, 22.0, -26.0)
 const KICK_BACK := 0.032
 ## Timeline: the old ball hops out, the rail rises, the new ball rolls up and lands.
 const HOP_OUT := Vector2(0.08, 0.3)
 const RAIL_IN := Vector2(0.1, 0.3)
 const ROLL := Vector2(0.32, 0.64)
-const SPIN := Vector2(0.66, 0.9)
+const SPIN := Vector2(0.64, 0.9)
 const SPARE_IN := Vector2(0.56, 0.78)
 const RAIL_OUT := Vector2(0.82, 0.95)
 ## Pace along the rail: share of the way at the crest, and the speeds (share
@@ -35,8 +36,9 @@ const RAIL_OUT := Vector2(0.82, 0.95)
 const CREST_T := 0.74
 const CREST_AT := 0.84
 const PACE := Vector3(1.6, 0.42, 1.7)
-## Turns of the finger-hole spin (degrees about the ball's vertical).
-const SPIN_DEG := 470.0
+## The finger-hole spin (degrees about the ball's vertical): it starts as
+## fast as the ball was rolling when it landed and winds down.
+const SPIN_DEG := 300.0
 const RAIL_RISE := 0.06
 const HOLO_SHADER := "res://art/shaders/holo.gdshader"
 const CYAN := Color(0.3, 0.95, 1.0)
@@ -166,13 +168,15 @@ func _pose_ball(s: float) -> void:
 		_roll_to(at)
 		ball.transform = Transform3D(_roll, at)
 		return
-	# In the chamber: a small bounce, then the finger-hole spin to rest.
+	# In the chamber: a small bounce, and the finger-hole spin: it keeps
+	# turning (now about its vertical), winding down, while it rights itself
+	# so the holes come round to face the player.
 	var b := _e(ROLL.y, ROLL.y + 0.08, s)
 	var bounce := Vector3.UP * 0.009 * sin(PI * b) * (1.0 - b)
-	var u := _e(SPIN.x, SPIN.y, s)
-	var turn := deg_to_rad(SPIN_DEG) * (1.0 - (1.0 - (1.0 - u) * (1.0 - u) * (1.0 - u)))
-	var target := Quaternion(Vector3.UP, turn) * rest.basis.get_rotation_quaternion()
-	var q := _landed.slerp(target, _e(ROLL.y, ROLL.y + 0.06, s))
+	var u := clampf((s - SPIN.x) / (SPIN.y - SPIN.x), 0.0, 1.0)
+	var turn := deg_to_rad(SPIN_DEG) * (1.0 - (1.0 - u) * (1.0 - u) * (1.0 - u))
+	var settled := Quaternion(Vector3.UP, -deg_to_rad(SPIN_DEG)) * rest.basis.get_rotation_quaternion()
+	var q := Quaternion(Vector3.UP, turn) * _landed.slerp(settled, smoothstep(0.0, 1.0, u))
 	ball.transform = Transform3D(Basis(q), rest.origin + bounce)
 
 

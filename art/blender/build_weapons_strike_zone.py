@@ -44,10 +44,10 @@ BALL_R = 0.05
 BALL_C = (0.0, 0.258, 0.044)       # chamber ball centre
 SPARE_C = (-0.106, 0.12, 0.03)     # spare ball centre (side ball return)
 RAIL_TOP = 0.112
-# The ball's centre along the hologram rail, from under the gun up the left
-# flank and over the deck's front edge into the chamber.
-RAIL_PATH = [(-0.12, 0.24, -0.28), (-0.16, 0.235, -0.16), (-0.165, 0.23, -0.04), (-0.135, 0.225, 0.07),
-             (-0.07, 0.215, 0.14), (-0.015, 0.21, 0.13), (0.0, 0.245, 0.06), BALL_C]
+# The ball's centre along the hologram rail: from under the gun up past the
+# left of the hood, curling back over the deck's front edge into the chamber.
+RAIL_PATH = [(-0.12, 0.34, -0.27), (-0.16, 0.345, -0.15), (-0.17, 0.33, -0.03), (-0.14, 0.29, 0.08),
+             (-0.075, 0.23, 0.145), (-0.015, 0.205, 0.13), (0.0, 0.245, 0.06), BALL_C]
 # The hood over the chamber: a tunnel from HOOD_Y0 to HOOD_Y1 (relative to the ball).
 HOOD_INNER = 0.06
 HOOD_THICK = 0.008
@@ -261,9 +261,9 @@ def build_strike_zone():
         base = q + down * (BALL_R * 0.72)
         rail_l.append(tuple(base - side * 0.026))
         rail_r.append(tuple(base + side * 0.026))
-    rail = [tube("RailL", rail_l[:-1], 0.0045, m=M["holo"], segs=8), tube("RailR", rail_r[:-1], 0.0045, m=M["holo"], segs=8)]
+    rail = [tube("RailL", rail_l[:-1], 0.0075, m=M["holo"], segs=10), tube("RailR", rail_r[:-1], 0.0075, m=M["holo"], segs=10)]
     for i in range(1, len(rail_l) - 1):
-        rail.append(tube(f"RailTie{i}", [rail_l[i], rail_r[i]], 0.003, m=M["holo"], segs=6))
+        rail.append(tube(f"RailTie{i}", [rail_l[i], rail_r[i]], 0.0055, m=M["holo"], segs=8))
 
     bowl = [(-0.012, 0.02), (0.012, 0.02), (0.016, 0.006), (0.009, -0.004), (0.012, -0.02), (-0.012, -0.02),
             (-0.009, -0.004), (-0.016, 0.006)]

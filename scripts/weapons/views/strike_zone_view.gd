@@ -33,6 +33,8 @@ const HOP: Array[Vector3] = [Vector3(-0.106, 0.03, -0.12), Vector3(-0.1, 0.12, -
 	Vector3(-0.015, 0.13, -0.21), Vector3(0.0, 0.06, -0.245), Vector3(0.0, 0.044, -0.258)]
 const GOLD := [Color(1.0, 0.85, 0.3), Color(1.0, 1.0, 0.85), Color(1.0, 0.3, 0.62)]
 
+static var _curves := {}
+
 var _ball: Node3D
 var _spare: Node3D
 var _kicker: Node3D
@@ -82,22 +84,20 @@ static func hop(k: float) -> Vector3:
 
 
 ## A point `k` (0-1) of the way along a smooth curve through `points`, at an
-## even pace (Catmull-Rom, spaced by the distance between the points).
+## even pace: a Catmull-Rom spline, sampled by its length (so a ball rolling
+## along it never speeds up or slows down where two pieces meet).
 static func along(points: Array[Vector3], k: float) -> Vector3:
-	var n := points.size()
-	var total := 0.0
-	for i in n - 1:
-		total += points[i].distance_to(points[i + 1])
-	var want := clampf(k, 0.0, 1.0) * total
-	for i in n - 1:
-		var seg := points[i].distance_to(points[i + 1])
-		if want <= seg or i == n - 2:
-			var t := clampf(want / maxf(seg, 0.0001), 0.0, 1.0)
-			var p0 := points[maxi(i - 1, 0)]
-			var p3 := points[mini(i + 2, n - 1)]
-			return points[i].cubic_interpolate(points[i + 1], p0, p3, t)
-		want -= seg
-	return points[n - 1]
+	var key := hash(points)
+	if not _curves.has(key):
+		var c := Curve3D.new()
+		c.bake_interval = 0.002
+		var n := points.size()
+		for i in n:
+			var tangent := (points[mini(i + 1, n - 1)] - points[maxi(i - 1, 0)]) / 6.0
+			c.add_point(points[i], -tangent, tangent)
+		_curves[key] = c
+	var curve: Curve3D = _curves[key]
+	return curve.sample_baked(clampf(k, 0.0, 1.0) * curve.get_baked_length(), true)
 
 
 ## A ball turned by rolling `angle` radians along `dir` (model space).

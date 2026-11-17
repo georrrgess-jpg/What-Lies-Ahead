@@ -31,7 +31,7 @@ const DROP_SPEED := 3.5
 ## A landing faster than this (m/s down) hops once; the first one thuds,
 ## bowling over every zombie within LAND_RADIUS (m) of it.
 const HOP_SPEED := 4.0
-const LAND_RADIUS := 1.3
+const LAND_RADIUS := 1.8
 ## Reach (m) beyond a zombie's capsule at which the ball bowls it over.
 const REACH := 0.15
 const PIN_FALLOFF := 0.95
@@ -42,7 +42,7 @@ const WALL_KEEP := 0.75
 ## Zombies this heavy or heavier only stagger.
 const HEAVY_MASS := 2.5
 ## Damage multiplier on heavies and bosses (the whole ball's weight lands).
-const BIG_SCALE := 1.5
+const BIG_SCALE := 1.7
 ## A boss sends the ball back at this share of its speed.
 const BOSS_REBOUND := 0.3
 ## Sideways scatter (m/s) given to a bowled-over light zombie, before its mass.
