@@ -14,6 +14,9 @@ const SHADERS := "res://art/shaders/"
 const CENTRE := Vector3(10.0, 0.0, -24.0)
 ## The districts' footprint: its own floors and blocks (kept clear).
 const CITY := Rect2(-100.0, -104.0, 222.0, 168.0)
+## The generator's PRECINCT and MARKET district rects.
+const PRECINCT := Rect2(-74.0, -24.0, 40.0, 48.0)
+const MARKET := Rect2(34.0, -8.0, 56.0, 16.0)
 ## Openings in the street the fill must not cover: the subway stairs and the
 ## Tower stairs.
 const HOLES := [Rect2(-4.0, -28.0, 8.0, 13.0), Rect2(40.0, -37.0, 16.0, 10.0)]
@@ -21,6 +24,18 @@ const NEAR_CELL := 24.0
 const NEAR_RADIUS := 178.0
 const MID_CELL := 34.0
 const MID_RADIUS := 300.0
+const HORIZON_RADIUS := 430.0
+## The square, the Precinct, the Market, the Tower plaza (generator rects).
+const ARENAS := [Rect2(-22.0, -22.0, 44.0, 44.0), Rect2(-74.0, -24.0, 40.0, 48.0), Rect2(34.0, -8.0, 56.0, 16.0),
+	Rect2(46.0, -72.0, 48.0, 50.0), Rect2(-34.0, 12.0, 12.0, 6.0), Rect2(-34.0, -4.0, 12.0, 8.0),
+	Rect2(22.0, -8.0, 12.0, 16.0)]
+const CORDON_SIGNS := ["KEEP OUT", "QUARANTINE", "DO NOT CROSS", "NO ENTRY"]
+## Billboards on district roofs, facing their streets: [name, position, yaw].
+const ROOF_BILLBOARDS := [["BillboardPrecinct", Vector3(-43.0, 18.0, -30.0), 0.0],
+	["BillboardMarketN", Vector3(53.0, 15.0, -16.0), 0.0], ["BillboardTower", Vector3(100.0, 16.0, -61.0), -90.0]]
+## Fires on district roofs (small, no light): [name, position].
+const ROOF_FIRES := [["RoofFireSqE", Vector3(28.0, 16.7, -16.0)], ["RoofFirePrecS", Vector3(-70.0, 16.7, 31.0)],
+	["RoofFireMktS", Vector3(88.0, 16.7, 15.0)]]
 ## One city's palette: soot-dark concrete, brick, sandstone, blue-grey, tar.
 const PALETTE := [Color(0.42, 0.36, 0.34), Color(0.5, 0.3, 0.26), Color(0.52, 0.45, 0.36),
 	Color(0.36, 0.38, 0.44), Color(0.3, 0.27, 0.28), Color(0.46, 0.4, 0.38)]
@@ -51,6 +66,8 @@ var _beacon_phase: PackedColorArray = []
 ## Footprints already built on (x, z, radius), so rings do not overlap.
 var _taken: Array[Vector3] = []
 var _smokes := 0
+var _trims: Array[Transform3D] = []
+var _trim_colors: PackedColorArray = []
 
 
 func _init(builder: Object, into: Node3D) -> void:
@@ -68,7 +85,109 @@ func build(towers: Array[Transform3D]) -> void:
 	_ring(NEAR_CELL, CITY.grow(5.0), NEAR_RADIUS, 0.0)
 	_ring(MID_CELL, Rect2(), MID_RADIUS, 1.0)
 	_cranes()
-	_emit()
+	_horizon()
+	_emit("Skyline")
+
+
+## The district blocks' roofs ([Rect2, height] each): stair houses, masts
+## with beacons, the districts' colours along the parapets (Precinct blue
+## and red, Market pink and cyan), billboards facing the streets and a few
+## roof fires; they read from the street and from the high views.
+func build_roofs(roofs: Array) -> void:
+	var k := 0
+	for roof in roofs:
+		var r: Rect2 = roof[0]
+		var h: float = roof[1] + 0.7
+		if r.size.x < 6.0 or r.size.y < 6.0:
+			continue
+		var corner := Vector3(r.position.x + 2.2, h, r.position.y + 2.2) if k % 2 == 0 else Vector3(r.end.x - 2.2, h, r.end.y - 2.2)
+		_box(corner, Vector3(2.8, 2.8, 3.4), 0.0, Color(0.3, 0.27, 0.28))
+		if h > 17.0 and k % 2 == 0:
+			var p := Vector3(r.end.x - 2.0, h, r.position.y + 2.0)
+			var ah := rng.randf_range(6.0, 10.0)
+			_box(p, Vector3(0.3, ah, 0.3), 0.0, STEEL)
+			_box(p + Vector3(0, ah * 0.6, 0), Vector3(1.8, 0.12, 0.12), 0.0, STEEL)
+			_beacon(p + Vector3(0, ah, 0))
+		_trim(r, h, k)
+		k += 1
+	for spot in ROOF_BILLBOARDS:
+		b._roof_billboard(spot[0], spot[1], spot[2])
+	for spot in ROOF_FIRES:
+		b._fire_at(b.fx, spot[0], spot[1], 1.4, false, 0.0, true)
+		b._smoke(b.fx, spot[0] + "Smoke", spot[1], 0.7)
+	_emit("Roofs")
+	_emit_trim()
+
+
+## The cordons across the alley mouths ([a, b] each, the generator's tape
+## lines over player-only walls): the tape tied to police sawhorses against
+## the alley walls, a sign facing the district, ash smoke drifting in the
+## alley behind, so a blocked street reads as cordoned off, not as an
+## invisible wall.
+func build_boundary(mouths: Array) -> void:
+	var k := 0
+	for m in mouths:
+		var a: Vector3 = m[0]
+		var to: Vector3 = m[1]
+		var along := (to - a).normalized()
+		var out := Vector3(-along.z, 0, along.x)
+		var mid := (a + to) * 0.5
+		if _in_arena(mid + out * 3.0):
+			out = -out
+		var yaw := rad_to_deg(atan2(-out.z, out.x))
+		for end: Vector3 in [a + along * 0.35, to - along * 0.35]:
+			b._kit(parent, "city_police_barrier", "Cordon%d_%d" % [k, int(end.distance_to(a))], end + out * 1.2, yaw, Vector3(2.8, 1.1, 0.5))
+		var face := -out
+		var sign_text: String = CORDON_SIGNS[k % CORDON_SIGNS.size()]
+		var board := mid + Vector3(0, 0.55, 0) + out * 0.06
+		_box(board, Vector3(1.3, 0.42, 0.04), atan2(-along.z, along.x), Color(0.95, 0.75, 0.12))
+		b._label(parent, "CordonSign%d" % k, sign_text, board + Vector3(0, 0.21, 0) + face * 0.04, rad_to_deg(atan2(face.x, face.z)), 52, Color(0.08, 0.06, 0.05)).outline_size = 0
+		b._steam(mid + out * 5.0, Color(0.5, 0.42, 0.4), 0.85)
+		k += 1
+	_emit("Cordons")
+
+
+## Open ground the player fights on (the square, the districts): the side of
+## a cordon that is not the alley.
+func _in_arena(p: Vector3) -> bool:
+	for r: Rect2 in ARENAS:
+		if r.has_point(Vector2(p.x, p.z)):
+			return true
+	return false
+
+
+## Neon along the parapet edge each Market and Precinct block turns to its
+## district (pink and cyan, police blue and red).
+func _trim(r: Rect2, h: float, k: int) -> void:
+	var district := MARKET if r.get_center().x > 30.0 else PRECINCT
+	var colors := [Color(1.0, 0.2, 0.7), Color(0.2, 0.9, 1.0)] if district == MARKET else [Color(0.25, 0.4, 1.0), Color(1.0, 0.12, 0.12)]
+	if not r.grow(1.0).intersects(district):
+		return
+	var y := h - 0.05
+	var edge := Vector3.ZERO
+	var size := Vector3.ZERO
+	if r.end.y <= district.position.y + 0.5:
+		edge = Vector3(r.get_center().x, y, r.end.y + 0.25)
+	elif r.position.y >= district.end.y - 0.5:
+		edge = Vector3(r.get_center().x, y, r.position.y - 0.25)
+	elif r.end.x <= district.position.x + 0.5:
+		edge = Vector3(r.end.x + 0.25, y, r.get_center().y)
+	elif r.position.x >= district.end.x - 0.5:
+		edge = Vector3(r.position.x - 0.25, y, r.get_center().y)
+	else:
+		return
+	size = Vector3(r.size.x + 0.5, 0.14, 0.14) if absf(edge.z - r.get_center().y) > 0.1 else Vector3(0.14, 0.14, r.size.y + 0.5)
+	_trims.append(Transform3D(Basis.IDENTITY.scaled(size), edge))
+	_trim_colors.append(colors[k % 2])
+
+
+func _emit_trim() -> void:
+	var box := BoxMesh.new()
+	var m := ShaderMaterial.new()
+	m.shader = load(SHADERS + "city_skyline_beacon.gdshader")
+	m.set_shader_parameter("steady", 1.0)
+	box.material = m
+	_mm("RoofNeon", box, _trims, _trim_colors, PackedColorArray())
 
 
 # ---------------------------------------------------------------------------
@@ -325,6 +444,22 @@ func _blocked(pos: Vector3, radius: float) -> bool:
 	return _near_bridge(pos, radius)
 
 
+## The last ring, deep in the haze: tall blocks shoulder to shoulder, so
+## the ground's far edge never shows under the sky from any height.
+func _horizon() -> void:
+	for layer in 2:
+		var radius := HORIZON_RADIUS + layer * 60.0
+		var count := 64 + layer * 12
+		for k in count:
+			var a := TAU * (k + layer * 0.5) / count
+			var w := TAU * radius / count * rng.randf_range(1.0, 1.25)
+			var h := rng.randf_range(55.0, 95.0) + layer * 25.0
+			var base := CENTRE + Vector3(cos(a), 0, sin(a)) * (radius + rng.randf_range(-12.0, 12.0))
+			_box(base, Vector3(w, h, rng.randf_range(20.0, 40.0)), -a + PI * 0.5, _tint() * 0.8, rng.randf_range(0.03, 0.08), 0.02, 4.4)
+			if rng.randf() < 0.25:
+				_box(base + Vector3(0, h, 0), Vector3(w * 0.5, h * rng.randf_range(0.2, 0.6), 18.0), -a + PI * 0.5, _tint() * 0.8, 0.05, 0.0, 4.4)
+
+
 # ---------------------------------------------------------------------------
 # Landmarks: the bridge, the cranes
 # ---------------------------------------------------------------------------
@@ -449,12 +584,12 @@ func _cranes() -> void:
 # Output
 # ---------------------------------------------------------------------------
 
-func _emit() -> void:
+func _emit(prefix: String) -> void:
 	var box := BoxMesh.new()
 	var m := ShaderMaterial.new()
 	m.shader = load(SHADERS + "city_skyline_blocks.gdshader")
 	box.material = m
-	_mm("Skyline", box, _boxes, _tints, _custom)
+	_mm(prefix, box, _boxes, _tints, _custom)
 	var tank := CylinderMesh.new()
 	tank.top_radius = 1.0
 	tank.bottom_radius = 1.0
@@ -465,7 +600,7 @@ func _emit() -> void:
 	wood.albedo_color = Color(0.32, 0.2, 0.13)
 	wood.roughness = 0.95
 	tank.material = wood
-	_mm("SkylineTanks", tank, _tanks, PackedColorArray(), PackedColorArray())
+	_mm(prefix + "Tanks", tank, _tanks, PackedColorArray(), PackedColorArray())
 	var lamp := SphereMesh.new()
 	lamp.radius = 0.5
 	lamp.height = 1.0
@@ -474,10 +609,12 @@ func _emit() -> void:
 	var glow := ShaderMaterial.new()
 	glow.shader = load(SHADERS + "city_skyline_beacon.gdshader")
 	lamp.material = glow
-	_mm("SkylineBeacons", lamp, _beacons, PackedColorArray(), _beacon_phase)
+	_mm(prefix + "Beacons", lamp, _beacons, PackedColorArray(), _beacon_phase)
 
 
-func _mm(mm_name: String, mesh: Mesh, xforms: Array[Transform3D], colors: PackedColorArray, custom: PackedColorArray) -> MultiMeshInstance3D:
+func _mm(mm_name: String, mesh: Mesh, xforms: Array[Transform3D], colors: PackedColorArray, custom: PackedColorArray) -> void:
+	if xforms.is_empty():
+		return
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = not colors.is_empty()
@@ -494,5 +631,6 @@ func _mm(mm_name: String, mesh: Mesh, xforms: Array[Transform3D], colors: Packed
 	mmi.name = mm_name
 	mmi.multimesh = mm
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# Hidden with the rest of the street while the player is in the Metro.
+	mmi.add_to_group("city_surface", true)
 	parent.add_child(mmi)
-	return mmi

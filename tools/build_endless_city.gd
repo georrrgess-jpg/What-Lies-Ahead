@@ -1212,18 +1212,15 @@ func _shell_rooms(block_name: String, r: Rect2, height: float, facing: String) -
 
 ## How far behind a facade the dark rooms stop (metres).
 const ROOM_DEPTH := 3.0
-var _room_mat: StandardMaterial3D
+var _room_mat: ShaderMaterial
 
 
-## Near-black plaster with a faint warm glow: the gutted rooms behind the windows.
-func _room_material() -> StandardMaterial3D:
+## The gutted rooms behind the windows: near-black, a few still lit or
+## burning (art/shaders/city_rooms.gdshader).
+func _room_material() -> ShaderMaterial:
 	if _room_mat == null:
-		_room_mat = StandardMaterial3D.new()
-		_room_mat.albedo_color = Color(0.07, 0.055, 0.06)
-		_room_mat.roughness = 1.0
-		_room_mat.emission_enabled = true
-		_room_mat.emission = Color(0.16, 0.07, 0.04)
-		_room_mat.emission_energy_multiplier = 0.25
+		_room_mat = ShaderMaterial.new()
+		_room_mat.shader = load(SHADERS + "city_rooms.gdshader")
 	return _room_mat
 
 
@@ -1497,6 +1494,8 @@ func _build_boundary() -> void:
 		_player_wall(walls, "Mouth%d" % i, m[0], m[1], WALL_H)
 		_tape_line(m[0], m[1], i)
 		i += 1
+	# Sawhorses, signs and smoke make each cordon read (tools/city/city_skyline.gd).
+	preload("res://tools/city/city_skyline.gd").new(self, dressing).build_boundary(mouths)
 
 
 func _player_walls() -> Node3D:
@@ -2602,6 +2601,8 @@ func _build_rooftops() -> void:
 		if i % 4 == 0:
 			_instance("antenna", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU), _roof_spot(inner, h)), Color.WHITE)
 		i += 1
+	# Stair houses, masts, district neon, billboards and fires (tools/city/city_skyline.gd).
+	preload("res://tools/city/city_skyline.gd").new(self, dressing).build_roofs(_roofs)
 
 
 func _roof_spot(inner: Rect2, h: float) -> Vector3:
