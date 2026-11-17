@@ -37,10 +37,12 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from weapon_kit import *  # noqa: F401,F403
-from weapon_kit import _save  # noqa: E402
+from weapon_kit import _finish_part, _save  # noqa: E402
 from wla_common import _finish  # noqa: E402
 
 BALL_R = 0.05
+# Which way the hologram rail's floor faces (toward the player and up).
+FACING = Vector((0.0, -0.55, 0.85)).normalized()
 BALL_C = (0.0, 0.258, 0.044)       # chamber ball centre
 SPARE_C = (-0.106, 0.12, 0.03)     # spare ball centre (side ball return)
 RAIL_TOP = 0.112
@@ -53,6 +55,53 @@ HOOD_INNER = 0.06
 HOOD_THICK = 0.008
 HOOD_Y0 = 0.012
 HOOD_Y1 = 0.084
+
+
+def spline(points, per=6):
+    """Catmull-Rom samples through `points` (`per` between each pair)."""
+    p = [Vector(q) for q in points]
+    ext = [p[0] * 2 - p[1]] + p + [p[-1] * 2 - p[-2]]
+    out = []
+    for i in range(1, len(ext) - 2):
+        a, b, c, d = ext[i - 1], ext[i], ext[i + 1], ext[i + 2]
+        for k in range(per):
+            t = k / per
+            out.append(0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (3 * b - a - 3 * c + d) * t ** 3))
+    out.append(p[-1])
+    return out
+
+
+def holo_channel(name, path, m, half=0.045, lip=0.016):
+    """The hologram ball-return rail: one open channel (a floor and two low
+    walls) the ball rolls along, under its centre `path`. UV.x runs across it
+    (0 and 1 are the two lip edges), UV.y along it from the bottom (0) to the
+    chamber (1): art/shaders/holo_rail.gdshader draws the fill, the glowing
+    edges and the lane arrows from them."""
+    pts = spline(path)
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("UVMap")
+    span = 2 * half + 2 * lip
+    across = [0.0, lip / span, (lip + 2 * half) / span, 1.0]
+    rings = []
+    for i, q in enumerate(pts):
+        tan = (pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]).normalized()
+        # The floor faces up and back toward the player as far as the path allows,
+        # so the channel shows its whole width in first person.
+        up = FACING - tan * FACING.dot(tan)
+        up.normalize()
+        side = tan.cross(up).normalized()
+        down = -up
+        base = q + down * (BALL_R * 0.72)
+        rings.append([bm.verts.new(base - side * half - down * lip), bm.verts.new(base - side * half),
+                      bm.verts.new(base + side * half), bm.verts.new(base + side * half - down * lip)])
+    for i in range(len(rings) - 1):
+        for j in range(3):
+            face = bm.faces.new((rings[i][j], rings[i][j + 1], rings[i + 1][j + 1], rings[i + 1][j]))
+            v0, v1 = i / (len(rings) - 1), (i + 1) / (len(rings) - 1)
+            for loop, (u, v) in zip(face.loops, ((across[j], v0), (across[j + 1], v0), (across[j + 1], v1), (across[j], v1))):
+                loop[uv].uv = (u, v)
+    ob = _finish_part(name, bm, m, smooth=False)
+    return ob
 
 
 def palette():
@@ -248,22 +297,7 @@ def build_strike_zone():
         box("ReturnStop", (0.056, 0.008, 0.016), (sx, sy + 0.064, sz - 0.032), bevel=0.003, m=M["dark"]),
         box("ReturnSled", (0.056, 0.12, 0.006), (sx, sy, sz - 0.047), bevel=0.002, m=M["dark"]),
     ]
-    # The hologram rail: two rails the ball rides on, under its centre path.
-    rail_l, rail_r = [], []
-    for i, p in enumerate(RAIL_PATH):
-        q = Vector(p)
-        nxt = Vector(RAIL_PATH[min(i + 1, len(RAIL_PATH) - 1)]) - Vector(RAIL_PATH[max(i - 1, 0)])
-        side = nxt.cross(Vector((0, 0, 1)))
-        side = side.normalized() if side.length > 1e-4 else Vector((1, 0, 0))
-        down = nxt.cross(side).normalized()
-        if down.z > 0:
-            down = -down
-        base = q + down * (BALL_R * 0.72)
-        rail_l.append(tuple(base - side * 0.026))
-        rail_r.append(tuple(base + side * 0.026))
-    rail = [tube("RailL", rail_l[:-1], 0.0075, m=M["holo"], segs=10), tube("RailR", rail_r[:-1], 0.0075, m=M["holo"], segs=10)]
-    for i in range(1, len(rail_l) - 1):
-        rail.append(tube(f"RailTie{i}", [rail_l[i], rail_r[i]], 0.0055, m=M["holo"], segs=8))
+    rail = [holo_channel("Rail", RAIL_PATH, M["holo"])]
 
     bowl = [(-0.012, 0.02), (0.012, 0.02), (0.016, 0.006), (0.009, -0.004), (0.012, -0.02), (-0.012, -0.02),
             (-0.009, -0.004), (-0.016, 0.006)]

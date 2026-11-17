@@ -41,6 +41,7 @@ const PACE := Vector3(1.6, 0.42, 1.7)
 const SPIN_DEG := 300.0
 const RAIL_RISE := 0.06
 const HOLO_SHADER := "res://art/shaders/holo.gdshader"
+const RAIL_SHADER := "res://art/shaders/holo_rail.gdshader"
 const CYAN := Color(0.3, 0.95, 1.0)
 const SPARKS := [Color(0.3, 0.95, 1.0), Color(1.0, 1.0, 1.0), Color(1.0, 0.3, 0.62)]
 ## [timeline point, sound, volume, pitch, only when the chamber was loaded]
@@ -67,7 +68,7 @@ func play(v: WeaponView, d: float) -> void:
 	StrikeZoneView.register(v)
 	var w := v.player.weapons if v.player else null
 	_loaded = w != null and w.current == v.data and w.magazine() >= 1
-	_rail_mat = _holo(v.part("RailHolo"), CYAN)
+	_rail_mat = _rail_material(v.part("RailHolo"))
 	_spare_mat = _holo(v.part("SpareHolo"), Color(1.0, 0.45, 0.78))
 	for i in StrikeZoneView.ARROWS:
 		var mi := v.part("Arrow%d" % i) as MeshInstance3D
@@ -91,6 +92,20 @@ static func _holo(part: Node3D, color: Color) -> ShaderMaterial:
 	m.set_shader_parameter("holo_color", color)
 	var box := mi.mesh.get_aabb()
 	m.set_shader_parameter("span", maxf(0.02, maxf(absf(box.position.y), absf(box.end.y))))
+	mi.material_override = m
+	return m
+
+
+## The rail's channel shader (made once and kept on the part).
+static func _rail_material(part: Node3D) -> ShaderMaterial:
+	var mi := part as MeshInstance3D
+	if mi == null:
+		return null
+	if mi.material_override is ShaderMaterial:
+		return mi.material_override
+	var m := ShaderMaterial.new()
+	m.shader = load(RAIL_SHADER)
+	m.set_shader_parameter("holo_color", CYAN)
 	mi.material_override = m
 	return m
 
@@ -145,7 +160,7 @@ func _pose_rail(s: float) -> void:
 	_place(rail, _v.rest_transform("RailHolo"), drop, Vector3(0.0, 0.0, -6.0 * (1.0 - grow)))
 	if _rail_mat:
 		_rail_mat.set_shader_parameter("materialize", grow * (1.0 - gone))
-		_rail_mat.set_shader_parameter("intensity", 1.2 + 0.8 * sin(PI * _e(ROLL.x, ROLL.y, s)))
+		_rail_mat.set_shader_parameter("intensity", 0.9 + 0.5 * sin(PI * _e(ROLL.x, ROLL.y, s)))
 
 
 func _pose_ball(s: float) -> void:
