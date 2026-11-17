@@ -91,6 +91,7 @@ func _build_badge() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.set_meta(&"hud_block", true)
 	add_child(row)
 	row.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	row.grow_vertical = Control.GROW_DIRECTION_BEGIN

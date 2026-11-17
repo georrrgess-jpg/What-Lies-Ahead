@@ -8,9 +8,7 @@ extends Control
 ##   - the three active contracts with their progress, shown between waves
 ##     (and for a moment when one is completed), hidden while fighting.
 
-const MARGIN := 48.0
 const COUNTER_BOTTOM := -34.0
-const CONTRACTS_TOP := 176.0
 ## Pickups this close together keep the streak (and the pitch) climbing.
 const STREAK_WINDOW := 1.1
 const STREAK_MAX := 14
@@ -43,6 +41,12 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_counter()
 	_build_contracts()
+
+
+## The contracts go in the HUD's left column, under the wave header and the
+## Endless chips.
+func hud_left() -> Array[Control]:
+	return [_contracts]
 
 
 func bind(director: RunDirector, player: Player) -> void:
@@ -91,6 +95,7 @@ func _build_counter() -> void:
 	plate.content_margin_bottom = 4
 	_counter.add_theme_stylebox_override("panel", plate)
 	_counter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_counter.set_meta(&"hud_block", true)
 	add_child(_counter)
 	_counter.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_counter.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -179,8 +184,8 @@ func _build_contracts() -> void:
 	_contracts = PanelContainer.new()
 	_contracts.add_theme_stylebox_override("panel", UiKit.box(Color(UiKit.INK, 0.7), Color(Wallet.COLOR_GLOW, 0.35), 16, 2, 12))
 	_contracts.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_contracts.position = Vector2(MARGIN, CONTRACTS_TOP)
 	_contracts.custom_minimum_size = Vector2(400, 0)
+	_contracts.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_contracts.visible = false
 	_contracts.modulate.a = 0.0
 	add_child(_contracts)
