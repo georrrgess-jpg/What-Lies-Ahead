@@ -10,6 +10,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
+from weapon_punch import HANDLE, punch, punched
 
 MUSIC = {}
 
@@ -31,7 +32,8 @@ def weap_popper_fire():
     thump = _sub_thump(130, 55, d, 0.09) * 0.9
     out = pop + puff + thump
     place(out, bwip, 0.004, 1.0)
-    return crush(filt(out, low=5000), 1.5)
+    return punch(crush(filt(out, low=5000), 1.5), snap_gain=0.22, snap_hz=2600, thump_gain=0.5, thump_hz=(150, 60),
+                 thump_decay=0.05, slap=(0.026,), slap_gain=0.13, room_gain=0.08, room_s=0.12, seed="popper")
 
 
 def weap_popper_bounce():
@@ -41,7 +43,8 @@ def weap_popper_bounce():
     body = tone(330, d, "tri") * env(d, 0.001, 0.05, power=2.0) * 0.3
     out = boink + body
     place(out, click(0.01, 1800), 0.0, 0.35)
-    return out
+    return punch(out, snap_gain=0.15, snap_hz=2200, thump_gain=0.3, thump_hz=(200, 90), thump_decay=0.03,
+                 duck=0.15, slap=(0.022,), slap_gain=0.1, room_gain=0.0, seed="popper_bounce")
 
 
 def weap_popper_pop():
@@ -51,9 +54,11 @@ def weap_popper_pop():
     blip_ = sweep(950, 380, 0.09, "sine", 0.5) * env(0.09, 0.001, 0.08, power=1.6) * 0.6
     out = snap
     place(out, blip_, 0.003, 1.0)
-    return out
+    return punch(out, snap_gain=0.2, snap_hz=2400, thump_gain=0.45, thump_hz=(160, 60), thump_decay=0.05,
+                 slap=(0.03,), slap_gain=0.12, room_gain=0.1, room_s=0.15, seed="popper_pop")
 
 
+@punched(HANDLE)
 def weap_popper_reload():
     """Drum release and a gumball rattle as it spins out (the rest is shared reload sounds)."""
     out = silence(0.9)
@@ -78,7 +83,9 @@ def weap_whirl_fire():
     tick = click(0.008, 1900) * 0.25
     out = thup + grit
     place(out, tick, 0.0, 1.0)
-    return crush(out, 1.6)
+    return punch(crush(out, 1.6), snap_gain=0.18, snap_hz=2400, snap_ms=1.5, thump_gain=0.3, thump_hz=(150, 70),
+                 thump_decay=0.025, duck=0.15, slap=(0.019,), slap_gain=0.08, room_gain=0.0, shelf_db=-4.0,
+                 seed="whirl")
 
 
 def weap_whirl_spin():
@@ -109,6 +116,7 @@ def weap_whirl_windup():
     return out
 
 
+@punched(HANDLE)
 def weap_whirl_reload():
     """Overheat vent: a hiss, then the spent canister pops out."""
     out = silence(0.75)
@@ -141,9 +149,13 @@ def weap_rip_fire():
     thoonk = sweep(150, 55, d, "sine", 0.45) * env(d, 0.001, 0.2, power=1.8) * 1.4
     blast = _air(d, 1100, 1400, 1.0) * env(d, 0.001, 0.12, power=1.8)
     line = filt(sweep(1300, 520, 0.3, "saw", 0.6), low=2600) * env(0.3, 0.01, 0.28, power=1.2) * 0.18
+    clang = sum(tone(f, 0.35) * g for f, g in ((410, 0.5), (1030, 0.3), (1720, 0.12))) * env(0.35, 0.0008, 0.3, power=2.4)
     out = thoonk + blast
     place(out, line, 0.04, 1.0)
-    return crush(out, 1.5)
+    place(out, clang, 0.0, 0.35)                                                   # the steel harpoon leaving
+    return punch(crush(out, 1.5), snap_gain=0.35, snap_hz=2600, snap_ms=4.0, thump_gain=0.45, thump_hz=(110, 42),
+                 thump_decay=0.12, duck=0.3, slap=(0.04, 0.085), slap_gain=0.18, room_gain=0.16, room_s=0.3,
+                 seed="riptide")
 
 
 def weap_rip_charge():
@@ -161,11 +173,14 @@ def weap_rip_charge():
 
 def weap_rip_ready():
     """Full charge: a small brass clink."""
-    out = silence(0.3)
-    place(out, blip(1320, 0.22, "sine", 0.2), 0.0, 0.35)
-    place(out, blip(1980, 0.18, "sine", 0.16), 0.01, 0.2)
+    out = silence(0.45)
+    place(out, sweep(420, 180, 0.08, "sine") * env(0.08, 0.001, power=2.5), 0.0, 0.45)   # the latch locks
+    place(out, blip(1320, 0.22, "sine", 0.2), 0.02, 0.35)
+    place(out, blip(1980, 0.18, "sine", 0.16), 0.03, 0.2)
+    place(out, blip(2640, 0.25, "sine", 0.22), 0.09, 0.12)                         # hologram glint
     place(out, click(0.01, 2600), 0.0, 0.3)
-    return out
+    return punch(out, snap_gain=0.0, thump_gain=0.2, thump_hz=(180, 90), thump_decay=0.04, duck=0.0,
+                 slap=(0.03,), slap_gain=0.12, room_gain=0.14, room_s=0.25, seed="rip_ready")
 
 
 def weap_rip_reel():
@@ -180,6 +195,7 @@ def weap_rip_reel():
     return out
 
 
+@punched(HANDLE)
 def weap_rip_reload():
     """The air tank unscrews on a ratchet and lets go with a hiss."""
     out = silence(0.75)
@@ -197,7 +213,7 @@ SOUNDS = [
 
 VARIANTS = [
     (weap_popper_fire, (0.94, 1.07)), (weap_popper_bounce, (0.9, 1.12)), (weap_popper_pop, (0.92, 1.1)),
-    (weap_whirl_fire, (0.95, 1.05)),
+    (weap_whirl_fire, (0.95, 1.05)), (weap_rip_fire, (0.95, 1.05)),
 ]
 
 LOOPS = {"weap_whirl_spin": weap_whirl_spin}

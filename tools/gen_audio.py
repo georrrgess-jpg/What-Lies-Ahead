@@ -409,26 +409,37 @@ def pistol_fire():
 
 
 def carbine_fire():
-    """Ion Carbine: fast ion crack with a short electric buzz. The crack is
-    band-limited (no fizz above ~10 kHz): it fires many times a second."""
+    """Ion Carbine: fast ion crack with a short electric buzz, a tight chest
+    tap and a short slap-back. The crack is band-limited (no fizz above
+    ~10 kHz) and the tail stays short: it fires twelve times a second."""
+    from weapon_punch import punch
     d = 0.16
     snap = filt(noise(d), high=2600, low=9000) * env(d, 0.0003, 0.012, power=2.0)
     pew = _laser_layer(3000, 800, d, 0.4) * env(d, 0.0006, 0.08, power=1.8) * 0.4
     buzz = tone(110, d, "square") * env(d, 0.001, 0.07, power=1.5) * 0.2
     sub = _sub_thump(210, 70, d, 0.06) * 0.9
     tail = _shimmer(d, 0.1, 5200) * 0.12
-    return crush(filt(snap + pew + buzz + sub + tail, low=10000), 1.25)
+    zip_ = _laser_layer(1400, 520, d, 0.5, "tri") * env(d, 0.001, 0.05, power=2.0) * 0.25
+    body = crush(filt(snap + pew + buzz + sub + tail + zip_, low=10000), 1.25)
+    return punch(body, snap_gain=0.25, snap_hz=3600, thump_gain=0.45, thump_hz=(170, 70), thump_decay=0.035,
+                 duck=0.25, slap=(0.024,), slap_gain=0.12, room_gain=0.07, room_s=0.1, shelf_db=-3.5, seed="carbine")
 
 
 def scatter_fire():
-    """Scatter Blaster: huge plasma boom, rolling sub and a fizzing cooldown."""
+    """Scatter Blaster: a hard crack, a huge plasma boom with a mid-range
+    'chunk' so it reads on small speakers, a rolling sub, a fizzing cooldown
+    and a big slap-back off the walls."""
+    from weapon_punch import punch
     d = 0.75
     crack = filt(noise(d), high=1800) * env(d, 0.0005, 0.05, power=1.6) * 1.2
     boom = _sub_thump(190, 30, d, 0.45) * 1.5
     blast = filt(noise(d), low=2600) * env(d, 0.001, 0.26, power=2.2) * 0.9
     zap = _laser_layer(1300, 140, d, 0.35, "square") * env(d, 0.001, 0.14, power=2.0) * 0.35
     fizz = _shimmer(d, 0.6, 5200) * 0.35
-    return crush(boom + crack + blast + zap + fizz, 1.7)
+    chunk = band(noise(d), 520, 260) * env(d, 0.0008, 0.09, power=1.8) * 2.4
+    body = crush(boom + crack + blast + zap + fizz + chunk, 1.7)
+    return punch(body, snap_gain=0.4, snap_hz=2800, snap_ms=4.0, thump_gain=0.5, thump_hz=(120, 45), thump_decay=0.12,
+                 duck=0.35, slap=(0.045, 0.09), slap_gain=0.2, room_gain=0.16, room_s=0.35, shelf_db=-2.5, seed="scatter")
 
 
 def charge(seconds, f0=300, f1=1400, gain=1.0):
@@ -453,16 +464,18 @@ def pistol_reload():
 
 
 def carbine_reload():
+    from weapon_punch import HANDLE, punch
     out = silence(1.75)
     place(out, clunk(160, 0.12), 0.25, 0.8)
     place(out, band(noise(0.3), 1500, 700) * env(0.3, 0.08, power=1.0), 0.42, 0.55)   # cell slides out
     place(out, band(noise(0.26), 2000, 800) * env(0.26, 0.1, power=1.0), 0.86, 0.5)   # new cell slides in
     place(out, clunk(210, 0.14), 1.1, 1.0)
     place(out, charge(0.42, 350, 1700), 1.25, 0.5)
-    return out
+    return punch(out, seed="carbine_reload", **HANDLE)
 
 
 def scatter_reload():
+    from weapon_punch import HANDLE, punch
     out = silence(2.3)
     place(out, clunk(110, 0.18), 0.2, 1.0)                                   # break open
     place(out, click(0.03, 1500), 0.32, 0.6)
@@ -471,7 +484,7 @@ def scatter_reload():
     for at in (1.72, 2.02):                                                  # two pumps
         place(out, band(noise(0.09), 1200, 600) * env(0.09, 0.01, power=1.2), at, 0.7)
         place(out, clunk(170, 0.1), at + 0.09, 0.9)
-    return out
+    return punch(out, seed="scatter_reload", **HANDLE)
 
 
 def empty_click():
