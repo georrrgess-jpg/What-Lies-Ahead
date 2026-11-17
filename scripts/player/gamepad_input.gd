@@ -13,6 +13,9 @@ extends RefCounted
 ##   LB            station: next weapon of the slot
 ##   D-pad         station: up energy, down snack, left overshield, right boost
 ##   Start         pause                Back            start the next wave
+##
+## While a pad is in use, hits taken rumble it (rumble_hit), and the run
+## pauses if it disconnects (RunDirector).
 
 const AXIS := 0
 const BUTTON := 1
@@ -49,6 +52,14 @@ const DEADZONE := 0.18
 ## the deflection is squared, so small pushes aim finely.
 const LOOK_SPEED := Vector2(3.4, 2.3)
 
+## Rumble for a hit taken: strength per point of damage, its floor and
+## ceiling, and how long it lasts (seconds).
+const RUMBLE_PER_DAMAGE := 0.035
+const RUMBLE_RANGE := Vector2(0.25, 0.9)
+const RUMBLE_TIME := 0.22
+
+## True while the player is playing with a pad (the last input came from one).
+static var in_use := false
 static var _bound := false
 
 
@@ -88,3 +99,22 @@ static func look(delta: float) -> Vector2:
 		return Vector2.ZERO
 	var sens := Settings.look_radians() / Settings.LOOK_RADIANS
 	return stick * stick.length() * LOOK_SPEED * sens * delta
+
+
+## Keeps in_use up to date from the player's input events.
+static func note(event: InputEvent) -> void:
+	if event is InputEventJoypadButton or (event is InputEventJoypadMotion and absf((event as InputEventJoypadMotion).axis_value) > 0.5):
+		in_use = true
+	elif event is InputEventKey or event is InputEventMouseButton:
+		in_use = false
+
+
+## A short rumble on the pad in use for `damage` taken (scaled by the camera
+## shake setting, so "no shake" also means no rumble).
+static func rumble_hit(damage: float) -> void:
+	var k := clampf(damage * RUMBLE_PER_DAMAGE, RUMBLE_RANGE.x, RUMBLE_RANGE.y) * Settings.shake_scale()
+	if not in_use or k <= 0.0:
+		return
+	var pads := Input.get_connected_joypads()
+	for device in pads if not pads.is_empty() else [0]:
+		Input.start_joy_vibration(device, k, k * 0.7, RUMBLE_TIME)

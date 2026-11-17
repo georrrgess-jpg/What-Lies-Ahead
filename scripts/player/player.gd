@@ -233,6 +233,7 @@ func _apply_settings() -> void:
 ## sit under the captured cursor (the screen centre) never swallows the motion.
 ## Menus that need the mouse release the capture, which stops this.
 func _input(event: InputEvent) -> void:
+	GamepadInput.note(event)
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and controls_enabled and alive:
 		# Screen pixels (mouse counts), not viewport units: the same turn at any window size.
 		var look: Vector2 = (event as InputEventMouseMotion).screen_relative * Settings.look_radians() * _aim_look_scale()
@@ -869,6 +870,7 @@ func take_damage(amount: float, source_position: Vector3) -> void:
 			return
 	health = maxf(0.0, health - amount)
 	add_shake(0.65)
+	GamepadInput.rumble_hit(amount)
 	damaged.emit(amount, source_position)
 	health_changed.emit(health, max_health)
 	Sfx.play(&"player_hurt", -3.0, randf_range(0.95, 1.05))
