@@ -59,6 +59,12 @@ TARGETS = {
     "dc_pct": 2.0,
     "cent_oct": 1.5,        # centroid this many octaves off the family median: out of family
 }
+# House bands per family: the ceiling of the in-game level (eff, dB); see the
+# table in docs/SOUND_AUDIT.md. Nothing goes above CEILING_DB.
+HOUSE_MAX = {"weapon": -11.0, "handling": -16.0, "confirm": -16.0, "impact": -13.0, "kill_effect": -17.0,
+             "enemy_voice": -16.0, "enemy_attack": -11.0, "enemy_telegraph": -11.0, "enemy_special": -11.0,
+             "cue": -10.0, "player": -17.0, "ui": -14.0, "ambience": -16.0, "music": -26.0, "ambience_bed": -31.0}
+CEILING_DB = -9.0
 # Families allowed more low end by design (thumps, bosses, music, beds).
 LOW_OK = ("enemy_attack", "enemy_special", "music", "ambience", "ambience_bed")
 # Families allowed a bright, tonal character (UI blips, pings, chimes).
@@ -158,21 +164,24 @@ def collect(only=(), family=None):
     sites = amr.call_sites(names)
     pack_of = packs()
     rows = {}
+    known = set(names)
     for path, name in zip(sfx, names):
         if only and not name.startswith(tuple(only)):
             continue
-        fam = family_of(name, mix)
+        # A take (name_b, name_c) is played, mixed and judged as its base sound.
+        base = re.sub(r"_[bc]$", "", name)
+        base = base if base != name and base in known else name
+        fam = family_of(base, mix)
         if family and fam != family:
             continue
         loop = name in loops
         m = measure(path, loop)
-        base = re.sub(r"_[bc]$", "", name) if name not in sites else name
         e = amr.effective(base, m, sites, mix, busses)
         if e is None:   # no call site found: the mix gain at volume 0, non-positional
             g = mix.gain_db(base) + busses.get(mix.bus_of(base), 0.0)
             e = {"effK": m["k100"] + g, "mix": mix.gain_db(base), "call": None, "where": ""}
         m.update(name=name, kind="sfx", family=fam, loop=loop, eff=e["effK"] if not loop else m["lufs"] + e["effK"] - m["k100"],
-                 mix=e["mix"], call=e["call"], where=e["where"], path=path, pack=pack_of.get(re.sub(r"_[bc]$", "", name), "core"),
+                 mix=e["mix"], call=e["call"], where=e["where"], path=path, pack=pack_of.get(base, "core"),
                  owner=owner_of(name, pack_of))
         rows[name] = m
     for track, lvl, bus in music_levels(mix, busses):
@@ -225,6 +234,9 @@ def flag(rows):
         d = r["eff"] - med[fam]["eff"]
         if d > t["loud_db"]:
             f.append("loud+%.0f" % d)
+        top = HOUSE_MAX.get(fam, CEILING_DB)
+        if r["eff"] > CEILING_DB + 0.25 or r["eff"] > top + 0.5:
+            f.append("over band %.0f" % min(top, CEILING_DB))
         if d < -t["quiet_db"]:
             f.append("quiet%.0f" % d)
         if r["hf8"] > t["hf8_pct"]:
@@ -328,6 +340,7 @@ COLS = ("seconds", "peak", "rms", "lufs", "crest", "cent", "hf4", "hf8", "tone_h
 
 
 def write_csv(rows, path):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w") as f:
         f.write("name,kind,family,pack,owner," + ",".join(COLS) + ",flags\n")
         for r in sorted(rows.values(), key=lambda r: (r["family"], r["name"])):
