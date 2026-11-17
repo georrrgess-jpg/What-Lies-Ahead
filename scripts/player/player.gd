@@ -213,6 +213,7 @@ func _ready() -> void:
 	add_to_group("player")
 	Loadout.ensure_input_actions()
 	ensure_dash_action()
+	GamepadInput.ensure()
 	health = max_health
 	# Own copy of the capsule: its height changes while sliding.
 	_capsule.shape = _capsule.shape.duplicate()
@@ -238,6 +239,18 @@ func _input(event: InputEvent) -> void:
 		rotate_y(-look.x)
 		_pitch = clampf(_pitch - look.y * Settings.look_y_sign(), -1.45, 1.45)
 		view.add_look(look)
+
+
+## Right-stick look (GamepadInput), slowed while aiming like the mouse.
+func _stick_look(delta: float) -> void:
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED or not controls_enabled or not alive:
+		return
+	var look := GamepadInput.look(delta) * _aim_look_scale()
+	if look == Vector2.ZERO:
+		return
+	rotate_y(-look.x)
+	_pitch = clampf(_pitch - look.y * Settings.look_y_sign(), -1.45, 1.45)
+	view.add_look(look)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -775,6 +788,7 @@ func view_origin() -> Vector3:
 # --- per frame ---------------------------------------------------------------------
 
 func _process(delta: float) -> void:
+	_stick_look(delta)
 	_update_aim_blend(delta)
 	_update_gait(delta)
 	_heartbeat_tick(delta)
