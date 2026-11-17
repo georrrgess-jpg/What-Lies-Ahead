@@ -444,8 +444,8 @@ static func _hydrant(b: Object, root: Node3D) -> void:
 			var uvs: Array[Vector2] = []
 			for k in [i, i + 1]:
 				var t := float(k) / steps
-				var centre := Vector3(0, 0.25 * t - 0.77 * t * t, reach * t)
-				var half := 0.05 + 0.3 * t
+				var centre := Vector3(0, 0.9 * t - 1.42 * t * t, reach * t)
+				var half := 0.07 + 0.42 * t
 				quad.append(centre - across * half)
 				quad.append(centre + across * half)
 				uvs.append(Vector2(0, t))
