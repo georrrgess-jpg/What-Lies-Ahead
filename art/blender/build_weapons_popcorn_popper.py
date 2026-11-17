@@ -11,7 +11,7 @@ finish, cell, decal and charm works). Moving parts, driven by
 scripts/weapons/views/popcorn_popper_view.gd and
 scripts/weapons/reloads/popcorn_popper_reload.gd:
 
-  Lid           the kettle lid (pivot on its hinge at the left rim, axis +Y):
+  Lid           the kettle lid (pivot on its hinge at the front rim, axis +X):
                 rattles as the kettle heats and jams, flips open to reload
   HeatNeedle    the dial's needle (pivot at the dial centre, turning about
                 the dial's normal, DIAL_NORMAL): cold to jam over NEEDLE_SWEEP
@@ -52,8 +52,14 @@ KET_R = 0.033
 DIAL_NORMAL = (-0.62, -0.56, 0.55)
 DIAL_R = 0.0125
 DECK_Z = 0.083
-RAIL_TOP = 0.222
-POST_Y = (-0.112, 0.142)
+RAIL_TOP = 0.234
+POST_Y = (-0.112, 0.16)
+## The lid hinges on the kettle's front rim and flips forward, so the player sees into the kettle.
+HINGE_Y = KET_Y + KET_R + 0.002
+## The steam whistle up the kettle's right side (x, y).
+WHISTLE = (KET_X + KET_R + 0.0055, KET_Y - 0.016)
+## Hologram size.
+HOLO_SCALE = 1.4
 
 
 def palette():
@@ -103,11 +109,11 @@ def dome_radius(h):
 
 def puff(name, c, r, m, rnd):
     """One popped kernel: a lumpy cluster of two or three lobes."""
-    parts = [sphere(name, r, c, scale=(1.0, 0.95, 0.85), m=m, segs=7, rings=5)]
+    parts = [sphere(name, r, c, scale=(1.0, 0.95, 0.85), m=m, segs=7, rings=4)]
     for k in range(rnd.choice((1, 2))):
         a = rnd.uniform(0, math.tau)
         off = (math.cos(a) * r * 0.7, math.sin(a) * r * 0.7, rnd.uniform(-0.2, 0.5) * r)
-        parts.append(sphere(f"{name}L{k}", r * rnd.uniform(0.6, 0.78), (c[0] + off[0], c[1] + off[1], c[2] + off[2]), m=m, segs=7, rings=5))
+        parts.append(sphere(f"{name}L{k}", r * rnd.uniform(0.6, 0.78), (c[0] + off[0], c[1] + off[1], c[2] + off[2]), m=m, segs=6, rings=4))
     return parts
 
 
@@ -178,7 +184,7 @@ def _face_rot(n, side, up, a):
 
 
 def kettle(M, silver, glow, kernel):
-    """The kettle, its lid (hinged at the left rim), the heater ring and the kernels."""
+    """The kettle, its lid (hinged at the front rim), the heater ring and the kernels."""
     cx, cy = KET_X, KET_Y
     pot = [
         lathe("Pot", [(0.0, 0.025), (0.004, 0.03), (0.03, KET_R), (0.044, KET_R - 0.0005), (0.047, KET_R + 0.0015),
@@ -187,10 +193,11 @@ def kettle(M, silver, glow, kernel):
         torus("PotBandWhite", KET_R + 0.0008, 0.0024, (cx, cy, KET_Z + 0.022), m=M["trim"], major_segs=32, minor_segs=6),
         lathe("PotStand", [(0.0, 0.03), (0.003, 0.03), (0.006, 0.024)], (cx, cy, DECK_Z - 0.001), M["steel"], segs=28),
         # The hinge knuckles on the left rim and the brass whistle on the back right.
-        ycyl("HingeKnuckle0", 0.0035, 0.01, cy - 0.014, z=RIM_Z + 0.002, x=cx - KET_R - 0.002, m=M["steel"], segs=10, bevel=0.001),
-        ycyl("HingeKnuckle1", 0.0035, 0.01, cy + 0.014, z=RIM_Z + 0.002, x=cx - KET_R - 0.002, m=M["steel"], segs=10, bevel=0.001),
-        cyl("Whistle", 0.0042, 0.03, (cx + 0.021, cy - 0.019, RIM_Z + 0.006), segs=12, bevel=0.001, m=M["steel"]),
-        cyl("WhistleCap", 0.0058, 0.006, (cx + 0.021, cy - 0.019, RIM_Z + 0.023), segs=12, bevel=0.0015, m=M["shell"]),
+        xcyl("HingeKnuckle0", 0.0035, 0.01, (cx - 0.014, HINGE_Y, RIM_Z + 0.002), m=M["steel"], segs=10, bevel=0.001),
+        xcyl("HingeKnuckle1", 0.0035, 0.01, (cx + 0.014, HINGE_Y, RIM_Z + 0.002), m=M["steel"], segs=10, bevel=0.001),
+        cyl("Whistle", 0.0042, 0.04, (WHISTLE[0], WHISTLE[1], RIM_Z - 0.004), segs=12, bevel=0.001, m=M["steel"]),
+        cyl("WhistleCap", 0.0058, 0.007, (WHISTLE[0], WHISTLE[1], RIM_Z + 0.019), segs=12, bevel=0.0015, m=M["shell"]),
+        box("WhistleClip", (0.008, 0.006, 0.006), (WHISTLE[0] - 0.004, WHISTLE[1], RIM_Z - 0.012), bevel=0.001, m=M["steel"]),
         # The chute that feeds popped kernels down into the chamber.
         tube("Chute", [(cx + KET_R - 0.002, cy, KET_Z + 0.012), (cx + KET_R + 0.01, cy, KET_Z + 0.004), (cx + KET_R + 0.014, cy, DECK_Z - 0.004)],
              0.0055, m=M["steel"], segs=10),
@@ -200,7 +207,7 @@ def kettle(M, silver, glow, kernel):
         torus("LidRim", KET_R + 0.001, 0.0016, (cx, cy, RIM_Z + 0.001), m=M["shell"], major_segs=32, minor_segs=5),
         cyl("LidKnobStem", 0.003, 0.006, (cx, cy, RIM_Z + 0.021), segs=10, bevel=0.0, m=M["steel"]),
         sphere("LidKnob", 0.0058, (cx, cy, RIM_Z + 0.027), m=M["shell"], segs=12, rings=8),
-        ycyl("HingeLeaf", 0.003, 0.016, cy, z=RIM_Z + 0.002, x=cx - KET_R - 0.002, m=M["steel"], segs=10, bevel=0.001),
+        xcyl("HingeLeaf", 0.003, 0.016, (cx, HINGE_Y, RIM_Z + 0.002), m=M["steel"], segs=10, bevel=0.001),
     ]
     heater = [torus(f"Heater{i}", 0.02 - i * 0.007, 0.0022, (cx, cy, KET_Z + 0.0135), m=M["cell"], major_segs=22, minor_segs=5) for i in range(2)]
     rnd = random.Random(7)
@@ -258,7 +265,8 @@ BUTTER_HOME = (KET_X - 0.002, KET_Y + 0.008, RIM_Z + 0.046)
 
 def _at(parts, home):
     for p in parts:
-        p.location = Vector(p.location) + Vector(home)
+        p.location = Vector(p.location) * HOLO_SCALE + Vector(home)
+        p.scale = (HOLO_SCALE, HOLO_SCALE, HOLO_SCALE)
     return parts
 
 
@@ -293,10 +301,10 @@ def build_popcorn_popper():
     reset_scene()
     palette()
     M = weapon_mats("#ffd23f", emit=2.2)
-    silver = mat("Kettle", "#dfe3ee", rough=0.22, metal=0.7)
-    glass = glass_mat("DomeGlass", "#eaf6ff", alpha=0.2, emit=0.08)
-    pop = mat("Popcorn", "#fff4dc", rough=0.75)
-    butter = mat("PopcornButter", "#ffd35a", rough=0.6)
+    silver = mat("Kettle", "#e4e8f2", rough=0.3, metal=0.35)
+    glass = glass_mat("DomeGlass", "#eaf6ff", alpha=0.13, emit=0.0)
+    pop = mat("Popcorn", "#fff6e2", rough=0.7, emit=0.35)
+    butter = mat("PopcornButter", "#ffd35a", rough=0.55, emit=0.3)
     kernel = mat("KernelYellow", "#ffb52e", rough=0.4)
     grip_loc = (0, -0.03, -0.115)
     grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.07, 0.092, 0.19), body_bottom=-0.02)
@@ -308,7 +316,7 @@ def build_popcorn_popper():
         loft("Body", [(-0.118, 0.042, 0.04, 0.034, 0.018), (-0.07, 0.046, 0.043, 0.033, 0.02), (0.13, 0.046, 0.043, 0.033, 0.02),
                       (0.195, 0.04, 0.036, 0.036, 0.016)], M["shell"]),
         box("Belly", (0.092, 0.25, 0.02), (0, 0.035, -0.012), bevel=0.008, m=M["dark"]),
-        box("Deck", (0.084, 0.28, 0.008), (0, 0.025, DECK_Z - 0.004), bevel=0.003, m=M["steel"]),
+        box("Deck", (0.084, 0.29, 0.008), (0, 0.03, DECK_Z - 0.004), bevel=0.003, m=M["steel"]),
         # Brass barrel and the striped popper horn with its glowing butter core.
         ycyl("Barrel", 0.022, 0.07, 0.225, z=bore_z, m=M["steel"], segs=18),
         ring("BarrelBand", 0.0235, 0.004, 0.205, z=bore_z, m=M["dark"], segs=18),
@@ -331,17 +339,17 @@ def build_popcorn_popper():
     ]
     # Cream stripes round the receiver, between the deck and the belly.
     for i, y in enumerate((-0.095, -0.06, -0.025, 0.01, 0.045, 0.08, 0.115, 0.15)):
-        shell.append(loft(f"Stripe{i}", [(y - 0.008, 0.0466, 0.0432, 0.033, 0.02), (y + 0.008, 0.0466, 0.0432, 0.033, 0.02)], M["trim"], n=24, bevel=0.002))
+        shell.append(loft(f"Stripe{i}", [(y - 0.008, 0.0466, 0.0432, 0.033, 0.02), (y + 0.008, 0.0466, 0.0432, 0.033, 0.02)], M["trim"], n=24, bevel=0.0))
     pot, lid, heater, kernels = kettle(M, silver, M["cell"], kernel)
     shell += pot + awning(M) + wheel(M, -0.05, -0.035, 0.028, 0.024)
-    shell += top_rail("TopRail", -0.1, 0.13, RAIL_TOP, M, width=0.03)
+    shell += top_rail("TopRail", -0.1, 0.15, RAIL_TOP, M, width=0.03)
     shell += vent_slots("Vent", 0.047, 0.03, 0.09, 0.03, 3, M["dark"], M["cell"], height=0.03, side=1)
     shell += bolts("Pin", [(0.047, -0.08, 0.05), (-0.047, 0.15, 0.06)], M["steel"], radius=0.006, height=0.006)
     dial_parts, needle, needle_pivot = dial(M, M["cell"])
     shell += dial_parts
     lug, charm_point = charm_lug(-0.027, -0.17, 0.004, M)
     shell += lug
-    sight_rear, sight_front = sights_notch(0.0, -0.09, 0.118, RAIL_TOP, RAIL_TOP, RAIL_TOP + SIGHT_HEIGHT, M, gap=0.016)
+    sight_rear, sight_front = sights_notch(0.0, -0.09, 0.138, RAIL_TOP, RAIL_TOP, RAIL_TOP + SIGHT_HEIGHT, M, gap=0.016)
     heater_holo = holo_copy(heater)
     dome = [lathe("DomeGlass", DOME_PROFILE, (DOME_X, DOME_Y, DOME_Z), glass, segs=36)]
     scoop, pour, butter_pump, drizzle = holo_parts(M)
@@ -351,12 +359,12 @@ def build_popcorn_popper():
     decal = [side_emblem("Emblem", emblem, -0.047, 0.098, 0.03, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
     arm_l, elbow_l = vertical_hand(fore, 0.023, 0.027, 0.11, M, (-0.52, -0.16, -0.46))
-    hinge = (KET_X - KET_R - 0.002, KET_Y, RIM_Z + 0.002)
+    hinge = (KET_X, HINGE_Y, RIM_Z + 0.002)
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "Dome": (dome, (DOME_X, DOME_Y, DOME_Z), None),
         "IronSightRear": (sight_rear, (0, -0.09, RAIL_TOP), None),
-        "IronSightFront": (sight_front, (0, 0.118, RAIL_TOP), None),
+        "IronSightFront": (sight_front, (0, 0.138, RAIL_TOP), None),
         "Lid": (lid, hinge, None),
         "HeatNeedle": (needle, needle_pivot, None),
         "Kernels": (kernels, (KET_X, KET_Y, KET_Z + 0.018), None),
@@ -375,10 +383,9 @@ def build_popcorn_popper():
     empties = {
         "Muzzle": ((0, 0.328, bore_z), None),
         "SightPoint": ((0, -0.09, RAIL_TOP + SIGHT_HEIGHT), None),
-        "SightMount": ((0, 0.015, RAIL_TOP), None),
+        "SightMount": ((0, 0.025, RAIL_TOP), None),
         "EjectPoint": ((KET_X, KET_Y, RIM_Z + 0.01), None),
-        "VentPoint": ((KET_X + 0.021, KET_Y - 0.019, RIM_Z + 0.028), None),
-        "DomePoint": ((DOME_X, DOME_Y, DOME_Z + 0.06), None),
+        "VentPoint": ((WHISTLE[0], WHISTLE[1], RIM_Z + 0.025), None),
         "CharmPoint": (charm_point, None),
         "ElbowR": (elbow_r, "ArmR"),
         "ElbowL": (elbow_l, "ArmL"),

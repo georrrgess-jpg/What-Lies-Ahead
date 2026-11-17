@@ -20,7 +20,9 @@ to the pop and gathers the pack into the cup (scripts/weapons/twister_vortex.gd)
 Tank's soak multiplies its own hits (scripts/weapons/soak.gd), the Road Rager's hubcap
 (scripts/weapons/hubcap_shot.gd) hits its target on the way out and back, is paced by its
 round trips (catches refill it, so it never reloads or runs dry) and slices through the
-whole pack, a pile-up hitting harder; the Lava Lampoon fires its warm-up groove's slower shots
+whole pack, a pile-up hitting harder; the Popcorn Popper climbs its heat stages
+(scripts/weapons/modes/popcorn_popper_mode.gd) from cold each magazine and pulses the trigger
+to stay hot, its warm puffs and hot butter bursts splashing the pack; the Lava Lampoon fires its warm-up groove's slower shots
 first and its target burns in the lava puddle under it (the pack walks through it); the Markdown
 Marker's tags (scripts/weapons/markdown_marker_tags.gd) mark the target down per tag, a full stack
 pops for its own damage and splash and refunds tags (a longer magazine); the T-Minus Six
@@ -92,6 +94,9 @@ MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
 # The Lava Lampoon: its warm-up groove (mode) and the lava puddle its globs leave.
 LAVA_MODE = gd_consts("scripts/weapons/modes/lava_lampoon_mode.gd")
 LAVA_PUDDLE = gd_consts("scripts/weapons/lava_lampoon_puddle.gd")
+# The Popcorn Popper: its heat stages (mode) and its kernels' splash puffs and butter bursts.
+POPCORN_MODE = gd_consts("scripts/weapons/modes/popcorn_popper_mode.gd")
+POPCORN = gd_consts("scripts/weapons/popcorn_kernels.gd")
 # Share of the pop a gathered zombie takes (they spin near the cup's centre).
 VORTEX_POP_SHARE = 0.8
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
@@ -321,6 +326,9 @@ def pull_damage(w, e, d, head):
 		# A glob hits like a ray shot; the target burns in the puddle under it meanwhile.
 		cycle = lava_cycle(w)
 		return w["damage"] * scale * head_mix + LAVA_PUDDLE["BURN_DPS"] * cycle, cycle
+	if w["id"] == "popcorn_popper":
+		# Kernels hit like ray shots; a magazine climbs cold and warm, then pulses hot.
+		return w["damage"] * scale * head_mix, popcorn_cycle(w)[0]
 	if w["projectile_speed"] > 0.0:
 		dmg = w["damage"] + w["direct_hit_bonus"]
 		return dmg, w["fire_interval"]
@@ -337,6 +345,19 @@ def lava_cycle(w):
 	warm = math.ceil(LAVA_MODE["GROOVE_TIME"] / LAVA_MODE["WARM_INTERVAL"])
 	mag = w["magazine_size"]
 	return (LAVA_MODE["GROOVE_TIME"] + (mag - warm) * w["fire_interval"]) / mag
+
+
+def popcorn_cycle(w):
+	"""Popcorn Popper over one magazine from a cold kettle, pulsed to stay under the jam:
+	(average seconds per shot, share of warm shots, share of hot shots)."""
+	m = POPCORN_MODE
+	per = m["HEAT_PER_SHOT"]
+	cold = m["WARM_AT"] / per
+	warm = (m["HOT_AT"] - m["WARM_AT"]) / per
+	hot = max(0.0, w["magazine_size"] - cold - warm)
+	rest = per / m["COOL_RATE"]
+	time = cold * m["COLD_INTERVAL"] + warm * m["WARM_INTERVAL"] + hot * (w["fire_interval"] + rest)
+	return time / w["magazine_size"], warm / w["magazine_size"], hot / w["magazine_size"]
 
 
 def vortex_spin():
@@ -453,6 +474,11 @@ def crowd_damage(w, d=8.0):
 	if w["id"] == "lava_lampoon":
 		# The pack walks through the puddle (about a second each at shambling pace).
 		return dmg + 3 * LAVA_PUDDLE["BURN_DPS"] * 2 * LAVA_PUDDLE["RADIUS"] / 2.0
+	if w["id"] == "popcorn_popper":
+		# The other three take the warm shots' puffs and the hot shots' bursts (half way to the rim).
+		_, warm, hot = popcorn_cycle(w)
+		edge = (1 + POPCORN["SPLASH_EDGE"]) / 2
+		return dmg + 3 * edge * (warm * POPCORN["PUFF_DAMAGE"] + hot * POPCORN["BURST_DAMAGE"])
 	if w["splash_radius"] > 0.0:
 		return dmg + 3 * w["damage"] * (1 + w["splash_edge_scale"]) / 2
 	if w["pierce"] > 0:

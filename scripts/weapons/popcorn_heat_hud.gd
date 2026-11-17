@@ -2,9 +2,9 @@ class_name PopcornHeatHud
 extends Control
 ## The Popcorn Popper's heat gauge (made by its mode, under the HUD): a
 ## curved bar under the crosshair in three zones (cold, warm, hot) that
-## fills with the kettle's heat, a tick at the jam line, and a word that
-## pops when the stage changes ("POP!", "BUTTER!"). Jammed, the bar flashes
-## red, drains with the jam and "JAMMED!" shakes under it. It fades out once
+## fills with the kettle's heat, a tick at the jam line, and a word off its
+## jam end that pops when the stage changes ("POP!", "BUTTER!"). Jammed, the
+## bar flashes red, drains with the jam and "JAMMED!" shakes beside it. It fades out once
 ## the kettle is cold and redraws only while it shows.
 
 const RADIUS := 58.0
@@ -83,12 +83,14 @@ func _draw() -> void:
 	draw_line(c + dir * (RADIUS - 8.0), c + dir * (RADIUS + 8.0), Color(Color.WHITE, a), 2.2, true)
 	var end := Vector2(cos(start - SPAN), sin(start - SPAN))
 	draw_line(c + end * (RADIUS - 7.0), c + end * (RADIUS + 7.0), Color(JAM, a), 3.0, true)
+	# Words sit off the jam end of the bar, clear of the reload prompt under the crosshair.
+	var word_at := c + end * RADIUS + Vector2(14.0, 8.0)
 	if jammed:
 		var shake := Vector2(sin(_time * 61.0), cos(_time * 47.0)) * 2.0
-		_text(c + Vector2(0.0, RADIUS + 30.0) + shake, "JAMMED!", JAM, 22, a)
+		_text(word_at + shake, "JAMMED!", JAM, 22, a)
 	elif _word_left > 0.0:
 		var u := 1.0 - _word_left / WORD_TIME
-		_text(c + Vector2(0.0, RADIUS + 28.0 - 10.0 * u), _word, _word_color, int(18.0 + 6.0 * sin(PI * minf(1.0, u * 3.0))), a * minf(1.0, _word_left * 4.0))
+		_text(word_at + Vector2(0.0, -8.0 * u), _word, _word_color, int(18.0 + 6.0 * sin(PI * minf(1.0, u * 3.0))), a * minf(1.0, _word_left * 4.0))
 
 
 func _zone(c: Vector2, from: float, to: float, col: Color, alpha: float) -> void:
@@ -102,9 +104,8 @@ static func _color(h: float) -> Color:
 	return COLD.lerp(WARM, smoothstep(PopcornPopperMode.WARM_AT - 0.06, PopcornPopperMode.WARM_AT, h)).lerp(HOT, smoothstep(PopcornPopperMode.HOT_AT - 0.06, PopcornPopperMode.HOT_AT, h))
 
 
+## `text` starting at `at` (its baseline's left end).
 func _text(at: Vector2, text: String, col: Color, font_size: int, alpha: float) -> void:
 	var font := get_theme_default_font()
-	var w := 200.0
-	var p := at - Vector2(w * 0.5, 0.0)
-	draw_string_outline(font, p, text, HORIZONTAL_ALIGNMENT_CENTER, w, font_size, 6, Color(UiKit.INK, 0.9 * alpha))
-	draw_string(font, p, text, HORIZONTAL_ALIGNMENT_CENTER, w, font_size, Color(col, alpha))
+	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color(UiKit.INK, 0.9 * alpha))
+	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(col, alpha))

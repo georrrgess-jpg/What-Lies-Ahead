@@ -24,7 +24,7 @@ const HOLO_SHADER := "res://art/shaders/holo.gdshader"
 const LAYERS := 8
 const PARTS: Array[String] = ["Lid", "HeatNeedle", "Kernels", "ScoopHolo", "PourHolo", "ButterHolo", "DrizzleHolo"]
 const HOLOS: Array[String] = ["ScoopHolo", "PourHolo", "ButterHolo", "DrizzleHolo"]
-const HOLO_COLOR := Color(1.0, 0.86, 0.36)
+const HOLO_COLOR := Color(1.0, 0.74, 0.18)
 ## The dial's normal in the model (Godot axes) and the needle's sweep (degrees either side of up).
 const DIAL_NORMAL := Vector3(-0.62, 0.55, 0.56)
 const NEEDLE_SWEEP := 125.0
@@ -209,12 +209,13 @@ static func layers(v: WeaponView) -> Array[Node3D]:
 	return out
 
 
-## The lid turned `deg` open on its hinge (the free edge rises).
+## The lid turned `deg` open on its hinge at the kettle's front (the back
+## edge, toward the player, rises).
 static func pose_lid(v: WeaponView, deg: float) -> void:
 	var lid := v.part("Lid")
 	if lid:
 		var rest := v.rest_transform("Lid")
-		lid.transform = Transform3D(Basis(Vector3.BACK, deg_to_rad(deg)) * rest.basis, rest.origin)
+		lid.transform = Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-deg)) * rest.basis, rest.origin)
 
 
 ## The dome shows `fill` layers of popcorn (fractional: the top one shrinks),
@@ -264,6 +265,7 @@ static func holo_materials(v: WeaponView) -> void:
 		holo.set_shader_parameter("holo_color", HOLO_COLOR)
 		holo.set_shader_parameter("span", maxf(0.02, node.mesh.get_aabb().size.y * 0.6))
 		holo.set_shader_parameter("materialize", 0.0)
+		holo.set_shader_parameter("intensity", 0.9)
 		node.material_override = holo
 		node.visible = false
 

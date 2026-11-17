@@ -15,9 +15,9 @@ extends RefCounted
 ## other with no stops between keys. The dome shows the old popcorn until
 ## the fresh batch pops, and is full exactly when the reload ends.
 
-const ROOT_POS := Vector3(-0.012, 0.022, 0.0)
-const ROOT_ROT := Vector3(11.0, -6.0, -18.0)
-const LID_OPEN := 118.0
+const ROOT_POS := Vector3(-0.02, 0.03, 0.03)
+const ROOT_ROT := Vector3(22.0, 12.0, -24.0)
+const LID_OPEN := 130.0
 ## The scoop's way in (offset from its home, model space) and its pour tilt.
 const SCOOP_FROM := Vector3(-0.07, 0.05, 0.02)
 const SCOOP_TILT := -72.0
@@ -31,11 +31,11 @@ const BUTTER := [Color(1.0, 0.86, 0.32), Color(1.0, 0.95, 0.6)]
 const STEAM := [Color(1.0, 1.0, 1.0, 0.85), Color(0.92, 0.94, 1.0, 0.8)]
 const FLAKES := [Color(1.0, 0.98, 0.9), Color(1.0, 0.92, 0.65), Color(1.0, 0.84, 0.4)]
 ## [timeline point, sound, volume, pitch]
-const SOUNDS := [[0.07, &"pcp_lid_open", -5.0, 1.0], [0.2, &"pcp_holo", -9.0, 1.0], [0.33, &"pcp_scoop", -5.0, 1.0],
+const SOUNDS := [[0.05, &"pcp_lid_open", -5.0, 1.0], [0.2, &"pcp_holo", -9.0, 1.0], [0.33, &"pcp_scoop", -5.0, 1.0],
 	[0.6, &"pcp_holo", -9.0, 1.15], [0.64, &"pcp_pump", -6.0, 1.0], [0.7, &"pcp_pump", -6.0, 1.1],
 	[0.795, &"pcp_lid_shut", -3.0, 1.0], [0.83, &"pcp_popping", -4.0, 1.0]]
 ## Moments (timeline) for one-shot bursts: [point, kind].
-const BURSTS := [[0.13, &"steam"], [0.36, &"kernels"], [0.41, &"kernels"], [0.46, &"kernels"], [0.51, &"kernels"],
+const BURSTS := [[0.12, &"steam"], [0.36, &"kernels"], [0.41, &"kernels"], [0.46, &"kernels"], [0.51, &"kernels"],
 	[0.655, &"butter"], [0.69, &"butter"], [0.72, &"butter"], [0.8, &"steam"]]
 
 var _v: WeaponView
@@ -46,7 +46,6 @@ var _full_fill := 8.0
 var _layers: Array[Node3D] = []
 var _popped := 0
 var _eject := Vector3.ZERO
-var _dome := Vector3.ZERO
 var _pour := Vector3.ZERO
 var _nozzle := Vector3.ZERO
 
@@ -67,7 +66,6 @@ func play(v: WeaponView, d: float) -> void:
 	_full_fill = float(full) / v.data.magazine_size * PopcornPopperView.LAYERS
 	_popped = ceili(_start_fill)
 	_eject = PopcornPopperView.model_point(v, "EjectPoint")
-	_dome = PopcornPopperView.model_point(v, "DomePoint")
 	_pour = v.rest_transform("PourHolo").origin
 	_nozzle = v.rest_transform("ButterHolo").origin
 	v.glow_ramp(0.1, 0.22, d, 1.0, 0.25)
@@ -96,16 +94,15 @@ func _step(s: float) -> void:
 	_pose_popcorn(s)
 
 
-## The lid (degrees open): a latch hop, the flip open with an overshoot that
-## settles, then the slam (speeding up into the rim) and a small rebound,
-## and the chatter of the popping batch.
+## The lid (degrees open): the flip open with an overshoot that settles,
+## then the slam (speeding up into the rim) and a small rebound, and the
+## chatter of the popping batch.
 func _lid(s: float) -> float:
-	var hop := 6.0 * sin(PI * _e(0.03, 0.08, s))
-	var open := LID_OPEN * _overshoot(_e(0.07, 0.27, s))
+	var open := LID_OPEN * _overshoot(_e(0.04, 0.3, s))
 	var shut := _slam(clampf((s - 0.74) / 0.055, 0.0, 1.0))
 	var rebound := 7.0 * sin(PI * clampf((s - 0.795) / 0.04, 0.0, 1.0)) * (1.0 - clampf((s - 0.795) / 0.04, 0.0, 1.0) * 0.5)
 	var chatter := 3.5 * absf(sin((s - POP_START) * _d * 40.0)) * _e(POP_START, POP_START + 0.02, s) * (1.0 - _e(POP_END - 0.02, POP_END + 0.02, s))
-	return hop * (1.0 - _e(0.07, 0.1, s)) + open * (1.0 - shut) + rebound + chatter
+	return open * (1.0 - shut) + rebound + chatter
 
 
 ## The kernels in the kettle: a few left, then heaping up as the scoop pours.

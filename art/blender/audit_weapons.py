@@ -32,7 +32,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 WEAPONS = ["pulse_pistol", "ion_carbine", "scatter_blaster", "comet_cannon", "arc_coil", "bumper_lobber", "cryo_beam", "rail_lancer",
            "sparkler", "ring_toss", "drum_popper", "whirligig", "riptide", "toxic_ripsaw",
            "shutterbug", "balloon_darter", "teacup_twister", "dunk_tank", "ground_control", "t_minus_six",
-           "markdown_marker", "lava_lampoon"]
+           "markdown_marker", "lava_lampoon", "popcorn_popper"]
 REQUIRED = ["Shell", "ArmL", "ArmR", "Decal", "IronSightRear", "IronSightFront",
             "Muzzle", "SightPoint", "SightMount", "EjectPoint", "VentPoint", "CharmPoint", "ElbowL", "ElbowR"]
 # The energy cell and its hologram copy (the Scatter Blaster loads two capsules instead).
@@ -75,6 +75,9 @@ JOINTS = {
 }
 JOINTS["lava_lampoon"] = [("Lamp", "Shell"), ("LampGlass", "Lamp"), ("LampCap", "LampGlass"), ("LampCap", "Lamp"), ("LampWax", "LampGlass"),
                           ("LampWax", "Lamp"), ("LampGlass", "Shell"), ("Cell", "Shell"), ("Cell", "Lamp")] + [(f"Pip{i}", "Shell") for i in range(10)]
+# The lid turns on its hinge knuckles; the kernel stream and the butter drizzle run into the kettle.
+JOINTS["popcorn_popper"] = [("Lid", "Shell"), ("PourHolo", "Shell"), ("PourHolo", "Kernels"), ("DrizzleHolo", "Shell"),
+                            ("DrizzleHolo", "Kernels")]
 
 
 def world_tree(ob, matrix=None):
