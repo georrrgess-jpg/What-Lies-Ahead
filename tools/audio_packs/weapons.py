@@ -7,6 +7,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _laser_layer, _shimmer, _sub_thump
+from weapon_punch import punch
 
 
 def _arc(d, density=0.03, centre=3500):
@@ -74,7 +75,9 @@ def weap_arc_fire():
     crackle = _arc(d, 0.05, 3800) * env(d, 0.001, 0.13, power=1.5)
     buzz = tone(95, d, "square") * env(d, 0.002, 0.12, power=1.4) * 0.3
     zap = sweep(2600, 700, d, "saw", 0.4) * env(d, 0.001, 0.06, power=2.0) * 0.25
-    return crush(filt(crackle * 0.6 + buzz + zap, low=11000), 1.4)
+    return punch(crush(filt(crackle * 0.6 + buzz + zap, low=11000), 1.4), snap_gain=0.2, snap_hz=3000,
+                 thump_gain=0.4, thump_hz=(130, 55), thump_decay=0.04, duck=0.2, slap=(0.023,), slap_gain=0.1,
+                 room_gain=0.07, room_s=0.12, shelf_hz=4200, shelf_db=-5.0, low=9500, seed="arc")
 
 
 def weap_arc_chain():
@@ -82,7 +85,9 @@ def weap_arc_chain():
     d = 0.12
     snap = _arc(d, 0.06, 5200) * env(d, 0.0005, 0.08, power=2.0)
     tick = sweep(3800, 1600, d, "square", 0.5) * env(d, 0.0005, 0.03, power=2.0) * 0.25
-    return filt(crush(snap * 0.5 + tick, 1.3), low=7000)
+    return punch(filt(crush(snap * 0.5 + tick, 1.3), low=7000), snap_gain=0.0, thump_gain=0.25, thump_hz=(160, 80),
+                 thump_decay=0.025, duck=0.1, slap=(0.021,), slap_gain=0.1, room_gain=0.05, room_s=0.1,
+                 shelf_hz=4200, shelf_db=-4.0, seed="arc_chain")
 
 
 def weap_arc_reload():
@@ -109,7 +114,9 @@ def weap_lobber_fire():
     puff = filt(noise(d), low=900) * env(d, 0.002, 0.1, power=2.0) * 0.7
     out = thoomp + puff
     place(out, boing, 0.03, 1.0)
-    return crush(out, 1.4)
+    return punch(crush(out, 1.4), snap_gain=0.28, snap_hz=2200, snap_ms=4.0, thump_gain=0.35, thump_hz=(120, 48),
+                 thump_decay=0.1, duck=0.25, slap=(0.035, 0.07), slap_gain=0.15, room_gain=0.12, room_s=0.25,
+                 seed="lobber")
 
 
 def weap_lobber_bounce():
@@ -119,7 +126,8 @@ def weap_lobber_bounce():
     spring = tone(780, d, "sine", vibrato=0.06, vib_rate=28) * env(d, 0.002, 0.18, power=1.6) * 0.3
     out = bonk + spring
     place(out, click(0.015, 2000), 0.0, 0.4)
-    return out
+    return punch(out, snap_gain=0.12, snap_hz=2000, thump_gain=0.35, thump_hz=(170, 75), thump_decay=0.04,
+                 duck=0.15, slap=(0.026,), slap_gain=0.1, room_gain=0.06, room_s=0.12, seed="lobber_bounce")
 
 
 def weap_lobber_boom():
@@ -131,7 +139,9 @@ def weap_lobber_boom():
     out = boom + blast + crackle
     for i, n in enumerate((19, 23, 26, 31)):
         place(out, blip(note(n), 0.18, "sine", 0.14), 0.08 + i * 0.05, 0.12)
-    return crush(out, 1.5)
+    return punch(crush(out, 1.5), snap_gain=0.3, snap_hz=2400, snap_ms=4.0, thump_gain=0.35, thump_hz=(95, 38),
+                 thump_decay=0.16, duck=0.3, slap=(0.06, 0.12), slap_gain=0.16, room_gain=0.18, room_s=0.45,
+                 seed="lobber_boom")
 
 
 def weap_lobber_reload():
@@ -157,7 +167,12 @@ def weap_cryo_start():
     d = 0.35
     whoosh = band(noise(d), 3000, 2000) * env(d, 0.01, 0.3, power=1.2) * 0.8
     rise = sweep(400, 2400, d, "sine", 0.6) * env(d, 0.005, 0.3, power=1.0) * 0.3
-    return whoosh + rise
+    crack = sum(tone(f, 0.12) * g for f, g in ((1180, 0.3), (2950, 0.15))) * env(0.12, 0.0008, 0.1, power=2.5)
+    out = whoosh + rise
+    place(out, crack, 0.0, 1.0)                                                    # the nozzle frosting over
+    return punch(out, snap_gain=0.25, snap_hz=3400, thump_gain=0.45, thump_hz=(140, 60), thump_decay=0.07,
+                 duck=0.2, slap=(0.03,), slap_gain=0.12, room_gain=0.12, room_s=0.25, shelf_hz=4500, shelf_db=-4.0,
+                 seed="cryo_start")
 
 
 def weap_cryo_loop():
@@ -179,7 +194,9 @@ def weap_cryo_freeze():
     place(out, sweep(1200, 3200, 0.3, "sine", 0.6) * env(0.3, 0.01, 0.35, power=1.0) * 0.3, 0.0, 1.0)
     place(out, blip(note(36), 0.3, "sine", 0.28), 0.28, 0.5)
     place(out, blip(note(43), 0.25, "sine", 0.22), 0.3, 0.3)
-    return out
+    return punch(out, snap_gain=0.0, thump_gain=0.2, thump_hz=(150, 70), thump_decay=0.05, duck=0.0,
+                 slap=(0.03,), slap_gain=0.1, room_gain=0.12, room_s=0.3, shelf_hz=4500, shelf_db=-4.0,
+                 seed="cryo_freeze")
 
 
 def weap_cryo_shatter():
@@ -190,7 +207,9 @@ def weap_cryo_shatter():
     rng = np.random.default_rng(23)
     for i in range(14):
         place(out, blip(rng.uniform(2400, 6200), 0.12, "sine", 0.1) * 0.3, 0.02 + rng.uniform(0, 0.5), 1.0)
-    return out
+    return punch(out, snap_gain=0.2, snap_hz=3000, thump_gain=0.4, thump_hz=(130, 50), thump_decay=0.07,
+                 duck=0.2, slap=(0.032,), slap_gain=0.12, room_gain=0.14, room_s=0.3, shelf_hz=4500, shelf_db=-5.0,
+                 seed="cryo_shatter")
 
 
 def weap_cryo_vent():
@@ -226,8 +245,11 @@ def weap_rail_ready():
     out = silence(0.4)
     place(out, blip(note(31), 0.25, "sine", 0.22), 0.0, 0.7)
     place(out, blip(note(38), 0.25, "sine", 0.2), 0.05, 0.5)
+    place(out, blip(note(43), 0.3, "sine", 0.26), 0.1, 0.35)                        # the lock-in resolves up
     place(out, click(0.02, 4800), 0.0, 0.5)
-    return out
+    return punch(out, snap_gain=0.0, thump_gain=0.3, thump_hz=(170, 80), thump_decay=0.05, duck=0.0,
+                 slap=(0.035,), slap_gain=0.12, room_gain=0.15, room_s=0.3, shelf_hz=4500, shelf_db=-4.0,
+                 seed="rail_ready")
 
 
 def weap_rail_fire():
@@ -237,7 +259,10 @@ def weap_rail_fire():
     zing = _laser_layer(5200, 900, d, 0.35, "saw") * env(d, 0.0005, 0.35, power=1.6) * 0.3
     ring = (tone(1850, d, "sine") * 0.4 + tone(2790, d, "sine") * 0.25) * env(d, 0.001, 0.8, power=2.2)
     boom = _sub_thump(110, 28, d, 0.6) * 1.7
-    return crush(crack + zing + ring * 0.6 + boom, 1.6)
+    body = crush(crack + zing + ring * 0.3 + boom, 1.6)                        # the ring stays a tint, not a whistle
+    return punch(body, snap_gain=0.4, snap_hz=3000, snap_ms=4.0, thump_gain=0.3, thump_hz=(90, 36), thump_decay=0.18,
+                 duck=0.3, slap=(0.07, 0.15), slap_gain=0.2, room_gain=0.2, room_s=0.6, shelf_hz=4500, shelf_db=-3.0,
+                 seed="rail")
 
 
 def weap_rail_reload():
@@ -264,7 +289,7 @@ SOUNDS = [
 
 VARIANTS = [
     (weap_cannon_fire, (0.95, 1.05)), (weap_arc_fire, (0.93, 1.07)), (weap_arc_chain, (0.9, 1.12)),
-    (weap_lobber_boom, (0.93, 1.06)), (weap_lobber_bounce, (0.9, 1.12)), (weap_cryo_shatter, (0.92, 1.08)),
+    (weap_lobber_fire, (0.95, 1.06)), (weap_lobber_boom, (0.93, 1.06)), (weap_lobber_bounce, (0.9, 1.12)), (weap_cryo_shatter, (0.92, 1.08)),
     (weap_rail_fire, (0.96, 1.04)),
 ]
 
