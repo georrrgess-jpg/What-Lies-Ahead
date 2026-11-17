@@ -30,7 +30,9 @@ is printed below the tables; the "amp" column is the
 damage bonus a status lends every other weapon. Ground Control's full-charge ring
 (scripts/weapons/ground_control_ring.gd) passes through the whole pack, weaker for each
 zombie it has passed, and its mark (scripts/weapons/ground_control_mark.gd) adds its bonus
-to every hit after the first. Armour behaviours (helmets, shields, ice
+to every hit after the first. The Strike Zone's full wind-up ball (scripts/weapons/strike_zone_ball.gd)
+bowls through the whole pack, PIN_FALLOFF weaker for each pin already down, and lands BIG_SCALE
+on heavies. Armour behaviours (helmets, shields, ice
 shells) are approximated as extra health. Numbers are for comparison
 between weapons, not exact in-game times.
 """
@@ -88,6 +90,7 @@ TMINUS.update(gd_consts("scripts/weapons/t_minus_rocket.gd"))
 # Share of a painted swarm's rockets that land on the head they seek.
 TMINUS_SEEK_HEAD = 0.85
 STACK = gd_consts("scripts/weapons/damage_stack.gd")
+BALL = gd_consts("scripts/weapons/strike_zone_ball.gd")
 MODE_OF = {"teacup_twister": "vortex", "dunk_tank": "soak"}
 # The Lava Lampoon: its warm-up groove (mode) and the lava puddle its globs leave.
 LAVA_MODE = gd_consts("scripts/weapons/modes/lava_lampoon_mode.gd")
@@ -182,6 +185,8 @@ def mode_kind(w):
 		return "marker"
 	if mode.endswith("t_minus_six_mode.gd"):
 		return "tminus"
+	if mode.endswith("strike_zone_mode.gd"):
+		return "strike"
 	return ""
 
 
@@ -297,6 +302,10 @@ def pull_damage(w, e, d, head):
 	if mode_kind(w) == "hubcap":
 		# Aimed down the sights it strikes the target on the way out and back.
 		return 2.0 * w["damage"] * head_mix, hubcap_cycle(w)
+	if mode_kind(w) == "strike":
+		# A full wind-up roll (no headshots); heavies take the whole ball's weight.
+		big = BALL["BIG_SCALE"] if e.get("mass", 1.0) >= BALL["HEAVY_MASS"] else 1.0
+		return w["damage"] * big, w["fire_interval"] + w["charge_time"]
 	if mode_kind(w) == "ping":
 		# A full-charge ring (no headshots); the mark it leaves makes the next ones hit harder.
 		return w["damage"] * MARK.get("DAMAGE_BONUS", 1.0), w["fire_interval"] + w["charge_time"]
@@ -432,6 +441,9 @@ def crowd_damage(w, d=8.0):
 		c = script_consts("marker")
 		dart = w["damage"] * (1.0 + c["TAG_BONUS"] * c["MAX_TAGS"])
 		return dart + c["POP_DAMAGE"] * (1.0 + 3 * (1.0 + c["POP_EDGE"]) / 2)
+	if mode_kind(w) == "strike":
+		# Down the lane through all four, weaker for each pin already down.
+		return w["damage"] * sum(BALL["PIN_FALLOFF"] ** k for k in range(4))
 	if mode_kind(w) == "tminus":
 		# A dumb rocket into one of the pack: its pop splashes the other three.
 		return dmg + 3 * TMINUS["SPLASH_DAMAGE"]

@@ -75,6 +75,10 @@ JOINTS = {
 }
 JOINTS["lava_lampoon"] = [("Lamp", "Shell"), ("LampGlass", "Lamp"), ("LampCap", "LampGlass"), ("LampCap", "Lamp"), ("LampWax", "LampGlass"),
                           ("LampWax", "Lamp"), ("LampGlass", "Shell"), ("Cell", "Shell"), ("Cell", "Lamp")] + [(f"Pip{i}", "Shell") for i in range(10)]
+# The kicker's rod slides into the body; the balls sit on their rails.
+WEAPONS.append("strike_zone")
+CELLS["strike_zone"] = ["Cell", "SpareHolo", "RailHolo"]
+JOINTS["strike_zone"] = [("Kicker", "Shell"), ("Ball", "Shell"), ("Spare", "Cell"), ("Spare", "Shell")]
 
 
 def world_tree(ob, matrix=None):

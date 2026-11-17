@@ -29,8 +29,8 @@ const ARROW_DIM := 0.14
 const ARROW_FULL := 2.4
 ## The spare's hop into the chamber (model space): the side return, back and
 ## up, over the deck, down the chamber's back (the rail's last points) and in.
-const HOP := PackedVector3Array([Vector3(-0.106, 0.03, -0.12), Vector3(-0.1, 0.12, -0.07), Vector3(-0.055, 0.15, -0.15),
-	Vector3(-0.015, 0.13, -0.21), Vector3(0.0, 0.06, -0.245), Vector3(0.0, 0.044, -0.258)])
+const HOP: Array[Vector3] = [Vector3(-0.106, 0.03, -0.12), Vector3(-0.1, 0.12, -0.07), Vector3(-0.055, 0.15, -0.15),
+	Vector3(-0.015, 0.13, -0.21), Vector3(0.0, 0.06, -0.245), Vector3(0.0, 0.044, -0.258)]
 const GOLD := [Color(1.0, 0.85, 0.3), Color(1.0, 1.0, 0.85), Color(1.0, 0.3, 0.62)]
 
 var _ball: Node3D
@@ -50,6 +50,10 @@ func setup(v: WeaponView) -> void:
 	_ball = v.part("Ball")
 	_spare = v.part("Spare")
 	_kicker = v.part("Kicker")
+	# The reload's holograms stay hidden until it shows them.
+	for holo in ["SpareHolo", "RailHolo"]:
+		if v.part(holo):
+			v.part(holo).visible = false
 	for i in ARROWS:
 		var mi := v.part("Arrow%d" % i) as MeshInstance3D
 		if mi == null:
@@ -79,7 +83,7 @@ static func hop(k: float) -> Vector3:
 
 ## A point `k` (0-1) of the way along a smooth curve through `points`, at an
 ## even pace (Catmull-Rom, spaced by the distance between the points).
-static func along(points: PackedVector3Array, k: float) -> Vector3:
+static func along(points: Array[Vector3], k: float) -> Vector3:
 	var n := points.size()
 	var total := 0.0
 	for i in n - 1:

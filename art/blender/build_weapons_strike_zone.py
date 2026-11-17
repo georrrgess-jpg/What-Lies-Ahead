@@ -74,7 +74,7 @@ def ball_mats():
     )
 
 
-def marbled_ball(name, radius, centre, B, segs=36, rings=22):
+def marbled_ball(name, radius, centre, B, segs=56, rings=34):
     """A bowling ball: a UV sphere whose faces are split into a pink shell and
     violet and pearl marbling bands, plus three finger holes on its +Z side,
     leaning back towards -Y (the player)."""
@@ -83,8 +83,8 @@ def marbled_ball(name, radius, centre, B, segs=36, rings=22):
     for f in bm.faces:
         n = f.calc_center_median().normalized()
         a = math.atan2(n.y, n.x)
-        s = math.sin(4.2 * n.z + 2.4 * math.sin(3.0 * a + 1.3 * n.z) + 0.8 * math.sin(5.0 * a))
-        f.material_index = 1 if s > 0.62 else (2 if s < -0.86 else 0)
+        s = math.sin(3.2 * n.z + 2.0 * math.sin(2.0 * a + 1.6 * n.z) + 0.5 * math.sin(3.0 * a - n.z))
+        f.material_index = 1 if s > 0.58 else (2 if s < -0.88 else 0)
     ob = _finish(name, bm, B["shell"], centre, (0, 0, 0))
     ob.data.materials.append(B["swirl"])
     ob.data.materials.append(B["pearl"])
@@ -173,13 +173,19 @@ def build_strike_zone():
         box("ChinBumper", (0.11, 0.014, 0.02), (0, 0.338, -0.016), bevel=0.007, m=M["pink"]),
         box("ChamberNeck", (0.09, 0.03, 0.03), (0, 0.205, -0.015), bevel=0.008, m=M["shell"]),
         cyl("KickerPort", 0.027, 0.006, (0, 0.196, bz), rot=rad(90, 0, 0), segs=24, bevel=0.0015, m=M["dark"]),
-        box("RailRiser", (0.03, 0.15, 0.018), (0, 0.0, 0.088), bevel=0.004, m=M["dark"]),
+        box("RailRiser", (0.03, 0.165, 0.018), (0, 0.01, 0.088), bevel=0.004, m=M["dark"]),
         # Rear stock: a padded ball-return block with a dark butt.
         box("Stock", (0.072, 0.11, 0.07), (0, -0.15, 0.02), bevel=0.026, segs=3, m=M["shell"]),
-        box("StockBand", (0.076, 0.016, 0.074), (0, -0.13, 0.02), bevel=0.006, m=M["pink"]),
-        box("Butt", (0.07, 0.022, 0.072), (0, -0.21, 0.02), bevel=0.012, m=M["dark"]),
+        box("StockBand", (0.05, 0.016, 0.006), (0, -0.13, 0.055), bevel=0.002, m=M["pink"]),
+        box("Butt", (0.07, 0.02, 0.07), (0, -0.212, 0.02), bevel=0.016, segs=3, m=M["pink"]),
+        box("ButtPlate", (0.056, 0.006, 0.056), (0, -0.223, 0.02), bevel=0.006, m=M["dark"]),
         box("ForegripMount", (0.05, 0.06, 0.012), (0, fore[1], -0.036), bevel=0.004, m=M["dark"]),
     ]
+    # The ten-pin triangle lit on the butt plate, facing the player.
+    for row in range(4):
+        for j in range(row + 1):
+            px = (j - row / 2) * 0.011
+            shell.append(sphere(f"PinLight{row}{j}", 0.0036, (px, -0.2265, 0.038 - row * 0.011), scale=(1, 0.5, 1), m=M["cell"], segs=8, rings=5))
     for i in range(5):
         shell.append(box(f"Seam{i}", (0.0012, 0.27, 0.0016), (-0.0336 + i * 0.0168, 0.05, deck_z + 0.005), bevel=0.0, m=M["dark"]))
     # Steel guide rails the chamber ball sits on.
@@ -212,11 +218,11 @@ def build_strike_zone():
         arrows[f"Arrow{i}"] = ([lane_arrow(f"Arrow{i}Tri", (x, y, deck_z + 0.0065), 0.0105, M["cell"])], (x, y, deck_z + 0.0065))
     # The vertical foregrip: rubber, with a bowling pin's head for a knob.
     shell += [
-        box("Foregrip", (0.042, 0.05, 0.11), fore, bevel=0.016, m=M["dark"]),
-        sphere("ForegripKnob", 0.027, (0, fore[1], fore[2] - 0.066), scale=(1, 1, 0.75), m=white, segs=16, rings=10),
-        cyl("ForegripStripe", 0.0262, 0.006, (0, fore[1], fore[2] - 0.054), segs=20, bevel=0.0, m=M["pink"]),
+        box("Foregrip", (0.042, 0.05, 0.12), fore, bevel=0.016, m=M["dark"]),
+        sphere("ForegripKnob", 0.023, (0, fore[1], fore[2] - 0.08), scale=(1, 1, 0.8), m=white, segs=16, rings=10),
+        cyl("ForegripStripe", 0.0232, 0.005, (0, fore[1], fore[2] - 0.08), segs=20, bevel=0.0, m=M["pink"]),
     ]
-    shell += top_rail("TopRail", -0.07, 0.07, RAIL_TOP, M, width=0.03)
+    shell += top_rail("TopRail", -0.075, 0.095, RAIL_TOP, M, width=0.03)
     shell += bolts("Pin", [(-0.052, 0.17, 0.05), (0.052, 0.17, 0.05), (0.052, -0.08, 0.05)], chrome, radius=0.005, height=0.005)
     lug, charm_point = charm_lug(-0.036, -0.165, 0.004, M)
     shell += lug
@@ -263,7 +269,7 @@ def build_strike_zone():
             (-0.009, -0.004), (-0.016, 0.006)]
     decal = [side_emblem("Emblem", bowl, -0.074, -0.15, 0.024, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
-    arm_l, elbow_l = vertical_hand(fore, 0.021, 0.025, 0.11, M, (-0.52, -0.16, -0.46))
+    arm_l, elbow_l = vertical_hand(fore, 0.023, 0.027, 0.12, M, (-0.52, -0.16, -0.46))
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "IronSightRear": (sight_rear, (0, -0.058, RAIL_TOP), None),
@@ -283,7 +289,7 @@ def build_strike_zone():
     empties = {
         "Muzzle": ((0, 0.35, 0.044), None),
         "SightPoint": ((0, -0.058, z_line), None),
-        "SightMount": ((0, 0.0, RAIL_TOP), None),
+        "SightMount": ((0, 0.024, RAIL_TOP), None),
         "EjectPoint": ((sx, sy, sz - 0.05), None),
         "VentPoint": ((0, by + 0.05, bz + 0.07), None),
         "CharmPoint": (charm_point, None),
@@ -297,7 +303,7 @@ def build_rolling_ball():
     """The ball in play: radius 0.25 m (WeaponData.projectile_size), finger holes on +Z."""
     reset_scene()
     B = ball_mats()
-    parts = marbled_ball("BallCore", 0.25, (0, 0, 0), B, segs=40, rings=24)
+    parts = marbled_ball("BallCore", 0.25, (0, 0, 0), B)
     ball = merge("Ball", parts)
     _save("strike_zone_ball", [ball])
 

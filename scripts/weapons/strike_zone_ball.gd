@@ -87,9 +87,11 @@ static var _ball_scene: PackedScene
 static var _gutter_meshes: Array[BoxMesh] = []
 
 
-## Rolls a ball of `w` from `from` along the flat direction `dir` at `speed`
-## m/s, dealing `scale` times its damage.
-static func launch(owner_controller: WeaponController, owner_mode: StrikeZoneMode, from: Vector3, dir: Vector3, speed: float, scale: float) -> StrikeZoneBall:
+## Rolls a ball from `from` along the flat direction `dir` at `speed` m/s,
+## dealing `scale` times its damage; it leaves at `lift` m/s upward (negative:
+## dropped).
+static func launch(owner_controller: WeaponController, owner_mode: StrikeZoneMode, from: Vector3, dir: Vector3, speed: float, scale: float,
+		lift: float) -> StrikeZoneBall:
 	var level := owner_controller.player.get_parent()
 	if level == null:
 		return null
@@ -99,7 +101,7 @@ static func launch(owner_controller: WeaponController, owner_mode: StrikeZoneMod
 	b.mode = owner_mode
 	b.velocity = dir * speed
 	b._heading = dir
-	b._fall = -DROP_SPEED
+	b._fall = lift
 	b._scale = scale
 	b._exclude = [owner_controller.player.get_rid()]
 	level.add_child(b)

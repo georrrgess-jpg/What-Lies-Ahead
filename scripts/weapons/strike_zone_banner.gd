@@ -57,11 +57,12 @@ func _init() -> void:
 	_burst.material_override = _burst_mat
 	_burst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_burst)
-	_title = _label(120, 0.0021, 0.0)
-	_sub = _label(52, 0.0021, -0.16)
+	_title = _label(112, 0.0015, 0.0)
+	_sub = _label(48, 0.0015, -92.0)
 
 
-func _label(font_size: int, pixel: float, height: float) -> Label3D:
+## A label `drop` pixels below the banner's centre.
+func _label(font_size: int, pixel: float, drop: float) -> Label3D:
 	var l := Label3D.new()
 	l.font = UiKit.display_font()
 	l.font_size = font_size
@@ -72,7 +73,7 @@ func _label(font_size: int, pixel: float, height: float) -> Label3D:
 	l.fixed_size = true
 	l.render_priority = 10
 	l.outline_render_priority = 9
-	l.position.y = height
+	l.offset = Vector2(0.0, drop)
 	add_child(l)
 	return l
 
@@ -88,12 +89,12 @@ func _play(at: Vector3, rung_index: int, rung: int) -> void:
 	_set_alpha(title_color, burst_color, 1.0)
 	_title.scale = Vector3.ONE * 2.2
 	_sub.scale = Vector3.ONE * 0.01
-	_burst.scale = Vector3.ONE * 0.2
+	_burst.scale = Vector3.ONE * 0.15
 	if _tween and _tween.is_valid():
 		_tween.kill()
 	_tween = create_tween().set_parallel(true)
 	_tween.tween_property(_title, "scale", Vector3.ONE, 0.26).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_tween.tween_property(_burst, "scale", Vector3.ONE, 0.32).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(_burst, "scale", Vector3.ONE * 0.75, 0.32).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	_tween.tween_property(_sub, "scale", Vector3.ONE, 0.18).set_delay(0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_tween.tween_method(_wobble, 0.0, 1.0, 0.6).set_delay(0.2)
 	_tween.tween_property(self, "global_position", at + Vector3.UP * RISE, LIFE).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)

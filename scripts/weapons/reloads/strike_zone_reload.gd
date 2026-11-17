@@ -15,9 +15,9 @@ extends RefCounted
 ## turns by exactly the distance it rolls.
 
 ## The ball's centre along the rail, model space (build_weapons_strike_zone.py RAIL_PATH).
-const RAIL := PackedVector3Array([Vector3(-0.12, -0.28, -0.24), Vector3(-0.16, -0.16, -0.235), Vector3(-0.165, -0.04, -0.23),
+const RAIL: Array[Vector3] = [Vector3(-0.12, -0.28, -0.24), Vector3(-0.16, -0.16, -0.235), Vector3(-0.165, -0.04, -0.23),
 	Vector3(-0.135, 0.07, -0.225), Vector3(-0.07, 0.14, -0.215), Vector3(-0.015, 0.13, -0.21), Vector3(0.0, 0.06, -0.245),
-	Vector3(0.0, 0.044, -0.258)])
+	Vector3(0.0, 0.044, -0.258)]
 const BALL_R := 0.05
 const ROOT_POS := Vector3(-0.012, 0.03, 0.0)
 const ROOT_ROT := Vector3(10.0, -6.0, -19.0)
