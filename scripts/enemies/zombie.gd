@@ -1344,3 +1344,25 @@ func _set_overlay(material: Material) -> void:
 	for mi in _meshes:
 		if is_instance_valid(mi):
 			mi.material_overlay = material
+
+
+## The skeleton the body moves with (null for a model without one).
+func skeleton() -> Skeleton3D:
+	return _skeleton
+
+
+## The torso at rest in the skeleton's space: the outfit's vertices on the
+## Spine bone, AABB() if the model has none. Things stuck on the body (the
+## Markdown Marker's tags) fit to it.
+func torso_rest_box() -> AABB:
+	var bone := _skeleton.find_bone("Spine") if _skeleton else -1
+	var box := AABB()
+	if bone < 0:
+		return box
+	for mi in _meshes:
+		if mi.skin == null or mi.mesh == null or not String(mi.name).begins_with("Outfit_"):
+			continue
+		var b := _bone_bounds(mi, bone)
+		if b.size != Vector3.ZERO:
+			box = b if box.size == Vector3.ZERO else box.merge(b)
+	return box
