@@ -59,6 +59,12 @@ TARGETS = {
     "dc_pct": 2.0,
     "cent_oct": 1.5,        # centroid this many octaves off the family median: out of family
 }
+# House bands per family: the ceiling of the in-game level (eff, dB); see the
+# table in docs/SOUND_AUDIT.md. Nothing goes above CEILING_DB.
+HOUSE_MAX = {"weapon": -11.0, "handling": -16.0, "confirm": -16.0, "impact": -13.0, "kill_effect": -17.0,
+             "enemy_voice": -16.0, "enemy_attack": -11.0, "enemy_telegraph": -11.0, "enemy_special": -11.0,
+             "cue": -10.0, "player": -17.0, "ui": -14.0, "ambience": -16.0, "music": -26.0, "ambience_bed": -31.0}
+CEILING_DB = -9.0
 # Families allowed more low end by design (thumps, bosses, music, beds).
 LOW_OK = ("enemy_attack", "enemy_special", "music", "ambience", "ambience_bed")
 # Families allowed a bright, tonal character (UI blips, pings, chimes).
@@ -228,6 +234,9 @@ def flag(rows):
         d = r["eff"] - med[fam]["eff"]
         if d > t["loud_db"]:
             f.append("loud+%.0f" % d)
+        top = HOUSE_MAX.get(fam, CEILING_DB)
+        if r["eff"] > CEILING_DB + 0.25 or r["eff"] > top + 0.5:
+            f.append("over band %.0f" % min(top, CEILING_DB))
         if d < -t["quiet_db"]:
             f.append("quiet%.0f" % d)
         if r["hf8"] > t["hf8_pct"]:

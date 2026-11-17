@@ -25,7 +25,8 @@ draws a log-frequency spectrogram (30 Hz - 18 kHz, -80..0 dBFS, guides at 100 Hz
 10 kHz) of every file, tiled per family, each tile labelled with its length and `eff`;
 flagged sounds have a red label. A family is the sound's mix category.
 
-Flags: louder than the family median by > 5 dB or quieter by > 8 dB; > 6 % above
+Flags: above its family's house ceiling (`HOUSE_MAX`, the top of the bands below) or
+above -9 ("over band"); louder than the family median by > 5 dB or quieter by > 8 dB; > 6 % above
 8 kHz or > 30 % above 4 kHz; a narrow tone above 1.2 kHz holding > 25 % of the energy
 (not counted for UI, confirm, cue and kill-effect chimes); > 35 % below 80 Hz (not
 counted for thumps, bosses, music and beds); a click > 5 % of the peak; DC; clipping;
