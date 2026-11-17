@@ -28,11 +28,13 @@ const FRICTION := 1.6
 const STOP_SPEED := 2.5
 ## Speed (m/s) at which it leaves the chamber downwards (it drops, not lobs).
 const DROP_SPEED := 3.5
-## A landing faster than this (m/s down) hops once.
+## A landing faster than this (m/s down) hops once; the first one thuds,
+## bowling over every zombie within LAND_RADIUS (m) of it.
 const HOP_SPEED := 4.0
+const LAND_RADIUS := 1.3
 ## Reach (m) beyond a zombie's capsule at which the ball bowls it over.
 const REACH := 0.15
-const PIN_FALLOFF := 0.92
+const PIN_FALLOFF := 0.95
 ## Speed kept after bowling over a light zombie, after a heavy, and off a wall.
 const PIN_DRAG := 0.9
 const HEAVY_DRAG := 0.55
@@ -40,7 +42,7 @@ const WALL_KEEP := 0.75
 ## Zombies this heavy or heavier only stagger.
 const HEAVY_MASS := 2.5
 ## Damage multiplier on heavies and bosses (the whole ball's weight lands).
-const BIG_SCALE := 1.35
+const BIG_SCALE := 1.5
 ## A boss sends the ball back at this share of its speed.
 const BOSS_REBOUND := 0.3
 ## Sideways scatter (m/s) given to a bowled-over light zombie, before its mass.
@@ -80,6 +82,7 @@ var _sink_from := Vector3.ZERO
 var _hum: AudioStreamPlayer3D
 var _exclude: Array[RID] = []
 var _strike := false
+var _thudded := false
 ## The way it last rolled (flat), for the gutter.
 var _heading := Vector3.FORWARD
 
@@ -226,9 +229,22 @@ func _follow_slope(normal: Vector3, delta: float) -> void:
 		_heading = velocity / speed
 
 
+## The first hard landing thuds: it bowls over every zombie within LAND_RADIUS.
 func _land(at: Vector3, impact: float) -> void:
 	Sfx.play_at(&"sz_thud", at, -2.0, randf_range(0.92, 1.05))
-	WeaponFx.burst(get_parent(), at + Vector3.DOWN * weapon.projectile_size, Vector3.UP, PIN_SPARKS, 6, 2.0 + impact * 0.2, 0.25, 0.03)
+	var floor_at := at + Vector3.DOWN * weapon.projectile_size
+	WeaponFx.burst(get_parent(), floor_at, Vector3.UP, PIN_SPARKS, 6, 2.0 + impact * 0.2, 0.25, 0.03)
+	if _thudded:
+		return
+	_thudded = true
+	WeaponFx.shockwave(get_parent(), at, weapon.tracer_color, LAND_RADIUS)
+	for node in get_tree().get_nodes_in_group("zombies"):
+		var z := node as Zombie
+		if z == null or z.is_dead() or _struck.has(z.get_instance_id()):
+			continue
+		var flat := Vector2(z.global_position.x - at.x, z.global_position.z - at.z).length()
+		if flat <= LAND_RADIUS + z.data.capsule_radius * z.data.body_scale and absf(z.global_position.y - floor_at.y) < 1.0:
+			_bowl(z, at)
 
 
 ## Off the first wall it bounces; the second one stops it for the gutter.

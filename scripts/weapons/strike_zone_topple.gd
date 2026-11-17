@@ -13,7 +13,7 @@ extends Node3D
 
 const NODE_NAME := "StrikeTopple"
 const FALL_TIME := 0.28
-const LIE_TIME := 0.75
+const LIE_TIME := 1.0
 const RISE_TIME := 0.45
 const IMMUNE_TIME := 1.2
 ## How far it tips (degrees): nearly flat on its back.
