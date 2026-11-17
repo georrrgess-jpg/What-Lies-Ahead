@@ -36,17 +36,17 @@ TUNING = {
     "rounds_boss_defeat": dict(_DEEP_PUNCH, pitch=_FOURTH),    # (a fourth keeps the fanfare on the A440 grid)
     "rounds_boss_roar": _PUNCH,
     "rounds_boss_charge": _PUNCH,
-    "rounds_boss_stone": _PUNCH,
+    "rounds_boss_stone": dict(_PUNCH, pitch=_FOURTH),
     "rounds_boss_geyser": _PUNCH,
     "rounds_surge_hit": dict(_PUNCH, pitch=_FOURTH),
     "rounds_wave_siege": _PUNCH,
-    "lava_eruption_rumble": _DEEP_PUNCH,
+    "lava_eruption_rumble": dict(_DEEP_PUNCH, pitch=1.6),        # a 56 Hz drone -> 90 Hz
     "end_trap_fire": _PUNCH,
-    "end_supply_land": _PUNCH,
+    "end_supply_land": dict(_PUNCH, pitch=_FOURTH),
     "end_boss_siren": {"hp": 70.0},
     "cz_wrecker_engine": {"hp": 50.0, "pitch": 1.25},
-    "cz_wrecker_charge": _PUNCH,
-    "move_land_heavy": _PUNCH,
+    "cz_wrecker_charge": dict(_PUNCH, pitch=_FOURTH),
+    "move_land_heavy": dict(_PUNCH, pitch=_FOURTH),
     "city_blast_far": _DEEP_PUNCH,
     "city_buzz_loop": {"pitch": 2.0},                       # a 54 Hz drone -> a 108 Hz mains buzz
     "heartbeat": {"pitch": 1.35, "drive": 2.0, "hp": 45.0, "bells": ((150.0, 4.0, 0.8),)},

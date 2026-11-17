@@ -359,7 +359,7 @@ sound_trim_db = Dictionary[StringName, float]({
 &"end_trap_shock": 0.5,
 &"cz_wrecker_debris": -5.0,
 &"cz_wrecker_engine": -2.0,
-&"cz_wrecker_charge": -5.0,
+&"cz_wrecker_charge": -6.0,
 &"cz_firebug_light": 3.0,
 &"city_alarm_loop": -6.0,
 &"city_buzz_loop": -7.0,
@@ -403,5 +403,6 @@ sound_trim_db = Dictionary[StringName, float]({
 &"ui_hover": 3.5,
 &"ui_tick": 7.0,
 &"prog_xp_tick": 4.0,
-&"city_sparks_loop": 3.0
+&"city_sparks_loop": 3.0,
+&"lava_eruption_rumble": -3.0
 })

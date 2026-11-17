@@ -158,21 +158,24 @@ def collect(only=(), family=None):
     sites = amr.call_sites(names)
     pack_of = packs()
     rows = {}
+    known = set(names)
     for path, name in zip(sfx, names):
         if only and not name.startswith(tuple(only)):
             continue
-        fam = family_of(name, mix)
+        # A take (name_b, name_c) is played, mixed and judged as its base sound.
+        base = re.sub(r"_[bc]$", "", name)
+        base = base if base != name and base in known else name
+        fam = family_of(base, mix)
         if family and fam != family:
             continue
         loop = name in loops
         m = measure(path, loop)
-        base = re.sub(r"_[bc]$", "", name) if name not in sites else name
         e = amr.effective(base, m, sites, mix, busses)
         if e is None:   # no call site found: the mix gain at volume 0, non-positional
             g = mix.gain_db(base) + busses.get(mix.bus_of(base), 0.0)
             e = {"effK": m["k100"] + g, "mix": mix.gain_db(base), "call": None, "where": ""}
         m.update(name=name, kind="sfx", family=fam, loop=loop, eff=e["effK"] if not loop else m["lufs"] + e["effK"] - m["k100"],
-                 mix=e["mix"], call=e["call"], where=e["where"], path=path, pack=pack_of.get(re.sub(r"_[bc]$", "", name), "core"),
+                 mix=e["mix"], call=e["call"], where=e["where"], path=path, pack=pack_of.get(base, "core"),
                  owner=owner_of(name, pack_of))
         rows[name] = m
     for track, lvl, bus in music_levels(mix, busses):
