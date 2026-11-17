@@ -119,6 +119,8 @@ var _pools := {}
 var _roofs: Array = []
 ## Merged dressing meshes by name.
 var _meshes := {}
+## The gates' blocker boxes (baked thin, then given their real depth).
+var _blockers: Array[BoxShape3D] = []
 
 
 func _initialize() -> void:
@@ -166,7 +168,9 @@ func _initialize() -> void:
 
 	get_root().add_child(level)
 	await process_frame
+	preload("res://tools/city/city_clutter.gd").prepare(self)
 	_bake_navigation(nav)
+	preload("res://tools/city/city_clutter.gd").pass_through(self)
 	get_root().remove_child(level)
 	_compound_static()
 
@@ -1367,7 +1371,8 @@ func _gate(parent: Node3D, gate_name: String, g: Array) -> void:
 	var bs := CollisionShape3D.new()
 	bs.name = "CollisionShape3D"
 	var bbox := BoxShape3D.new()
-	bbox.size = Vector3(width, height + 2.0, 0.8)
+	bbox.size = Vector3(width, height + 2.0, BLOCKER_BAKE_DEPTH)
+	_blockers.append(bbox)
 	bs.shape = bbox
 	bs.position.y = (height + 2.0) * 0.5 - 1.0
 	blocker.add_child(bs)
@@ -1391,10 +1396,11 @@ func _gate(parent: Node3D, gate_name: String, g: Array) -> void:
 		var link := NavigationLink3D.new()
 		link.name = "NavLink" if k == 0 else "NavLink%d" % (k + 1)
 		var lx := (float(k) / (links - 1) - 0.5) * (width - 2.4)
-		var y_neg: float = g[6] - pos.y
-		var y_pos: float = g[7] - pos.y
-		link.start_position = Vector3(lx, y_neg, -2.2)
-		link.end_position = Vector3(lx, y_pos, 2.2)
+		# Ends in the gap the shut gate cut in the navmesh (see LINK_REACH).
+		var y_neg: float = (g[6] - pos.y) * LINK_REACH / 2.2
+		var y_pos: float = (g[7] - pos.y) * LINK_REACH / 2.2
+		link.start_position = Vector3(lx, y_neg, -LINK_REACH)
+		link.end_position = Vector3(lx, y_pos, LINK_REACH)
 		link.bidirectional = true
 		link.enabled = false
 		gate.add_child(link)
@@ -1405,6 +1411,19 @@ func _fit_width(node: Node3D, model: String, width: float) -> void:
 	var aabb := _model_aabb(model)
 	if aabb.size.x > 0.1:
 		node.scale = Vector3.ONE * (width / aabb.size.x)
+
+
+## A shut gate's blocker is this deep (m) in play, but baked this thin: the
+## gap it leaves in the navmesh (its depth and the bake's agent radius each
+## side) is then 1.55 m, so a zombie anywhere in an open gateway is less
+## than its path_desired_distance (0.8 m) from the nearer edge. Baked at
+## full depth (a 2.3 m gap), a zombie repathing in the gateway was sent
+## back to the near edge, every repath, and paced there.
+const BLOCKER_DEPTH := 0.8
+const BLOCKER_BAKE_DEPTH := 0.05
+## A gate's nav links reach this far (m) each side of the threshold: in the
+## gap, so the path enters and leaves them at the navmesh's edges.
+const LINK_REACH := 0.6
 
 
 # ---------------------------------------------------------------------------
@@ -2965,6 +2984,8 @@ func _bake_navigation(region: NavigationRegion3D) -> void:
 	var seeds: Array[Vector3] = _spawn_points.duplicate()
 	seeds.append(STATION + Vector3(0, 0, 9.5))
 	region.navigation_mesh = _keep_islands(mesh, seeds)
+	for box in _blockers:
+		box.size.z = BLOCKER_DEPTH
 	print("build_endless_city: navmesh polygons = %d (dropped %d on junk islands)" % [region.navigation_mesh.get_polygon_count(),
 		before - region.navigation_mesh.get_polygon_count()])
 
