@@ -10,7 +10,8 @@ extends SceneTree
 ##   --mode=fp        first person: hip, aiming, sprinting and a side view of both hands
 ##   --mode=hands     close-ups of the hands on the weapon: player's eye, left, right, below
 ##                    (--view=0..3 renders just one of them, full size)
-##   --mode=reload    first person at six moments of the reload (--times=0.15,0.3,...)
+##   --mode=reload    first person at six moments of the reload (--times=0.15,0.3,...,
+##                    --tile=640x540 for bigger tiles, --cols=2)
 ##   --mode=charm     first person while the weapon is shaken, to stress the charm (--charm=<id>)
 ##   --weapons=a,b    weapon ids (default: all)
 ##   --finish=<id> --charm=<id> --decal=<id> --arms=<id>   cosmetics to wear (item ids)
@@ -283,10 +284,11 @@ func _sheet_hands(w) -> void:
 
 
 func _sheet_reload(w) -> void:
-	_grid.columns = 3
+	_grid.columns = int(opts.get("cols", "3"))
 	var times := String(opts.get("times", "0.16,0.3,0.44,0.58,0.72,0.88")).split(",")
+	var tile := String(opts.get("tile", "320x270")).split("x")
 	for t in times:
-		var rig := _fp_rig(w, Vector2i(320, 270))
+		var rig := _fp_rig(w, Vector2i(int(tile[0]), int(tile[1])))
 		var view = rig.view
 		view.play_reload(w, 1.0)
 		var tween: Tween = view._reload_tween
