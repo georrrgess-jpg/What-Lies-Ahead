@@ -836,8 +836,9 @@ func _metro_dressing(parent: Node3D) -> void:
 			ad.add_to_group("city_neon_flicker", true)
 		k += 1
 	var bench := _mat("bench", Color(0.5, 0.3, 0.18), 0.6)
-	for x in [-9.0, 1.0, 23.0]:
-		_bench(parent, "Bench%d" % int(x), Vector3(x, METRO_Y, -28.7), 180.0)
+	# Against the wall between the openings, facing the trains.
+	for x in [-6.5, 11.0, 27.5]:
+		_bench(parent, "Bench%d" % int(x), Vector3(x, METRO_Y, -28.7), 0.0)
 	# Line signs over the platform edge, hanging from the ceiling.
 	for x in [-6.0, 22.0]:
 		_visual_box(dressing, "LineSign%d" % int(x), Vector3(3.4, 0.7, 0.12), Vector3(x, HALL_CEILING - 1.2, -37.0), board)
@@ -2472,9 +2473,9 @@ func _build_story() -> void:
 		_poster("StreetPoster%db" % n, w[0] + Vector3(-w[1].z, 0.3, w[1].x) * 1.1, w[1], n * 3 + 2)
 		n += 1
 	_graffiti("EVAC >", Vector3(-25.5, 2.4, 4.0), Vector3(0, 0, -1), Color(0.4, 1.0, 0.6), 96)
-	_graffiti("NO WAY OUT", Vector3(4.9, 2.5, 30.0), Vector3(1, 0, 0), Color(1.0, 0.35, 0.2), 80)
-	_graffiti("STAY INSIDE", Vector3(87.0, 3.0, -8.0), Vector3(0, 0, 1), Color(0.3, 0.95, 1.0), 72)
-	_graffiti("ON AIR", Vector3(93.95, 3.6, -48.0), Vector3(-1, 0, 0), Color(1.0, 0.2, 0.2), 90)
+	_graffiti("NO WAY OUT", Vector3(4.95, 2.5, 30.0), Vector3(-1, 0, 0), Color(1.0, 0.35, 0.2), 80)
+	_graffiti("STAY INSIDE", Vector3(92.0, 3.0, -8.0), Vector3(0, 0, 1), Color(0.3, 0.95, 1.0), 72)
+	_graffiti("ON AIR", Vector3(93.95, 3.6, -58.0), Vector3(-1, 0, 0), Color(1.0, 0.2, 0.2), 90)
 	# Cars that ran into storefronts, nose first, still burning.
 	# Cars run into the walls at the far ends of the alleys (behind the
 	# zombies' entrances: seen from the street, never in anyone's way).
@@ -2504,6 +2505,7 @@ func _build_story() -> void:
 			var sc := _rng.randf_range(1.0, 3.2)
 			var p := Vector3(float(x) + _rng.randf_range(-1.0, 1.0), 0.05, -71.4 + _rng.randf_range(0.0, 1.4))
 			_instance("chunk", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled_local(Vector3(sc, sc, sc)), p), Color(shade, shade * 0.95, shade * 0.9))
+	preload("res://tools/city/city_streets.gd").new(self).build()
 
 
 ## The kit's torn billboard on a roof, facing `yaw`, with a lamp on it.
