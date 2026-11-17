@@ -26,11 +26,21 @@ import zlib
 
 import numpy as np
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sound_tuning  # noqa: E402
+
 SR = 44100
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "audio")
 SFX = os.path.join(ROOT, "sfx")
 MUSIC = os.path.join(ROOT, "music")
 rng = np.random.default_rng(42)
+# Names to write (--only / --tuned); None writes everything. Sounds are still
+# generated in order, so the random streams of the others never shift.
+ONLY = None
+
+
+def wanted(name):
+    return ONLY is None or re.sub(r"_[bc]$", "", name) in ONLY or name in ONLY
 
 
 # ---------------------------------------------------------------------------
@@ -145,8 +155,10 @@ def crush(x, drive=2.0):
 
 
 def write_wav(name, x, peak=0.85):
-    x = norm(fade(np.asarray(x, dtype=np.float64)), peak)
     path = os.path.join(SFX, name + ".wav")
+    if not wanted(name):
+        return path
+    x = norm(fade(sound_tuning.apply(name, np.asarray(x, dtype=np.float64))), peak)
     with wave.open(path, "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
@@ -302,6 +314,7 @@ def write_music(name, stereo):
     """Masters and writes a loop at full quality (builds ship as GitHub
     Releases, so there is no size budget): names ending in _ambience are
     stereo beds at Vorbis q5, everything else q6."""
+    stereo = sound_tuning.apply(name, stereo, loop=True)
     if name.endswith("_ambience"):
         return write_ogg(name, master(stereo, BED_LUFS, BED_EQ), peak=None, quality=AMBIENCE_Q)
     final = name.endswith("_final")
@@ -1225,7 +1238,9 @@ VARIANTS = [
 
 def write_loop_wav(name, mono, peak=0.7):
     """A mono loop written without fades (so it loops cleanly)."""
-    x = norm(np.asarray(mono, dtype=np.float64), peak)
+    if not wanted(name):
+        return
+    x = norm(sound_tuning.apply(name, np.asarray(mono, dtype=np.float64), loop=True), peak)
     with wave.open(os.path.join(SFX, name + ".wav"), "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
@@ -1250,7 +1265,8 @@ def run_core(music_only=False):
                 write_wav(fn.__name__ + suffix, _variant(fn, pitch, seed))
         write_loop_wav("portal_hum", portal_hum())
     for name, fn in CORE_MUSIC.items():
-        write_music(name, render_music(name, fn, sys.modules[__name__]))
+        if wanted(name):
+            write_music(name, render_music(name, fn, sys.modules[__name__]))
     print("core: %s%s" % ("" if music_only else "%d sfx + portal_hum, " % len(SFX_SOUNDS), ", ".join(CORE_MUSIC)))
 
 
@@ -1292,7 +1308,8 @@ def run_pack(name, music_only=False):
         for loop_name, fn in own("LOOPS", {}).items():
             write_loop_wav(loop_name, fn())
     for music_name, fn in own("MUSIC", {}).items():
-        write_music(music_name, core.render_music(music_name, fn, core, mod))
+        if wanted(music_name):
+            write_music(music_name, core.render_music(music_name, fn, core, mod))
     print("pack %s: %d sfx, %d loops, %d music" % (name, count, len(own("LOOPS", {})), len(own("MUSIC", {}))))
 
 
@@ -1300,7 +1317,15 @@ def main():
     """python tools/gen_audio.py            -> core sounds + every pack
        python tools/gen_audio.py core       -> only the core sounds
        python tools/gen_audio.py neon_city  -> only tools/audio_packs/neon_city.py
-       --music                              -> only the music and ambience loops"""
+       --music                              -> only the music and ambience loops
+       --only=a,b                           -> write only these sounds (and their _b/_c takes)
+       --tuned                              -> write only the sounds tools/sound_tuning.py tunes"""
+    global ONLY
+    for arg in sys.argv[1:]:
+        if arg.startswith("--only="):
+            ONLY = set(arg[7:].split(","))
+        elif arg == "--tuned":
+            ONLY = set(sound_tuning.TUNING)
     os.makedirs(SFX, exist_ok=True)
     os.makedirs(MUSIC, exist_ok=True)
     wanted = [a for a in sys.argv[1:] if not a.startswith("-")]
