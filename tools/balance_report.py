@@ -21,7 +21,7 @@ Tank's soak multiplies its own hits (scripts/weapons/soak.gd), the Road Rager's 
 (scripts/weapons/hubcap_shot.gd) hits its target on the way out and back, is paced by its
 round trips (catches refill it, so it never reloads or runs dry) and slices through the
 whole pack, a pile-up hitting harder; the Popcorn Popper climbs its heat stages
-(scripts/weapons/modes/popcorn_popper_mode.gd) from cold each magazine and pulses the trigger
+(scripts/weapons/modes/popcorn_popper_mode.gd) from warm each magazine and pulses the trigger
 to stay hot, its warm puffs and hot butter bursts splashing the pack; the Lava Lampoon fires its warm-up groove's slower shots
 first and its target burns in the lava puddle under it (the pack walks through it); the Markdown
 Marker's tags (scripts/weapons/markdown_marker_tags.gd) mark the target down per tag, a full stack
@@ -327,7 +327,7 @@ def pull_damage(w, e, d, head):
 		cycle = lava_cycle(w)
 		return w["damage"] * scale * head_mix + LAVA_PUDDLE["BURN_DPS"] * cycle, cycle
 	if w["id"] == "popcorn_popper":
-		# Kernels hit like ray shots; a magazine climbs cold and warm, then pulses hot.
+		# Kernels hit like ray shots; a magazine climbs from warm, then pulses hot.
 		return w["damage"] * scale * head_mix, popcorn_cycle(w)[0]
 	if w["projectile_speed"] > 0.0:
 		dmg = w["damage"] + w["direct_hit_bonus"]
@@ -348,15 +348,14 @@ def lava_cycle(w):
 
 
 def popcorn_cycle(w):
-	"""Popcorn Popper over one magazine from a cold kettle, pulsed to stay under the jam:
+	"""Popcorn Popper over one magazine (the kettle keeps warm through reloads), pulsed to stay under the jam:
 	(average seconds per shot, share of warm shots, share of hot shots)."""
 	m = POPCORN_MODE
 	per = m["HEAT_PER_SHOT"]
-	cold = m["WARM_AT"] / per
 	warm = (m["HOT_AT"] - m["WARM_AT"]) / per
-	hot = max(0.0, w["magazine_size"] - cold - warm)
+	hot = max(0.0, w["magazine_size"] - warm)
 	rest = per / m["COOL_RATE"]
-	time = cold * m["COLD_INTERVAL"] + warm * m["WARM_INTERVAL"] + hot * (w["fire_interval"] + rest)
+	time = warm * m["WARM_INTERVAL"] + hot * (w["fire_interval"] + rest)
 	return time / w["magazine_size"], warm / w["magazine_size"], hot / w["magazine_size"]
 
 

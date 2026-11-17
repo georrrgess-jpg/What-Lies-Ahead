@@ -11,7 +11,8 @@ extends WeaponMode
 ##   hot    (HOT_AT and up) big buttered popcorn at the fastest rate that
 ##          bursts wide and butters (slows) what it splashes
 ## A shot that takes the heat to 1 jams the kettle: nothing fires for
-## JAM_TIME while the lid rattles and it vents down to JAM_VENT_TO. Held
+## JAM_TIME while the lid rattles and it vents down to JAM_VENT_TO. A
+## reload never cools it below WARM_AT (the kettle keeps warm). Held
 ## down, the gun runs cold, warm, hot and jams; pulsed in short bursts it
 ## stays hot. The view (scripts/weapons/views/popcorn_popper_view.gd) reads
 ## `heat`, `stage()` and `jam`; PopcornHeatHud draws the gauge round the
@@ -83,7 +84,9 @@ func trigger(spinning: bool, delta: float) -> bool:
 	else:
 		_rest += delta
 		if _rest >= COOL_DELAY:
-			heat = maxf(0.0, heat - COOL_RATE * delta)
+			# The kettle keeps warm while it is refilled.
+			var floor_heat := minf(heat, WARM_AT) if controller.is_reloading() else 0.0
+			heat = maxf(floor_heat, heat - COOL_RATE * delta)
 	return _since >= _interval() - 0.001
 
 
