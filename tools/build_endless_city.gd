@@ -1534,14 +1534,6 @@ func _build_skyline() -> void:
 	var back := Node3D.new()
 	back.name = "Skyline"
 	dressing.add_child(back)
-	var m := ShaderMaterial.new()
-	m.shader = load(SHADERS + "city_sky_skyline.gdshader")
-	m.set_shader_parameter("far_fade", 1.0)
-	m.set_shader_parameter("window_size", Vector2(4.0, 4.4))
-	m.set_shader_parameter("wall_color", Color(0.3, 0.24, 0.26))
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3.ONE
-	mesh.material = m
 	var xforms: Array[Transform3D] = []
 	var centre := Vector3(10.0, 0, -24.0)
 	for ring in 3:
@@ -1557,10 +1549,9 @@ func _build_skyline() -> void:
 			var pos := centre + Vector3(cos(a) * r, h * 0.5 - 2.0, sin(a) * r)
 			var basis := Basis(Vector3.UP, -a + _rng.randf_range(-0.2, 0.2)).scaled(Vector3(w, h, _rng.randf_range(12.0, 26.0)))
 			xforms.append(Transform3D(basis, pos))
-	var mmi := _multimesh("Towers", mesh, xforms)
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	back.add_to_group("city_surface", true)
-	back.add_child(mmi)
+	# The towers dressed as one city, the outer blocks, landmarks (tools/city/city_skyline.gd).
+	preload("res://tools/city/city_skyline.gd").new(self, back).build(xforms)
 	# The ground out to the horizon round the city's footprint (the districts
 	# have their own floors; the stairwells must stay open), and a dark floor
 	# deep under everything.
