@@ -38,13 +38,13 @@ void fragment() {
 	float spot = (1.0 - smoothstep(0.05, 0.45, abs(f.x - 0.5))) * mix(1.0, 0.4, f.y);
 	vec3 glow = ember * 0.25;
 	if (h < lit_fraction) {
-		glow = lamp * (0.12 + 0.18 * hash(id + 3.1)) * spot;
+		glow = lamp * (0.22 + 0.28 * hash(id + 3.1)) * spot;
 	} else if (h < lit_fraction + tv_fraction) {
 		float flick = 0.6 + 0.4 * step(0.5, fract(sin(floor(TIME * 7.0 + h * 40.0)) * 91.7));
-		glow = screen * 0.25 * flick * spot;
+		glow = screen * 0.4 * flick * spot;
 	} else if (h > 1.0 - fire_fraction) {
 		float flame = 0.75 + 0.25 * sin(TIME * 9.0 + h * 60.0) * sin(TIME * 3.3 + h * 17.0);
-		glow = fire * 0.6 * flame * (1.0 - smoothstep(0.0, 0.9, f.y)) * (0.4 + 0.6 * spot);
+		glow = fire * 0.9 * flame * (1.0 - smoothstep(0.0, 0.9, f.y)) * (0.4 + 0.6 * spot);
 	}
 	ALBEDO = plaster;
 	ROUGHNESS = 1.0;
