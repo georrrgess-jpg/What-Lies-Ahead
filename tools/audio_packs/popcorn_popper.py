@@ -12,6 +12,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
+from weapon_punch import FAST, HIT, punched
 
 
 def _pop(pitch=1.0, gain=1.0):
@@ -47,6 +48,7 @@ def _grains(d, density, gain=1.0, seed=4):
     return out * gain
 
 
+@punched(FAST)
 def pcp_fire():
     """A kernel blown out of the horn: a round pomp, a thump and a crack."""
     d = 0.22
@@ -57,11 +59,13 @@ def pcp_fire():
     return crush(filt(out, low=8500), 1.5)
 
 
+@punched(HIT, room_gain=0.0, thump_gain=0.2)
 def pcp_pop():
     """A kernel popping in flight."""
     return filt(_pop(1.0, 1.0), low=9000)
 
 
+@punched(HIT, thump_gain=0.25)
 def pcp_puff():
     """A warm kernel lands: a soft popcorn puff with a little crackle."""
     d = 0.3
@@ -71,6 +75,7 @@ def pcp_puff():
     return filt(out, low=8000)
 
 
+@punched(HIT, thump_gain=0.45)
 def pcp_butter():
     """A hot burst: a fat wet splat, a whoomph and a buttery sizzle."""
     d = 0.5

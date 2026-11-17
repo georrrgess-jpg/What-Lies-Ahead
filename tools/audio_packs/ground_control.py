@@ -10,6 +10,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
+from weapon_punch import CUE, HEAVY, HIT, MID, punched
 
 
 def _ping(freq, d, gain=1.0, decay=1.6):
@@ -24,6 +25,7 @@ def _whoomp(d, f0, f1, gain=1.0):
     return (_sub_thump(f0, f1, d, d * 0.45) * 1.2 + rush) * gain
 
 
+@punched(MID)
 def gc_fire():
     """A ping: the dish thumps and a bright sonar note rings away."""
     d = 0.55
@@ -34,6 +36,7 @@ def gc_fire():
     return filt(out, low=7500)
 
 
+@punched(HEAVY)
 def gc_fire_big():
     """The full charge on top of the ping: a deep, wide sonar boom."""
     d = 0.9
@@ -67,6 +70,7 @@ def gc_charge():
     return filt(whine * pulse * env(d, 0.04, d, power=0.5, release=0.04), low=5000)
 
 
+@punched(CUE)
 def gc_ready():
     """Full charge: a two-note lock-on chirp."""
     out = silence(0.25)
@@ -100,6 +104,7 @@ def gc_stall():
     return filt(out, low=7000)
 
 
+@punched(HIT, thump_gain=0.2)
 def gc_bounce():
     """A ring echoing off a wall: a glassy reflected ping with a tail."""
     d = 0.5
@@ -108,6 +113,7 @@ def gc_bounce():
     return filt(out, low=6500)
 
 
+@punched(HIT)
 def gc_strike():
     """A ring passing through a zombie: a soft thud and a blip."""
     d = 0.22

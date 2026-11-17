@@ -1,6 +1,6 @@
 """Shared "epic" layering for the primary weapons' sounds (update 14).
 
-`punch(x, ...)` takes a weapon sound as its generator renders it and wraps it
+`punch(x, ...)` (or the `@punched(...)` decorator) takes a weapon sound as its generator renders it and wraps it
 in the house weapon recipe:
 
     transient  a 1-4 ms band-limited snap (the trigger break)
@@ -13,6 +13,7 @@ in the house weapon recipe:
 Everything here draws from its own seeded generator, never from gen_audio's
 `rng`, so wrapping a pack's sound does not re-roll the sounds after it.
 """
+import functools
 import zlib
 
 import numpy as np
@@ -87,3 +88,29 @@ def punch(x, *, snap_gain=0.35, snap_hz=3200.0, snap_ms=3.0,
     pad = int(SR * 0.1)                 # FFT filters ring both ways: keep that ringing out of the sound
     out = _shelf(filt(np.concatenate([out, np.zeros(pad)]), low=low, high=35.0), shelf_hz, shelf_db)[:len(out)]
     return np.tanh(out * drive) / np.tanh(drive)
+
+
+# Presets: how much of each layer a kind of sound gets.
+FAST = dict(snap_gain=0.2, snap_ms=1.5, thump_gain=0.35, thump_hz=(150.0, 65.0), thump_decay=0.03, duck=0.15,
+            slap=(0.021,), slap_gain=0.09, room_gain=0.0, shelf_db=-4.0)            # autos, 8+ shots a second
+MID = dict(snap_gain=0.3, thump_gain=0.45, thump_hz=(140.0, 55.0), thump_decay=0.06, duck=0.25,
+           slap=(0.03,), slap_gain=0.13, room_gain=0.1, room_s=0.18)                # 2-5 shots a second
+HEAVY = dict(snap_gain=0.35, snap_ms=4.0, thump_gain=0.4, thump_hz=(105.0, 40.0), thump_decay=0.12, duck=0.3,
+             slap=(0.045, 0.09), slap_gain=0.18, room_gain=0.16, room_s=0.35)       # big single shots and blasts
+HIT = dict(snap_gain=0.15, thump_gain=0.35, thump_hz=(150.0, 60.0), thump_decay=0.05, duck=0.15,
+           slap=(0.028,), slap_gain=0.1, room_gain=0.1, room_s=0.2)                 # the weapon's own impacts
+CUE = dict(snap_gain=0.0, thump_gain=0.2, thump_hz=(180.0, 90.0), thump_decay=0.04, duck=0.0,
+           slap=(0.03,), slap_gain=0.1, room_gain=0.14, room_s=0.28, shelf_hz=4500.0, shelf_db=-4.0)  # ready/lock cues
+
+
+def punched(preset=None, **kw):
+    """Decorator form of punch(): `@punched(HEAVY, thump_gain=0.5)` over a
+    sound function wraps what it returns and keeps its name (the file name)."""
+    args = dict(preset or {}, **kw)
+
+    def wrap(fn):
+        @functools.wraps(fn)
+        def inner():
+            return punch(fn(), seed=fn.__name__, **args)
+        return inner
+    return wrap

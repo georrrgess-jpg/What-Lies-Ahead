@@ -11,6 +11,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
+from weapon_punch import CUE, HEAVY, HIT, punched
 
 
 def _rumble(d, f=70.0, gain=1.0):
@@ -46,6 +47,7 @@ def _ding(freq, d=0.35, gain=1.0):
     return (tone(freq, d, "tri") + tone(freq * 2, d) * 0.25) * env(d, 0.002, d, power=1.8) * gain
 
 
+@punched(HEAVY, thump_hz=(95.0, 38.0))
 def sz_fire():
     """The roll: the kicker thwacks, the ball drops out of the chamber and rumbles off."""
     d = 0.6
@@ -68,6 +70,7 @@ def sz_charge():
     return filt(out, low=5000)
 
 
+@punched(CUE)
 def sz_ready():
     """Fully wound: the lane lights ding twice."""
     out = silence(0.45)
@@ -82,6 +85,7 @@ def sz_roll_loop():
     return loopable(filt(_rumble(d + 0.1, 66.0), low=2600), 0.1)
 
 
+@punched(HIT)
 def sz_thud():
     """The ball lands on the floor: a deep thud and a wooden knock."""
     d = 0.35
@@ -90,6 +94,7 @@ def sz_thud():
     return crush(filt(out, low=3500), 1.4)
 
 
+@punched(HIT)
 def sz_pin():
     """Bowling a zombie over: a hollow pin knock and a little clatter."""
     d = 0.35
@@ -99,6 +104,7 @@ def sz_pin():
     return crush(filt(out, low=6000), 1.3)
 
 
+@punched(HEAVY)
 def sz_strike():
     """STRIKE: a big crash of pins and an arcade fanfare rising over it."""
     d = 1.3
@@ -110,6 +116,7 @@ def sz_strike():
     return filt(out, low=7500)
 
 
+@punched(HIT)
 def sz_bonk():
     """Off a wall: a heavy, hollow bonk."""
     d = 0.4

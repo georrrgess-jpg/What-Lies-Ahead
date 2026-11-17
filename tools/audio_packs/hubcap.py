@@ -11,6 +11,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
+from weapon_punch import CUE, HIT, MID, punched
 
 
 def _whoosh(d, f0=500, f1=1600, gain=1.0):
@@ -37,6 +38,7 @@ def _squeal(f0, f1, d, gain=1.0):
     return (body * 0.7 + hiss) * env(d, 0.01, d, power=1.1, release=0.03) * gain
 
 
+@punched(MID, thump_hz=(160.0, 60.0))
 def hub_throw():
     """The throw: the tyres bite with a chirp, a sprung thunk, the disc whips away."""
     d = 0.5
@@ -50,6 +52,7 @@ def hub_throw():
     return crush(filt(out, low=6500), 1.25)
 
 
+@punched(HIT)
 def hub_strike():
     """The hubcap slicing through a zombie: a bright clank and a meaty chop."""
     d = 0.3
@@ -58,6 +61,7 @@ def hub_strike():
     return crush(filt(_clang(880, d, 0.45, decay=3.0) + chop + thump, low=6500), 1.3)
 
 
+@punched(HIT, shelf_db=-3.0)
 def hub_clang():
     """Off a wall: a big hollow clang with a scrape."""
     d = 0.45
@@ -65,6 +69,7 @@ def hub_clang():
     return filt(_clang(410, d, 0.8) + scrape, low=6000)
 
 
+@punched(CUE)
 def hub_catch():
     """Caught: the magnet clacks shut and the hubcap rings in its seat."""
     d = 0.4

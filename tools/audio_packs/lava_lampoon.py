@@ -11,6 +11,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
+from weapon_punch import CUE, FAST, HIT, punched
 
 
 def _bloop(f0, f1, d, gain=1.0):
@@ -39,6 +40,7 @@ def _chime(freqs, step, d, gain=1.0):
     return out * gain
 
 
+@punched(FAST, thump_hz=(130.0, 55.0))
 def weap_lava_fire():
     """A molten glob spat out: a fat bloop, a thump and a fizz off the muzzle."""
     d = 0.26
@@ -49,6 +51,7 @@ def weap_lava_fire():
     return crush(filt(out, low=7000), 1.4)
 
 
+@punched(HIT)
 def weap_lava_splat():
     """The glob lands: a wet splat and a hiss of sizzling lava."""
     d = 0.4
@@ -102,6 +105,7 @@ def weap_lava_glug():
     return filt(_bubbles(d, 6, 140, 260, 1.3), low=5000)
 
 
+@punched(CUE)
 def weap_lava_lock():
     """Twist-lock: a solid gold clunk, a ratchet click and a warm two-note chime."""
     d = 0.55
@@ -120,6 +124,7 @@ def weap_lava_ripple():
     return filt(out, low=9000)
 
 
+@punched(CUE)
 def weap_lava_groovy():
     """Active reload: a funky wah up (a saw through a rising band) and a bright chord."""
     d = 0.6

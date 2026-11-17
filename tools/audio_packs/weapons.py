@@ -245,7 +245,7 @@ def weap_rail_ready():
     out = silence(0.4)
     place(out, blip(note(31), 0.25, "sine", 0.22), 0.0, 0.7)
     place(out, blip(note(38), 0.25, "sine", 0.2), 0.05, 0.5)
-    place(out, blip(note(43), 0.3, "sine", 0.26), 0.1, 0.35)                        # the lock-in resolves up
+    place(out, blip(note(34), 0.3, "sine", 0.26), 0.1, 0.35)                        # the lock-in resolves up
     place(out, click(0.02, 4800), 0.0, 0.5)
     return punch(out, snap_gain=0.0, thump_gain=0.3, thump_hz=(170, 80), thump_decay=0.05, duck=0.0,
                  slap=(0.035,), slap_gain=0.12, room_gain=0.15, room_s=0.3, shelf_hz=4500, shelf_db=-4.0,

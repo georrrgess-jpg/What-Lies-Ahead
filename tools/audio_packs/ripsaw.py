@@ -9,6 +9,7 @@ import numpy as np
 
 from gen_audio import *  # noqa: F401,F403
 from gen_audio import _sub_thump
+from weapon_punch import HEAVY, HIT, punched
 
 
 def _engine(d, f0, f1, curve=1.0, grit=0.5):
@@ -48,6 +49,7 @@ def _bubbles(d, count, seed, lo=500, hi=1300):
 # Shotgun
 # ---------------------------------------------------------------------------
 
+@punched(HEAVY)
 def weap_ripsaw_fire():
     """A slime blast: deep thump, a wet splat and a gloopy tail."""
     d = 0.5
@@ -60,6 +62,7 @@ def weap_ripsaw_fire():
     return crush(filt(out, low=6500), 1.5)
 
 
+@punched(HIT)
 def weap_ripsaw_splat():
     """The slime splatting onto a zombie and the floor."""
     d = 0.28
@@ -89,6 +92,7 @@ def weap_ripsaw_rev():
     return filt(out, low=3000)
 
 
+@punched(HIT, room_gain=0.05)
 def weap_ripsaw_bite():
     """The chain biting in: a grinding rasp with a wet chew."""
     d = 0.34
