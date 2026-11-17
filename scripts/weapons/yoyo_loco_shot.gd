@@ -35,11 +35,11 @@ const HOME_DISTANCE := 0.5
 ## Extra reach (m) beyond a zombie's capsule at which a passing yo-yo still hits.
 const GRAZE := 0.12
 const SLEEP_TICK := 0.1
-const SLEEP_DPS_START := 85.0
-const SLEEP_DPS_TOP := 210.0
-const SLEEP_RAMP := 1.1
+const SLEEP_DPS_START := 110.0
+const SLEEP_DPS_TOP := 300.0
+const SLEEP_RAMP := 0.9
 const SLEEP_MAX := 3.0
-const SLEEP_ROUND_TIME := 0.4
+const SLEEP_ROUND_TIME := 0.55
 ## Speed multiplier on a 1-mass zombie being ground (heavier ones slow less).
 const SLEEP_SLOW := 0.55
 const STRING_MAX := 17.0
