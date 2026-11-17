@@ -143,7 +143,7 @@ func _pose_butter(s: float) -> void:
 	var drizzle := _v.part("DrizzleHolo")
 	PopcornPopperView.set_holo(_v, "ButterHolo", _e(0.57, 0.63, s) * (1.0 - _e(0.73, 0.78, s)))
 	var away := 1.0 - _e(0.57, 0.64, s) + _e(0.73, 0.79, s)
-	var dip := PUMP_DIP * (sin(PI * _e(0.635, 0.675, s)) + sin(PI * _e(0.69, 0.73, s)))
+	var dip := PUMP_DIP * (sin(PI * _e(0.626, 0.678, s)) + sin(PI * _e(0.682, 0.734, s)))
 	var at := Vector3.DOWN * dip + BUTTER_FROM * away
 	if pump:
 		var rest := _v.rest_transform("ButterHolo")
