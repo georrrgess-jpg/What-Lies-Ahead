@@ -281,7 +281,7 @@ func _ground_strip(material: Material, r: Rect2, k: int) -> void:
 
 ## Adds one unit box: `size` at `pos` (its base centre), turned `yaw`.
 func _box(pos: Vector3, size: Vector3, yaw: float, tint: Color, lit := 0.0, burning := 0.0, cell := 0.0) -> void:
-	var basis := Basis(Vector3.UP, yaw).scaled(size)
+	var basis := Basis(Vector3.UP, yaw).scaled_local(size)
 	_boxes.append(Transform3D(basis, pos + Vector3(0, size.y * 0.5, 0)))
 	_tints.append(tint)
 	_custom.append(Color(lit, burning, rng.randf() * 10.0, cell))
@@ -389,8 +389,8 @@ func _broken_tower(base: Vector3, w: float, d: float, h: float, yaw: float, burn
 		var p := base + basis * Vector3(rng.randf_range(-0.3, 0.3) * w, 0, rng.randf_range(-0.3, 0.3) * d)
 		_box(p + Vector3(0, h, 0), Vector3(cw, ch, d * rng.randf_range(0.4, 0.9)), yaw, tint, 0.0, 0.3, 3.8)
 	# A floor slab torn loose, hanging down one side.
-	var slab := Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, deg_to_rad(rng.randf_range(35.0, 60.0))).scaled(Vector3(w * 0.7, 0.8, d * 0.5)),
-		base + basis * Vector3(0, 0, d * 0.55) + Vector3(0, h - d * 0.15, 0))
+	var slab := Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, deg_to_rad(rng.randf_range(35.0, 60.0))).scaled_local(Vector3(w * 0.45, 0.6, d * 0.3)),
+		base + basis * Vector3(0, 0, d * 0.55) + Vector3(0, h - d * 0.1, 0))
 	_boxes.append(slab)
 	_tints.append(tint * 0.7)
 	_custom.append(Color(0, 0, 0, 0))
@@ -532,7 +532,7 @@ func _bridge() -> void:
 		if t + step * 0.5 > gap.x and t + step * 0.5 < gap.y:
 			# The fallen span: one end still on the deck, the other in the gap.
 			if t + step > gap.y:
-				var hang := Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, deg_to_rad(28.0)).scaled(Vector3(step * 1.4, 1.4, 16.0)), p + Vector3(0, BRIDGE_DECK_Y - 8.0, 0))
+				var hang := Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, deg_to_rad(28.0)).scaled_local(Vector3(step * 1.4, 1.4, 16.0)), p + Vector3(0, BRIDGE_DECK_Y - 8.0, 0))
 				_boxes.append(hang)
 				_tints.append(deck)
 				_custom.append(Color(0, 0, 0, 0))
