@@ -44,7 +44,7 @@ TUNING = {
     "end_trap_fire": _PUNCH,
     "end_supply_land": dict(_PUNCH, pitch=_FOURTH),
     "end_boss_siren": {"hp": 70.0},
-    "cz_wrecker_engine": {"hp": 50.0, "pitch": 1.25},
+    "cz_wrecker_engine": dict(_PUNCH, pitch=1.25),
     "cz_wrecker_charge": dict(_PUNCH, pitch=_FOURTH),
     "move_land_heavy": dict(_PUNCH, pitch=_FOURTH),
     "city_blast_far": _DEEP_PUNCH,

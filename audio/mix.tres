@@ -404,5 +404,6 @@ sound_trim_db = Dictionary[StringName, float]({
 &"ui_tick": 7.0,
 &"prog_xp_tick": 4.0,
 &"city_sparks_loop": 3.0,
-&"lava_eruption_rumble": -3.0
+&"lava_eruption_rumble": -3.0,
+&"city_fire_crackle": 2.5
 })
