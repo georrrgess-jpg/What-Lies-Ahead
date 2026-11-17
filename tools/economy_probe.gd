@@ -57,6 +57,7 @@ func _run() -> void:
 	_contracts()
 	_prints()
 	_migration()
+	_moved_rewards()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SCRATCH))
 	print("[probe] %s" % ("ALL PASSED" if _failed == 0 else "%d FAILED" % _failed))
 	quit(1 if _failed > 0 else 0)
@@ -311,3 +312,28 @@ func _migration() -> void:
 		profile.load_profile()
 		Legacy.apply_if_pending()
 		_check("migration: %s is migrated once (saved as version %d)" % [name, profile.SAVE_VERSION], wallet.balance() == balance and not profile.section("economy").has("legacy_pending"))
+
+
+# --- Level rewards moved to the Shop (MovedRewards) -------------------------------
+func _moved_rewards() -> void:
+	var moved = load("res://scripts/economy/moved_rewards.gd")
+	for batch in moved.BATCHES:
+		var items: Dictionary = moved.BATCHES[batch]
+		var bad: Array = []
+		for id in items:
+			var it = cosmetics.item(id)
+			if it == null or it.price <= 0 or it.requirement != null:
+				bad.append(id)
+		_check("moved: batch %s's %d items exist, sell in the Shop and need no level" % [batch, items.size()], bad.is_empty(), str(bad))
+		_fresh_profile()
+		_check("moved: batch %s grants nothing to a new profile" % batch, moved.apply(items).is_empty())
+		_fresh_profile()
+		progression.add_xp(progression.xp_for_level(30))
+		var expect: Array = []
+		for id in items:
+			if int(items[id]) <= 30:
+				expect.append(id)
+		var kept: Array = moved.apply(items)
+		var owned := kept.all(func(id) -> bool: return cosmetics.is_owned_anywhere(cosmetics.item(id)))
+		_check("moved: batch %s keeps a level-30 save's %d earned items, once" % [batch, expect.size()],
+			kept.size() == expect.size() and owned and moved.apply(items).is_empty(), "%s vs %s" % [kept, expect])
