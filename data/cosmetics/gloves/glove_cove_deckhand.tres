@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_cove_deckhand"
+display_name = "Deckhand Wraps"
+description = "Rope-wrapped knuckles and a striped sailor sleeve in navy and cream: for hauling lines and popping zombies."
+slot = &"gloves"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.9098, 0.8627, 0.7216, 1, 0.6902, 0.5412, 0.3216, 1, 0.1647, 0.3098, 0.5255, 1, 0.1647, 0.3098, 0.5255, 1, 0.9569, 0.9255, 0.8235, 1, 0.1647, 0.3098, 0.5255, 1)
+params = {
+"kit": "Wraps",
+"pattern": "stripes",
+"pattern_on": ["Sleeve"]
+}
+sort_order = 6331

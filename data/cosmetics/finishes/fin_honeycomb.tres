@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_honeycomb"
+display_name = "Amber Mosaic"
+description = "Amber tiles set in dark wax grout, like a fresh frame out of the hive."
+slot = &"weapon_finish"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.9490, 0.6588, 0.1137, 1, 0.2275, 0.1490, 0.0627, 1)
+params = {
+"shader": "res://art/shaders/finish_graphic.gdshader",
+"shader_params": {
+"pattern": 6,
+"color_d": Color(0.1686, 0.1059, 0.0314, 1),
+"roughness": 0.35,
+"metallic": 0.0
+}
+}
+sort_order = 2430

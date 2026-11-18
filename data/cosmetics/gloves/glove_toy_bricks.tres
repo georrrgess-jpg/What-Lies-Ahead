@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_toy_bricks"
+display_name = "Brick Mitts"
+description = "Chunky mitts in building-block red, blue and yellow, studs on every knuckle. They snap onto anything."
+slot = &"gloves"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.8510, 0.2275, 0.2275, 1, 0.1686, 0.4353, 0.8510, 1, 0.9647, 0.7765, 0.1569, 1, 0.1686, 0.4353, 0.8510, 1, 1.0000, 1.0000, 1.0000, 1, 0.9647, 0.7765, 0.1569, 1)
+params = {
+"kit": "Mitten",
+"pattern": "dots",
+"pattern_on": ["Glove", "Sleeve"]
+}
+sort_order = 6333

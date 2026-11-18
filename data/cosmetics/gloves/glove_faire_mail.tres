@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_faire_mail"
+display_name = "Knight's Mail"
+description = "Steel scale gauntlets with gold studs under a cobalt surcoat sleeve. Polished for the joust."
+slot = &"gloves"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.6039, 0.6392, 0.6980, 1, 0.9451, 0.7529, 0.2902, 1, 0.1725, 0.3725, 0.7020, 1, 0.1725, 0.3725, 0.7020, 1, 0.4353, 0.4627, 0.5176, 1, 0.7765, 0.8000, 0.8471, 1)
+params = {
+"kit": "Studs",
+"pattern": "scales",
+"pattern_on": ["Glove"]
+}
+sort_order = 6332
