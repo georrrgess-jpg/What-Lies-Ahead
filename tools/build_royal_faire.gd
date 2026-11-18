@@ -413,8 +413,12 @@ func _build_castle() -> void:
 	# Banner poles and torches on the walls.
 	for s in [-1.0, 1.0]:
 		_banner(dressing, "WalkBanner%d" % int(s), Vector3(s * 11.5, WALL_H, CASTLE_S + 1.05), 0.0, BLUE if s < 0 else RED)
-	# Player-only caps: nobody climbs onto towers, the gatehouse or the keep.
+	# Player-only caps: nobody climbs onto towers, the gatehouse or the keep,
+	# and only the south wall-walk is walkable (the other wall tops are capped).
 	_player_block(c, "KeepCap", Vector3(18.0, 10.0, 14.0), KEEP + Vector3(0, 22.0, 0))
+	_player_block(c, "WallTopN", Vector3(2.0 * x + 2.0, 8.0, WALL_T + 0.4), Vector3(0, WALL_H + 4.0, CASTLE_N))
+	for s in [-1.0, 1.0]:
+		_player_block(c, "WallTopSide%d" % int(s), Vector3(WALL_T + 0.4, 8.0, 23.5), Vector3(s * x, WALL_H + 4.0, CASTLE_N + 11.75))
 
 
 ## A curtain wall from a to b (along X or Z), WALL_T thick, WALL_H tall.
@@ -527,6 +531,7 @@ func _banner(parent: Node3D, b_name: String, pos: Vector3, yaw: float, color: Co
 	var node := _prop(dressing, "faire_banner", b_name, pos, yaw, Vector3(0.4, 6, 0.4))
 	_recolour(node, "FaireBanner", color)
 	_post(parent, b_name + "Post", 0.35, 6.2, pos)
+	_player_block(parent, b_name + "Cap", Vector3(0.9, 3.0, 0.9), pos + Vector3(0, 7.7, 0))
 
 
 # ---------------------------------------------------------------------------
@@ -582,11 +587,11 @@ func _build_market() -> void:
 	geo.add_child(m)
 	var awnings := [RED, BLUE, GREEN, GOLD, RED, BLUE, GOLD]
 	var k := 0
-	for z in [1.5, 7.0, 12.5, 18.0]:
+	for z in [0.5, 5.0, 14.5, 19.0]:
 		var node := _solid_prop(m, "faire_stall", "StallW%d" % k, Vector3(-27.5, 0, z), 90.0, Vector3(3.2, 2.9, 2.0))
 		_recolour(node, "FaireTentA", awnings[k % awnings.size()])
 		k += 1
-	for z in [4.0, 9.5, 15.0]:
+	for z in [3.0, 9.5, 16.0]:
 		var node := _solid_prop(m, "faire_stall", "StallE%d" % k, Vector3(-16.8, 0, z), -90.0, Vector3(3.2, 2.9, 2.0))
 		_recolour(node, "FaireTentA", awnings[k % awnings.size()])
 		k += 1
@@ -595,8 +600,8 @@ func _build_market() -> void:
 	_solid_prop(m, "faire_cart", "MarketCart", Vector3(-30.6, 0, -2.0), 70.0, Vector3(1.8, 1.8, 3.3))
 	_solid_prop(m, "faire_hay", "MarketHay", Vector3(-22.0, 0, 23.0), 0.0, Vector3(2.4, 1.4, 1.2))
 	_brazier(m, "MarketBrazier", Vector3(-22.0, 0, 0.0))
-	for z in [3.0, 9.0, 15.0]:
-		_string_bunting(Vector3(-26.4, 3.0, z), Vector3(-17.9, 3.0, z + 1.8), 0.6)
+	for z in [2.0, 16.5]:
+		_string_bunting(Vector3(-26.4, 3.0, z), Vector3(-17.9, 3.0, z + 1.0), 0.6)
 
 
 # ---------------------------------------------------------------------------
@@ -745,6 +750,7 @@ func _build_boundary() -> void:
 	_palisade(b, walls, "PalNE2", Vector3(30.2, 0, z0), Vector3(x1, 0, z0))
 	for s in [-1.0, 1.0]:
 		_palisade(b, walls, "PalBack%d" % int(s), Vector3(s * CASTLE_X, 0, CASTLE_N - 2.6), Vector3(s * CASTLE_X, 0, z0))
+	_player_wall(walls, "BehindKeep", Vector3(-CASTLE_X, 0, z0), Vector3(CASTLE_X, 0, z0), PLAYER_WALL_H)
 	# South: between the houses (a gap for the village lane at x -2.1..2.1).
 	var hx := [-31.0, -22.0, -9.2, 9.2, 21.0, 30.5]
 	_palisade(b, walls, "PalS0", Vector3(x0, 0, z1), Vector3(hx[0] - 3.4, 0, z1))

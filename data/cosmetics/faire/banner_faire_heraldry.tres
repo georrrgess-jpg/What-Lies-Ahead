@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"royal_faire"
+
+[resource]
+script = ExtResource("1")
+id = &"banner_faire_heraldry"
+display_name = "Royal Faire Heraldry"
+description = "Gold chevrons on royal blue and banner red: the colours of the King's tourney."
+slot = &"banner"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.184, 0.357, 0.827, 1, 0.949, 0.757, 0.310, 1, 0.847, 0.204, 0.247, 1)
+params = {
+"pattern": "chevrons"
+}
+sort_order = 10702
