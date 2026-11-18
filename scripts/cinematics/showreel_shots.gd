@@ -730,22 +730,22 @@ func _moves(st: CineStage) -> void:
 	var view := _viewmodel(st, &"ion_carbine", &"fin_marquee", GLOVES[0])
 	var x := 0.9
 	st.spline([
-		[0.0, Vector3(x, 1.6, -40.2), Vector3(x, 1.5, -52)],
-		[0.5, Vector3(x, 1.7, -44.0), Vector3(x, 1.3, -56)],
-		[0.7, Vector3(x, 2.15, -45.4), Vector3(x, 1.5, -57)],
-		[0.92, Vector3(x, 1.6, -47.0), Vector3(x, 1.5, -58)],
-		[1.3, Vector3(x, 1.55, -50.2), Vector3(x, 1.3, -60)],
-		[1.55, Vector3(x, 0.9, -52.0), Vector3(x, 0.95, -62)],
-		[2.0, Vector3(x, 0.82, -55.2), Vector3(x, 1.0, -64)],
+		[0.0, Vector3(x, 1.6, -41.6), Vector3(x, 1.5, -53)],
+		[0.3, Vector3(x, 1.7, -43.9), Vector3(x, 1.3, -56)],
+		[0.48, Vector3(x, 2.15, -45.3), Vector3(x, 1.5, -57)],
+		[0.68, Vector3(x, 1.6, -46.9), Vector3(x, 1.5, -58)],
+		[0.98, Vector3(x, 1.5, -49.7), Vector3(x, 1.3, -60)],
+		[1.22, Vector3(x, 0.9, -51.6), Vector3(x, 0.95, -62)],
+		[2.0, Vector3(x, 0.82, -55.6), Vector3(x, 1.0, -64)],
 	])
 	st.fov(68.0, 76.0)
 	st.every_frame(func(t: float):
-		view.staged_mantle = smoothstep(0.45, 0.58, t) * (1.0 - smoothstep(0.78, 0.95, t))
-		view.staged_slide = smoothstep(1.28, 1.45, t)
+		view.staged_mantle = smoothstep(0.25, 0.38, t) * (1.0 - smoothstep(0.56, 0.72, t))
+		view.staged_slide = smoothstep(0.96, 1.12, t)
 		view.staged_sprint = clampf(1.0 - view.staged_mantle - view.staged_slide, 0.0, 1.0)
 		view.staged_gait = Vector2(t * TAU * 2.2, view.staged_sprint))
 	st.at(0.05, st.overlay.tag.bind("Move", "Sprint  ·  vault  ·  slide", UiKit.CYAN))
-	st.at(1.28, func(): Sfx.play(&"ui_whoosh", -6.0, 0.7))
+	st.at(0.96, func(): Sfx.play(&"ui_whoosh", -6.0, 0.7))
 
 
 ## Aim down sights in half time: the cannon comes up, its optic's reticle
