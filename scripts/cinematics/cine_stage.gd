@@ -75,7 +75,8 @@ func after_camera(f: Callable) -> void:
 
 
 ## The game world runs at `scale` between `from` and `to`, easing in over
-## `ramp_in` and back out over `ramp_out` seconds (a speed ramp).
+## `ramp_in` and back out over `ramp_out` seconds (a speed ramp; 0 = a hard
+## cut in or out of slow motion).
 func slowmo(from: float, to: float, scale: float, ramp_in := 0.12, ramp_out := 0.12) -> void:
 	_slowmo.append([from, to, scale, ramp_in, ramp_out])
 
@@ -102,7 +103,7 @@ func update(now: float, game_delta: float) -> void:
 func _time_scale() -> float:
 	var scale := 1.0
 	for s in _slowmo:
-		var k := clampf((t - s[0]) / s[3], 0.0, 1.0) * clampf((s[1] - t) / s[4], 0.0, 1.0)
+		var k := clampf((t - s[0]) / maxf(s[3], 0.001), 0.0, 1.0) * clampf((s[1] - t) / maxf(s[4], 0.001), 0.0, 1.0)
 		scale = minf(scale, lerpf(1.0, s[2], k * k * (3.0 - 2.0 * k)))
 	return scale
 
