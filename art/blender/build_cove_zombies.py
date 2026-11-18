@@ -268,17 +268,19 @@ def barnacle_accessories(m):
             box(p + "BadgeBones2", (0.22, 0.03, 0.04), (0, fy - 0.01, 1.95), rot=(0, -0.5, 0), bevel=0.01, m=m["stripe"]),
             tube(p + "Plume", [(0.25, HEAD_Y + 0.2, 2.1), (0.42, HEAD_Y + 0.35, 2.4), (0.36, HEAD_Y + 0.55, 2.6)], 0.07, m=m["feather"], segs=8,
                  radius_end=0.02)]
-    # The anchor, held in the right fist, hanging down and forward.
+    # The anchor, gripped by the shank like a club: ring and stock by the
+    # fist, the crown and flukes up over the shoulder.
     hx, hy, hz = -0.62, -0.12, 0.5
-    anchor = [cyl(p + "Shank", 0.06, 1.3, (hx, hy - 0.05, hz - 0.45), segs=10, bevel=0.0, m=m["iron"]),
-              torus(p + "Ring", 0.12, 0.035, (hx, hy - 0.05, hz + 0.25), rot=rad(90, 0, 90), m=m["iron"], major_segs=12, minor_segs=4),
-              cyl(p + "Stock", 0.05, 0.7, (hx, hy - 0.05, hz + 0.05), rot=rad(0, 90, 0), segs=8, bevel=0.0, m=m["wood_dark"]),
-              torus(p + "Arms", 0.42, 0.06, (hx, hy - 0.05, hz - 0.95), rot=rad(90, 0, 90), m=m["iron"], major_segs=16, minor_segs=5, arc=math.pi,
-                    start=math.pi)]
-    for s in (-1, 1):
-        anchor.append(prism(f"{p}Fluke{s}", [(-0.1, 0), (0.1, 0), (0, 0.2)], 0.05, (hx, hy - 0.05 + s * 0.42, hz - 0.88), rot=(0, 0, 0),
+    ay = hy - 0.05
+    anchor = [cyl(p + "Shank", 0.06, 1.25, (hx, ay, hz + 0.5), segs=10, bevel=0.0, m=m["iron"]),
+              torus(p + "Ring", 0.12, 0.035, (hx, ay, hz - 0.2), rot=rad(90, 0, 90), m=m["iron"], major_segs=12, minor_segs=4),
+              cyl(p + "Stock", 0.05, 0.7, (hx, ay, hz - 0.02), rot=rad(0, 90, 0), segs=8, bevel=0.0, m=m["wood_dark"]),
+              torus(p + "Arms", 0.38, 0.06, (hx, ay, hz + 1.0), rot=rad(90, 0, 90), m=m["iron"], major_segs=16, minor_segs=5, arc=math.pi,
+                    start=0.0)]
+    for side in (-1, 1):
+        anchor.append(prism(f"{p}Fluke{side}", [(-0.11, 0), (0.11, 0), (0, 0.22)], 0.05, (hx, ay + side * 0.38, hz + 1.0), rot=(0, 0, 0),
                             m=m["iron"]))
-    anchor += [cyl(f"{p}Crust{i}", 0.04, 0.04, (hx + 0.05, hy - 0.05 + dy, hz - 0.6 + dz), rot=rad(0, 90, 0), segs=6, bevel=0.0, m=m["barnacle"],
+    anchor += [cyl(f"{p}Crust{i}", 0.04, 0.04, (hx + 0.05, ay + dy, hz + 0.6 + dz), rot=rad(0, 90, 0), segs=6, bevel=0.0, m=m["barnacle"],
                    radius_top=0.02) for i, (dy, dz) in enumerate(((0.0, 0.0), (0.03, 0.2), (-0.02, -0.25)))]
     acc = {
         "Acc_Barnacle_Tricorn": bz.bind("Head", hat),

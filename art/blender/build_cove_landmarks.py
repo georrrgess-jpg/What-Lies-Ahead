@@ -347,6 +347,32 @@ def build_warehouse():
           box("Sign", (6.0, 0.15, 0.8), (0, -D / 2 - 0.35, door_h + 1.0), bevel=0.04, m=cmat("Navy")),
           text("SignText", "BONDED WAREHOUSE", 0.46, 0.05, (0, -D / 2 - 0.45, door_h + 0.98), m=cmat("Gold", rough=0.3))]
     p += lantern("LampL", (-door_w / 2 - 0.6, -D / 2 - 0.4, 3.2), scale=1.4) + lantern("LampR", (door_w / 2 + 0.6, -D / 2 - 0.4, 3.2), scale=1.4)
+    # Corner quoins, shuttered windows along the sides and back, a ridge cap
+    # and the loading hoist over the doors.
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            for k in range(5):
+                p.append(box(f"Quoin{sx}{sy}{k}", (0.6 if k % 2 else 0.45, 0.6 if k % 2 == 0 else 0.45, 0.5), (sx * W / 2, sy * D / 2, 0.5 + k * 1.15),
+                             bevel=0.04, m=cmat("StoneDark", rough=0.85)))
+    glow = cglow("CoveWindowGlow", "#ffc77a", 1.6)
+    for k, y in enumerate((-2.2, 2.2)):
+        for sx in (-1, 1):
+            x = sx * (W / 2 + 0.05)
+            p += [box(f"SideWin{k}{sx}", (0.1, 1.0, 1.3), (x, y, 3.4), bevel=0.02, m=glow),
+                  box(f"SideFrame{k}{sx}", (0.12, 1.2, 1.5), (x - sx * 0.02, y, 3.4), bevel=0.02, m=dark),
+                  box(f"SideShutA{k}{sx}", (0.08, 0.5, 1.4), (x + sx * 0.04, y - 0.85, 3.4), bevel=0.02, m=cmat("Teal", rough=0.6)),
+                  box(f"SideShutB{k}{sx}", (0.08, 0.5, 1.4), (x + sx * 0.04, y + 0.85, 3.4), bevel=0.02, m=cmat("Teal", rough=0.6))]
+    for k, x in enumerate((-3.0, 0.0, 3.0)):
+        p += [box(f"BackWin{k}", (1.0, 0.1, 1.3), (x, D / 2 + 0.05, 3.4), bevel=0.02, m=glow),
+              box(f"BackFrame{k}", (1.2, 0.12, 1.5), (x, D / 2 + 0.03, 3.4), bevel=0.02, m=dark)]
+    p += [box("Ridge", (W + 1.0, 0.45, 0.3), (0, 0, H + 2.6), bevel=0.06, m=dark),
+          box("HoistBeam", (0.35, 2.2, 0.35), (0, -D / 2 - 0.9, H + 0.9), bevel=0.04, m=dark),
+          box("HoistBrace", (0.2, 1.4, 0.2), (0, -D / 2 - 0.4, H + 0.35), rot=(0.7, 0, 0), bevel=0.02, m=dark),
+          cyl("HoistPulley", 0.2, 0.12, (0, -D / 2 - 1.8, H + 0.62), rot=rad(0, 90, 0), segs=10, bevel=0.0, m=cmat("Iron")),
+          rope("HoistRope", [(0, -D / 2 - 1.95, H + 0.55), (0, -D / 2 - 1.95, H - 1.3)], 0.03),
+          torus("HoistHook", 0.14, 0.035, (0, -D / 2 - 1.95, H - 1.45), rot=rad(90, 0, 90), m=cmat("Iron"), major_segs=10, minor_segs=4,
+                arc=math.pi * 1.3, start=-math.pi * 0.4),
+          box("HoistNet", (0.9, 0.9, 0.7), (0, -D / 2 - 1.95, H - 2.0), bevel=0.15, m=cmat("Rope", rough=0.9))]
     # Crates and kegs stacked inside, against the walls.
     for k, (x, y, z, sz) in enumerate(((-4.0, 2.5, 0.6, 1.2), (-4.0, 2.5, 1.8, 1.1), (-2.8, 3.3, 0.55, 1.1), (3.9, 2.8, 0.6, 1.2), (3.9, 1.5, 0.6, 1.2),
                                        (3.9, 2.1, 1.8, 1.1))):
