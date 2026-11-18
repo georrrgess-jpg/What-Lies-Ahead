@@ -682,6 +682,7 @@ func _build_north() -> void:
 	_late(foam, "res://scripts/props/ambient_motion.gd", {"bob_height": 0.08, "bob_seconds": 0.9})
 	# 3. The Rusty Anchor tavern (solid; its veranda is part of the quay).
 	_prop(dressing, "cove_tavern", "RustyAnchor", TAVERN, 0.0, Vector3(10, 10, 7))
+	_chimney_smoke(TAVERN + Vector3(3.6, 11.3, -1.2))
 	_collider(n, "TavernBody", Vector3(10.6, 7.0, 7.6), TAVERN + Vector3(0, 3.5, 0))
 	_player_block(n, "TavernRoof", Vector3(11.0, 6.0, 9.0), TAVERN + Vector3(0, 9.5, 0))
 	for k in 5:
@@ -696,6 +697,45 @@ func _build_north() -> void:
 	_collider(n, "TunnelWallW", Vector3(0.6, 5.0, 8.4), Vector3(TUNNEL.x - 2.6, 2.5, TUNNEL.z - 4.0))
 	_collider(n, "TunnelWallE", Vector3(0.6, 5.0, 8.4), Vector3(TUNNEL.x + 2.6, 2.5, TUNNEL.z - 4.0))
 	_collider(n, "TunnelBack", Vector3(6.0, 5.0, 0.6), Vector3(TUNNEL.x, 2.5, TUNNEL.z - 8.2))
+
+
+## A lazy plume of soft smoke from the tavern's chimney, drifting inland.
+func _chimney_smoke(at: Vector3) -> void:
+	var smoke := CPUParticles3D.new()
+	smoke.name = "ChimneySmoke"
+	smoke.position = at
+	smoke.amount = 14
+	smoke.lifetime = 5.0
+	smoke.preprocess = 5.0
+	var puff := SphereMesh.new()
+	puff.radius = 0.5
+	puff.height = 1.0
+	puff.radial_segments = 8
+	puff.rings = 4
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.vertex_color_use_as_albedo = true
+	m.albedo_color = Color(0.9, 0.82, 0.86, 0.6)
+	puff.material = m
+	smoke.mesh = puff
+	smoke.direction = Vector3(0.15, 1.0, -0.25)
+	smoke.spread = 12.0
+	smoke.gravity = Vector3(0.25, 0.35, -0.15)
+	smoke.initial_velocity_min = 0.5
+	smoke.initial_velocity_max = 0.8
+	smoke.scale_amount_min = 1.1
+	smoke.scale_amount_max = 1.7
+	var grow := Curve.new()
+	grow.add_point(Vector2(0.0, 0.3))
+	grow.add_point(Vector2(1.0, 1.6))
+	smoke.scale_amount_curve = grow
+	var fade := Gradient.new()
+	fade.set_color(0, Color(1, 1, 1, 0.8))
+	fade.set_color(1, Color(1, 1, 1, 0.0))
+	smoke.color_ramp = fade
+	smoke.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dressing.add_child(smoke)
 
 
 # ---------------------------------------------------------------------------
