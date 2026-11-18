@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/ticket_ripper.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/ticket_ripper_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/ticket_ripper_mode.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/views/ticket_ripper_view.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 12
+
+[resource]
+script = ExtResource("1")
+id = &"ticket_ripper"
+sort_order = 80
+category = "SMG"
+display_name = "Ticket Ripper"
+role = "Compact prize-ticket SMG: a very fast stream of tickets from the dispenser drum, light in the hand (no slowdown, quick to aim and to fire out of a sprint) with a tight hip spread, strong up close and weak past 20 m. Winner!: every hit in a row ticks the counter on the drum; 15 in a row without a miss prints a golden WINNER ticket that pierces up to three zombies and pops a ticket burst round the first. A miss resets the count."
+unlock = SubResource("unlock")
+slot_class = "primary"
+magazine_size = 50
+reserve_start = 250
+reserve_max = 400
+reload_time = 1.7
+emergency_recharge_interval = 0.8
+automatic = true
+fire_interval = 0.066
+damage = 15.0
+pellets = 1
+spread_degrees = 0.85
+spread_bloom = 0.06
+spread_bloom_max = 1.5
+spread_recovery = 9.0
+max_range = 45.0
+falloff_start = 9.0
+falloff_end = 24.0
+falloff_min_scale = 0.5
+headshot_multiplier = 1.5
+knockback = 0.25
+ads_fov_scale = 0.86
+ads_time = 0.11
+ads_spread_scale = 0.55
+ads_depth = 0.16
+first_shot_accurate = false
+reticle_style = "bracket"
+recoil_kick = 0.32
+recoil_yaw = 0.22
+view_kick = 0.022
+shake = 0.04
+tracer_color = Color(1, 0.36, 0.5, 1)
+tracer_width = 0.03
+view_position = Vector3(0.25, -0.26, -0.6)
+view_rotation_degrees = Vector3(0, 0, -3)
+viewmodel = ExtResource("3")
+reload_script = ExtResource("4")
+view_script = ExtResource("6")
+fire_sound = &"tkr_fire"
+reload_sound = &"tkr_crank"
+empty_sound = &"empty_click"
+fire_pitch_variance = 0.06
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
+move_speed_scale = 1.0
+equip_time = 0.26
+equip_sound = &"tkr_equip"
+mode_script = ExtResource("5")

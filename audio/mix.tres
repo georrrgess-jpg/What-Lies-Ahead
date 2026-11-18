@@ -348,7 +348,12 @@ sound_category = Dictionary[StringName, StringName]({
 &"toy_windup_rundown": &"cue",
 &"toy_shop_loop": &"music",
 &"toy_shop_final": &"music",
-&"toy_ambience": &"ambience"
+&"toy_ambience": &"ambience",
+&"tkr_": &"handling",
+&"tkr_fire": &"weapon",
+&"tkr_winner": &"weapon",
+&"tkr_pop": &"impact",
+&"tkr_ready": &"confirm"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -539,5 +544,6 @@ sound_trim_db = Dictionary[StringName, float]({
 &"faire_siege_horn": -2.0,
 &"cove_cannon_whistle": -2.0,
 &"cove_cannon_boom": -2.5,
-&"cove_broadside_call": -3.0
+&"cove_broadside_call": -3.0,
+&"tkr_fire": -3.0
 })
