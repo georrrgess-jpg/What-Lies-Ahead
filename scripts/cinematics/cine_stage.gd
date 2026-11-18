@@ -262,6 +262,7 @@ func zombie(id: StringName, pos: Vector3, yaw := 0.0, clip := "Idle", rate := 1.
 	z.rotation.y = deg_to_rad(yaw)
 	actors.add_child(z)
 	if not emerge:
+		z.skip_emerge()
 		play(z, clip, rate)
 	return z
 

@@ -23,32 +23,33 @@ const BEAT := 0.4
 # --- featured items (swap ids here) ---------------------------------------------
 
 ## The fifteen worlds in unlock order: [level, camera from, look from, camera
-## to, look to, zombies (walking at the lens), where they stand].
+## to, look to, zombies (walking at the lens), where they stand (ZERO: on
+## the floor a few metres in front of the lens's last position)].
 const WORLDS := [
 	["prize_pier", Vector3(-8.0, 1.3, 7.5), Vector3(-27, 6.5, -22), Vector3(-10.0, 1.9, 4.5), Vector3(-29, 7.0, -22),
 		[&"tourist_shambler", &"lifeguard_runner", &"boardwalk_bruiser"], Vector3(-13.5, 0, 0.5)],
 	["neon_skyline", Vector3(25, 11, 24), Vector3(-2, 3, -6), Vector3(20.0, 8.0, 18.5), Vector3(-1, 3, -6),
 		[&"neon_punk", &"hover_courier", &"riot_bruiser"], Vector3(5.5, 0, 5.0)],
 	["tidal_tunnels", Vector3(7.6, 2.3, 6.9), Vector3(-1.5, 5.2, -2.5), Vector3(5.4, 2.6, 4.9), Vector3(-3.0, 5.2, -2.5),
-		[&"deep_diver", &"jelly_head", &"mascot_inker"], Vector3(1.5, 0, 1.0)],
+		[&"deep_diver", &"jelly_head", &"mascot_inker"], Vector3.ZERO],
 	["launch_pad", Vector3(7, 1.2, 12), Vector3(0, 8, -9), Vector3(8.5, 3.0, 14), Vector3(0, 15, -9),
-		[&"dune_space_cadet", &"dune_hazmat_worker", &"dune_jet_mechanic"], Vector3(2, 0, 4)],
+		[&"dune_space_cadet", &"dune_hazmat_worker", &"dune_jet_mechanic"], Vector3.ZERO],
 	["summit_lodge", Vector3(25, 9, 21), Vector3(-4, 4, -12), Vector3(20.5, 6.5, 16.5), Vector3(-4, 5, -12),
-		[&"frost_ski_racer", &"frost_yeti", &"frost_frozen_tourist"], Vector3(9, 0, 9)],
+		[&"frost_ski_racer", &"frost_yeti", &"frost_frozen_tourist"], Vector3.ZERO],
 	["midnight_mall", Vector3(-8.0, 7.5, 17.0), Vector3(0, 3.5, -9), Vector3(-6.5, 5.5, 11.5), Vector3(0, 4.0, -10),
 		[&"mall_walker", &"mall_flinger", &"mall_walker"], Vector3(0, 0, -2.5)],
 	["lost_temple", Vector3(7.0, 1.6, 15.0), Vector3(0, 7.0, -24), Vector3(6.5, 3.2, 10.5), Vector3(0, 8.0, -25),
-		[&"jungle_explorer", &"jungle_overgrown", &"jungle_explorer"], Vector3(-0.5, 0, -6.5)],
+		[&"jungle_explorer", &"jungle_overgrown", &"jungle_explorer"], Vector3.ZERO],
 	["candy_works", Vector3(-10.0, 1.6, 18.0), Vector3(0, 9.0, -28), Vector3(-9.5, 3.0, 12.5), Vector3(0, 10.5, -28),
 		[&"candy_gummy", &"candy_taffy_puller", &"candy_gummy"], Vector3(-3.5, 0, -3.5)],
 	["lava_lagoon", Vector3(-6.0, 1.7, 17.0), Vector3(14, 24, -300), Vector3(-5.0, 2.8, 12.5), Vector3(16, 28, -300),
-		[&"lava_fire_dancer", &"lava_tiki_bartender", &"lava_fire_dancer"], Vector3(-1.5, 0, -3.0)],
+		[&"lava_fire_dancer", &"lava_tiki_bartender", &"lava_fire_dancer"], Vector3.ZERO],
 	["sky_harbor", Vector3(-19.0, 1.8, 8.0), Vector3(-53, 12, -1.5), Vector3(-22.0, 3.0, 6.3), Vector3(-53, 13.5, -1.5),
-		[&"sky_diver", &"sky_balloon_vendor", &"sky_diver"], Vector3(-31.0, 0, -1.5)],
+		[&"sky_diver", &"sky_balloon_vendor", &"sky_diver"], Vector3.ZERO],
 	["ghost_train", Vector3(9.0, 3.0, 24.0), Vector3(-4, 5, -20), Vector3(6.5, 2.2, 19.5), Vector3(-4, 5.5, -20),
 		[&"fright_ghost", &"fright_pumpkin_head", &"fright_ghost"], Vector3(1.5, 0, 8.0)],
 	["boomtown", Vector3(-0.8, 1.8, 6.0), Vector3(0.8, 10, 26), Vector3(0.0, 2.6, 9.5), Vector3(0.8, 11, 26),
-		[&"gulch_cowpoke", &"gulch_prospector", &"gulch_cowpoke"], Vector3(0.5, 0, 15.5)],
+		[&"gulch_cowpoke", &"gulch_prospector", &"gulch_cowpoke"], Vector3.ZERO],
 	["skull_harbor", Vector3(13.0, 3.0, 11.0), Vector3(-24, 7, -6), Vector3(9.5, 2.4, 8.5), Vector3(-24, 7.5, -6),
 		[&"cove_deckhand", &"cove_powder_monkey", &"cove_deckhand"], Vector3(1.5, 0, 3.0)],
 	["royal_faire", Vector3(9.0, 2.6, 25.0), Vector3(-3, 6, -22), Vector3(6.5, 2.0, 20.0), Vector3(-3, 6.5, -22),
@@ -60,7 +61,7 @@ const WORLDS := [
 const ALPHAS := [
 	["ghost_train", &"alpha_ringmaster", Vector3(0.5, 0, 8.0), 20.0],
 	["boomtown", &"alpha_rattlebones", Vector3(0.5, 0, 14.5), 180.0],
-	["skull_harbor", &"alpha_barnacle", Vector3(1.0, 0, 3.0), 60.0],
+	["skull_harbor", &"alpha_barnacle", Vector3(2.0, 0, 4.5), 80.0],
 	["toy_shop", &"alpha_toymaker", Vector3(-4.0, 0, 15.0), -40.0],
 ]
 ## The zombies that lunge at the lens in the muzzle-flash cold open: [level, zombie, where, yaw].
@@ -72,6 +73,9 @@ const LUNGES := [
 ]
 ## Reloads, close up: the weapon reloading in the dark open, and the showcase cuts.
 const DARK_RELOAD := &"rail_lancer"
+## Where a reload close-up moves the viewmodel (metres in the lens's space):
+## left and up toward the middle of the frame, a little nearer.
+const CLOSE_UP := Vector3(-0.05, 0.035, 0.02)
 ## Operators: the line-up (Madame Fortuna in the centre), the three who hold
 ## the line in the finale.
 const LINEUP_FRONT: Array[StringName] = [&"op_stunt_ace", &"op_halfpipe", &"op_top_dog", &"op_pixel_pal",
@@ -162,8 +166,9 @@ static func build() -> Array[CineShot]:
 
 ## A first-person weapon on the game's own viewmodel rig (WeaponView: sway,
 ## kick, muzzle flash and the weapon's real reload), pinned to the lens, with
-## the operator's arms in `gloves`.
-func _viewmodel(st: CineStage, weapon_id: StringName, finish: StringName, gloves: StringName, sight: StringName = &"") -> WeaponView:
+## the operator's arms in `gloves`. `lean` moves it in the lens's space (a
+## reload close-up brings it in toward the middle of the frame).
+func _viewmodel(st: CineStage, weapon_id: StringName, finish: StringName, gloves: StringName, sight: StringName = &"", lean := Vector3.ZERO) -> WeaponView:
 	var w := GameData.weapon(weapon_id)
 	var view := WeaponView.new()
 	st.actors.add_child(view)
@@ -177,7 +182,7 @@ func _viewmodel(st: CineStage, weapon_id: StringName, finish: StringName, gloves
 	view.refit_sight()
 	st.at(0.0, func(): st.camera.near = 0.02)
 	st.after_camera(func(_t: float):
-		view.global_transform = st.camera.global_transform.scaled_local(Vector3.ONE * WeaponView.VIEW_SCALE))
+		view.global_transform = st.camera.global_transform.translated_local(lean).scaled_local(Vector3.ONE * WeaponView.VIEW_SCALE))
 	return view
 
 
@@ -287,7 +292,7 @@ func _cold_open(st: CineStage) -> void:
 func _dark_reload(st: CineStage) -> void:
 	st.at(0.0, st.overlay.grade.bind(&"dark"))
 	st.lighting(0.12, 0.55, 1.6, 0.05)
-	var view := _viewmodel(st, DARK_RELOAD, &"fin_thunderhead", GLOVES[1])
+	var view := _viewmodel(st, DARK_RELOAD, &"fin_thunderhead", GLOVES[1], &"", CLOSE_UP)
 	var eye := Vector3(-3.0, 1.6, 6.0)
 	st.fov(42.0, 38.0)
 	_eye_track(st, eye, eye + Vector3(-1, -0.2, -1), eye + Vector3(-1, -0.1, -0.75), Vector3(-0.1, 0.03, -0.15), 1.0)
@@ -381,7 +386,12 @@ func _world(st: CineStage, index: int) -> void:
 	st.lighting(1.0, 1.0, 1.2)
 	st.fov(54.0, 48.0)
 	st.dolly(spec[1], spec[2], spec[3], spec[4], 1.0)
-	_pack(st, spec[5], spec[6], spec[1], 1.8, 0.95)
+	var pack: Vector3 = spec[6]
+	if pack == Vector3.ZERO:
+		var ahead: Vector3 = spec[4] - spec[3]
+		pack = spec[3] + Vector3(ahead.x, 0, ahead.z).normalized() * 6.5
+		pack.y = 0.0
+	_pack(st, spec[5], pack, spec[1], 1.8, 0.95)
 	var w := _world_of(spec[0])
 	if w:
 		st.at(0.0, st.overlay.tag.bind("World %02d" % (index + 1), w.display_name, w.accent_color.lerp(Color.WHITE, 0.35)))
@@ -423,7 +433,7 @@ func _alpha(st: CineStage, index: int) -> void:
 	var tall := 1.75 * z.data.body_scale
 	st.fov(46.0, 38.0)
 	st.track(func(k: float) -> Transform3D:
-		var from := at + fwd * lerpf(tall * 2.6, tall * 2.2, k) + side * lerpf(1.6, 0.9, k) + Vector3.UP * 0.45
+		var from := at + fwd * lerpf(tall * 2.1, tall * 1.75, k) + side * lerpf(1.2, 0.5, k) + Vector3.UP * 0.35
 		return Transform3D(Basis.looking_at(at + Vector3.UP * tall * 0.62 - from), from))
 	st.light(at + fwd * 2.5 + side * -2.0 + Vector3.UP * 3.0, Color("ffd9a8"), 3.0, 10.0)
 	st.light(at - fwd * 1.5 + Vector3.UP * 2.5, UiKit.PINK if index % 2 == 0 else UiKit.CYAN, 4.0, 6.0)
@@ -436,7 +446,7 @@ func _alpha(st: CineStage, index: int) -> void:
 func _lock_load(st: CineStage) -> void:
 	st.at(0.0, st.overlay.fade.bind(0.0, 0.0))
 	st.at(0.0, st.overlay.backdrop.bind(1.0))
-	st.at(0.0, st.overlay.stamp.bind("Lock and load", "", Vector2(0.5, 0.5), 0.3, UiKit.CREAM, 56))
+	st.at(0.0, st.overlay.stamp.bind("Lock and load", "", Vector2(0.5, 0.5), 0.3, UiKit.CREAM, 80))
 	st.dolly(Vector3(0, 2, 10), Vector3.ZERO, Vector3(0, 2, 9), Vector3.ZERO)
 
 
@@ -497,10 +507,10 @@ func _winner(st: CineStage, view: WeaponView, a: Zombie, b: Zombie) -> void:
 func _reload_lava(st: CineStage) -> void:
 	st.at(0.0, st.overlay.grade.bind(&"dusk"))
 	st.lighting(0.7, 0.95, 1.3)
-	var view := _viewmodel(st, &"lava_lampoon", &"", GLOVES[1])
+	var view := _viewmodel(st, &"lava_lampoon", &"", GLOVES[1], &"", CLOSE_UP)
 	var eye := Vector3(4.0, 1.6, 16.5)
 	st.fov(38.0, 34.0)
-	_eye_track(st, eye, eye + Vector3(0.25, -0.35, -1), eye + Vector3(0.35, -0.3, -1), Vector3(0, -0.02, -0.08), 1.0)
+	_eye_track(st, eye, eye + Vector3(0.25, -0.15, -1), eye + Vector3(0.35, -0.1, -1), Vector3(0, -0.02, -0.08), 1.0)
 	var d := GameData.weapon(&"lava_lampoon").reload_time
 	_reload(st, view, &"lava_lampoon", 0.0, d, d * 0.22)
 	st.slowmo(0.0, 0.8, 0.55, 0.01, 0.2)
@@ -587,10 +597,10 @@ func _ads(st: CineStage) -> void:
 ## hologram gantry into the pod, the countdown runs, the pod flares.
 func _reload_tminus(st: CineStage) -> void:
 	st.at(0.0, st.overlay.grade.bind(&"golden"))
-	var view := _viewmodel(st, &"t_minus_six", &"fin_treasure_map", GLOVES[0])
+	var view := _viewmodel(st, &"t_minus_six", &"fin_treasure_map", GLOVES[0], &"", CLOSE_UP)
 	var eye := Vector3(0.0, 1.6, 21.5)
 	st.fov(38.0, 34.0)
-	_eye_track(st, eye, eye + Vector3(-0.2, -0.3, -1), eye + Vector3(-0.1, -0.15, -1), Vector3(0, 0, -0.1), 1.0)
+	_eye_track(st, eye, eye + Vector3(-0.2, -0.12, -1), eye + Vector3(-0.1, -0.05, -1), Vector3(0, 0, -0.1), 1.0)
 	var d := GameData.weapon(&"t_minus_six").reload_time
 	_reload(st, view, &"t_minus_six", 0.0, d * 0.75, d * 0.25)
 	_lens_light(st, UiKit.CYAN, Vector3(0.15, -0.15, -0.45), func(t: float) -> float: return 0.8 + 1.5 * smoothstep(0.5, 0.75, t))
@@ -715,12 +725,12 @@ func _city_wide(st: CineStage) -> void:
 	st.at(0.0, st.overlay.flash.bind(Color(1.0, 0.6, 0.3), 0.3, 0.6))
 	var kinds := [&"city_shambler", &"city_runner", &"city_shambler", &"city_bruiser", &"city_runner", &"city_shambler",
 		&"riot_shield", &"city_runner", &"city_shambler", &"tunnel_crawler", &"city_runner", &"city_shambler"]
-	var toward := Vector3(0, 0, 30)
+	var toward := Vector3(0, 0, 40)
 	for i in kinds.size():
-		var p := Vector3(((i % 4) - 1.5) * 2.2, 0, 2.0 - (i / 4) * 2.6 + (i % 2) * 0.8)
+		var p := Vector3(((i % 4) - 1.5) * 2.2, 0, 13.0 - (i / 4) * 2.6 + (i % 2) * 0.8)
 		st.walker(kinds[i], p, _yaw_to(p, toward), 1.0, i % 3 != 0)
 	st.fov(50.0, 44.0)
-	st.dolly(Vector3(4.0, 11.0, 30.0), Vector3(0, 3.0, -8), Vector3(2.5, 4.0, 22.0), Vector3(0, 2.0, -6), -1.2)
+	st.dolly(Vector3(-2.5, 10.0, 33.0), Vector3(0, 2.0, 4), Vector3(-1.5, 4.0, 25.0), Vector3(0, 1.5, 6), -1.2)
 	st.at(0.1, st.overlay.stamp.bind("Endless", "Ashfall City", Vector2(0.5, 0.26), 1.3, Color(1.0, 0.55, 0.25), 120))
 
 
@@ -734,10 +744,10 @@ func _city_street(st: CineStage) -> void:
 	for i in kinds.size():
 		var p := Vector3(((i % 3) - 1.0) * 1.9 + randf_range(-0.3, 0.3), 0, 8.5 - (i / 3) * 2.2)
 		st.walker(kinds[i], p, _yaw_to(p, cam), 1.0, true)
-	var boss := st.walker(&"the_wrecker", Vector3(-1.5, 0, -4.0), _yaw_to(Vector3(-1.5, 0, -4.0), cam), 0.9)
+	var boss := st.walker(&"the_wrecker", Vector3(-6.0, 0, 7.0), _yaw_to(Vector3(-6.0, 0, 7.0), cam), 0.9)
 	st.at(0.9, st.play.bind(boss, "Roar", 1.0, 0.0, 0.1))
 	st.fov(46.0, 40.0)
-	st.dolly(cam, Vector3(0, 2.6, -4), cam + Vector3(-0.8, 0.2, 1.2), Vector3(-0.5, 3.4, -4), 1.0)
+	st.dolly(cam, Vector3(-1.0, 2.6, 4), cam + Vector3(-0.8, 0.2, 1.2), Vector3(-2.0, 3.2, 4), 1.0)
 	st.at(0.0, func(): st.overlay.counter("WAVE", 5, 30, 1.4, Vector2(0.5, 0.22), Color(1.0, 0.6, 0.3), 104))
 	st.shake(0.9, 0.06, 0.6)
 
@@ -821,14 +831,14 @@ func _operators(st: CineStage) -> void:
 func _prints(st: CineStage) -> void:
 	st.at(0.0, st.overlay.grade.bind(&"studio"))
 	st.lighting(0.8, 1.0, 1.4)
-	var pivot := _turntable(st, st.weapon(PRINT_WEAPON, PRINT_FINISH), 1.3, 1.6)
+	var pivot := _turntable(st, st.weapon(PRINT_WEAPON, PRINT_FINISH), 1.3, 1.3)
 	pivot.visible = false
 	st.every_frame(func(t: float):
 		pivot.visible = t >= 0.4
 		pivot.rotation.y = deg_to_rad(-50.0 + t * 70.0)
 		pivot.position.y = 1.3 + 0.5 * pow(1.0 - smoothstep(0.4, 0.55, t), 2.0))
 	st.fov(36.0, 32.0)
-	st.dolly(Vector3(1.4, 1.6, 3.6), Vector3(-0.6, 1.3, 0), Vector3(1.0, 1.5, 3.1), Vector3(-0.5, 1.3, 0), 1.0)
+	st.dolly(Vector3(1.2, 1.55, 3.8), Vector3(-0.7, 1.45, 0), Vector3(0.9, 1.5, 3.3), Vector3(-0.6, 1.45, 0), 1.0)
 	var gold := CosmeticItem.rarity_color(CosmeticItem.Rarity.LEGENDARY)
 	st.at(0.0, func():
 		var machine := CapsuleMachine.new()
