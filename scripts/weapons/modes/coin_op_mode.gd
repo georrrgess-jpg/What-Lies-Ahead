@@ -47,9 +47,11 @@ var _since := 10.0
 var _listening := false
 
 
-## The Arsenal shows the untilted rate: the data rate is the tilted peak.
+## The Arsenal shows the untilted rate (the data rate is the tilted peak):
+## the same magazine and reload, paced at BASE_INTERVAL.
 func arsenal_dps(base: float) -> float:
-	return base * data.fire_interval / BASE_INTERVAL
+	var mag := float(data.magazine_size)
+	return base * (mag * data.fire_interval + data.reload_time) / (mag * BASE_INTERVAL + data.reload_time)
 
 
 func trigger(spinning: bool, delta: float) -> bool:
