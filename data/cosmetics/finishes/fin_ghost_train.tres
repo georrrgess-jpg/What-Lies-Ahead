@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_ghost_train"
+display_name = "Ghost Train"
+description = "The midnight express that never stops: carriage windows rush along the weapon with pale passengers and grinning ghosts at the glass, bulbs failing and flickering back, speed streaks and cold steam over the iron. Rusted trim with ghost-green lamps."
+slot = &"weapon_finish"
+rarity = 3
+price = 3500
+colors = PackedColorArray(0.0784, 0.0902, 0.1686, 1, 0.2745, 0.1490, 0.1020, 1)
+params = {
+"shader": "res://art/shaders/finish_ghost_train.gdshader"
+}
+sort_order = 2421

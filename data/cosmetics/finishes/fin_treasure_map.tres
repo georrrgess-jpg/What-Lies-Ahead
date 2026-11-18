@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_treasure_map"
+display_name = "Treasure Map"
+description = "A creased parchment chart that draws itself: coast and sea sketched in, a dotted route inked across every panel, and a red X that pulses where the loot is buried, before the ink dries and the map starts again. Oiled wood trim with brass fittings."
+slot = &"weapon_finish"
+rarity = 3
+price = 4250
+colors = PackedColorArray(0.9098, 0.8235, 0.6039, 1, 0.3020, 0.1725, 0.0863, 1)
+params = {
+"shader": "res://art/shaders/finish_treasure_map.gdshader"
+}
+sort_order = 2420

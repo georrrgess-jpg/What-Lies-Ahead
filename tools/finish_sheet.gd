@@ -2,7 +2,7 @@ extends SceneTree
 ## Finish check: renders a grid of weapon models, one tile per (finish, weapon),
 ## so new weapon finishes can be judged side by side.
 ##
-##   godot --path . --resolution 1440x810 --script res://tools/finish_sheet.gd -- <out.png> --finishes=a,b,c --weapons=x,y [--cols=3] [--tile=480x270] [--time=0.0]
+##   godot --path . --resolution 1440x810 --script res://tools/finish_sheet.gd -- <out.png> --finishes=a,b,c --weapons=x,y [--cols=3] [--tile=480x270] [--time=0.0] [--zoom=0.85] [--dark=1]
 ##
 ## Weapons run along the rows, finishes along the columns. --time advances the
 ## animated finishes by that many seconds before the capture (frames are
@@ -116,4 +116,4 @@ func _tile(grid: GridContainer, size: Vector2i, w, finish) -> void:
 	cam.fov = 28.0
 	vp.add_child(cam)
 	var radius := box.size.length() * 0.5
-	cam.look_at_from_position(Vector3(-0.72, 0.38, -0.78).normalized() * radius / tan(deg_to_rad(14.0)) * 0.62, Vector3.ZERO)
+	cam.look_at_from_position(Vector3(-0.95, 0.3, -0.32).normalized() * radius / tan(deg_to_rad(14.0)) * float(opts.get("zoom", "0.85")), Vector3.ZERO)

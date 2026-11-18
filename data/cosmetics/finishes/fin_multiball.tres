@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 21
+amount = 30
+
+[resource]
+script = ExtResource("1")
+id = &"fin_multiball"
+display_name = "Multiball"
+description = "A pinball playfield wrapped round the weapon: pop bumpers flash and swell as two chrome balls ricochet across the table trailing comets, and star inserts twinkle on the violet board. Chrome rail trim with rollover lights. For reaching Endless wave 30."
+slot = &"weapon_finish"
+rarity = 3
+requirement = SubResource("req")
+colors = PackedColorArray(0.1412, 0.0353, 0.4784, 1, 0.8000, 0.8157, 0.9020, 1)
+params = {
+"shader": "res://art/shaders/finish_pinball.gdshader"
+}
+sort_order = 2423
