@@ -367,7 +367,10 @@ sound_category = Dictionary[StringName, StringName]({
 &"tkr_fire": &"weapon",
 &"tkr_winner": &"weapon",
 &"tkr_pop": &"impact",
-&"tkr_ready": &"confirm"
+&"tkr_ready": &"confirm",
+&"cop_": &"handling",
+&"cop_fire": &"weapon",
+&"cop_payout": &"impact"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -564,5 +567,6 @@ sound_trim_db = Dictionary[StringName, float]({
 &"tkr_fire": 2.5,
 &"tkr_door": -2.0,
 &"tkr_holo": -4.0,
-&"tkr_ready": -5.0
+&"tkr_ready": -5.0,
+&"cop_equip": 2.0
 })

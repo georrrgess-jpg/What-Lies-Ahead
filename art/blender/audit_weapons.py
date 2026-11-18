@@ -33,6 +33,8 @@ WEAPONS = ["pulse_pistol", "ion_carbine", "scatter_blaster", "comet_cannon", "ar
            "sparkler", "ring_toss", "drum_popper", "whirligig", "riptide", "toxic_ripsaw",
            "shutterbug", "balloon_darter", "teacup_twister", "dunk_tank", "ground_control", "t_minus_six",
            "markdown_marker", "lava_lampoon", "yoyo_loco", "jack_pot", "popcorn_popper"]
+# Update 16: the Coin-Op.
+WEAPONS.append("coin_op")
 REQUIRED = ["Shell", "ArmL", "ArmR", "Decal", "IronSightRear", "IronSightFront",
             "Muzzle", "SightPoint", "SightMount", "EjectPoint", "VentPoint", "CharmPoint", "ElbowL", "ElbowR"]
 # The energy cell and its hologram copy (the Scatter Blaster loads two capsules instead).

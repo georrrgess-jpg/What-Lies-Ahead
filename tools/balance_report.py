@@ -111,6 +111,8 @@ TICKET = gd_consts("scripts/weapons/modes/ticket_ripper_mode.gd")
 # Share of the pop a gathered zombie takes (they spin near the cup's centre).
 VORTEX_POP_SHARE = 0.8
 JACKPOT = gd_consts("scripts/weapons/jack_pot_box.gd")
+# The Coin-Op: its tilt (rate climbs past TILT_DELAY), heavy glance and Free Play refunds (mode).
+COIN = gd_consts("scripts/weapons/modes/coin_op_mode.gd")
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
 	"capsule_height": 1.9, "mass": 1.0, "move_speed": 2.0}
 # Extra effective health from armour behaviours (helmet, riot shield, ice shell).
@@ -363,6 +365,10 @@ def pull_damage(w, e, d, head):
 	if w["id"] == "ticket_ripper":
 		# Every STREAK hits in a row the next shot is a WINNER ticket (perfect tracking assumed).
 		return w["damage"] * scale * head_mix * (TICKET["STREAK"] + TICKET["WINNER_SCALE"]) / (TICKET["STREAK"] + 1), w["fire_interval"]
+	if w["id"] == "coin_op":
+		# Tokens hit like ray shots at the tilting rate; heavies and alphas take HEAVY_SCALE.
+		glance = COIN["HEAVY_SCALE"] if e.get("heavy", False) or e.get("mass", 1.0) >= 3.0 else 1.0
+		return w["damage"] * scale * head_mix * glance, coin_cycle(w)
 	if w["projectile_speed"] > 0.0:
 		dmg = w["damage"] + w["direct_hit_bonus"]
 		return dmg, w["fire_interval"]
@@ -392,6 +398,38 @@ def popcorn_cycle(w):
 	rest = per / m["COOL_RATE"] + m["COOL_DELAY"] * per / (m["BOT_REST"] - m["BOT_RESUME"])
 	time = warm * m["WARM_INTERVAL"] + hot * (w["fire_interval"] + rest)
 	return time / w["magazine_size"], warm / w["magazine_size"], hot / w["magazine_size"]
+
+
+def coin_cycle(w):
+	"""Coin-Op: average seconds per token over a magazine held down: the untilted rate for
+	TILT_DELAY, then the rate climbing over TILT_RAMP to the data rate (60 Hz frames)."""
+	t, since, shots = 0.0, 1.0, 0
+	frame = 1.0 / 60.0
+	while shots < w["magazine_size"]:
+		tilt = min(1.0, max(0.0, (t - COIN["TILT_DELAY"]) / COIN["TILT_RAMP"]))
+		interval = COIN["BASE_INTERVAL"] + (w["fire_interval"] - COIN["BASE_INTERVAL"]) * tilt
+		if since >= max(interval, w["fire_interval"]) - 0.001:
+			shots += 1
+			since = min(max(since - interval, 0.0), frame)
+		t += frame
+		since += frame
+	return t / shots
+
+
+def coin_free_play(w, e, head):
+	"""Coin-Op Free Play on a stream of `e`: (kills per magazine, of which pay out, rounds refunded)."""
+	dmg = w["damage"] * (1.0 + head * (w["headshot_multiplier"] - 1.0))
+	shots = math.ceil((e["max_health"] + e["armour"]) / dmg)
+	# A kill is a headshot kill when its last token lands on the head (head share).
+	kills, mag, credits, paid, refunded = 0, float(w["magazine_size"]), 0.0, 0.0, 0.0
+	while mag >= shots and kills < 200:
+		mag -= shots
+		kills += 1
+		pay = head + (1.0 - head) / COIN["PAYOUT_EVERY"]
+		paid += pay
+		refunded += pay * COIN["PAYOUT_ROUNDS"]
+		mag = min(w["magazine_size"], mag + pay * COIN["PAYOUT_ROUNDS"])
+	return kills, paid, refunded
 
 
 def vortex_spin():
@@ -627,6 +665,13 @@ def main():
 			print(f"\n{w['display_name']} field: {int(JACKPOT['MAX_BOXES'])} boxes armed {JACKPOT['ARM_TIME']:g} s after landing, "
 				f"each {w['damage']:.0f} to the zombie that sets it off and {edge:.0f} on average to the rest within {w['splash_radius']:g} m; "
 				f"a pack of four walking into the field takes {field:.0f}; a boss {w['damage'] * JACKPOT['BOSS_SCALE']:.0f} a box")
+	for w in ws.values():
+		if w["id"] == "coin_op":
+			k, paid, back = coin_free_play(w, es["tourist_shambler"], head)
+			k0, _, _ = coin_free_play(w, es["tourist_shambler"], 0.0)
+			print(f"\n{w['display_name']} Free Play: a magazine held down averages {1.0 / coin_cycle(w):.1f} tokens a second (tilts after "
+				f"{COIN['TILT_DELAY']:g} s); on a stream of tourists it drops {k} with {head * 100:.0f}% headshots ({paid:.1f} payouts, "
+				f"+{back:.0f} rounds) against {k0} with body shots only; heavies and alphas take {COIN['HEAVY_SCALE'] * 100:.0f}%")
 	tags = gd_consts("scripts/weapons/markdown_marker_tags.gd")
 	own = {"Marker tags": tags["TAG_BONUS"] * tags["MAX_TAGS"], "Ground Control mark": MARK["DAMAGE_BONUS"] - 1.0,
 		"Dunk Tank soak": SOAK["DAMAGE_BONUS"] - 1.0}
