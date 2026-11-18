@@ -336,7 +336,19 @@ sound_category = Dictionary[StringName, StringName]({
 &"cove_broadside_call": &"cue",
 &"skull_harbor_loop": &"music",
 &"skull_harbor_final": &"music",
-&"cove_ambience": &"ambience"
+&"cove_ambience": &"ambience",
+&"toy_": &"enemy_voice",
+&"toy_soldier_ratchet": &"enemy_telegraph",
+&"toy_soldier_march": &"enemy_telegraph",
+&"toy_plush_squash": &"enemy_telegraph",
+&"toy_plush_boing": &"enemy_telegraph",
+&"toy_plush_thump": &"enemy_attack",
+&"toy_train_whistle": &"cue",
+&"toy_windup_ratchet": &"cue",
+&"toy_windup_rundown": &"cue",
+&"toy_shop_loop": &"music",
+&"toy_shop_final": &"music",
+&"toy_ambience": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,

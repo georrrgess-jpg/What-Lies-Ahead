@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/toy_shop_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"toy_shop"
+display_name = "Toy Shop"
+blurb = "Hold the shop floor round the Toy Chest, between the window display, the dollhouse and the counter, then follow the star nightlights to the portal."
+scene_path = "res://scenes/levels/toy_shop.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"toy_shop_loop"
+music_final = &"toy_shop_final"
+ambience = &"toy_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(0.95, 0.76, 0.23, 1)
+menu_camera_from = Vector3(-22, 8, 26)
+menu_camera_to = Vector3(14, 6, -14)
+heal_item_name = "Milk and cookies"
+loading_tips = PackedStringArray("Wind-up Soldiers stop to wind their keys before they march: step aside and they march straight past.", "Plush Brutes squash down before they bounce. A ring marks where they land: get out of it or be bounced back.", "The window display is high ground with a view of the whole floor: book stairs climb it at both ends.", "The dollhouse has two floors and a stair along its back wall. Its open side faces the station.", "When the music box plays, the whole horde is wound up. When it winds down, they nearly stop: that is your moment.", "The Toymaker drops building blocks where you stand. Keep moving, and shoot the glow when he winds down.")

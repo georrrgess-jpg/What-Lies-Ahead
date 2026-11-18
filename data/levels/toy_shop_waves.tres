@@ -1,0 +1,165 @@
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
+
+[sub_resource type="Resource" id="wave_1"]
+script = ExtResource("2")
+spawns = {
+"toy_windup_soldier": 9,
+"tourist_shambler": 10,
+"toy_plush_brute": 2,
+"mall_flinger": 2
+}
+spawn_interval = 1.35
+burst = 1
+max_alive = 12
+speed_scale = 1.03
+late_types_after = 0.4
+banner = ""
+kind = &"standard"
+title = "AFTER HOURS"
+hint = "Soldiers stop to wind their keys before they march: step aside."
+
+[sub_resource type="Resource" id="wave_2"]
+script = ExtResource("2")
+spawns = {
+"toy_windup_soldier": 14,
+"lifeguard_runner": 6,
+"tourist_shambler": 6,
+"frost_ski_racer": 3
+}
+spawn_interval = 0.85
+burst = 1
+max_alive = 14
+speed_scale = 1.05
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "QUICK MARCH"
+hint = "The whole regiment is on the march: let the bursts sail past."
+surge_at = 0.5
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_3"]
+script = ExtResource("2")
+spawns = {
+"toy_plush_brute": 5,
+"sky_balloon_vendor": 4,
+"tourist_shambler": 11,
+"mall_flinger": 2
+}
+spawn_interval = 1.0
+burst = 1
+max_alive = 14
+speed_scale = 1.06
+late_types_after = 0.15
+banner = ""
+kind = &"ranged"
+title = "PILLOW FIGHT"
+hint = "Brutes bounce in from every side: leave the ring before they land."
+surge_at = 0.55
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_4"]
+script = ExtResource("2")
+spawns = {
+"toy_windup_soldier": 12,
+"tourist_shambler": 10,
+"toy_plush_brute": 3,
+"boardwalk_bruiser": 1,
+"sky_balloon_vendor": 2
+}
+spawn_interval = 1.0
+burst = 1
+max_alive = 15
+speed_scale = 1.08
+late_types_after = 0.2
+banner = ""
+kind = &"bounty"
+title = "THE GOLDEN SOLDIER"
+hint = "Pop the golden soldier before it marches off the shelf."
+bounty = &"toy_windup_soldier"
+bounty_tickets = 240
+
+[sub_resource type="Resource" id="wave_5"]
+script = ExtResource("2")
+spawns = {
+"toy_plush_brute": 5,
+"frost_yeti": 1,
+"boardwalk_bruiser": 2,
+"tourist_shambler": 12,
+"toy_windup_soldier": 10,
+"mall_flinger": 2
+}
+spawn_interval = 1.05
+burst = 1
+max_alive = 16
+speed_scale = 1.11
+late_types_after = 0.25
+banner = ""
+kind = &"siege"
+title = "STUFFED AND MOUNTED"
+hint = "The heavies come one entrance at a time: hold the high ground."
+
+[sub_resource type="Resource" id="wave_6"]
+script = ExtResource("2")
+spawns = {
+"toy_windup_soldier": 14,
+"tourist_shambler": 13,
+"lifeguard_runner": 5,
+"toy_plush_brute": 2,
+"sky_balloon_vendor": 2
+}
+spawn_interval = 0.85
+burst = 1
+max_alive = 16
+speed_scale = 1.12
+late_types_after = 0.15
+banner = ""
+kind = &"standard"
+title = "WOUND UP"
+hint = "The music box winds them fast, then they run down: strike when they slow."
+surge_at = 0.5
+surge_count = 6
+twist = &"wind_up"
+
+[sub_resource type="Resource" id="wave_7"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 14,
+"toy_windup_soldier": 12,
+"toy_plush_brute": 5,
+"lava_fire_dancer": 3,
+"sky_balloon_vendor": 3
+}
+spawn_interval = 1.5
+burst = 2
+max_alive = 17
+speed_scale = 1.14
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "THE TOYMAKER"
+hint = "Keep moving under the blocks, sidestep his rush, then shoot the glow."
+boss = &"alpha_toymaker"
+boss_at = 0.45
+rest_before = 24.0
+
+[resource]
+script = ExtResource("1")
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
+prep_seconds = 12.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 560
+break_refill_fraction = 0.3
+ammo_topup_price = 250
+heal_price = 390
+heal_amount = 60.0
+heals_per_break = 1
+wave_bonus_base = 22
+wave_bonus_per_wave = 5
+overshield_price = 780
+overshield_amount = 25.0
+damage_boost_price = 750
