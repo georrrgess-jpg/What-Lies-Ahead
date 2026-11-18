@@ -75,6 +75,11 @@ func _ready() -> void:
 	_timer.autostart = true
 	_timer.timeout.connect(_poll)
 	add_child(_timer)
+	# A resized window moves the anchor: follow it on the next frame (once the
+	# containers have laid out) rather than at the next poll.
+	get_viewport().size_changed.connect(func():
+		if _callout.visible and not get_tree().process_frame.is_connected(_place):
+			get_tree().process_frame.connect(_place, CONNECT_ONE_SHOT))
 
 
 ## Follows `menu` (the MainMenu) and coaches the pages it opens.

@@ -40,6 +40,9 @@ const STRAY := 6.0
 const SMALL_CASTER := 2.0
 ## The sun's shadows end here: about the menu camera's distance to its target.
 const SHADOW_DISTANCE := 40.0
+## How far the camera leans towards the mouse (gentle parallax), metres
+## sideways and up.
+const PARALLAX := Vector2(0.9, 0.35)
 ## Nodes the menu never needs, by class.
 const GAMEPLAY_ONLY := ["CollisionShape3D", "CollisionPolygon3D"]
 
@@ -52,6 +55,8 @@ var _camera: Camera3D
 var _time := 0.0
 ## Seconds since the shown level came up (the camera drift's clock).
 var _drift := 0.0
+## The camera's smoothed lean towards the mouse, -1..1 on each axis.
+var _lean := Vector2.ZERO
 var _from := Vector3(28, 9, 18)
 var _to := Vector3(-2, 3, -4)
 var _fade: ColorRect
@@ -121,11 +126,23 @@ func _process(delta: float) -> void:
 	if _camera == null:
 		return
 	# Cinematic drift: a slow figure-eight around the menu viewpoint, always
-	# looking at the target, with a gentle breathing height.
+	# looking at the target, with a gentle breathing height, leaning a little
+	# towards the mouse.
 	var t := _drift * DRIFT * TAU
 	var side := (_to - _from).cross(Vector3.UP).normalized()
-	var pos := _from + side * sin(t) * 5.0 + (_to - _from).normalized() * sin(t * 2.0) * 2.0 + Vector3.UP * sin(t * 1.3) * 0.8
+	_lean = _lean.lerp(_mouse(), 1.0 - exp(-delta * 2.0))
+	var pos := _from + side * (sin(t) * 5.0 + _lean.x * PARALLAX.x) + (_to - _from).normalized() * sin(t * 2.0) * 2.0 \
+		+ Vector3.UP * (sin(t * 1.3) * 0.8 - _lean.y * PARALLAX.y)
 	_camera.look_at_from_position(pos, _to + Vector3.UP * sin(t * 0.7) * 0.5)
+
+
+## The mouse from the middle of the window, -1..1 on each axis.
+func _mouse() -> Vector2:
+	var vp := get_viewport()
+	var view := vp.get_visible_rect().size
+	if view.x <= 0.0 or view.y <= 0.0:
+		return Vector2.ZERO
+	return ((vp.get_mouse_position() / view - Vector2(0.5, 0.5)) * 2.0).clampf(-1.0, 1.0)
 
 
 ## One step of load -> veil -> swap -> unveil per frame at most.
