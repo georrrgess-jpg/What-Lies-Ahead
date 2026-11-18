@@ -770,6 +770,7 @@ func _sweep_track(parent: Node3D, ups: PackedVector3Array) -> void:
 	_tube(st_spine, ups, Vector2(0.0, -0.48), 0.22, 8)
 	for pair in [[st_rail, rail, "Rails"], [st_spine, spine, "Spine"]]:
 		var st: SurfaceTool = pair[0]
+		st.index()
 		(pair[1] as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
 		st.set_material(pair[1])
 		var mi := MeshInstance3D.new()
@@ -817,6 +818,8 @@ func _tube(st: SurfaceTool, ups: PackedVector3Array, offset: Vector2, r: float, 
 	for i in _track.size():
 		if _hidden[i]:
 			prev.clear()
+			continue
+		if i % 2 == 1 and i + 1 < _track.size() and not _hidden[i + 1]:
 			continue
 		var f := _frame_at(i, ups)
 		var centre := f.origin + f.basis.x * offset.x + f.basis.y * offset.y
