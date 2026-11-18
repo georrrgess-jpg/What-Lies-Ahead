@@ -858,12 +858,18 @@ func _build_entrances() -> void:
 	_solid_prop(e, "faire_cart", "RoadCart", Vector3(-43.6, 0, 7.4), 0.0, Vector3(1.8, 1.8, 3.3))
 	_solid_prop(e, "faire_hay", "BarnHay", Vector3(30.6, 0, -52.6), 0.0, Vector3(2.4, 1.4, 1.2))
 	# The courtyard postern: an open door in the north-west tower.
-	var door_at := Vector3(-CASTLE_X, 0, CASTLE_N) + Vector3(0.707, 0, 0.707) * 3.0
+	var out := Vector3(0.707, 0, 0.707)
+	var along := Vector3(0.707, 0, -0.707)
+	var door_at := Vector3(-CASTLE_X, 0, CASTLE_N) + out * 3.3
 	var dark := _mat("doorway", Color(0.08, 0.07, 0.1), 0.9)
-	var postern := _visual_box(dressing, "PosternDoorway", Vector3(2.0, 3.0, 0.3), door_at + Vector3(0, 1.5, 0), dark)
-	postern.rotation.y = deg_to_rad(45.0)
-	var arch := _visual_box(dressing, "PosternArch", Vector3(2.6, 0.5, 0.5), door_at + Vector3(0, 3.2, 0), _stone_trim())
-	arch.rotation.y = deg_to_rad(45.0)
+	var parts := [["PosternDoorway", Vector3(2.0, 3.0, 0.5), door_at + Vector3(0, 1.5, 0), dark],
+		["PosternArch", Vector3(2.9, 0.55, 0.7), door_at + Vector3(0, 3.25, 0) + out * 0.05, _stone_trim()],
+		["PosternJambL", Vector3(0.45, 3.0, 0.7), door_at + Vector3(0, 1.5, 0) + along * 1.22 + out * 0.05, _stone_trim()],
+		["PosternJambR", Vector3(0.45, 3.0, 0.7), door_at + Vector3(0, 1.5, 0) - along * 1.22 + out * 0.05, _stone_trim()],
+		["PosternStep", Vector3(2.6, 0.2, 1.0), door_at + Vector3(0, 0.1, 0) + out * 0.4, _stone_trim()]]
+	for part in parts:
+		var box := _visual_box(dressing, part[0], part[1], part[2], part[3])
+		box.rotation.y = deg_to_rad(45.0)
 
 
 ## Invisible walls (world layer, so the navmesh stops at them) round a
