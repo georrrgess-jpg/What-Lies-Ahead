@@ -16,6 +16,9 @@ extends Node3D
 @export var lift := Vector2.ZERO
 ## Height of the lift's crest (the train's speed comes from the drop below it).
 @export var top_y := 24.5
+## Where the loco starts (metres along the circuit): just short of the loop,
+## so the train is diving through it when a level (or the menu) first shows.
+@export var start := 0.0
 @export var spacing := 2.3
 @export var lift_speed := 3.6
 @export var hidden_speed := 16.0
@@ -43,8 +46,9 @@ func _ready() -> void:
 	for child in get_children():
 		if child is Node3D:
 			_cars.append(child)
-	# Start with the train part-way up the lift, out of step with any replay.
-	_s = lerpf(lift.x, lift.y, 0.2)
+	_s = start
+	if _total > 0.0:
+		_speed = _target_speed(_sample(_s).origin.y)
 	set_process(_total > 0.0)
 
 
@@ -52,12 +56,10 @@ func _process(delta: float) -> void:
 	var head := _sample(_s)
 	var on_lift := _s >= lift.x and _s <= lift.y
 	var target := lift_speed
-	if on_lift:
-		target = lift_speed
-	elif _is_hidden(_s):
+	if _is_hidden(_s):
 		target = hidden_speed
-	else:
-		target = clampf(sqrt(lift_speed * lift_speed + 2.0 * GRAVITY * maxf(0.0, top_y - head.origin.y)) * FRICTION, lift_speed, max_speed)
+	elif not on_lift:
+		target = _target_speed(head.origin.y)
 	_speed = move_toward(_speed, target, delta * 14.0)
 	if _was_lift and not on_lift:
 		Sfx.play_at(&"gulch_coaster_whoosh", head.origin, 2.0, 1.0, 22.0)
@@ -70,6 +72,11 @@ func _process(delta: float) -> void:
 		var car := _cars[i]
 		car.transform = _sample(d)
 		car.visible = not _is_hidden(d)
+
+
+## Free-rolling speed at height y: what the drop from the crest gives, less friction.
+func _target_speed(y: float) -> float:
+	return clampf(sqrt(lift_speed * lift_speed + 2.0 * GRAVITY * maxf(0.0, top_y - y)) * FRICTION, lift_speed, max_speed)
 
 
 func _is_hidden(d: float) -> bool:

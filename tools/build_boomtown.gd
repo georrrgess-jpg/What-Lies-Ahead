@@ -79,6 +79,7 @@ var _mesh_cache := {}
 var _track := PackedVector3Array()
 var _hidden: Array[bool] = []
 var _lift_range := Vector2.ZERO
+var _loop_start := 0.0
 
 
 func _initialize() -> void:
@@ -650,7 +651,7 @@ func _build_coaster() -> void:
 	for h in _hidden:
 		hidden.append(1 if h else 0)
 	_late(train, "res://scripts/props/gulch_coaster_train.gd", {"points": _track, "ups": ups, "hidden": hidden, "lift": _lift_range,
-		"top_y": TOP_Y + 0.5})
+		"top_y": TOP_Y + 0.5, "start": _loop_start + 4.0})
 
 
 ## The circuit as a dense polyline (0.5 m apart), starting at the east tunnel.
@@ -669,6 +670,7 @@ func _trace_track() -> void:
 	_line(pts, hid, Vector3(LIFT_X - 6.0, TOP_Y + 0.5, LOOP_C.z), Vector3(LIFT_X - 8.0, TOP_Y + 0.5, LOOP_C.z), false)
 	_drop(pts, hid, Vector3(LIFT_X - 8.0, TOP_Y + 0.5, LOOP_C.z), Vector3(6.0, TRACK_Y, LOOP_C.z))
 	_line(pts, hid, Vector3(6.0, TRACK_Y, LOOP_C.z), Vector3(0.0, TRACK_Y, LOOP_C.z), false)
+	_loop_start = _length(pts)
 	# The loop: in at the bottom heading west, round, out 2 m further south.
 	var steps := int(TAU * LOOP_R / 0.5)
 	for i in range(1, steps + 1):
