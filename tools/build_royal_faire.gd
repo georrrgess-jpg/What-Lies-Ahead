@@ -45,7 +45,7 @@ const CASTLE_N := -40.0
 const CASTLE_S := -14.0
 const SIDE_DOOR_Z := -27.0
 const MOAT := Rect2(-16.0, -9.0, 32.0, 6.0)          # x, z, w, d
-const MOAT_Y := -1.0
+const MOAT_Y := -0.45
 const ARENA := Rect2(-36.0, -46.0, 72.0, 80.2)       # the player boundary
 const SUN_DIRECTION := Vector3(0.6, 0.55, 0.58)      # toward the sun (east-south-east, morning)
 const PLAYER_WALL_H := 12.0
@@ -53,6 +53,11 @@ const RED := Color(0.85, 0.2, 0.25)
 const BLUE := Color(0.18, 0.36, 0.83)
 const GOLD := Color(0.95, 0.76, 0.31)
 const GREEN := Color(0.25, 0.66, 0.36)
+## Small props drawn only within this distance (they are lost in the crowd
+## further out, and long views over the faire stay under the draw-call budget).
+const SMALL_RANGE := 48.0
+const SMALL_PROPS: Array[String] = ["faire_hay", "faire_barrels", "faire_crates", "faire_bench", "faire_brazier", "faire_hay_target",
+	"faire_cart", "faire_well", "faire_dummy", "faire_exit_lantern"]
 const CREAM := Color(0.96, 0.93, 0.84)
 
 var level: Node3D
@@ -214,16 +219,13 @@ func _build_ground() -> void:
 	_ground_box(g, "TurfSouth", Rect2(x0, mz1, x1 - x0, z1 - mz1), grass)
 	_ground_box(g, "TurfWest", Rect2(x0, mz0, mx0 - x0, MOAT.size.y), grass)
 	_ground_box(g, "TurfEast", Rect2(mx1, mz0, x1 - mx1, MOAT.size.y), grass)
-	# The far meadow round it (scenery only, just under the turf).
-	var meadow := MeshInstance3D.new()
-	meadow.name = "Meadow"
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(1400.0, 1400.0)
-	meadow.mesh = plane
-	meadow.material_override = _textured("grass_far", "faire_grass", 0.05, 0.95)
-	meadow.position = Vector3(0, -0.04, 0)
-	meadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	dressing.add_child(meadow)
+	# The far meadow round it (scenery only, just under the turf), open over the moat.
+	var far := _textured("grass_far", "faire_grass", 0.05, 0.95)
+	var r := 700.0
+	_decal(dressing, "MeadowNorth", Rect2(-r, -r, 2.0 * r, mz0 + r), -0.04, far)
+	_decal(dressing, "MeadowSouth", Rect2(-r, mz1, 2.0 * r, r - mz1), -0.04, far)
+	_decal(dressing, "MeadowWest", Rect2(-r, mz0, mx0 + r, MOAT.size.y), -0.04, far)
+	_decal(dressing, "MeadowEast", Rect2(mx1, mz0, r - mx1, MOAT.size.y), -0.04, far)
 	# Cobbled paths: the courtyard, the gate passage, the plaza and the way to it.
 	var cobble := _textured("cobble", "faire_cobble", 0.33, 0.8)
 	_decal(dressing, "Courtyard", Rect2(-16.5, -38.5, 33.0, 24.6), 0.012, cobble)
@@ -707,7 +709,7 @@ func _build_lanes() -> void:
 	geo.add_child(l)
 	# West: the tourney stables (hay, carts, a quintain, an archery butt).
 	_solid_prop(l, "faire_hay", "WLaneHayA", Vector3(-31.5, 0, -16.0), 90.0, Vector3(2.4, 1.4, 1.2))
-	_solid_prop(l, "faire_cart", "WLaneCart", Vector3(-24.5, 0, -33.0), 10.0, Vector3(1.8, 1.8, 3.3))
+	_solid_prop(l, "faire_cart", "WLaneCart", Vector3(-22.5, 0, -41.5), 10.0, Vector3(1.8, 1.8, 3.3))
 	_solid_prop(l, "faire_hay_target", "WLaneTarget", Vector3(-32.5, 0, -27.0), 80.0, Vector3(1.8, 2.2, 1.2))
 	_solid_prop(l, "faire_barrels", "WLaneBarrels", Vector3(-31.5, 0, -38.5), 0.0, Vector3(1.9, 1.3, 1.4))
 	_solid_prop(l, "faire_crates", "WLaneCrates", Vector3(-22.6, 0, -19.0), 100.0, Vector3(1.6, 1.5, 1.2))
@@ -720,6 +722,15 @@ func _build_lanes() -> void:
 	_solid_prop(l, "faire_barrels", "ELaneBarrels", Vector3(22.5, 0, -21.0), 120.0, Vector3(1.9, 1.3, 1.4))
 	_solid_prop(l, "faire_tent", "ELaneTent", Vector3(31.0, 0, -6.5), 200.0, Vector3(5.2, 5.6, 5.2))
 	_recolour(l.get_node("ELaneTent"), "FaireTentA", RED)
+	# A paddock on the barn track (a fenced square of hay) and an archery line
+	# on the west lane.
+	var pen := [Vector3(29.0, 0, -42.5), Vector3(35.0, 0, -42.5), Vector3(35.0, 0, -37.0), Vector3(29.0, 0, -37.0)]
+	for i in 3:
+		_fence_line(l, "PenFence%d" % i, pen[i], pen[i + 1])
+	_solid_prop(l, "faire_hay", "PenHay", Vector3(32.0, 0, -40.0), 10.0, Vector3(2.4, 1.4, 1.2))
+	for z in [-31.0, -35.0]:
+		_solid_prop(l, "faire_hay_target", "WLaneTarget%d" % int(-z), Vector3(-33.0, 0, z), 80.0, Vector3(1.8, 2.2, 1.2))
+	_fence_line(l, "ArcheryLine", Vector3(-25.5, 0, -38.0), Vector3(-25.5, 0, -28.0))
 	for s in [-1.0, 1.0]:
 		_banner(l, "LaneBanner%d" % int(s), Vector3(s * 22.0, 0, -10.6), 0.0, RED if s < 0 else BLUE)
 		_brazier(l, "LaneBrazier%d" % int(s), Vector3(s * 22.4, 0, -24.0))
@@ -766,6 +777,24 @@ func _build_boundary() -> void:
 		_player_wall(walls, "HouseWall%d" % i, Vector3(hx[i] - 3.6, 0, z1), Vector3(hx[i] + 3.6, 0, z1), PLAYER_WALL_H)
 
 
+## A low post-and-rail fence from a to b (1.15 m, blocks walking).
+func _fence_line(parent: Node3D, run_name: String, a: Vector3, b: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = run_name
+	parent.add_child(body)
+	body.position = (a + b) * 0.5
+	var dir := (b - a).normalized()
+	body.rotation.y = atan2(-dir.z, dir.x)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var box := BoxShape3D.new()
+	box.size = Vector3(a.distance_to(b), 1.15, 0.25)
+	shape.shape = box
+	shape.position.y = 0.575
+	body.add_child(shape)
+	body.add_child(_module_row("Modules", "faire_fence", a.distance_to(b), 3.0))
+
+
 func _palisade(parent: Node3D, walls: Node3D, run_name: String, a: Vector3, b: Vector3) -> void:
 	var length := a.distance_to(b)
 	if length < 0.5:
@@ -807,13 +836,23 @@ func _build_entrances() -> void:
 	_player_wall(walls, "ForestGateBar", Vector3(-30.2, 0, ARENA.position.y), Vector3(-25.8, 0, ARENA.position.y), PLAYER_WALL_H)
 	_player_wall(walls, "BarnGateBar", Vector3(25.8, 0, ARENA.position.y), Vector3(30.2, 0, ARENA.position.y), PLAYER_WALL_H)
 	_player_wall(walls, "VillageGateBar", Vector3(-2.1, 0, ARENA.end.y), Vector3(2.1, 0, ARENA.end.y), PLAYER_WALL_H)
-	# Beyond the gates: the knights' pavilion, the market road cart, the
-	# forest road and barn, the village lane's houses.
-	var pav := _prop(dressing, "faire_tent", "KnightsPavilion", Vector3(42.0, 0, 12.0), 270.0, Vector3(5.2, 5.6, 5.2))
+	# Beyond each gate a closed pocket (invisible walls), so nothing walks round
+	# the outside of the faire from one entrance to another; in them the
+	# knights' pavilion, the market road cart, the barn's hay.
+	var x0 := ARENA.position.x
+	var x1 := ARENA.end.x
+	var z0 := ARENA.position.y
+	var z1 := ARENA.end.y
+	_pocket(e, "MarketPocket", Rect2(x0 - 9.0, 5.5, 9.0, 8.0), "east")
+	_pocket(e, "PavilionPocket", Rect2(x1, 8.0, 10.0, 8.0), "west")
+	_pocket(e, "ForestPocket", Rect2(-32.0, z0 - 9.0, 8.0, 9.0), "south")
+	_pocket(e, "BarnPocket", Rect2(24.0, z0 - 9.0, 8.0, 9.0), "south")
+	_pocket(e, "VillagePocket", Rect2(-4.0, z1, 8.0, 9.0), "north")
+	var pav := _prop(dressing, "faire_tent", "KnightsPavilion", Vector3(44.6, 0, 12.0), 270.0, Vector3(5.2, 5.6, 5.2))
 	pav.scale = Vector3.ONE * 1.25
 	_recolour(pav, "FaireTentA", BLUE)
-	_solid_prop(e, "faire_cart", "RoadCart", Vector3(-41.5, 0, 4.0), 20.0, Vector3(1.8, 1.8, 3.3))
-	_solid_prop(e, "faire_hay", "BarnHay", Vector3(33.0, 0, -50.0), 0.0, Vector3(2.4, 1.4, 1.2))
+	_solid_prop(e, "faire_cart", "RoadCart", Vector3(-43.6, 0, 7.4), 0.0, Vector3(1.8, 1.8, 3.3))
+	_solid_prop(e, "faire_hay", "BarnHay", Vector3(30.6, 0, -52.6), 0.0, Vector3(2.4, 1.4, 1.2))
 	# The courtyard postern: an open door in the north-west tower.
 	var door_at := Vector3(-CASTLE_X, 0, CASTLE_N) + Vector3(0.707, 0, 0.707) * 3.0
 	var dark := _mat("doorway", Color(0.08, 0.07, 0.1), 0.9)
@@ -821,6 +860,25 @@ func _build_entrances() -> void:
 	postern.rotation.y = deg_to_rad(45.0)
 	var arch := _visual_box(dressing, "PosternArch", Vector3(2.6, 0.5, 0.5), door_at + Vector3(0, 3.2, 0), _stone_trim())
 	arch.rotation.y = deg_to_rad(45.0)
+
+
+## Invisible walls (world layer, so the navmesh stops at them) round a
+## rectangle beyond a gate, open on the side that faces the gate.
+func _pocket(parent: Node3D, pocket_name: String, r: Rect2, open_side: String) -> void:
+	var sides := {
+		"north": [Vector3(r.position.x, 0, r.position.y), Vector3(r.end.x, 0, r.position.y)],
+		"south": [Vector3(r.position.x, 0, r.end.y), Vector3(r.end.x, 0, r.end.y)],
+		"west": [Vector3(r.position.x, 0, r.position.y), Vector3(r.position.x, 0, r.end.y)],
+		"east": [Vector3(r.end.x, 0, r.position.y), Vector3(r.end.x, 0, r.end.y)],
+	}
+	for side in sides:
+		if side == open_side:
+			continue
+		var a: Vector3 = sides[side][0]
+		var b: Vector3 = sides[side][1]
+		var along_x := absf(b.x - a.x) > absf(b.z - a.z)
+		var size := Vector3(a.distance_to(b) + 0.5, 3.0, 0.5) if along_x else Vector3(0.5, 3.0, a.distance_to(b) + 0.5)
+		_collider(parent, "%s_%s" % [pocket_name, side], size, (a + b) * 0.5 + Vector3(0, 1.5, 0))
 
 
 ## A palisade gateway: two posts, a lintel with a sign board, a gate leaf
@@ -939,8 +997,8 @@ func _build_backdrop() -> void:
 		var s := rng.randf_range(1.2, 2.2)
 		_scatter_add(model, Transform3D(Basis(Vector3.UP, rng.randf_range(0, TAU)).scaled(Vector3.ONE * s), p + Vector3(0, _hill_height(p, hills), 0)))
 	# A few trees just inside the edges of the lanes and the green.
-	for p in [Vector3(-34.0, 0, -42.0), Vector3(34.0, 0, -42.5), Vector3(-34.3, 0, 30.5), Vector3(34.0, 0, 32.0), Vector3(-34.0, 0, -22.0),
-			Vector3(34.2, 0, -25.0)]:
+	for p in [Vector3(-34.0, 0, -42.0), Vector3(-34.3, 0, 30.5), Vector3(34.0, 0, 32.0), Vector3(-34.0, 0, -22.0),
+			Vector3(34.2, 0, -25.0), Vector3(-34.0, 0, -12.5), Vector3(22.0, 0, -44.0), Vector3(34.0, 0, -12.0)]:
 		_scatter_add("faire_tree", Transform3D(Basis(Vector3.UP, p.x).scaled(Vector3.ONE * 1.1), p))
 		_post(geo, "EdgeTree%d_%d" % [int(p.x), int(p.z)], 0.45, 3.0, p)
 	# Birds wheeling over the castle.
@@ -1491,6 +1549,8 @@ func _prop(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_d
 	if ResourceLoader.exists(path):
 		var mi := MeshInstance3D.new()
 		mi.mesh = _model_mesh(model)
+		if model in SMALL_PROPS:
+			mi.visibility_range_end = SMALL_RANGE
 		node = mi
 	else:
 		var mi := MeshInstance3D.new()
