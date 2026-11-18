@@ -6,14 +6,15 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"toy_windup_soldier": 6,
-"tourist_shambler": 9,
-"toy_plush_brute": 1
+"toy_windup_soldier": 9,
+"tourist_shambler": 10,
+"toy_plush_brute": 2,
+"mall_flinger": 2
 }
-spawn_interval = 1.6
+spawn_interval = 1.35
 burst = 1
-max_alive = 10
-speed_scale = 1.0
+max_alive = 13
+speed_scale = 1.03
 late_types_after = 0.4
 banner = ""
 kind = &"standard"
@@ -23,14 +24,15 @@ hint = "Soldiers stop to wind their keys before they march: step aside."
 [sub_resource type="Resource" id="wave_2"]
 script = ExtResource("2")
 spawns = {
-"toy_windup_soldier": 13,
-"lifeguard_runner": 5,
-"tourist_shambler": 4
+"toy_windup_soldier": 14,
+"lifeguard_runner": 6,
+"tourist_shambler": 6,
+"frost_ski_racer": 3
 }
-spawn_interval = 1.0
+spawn_interval = 0.85
 burst = 1
-max_alive = 12
-speed_scale = 1.02
+max_alive = 15
+speed_scale = 1.05
 late_types_after = 0.0
 banner = ""
 kind = &"rush"
@@ -42,15 +44,15 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"toy_plush_brute": 4,
-"sky_balloon_vendor": 4,
-"tourist_shambler": 8,
-"mall_flinger": 3
+"toy_plush_brute": 6,
+"sky_balloon_vendor": 6,
+"tourist_shambler": 10,
+"mall_flinger": 4
 }
-spawn_interval = 1.25
+spawn_interval = 1.0
 burst = 1
-max_alive = 12
-speed_scale = 1.03
+max_alive = 15
+speed_scale = 1.06
 late_types_after = 0.15
 banner = ""
 kind = &"ranged"
@@ -62,15 +64,16 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"toy_windup_soldier": 11,
-"tourist_shambler": 9,
-"toy_plush_brute": 2,
-"boardwalk_bruiser": 1
+"toy_windup_soldier": 13,
+"tourist_shambler": 11,
+"toy_plush_brute": 4,
+"boardwalk_bruiser": 1,
+"sky_balloon_vendor": 3
 }
-spawn_interval = 1.15
+spawn_interval = 1.0
 burst = 1
-max_alive = 13
-speed_scale = 1.06
+max_alive = 16
+speed_scale = 1.08
 late_types_after = 0.2
 banner = ""
 kind = &"bounty"
@@ -82,16 +85,17 @@ bounty_tickets = 240
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"toy_plush_brute": 4,
-"frost_yeti": 1,
-"boardwalk_bruiser": 1,
-"tourist_shambler": 10,
-"toy_windup_soldier": 8
+"toy_plush_brute": 6,
+"frost_yeti": 2,
+"boardwalk_bruiser": 2,
+"tourist_shambler": 12,
+"toy_windup_soldier": 10,
+"mall_flinger": 3
 }
-spawn_interval = 1.2
+spawn_interval = 1.05
 burst = 1
-max_alive = 14
-speed_scale = 1.07
+max_alive = 17
+speed_scale = 1.09
 late_types_after = 0.25
 banner = ""
 kind = &"siege"
@@ -101,15 +105,16 @@ hint = "The heavies come one entrance at a time: hold the high ground."
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"toy_windup_soldier": 12,
-"tourist_shambler": 10,
-"lifeguard_runner": 4,
-"toy_plush_brute": 2
+"toy_windup_soldier": 14,
+"tourist_shambler": 13,
+"lifeguard_runner": 6,
+"toy_plush_brute": 4,
+"sky_balloon_vendor": 3
 }
-spawn_interval = 1.0
+spawn_interval = 0.85
 burst = 1
-max_alive = 14
-speed_scale = 1.08
+max_alive = 17
+speed_scale = 1.1
 late_types_after = 0.15
 banner = ""
 kind = &"standard"
@@ -122,15 +127,16 @@ twist = &"wind_up"
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 12,
-"toy_windup_soldier": 9,
-"toy_plush_brute": 3,
-"lava_fire_dancer": 3
+"tourist_shambler": 14,
+"toy_windup_soldier": 12,
+"toy_plush_brute": 5,
+"lava_fire_dancer": 4,
+"sky_balloon_vendor": 3
 }
-spawn_interval = 1.8
+spawn_interval = 1.5
 burst = 2
-max_alive = 14
-speed_scale = 1.1
+max_alive = 17
+speed_scale = 1.12
 late_types_after = 0.1
 banner = ""
 kind = &"finale"
