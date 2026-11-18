@@ -115,6 +115,7 @@ func _initialize() -> void:
 	_build_quay_props()
 	_build_lights()
 	_build_sea_and_cliffs()
+	_build_foam()
 	_build_backdrop()
 	_finish_cliffs()
 	_build_exit()
@@ -1099,6 +1100,69 @@ func _build_sea_and_cliffs() -> void:
 		palm.scale = Vector3.ONE * rng.randf_range(1.0, 1.4)
 		var fern := _prop(back, "cove_fern", "CliffFern%d" % i, tops[i] + Vector3(2.5, -1.0, 1.5), rng.randf_range(0, 360), Vector3.ONE)
 		fern.scale = Vector3.ONE * 2.2
+
+
+## Foam lapping the quay walls, the pads and the galleon's hull at the waterline.
+func _build_foam() -> void:
+	var foam := Node3D.new()
+	foam.name = "Foam"
+	dressing.add_child(foam)
+	var m := ShaderMaterial.new()
+	m.shader = load(SHADERS + "cove_foam.gdshader")
+	_foam_strip(foam, "QuayFoam", _quay_outline(), true, Vector2(3, -2), 1.6, m)
+	_foam_strip(foam, "WarehouseFoam", PackedVector2Array([Vector2(13.5, 16.0), Vector2(13.5, 25.5), Vector2(24.5, 25.5), Vector2(24.5, 16.0)]), false,
+		Vector2(19.0, 20.0), 1.4, m)
+	_foam_strip(foam, "SlipFoamW", PackedVector2Array([Vector2(-20.0, 16.0), Vector2(-20.0, 23.5)]), false, Vector2(-15.5, 20.0), 1.2, m)
+	_foam_strip(foam, "SlipFoamE", PackedVector2Array([Vector2(-11.0, 23.5), Vector2(-11.0, 16.0)]), false, Vector2(-15.5, 20.0), 1.2, m)
+	var hull := PackedVector2Array()
+	var y := -SHIP_HALF_L
+	while y <= SHIP_HALF_L:
+		var p := _ship(_ship_plan(y) * 0.93, y, 0.0)
+		hull.append(Vector2(p.x, p.z))
+		y += 1.0
+	y = SHIP_HALF_L
+	while y >= -SHIP_HALF_L:
+		var p := _ship(-_ship_plan(y) * 0.93, y, 0.0)
+		hull.append(Vector2(p.x, p.z))
+		y -= 1.0
+	_foam_strip(foam, "HullFoam", hull, true, Vector2(GALLEON.x, GALLEON.z), 1.3, m)
+
+
+## A band of foam `width` wide along a polyline (outward, away from `centre`)
+## on the sea surface; UV.x runs along it in metres, UV.y from 0 at the wall to 1.
+func _foam_strip(parent: Node3D, strip_name: String, pts: PackedVector2Array, closed: bool, centre: Vector2, width: float, m: Material) -> void:
+	var n := pts.size()
+	var outs: Array[Vector2] = []
+	for i in n:
+		var prev := pts[(i - 1 + n) % n] if (closed or i > 0) else pts[i]
+		var next := pts[(i + 1) % n] if (closed or i < n - 1) else pts[i]
+		var d := (next - prev).normalized()
+		var o := Vector2(d.y, -d.x)
+		if o.dot(pts[i] - centre) < 0.0:
+			o = -o
+		outs.append(o)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var along := 0.0
+	var segments := n if closed else n - 1
+	for i in segments:
+		var j := (i + 1) % n
+		var seg := pts[i].distance_to(pts[j])
+		var quad := [[pts[i], along, 0.0], [pts[j], along + seg, 0.0], [pts[j] + outs[j] * width, along + seg, 1.0],
+			[pts[i] + outs[i] * width, along, 1.0]]
+		for k in [0, 1, 2, 0, 2, 3]:
+			var v: Array = quad[k]
+			st.set_normal(Vector3.UP)
+			st.set_uv(Vector2(v[1], v[2]))
+			var p: Vector2 = v[0]
+			st.add_vertex(Vector3(p.x, SEA_Y + 0.04, p.y))
+		along += seg
+	var mi := MeshInstance3D.new()
+	mi.name = strip_name
+	mi.mesh = st.commit()
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
 
 
 ## One cliff chunk (unit model scaled to `size`); all are drawn by two
