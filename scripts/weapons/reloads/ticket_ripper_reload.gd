@@ -21,9 +21,11 @@ const SLIDE_OUT := Vector3(-0.075, 0.0, 0.0)
 const HOLO_START := Vector3(-0.085, 0.045, 0.0)
 ## The support hand: where it pinches the leading ticket and the tear's pull
 ## (model space offsets from its rest on the foregrip), and its turn.
-const GRAB := Vector3(-0.1, 0.035, 0.104)
+const GRAB := Vector3(-0.1, 0.035, 0.126)
 const RIP := Vector3(-0.05, -0.075, 0.03)
 const HAND_ROT := Vector3(0.0, 0.0, 18.0)
+## How far below the foregrip the hand comes home from.
+const HOME_DROP := 0.07
 const SPARKS := [Color(1.0, 0.95, 0.8), Color(1.0, 0.4, 0.55), Color(1.0, 0.84, 0.3), Color(1.0, 0.62, 0.82)]
 ## [timeline point, sound, volume, pitch]
 const SOUNDS := [[0.08, &"tkr_door", -5.0, 1.0], [0.2, &"tkr_eject", -5.0, 1.0], [0.37, &"tkr_holo", -6.0, 1.0],
@@ -135,11 +137,14 @@ func _pose_hand(s: float) -> void:
 	var arm := _v.part("ArmL")
 	if arm == null:
 		return
+	# Out to the left first, then back along the flank, so it clears the
+	# firing hand; home again from below, sliding up onto the foregrip.
 	var reach := _e(0.62, 0.77, s)
 	var rip := _e(TEAR_AT - 0.015, TEAR_AT + 0.05, s)
-	var back := _e(0.87, 0.99, s)
-	var pos := (GRAB * reach + RIP * rip) * (1.0 - back)
-	var rot := HAND_ROT * reach * (1.0 - back) + Vector3(0.0, 0.0, 10.0) * rip * (1.0 - back)
+	var home := _e(0.86, 0.93, s)
+	var k := Vector3(_e(0.62, 0.71, s), reach, _e(0.66, 0.77, s)) * (1.0 - home)
+	var pos := (GRAB * k + RIP * rip) * (1.0 - home) + Vector3.DOWN * HOME_DROP * home * (1.0 - _e(0.92, 0.99, s))
+	var rot := (HAND_ROT * reach + Vector3(0.0, 0.0, 10.0) * rip) * (1.0 - home)
 	_place(arm, _v.rest_transform("ArmL"), pos, rot)
 	var tip := _v.part("Rib3")
 	if tip and _torn:

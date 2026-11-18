@@ -138,7 +138,7 @@ def build_ticket_ripper():
     pip_m = mat("PipLit", "#ffd23f", rough=0.3, emit=3.0)
     grip_loc = (0, -0.04, -0.108)
     grip_parts, G = grip("", grip_loc, M, tilt=-12, size=(0.064, 0.086, 0.178), body_bottom=-0.012)
-    fore = (0, 0.168, -0.056)
+    fore = (0, 0.19, -0.056)
     dy, dz = DRUM_Y, DRUM_Z
 
     shell = grip_parts + [
@@ -171,17 +171,17 @@ def build_ticket_ripper():
         # Stubby vertical foregrip with a pink cap.
         box("ForegripMount", (0.044, 0.05, 0.03), (0, fore[1], -0.006), bevel=0.008, m=M["dark"]),
         box("Foregrip", (0.04, 0.046, 0.1), fore, bevel=0.018, m=M["dark"]),
-        sphere("ForegripKnob", 0.024, (0, fore[1], fore[2] - 0.056), scale=(1, 1, 0.55), m=M["pink"], segs=14, rings=8),
+        sphere("ForegripKnob", 0.019, (0, fore[1], fore[2] - 0.056), scale=(1, 1, 0.55), m=M["pink"], segs=14, rings=8),
         # A short rear cap (no stock: it is an SMG) with a purple ticket-tray lip.
-        box("RearCap", (0.07, 0.03, 0.074), (0, -0.124, 0.034), bevel=0.012, m=M["trim"]),
-        box("RearLip", (0.074, 0.012, 0.012), (0, -0.136, 0.064), bevel=0.004, m=M["pink"]),
-        box("RearStripe", (0.072, 0.031, 0.008), (0, -0.124, 0.012), bevel=0.002, m=M["steel"]),
+        box("RearCap", (0.086, 0.07, 0.074), (0, -0.14, 0.034), bevel=0.012, m=M["trim"]),
+        box("RearLip", (0.084, 0.012, 0.012), (0, -0.172, 0.064), bevel=0.004, m=M["pink"]),
+        box("RearStripe", (0.084, 0.071, 0.008), (0, -0.14, 0.012), bevel=0.002, m=M["steel"]),
         # The sight bridge over the drum.
         box("BridgeBeam", (0.028, 0.2, 0.012), (0, dy, RAIL_TOP - 0.018), bevel=0.004, m=M["trim"]),
     ]
     shell += bridge_post("PostRear", dy - 0.078, M)
     shell += bridge_post("PostFront", dy + 0.078, M)
-    shell += top_rail("TopRail", dy - 0.07, dy + 0.075, RAIL_TOP, M, width=0.028)
+    shell += top_rail("TopRail", dy - 0.085, dy + 0.09, RAIL_TOP, M, width=0.028)
     # The drum's left plate is a door hinged at its front edge: the counter on
     # it (a dark face under a pink bezel) and the streak sockets round it.
     door = [
@@ -189,8 +189,8 @@ def build_ticket_ripper():
         xcyl("CounterFace", 0.026, 0.004, (-DRUM_HALF - 0.004, dy, dz), m=face_m, segs=28),
         torus("CounterBezel", 0.027, 0.0026, (-DRUM_HALF - 0.005, dy, dz), rot=rad(0, 90, 0), m=M["pink"], major_segs=28, minor_segs=5),
         # Its inside face: a purple disc with a gold star, seen when the door swings open.
-        xcyl("DoorInner", DRUM_R - 0.004, 0.002, (-DRUM_HALF + 0.0035, dy, dz), m=M["trim"], segs=32),
-        star("DoorStar", 0.018, 0.002, (-DRUM_HALF + 0.0048, dy, dz), rot=rad(0, 0, 90), m=M["steel"], inner=0.008),
+        xcyl("DoorInner", DRUM_R - 0.004, 0.002, (-DRUM_HALF + 0.002, dy, dz), m=M["trim"], segs=32),
+        star("DoorStar", 0.018, 0.002, (-DRUM_HALF + 0.003, dy, dz), rot=rad(0, 0, 90), m=M["steel"], inner=0.008),
         box("DoorLatch", (0.008, 0.012, 0.016), (-DRUM_HALF - 0.003, dy - DRUM_R + 0.004, dz), bevel=0.003, m=M["trim"]),
     ]
     door += [xcyl(f"DoorHinge{i}", 0.0045, 0.006, (-DRUM_HALF - 0.001, dy + DRUM_R + 0.002, dz + z), m=M["dark"], segs=10)
@@ -211,9 +211,9 @@ def build_ticket_ripper():
             box("CellStripR", (0.004, 0.1, 0.008), (0.0395, -0.03, 0.018), bevel=0.001, m=M["cell"])]
     shell += vent_slots("Vent", 0.039, 0.06, 0.11, 0.022, 3, M["dark"], M["cell"], height=0.026, side=1)
     shell += bolts("Pin", [(-0.04, -0.075, 0.04), (0.04, 0.09, 0.012), (-0.04, 0.12, 0.012)], M["steel"], radius=0.005, height=0.005)
-    lug, charm_point = charm_lug(-0.034, -0.09, -0.004, M)
+    lug, charm_point = charm_lug(-0.043, -0.166, 0.03, M)
     shell += lug
-    sight_rear, sight_front = sights_notch(0.0, dy - 0.06, dy + 0.065, RAIL_TOP, RAIL_TOP, RAIL_TOP + SIGHT_HEIGHT, M, gap=0.016)
+    sight_rear, sight_front = sights_notch(0.0, dy - 0.075, dy + 0.08, RAIL_TOP, RAIL_TOP, RAIL_TOP + SIGHT_HEIGHT, M, gap=0.016)
 
     # The roll: cream tickets wound on a dark core, pink edges, notches that show it turning.
     roll = [xcyl("RollBody", ROLL_R, ROLL_HALF * 2, (0, dy, dz), m=ticket_m, segs=32)]
@@ -245,8 +245,8 @@ def build_ticket_ripper():
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "Cell": (cell, (0, -0.03, 0.018), None),
-        "IronSightRear": (sight_rear, (0, dy - 0.06, RAIL_TOP), None),
-        "IronSightFront": (sight_front, (0, dy + 0.065, RAIL_TOP), None),
+        "IronSightRear": (sight_rear, (0, dy - 0.075, RAIL_TOP), None),
+        "IronSightFront": (sight_front, (0, dy + 0.08, RAIL_TOP), None),
         "DrumDoor": (door, (-DRUM_HALF, dy + DRUM_R + 0.003, dz), None),
         "Roll": (roll, (0, dy, dz), None),
         "RollHolo": (roll_holo, (0, dy, dz), None),
@@ -260,7 +260,7 @@ def build_ticket_ripper():
         groups[name] = (parts, centre, "DrumDoor")
     empties = {
         "Muzzle": ((0, 0.288, BORE_Z), None),
-        "SightPoint": ((0, dy - 0.06, RAIL_TOP + SIGHT_HEIGHT), None),
+        "SightPoint": ((0, dy - 0.075, RAIL_TOP + SIGHT_HEIGHT), None),
         "SightMount": ((0, dy, RAIL_TOP), None),
         "EjectPoint": ((SLOT[0] - 0.006, SLOT[1], SLOT[2]), None),
         "VentPoint": ((0.03, 0.19, BORE_Z), None),

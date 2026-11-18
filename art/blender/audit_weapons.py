@@ -93,6 +93,7 @@ JOINTS["strike_zone"] = [("Kicker", "Shell"), ("Ball", "Shell"), ("Spare", "Cell
 # The roll turns on the drum's axle, the door on its hinge, the pips sit in the door, the ribbon hangs in its slot.
 WEAPONS.append("ticket_ripper")
 CELLS["ticket_ripper"] = ["Cell", "RollHolo"]
+HOLDS["ticket_ripper"] = [("ArmL", "Rib3")]
 JOINTS["ticket_ripper"] = ([("Roll", "Shell"), ("RollHolo", "Shell"), ("RollHolo", "Roll"), ("DrumDoor", "Shell"), ("Rib0", "Shell")]
                            + [(f"Rib{i + 1}", f"Rib{i}") for i in range(3)] + [(f"Pip{i}", "DrumDoor") for i in range(15)])
 
