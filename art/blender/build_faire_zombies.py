@@ -46,7 +46,7 @@ def materials():
         shirt=mat("Shirt", "#d8343f", rough=0.55),
         steel=mat("FaireZSteel", "#b7bfcf", rough=0.3, metal=0.55),
         steel_dark=mat("FaireZSteelDark", "#6f7789", rough=0.35, metal=0.5),
-        black=mat("FaireZBlack", "#2a2c38", rough=0.35, metal=0.45),
+        black=mat("FaireZBlack", "#202129", rough=0.45, metal=0.2),
         gold=mat("FaireZGold", "#f2c14e", rough=0.3, metal=0.4),
         red=mat("FaireZRed", "#d8343f", rough=0.5),
         blue=mat("FaireZBlue", "#2f5bd3", rough=0.5),
