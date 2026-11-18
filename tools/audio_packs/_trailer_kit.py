@@ -640,18 +640,20 @@ def tick(vel=1.0, pitch=2800.0):
 # ---------------------------------------------------------------------------
 
 def hall_ir(seconds=3.2, predelay=0.02, seed=5, rt=((250, 1.15), (1200, 1.0), (4000, 0.65), (20000, 0.35)),
-            early=12, width=1.0):
+            early=12, width=1.0, shared=0.35):
     """A stereo hall impulse response: sparse early reflections, then a
     dense noise tail whose decay time depends on frequency (`rt`: band top
     Hz, RT60 as a fraction of `seconds`), so the highs die first and the
-    tail darkens like a real room. The two sides are independent noise."""
+    tail darkens like a real room. The two sides are mostly independent
+    noise (wide) with a `shared` part, so the tail stays mono-compatible."""
     r = np.random.default_rng(seed)
     n = int(SR * seconds)
     t = np.arange(n) / SR
     f = np.fft.rfftfreq(n, 1.0 / SR)
+    common = r.standard_normal(n)
     sides = []
     for _ in range(2):
-        w = r.standard_normal(n)
+        w = r.standard_normal(n) * math.sqrt(1 - shared) + common * math.sqrt(shared)
         spec = np.fft.rfft(w)
         tail = np.zeros(n)
         lo_edge = 0.0
