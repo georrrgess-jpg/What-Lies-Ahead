@@ -1,7 +1,7 @@
 class_name MovedRewards
 extends RefCounted
 ## One-time carry-over for level rewards that moved to the Shop (updates 12,
-## and 13: new guns took their levels). A save that had already reached the
+## 13 and 16: new guns took their levels). A save that had already reached the
 ## level keeps the item it earned there (granted "cosmetic:<id>"); everyone
 ## else buys it in the Shop. "moved_rewards" in the progression section
 ## records the batches applied, so each runs once per profile.
