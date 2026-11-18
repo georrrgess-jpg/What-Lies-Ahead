@@ -245,34 +245,41 @@ def build_drawbridge():
 
 
 def build_windmill():
+    """A tower mill: a stone base, a tapered timber-clad body with white trim,
+    a gallery ring, shuttered windows and a conical thatch cap; the sails' hub
+    at (0, -2.6, 9.6)."""
     reset_scene()
-    plaster, timber, st, dark = fmat("Plaster", rough=0.8), fmat("Timber", rough=0.8), stone(), fmat("StoneDark", rough=0.85)
-    roof, gold, blue = fmat("Roof", rough=0.7), fmat("Gold", rough=0.35), fmat("Blue", rough=0.5)
-    body = lathe("Body", [(3.0, 1.2), (2.5, 6.0), (2.05, 9.6)], [plaster], segs=20, smooth=True, cap_bottom=False)
-    p = [body, cyl("Base", 3.4, 1.3, (0, 0, 0.65), segs=20, bevel=0.06, m=st),
-         cyl("BaseCap", 3.5, 0.2, (0, 0, 1.32), segs=20, bevel=0.04, m=dark)]
-    for k, (r0, z) in enumerate(((2.8, 3.4), (2.3, 7.6))):
-        p.append(torus(f"Band{k}", r0, 0.09, (0, 0, z), m=timber, major_segs=24, minor_segs=6))
-    for k in range(8):
-        a = math.tau * k / 8
-        p.append(tube(f"Rib{k}", [(math.cos(a) * 3.0, math.sin(a) * 3.0, 1.3), (math.cos(a) * 2.06, math.sin(a) * 2.06, 9.6)], 0.08, m=timber, segs=4))
-    p += [cyl("CapRing", 2.35, 0.4, (0, 0, 9.75), segs=20, bevel=0.05, m=timber),
-          sphere("Cap", 2.45, (0, 0, 9.9), scale=(1, 1, 1.25), m=roof, segs=20, rings=10)]
-    p += [cyl("Finial", 0.08, 1.2, (0, 0, 13.4), segs=6, bevel=0.0, m=timber), sphere("FinialBall", 0.22, (0, 0, 14.0), m=gold, segs=10, rings=6)]
-    # The hub out front and a little door with a canopy.
-    p += [box("HubBlock", (1.0, 1.6, 1.0), (0, -2.0, 9.6), bevel=0.08, m=timber),
+    timber, dark, st = fmat("Wood", rough=0.8), fmat("Timber", rough=0.8), stone()
+    white, thatch, gold, blue = fmat("White", rough=0.6), fmat("Thatch", rough=0.9), fmat("Gold", rough=0.35), fmat("Blue", rough=0.5)
+    body = lathe("Body", [(2.9, 3.0), (2.45, 6.5), (2.05, 9.6)], [timber], segs=16, smooth=False, cap_bottom=False)
+    p = [body, cyl("Base", 3.3, 3.0, (0, 0, 1.5), segs=16, bevel=0.06, m=st),
+         cyl("BaseCap", 3.4, 0.2, (0, 0, 3.0), segs=16, bevel=0.04, m=fmat("StoneDark", rough=0.85))]
+    for k, (r0, z) in enumerate(((2.75, 4.4), (2.45, 6.5), (2.2, 8.4))):
+        p.append(torus(f"Band{k}", r0, 0.06, (0, 0, z), m=white, major_segs=16, minor_segs=4))
+    # The gallery: a timber deck ring with posts and a rail at the top of the base.
+    p += [cyl("Gallery", 3.9, 0.15, (0, 0, 3.15), segs=16, bevel=0.03, m=dark),
+          torus("GalleryRail", 3.85, 0.05, (0, 0, 4.1), m=dark, major_segs=24, minor_segs=4)]
+    for k in range(12):
+        a = math.tau * k / 12
+        p.append(cyl(f"GalleryPost{k}", 0.05, 0.95, (math.cos(a) * 3.85, math.sin(a) * 3.85, 3.65), segs=5, bevel=0.0, m=dark))
+    p += [cyl("CapRing", 2.35, 0.35, (0, 0, 9.75), segs=16, bevel=0.05, m=white),
+          cyl("Cap", 2.6, 3.6, (0, 0, 11.7), segs=16, bevel=0.08, m=thatch, radius_top=0.15),
+          cyl("CapTrim", 2.62, 0.2, (0, 0, 10.0), segs=16, bevel=0.03, m=fmat("HayDark", rough=0.9))]
+    p += [cyl("Finial", 0.08, 1.2, (0, 0, 13.9), segs=6, bevel=0.0, m=dark), sphere("FinialBall", 0.22, (0, 0, 14.5), m=gold, segs=10, rings=6),
+          prism("Vane", [(0, 0), (0.9, -0.15), (0.9, -0.4), (0, -0.55)], 0.04, (0.05, 0, 14.3), m=fmat("Red", rough=0.5))]
+    # The hub out front and a little door with a canopy in the base.
+    p += [box("HubBlock", (1.0, 1.6, 1.0), (0, -2.0, 9.6), bevel=0.08, m=dark),
           cyl("Axle", 0.32, 0.8, (0, -2.8, 9.6), rot=(math.pi / 2, 0, 0), segs=12, bevel=0.03, m=fmat("IronDark"))]
     door = [(-0.6, 0), (0.6, 0), (0.6, 1.6)] + [(math.cos(math.radians(a)) * 0.6, 1.6 + math.sin(math.radians(a)) * 0.6) for a in range(30, 180, 30)] + [(-0.6, 1.6)]
-    p += [prism("Door", door, 0.12, (0, -2.98, 1.3), m=blue),
-          box("DoorStep", (1.6, 0.6, 0.2), (0, -3.5, 1.2), bevel=0.04, m=dark),
-          box("Canopy", (1.8, 0.8, 0.12), (0, -3.25, 3.6), rot=(0.35, 0, 0), bevel=0.03, m=roof)]
-    for k, (a, z) in enumerate(((60, 5.0), (-60, 5.0), (180, 6.8))):
+    p += [prism("Door", door, 0.12, (0, -3.32, 0.0), m=blue),
+          box("DoorStep", (1.6, 0.6, 0.2), (0, -3.6, 0.1), bevel=0.04, m=fmat("StoneDark")),
+          box("Canopy", (1.8, 0.8, 0.12), (0, -3.6, 2.5), rot=(0.35, 0, 0), bevel=0.03, m=thatch)]
+    for k, (a, z) in enumerate(((60, 5.2), (-60, 5.2), (180, 7.4), (0, 7.2))):
         ar = math.radians(a - 90)
-        rr = 2.5 - (z - 6.0) * 0.12
-        p.append(box(f"Window{k}", (0.6, 0.2, 0.8), (math.cos(ar) * rr, math.sin(ar) * rr, z), rot=(0, 0, ar + math.pi / 2), bevel=0.04,
-                     m=fglow("FaireWindow", "#ffd98a", 1.4)))
-        p.append(box(f"Shutter{k}", (0.9, 0.16, 0.9), (math.cos(ar) * (rr - 0.03), math.sin(ar) * (rr - 0.03), z), rot=(0, 0, ar + math.pi / 2),
-                     bevel=0.03, m=blue))
+        rr = 2.62 - (z - 4.0) * 0.14
+        for part, size, m in (("Window", (0.6, 0.2, 0.8), fglow("FaireWindow", "#ffd98a", 1.4)), ("Frame", (0.82, 0.14, 1.02), white)):
+            p.append(box(f"{part}{k}", size, (math.cos(ar) * (rr + (0.0 if part == "Window" else -0.04)), math.sin(ar) * (rr + (0.0 if part == "Window" else -0.04)), z),
+                         rot=(0, 0, ar + math.pi / 2), bevel=0.03, m=m))
     save("faire_windmill", [merge("Windmill", p)])
 
 
