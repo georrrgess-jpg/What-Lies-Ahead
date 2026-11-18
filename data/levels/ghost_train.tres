@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/ghost_train_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"ghost_train"
+display_name = "Ghost Train"
+blurb = "Hold the plaza round Creeps & Treats, between the grinning skull of the ghost train and the graveyard, then follow the jack-o'-lanterns to the front gate."
+scene_path = "res://scenes/levels/ghost_train.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"ghost_train_loop"
+music_final = &"ghost_train_final"
+ambience = &"fright_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(0.49, 1, 0.42, 1)
+menu_camera_from = Vector3(14, 7, 22)
+menu_camera_to = Vector3(-4, 5, -20)
+heal_item_name = "Toffee apple"
+loading_tips = PackedStringArray("Bedsheet Ghosts shiver before they fade: a faded ghost darts faster, but your shots still land.", "Pumpkin Heads wind up a lit pumpkin: a ring marks where it lands. Step out of it, or headshot the throw away.", "The boarding platforms either side of the skull are high ground with a long view down the plaza.", "The hall of mirrors has three doors: a quick way round the west side, and a place to break line of sight.", "When the lights go out, only the green lights stay on. Watch for glowing eyes.", "Ringmaster Rictus calls his spotlight down the plaza: get behind something before it sweeps over you.")

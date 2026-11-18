@@ -348,7 +348,21 @@ sound_category = Dictionary[StringName, StringName]({
 &"toy_windup_rundown": &"cue",
 &"toy_shop_loop": &"music",
 &"toy_shop_final": &"music",
-&"toy_ambience": &"ambience"
+&"toy_ambience": &"ambience",
+&"fright_": &"enemy_voice",
+&"fright_ghost_wail": &"enemy_telegraph",
+&"fright_ghost_fade": &"enemy_telegraph",
+&"fright_pumpkin_fuse": &"enemy_telegraph",
+&"fright_pumpkin_throw": &"enemy_telegraph",
+&"fright_pumpkin_splat": &"enemy_attack",
+&"fright_ringmaster_cackle": &"enemy_telegraph",
+&"fright_ringmaster_whistle": &"enemy_telegraph",
+&"fright_power_down": &"cue",
+&"fright_power_up": &"cue",
+&"fright_power_buzz": &"cue",
+&"ghost_train_loop": &"music",
+&"ghost_train_final": &"music",
+&"fright_ambience": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -539,5 +553,7 @@ sound_trim_db = Dictionary[StringName, float]({
 &"faire_siege_horn": -2.0,
 &"cove_cannon_whistle": -2.0,
 &"cove_cannon_boom": -2.5,
-&"cove_broadside_call": -3.0
+&"cove_broadside_call": -3.0,
+&"fright_power_down": -2.0,
+&"fright_ghost_wail": -1.5
 })
