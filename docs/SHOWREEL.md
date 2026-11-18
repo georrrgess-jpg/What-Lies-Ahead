@@ -1,6 +1,6 @@
 # The trailer (in-engine showreel) and the startup screen
 
-A 41.6-second trailer (and a 1.6 s ring-out on black) made in the engine from the game's real levels, zombies,
+A 41.6-second trailer (and the score's 1.8 s ring-out on black) made in the engine from the game's real levels, zombies,
 alphas, operators, weapons (with their real reloads), skins and effects, cut to
 a 150 BPM score. It plays from the title screen (WATCH TRAILER, or as an
 attract mode), and renders to a video.
@@ -160,7 +160,7 @@ boundaries and the bold hits are locked.
 | 34.4-35.2 | prints | Studio | Prize Prints: the capsule machine turns a Legendary capsule, a print lands on the plinth in a gold burst; the cosmetic count | |
 | **Finale** | | | | |
 | **35.2-41.6** | finale | Prize Pier | **HIT 35.2**: three operators (Madame Fortuna in the middle) hold the line at dusk as a horde of every world charges; slow motion, kill effects, crane up and back. **HIT 38.4**: the logo slams in, the feature chips (worlds, weapons, zombies, alphas, Endless, operators, Last Ride), PLAY NOW; fade to black on **41.6** | the full theme, final slam |
-| 41.6-43.2 | ring_out | (black) | The tagline fades on black while the score rings out | ring-out |
+| 41.6-43.4 | ring_out | (black) | The tagline fades on black while the score rings out | ring-out |
 
 ## Smoothness
 

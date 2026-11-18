@@ -156,8 +156,8 @@ static func build() -> Array[CineShot]:
 		CineShot.make("prints", STUDIO, 2 * BEAT, s._prints),
 		# The finale: hold the line (35.2), the title (38.4), black (41.6)
 		CineShot.make("finale", PIER, 16 * BEAT, s._finale),
-		# The music's ring-out on black (41.6-43.2)
-		CineShot.make("ring_out", PIER, 4 * BEAT, s._ring_out),
+		# The music's ring-out on black (41.6 to the track's end, 43.4)
+		CineShot.make("ring_out", PIER, 4.5 * BEAT, s._ring_out),
 	])
 	for shot in list:
 		shot.prebuild = shot.id in BUILT_AHEAD
@@ -922,6 +922,6 @@ func _ring_out(st: CineStage) -> void:
 	st.at(0.0, st.overlay.fade.bind(0.0, 0.0))
 	st.at(0.0, st.overlay.backdrop.bind(1.0))
 	st.at(0.0, func():
-		var l := st.overlay.caption("An arcade zombie survival", 0.85, UiKit.CREAM)
+		var l := st.overlay.caption("An arcade zombie survival", 1.0, UiKit.CREAM)
 		l.position.y = st.overlay.root.size.y * 0.5 - l.size.y * 0.5)
 	st.dolly(Vector3(0, 2, 10), Vector3.ZERO, Vector3(0, 2, 9), Vector3.ZERO)
