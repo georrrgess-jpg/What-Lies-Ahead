@@ -369,9 +369,26 @@ def dollhouse():
           box("Pillow", (0.6, 1.4, 0.25), (5.7, 1.0, DH_UPPER + 0.7), bevel=0.1, m=tmat("Cream")),
           box("Headboard", (0.2, 1.9, 1.4), (6.2, 1.0, DH_UPPER + 0.7), bevel=0.06, m=wood)]
     # Little framed pictures on the upper back wall.
-    for k, x in enumerate((-4.5, -1.5, 3.0)):
+    for k, x in enumerate((-1.8, 0.2, 2.2)):
         p += [box(f"Frame{k}", (1.2, 0.08, 0.9), (x, hd - t - 0.06, DH_UPPER + 2.2), bevel=0.03, m=tmat("Brass", rough=0.4)),
               box(f"Pic{k}", (1.0, 0.04, 0.7), (x, hd - t - 0.1, DH_UPPER + 2.2), bevel=0.0, m=tmat(("Green", "Blue", "Orange")[k], rough=0.7))]
+    # The windows from inside: moonlit panes with white frames and glazing bars.
+    pane = tglow("ToyDollPane", "#9fc4ff", 0.9)
+    panes = [((s * (hw - t - 0.04), 0.0), (0.06, 1.6, 1.6)) for s in (-1, 1)] + [((x, hd - t - 0.04), (1.8, 0.06, 1.8)) for x in (-4.0, 4.0)]
+    for i, ((x, y), size) in enumerate(panes):
+        for z in (1.6, DH_UPPER + 1.6):
+            if y > 0 and z < DH_UPPER and x < 0:
+                continue    # the stair runs along the back wall there
+            frame = (size[0] + (0.24 if size[0] > 1 else 0.02), size[1] + (0.24 if size[1] > 1 else 0.02), size[2] + 0.24)
+            p += [box(f"InFrame{i}{z}", frame, (x, y, z + 0.4), bevel=0.03, m=trim),
+                  box(f"InPane{i}{z}", (size[0] + 0.02, size[1] + 0.02, size[2]), (x - math.copysign(0.02, x) * (y == 0.0), y - 0.02 * (y > 0.0), z + 0.4),
+                      bevel=0.0, m=pane)]
+    # A round rag rug under the table and a reading lamp upstairs.
+    p += [cyl("Rug", 1.7, 0.03, (-3.5, -1.8, 0.055), segs=24, bevel=0.0, m=tmat("Red", rough=0.9)),
+          cyl("RugRing", 1.2, 0.035, (-3.5, -1.8, 0.06), segs=24, bevel=0.0, m=tmat("Cream", rough=0.9)),
+          cyl("LampPole", 0.05, 1.8, (-6.2, -3.7, DH_UPPER + 0.9), segs=6, bevel=0.0, m=tmat("Brass", rough=0.3, metal=0.5)),
+          cyl("LampFoot", 0.25, 0.08, (-6.2, -3.7, DH_UPPER + 0.04), segs=12, bevel=0.02, m=tmat("Brass", rough=0.3, metal=0.5)),
+          cyl("LampShade", 0.45, 0.5, (-6.2, -3.7, DH_UPPER + 1.95), segs=14, bevel=0.0, m=tglow("ToyDollLamp", "#ffd890", 1.6), radius_top=0.25)]
     one("toy_dollhouse", p)
 
 
