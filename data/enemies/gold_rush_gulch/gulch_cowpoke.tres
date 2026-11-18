@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/gulch_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/gulch_quick_draw.gd" id="4"]
+
+[sub_resource type="Resource" id="draw"]
+script = ExtResource("4")
+min_range = 6.0
+max_range = 20.0
+cooldown = 5.5
+first_draw = Vector2(1.5, 3.5)
+windup = 0.92
+damage = 6.5
+projectile_speed = 18.0
+arc = 0.08
+size = 0.2
+lead = 0.35
+color = Color(1, 0.78, 0.25, 1)
+glint_color = Color(1, 0.92, 0.5, 1)
+windup_clip = &"Draw"
+windup_sound = &"gulch_cowpoke_draw"
+fire_sound = &"gulch_cowpoke_shot"
+
+[resource]
+script = ExtResource("1")
+id = &"gulch_cowpoke"
+display_name = "Cowpoke"
+max_health = 85.0
+move_speed = 2.6
+speed_variance = 0.1
+turn_speed = 7.0
+tickets = 20
+score = 240
+xp = 20
+damage = 12.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.5
+attack_recover = 0.7
+lunge_speed = 3.6
+mass = 1.0
+flank_degrees = 55.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Cowpoke"
+body_scale = 1.0
+capsule_radius = 0.42
+capsule_height = 1.9
+head_height = 1.25
+shirt_colors = Array[Color]([Color(0.91, 0.34, 0.29, 1), Color(0.18, 0.72, 0.69, 1), Color(0.98, 0.84, 0.52, 1), Color(0.36, 0.5, 0.82, 1)])
+skin_colors = Array[Color]([Color(0.66, 0.81, 0.38, 1), Color(0.6, 0.78, 0.44, 1), Color(0.7, 0.8, 0.4, 1)])
+accessory_slots = PackedStringArray("Acc_Cowpoke_Hat", "Acc_Cowpoke_Pistol")
+move_animation = &"Swagger"
+animation_reference_speed = 2.09
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("draw")])
+voice_sounds = Array[StringName]([&"gulch_cowpoke_yeehaw_1", &"gulch_cowpoke_yeehaw_2"])
+voice_interval = Vector2(3.0, 6.0)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

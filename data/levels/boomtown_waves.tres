@@ -6,26 +6,26 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"sky_balloon_vendor": 3,
 "tourist_shambler": 9,
-"sky_diver": 5
+"gulch_cowpoke": 4,
+"gulch_prospector": 3
 }
 spawn_interval = 1.7
 burst = 1
 max_alive = 9
 speed_scale = 1.0
-late_types_after = 0.35
+late_types_after = 0.3
 banner = ""
 kind = &"standard"
-title = "BOARDING CALL"
-hint = "Divers land where the ring glows: step out of it."
+title = "HIGH NOON"
+hint = "Cowpokes square up before they draw: shoot first, or break the line."
 
 [sub_resource type="Resource" id="wave_2"]
 script = ExtResource("2")
 spawns = {
-"sky_diver": 13,
-"lifeguard_runner": 4,
-"tourist_shambler": 4
+"lifeguard_runner": 10,
+"gulch_cowpoke": 5,
+"tourist_shambler": 5
 }
 spawn_interval = 1.05
 burst = 1
@@ -34,18 +34,18 @@ speed_scale = 1.0
 late_types_after = 0.0
 banner = ""
 kind = &"rush"
-title = "FREEFALL"
-hint = "Divers drop in from every side: keep moving between the rings."
+title = "STAMPEDE"
+hint = "They come down Main Street fast: back up onto the boardwalk and hold."
 surge_at = 0.5
 surge_count = 4
 
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"sky_balloon_vendor": 7,
+"gulch_cowpoke": 8,
 "tourist_shambler": 7,
-"lava_tiki_bartender": 2,
-"sky_diver": 5
+"gulch_prospector": 3,
+"lava_tiki_bartender": 2
 }
 spawn_interval = 1.25
 burst = 1
@@ -54,17 +54,17 @@ speed_scale = 1.0
 late_types_after = 0.15
 banner = ""
 kind = &"ranged"
-title = "BALLOON BARRAGE"
-hint = "Vendors lob water balloons from every side: a headshot pops the throw."
+title = "SHOWDOWN"
+hint = "Cowpokes draw from every side: watch for the glint, a headshot spoils the shot."
 surge_at = 0.55
 surge_count = 5
 
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"sky_diver": 11,
-"tourist_shambler": 9,
-"sky_balloon_vendor": 4,
+"gulch_cowpoke": 7,
+"tourist_shambler": 10,
+"gulch_prospector": 4,
 "boardwalk_bruiser": 1
 }
 spawn_interval = 1.2
@@ -74,58 +74,57 @@ speed_scale = 1.05
 late_types_after = 0.2
 banner = ""
 kind = &"bounty"
-title = "THE GOLDEN DIVER"
-hint = "Pop the golden diver before it bails out."
-bounty = &"sky_diver"
+title = "THE GOLDEN COWPOKE"
+hint = "Pop the golden cowpoke before it rides out of town."
+bounty = &"gulch_cowpoke"
 bounty_tickets = 225
 
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"boardwalk_bruiser": 2,
-"frost_yeti": 1,
+"gulch_prospector": 7,
 "tourist_shambler": 10,
-"sky_diver": 9,
-"sky_balloon_vendor": 5
+"gulch_cowpoke": 5,
+"frost_yeti": 1
 }
 spawn_interval = 1.25
 burst = 1
-max_alive = 14
+max_alive = 13
 speed_scale = 1.06
-late_types_after = 0.25
+late_types_after = 0.2
 banner = ""
-kind = &"siege"
-title = "HEAVY WEATHER"
-hint = "The heavies cross one bridge at a time: hold the far end."
+kind = &"ambush"
+title = "CAVE-IN"
+hint = "Prospectors tunnel in from everywhere: when the dust ring grows under you, move."
 
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 10,
-"sky_diver": 9,
-"sky_balloon_vendor": 5,
-"lava_fire_dancer": 4
+"gulch_cowpoke": 7,
+"gulch_prospector": 4,
+"lava_fire_dancer": 3
 }
-spawn_interval = 1.05
+spawn_interval = 1.1
 burst = 1
 max_alive = 13
 speed_scale = 1.08
 late_types_after = 0.15
 banner = ""
 kind = &"standard"
-title = "GALE FORCE"
-hint = "The wind leans on you: the railings hold, keep your aim."
+title = "DUST STORM"
+hint = "You can't see far in the dust: keep a wall at your back and listen for the spurs."
 surge_at = 0.5
-surge_count = 6
-twist = &"gale"
+surge_count = 5
+twist = &"dust_storm"
 
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 12,
-"sky_diver": 8,
-"sky_balloon_vendor": 4,
-"lava_fire_dancer": 3
+"tourist_shambler": 11,
+"gulch_cowpoke": 7,
+"gulch_prospector": 4,
+"sky_diver": 3
 }
 spawn_interval = 1.9
 burst = 2
@@ -134,9 +133,9 @@ speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
 kind = &"finale"
-title = "CAPTAIN CUMULUS"
-hint = "Out of his landing ring, through his ballast, back from the slam."
-boss = &"alpha_captain"
+title = "SHERIFF RATTLEBONES"
+hint = "Out of his dynamite rings, off his stampede lane, back from the slam."
+boss = &"alpha_rattlebones"
 boss_at = 0.45
 rest_before = 24.0
 
@@ -146,14 +145,14 @@ waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), S
 prep_seconds = 12.0
 break_seconds = 18.0
 checkpoint_wave = 4
-checkpoint_tickets = 500
+checkpoint_tickets = 525
 break_refill_fraction = 0.3
 ammo_topup_price = 225
-heal_price = 350
+heal_price = 375
 heal_amount = 60.0
 heals_per_break = 1
 wave_bonus_base = 20
 wave_bonus_per_wave = 5
-overshield_price = 700
+overshield_price = 725
 overshield_amount = 25.0
-damage_boost_price = 675
+damage_boost_price = 700

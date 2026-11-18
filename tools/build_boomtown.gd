@@ -222,6 +222,9 @@ func _build_ground() -> void:
 			Vector3(x, WALK_Y * 0.5, (ROW_S + ROW_N) * 0.5), boards)
 		_visual_box(dressing, "BoardwalkKerb%s" % ("W" if s < 0 else "E"), Vector3(0.14, 0.24, ROW_S - ROW_N),
 			Vector3(s * (STREET + 0.05), 0.1, (ROW_S + ROW_N) * 0.5), _mat("kerb", Color(0.43, 0.27, 0.17), 0.8))
+		# Gentle collision ramps up both edges, so nobody snags on the 0.2 m step.
+		_ramp(g, "WalkRampStreet%d" % int(s), Vector3(s * STREET, 0, ROW_N), Vector3(s * STREET, 0, ROW_S), -s, WALK_Y, 0.55)
+		_ramp(g, "WalkRampBack%d" % int(s), Vector3(s * FACADE, 0, ROW_N), Vector3(s * FACADE, 0, ROW_S), s, WALK_Y, 0.55)
 
 
 # ---------------------------------------------------------------------------
@@ -290,6 +293,8 @@ func _build_saloon() -> void:
 	_collider(s, "SideN", Vector3(10.0, 7.6, 0.3), Vector3(-FACADE - 5.0, 3.8, zc - 6.85))
 	_collider(s, "SideS", Vector3(10.0, 7.6, 0.3), Vector3(-FACADE - 5.0, 3.8, zc + 6.85))
 	_collider(s, "Ceiling", Vector3(10.0, 0.3, 14.0), Vector3(-FACADE - 5.0, 3.65, zc))
+	_collider(s, "Floor", Vector3(9.6, WALK_Y, 13.6), Vector3(-FACADE - 4.9, WALK_Y * 0.5, zc))
+	_ramp(s, "BackStep", Vector3(back, 0, zc - 3.9), Vector3(back, 0, zc - 2.1), -1.0, WALK_Y, 0.55)
 	# Inside: the bar, the back bar, tables, piano and stage.
 	_collider(s, "Bar", Vector3(0.7, 1.34, 6.4), Vector3(-FACADE - 7.7, 0.67, zc + 2.6))
 	_collider(s, "BackBar", Vector3(0.5, 1.2, 6.8), Vector3(-FACADE - 9.4, 0.6, zc + 2.6))
@@ -394,7 +399,7 @@ func _build_mine_yard() -> void:
 	_solid_prop(m, "gulch_barrels", "MineBarrels", Vector3(5.5, 0, -43.0), -20.0, Vector3(1.6, 1.8, 1.0))
 	_solid_prop(m, "gulch_wagon", "OreWagon", Vector3(14.0, 0, -41.0), 70.0, Vector3(2.0, 3.0, 4.4))
 	_solid_prop(m, "gulch_hay", "MineHay", Vector3(-17.0, 0, -40.0), 10.0, Vector3(1.6, 1.6, 1.0))
-	_solid_prop(m, "gulch_coaster_car", "OreCartA", Vector3(-2.0, 0, -40.5), 0.0, Vector3(1.4, 1.4, 2.0))
+	_solid_prop(m, "gulch_coaster_car", "OreCartA", Vector3(-6.8, 0, -42.5), 15.0, Vector3(1.4, 1.4, 2.0))
 	_prop(dressing, "gulch_cactus_a", "MineCactusA", Vector3(-22.0, 0, -43.0), 30.0, Vector3(1, 3.6, 1))
 	_post(m, "MineCactusAPost", 0.4, 3.6, Vector3(-22.0, 0, -43.0))
 	_prop(dressing, "gulch_cactus_b", "MineCactusB", Vector3(21.0, 0, -44.0), 200.0, Vector3(1, 2.6, 1))
@@ -1152,6 +1157,25 @@ func _stairs(parent: Node3D, stair_name: String, top: Vector3, bottom: Vector3, 
 			post.mesh = _box_mesh(Vector3(0.1, 1.05, 0.1), rail_m)
 			post.position = Vector3(-length * 0.5 + length * t, rise * 0.5 - rise * t + 0.52, 0)
 			side.add_child(post)
+
+
+## A collision wedge along a to b (a line on the ground): `rise` high at the
+## line, falling to 0 `run` metres out on the `out` side (+1 = +X).
+func _ramp(parent: Node3D, ramp_name: String, a: Vector3, b: Vector3, out: float, rise: float, run: float) -> void:
+	var body := StaticBody3D.new()
+	body.name = ramp_name
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.name = "CollisionShape3D"
+	var convex := ConvexPolygonShape3D.new()
+	var pts := PackedVector3Array()
+	for p: Vector3 in [a, b]:
+		pts.append(p)
+		pts.append(p + Vector3(0, rise, 0))
+		pts.append(p + Vector3(out * run, 0, 0))
+	convex.points = pts
+	shape.shape = convex
+	body.add_child(shape)
 
 
 func _player_walls() -> Node3D:
