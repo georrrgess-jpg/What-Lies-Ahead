@@ -20,7 +20,9 @@ to the pop and gathers the pack into the cup (scripts/weapons/twister_vortex.gd)
 Tank's soak multiplies its own hits (scripts/weapons/soak.gd), the Road Rager's hubcap
 (scripts/weapons/hubcap_shot.gd) hits its target on the way out and back, is paced by its
 round trips (catches refill it, so it never reloads or runs dry) and slices through the
-whole pack, a pile-up hitting harder; the Popcorn Popper climbs its heat stages
+whole pack, a pile-up hitting harder; the Ticket Ripper's every (STREAK + 1)th shot is a WINNER
+ticket at WINNER_SCALE (scripts/weapons/modes/ticket_ripper_mode.gd, perfect tracking assumed) that
+pierces the pack; the Popcorn Popper climbs its heat stages
 (scripts/weapons/modes/popcorn_popper_mode.gd) from warm each magazine and pulses the trigger
 to stay hot, its warm puffs and hot butter bursts splashing the pack; the Lava Lampoon fires its warm-up groove's slower shots
 first and its target burns in the lava puddle under it (the pack walks through it); the Markdown
@@ -104,6 +106,8 @@ YOYO = gd_consts("scripts/weapons/yoyo_loco_shot.gd")
 # The Popcorn Popper: its heat stages (mode) and its kernels' splash puffs and butter bursts.
 POPCORN_MODE = gd_consts("scripts/weapons/modes/popcorn_popper_mode.gd")
 POPCORN = gd_consts("scripts/weapons/popcorn_kernels.gd")
+# The Ticket Ripper: its Winner! streak (mode).
+TICKET = gd_consts("scripts/weapons/modes/ticket_ripper_mode.gd")
 # Share of the pop a gathered zombie takes (they spin near the cup's centre).
 VORTEX_POP_SHARE = 0.8
 JACKPOT = gd_consts("scripts/weapons/jack_pot_box.gd")
@@ -356,6 +360,9 @@ def pull_damage(w, e, d, head):
 	if w["id"] == "popcorn_popper":
 		# Kernels hit like ray shots; a magazine climbs from warm, then pulses hot.
 		return w["damage"] * scale * head_mix, popcorn_cycle(w)[0]
+	if w["id"] == "ticket_ripper":
+		# Every STREAK hits in a row the next shot is a WINNER ticket (perfect tracking assumed).
+		return w["damage"] * scale * head_mix * (TICKET["STREAK"] + TICKET["WINNER_SCALE"]) / (TICKET["STREAK"] + 1), w["fire_interval"]
 	if w["projectile_speed"] > 0.0:
 		dmg = w["damage"] + w["direct_hit_bonus"]
 		return dmg, w["fire_interval"]
@@ -509,6 +516,9 @@ def crowd_damage(w, d=8.0):
 		_, warm, hot = popcorn_cycle(w)
 		edge = (1 + POPCORN["SPLASH_EDGE"]) / 2
 		return dmg + 3 * edge * (warm * POPCORN["PUFF_DAMAGE"] + hot * POPCORN["BURST_DAMAGE"])
+	if w["id"] == "ticket_ripper":
+		# One shot in STREAK + 1 is a winner that pierces the other three.
+		return dmg + 3 * w["damage"] * TICKET["WINNER_SCALE"] / (TICKET["STREAK"] + 1)
 	if w["splash_radius"] > 0.0:
 		return dmg + 3 * w["damage"] * (1 + w["splash_edge_scale"]) / 2
 	if w["pierce"] > 0:

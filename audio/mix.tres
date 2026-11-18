@@ -362,7 +362,12 @@ sound_category = Dictionary[StringName, StringName]({
 &"fright_power_buzz": &"cue",
 &"ghost_train_loop": &"music",
 &"ghost_train_final": &"music",
-&"fright_ambience": &"ambience"
+&"fright_ambience": &"ambience",
+&"tkr_": &"handling",
+&"tkr_fire": &"weapon",
+&"tkr_winner": &"weapon",
+&"tkr_pop": &"impact",
+&"tkr_ready": &"confirm"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -555,5 +560,9 @@ sound_trim_db = Dictionary[StringName, float]({
 &"cove_cannon_boom": -2.5,
 &"cove_broadside_call": -3.0,
 &"fright_power_down": -2.0,
-&"fright_ghost_wail": -1.5
+&"fright_ghost_wail": -1.5,
+&"tkr_fire": 2.5,
+&"tkr_door": -2.0,
+&"tkr_holo": -4.0,
+&"tkr_ready": -5.0
 })
