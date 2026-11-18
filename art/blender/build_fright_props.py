@@ -295,7 +295,7 @@ def build():
     reset_scene()
     objects = [fence(), fence_low(), lamp(), pumpkin_single(), pumpkin_pile()] + graves() + trees()
     objects += [coffins(), booth(), apple_cart(), goo_barrel(), ghost_car(), bench(), track(), hedge(), exit_lantern()] + lanterns() + [bat()]
-    save("fright_kit", objects)
+    save_glb("fright_kit", objects)
 
 
 if __name__ == "__main__":

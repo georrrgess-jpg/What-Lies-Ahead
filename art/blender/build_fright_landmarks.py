@@ -326,7 +326,7 @@ def manor():
 def build():
     reset_scene()
     objects = [skull_ride()] + carousel() + [mirror_hall(), crypt(), fair_gate(), manor()]
-    save("fright_landmarks", objects)
+    save_glb("fright_landmarks", objects)
 
 
 if __name__ == "__main__":

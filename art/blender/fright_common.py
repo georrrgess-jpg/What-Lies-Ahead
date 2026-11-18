@@ -7,7 +7,8 @@ bone white), carved pumpkins, gravestones, twisted dead trees, wrought iron and
 the shared "FrightExitGlow" / "FrightBulb" emissive materials.
 
 A kit script saves its parts as separately named objects of one .glb, so a
-whole world of small props costs one .blend and one import.
+whole world of small props costs one import. The scripts are the editable
+source: save_glb() writes only the .glb (no .blend), to keep the world small.
 """
 import math
 import os
@@ -180,3 +181,17 @@ def iron_spears(prefix, length, height, m, spacing=0.22, y=0.0, x0=None):
         parts.append(cyl(f"{prefix}Bar{i}", 0.022, height, (x, y, height / 2), segs=5, bevel=0.0, m=m))
         parts.append(cyl(f"{prefix}Tip{i}", 0.05, 0.14, (x, y, height + 0.07), segs=4, bevel=0.0, m=m, radius_top=0.0))
     return parts
+
+
+def save_glb(name, export_objects):
+    """Write art/models/<name>.glb (like wla_common.save, without the .blend)."""
+    os.makedirs(MODELS_DIR, exist_ok=True)
+    bpy.context.view_layer.update()
+    for ob in bpy.context.scene.objects:
+        ob.select_set(ob in export_objects)
+    path = os.path.join(MODELS_DIR, name + ".glb")
+    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", use_selection=True, export_apply=True, export_yup=True,
+                              export_materials="EXPORT", export_tangents=False, export_animations=False)
+    tris = sum(len(o.data.polygons) for o in export_objects if o.type == "MESH")
+    print(f"[wla] {name}: {len(export_objects)} export objects, ~{tris} faces -> {os.path.relpath(path)}")
+    return path

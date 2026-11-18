@@ -155,7 +155,7 @@ def closed_sign():
 def build_station():
     reset_scene()
     station = merge("Station", booth() + goods())
-    save("fright_station", [station, shutter(), open_dressing(), closed_sign()])
+    save_glb("fright_station", [station, shutter(), open_dressing(), closed_sign()])
 
 
 def build_portal():
@@ -190,7 +190,7 @@ def build_portal():
     p += [box("Board", (1.3, 0.1, 0.42), (0, -0.45, wp.OPEN_SPRING + 0.95), bevel=0.04, m=night),
           text("BoardText", "EXIT", 0.3, 0.03, (0, -0.52, wp.OPEN_SPRING + 0.93), m=fglow("FrightExitText", "#7dff6a", 2.4))]
     p.append(wp.backing("Back", fmat("Night")))
-    save("fright_portal_arch", [merge("PortalArch", p)])
+    save_glb("fright_portal_arch", [merge("PortalArch", p)])
 
 
 if __name__ == "__main__":

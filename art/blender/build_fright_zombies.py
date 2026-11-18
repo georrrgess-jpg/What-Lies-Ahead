@@ -284,7 +284,22 @@ def build():
     for name, parts in accessories.items():
         meshes.append(bz.skin(name, parts, armature))
     zombie_anim.bake(armature, fright_clips, "fright_zombies")
-    bz.save_zombie("fright_zombies", [armature] + meshes)
+    save_zombie_glb("fright_zombies", [armature] + meshes)
+
+
+def save_zombie_glb(name, export_objects):
+    """build_zombie.save_zombie without the .blend: this script is the source."""
+    bpy.context.view_layer.update()
+    for ob in bpy.context.scene.objects:
+        ob.select_set(ob in export_objects)
+    path = os.path.join(MODELS_DIR, name + ".glb")
+    bpy.ops.export_scene.gltf(
+        filepath=path, export_format="GLB", use_selection=True, export_apply=False, export_yup=True, export_materials="EXPORT",
+        export_tangents=False, export_animations=True, export_animation_mode="ACTIONS", export_skins=True,
+        export_force_sampling=True, export_optimize_animation_size=False, export_texcoords=True,
+        export_vertex_color="ACTIVE", export_all_vertex_colors=False, export_active_vertex_color_when_no_material=True)
+    tris = sum(len(o.data.polygons) for o in export_objects if o.type == "MESH")
+    print(f"[wla] {name}: {len(export_objects)} export objects, ~{tris} faces -> {os.path.relpath(path)}")
 
 
 if __name__ == "__main__":
