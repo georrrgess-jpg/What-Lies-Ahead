@@ -6,14 +6,14 @@ shader_type sky;
 // first stars high up opposite the sun. Below the horizon it fades to the
 // sea haze. `barrage` (0..1, the Broadside twist) adds drifting gun smoke and
 // reddens the light. No textures.
-uniform vec3 zenith_color : source_color = vec3(0.24, 0.2, 0.45);
-uniform vec3 mid_color : source_color = vec3(0.78, 0.45, 0.6);
-uniform vec3 horizon_color : source_color = vec3(1.0, 0.62, 0.45);
-uniform vec3 sun_horizon : source_color = vec3(1.0, 0.72, 0.32);
-uniform vec3 far_horizon : source_color = vec3(0.7, 0.48, 0.66);
+uniform vec3 zenith_color : source_color = vec3(0.2, 0.24, 0.5);
+uniform vec3 mid_color : source_color = vec3(0.96, 0.56, 0.5);
+uniform vec3 horizon_color : source_color = vec3(1.0, 0.7, 0.44);
+uniform vec3 sun_horizon : source_color = vec3(1.0, 0.78, 0.36);
+uniform vec3 far_horizon : source_color = vec3(0.86, 0.56, 0.6);
 uniform vec3 sun_color : source_color = vec3(1.0, 0.82, 0.5);
 uniform vec3 cloud_lit : source_color = vec3(1.0, 0.72, 0.48);
-uniform vec3 cloud_shade : source_color = vec3(0.5, 0.32, 0.5);
+uniform vec3 cloud_shade : source_color = vec3(0.62, 0.38, 0.48);
 uniform vec3 below_color : source_color = vec3(0.86, 0.55, 0.52);
 uniform vec3 sun_direction = vec3(-0.6, 0.2, 0.77);
 uniform float barrage = 0.0;

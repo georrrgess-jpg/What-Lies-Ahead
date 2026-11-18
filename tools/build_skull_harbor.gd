@@ -164,7 +164,7 @@ func _build_environment() -> void:
 	sky.sky_material = sky_mat
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.68, 0.6, 0.8)
+	env.ambient_light_color = Color(0.76, 0.64, 0.7)
 	env.ambient_light_energy = 0.62
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_white = 2.4
@@ -174,7 +174,7 @@ func _build_environment() -> void:
 	env.glow_bloom = 0.0
 	env.glow_hdr_threshold = 1.0
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.92, 0.62, 0.6)
+	env.fog_light_color = Color(0.98, 0.72, 0.56)
 	env.fog_density = 0.0011
 	env.fog_sky_affect = 0.0
 	env.adjustment_enabled = true
@@ -202,7 +202,7 @@ func _build_environment() -> void:
 	var fill := DirectionalLight3D.new()
 	fill.name = "SkyFill"
 	fill.transform = Transform3D(Basis.looking_at(-Vector3(0.5, 0.7, -0.5).normalized(), Vector3.UP), Vector3(0, 30, 0))
-	fill.light_color = Color(0.66, 0.62, 1.0)
+	fill.light_color = Color(0.62, 0.66, 1.0)
 	fill.light_energy = 0.38
 	fill.shadow_enabled = false
 	level.add_child(fill)
