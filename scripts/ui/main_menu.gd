@@ -131,6 +131,7 @@ func _build_pages() -> void:
 	_home = MenuHome.new()
 	_home.play_requested.connect(_on_play_requested)
 	_home.endless_requested.connect(_on_endless_requested)
+	_home.world_shown.connect(_show_world_backdrop.bind(false))
 	_register("title", _home, "", Frame.FULL)
 	_later["play"] = [_new_play, "PLAY", Frame.SHELL]
 	_top_bar.add_tab("play", "PLAY")
