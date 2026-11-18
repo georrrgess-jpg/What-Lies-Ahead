@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/boomtown_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"boomtown"
+display_name = "Boomtown"
+blurb = "Hold Main Street round the Prospector Supply wagon, between the saloon and the livery, under the mine train's loop, then follow the lanterns out through the BOOMTOWN gate."
+scene_path = "res://scenes/levels/boomtown.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"boomtown_loop"
+music_final = &"boomtown_final"
+ambience = &"gulch_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(1, 0.79, 0.24, 1)
+menu_camera_from = Vector3(-0.8, 2.0, 6.5)
+menu_camera_to = Vector3(0.8, 10, 26)
+heal_item_name = "Sarsaparilla"
+loading_tips = PackedStringArray("A Cowpoke squares up and a glint flashes at its hip before it draws: break line of sight or shoot it first. A headshot spoils the draw.", "Prospectors dig in and tunnel toward you. When the dust ring grows under your feet, step out of it.", "The saloon balcony is high ground with a long view up Main Street: the stairs come up from the alley south of the saloon.", "The livery barn is open at both ends and the saloon has a back door: cut through them to lose a crowd.", "In the dust storm you can't see far. Listen for the spurs, and keep your back to a wall.", "Sheriff Rattlebones throws dynamite where you stand: keep moving, and never stand in his charge lane.")

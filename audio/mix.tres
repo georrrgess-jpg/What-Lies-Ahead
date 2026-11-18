@@ -309,7 +309,19 @@ sound_category = Dictionary[StringName, StringName]({
 &"faire_siege_horn": &"cue",
 &"faire_loop": &"music",
 &"faire_final": &"music",
-&"faire_ambience": &"ambience"
+&"faire_ambience": &"ambience",
+&"gulch_": &"enemy_voice",
+&"gulch_cowpoke_draw": &"enemy_telegraph",
+&"gulch_cowpoke_shot": &"enemy_attack",
+&"gulch_prospector_dig": &"enemy_telegraph",
+&"gulch_prospector_pop": &"enemy_attack",
+&"gulch_sheriff_fuse": &"enemy_telegraph",
+&"gulch_coaster_clack": &"ambience",
+&"gulch_coaster_whoosh": &"ambience",
+&"gulch_wind_gust": &"cue",
+&"boomtown_loop": &"music",
+&"boomtown_final": &"music",
+&"gulch_ambience": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,

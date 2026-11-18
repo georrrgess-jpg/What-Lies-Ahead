@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WorldData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/world_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="2"]
+[ext_resource type="Resource" path="res://data/levels/boomtown.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("4")
+kind = 2
+target = &"ghost_train"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"gold_rush_gulch"
+display_name = "Gold Rush Gulch"
+blurb = "A Wild West theme park at blazing high noon. The saloon doors are swinging, the mine train is running, and every cowpoke in the gulch has come back for the gold."
+levels = Array[ExtResource("2")]([ExtResource("3")])
+sort_order = 120
+tagline = "This town ain't big enough."
+requirement = SubResource("unlock")
+accent_color = Color(1, 0.79, 0.24, 1)
+secondary_color = Color(0.18, 0.72, 0.69, 1)
+backdrop_color = Color(0.36, 0.14, 0.1, 1)
