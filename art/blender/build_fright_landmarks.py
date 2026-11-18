@@ -91,6 +91,15 @@ def skull_ride():
               sphere(f"Eye{s}", 0.62, (s * 1.85, -3.05, cz - 0.45), scale=(1, 0.6, 1), m=green, segs=12, rings=8),
               bulb(f"EyeBulb{s}", 0.3, (s * 1.85, -3.3, cz - 0.45), green),
               sphere(f"Temple{s}", 1.8, (s * 3.6, 0.4, cz - 0.6), scale=(0.7, 1.0, 1.0), m=bone_d, segs=12, rings=8)]
+    # Two dark cracks running over the crown (points on the cranium's surface).
+    for k, (t0, t1, ph0, ph1) in enumerate(((-38.0, -8.0, 62.0, 34.0), (14.0, 40.0, 48.0, 70.0))):
+        pts = []
+        for i in range(7):
+            u = i / 6
+            th = math.radians(t0 + (t1 - t0) * u + (6.0 if i % 2 else -6.0) * (0 < i < 6))
+            ph = math.radians(ph0 + (ph1 - ph0) * u)
+            pts.append((5.0 * 1.01 * math.cos(ph) * math.sin(th), 1.2 - 3.9 * 1.01 * math.cos(ph) * math.cos(th), cz + 4.6 * 1.01 * math.sin(ph)))
+        p.append(tube(f"Crack{k}", pts, 0.08, m=night, segs=5, radius_end=0.03))
     p.append(prism("Nose", [(-0.55, 0.0), (0.55, 0.0), (0.0, 1.1)], 0.5, (0, -3.2, cz - 2.9), m=night))
     p.append(prism("NoseBridge", [(-0.2, 0.0), (0.2, 0.0), (0.0, -0.5)], 0.5, (0, -3.15, cz - 1.8), m=bone_d))
     # Upper jaw over the mouth and its teeth.

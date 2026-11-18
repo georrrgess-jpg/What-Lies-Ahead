@@ -16,8 +16,8 @@ three outfits.
     Outfit_Ringmaster  Ringmaster Rictus (the alpha): a towering ringmaster with a
                        bone-white skull face, a red tailcoat ("Shirt") with gold
                        buttons and black lapels, a white shirt front, black
-                       trousers and boots; a tall top hat with a green-glowing
-                       band (Acc_Ringmaster_Hat), a skull-topped cane
+                       trousers and boots; a tall purple top hat with a
+                       green-glowing band (Acc_Ringmaster_Hat), a skull-topped cane
                        (Acc_Ringmaster_Cane) and a curled moustache
                        (Acc_Ringmaster_Moustache)
 
@@ -240,9 +240,9 @@ def ringmaster_accessories(m):
     w = 0.62
     hat = [cap_crown(p + "Crown", w, m["black"], rim=1.76, top=1.98, off=0.04),
            cyl(p + "Brim", 0.44, 0.04, (0, HEAD_Y + 0.02, 1.86), segs=24, bevel=0.015, m=m["black"]),
-           cyl(p + "Tall", 0.27, 0.62, (0, HEAD_Y + 0.02, 2.2), segs=20, bevel=0.03, m=m["black"], radius_top=0.3),
-           cyl(p + "Band", 0.28, 0.1, (0, HEAD_Y + 0.02, 1.96), segs=20, bevel=0.0, m=m["green"]),
-           cyl(p + "Top", 0.3, 0.04, (0, HEAD_Y + 0.02, 2.5), segs=20, bevel=0.015, m=m["red"]),
+           cyl(p + "Tall", 0.27, 0.7, (0, HEAD_Y + 0.02, 2.24), segs=20, bevel=0.03, m=m["stripe"], radius_top=0.31),
+           cyl(p + "Band", 0.285, 0.14, (0, HEAD_Y + 0.02, 1.97), segs=20, bevel=0.0, m=m["green"]),
+           cyl(p + "Top", 0.31, 0.05, (0, HEAD_Y + 0.02, 2.59), segs=20, bevel=0.015, m=m["red"]),
            tube(p + "Feather", [(0.24, HEAD_Y + 0.1, 1.98), (0.32, HEAD_Y + 0.15, 2.3), (0.26, HEAD_Y + 0.25, 2.6)], 0.035, m=m["red"], segs=6, radius_end=0.01)]
     cane = [cyl(p + "Cane", 0.03, 1.15, (-0.5, -0.22, 0.05), rot=rad(14, 0, 0), segs=8, bevel=0.0, m=m["black"]),
             sphere(p + "Knob", 0.08, (-0.5, -0.08, 0.6), scale=(1, 0.85, 1.05), m=m["bone"], segs=10, rings=7),
