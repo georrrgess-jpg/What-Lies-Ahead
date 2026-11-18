@@ -25,7 +25,7 @@ windup_clip = &"Roar"
 windup_sound = &"rounds_boss_charge_windup"
 speed = 14.0
 width = 2.6
-damage = 17.0
+damage = 19.0
 lock_fraction = 0.65
 color = Color(1, 0.3, 0.3, 1)
 dazed = 2.6
@@ -44,7 +44,7 @@ waves = 2
 gap = 0.85
 speed = 8.0
 max_radius = 15.0
-damage = 9.0
+damage = 10.0
 color = Color(1, 0.78, 0.25, 1)
 
 [sub_resource type="Resource" id="siege_call"]
@@ -83,8 +83,8 @@ windup = 1.0
 windup_clip = &"Roar"
 callout = "SEND IN THE FOOLS! — CLEAR THE JESTERS"
 enemy = &"faire_jester"
-count = 3
-max_alive = 4
+count = 2
+max_alive = 3
 color = Color(1, 0.3, 0.3, 1)
 
 [sub_resource type="Resource" id="blade_sweep"]
@@ -127,7 +127,7 @@ moves = Array[ExtResource("b_move")]([SubResource("lance_charge"), SubResource("
 script = ExtResource("1")
 id = &"alpha_black_knight"
 display_name = "The Black Knight"
-max_health = 3500.0
+max_health = 3800.0
 move_speed = 2.0
 speed_variance = 0.0
 turn_speed = 3.5

@@ -88,7 +88,7 @@ spawns = {
 }
 spawn_interval = 1.15
 burst = 1
-max_alive = 14
+max_alive = 15
 speed_scale = 1.06
 late_types_after = 0.25
 banner = ""
@@ -121,8 +121,8 @@ twist = &"catapult"
 script = ExtResource("2")
 spawns = {
 "faire_jester": 7,
-"tourist_shambler": 11,
-"faire_knight": 2,
+"tourist_shambler": 12,
+"faire_knight": 3,
 "lifeguard_runner": 3
 }
 spawn_interval = 1.9
