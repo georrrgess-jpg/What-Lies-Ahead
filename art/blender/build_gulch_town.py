@@ -602,7 +602,7 @@ def build_gate():
     p += [box("SignBoard", (8.4, 0.24, 1.5), (0, 0, 5.5), bevel=0.08, m=gmat("RedDark", rough=0.6)),
           box("SignTrim", (8.8, 0.18, 1.8), (0, 0.04, 5.5), bevel=0.06, m=gold),
           text("SignFront", "BOOMTOWN", 1.0, 0.1, (0, -0.15, 5.4), m=gmat("Cream", rough=0.5)),
-          text("SignBack", "COME BACK SOON", 0.55, 0.06, (0, 0.15, 5.45), rot=(0, 0, math.pi), m=gmat("Cream", rough=0.5))]
+          text("SignBack", "COME BACK SOON", 0.55, 0.06, (0, 0.15, 5.45), rot=(0, 0, math.pi), m=gmat("RedDark", rough=0.5))]
     for s in (-1, 1):
         p.append(cyl(f"Chain{s}", 0.04, 0.8, (s * 3.6, 0, 6.6), segs=4, bevel=0.0, m=gmat("Iron")))
     # Horseshoes and a lantern on each post.
