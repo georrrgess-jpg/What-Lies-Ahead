@@ -122,14 +122,14 @@ twist = &"barrage"
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 13,
-"cove_deckhand": 11,
-"cove_powder_monkey": 5,
+"tourist_shambler": 11,
+"cove_deckhand": 9,
+"cove_powder_monkey": 4,
 "lava_fire_dancer": 4
 }
-spawn_interval = 1.9
+spawn_interval = 2.0
 burst = 2
-max_alive = 13
+max_alive = 12
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""

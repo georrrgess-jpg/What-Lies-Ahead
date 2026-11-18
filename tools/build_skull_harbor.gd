@@ -525,8 +525,8 @@ func _build_gangplanks() -> void:
 		var top := Vector3(-21.0, DECK_Y, z)
 		var foot := Vector3(GANGPLANK_FOOT, 0.0, z)
 		_ramp(g, "Gangplank%d" % k, top, foot, GANGPLANK_W, planks)
-		# Landing plank across the gap onto the deck.
-		_box(g, "Landing%d" % k, Vector3(top.x - deck_x, 0.3, GANGPLANK_W), Vector3((top.x + deck_x) * 0.5, DECK_Y - 0.15, z), planks)
+		# Landing plank across the gap onto the deck (a hair above it: no z-fighting).
+		_box(g, "Landing%d" % k, Vector3(top.x - deck_x, 0.3, GANGPLANK_W), Vector3((top.x + deck_x) * 0.5, DECK_Y - 0.135, z), planks)
 		for s in [-1.0, 1.0]:
 			var side_z: float = z + s * (GANGPLANK_W * 0.5 + 0.1)
 			_player_wall(walls, "GangplankWall%d_%d" % [k, int(s)], Vector3(foot.x, 0.0, side_z), Vector3(deck_x, 0.0, side_z), 6.0 + DECK_Y)

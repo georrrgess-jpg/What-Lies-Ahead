@@ -73,7 +73,7 @@ func _physics_process(delta: float) -> void:
 		_body.rotation.x = lerp_angle(_body.rotation.x, 0.0, minf(1.0, delta * 12.0))
 		var pulse := 1.0 + 0.08 * burn * sin(_age * (20.0 + burn * 40.0))
 		_body.scale = Vector3.ONE * (1.0 + burn * 0.15) * pulse
-		if randf() < 0.5:
+		if randf() < 0.25:
 			Fx.impact(get_parent(), global_position + Vector3.UP * 0.35, Vector3.UP, Color(1.0, 0.75, 0.3))
 	_spark.scale = Vector3.ONE * (0.8 + randf() * 0.6)
 	if _age >= _time + _fuse or not is_instance_valid(_zone):
