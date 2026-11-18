@@ -448,7 +448,7 @@ func _refresh_today() -> void:
 	if art == null:
 		art = UiKit.icon(&"icon_spark", 60.0)
 	_today_holder.add_child(art)
-	_today_caption.text = "TODAY'S PICK  ·  %d%% OFF  ·  %s" % [roundi(ShopCatalog.discount(pick) * 100.0), LockerCatalog.category_label(pick).to_upper()]
+	_today_caption.text = "TODAY'S PICK  ·  %d%% OFF" % roundi(ShopCatalog.discount(pick) * 100.0)
 	_today_name.text = pick.display_name.to_upper()
 	for c in _today_price.get_children():
 		_today_price.remove_child(c)
