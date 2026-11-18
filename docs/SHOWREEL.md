@@ -13,7 +13,7 @@ attract mode), and renders to a video.
 | The shot list (staging of every shot) and the featured items (ids at the top) | `scripts/cinematics/showreel_shots.gd` |
 | Timeline player: sets, cuts, music, skip, hand-back to the menu | `scripts/cinematics/cine_player.gd` (`CinePlayer`) |
 | Per-shot toolkit: camera moves (dolly, orbit, follow, spline), whip pans, speed ramps, relighting, focus, flares, actors, kills | `scripts/cinematics/cine_stage.gd` (`CineStage`) |
-| First-person weapon without a player: `WeaponView.staged_aim`, `staged_sprint`/`slide`/`mantle`, `staged_gait`, `refit_sight()`, `play_reload()` + `seek_reload()` (a reload showcase holds the rig still at an eye in the level and films it from its own angle: `ShowreelShots._showcase`) | `scripts/player/weapon_view.gd` |
+| First-person weapon without a player: `WeaponView.staged_aim`, `staged_sprint`/`slide`/`mantle`, `staged_gait`, `refit_sight()`, `play_reload()` + `seek_reload()` (a reload showcase leans the rig in and turns it about the gun, so each reload is seen from its own angle with the arms still running out of frame: `ShowreelShots._showcase`) | `scripts/player/weapon_view.gd` |
 | The Ticket Ripper's WINNER pop without damage: `TicketRipperBurst.show_at(parent, at)` | `scripts/weapons/ticket_ripper_burst.gd` |
 | The Eruption twist on cue: `LavaEruption.erupt_now()`, `strike_at(point)` | `scripts/props/lava_eruption.gd` |
 | Lens and colour grade, letterbox, flashes, fades, backdrop, section cards, title cards, stamps, tags, counters (UI kit) | `scripts/cinematics/cine_overlay.gd`, `art/shaders/cine_grade.gdshader`, `art/shaders/cine_wipe.gdshader` |
@@ -57,7 +57,12 @@ attract mode), and renders to a video.
   its set is handed over at the cut (`stage.set_root`). Each level set, once
   instantiated, is drawn twice into a small offscreen view of its own from its
   menu camera before its cut, so its materials compile there and not on the
-  cut. A video trims the warm-up frames.
+  cut. Sets too heavy to enter the tree mid-reel (`EARLY_SETS`: Ashfall
+  City, whose set-up took a 90 ms frame when it loaded during the Coin-Op
+  and aim-down-sights shots) load and warm behind the black
+  (`CinePlayer.early_sets`), and every letter of the display face is drawn
+  once at each size the cards use (`TYPE_SIZES`, `CineOverlay.warm_type`), so
+  no card rasterises its glyphs on its cut. A video trims the warm-up frames.
 * **Framing on any screen.** Shots are framed for 16:9. On a narrower screen
   the camera keeps the 16:9 width (`CineStage.lens_fov`) and the letterbox bars
   keep the same picture aspect (1920 x 888), so nothing framed to the sides is
@@ -111,7 +116,8 @@ attract mode), and renders to a video.
   slammed on its hit (`overlay.card`: a dark band wipes across, the title
   punches in with a settling tilt while an accent echo of it bursts outward,
   a rule wipes out under it; an alpha's epithet sits under its name): 15
-  WORLDS, the five alphas, 37 ZOMBIES · 15 ALPHAS, LOCK AND LOAD, RELOADS,
+  WORLDS, the five alphas, 42 ZOMBIES · 15 ALPHAS (the zombie kinds other
+  than the alphas), LOCK AND LOAD, RELOADS,
   ENDLESS, LAST RIDE, MAKE IT YOURS, the operators and Prize Prints (counts
   from `GameData`). Fast type for fast cuts:
   `overlay.stamp` (a big title that slams in in 0.14 s: HEADSHOT), `overlay.tag` (a small kicker and name sliding in low left in
@@ -152,13 +158,13 @@ boundaries and the bold hits are locked.
 | **17.5-18.0** | worlds_card | Toy Shop | The push carries on at a crawl (0.15x): **15 WORLDS** card | **stop-hit 17.5** |
 | **Alphas** | | | | |
 | **18.0-23.0** | alpha_0-4 | Ghost Train, Boomtown, Skull Harbor, Royal Faire, Toy Shop | Ringmaster Rictus, Sheriff Rattlebones, Captain Barnacle, The Black Knight, The Toymaker: a crash push up from a low lens as each roars in slow motion, the frame jolts, the name and epithet ("Champion of the lists") slam in | **hits 18, 19, 20, 21, 22** |
-| **23.0-24.0** | cast | Prize Pier | One zombie of every world marching at a low lens in slow motion, two alphas towering behind: **37 ZOMBIES · 15 ALPHAS** | **23.0** brass, rising |
+| **23.0-24.0** | cast | Prize Pier | One zombie of every world marching at a low lens in slow motion, two alphas towering behind: **42 ZOMBIES · 15 ALPHAS** | **23.0** brass, rising |
 | 24.0-25.5 | lock_load | Prize Pier | In the dark, first person: the Scatter Blaster snaps shut and racks twice, lit by its own glints: **LOCK AND LOAD** | riser |
 | **25.5-26.0** | silence | (black) | | **silence 25.5** |
 | **The drop** | | | | |
 | **26.0-29.0** | ripper | Prize Pier | **DROP**. First person, Ticket Ripper (Jackpot finish): fifteen rounds a second down the lane, three drop, then on **27.5** the golden WINNER round pierces the last two and pops its ticket burst at 0.18x while the lens closes in | **the drop**, **27.5** |
-| **29.0-33.0** | reload_0-3 | Lava Lagoon, Launch Pad 9, Neon Skyline, Candy Works | **RELOADS**: four close, lit showcases, each from its own angle (the Lava Lampoon's lamp cartwheeling from its right flank, the T-Minus Six's gantry from above, the Coin-Op's coin return over the shoulder, the Yo-Yo Loco's loop from high on its left) | a mechanical accent per snap |
-| 33.0-35.0 | moves | Boot Camp | First person: a sprint, a vault over the hurdle, a sprint and a slide under the DUCK! sign | whoosh on the slide |
+| **29.0-33.0** | reload_0-3 | Lava Lagoon, Launch Pad 9, Neon Skyline, Candy Works | **RELOADS**: four close, lit showcases, each from its own angle (the rig turns about the gun: the Lava Lampoon's lamp cartwheeling, turned to show its flank; the T-Minus Six's gantry, tipped toward the lens; the Coin-Op's coin return, rolled the other way; the Yo-Yo Loco's loop, rolled up); each reload's snap lands near the next cut | an accent on each cut |
+| 33.0-35.0 | moves | Boot Camp | First person: a sprint, a vault over the hurdle, a sprint and, on 34.0, a slide under the DUCK! sign | whoosh into 34.0 |
 | **35.0-37.0** | ads | Prize Pier | Aim down sights in half time: the Comet cannon's Gemcut optic lights on a far head; **36.0** the head pops at 0.15x, HEADSHOT | **half time**, thud on 36.0 |
 | **37.0-40.0** | cryo, lobber, coin_op, parade | Prize Pier, Candy Works, Neon Skyline, Midnight Mall | The Cryo Beam freezes three and they shatter (1 s); a gumball blast throws a ring of five (1 s); Coin-Op FREE PLAY (0.5 s); three kills in three kill effects and tracers (0.5 s) | **37.0** full band |
 | **Endless, Last Ride** | | | | |
