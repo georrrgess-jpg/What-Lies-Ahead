@@ -703,7 +703,7 @@ func _showcase(st: CineStage, index: int) -> void:
 	var view := _dressed_view(st, weapon_id, spec[1], GLOVES[index % 2])
 	var eye: Vector3 = spec[3]
 	var look: Vector3 = spec[4]
-	_eye_track(st, eye, look, look + Vector3(0.3, 0.15, 0), (look - eye).normalized() * 0.12, 1.0)
+	_eye_track(st, eye, look, look + Vector3(0.6, 0.2, 0), (look - eye).normalized() * 0.15, 1.0)
 	# The gun's hip position in the lens's space (metres).
 	var pivot := w.view_position * WeaponView.VIEW_SCALE
 	st.after_camera(func(t: float):
@@ -1020,7 +1020,7 @@ func _prints(st: CineStage) -> void:
 		pivot.rotation.y = deg_to_rad(-50.0 + t * 60.0)
 		pivot.position.y = 1.3 + 0.5 * pow(1.0 - smoothstep(0.5, 0.66, t), 2.0))
 	st.fov(36.0, 32.0)
-	st.dolly(Vector3(1.2, 1.55, 3.8), Vector3(-0.7, 1.45, 0), Vector3(0.9, 1.5, 3.3), Vector3(-0.6, 1.45, 0), 1.0)
+	st.dolly(Vector3(1.4, 1.6, 3.9), Vector3(-0.75, 1.45, 0), Vector3(0.7, 1.5, 3.2), Vector3(-0.55, 1.45, 0), 1.0)
 	var gold := CosmeticItem.rarity_color(CosmeticItem.Rarity.LEGENDARY)
 	st.at(0.0, func():
 		var machine := CapsuleMachine.new()
