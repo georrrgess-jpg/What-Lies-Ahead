@@ -522,6 +522,13 @@ func play_reload(weapon: WeaponData, duration: float) -> void:
 		_: _reload_holo_print(duration)
 
 
+## Jumps the running reload `seconds` ahead (a cinematic cutting in on the
+## middle of it).
+func seek_reload(seconds: float) -> void:
+	if is_reloading() and seconds > 0.0:
+		_reload_tween.custom_step(seconds)
+
+
 func cancel_reload() -> void:
 	_kill_reload_tween()
 	_reset_parts()

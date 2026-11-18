@@ -15,6 +15,9 @@ extends Node3D
 signal ended
 
 const LOOKAHEAD := 4
+## ...and every shot that starts within this many seconds (a run of fast cuts
+## across many sets, like the trailer's world montage, loads all of them).
+const LOOKAHEAD_SECONDS := 3.2
 const MUSIC_DB := -3.0
 ## Frames of black before the first shot while FxWarmup draws every effect,
 ## enemy and weapon of the reel once, so their shaders compile up front
@@ -374,10 +377,13 @@ func _release_unused(i: int) -> void:
 			_sets.erase(id)
 
 
-## Starts loading the sets of the next few shots: the level scene loads on
+## Starts loading the sets of the next few shots (LOOKAHEAD, LOOKAHEAD_SECONDS): the level scene loads on
 ## the engine's loader threads, then a worker thread instantiates it.
 func _prepare_from(i: int) -> void:
-	for k in range(i, mini(i + LOOKAHEAD, shots.size())):
+	var horizon := shots[i].start + LOOKAHEAD_SECONDS if i < shots.size() else 0.0
+	var k := i - 1
+	while k + 1 < shots.size() and (k + 1 < i + LOOKAHEAD or shots[k + 1].start < horizon):
+		k += 1
 		var id := shots[k].set_id
 		if _sets.has(id) or _jobs.has(id) or _loading.has(id):
 			continue
