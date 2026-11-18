@@ -635,6 +635,9 @@ func _build_dollhouse() -> void:
 	_collider(d, "UpperB", Vector3(6.65, 0.3, 7.65), _dh(-2.825, -1.175, 3.85))
 	_collider(d, "FrontRail", Vector3(0.2, 1.15, 13.3), _dh(0, -4.3, 4.575))
 	_collider(d, "WellRail", Vector3(0.2, 1.15, 7.65), _dh(-2.825, 2.05, 4.575))
+	# Nobody perches on the 0.2 m rail tops: a player-only block sits on each.
+	_player_block(d, "FrontRailCap", Vector3(0.4, 2.0, 13.3), _dh(0, -4.3, 6.15))
+	_player_block(d, "WellRailCap", Vector3(0.4, 2.0, 7.65), _dh(-2.825, 2.05, 6.15))
 	_ramp_collider(d, "Stair", _dh(1.0, 3.15, 4.0), _dh(-6.0, 3.15, 0.0), 2.0)
 	_collider(d, "Partition", Vector3(5.65, 3.7, 0.35), _dh(2.5, 1.325, 1.85))
 	# Furniture: table and chairs, sofa, bed.
