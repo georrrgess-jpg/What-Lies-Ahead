@@ -14,13 +14,13 @@ const TWIST := &"catapult"
 const LAUNCH_POINTS: Array[Vector3] = [Vector3(-40.0, 26.0, -70.0), Vector3(40.0, 26.0, -70.0), Vector3(0.0, 30.0, -80.0)]
 
 ## Seconds between boulders (a random pick in this range).
-@export var interval := Vector2(2.6, 3.6)
+@export var interval := Vector2(3.0, 4.0)
 ## Seconds from the ring appearing to the impact.
 @export var telegraph := 1.8
 ## Seconds of the boulder's flight (the end of the telegraph).
 @export var flight_time := 0.9
 @export var radius := 2.1
-@export var damage := 5.0
+@export var damage := 4.0
 ## Share of the boulders aimed close to the player (the rest land around them).
 @export_range(0.0, 1.0) var near_share := 0.35
 
