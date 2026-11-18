@@ -516,9 +516,43 @@ def build_livery():
           box("Loftfloor", (W - 0.6, D - 0.6, 0.15), (0, D / 2, H + 0.05), bevel=0.0, m=gmat("Wood", rough=0.8))]
     bulb_m = gglow("GulchLampGlow", "#ffd88a", 3.0)
     for y in (2.0, D - 2.0):
-        p.append(bulb(f"Lantern{y}", 0.12, (0, y, H - 0.6), bulb_m))
+        p += [bulb(f"Lantern{y}", 0.12, (0, y, H - 0.6), bulb_m),
+              cyl(f"LanternCage{y}", 0.15, 0.36, (0, y, H - 0.6), segs=8, bevel=0.02, m=gmat("Iron")),
+              cyl(f"LanternChain{y}", 0.015, 0.3, (0, y, H - 0.3), segs=4, bevel=0.0, m=gmat("Iron"))]
+    p += livery_tack(hw, D)
     p += sign("S", "LIVERY", 0, -0.25, H + 2.6, 3.6, 0.7, board=trim, ink=barn_b, size=0.46)
     save("gulch_livery", [merge("Livery", p)])
+
+
+def livery_tack(hw, D):
+    """Stable dressing: saddles and blankets over the stall rails, horseshoes
+    and a coiled rope on the posts, a wagon wheel, a pitchfork and buckets."""
+    leather, blanket = gmat("WoodDark", rough=0.6), [gmat("Turq", rough=0.8), gmat("Red", rough=0.8), gmat("Orange", rough=0.8)]
+    gold, iron = gmat("Gold", rough=0.3, metal=0.4), gmat("Iron", rough=0.5)
+    p = []
+    for s in (-1, 1):
+        for k in range(4):
+            y = 0.9 + k * 2.75
+            x = s * (hw - 1.5)
+            if (k + (s > 0)) % 2 == 0:
+                p += [box(f"Blanket{s}{k}", (1.0, 0.24, 0.5), (x, y, 1.25), bevel=0.04, m=blanket[(k + s) % 3]),
+                      sphere(f"Saddle{s}{k}", 0.32, (x, y, 1.48), scale=(1.3, 0.7, 0.5), m=leather, segs=10, rings=6),
+                      sphere(f"Horn{s}{k}", 0.06, (x - s * 0.3, y, 1.66), m=gold, segs=6, rings=4)]
+            else:
+                p.append(torus(f"Shoe{s}{k}", 0.1, 0.025, (s * (hw - 2.6) - s * 0.12, y, 1.9), rot=rad(0, 90, 0), m=iron, major_segs=12, minor_segs=4,
+                               arc=math.radians(250), start=math.radians(-35)))
+    # A spare wagon wheel against the back wall, a pitchfork and buckets by the door.
+    p.append(torus("SpareRim", 0.7, 0.06, (-3.7, D - 0.55, 0.72), rot=rad(80, 0, 0), m=gmat("Red", rough=0.6), major_segs=24, minor_segs=5))
+    for k in range(8):
+        a = math.tau * k / 8
+        p.append(tube(f"SpareSpoke{k}", [(-3.7, D - 0.55, 0.72), (-3.7 + math.cos(a) * 0.68, D - 0.55 - math.sin(a) * 0.68 * 0.17,
+                                          0.72 + math.sin(a) * 0.68 * 0.98)], 0.025, m=gmat("WoodDark"), segs=4))
+    p += [tube("Fork", [(3.3, D - 0.5, 0.0), (3.1, D - 0.4, 1.7)], 0.03, m=gmat("WoodLight"), segs=6),
+          box("ForkHead", (0.36, 0.05, 0.3), (3.1, D - 0.42, 1.85), bevel=0.01, m=iron),
+          cyl("BucketA", 0.22, 0.36, (3.8, D - 0.6, 0.18), segs=12, bevel=0.02, m=gmat("Wood"), radius_top=0.26),
+          cyl("BucketB", 0.22, 0.36, (-3.6, 0.7, 0.18), segs=12, bevel=0.02, m=gmat("Wood"), radius_top=0.26),
+          torus("Rope", 0.22, 0.04, (4.3, D - 0.4, 1.6), rot=rad(90, 0, 0), m=gmat("Straw"), major_segs=14, minor_segs=4)]
+    return p
 
 
 # ---------------------------------------------------------------------------
