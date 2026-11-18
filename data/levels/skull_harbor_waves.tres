@@ -1,0 +1,159 @@
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
+
+[sub_resource type="Resource" id="wave_1"]
+script = ExtResource("2")
+spawns = {
+"cove_deckhand": 8,
+"tourist_shambler": 10,
+"cove_powder_monkey": 4
+}
+spawn_interval = 1.6
+burst = 1
+max_alive = 11
+speed_scale = 1.0
+late_types_after = 0.3
+banner = ""
+kind = &"standard"
+title = "MAKE LANDFALL"
+hint = "Deckhands crouch before they lunge: step out of the line."
+
+[sub_resource type="Resource" id="wave_2"]
+script = ExtResource("2")
+spawns = {
+"cove_deckhand": 15,
+"lifeguard_runner": 7,
+"tourist_shambler": 5
+}
+spawn_interval = 1.0
+burst = 1
+max_alive = 13
+speed_scale = 1.0
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "CUTLASS CHARGE"
+hint = "The crew storms ashore: back off and let the lunges fall short."
+surge_at = 0.5
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_3"]
+script = ExtResource("2")
+spawns = {
+"cove_powder_monkey": 8,
+"tourist_shambler": 9,
+"lava_tiki_bartender": 2,
+"cove_deckhand": 6
+}
+spawn_interval = 1.25
+burst = 1
+max_alive = 12
+speed_scale = 1.0
+late_types_after = 0.15
+banner = ""
+kind = &"ranged"
+title = "POWDER KEGS"
+hint = "Kegs land in a ring and blow after the fuse: a headshot drops them."
+surge_at = 0.55
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_4"]
+script = ExtResource("2")
+spawns = {
+"cove_deckhand": 14,
+"tourist_shambler": 10,
+"cove_powder_monkey": 5,
+"boardwalk_bruiser": 2
+}
+spawn_interval = 1.15
+burst = 1
+max_alive = 14
+speed_scale = 1.08
+late_types_after = 0.2
+banner = ""
+kind = &"bounty"
+title = "THE GOLDEN DECKHAND"
+hint = "Catch the golden deckhand before it rows away."
+bounty = &"cove_deckhand"
+bounty_tickets = 250
+
+[sub_resource type="Resource" id="wave_5"]
+script = ExtResource("2")
+spawns = {
+"cove_deckhand": 9,
+"cove_powder_monkey": 5,
+"tourist_shambler": 11,
+"frost_yeti": 1,
+"boardwalk_bruiser": 2
+}
+spawn_interval = 3.4
+burst = 5
+max_alive = 14
+speed_scale = 1.06
+late_types_after = 0.25
+banner = ""
+kind = &"ambush"
+title = "BOARDING PARTY"
+hint = "They come from the cave, the tunnel, the warehouse and the water at once."
+
+[sub_resource type="Resource" id="wave_6"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 11,
+"cove_deckhand": 12,
+"cove_powder_monkey": 6,
+"lava_fire_dancer": 4
+}
+spawn_interval = 1.05
+burst = 1
+max_alive = 15
+speed_scale = 1.12
+late_types_after = 0.15
+banner = ""
+kind = &"standard"
+title = "BROADSIDE"
+hint = "The galleon fires on the quay: every cannonball lands in a glowing ring."
+surge_at = 0.5
+surge_count = 6
+twist = &"barrage"
+
+[sub_resource type="Resource" id="wave_7"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 11,
+"cove_deckhand": 9,
+"cove_powder_monkey": 4,
+"lava_fire_dancer": 4
+}
+spawn_interval = 2.0
+burst = 2
+max_alive = 12
+speed_scale = 1.1
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "CAPTAIN BARNACLE"
+hint = "Keep moving through his volleys, jump the anchor's ring, sidestep the ram."
+boss = &"alpha_barnacle"
+boss_at = 0.45
+rest_before = 24.0
+
+[resource]
+script = ExtResource("1")
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
+prep_seconds = 12.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 550
+break_refill_fraction = 0.3
+ammo_topup_price = 250
+heal_price = 390
+heal_amount = 60.0
+heals_per_break = 1
+wave_bonus_base = 20
+wave_bonus_per_wave = 5
+overshield_price = 780
+overshield_amount = 25.0
+damage_boost_price = 740

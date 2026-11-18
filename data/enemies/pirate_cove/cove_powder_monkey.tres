@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/cove_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/cove_keg_lob.gd" id="4"]
+
+[sub_resource type="Resource" id="keg"]
+script = ExtResource("4")
+fuse = 1.1
+min_range = 6.0
+max_range = 21.0
+cooldown = 6.5
+windup = 1.0
+damage = 8.0
+damage_per_second = 0.0
+radius = 1.8
+linger = 0.0
+projectile_speed = 12.0
+lead = 0.5
+apex = 2.6
+color = Color(1, 0.6, 0.2, 1)
+bottle_mesh = "Acc_Monkey_Keg"
+throw_clip = &"Throw"
+windup_sound = &"cove_fuse_light"
+throw_sound = &"cove_keg_throw"
+smash_sound = &"cove_keg_blast"
+retreat_range = 5.0
+
+[resource]
+script = ExtResource("1")
+id = &"cove_powder_monkey"
+display_name = "Powder Monkey"
+max_health = 100.0
+move_speed = 2.0
+speed_variance = 0.1
+turn_speed = 6.0
+tickets = 22
+score = 260
+xp = 22
+damage = 12.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.7
+attack_recover = 0.8
+lunge_speed = 3.0
+mass = 1.0
+flank_degrees = 45.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Monkey"
+body_scale = 0.9
+capsule_radius = 0.42
+capsule_height = 1.75
+head_height = 1.15
+shirt_colors = Array[Color]([Color(1, 0.94, 0.84, 1), Color(0.85, 0.2, 0.25, 1), Color(0.93, 0.66, 0.2, 1), Color(0.56, 0.78, 0.95, 1)])
+skin_colors = Array[Color]([Color(0.62, 0.82, 0.42, 1), Color(0.56, 0.78, 0.5, 1), Color(0.7, 0.82, 0.45, 1)])
+accessory_slots = PackedStringArray("Acc_Monkey_Pack", "Acc_Monkey_Cap|Acc_Monkey_Cap|")
+move_animation = &"Walk"
+animation_reference_speed = 1.9
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("keg")])
+voice_sounds = Array[StringName]([&"cove_monkey_cackle_1", &"cove_monkey_cackle_2"])
+voice_interval = Vector2(3.0, 6.0)
+voice_pitch = 1.15
+attack_sound = &"zombie_swipe"
