@@ -294,7 +294,22 @@ sound_category = Dictionary[StringName, StringName]({
 &"sz_bonk": &"impact",
 &"sz_thud": &"impact",
 &"sz_gutter": &"impact",
-&"prz_": &"ui"
+&"prz_": &"ui",
+&"cove_": &"enemy_voice",
+&"cove_cutlass_draw": &"enemy_telegraph",
+&"cove_cutlass_lunge": &"enemy_telegraph",
+&"cove_fuse_light": &"enemy_telegraph",
+&"cove_keg_throw": &"enemy_telegraph",
+&"cove_keg_blast": &"enemy_attack",
+&"cove_barnacle_bellow": &"enemy_telegraph",
+&"cove_anchor_slam": &"enemy_attack",
+&"cove_cannon_boom": &"enemy_attack",
+&"cove_cannon_whistle": &"enemy_telegraph",
+&"cove_cannon_impact": &"enemy_attack",
+&"cove_broadside_call": &"cue",
+&"skull_harbor_loop": &"music",
+&"skull_harbor_final": &"music",
+&"cove_ambience": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -479,5 +494,8 @@ sound_trim_db = Dictionary[StringName, float]({
 &"weap_lava_ripple": -2.0,
 &"sz_roll_up": -1.5,
 &"hub_spin_loop": -0.5,
-&"weap_ripsaw_idle": -0.5
+&"weap_ripsaw_idle": -0.5,
+&"cove_cannon_whistle": -2.0,
+&"cove_cannon_boom": -2.5,
+&"cove_broadside_call": -3.0
 })

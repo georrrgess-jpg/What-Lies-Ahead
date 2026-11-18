@@ -638,7 +638,7 @@ func _build_north() -> void:
 	# 2. The waterfall: a curtain down the cliff into a rock-rimmed basin.
 	var basin := Vector3(-2.0, 0.0, -18.6)
 	_collider(n, "Basin", Vector3(6.4, 0.7, 3.2), basin + Vector3(0, 0.35, -0.2))
-	_player_block(n, "BasinCap", Vector3(6.4, 3.0, 3.2), basin + Vector3(0, 2.2, -0.2))
+	_player_block(n, "BasinCap", Vector3(6.4, PLAYER_WALL_H, 3.2), basin + Vector3(0, 0.7 + PLAYER_WALL_H * 0.5, -0.2))
 	var rim := _mat("rock", Color(0.79, 0.54, 0.37), 0.9)
 	for k in 5:
 		_visual_box(dressing, "BasinRim%d" % k, [Vector3(6.4, 0.7, 0.5), Vector3(0.5, 0.7, 3.0), Vector3(0.5, 0.7, 3.0), Vector3(6.4, 0.7, 0.5), Vector3(6.2, 0.1, 3.0)][k],
@@ -684,6 +684,7 @@ func _build_north() -> void:
 	for k in 5:
 		var px := TAVERN.x - 4.8 + 9.6 * k / 4.0
 		_post(n, "VerandaPost%d" % k, 0.2, 3.0, Vector3(px, 0.0, TAVERN.z + 3.55 + 2.6))
+	_player_block(n, "VerandaCap", Vector3(10.6, 4.0, 3.2), TAVERN + Vector3(0, 5.0, 4.9))
 	_clutter_prop(n, "cove_barrels", "VerandaBarrels", TAVERN + Vector3(-3.0, 0.0, 4.9), 30.0, Vector3(1.9, 1.6, 1.6))
 	_clutter_prop(n, "cove_crates", "VerandaCrates", TAVERN + Vector3(-6.4, 0.0, -1.5), -15.0, Vector3(2.2, 2.0, 1.6))
 	# 4. The smugglers' tunnel.
@@ -721,7 +722,7 @@ func _build_swing() -> void:
 		var a: Vector2 = pts[k]
 		var b: Vector2 = pts[(k + 1) % 4]
 		_fence_run(s, "SwingFence%d" % k, Vector3(a.x, 0, a.y), Vector3(b.x, 0, b.y))
-		_player_wall(walls, "SwingWall%d" % k, Vector3(a.x, 0, a.y), Vector3(b.x, 0, b.y), 3.0)
+		_player_wall(walls, "SwingWall%d" % k, Vector3(a.x, 0, a.y), Vector3(b.x, 0, b.y), PLAYER_WALL_H)
 	for e in [-1.0, 1.0]:
 		for side in [-1.0, 1.0]:
 			_post(s, "SwingLeg%d%d" % [int(e), int(side)], 0.4, 8.0, SWING + Vector3(side * 2.3, 0, e * 4.6))
@@ -916,8 +917,9 @@ func _build_quay_props() -> void:
 	_clutter_prop(p, "cove_stall", "ParrotStall", Vector3(-9.5, 0, 1.0), 90.0, Vector3(2.9, 2.6, 1.2))
 	_prop(dressing, "cove_flagpole", "Flagpole", Vector3(5.5, 0, -13.0), 0.0, Vector3(0.4, 9, 0.4))
 	_post(p, "FlagpolePost", 0.4, 3.0, Vector3(5.5, 0, -13.0))
+	_player_block(p, "FlagpoleCap", Vector3(1.0, 6.0, 1.0), Vector3(5.5, 6.0, -13.0))
 	var lamps := [Vector3(-19.2, 0, -12.0), Vector3(-19.2, 0, 10.5), Vector3(-4.0, 0, 15.3), Vector3(8.0, 0, 15.3), Vector3(25.3, 0, -4.0),
-		Vector3(25.3, 0, 6.0), Vector3(-15.0, 0, -19.2), Vector3(2.0, 0, -19.2)]
+		Vector3(25.3, 0, 6.0), Vector3(-15.0, 0, -19.75), Vector3(2.4, 0, -19.75)]
 	var yaws := [90.0, 90.0, 180.0, 180.0, -90.0, -90.0, 0.0, 0.0]
 	for k in lamps.size():
 		_lamp(p, "Lamp%d" % k, lamps[k], yaws[k])
@@ -929,14 +931,15 @@ func _build_quay_props() -> void:
 	_string_bunting(Vector3(5.5, 8.6, -13.0), mast_top, 0.9)
 	_string_bunting(mast_top, Vector3(-19.2, 3.4, 10.5), 1.4)
 	_string_bunting(mast_top, Vector3(8.0, 3.4, 15.3), 1.2)
-	_string_bunting(Vector3(5.5, 8.6, -13.0), Vector3(-15.0, 3.4, -19.2), 1.2)
+	_string_bunting(Vector3(5.5, 8.6, -13.0), Vector3(-15.0, 3.4, -19.75), 1.2)
 	_string_bunting(Vector3(-19.2, 3.4, -12.0), Vector3(-4.0, 3.4, 15.3), 1.0)
-	_string_bunting(Vector3(25.3, 3.4, -4.0), Vector3(2.0, 3.4, -19.2), 1.0)
+	_string_bunting(Vector3(25.3, 3.4, -4.0), Vector3(2.4, 3.4, -19.75), 1.0)
 
 
 func _lamp(parent: Node3D, lamp_name: String, pos: Vector3, yaw: float) -> void:
 	_prop(dressing, "cove_lamp", lamp_name, pos, yaw, Vector3(0.3, 3.6, 0.3))
 	_post(parent, lamp_name + "Post", 0.2, 3.4, pos)
+	_player_block(parent, lamp_name + "Cap", Vector3(0.9, 4.0, 0.9), pos + Vector3(0, 5.4, 0))
 
 
 ## A string of fluttering pennants from a to b (added to the shared bunting mesh).
