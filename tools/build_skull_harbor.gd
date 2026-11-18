@@ -54,9 +54,14 @@ const TAVERN := Vector3(12.0, 0.0, -16.5)
 const CAVE := Vector3(-12.0, 0.0, -20.4)
 const TUNNEL := Vector3(22.0, 0.0, -20.4)
 const WAREHOUSE := Vector3(19.0, 0.0, 20.5)
-const HUTS := [Vector3(35.0, 0.0, -12.0), Vector3(43.0, 0.0, 0.0), Vector3(35.0, 0.0, 12.0)]
+## Stilt huts: [deck centre, yaw]. A (door south) and B (door north) are
+## walkable, joined by the rope bridge; C stands off in the lagoon.
+const HUTS := [[Vector3(34.0, 0.0, -10.5), 0.0], [Vector3(34.0, 0.0, 8.5), 180.0], [Vector3(47.0, 0.0, 8.0), -90.0]]
+const HUT_BODY_Z := 1.3                              # the hut's offset to the back of its deck
+const LAGOON_WALKS := [-8.5, 6.5]                    # z of the boardwalks to huts A and B
+const BRIDGE_X := 37.0
 const PORTAL := Vector3(2.0, 0.0, 28.6)
-const FAR_LANDING := Vector3(53.0, 0.0, 0.0)          # the far jetty's landing stage (6 x 6)
+const FAR_LANDING := Vector3(47.0, 0.0, -8.5)         # the far jetty's landing stage (6 x 6)
 const LIGHTHOUSE := Vector3(-72.0, -2.2, 88.0)
 const SUN_DIRECTION := Vector3(-0.6, 0.2, 0.77)      # toward the sun (south-west, low)
 const PLAYER_WALL_H := 10.0
@@ -75,6 +80,9 @@ var _bunting: SurfaceTool
 var _lines: SurfaceTool
 var _bunting_count := 0
 var _clutter: Array[CollisionShape3D] = []
+## Rails baked as walls but player-only afterwards: zombies cut the corners at
+## their ends and would stand pushing into them.
+var _soft: Array[StaticBody3D] = []
 
 
 func _initialize() -> void:
@@ -213,8 +221,8 @@ func _quay_outline() -> PackedVector2Array:
 ## is where a gangplank's trestle closes the edge.
 func _openings() -> Array:
 	var out := [
-		[Vector2(26.0, -12.0), 1.5, &"open"],
-		[Vector2(26.0, 12.0), 1.5, &"open"],
+		[Vector2(26.0, LAGOON_WALKS[0]), 1.5, &"open"],
+		[Vector2(26.0, LAGOON_WALKS[1]), 1.5, &"open"],
 		[Vector2(2.0, 16.0), 2.5, &"open"],
 		[Vector2(WAREHOUSE.x, 16.0), 5.5, &"entrance"],
 		[Vector2(-15.5, 16.0), 4.5, &"entrance"],
@@ -223,13 +231,9 @@ func _openings() -> Array:
 	]
 	for gy in GANGWAYS:
 		out.append([Vector2(-20.0, GALLEON.z + gy), GANGPLANK_W * 0.5 + 0.1, &"wedge"])
-	# Hut decks: where the boardwalks, the rope bridges and the far jetty join.
-	var a: Vector3 = HUTS[0]
-	var b: Vector3 = HUTS[1]
-	var c: Vector3 = HUTS[2]
-	out.append_array([[Vector2(a.x - 3.5, a.z), 1.5, &"open"], [Vector2(37.0, a.z + 3.0), 1.5, &"open"],
-		[Vector2(41.0, b.z - 3.0), 1.5, &"open"], [Vector2(41.0, b.z + 3.0), 1.5, &"open"], [Vector2(b.x + 3.5, b.z), 1.5, &"entrance"],
-		[Vector2(37.0, c.z - 3.0), 1.5, &"open"], [Vector2(c.x - 3.5, c.z), 1.5, &"open"],
+	# Hut decks: where the boardwalks, the rope bridge and the far jetty join.
+	out.append_array([[Vector2(30.0, LAGOON_WALKS[0]), 1.5, &"open"], [Vector2(30.0, LAGOON_WALKS[1]), 1.5, &"open"],
+		[Vector2(BRIDGE_X, -7.0), 1.3, &"open"], [Vector2(BRIDGE_X, 5.0), 1.3, &"open"], [Vector2(38.0, FAR_LANDING.z), 1.5, &"entrance"],
 		[Vector2(FAR_LANDING.x - 3.0, FAR_LANDING.z), 1.5, &"open"]])
 	return out
 
@@ -612,6 +616,7 @@ func _ramp(parent: Node3D, ramp_name: String, top: Vector3, bottom: Vector3, wid
 		var row := _module_row("Modules", "cove_rail", rb.size.x, 2.5)
 		row.rotation.z = -angle * dir
 		rail.add_child(row)
+		_soft.append(rail)
 
 
 # ---------------------------------------------------------------------------
@@ -734,31 +739,38 @@ func _build_lagoon() -> void:
 	var timber := _mat("timber", Color(0.48, 0.27, 0.16), 0.8)
 	var names := ["HutA", "HutB", "HutC"]
 	for k in HUTS.size():
-		var c: Vector3 = HUTS[k]
-		_prop(dressing, "cove_hut", names[k], c, 0.0, Vector3(7, 5, 6))
-		_collider(l, names[k] + "Deck", Vector3(7.0, 0.4, 6.0), c + Vector3(0, -0.2, 0))
-		_collider(l, names[k] + "Body", Vector3(4.4, 2.8, 3.8), c + Vector3(0, 1.4, -0.9))
-		_player_block(l, names[k] + "Roof", Vector3(6.0, 3.0, 6.0), c + Vector3(0, 4.2, -0.9))
-		_collider(l, names[k] + "Net", Vector3(0.3, 2.2, 3.8), c + Vector3(2.9, 1.1, 0.0))
-		var o := PackedVector2Array([Vector2(c.x - 3.5, c.z - 3.0), Vector2(c.x + 3.5, c.z - 3.0), Vector2(c.x + 3.5, c.z + 3.0), Vector2(c.x - 3.5, c.z + 3.0)])
+		var c: Vector3 = HUTS[k][0]
+		var yaw: float = HUTS[k][1]
+		var turn := Basis(Vector3.UP, deg_to_rad(yaw))
+		_prop(dressing, "cove_hut", names[k], c, yaw, Vector3(8, 5, 7))
+		var deck := _collider(l, names[k] + "Deck", Vector3(8.0, 0.4, 7.0), c + Vector3(0, -0.2, 0))
+		deck.rotation.y = deg_to_rad(yaw)
+		var body := _collider(l, names[k] + "Body", Vector3(4.4, 2.8, 3.8), c + turn * Vector3(0, 1.4, -HUT_BODY_Z))
+		body.rotation.y = deg_to_rad(yaw)
+		_player_block(l, names[k] + "Roof", Vector3(6.0, 3.0, 6.0), c + turn * Vector3(0, 4.2, -HUT_BODY_Z), deg_to_rad(yaw))
+		var net := _collider(l, names[k] + "Net", Vector3(0.3, 2.2, 2.8), c + turn * Vector3(3.4, 1.1, -1.75))
+		net.rotation.y = deg_to_rad(yaw)
+		var o := PackedVector2Array()
+		for corner in [Vector3(-4, 0, -3.5), Vector3(4, 0, -3.5), Vector3(4, 0, 3.5), Vector3(-4, 0, 3.5)]:
+			var w: Vector3 = c + turn * corner
+			o.append(Vector2(w.x, w.z))
 		for e in 4:
 			_edge_rails(l, "%sEdge%d" % [names[k], e], o[e], o[(e + 1) % 4], true)
-	# Boardwalks from the quay to huts A and C.
-	for entry in [["BoardwalkA", Vector3(26.0, 0, -12.0), Vector3(31.5, 0, -12.0)], ["BoardwalkC", Vector3(26.0, 0, 12.0), Vector3(31.5, 0, 12.0)]]:
-		_walkway(l, entry[0], entry[1], entry[2], 3.0, planks, timber, false)
-	# Rope bridges A-B and B-C, the far jetty east of B.
-	_walkway(l, "BridgeAB", Vector3(37.0, 0, -9.0), Vector3(41.0, 0, -3.0), 2.4, planks, timber, true)
-	_walkway(l, "BridgeBC", Vector3(41.0, 0, 3.0), Vector3(37.0, 0, 9.0), 2.4, planks, timber, true)
-	var b: Vector3 = HUTS[1]
-	_walkway(l, "FarJetty", Vector3(b.x + 3.5, 0, 0.0), FAR_LANDING - Vector3(3.0, 0, 0), 3.0, planks, timber, false)
+	# Boardwalks from the quay to the front walks of huts A and B.
+	for entry in [["BoardwalkA", LAGOON_WALKS[0]], ["BoardwalkB", LAGOON_WALKS[1]]]:
+		var z: float = entry[1]
+		_walkway(l, entry[0], Vector3(26.0, 0, z), Vector3(30.0, 0, z), 3.0, planks, timber, false)
+	# The rope bridge between them, and the far jetty east of hut A.
+	_walkway(l, "RopeBridge", Vector3(BRIDGE_X, 0, -7.0), Vector3(BRIDGE_X, 0, 5.0), 2.4, planks, timber, true)
 	var f := FAR_LANDING
+	_walkway(l, "FarJetty", Vector3(38.0, 0, f.z), f - Vector3(3.0, 0, 0), 3.0, planks, timber, false)
 	var stage := PackedVector2Array([Vector2(f.x - 3.0, f.z - 3.0), Vector2(f.x + 3.0, f.z - 3.0), Vector2(f.x + 3.0, f.z + 3.0), Vector2(f.x - 3.0, f.z + 3.0)])
 	_deck(l, "FarLanding", stage, 0.0, 0.5, planks, timber)
 	for e in 4:
 		_edge_rails(l, "FarLandingEdge%d" % e, stage[e], stage[(e + 1) % 4], true)
-	var boat := _prop(dressing, "cove_rowboat", "JettyBoat", f + Vector3(1.0, SEA_Y - 0.15, 4.4), 90.0, Vector3(4, 1, 1.5))
+	var boat := _prop(dressing, "cove_rowboat", "JettyBoat", f + Vector3(1.0, SEA_Y - 0.15, -4.4), 90.0, Vector3(4, 1, 1.5))
 	_late(boat, "res://scripts/props/ambient_motion.gd", {"bob_height": 0.1, "bob_seconds": 3.4, "rock_degrees": 2.5})
-	_lamp(l, "JettyLamp", f + Vector3(2.4, 0, -2.4), 180.0)
+	_lamp(l, "JettyLamp", f + Vector3(2.4, 0, 2.4), 0.0)
 
 
 ## A plank walkway from a to b (width w) at y 0: a box collider, a plank deck,
@@ -798,8 +810,10 @@ func _walkway(parent: Node3D, walk_name: String, a: Vector3, b: Vector3, w: floa
 		if rope:
 			var c := _collider(parent, "%sSide%d" % [walk_name, int(s)], Vector3(length + 0.4, 1.15, 0.2), (pa + pb) * 0.5 + Vector3(0, 0.575, 0))
 			c.rotation.y = yaw
+			_soft.append(c)
 		else:
 			_fence_run(parent, "%sRail%d" % [walk_name, int(s)], pa, pb)
+			_soft.append(parent.get_node("%sRail%d" % [walk_name, int(s)]) as StaticBody3D)
 		_player_wall(walls, "%sWall%d" % [walk_name, int(s)], pa, pb, PLAYER_WALL_H)
 
 
@@ -894,9 +908,9 @@ func _build_quay_props() -> void:
 			["CannonW", Vector3(-17.8, 0, -1.5), 90.0]]:
 		_clutter_prop(p, "cove_cannon", entry[0], entry[1], entry[2], Vector3(1.1, 1.3, 2.3))
 	for entry in [["CratesA", Vector3(-11.0, 0, -11.5), 15.0], ["CratesB", Vector3(7.5, 0, 6.5), -20.0], ["CratesC", Vector3(-15.0, 0, 10.5), 70.0],
-			["CratesD", Vector3(23.5, 0, 14.2), 5.0]]:
+			["CratesD", Vector3(-17.4, 0, 6.5), 95.0]]:
 		_clutter_prop(p, "cove_crates", entry[0], entry[1], entry[2], Vector3(2.2, 2.0, 1.6))
-	for entry in [["BarrelsA", Vector3(-3.5, 0, -11.0), 40.0], ["BarrelsB", Vector3(12.5, 0, 11.5), -30.0], ["BarrelsC", Vector3(-17.0, 0, -17.0), 0.0],
+	for entry in [["BarrelsA", Vector3(-3.5, 0, -11.0), 40.0], ["BarrelsB", Vector3(-13.0, 0, 13.6), -30.0], ["BarrelsC", Vector3(-17.0, 0, -17.0), 0.0],
 			["BarrelsD", Vector3(8.5, 0, -6.5), 100.0]]:
 		_clutter_prop(p, "cove_barrels", entry[0], entry[1], entry[2], Vector3(1.9, 1.6, 1.6))
 	_clutter_prop(p, "cove_stall", "ParrotStall", Vector3(-9.5, 0, 1.0), 90.0, Vector3(2.9, 2.6, 1.2))
@@ -990,7 +1004,7 @@ func _build_lights() -> void:
 	_omni(lights, "SternGlow", _ship(0.0, 16.0, 8.0), Color(1.0, 0.78, 0.5), 1.6, 10.0)
 	_omni(lights, "CaveGlow", CAVE + Vector3(2.0, 3.0, -2.5), Color(1.0, 0.7, 0.4), 1.2, 7.0)
 	_omni(lights, "WarehouseGlow", WAREHOUSE + Vector3(0, 3.2, -5.6), Color(1.0, 0.75, 0.45), 1.2, 7.0)
-	_omni(lights, "LagoonGlow", HUTS[1] + Vector3(-2.3, 2.6, 1.0), Color(1.0, 0.75, 0.45), 1.0, 8.0)
+	_omni(lights, "LagoonGlow", Vector3(BRIDGE_X, 2.6, -1.0), Color(1.0, 0.75, 0.45), 1.0, 8.0)
 
 
 func _omni(parent: Node3D, light_name: String, pos: Vector3, color: Color, energy: float, light_range: float) -> OmniLight3D:
@@ -1267,7 +1281,9 @@ func _find(parent: PackedInt32Array, i: int) -> int:
 
 
 ## After the bake: the small props' colliders go back to their real height on
-## the player-only layer (zombies path round them but never snag on them).
+## the player-only layer (zombies path round them but never snag on them), and
+## the gangplank and walkway rails go player-only too (the player walls along
+## them still hold the player).
 func _release_clutter() -> void:
 	for cs in _clutter:
 		var box := cs.shape as BoxShape3D
@@ -1276,6 +1292,9 @@ func _release_clutter() -> void:
 		cs.position.y = height * 0.5
 		cs.remove_meta("height")
 		var body := cs.get_parent() as StaticBody3D
+		body.collision_layer = 16
+		body.collision_mask = 0
+	for body in _soft:
 		body.collision_layer = 16
 		body.collision_mask = 0
 

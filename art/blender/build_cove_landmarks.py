@@ -10,8 +10,9 @@
                          Beam is the pair of light cones (the level spins it).
     cove_tavern.glb      the Rusty Anchor: a two-storey timber tavern, 10 x 7 m,
                          with a veranda, lit windows, the hanging anchor sign.
-    cove_hut.glb         a stilt hut: a 7 x 6 m plank platform (top z 0) on
-                         stilts, a plank hut with a thatched roof, nets, lantern.
+    cove_hut.glb         a stilt hut: an 8 x 7 m plank platform (top z 0) on
+                         stilts, a plank hut (4.2 x 3.6 m, centred 1.3 m back)
+                         with a thatched roof, a net, a lantern.
     cove_cave.glb        the sea cave's mouth: a rocky arch round a dark vault
                          10 m deep (front at y 0, opening 6 m wide, 5 m high).
     cove_tunnel.glb      the smugglers' tunnel: a timber-framed mine mouth with
@@ -31,6 +32,7 @@ from cove_common import *  # noqa: F401,F403
 from cove_common import _finish, bmesh, Vector  # noqa: F401
 
 AXLE_Z = 8.2
+HUT_BODY_Y = 1.3     # the hut on its 8 x 7 m deck, back of centre (+Y)
 
 
 def tentacle(name, base, radius, height, turns, r0=0.35, phase=0.0, m=None):
@@ -228,31 +230,35 @@ def build_tavern():
 def build_hut():
     reset_scene()
     wood, dark, thatch = cmat("Wood", rough=0.8), cmat("WoodDark", rough=0.8), cmat("Thatch", rough=0.9)
-    p = planks("Deck", (7.0, 6.0, 0.25), (0, 0, -0.125), along="y", count=20)
-    p += [box("DeckBeamF", (7.2, 0.3, 0.35), (0, -3.0, -0.3), bevel=0.04, m=dark), box("DeckBeamB", (7.2, 0.3, 0.35), (0, 3.0, -0.3), bevel=0.04, m=dark)]
-    for x in (-3.3, 0.0, 3.3):
-        for y in (-2.8, 2.8):
+    p = planks("Deck", (8.0, 7.0, 0.25), (0, 0, -0.125), along="y", count=23)
+    p += [box("DeckBeamF", (8.2, 0.3, 0.35), (0, -3.5, -0.3), bevel=0.04, m=dark), box("DeckBeamB", (8.2, 0.3, 0.35), (0, 3.5, -0.3), bevel=0.04, m=dark)]
+    for x in (-3.8, 0.0, 3.8):
+        for y in (-3.3, 3.3):
             p.append(cyl(f"Stilt{x}{y}", 0.2, 4.2, (x, y, -2.2), segs=8, bevel=0.0, m=dark))
-    # The hut sits on the back half of the deck.
-    p += planks("Walls", (4.2, 3.6, 2.6), (0, 0.9, 1.3), m_a=wood, m_b=cmat("WoodLight", rough=0.8), along="y", count=12)
-    p += [box("Door", (1.0, 0.1, 1.9), (0, -0.95, 0.95), bevel=0.03, m=cmat("Teal", rough=0.6)),
-          box("DoorFrame", (1.3, 0.08, 2.1), (0, -0.92, 1.05), bevel=0.02, m=dark),
-          cyl("RoundWin", 0.35, 0.1, (-1.4, -0.94, 1.6), rot=rad(90, 0, 0), segs=12, bevel=0.0, m=cglow("CoveWindowGlow", "#ffc77a", 1.6)),
-          torus("RoundWinRim", 0.36, 0.06, (-1.4, -0.96, 1.6), rot=rad(90, 0, 0), m=cmat("Brass", rough=0.35, metal=0.4), major_segs=12, minor_segs=4)]
+    # The hut sits on the back of the deck; the front strip is the walkway.
+    by = HUT_BODY_Y
+    p += planks("Walls", (4.2, 3.6, 2.6), (0, by, 1.3), m_a=wood, m_b=cmat("WoodLight", rough=0.8), along="y", count=12)
+    fy = by - 1.85
+    p += [box("Door", (1.0, 0.1, 1.9), (0, fy, 0.95), bevel=0.03, m=cmat("Teal", rough=0.6)),
+          box("DoorFrame", (1.3, 0.08, 2.1), (0, fy + 0.03, 1.05), bevel=0.02, m=dark),
+          cyl("RoundWin", 0.35, 0.1, (-1.4, fy + 0.01, 1.6), rot=rad(90, 0, 0), segs=12, bevel=0.0, m=cglow("CoveWindowGlow", "#ffc77a", 1.6)),
+          torus("RoundWinRim", 0.36, 0.06, (-1.4, fy - 0.01, 1.6), rot=rad(90, 0, 0), m=cmat("Brass", rough=0.35, metal=0.4), major_segs=12, minor_segs=4)]
     roof = lathe("Roof", [(3.4, 2.5), (2.6, 3.2), (0.15, 4.9)], [thatch, cmat("ThatchDark", rough=0.9)], segs=4, stripes=None, smooth=False)
-    roof.location = (0, 0.9, 0)
+    roof.location = (0, by, 0)
     roof.rotation_euler = (0, 0, math.pi / 4)
     p.append(roof)
-    p.append(cyl("RoofTip", 0.12, 0.8, (0, 0.9, 5.2), segs=6, bevel=0.0, m=dark))
-    p += skull_flag("Flag", (0.55, 0.9, 5.4), width=0.9, height=0.55, yaw=0.0)
-    # A fishing net slung on poles at the side, a lantern, a coil of rope.
-    p += [cyl("NetPoleA", 0.06, 2.2, (2.9, -1.8, 1.1), segs=6, bevel=0.0, m=dark), cyl("NetPoleB", 0.06, 2.2, (2.9, 1.8, 1.1), segs=6, bevel=0.0, m=dark)]
-    p.append(rope("NetTop", sag_points((2.9, -1.8, 2.1), (2.9, 1.8, 2.1), 0.5), 0.03))
-    for k in range(5):
-        y = -1.5 + k * 0.75
-        p.append(rope(f"NetDrop{k}", [(2.9, y, 2.1 - 0.5 * 4 * ((y + 1.8) / 3.6) * (1 - (y + 1.8) / 3.6)), (2.9, y, 0.6)], 0.015, segs=3))
-    p += lantern("Lamp", (-2.3, -1.0, 2.1), scale=1.2)
-    p.append(torus("Coil", 0.35, 0.09, (-2.6, -2.2, 0.1), m=cmat("Rope", rough=0.9), major_segs=14, minor_segs=5))
+    p.append(cyl("RoofTip", 0.12, 0.8, (0, by, 5.2), segs=6, bevel=0.0, m=dark))
+    p += skull_flag("Flag", (0.55, by, 5.4), width=0.9, height=0.55, yaw=0.0)
+    # A fishing net slung on poles along the back corner, a lantern, a coil of rope.
+    p += [cyl("NetPoleA", 0.06, 2.2, (3.4, 0.4, 1.1), segs=6, bevel=0.0, m=dark), cyl("NetPoleB", 0.06, 2.2, (3.4, 3.1, 1.1), segs=6, bevel=0.0, m=dark)]
+    p.append(rope("NetTop", sag_points((3.4, 0.4, 2.1), (3.4, 3.1, 2.1), 0.4), 0.03))
+    for k in range(4):
+        y = 0.7 + k * 0.7
+        t = (y - 0.4) / 2.7
+        p.append(rope(f"NetDrop{k}", [(3.4, y, 2.1 - 0.4 * 4 * t * (1 - t)), (3.4, y, 0.6)], 0.015, segs=3))
+    p += lantern("Lamp", (-2.6, fy + 0.2, 2.1), scale=1.2)
+    p.append(cyl("LampPost", 0.05, 2.1, (-2.6, fy + 0.2, 1.05), segs=6, bevel=0.0, m=dark))
+    p.append(torus("Coil", 0.35, 0.09, (-3.3, 3.0, 0.1), m=cmat("Rope", rough=0.9), major_segs=14, minor_segs=5))
     save("cove_hut", [merge("Hut", p)])
 
 
