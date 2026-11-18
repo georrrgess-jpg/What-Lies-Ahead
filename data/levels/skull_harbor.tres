@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/skull_harbor_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"skull_harbor"
+display_name = "Skull Harbor"
+blurb = "Hold Doubloon Quay round The Salty Chandler, between the galleon Barnacle Queen and the stilt-hut lagoon, then follow the lanterns down the jetty to the portal."
+scene_path = "res://scenes/levels/skull_harbor.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"skull_harbor_loop"
+music_final = &"skull_harbor_final"
+ambience = &"cove_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(1, 0.62, 0.32, 1)
+menu_camera_from = Vector3(22, 8, 22)
+menu_camera_to = Vector3(-24, 7, -8)
+heal_item_name = "Mug of grog"
+loading_tips = PackedStringArray("Deckhands crouch and draw back their cutlass before they lunge: step out of the line.", "Powder Monkeys light a fuse and lob a keg: a ring marks where it lands and blows. A headshot makes them drop it.", "The galleon's deck is high ground: two gangplanks lead up, and the bulwarks hold you in.", "The stilt huts and rope bridges make a loop round the lagoon, away from the crowd on the quay.", "In the Broadside wave the Barnacle Queen fires on the quay: every cannonball lands in a glowing ring.", "Captain Barnacle calls his cannons down round you and slams his anchor: jump the ring, run from the markers.")
