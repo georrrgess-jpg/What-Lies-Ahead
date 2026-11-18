@@ -62,8 +62,15 @@ def build_stall():
     W, D = 3.2, 2.0
     p = [box("Counter", (W, 0.7, 1.0), (0, -D / 2 + 0.35, 0.5), bevel=0.04, m=wood),
          box("CounterTop", (W + 0.1, 0.8, 0.08), (0, -D / 2 + 0.35, 1.02), bevel=0.02, m=timber),
-         box("Back", (W, 0.06, 2.6), (0, D / 2 - 0.03, 1.3), bevel=0.02, m=cream),
+         box("BackRail", (W + 0.1, 0.12, 0.14), (0, D / 2 - 0.03, 2.62), bevel=0.02, m=timber),
+         box("BackSill", (W + 0.1, 0.12, 0.14), (0, D / 2 - 0.03, 0.07), bevel=0.02, m=timber),
          box("Table", (W - 0.2, 0.6, 0.06), (0, D / 2 - 0.4, 0.8), bevel=0.02, m=wood)]
+    for k in range(8):
+        x = -W / 2 + (k + 0.5) * W / 8
+        p.append(box(f"Back{k}", (W / 8, 0.06, 2.5), (x, D / 2 - 0.03, 1.3), bevel=0.0, m=a if k % 2 == 0 else cream))
+    back_crown = crown_flat("BackCrown", (0, D / 2 + 0.02, 1.7), 0.7, gold, depth=0.04)
+    back_crown.rotation_euler = (0, 0, math.pi)
+    p.append(back_crown)
     for s in (-1, 1):
         p.append(box(f"Side{s}", (0.05, D - 0.3, 1.0), (s * (W / 2 - 0.03), 0.1, 1.55), bevel=0.0, m=cream))
     for k in range(8):
