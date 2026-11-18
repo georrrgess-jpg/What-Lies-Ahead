@@ -24,6 +24,7 @@
     toy_pendant            a hanging shop lamp shade with its glowing bulb (6 m wide)
     toy_street_lamp        the gas lamp outside the window (street scenery)
     toy_exit_star          exit nightlight: a block with a glowing star (ToyExitGlow)
+    toy_mobile             a nursery mobile (two biplanes, a star, a moon) hung from the ceiling
 
     python art/blender/build_toy_props.py [name ...]
 """
@@ -549,6 +550,43 @@ def street_lamp():
     one("toy_street_lamp", p)
 
 
+def plane_parts(prefix, loc, yaw, body_c, wing_c):
+    """A little toy biplane (2.4 m span), nose along -Y, for the mobile."""
+    body, wing, ink = tmat(body_c, rough=0.45), tmat(wing_c, rough=0.45), tmat("Ink")
+    p = [cyl(prefix + "Body", 0.22, 1.8, (0, 0, 0), rot=(math.pi / 2, 0, 0), segs=12, bevel=0.04, m=body, radius_top=0.14),
+         cyl(prefix + "Nose", 0.24, 0.16, (0, -0.95, 0), rot=(math.pi / 2, 0, 0), segs=12, bevel=0.03, m=ink),
+         box(prefix + "Prop", (0.9, 0.04, 0.12), (0, -1.05, 0), rot=(0, 0.6, 0), bevel=0.02, m=tmat("WoodLight")),
+         box(prefix + "Fin", (0.04, 0.4, 0.4), (0, 0.8, 0.22), bevel=0.02, m=wing),
+         box(prefix + "Tail", (0.8, 0.3, 0.04), (0, 0.8, 0.02), bevel=0.02, m=wing),
+         sphere(prefix + "Pilot", 0.13, (0, -0.2, 0.22), m=tmat("Brass"), segs=8, rings=5)]
+    for z in (-0.22, 0.32):
+        p.append(box(f"{prefix}Wing{z}", (2.4, 0.5, 0.05), (0, -0.4, z), bevel=0.03, m=wing))
+    for sx in (-1, 1):
+        p.append(cyl(f"{prefix}Strut{sx}", 0.025, 0.54, (sx * 0.8, -0.4, 0.05), segs=5, bevel=0.0, m=ink))
+    return xform(p, loc, (0, 0, yaw))
+
+
+def mobile():
+    """A nursery mobile hung from the ceiling: two crossed dowels, two biplanes,
+    a star and a moon on strings. Origin at the hook; everything hangs below."""
+    wood, string = tmat("WoodLight"), tmat("Cream", rough=0.9)
+    arm = 6.0
+    p = [cyl("Hook", 0.08, 1.0, (0, 0, -0.5), segs=6, bevel=0.0, m=tmat("Brass", rough=0.3, metal=0.5)),
+         cyl("DowelA", 0.09, arm * 2, (0, 0, -1.0), rot=(0, math.pi / 2, 0), segs=8, bevel=0.02, m=wood),
+         cyl("DowelB", 0.09, arm * 2, (0, 0, -1.0), rot=(math.pi / 2, 0, 0), segs=8, bevel=0.02, m=wood),
+         sphere("Knob", 0.2, (0, 0, -1.0), m=tmat("Red"), segs=10, rings=6)]
+    drops = [((arm, 0), 3.0), ((-arm, 0), 3.6), ((0, arm), 2.4), ((0, -arm), 3.2)]
+    for i, ((x, y), drop) in enumerate(drops):
+        p.append(cyl(f"String{i}", 0.02, drop, (x, y, -1.0 - drop / 2), segs=4, bevel=0.0, m=string))
+    z = -1.0
+    p += plane_parts("PlaneA", (arm, 0, z - 3.0 - 0.3), math.pi / 2, "Red", "Yellow")
+    p += plane_parts("PlaneB", (-arm, 0, z - 3.6 - 0.3), -math.pi / 2, "Blue", "Red")
+    p.append(star("Star", 0.9, 0.2, (0, arm, z - 2.4 - 0.9), m=tmat("Yellow", rough=0.4)))
+    p.append(torus("Moon", 0.7, 0.25, (0, -arm, z - 3.2 - 0.75), rot=(math.pi / 2, 0, 0), m=tmat("Cream", rough=0.5), major_segs=20, minor_segs=8,
+                   arc=math.radians(220), start=math.radians(-20)))
+    one("toy_mobile", p)
+
+
 def exit_star():
     glow_m = mat("ToyExitGlow", "#ffd86a", rough=0.35, emit=1.0)
     p = letter_block("E", 0.7, "Blue", letters="EXIT")
@@ -571,6 +609,7 @@ ALL = {
     "train": lambda: (train_loco(), train_car("a"), train_car("b"), track(), pier()),
     "scenery": lambda: (teddy(), robot(), rocket(), drum(), shelf(), pendant(), street_lamp()),
     "exit": exit_star,
+    "mobile": mobile,
 }
 
 

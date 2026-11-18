@@ -308,8 +308,8 @@ func _build_podium() -> void:
 		star.scale = Vector3.ONE * 0.8
 	# Book stairs at both ends, descending outward.
 	var sz := r.position.y + r.size.y * 0.5 + 1.2
-	_book_stairs(pod, "StairW", Vector3(r.position.x, PODIUM_Y, sz), Vector3(r.position.x - 8.4, 0, sz), 3.0)
-	_book_stairs(pod, "StairE", Vector3(r.end.x, PODIUM_Y, sz), Vector3(r.end.x + 8.4, 0, sz), 3.0)
+	_book_stairs(pod, "StairW", Vector3(r.position.x, PODIUM_Y, sz), Vector3(r.position.x - 8.4, 0, sz), 4.0)
+	_book_stairs(pod, "StairE", Vector3(r.end.x, PODIUM_Y, sz), Vector3(r.end.x + 8.4, 0, sz), 4.0)
 	# The window display: a rocket, a big teddy, a drum and blocks (cover up top).
 	var y := PODIUM_Y
 	_solid_prop(pod, "toy_rocket", "DisplayRocket", Vector3(-9.0, y, -35.0), 20.0, Vector3(3.0, 6.5, 3.0), 0.75)
@@ -339,6 +339,16 @@ func _book_stairs(parent: Node3D, stair_name: String, top: Vector3, bottom: Vect
 			p.y = maxf(bottom.y, p.y)
 			var yaw := rad_to_deg(atan2(-dir.z, dir.x)) + _rng.randf_range(-4.0, 4.0)
 			_add_multi("toy_book_" + colours[(k + b * 3) % 4], Transform3D(Basis(Vector3.UP, deg_to_rad(yaw + 90.0)), p))
+	# Bookends at the foot: a short stack on each corner keeps feet and paths
+	# off the stair's thin low edge.
+	var side := Vector3(-dir.z, 0, dir.x)
+	var run_yaw := atan2(-dir.z, dir.x)
+	for s: float in [-1.0, 1.0]:
+		var corner := bottom - dir * 0.3 + side * s * (width * 0.5 + 0.6)
+		for b in 3:
+			_add_multi("toy_book_" + colours[(b + int(s > 0.0)) % 4], Transform3D(Basis(Vector3.UP, run_yaw + 0.3 * b * s).scaled(Vector3.ONE * 0.36),
+				corner + Vector3(0, b * 0.18, 0)))
+		_collider(parent, "%sBookend%d" % [stair_name, int(s)], Vector3(1.4, 0.56, 1.1), corner + Vector3(0, 0.28, 0)).rotation.y = run_yaw
 
 
 # ---------------------------------------------------------------------------
@@ -369,6 +379,19 @@ func _build_counter() -> void:
 			_visual_box(dressing, "PanelStar%d" % k, Vector3(1.4, 1.4, 0.3), Vector3(x, 4.5, COUNTER_Z - 0.25), _mat("gold", Color(0.95, 0.72, 0.3), 0.35))
 		x += 8.0
 		k += 1
+	# The shop's name in gold along the counter front.
+	var sign := Label3D.new()
+	sign.name = "CounterName"
+	sign.text = "TINKER & CO.  ·  TOYS & GAMES  ·  EST. 1898"
+	sign.font_size = 200
+	sign.pixel_size = 0.016
+	sign.modulate = Color(1.0, 0.82, 0.38)
+	sign.outline_modulate = Color(0.3, 0.16, 0.06)
+	sign.outline_size = 20
+	sign.shaded = true
+	sign.position = Vector3(14.0, 9.4, COUNTER_Z - 0.06)
+	sign.rotation.y = PI
+	dressing.add_child(sign)
 	_visual_box(dressing, "Kick", Vector3(SHELF_X * 2, 0.8, 0.4), Vector3(0, 0.4, COUNTER_Z - 0.15), _mat("skirting", Color(0.95, 0.9, 0.8), 0.6))
 	# The flap itself, swung open against the counter side.
 	_visual_box(dressing, "Flap", Vector3(0.4, 5.6, 4.0), Vector3(gap0 + 0.25, 2.8, COUNTER_Z - 2.1), panel)
@@ -537,7 +560,7 @@ func _build_gamebox_stack() -> void:
 	var c := _collider(g, "GameBoxTopCollision", Vector3(5.6, 1.04, 4.0), GAMEBOXES + Vector3(-0.6, 1.3 + 0.52, 0.0))
 	c.rotation.y = deg_to_rad(8.0)
 	var y := 1.3 + 1.04
-	_book_stairs(g, "GameStair", GAMEBOXES + Vector3(2.0, y, 0.0), GAMEBOXES + Vector3(2.0 + 8.4, 0, 0.0), 3.0)
+	_book_stairs(g, "GameStair", GAMEBOXES + Vector3(2.0, y, 0.0), GAMEBOXES + Vector3(2.0 + 8.4, 0, 0.0), 4.0)
 
 
 # ---------------------------------------------------------------------------
@@ -699,6 +722,22 @@ func _build_lamps() -> void:
 		_omni(lamps, "PendantLight%d" % k, p + Vector3(0, -2.5, 0), Color(1.0, 0.8, 0.55), 1.55 if k < 4 else 1.25, 40.0)
 		k += 1
 	_omni(lamps, "StationGlow", STATION + Vector3(0, 4.0, 3.5), Color(1.0, 0.84, 0.55), 1.1, 11.0)
+	# A nursery mobile turning slowly under the ceiling, on a long cord.
+	var hook := Vector3(-8.0, 25.0, 3.0)
+	var mobile := _prop(lamps, "toy_mobile", "Mobile", hook, 0.0, Vector3(12, 5, 12))
+	mobile.scale = Vector3.ONE * 1.4
+	_late(mobile, "res://scripts/props/ambient_motion.gd", {"spin_degrees_per_second": 7.0, "rock_degrees": 1.5, "bob_seconds": 9.0})
+	var cord := MeshInstance3D.new()
+	cord.name = "MobileCord"
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.06
+	cyl.bottom_radius = 0.06
+	cyl.height = CEILING - hook.y
+	cyl.radial_segments = 6
+	cyl.material = _mat("ink", Color(0.12, 0.11, 0.16), 0.5)
+	cord.mesh = cyl
+	cord.position = hook + Vector3(0, (CEILING - hook.y) * 0.5, 0)
+	lamps.add_child(cord)
 	_omni(lamps, "WindowGlow", Vector3(0, 8.0, -30.0), Color(0.6, 0.7, 1.0), 0.8, 24.0)
 
 
