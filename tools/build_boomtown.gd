@@ -248,6 +248,7 @@ func _porch_posts(parent: Node3D, node_name: String, side: float, zc: float, w: 
 		var along := lerpf(-w * 0.5 + 0.3, w * 0.5 - 0.3, t)
 		var z := zc - along if side < 0 else zc + along
 		_post(parent, "%sPost%d" % [node_name, i], r, 3.0, Vector3(side * (FACADE - depth), WALK_Y, z))
+		_cap(parent, "%sPostCap%d" % [node_name, i], Vector3(side * (FACADE - depth), WALK_Y + 3.0, z))
 
 
 func _build_west_row() -> void:
@@ -259,6 +260,7 @@ func _build_west_row() -> void:
 	for i in 4:
 		var along := -6.0 + 0.6 + 10.8 * i / 3.0
 		_post(rows, "BankColumn%d" % i, 0.3, 3.0, Vector3(-(FACADE - 2.1), WALK_Y, -29.0 - along))
+		_cap(rows, "BankColumnCap%d" % i, Vector3(-(FACADE - 2.1), WALK_Y + 3.0, -29.0 - along))
 	_shop("gulch_sheriff", "Sheriff", -1.0, -19.0, 8.0, 8.0, 6.6, 2)
 	_shop("gulch_store", "Store", -1.0, 17.5, 11.0, 9.0, 7.6, 3)
 	_build_saloon()
@@ -287,11 +289,12 @@ func _build_saloon() -> void:
 	_collider(s, "FrontS", Vector3(0.6, f, 5.8), Vector3(-FACADE, f * 0.5, zc + 4.1))
 	_collider(s, "FrontLintel", Vector3(0.6, f - 2.7, 2.4), Vector3(-FACADE, 2.7 + (f - 2.7) * 0.5, zc))
 	# Back wall, the back door at z zc-3.8..zc-2.2.
-	_collider(s, "BackN", Vector3(0.3, 7.6, 3.2), Vector3(back + 0.15, 3.8, zc - 5.4))
-	_collider(s, "BackS", Vector3(0.3, 7.6, 9.2), Vector3(back + 0.15, 3.8, zc + 2.4))
-	_collider(s, "BackLintel", Vector3(0.3, 5.2, 1.6), Vector3(back + 0.15, 2.4 + 2.6, zc - 3.0))
-	_collider(s, "SideN", Vector3(10.0, 7.6, 0.3), Vector3(-FACADE - 5.0, 3.8, zc - 6.85))
-	_collider(s, "SideS", Vector3(10.0, 7.6, 0.3), Vector3(-FACADE - 5.0, 3.8, zc + 6.85))
+	_collider(s, "BackN", Vector3(0.3, f, 3.2), Vector3(back + 0.15, f * 0.5, zc - 5.4))
+	_collider(s, "BackS", Vector3(0.3, f, 9.2), Vector3(back + 0.15, f * 0.5, zc + 2.4))
+	_collider(s, "BackLintel", Vector3(0.3, f - 2.4, 1.6), Vector3(back + 0.15, 2.4 + (f - 2.4) * 0.5, zc - 3.0))
+	_collider(s, "SideN", Vector3(10.0, f, 0.3), Vector3(-FACADE - 5.0, f * 0.5, zc - 6.85))
+	_collider(s, "SideS", Vector3(10.0, f, 0.3), Vector3(-FACADE - 5.0, f * 0.5, zc + 6.85))
+	_player_block(s, "Lid", Vector3(10.4, 1.0, 14.4), Vector3(-FACADE - 5.0, f + 0.5, zc))
 	_collider(s, "Ceiling", Vector3(10.0, 0.3, 14.0), Vector3(-FACADE - 5.0, 3.65, zc))
 	_collider(s, "Floor", Vector3(9.6, WALK_Y, 13.6), Vector3(-FACADE - 4.9, WALK_Y * 0.5, zc))
 	_ramp(s, "BackStep", Vector3(back, 0, zc - 3.9), Vector3(back, 0, zc - 2.1), -1.0, WALK_Y, 0.55)
@@ -306,7 +309,7 @@ func _build_saloon() -> void:
 	_collider(s, "Balcony", Vector3(2.8, 0.3, 14.2), Vector3(-FACADE + 1.4, BALCONY_Y - 0.15, zc))
 	_collider(s, "BalconyRail", Vector3(0.2, 1.15, 14.2), Vector3(-FACADE + 2.72, BALCONY_Y + 0.575, zc))
 	_collider(s, "BalconyRailN", Vector3(2.8, 1.15, 0.2), Vector3(-FACADE + 1.4, BALCONY_Y + 0.575, zc - 6.95))
-	_player_block(s, "BalconyRailCap", Vector3(0.4, 2.0, 16.2), Vector3(-FACADE + 2.8, BALCONY_Y + 2.1, zc + 1.0))
+	_player_block(s, "BalconyRailCap", Vector3(0.4, 6.0, 16.2), Vector3(-FACADE + 2.8, BALCONY_Y + 4.1, zc + 1.0))
 	_porch_posts(s, "Saloon", -1.0, zc, 14.0, 4, 2.62, 0.16)
 
 
@@ -349,7 +352,8 @@ func _build_saloon_extras() -> void:
 	for x: float in [-FACADE + 2.6, -FACADE - 0.8]:
 		_box(s, "LandingPost%d" % int(x * 10), Vector3(0.26, BALCONY_Y - WALK_Y, 0.26), Vector3(x, (BALCONY_Y + WALK_Y) * 0.5, land_z1 - 0.2),
 			_mat("post", Color(0.81, 0.58, 0.38), 0.8))
-	_player_block(s, "LandingCap", Vector3(4.2, 2.0, 0.4), Vector3(-FACADE + 0.9, BALCONY_Y + 2.1, land_z1))
+	_player_block(s, "LandingCap", Vector3(4.2, 6.0, 0.4), Vector3(-FACADE + 0.9, BALCONY_Y + 4.1, land_z1))
+	_player_block(s, "LandingCapE", Vector3(0.4, 6.0, land_z1 - land_z0 + 0.4), Vector3(-FACADE + 2.8, BALCONY_Y + 4.1, (land_z0 + land_z1) * 0.5))
 
 
 # ---------------------------------------------------------------------------
@@ -376,9 +380,9 @@ func _build_tower() -> void:
 	_collider(t, "RailS", Vector3(2 * h - 2.2, 1.1, 0.15), TOWER + Vector3(1.1, y, h))
 	for side in ["N", "E", "W"]:
 		var off := {"N": Vector3(0, 0, -h), "E": Vector3(h, 0, 0), "W": Vector3(-h, 0, 0)}[side] as Vector3
-		var size := Vector3(2 * h + 0.4, 2.0, 0.4) if side == "N" else Vector3(0.4, 2.0, 2 * h + 0.4)
-		_player_block(t, "RailCap" + side, size, TOWER + off + Vector3(0, TOWER_DECK + 2.1, 0))
-	_player_block(t, "RailCapS", Vector3(2 * h - 1.8, 2.0, 0.4), TOWER + Vector3(1.1, TOWER_DECK + 2.1, h))
+		var size := Vector3(2 * h + 0.4, 6.0, 0.4) if side == "N" else Vector3(0.4, 6.0, 2 * h + 0.4)
+		_player_block(t, "RailCap" + side, size, TOWER + off + Vector3(0, TOWER_DECK + 4.1, 0))
+	_player_block(t, "RailCapS", Vector3(2 * h - 1.8, 6.0, 0.4), TOWER + Vector3(1.1, TOWER_DECK + 4.1, h))
 	_stairs(t, "TowerStairs", TOWER + Vector3(-h + 1.1, TOWER_DECK, h), TOWER + Vector3(-h + 1.1, 0.0, h + 6.0), 1.8)
 	# Barrels on the deck.
 	_solid_prop(t, "gulch_barrels", "DeckBarrels", TOWER + Vector3(1.9, TOWER_DECK, 1.9), 30.0, Vector3(1.6, 1.8, 1.0))
@@ -395,6 +399,7 @@ func _build_mine_yard() -> void:
 	_prop(m, "gulch_mine_mouth", "MineMouth", Vector3(-2.0, 0, MINE_Z + 1.5), 0.0, Vector3(6, 6, 1))
 	for s: float in [-1.0, 1.0]:
 		_post(m, "MinePost%d" % int(s), 0.35, 4.6, Vector3(-2.0 + s * 2.45, 0, MINE_Z + 1.5))
+		_cap(m, "MinePostCap%d" % int(s), Vector3(-2.0 + s * 2.45, 4.6, MINE_Z + 1.5))
 	_solid_prop(m, "gulch_crates", "MineCrates", Vector3(-8.5, 0, -42.5), 20.0, Vector3(1.6, 1.5, 1.2))
 	_solid_prop(m, "gulch_barrels", "MineBarrels", Vector3(5.5, 0, -43.0), -20.0, Vector3(1.6, 1.8, 1.0))
 	_solid_prop(m, "gulch_wagon", "OreWagon", Vector3(14.0, 0, -41.0), 70.0, Vector3(2.0, 3.0, 4.4))
@@ -402,8 +407,10 @@ func _build_mine_yard() -> void:
 	_solid_prop(m, "gulch_coaster_car", "OreCartA", Vector3(-6.8, 0, -42.5), 15.0, Vector3(1.4, 1.4, 2.0))
 	_prop(dressing, "gulch_cactus_a", "MineCactusA", Vector3(-22.0, 0, -43.0), 30.0, Vector3(1, 3.6, 1))
 	_post(m, "MineCactusAPost", 0.4, 3.6, Vector3(-22.0, 0, -43.0))
+	_cap(m, "MineCactusACap", Vector3(-22.0, 3.6, -43.0))
 	_prop(dressing, "gulch_cactus_b", "MineCactusB", Vector3(21.0, 0, -44.0), 200.0, Vector3(1, 2.6, 1))
 	_post(m, "MineCactusBPost", 0.4, 2.6, Vector3(21.0, 0, -44.0))
+	_cap(m, "MineCactusBCap", Vector3(21.0, 2.6, -44.0))
 	for k in 3:
 		_lamp(m, "MineLamp%d" % k, Vector3(-12.0 + k * 12.0, 0, -37.2), 90.0)
 
@@ -411,6 +418,7 @@ func _build_mine_yard() -> void:
 func _lamp(parent: Node3D, lamp_name: String, pos: Vector3, yaw: float) -> void:
 	_prop(dressing, "gulch_lamp", lamp_name, pos, yaw, Vector3(0.3, 3.4, 0.3))
 	_post(parent, lamp_name + "Post", 0.14, 3.2, pos)
+	_cap(parent, lamp_name + "Cap", pos + Vector3(0, 3.2, 0))
 
 
 # ---------------------------------------------------------------------------
@@ -462,6 +470,7 @@ func _build_edges() -> void:
 	for c in [[Vector3(23.0, 0, -32.0), "a"], [Vector3(27.5, 0, -2.0), "b"], [Vector3(-24.0, 0, 3.0), "b"]]:
 		_prop(dressing, "gulch_cactus_" + c[1], "Cactus%d" % int(c[0].z), c[0], c[0].x * 7.0, Vector3(1, 3, 1))
 		_post(e, "CactusPost%d" % int(c[0].z), 0.4, 3.0, c[0])
+		_cap(e, "CactusCap%d" % int(c[0].z), c[0] + Vector3(0, 3.0, 0))
 
 
 func _cliff(pos: Vector3, yaw: float, scale: Vector3) -> void:
@@ -481,6 +490,7 @@ func _build_gate_and_plaza() -> void:
 	_prop(p, "gulch_gate", "Gate", Vector3(0, 0, GATE_Z), 0.0, Vector3(18, 8, 1))
 	for s: float in [-1.0, 1.0]:
 		_post(p, "GatePost%d" % int(s), 0.55, 8.0, Vector3(s * 8.2, 0, GATE_Z))
+		_cap(p, "GatePostCap%d" % int(s), Vector3(s * 8.2, 8.0, GATE_Z))
 		_collider(p, "GateFooting%d" % int(s), Vector3(1.6, 0.6, 1.6), Vector3(s * 8.2, 0.3, GATE_Z))
 	_palisade(p, "PalisadeW", Vector3(WEST_CLIFF, 0, GATE_Z), Vector3(-8.9, 0, GATE_Z))
 	_palisade(p, "PalisadeE", Vector3(8.9, 0, GATE_Z), Vector3(CORRAL_X + 4.0, 0, GATE_Z))
@@ -506,6 +516,7 @@ func _build_gate_and_plaza() -> void:
 	for c in [[Vector3(-6.0, 0, 36.5), "a"], [Vector3(7.5, 0, 36.6), "b"], [Vector3(16.0, 0, 29.5), "a"]]:
 		_prop(dressing, "gulch_cactus_" + c[1], "PlazaCactus%d" % int(c[0].x), c[0], c[0].x * 11.0, Vector3(1, 3, 1))
 		_post(p, "PlazaCactusPost%d" % int(c[0].x), 0.4, 3.0, c[0])
+		_cap(p, "PlazaCactusCap%d" % int(c[0].x), c[0] + Vector3(0, 3.0, 0))
 	for k in 2:
 		_lamp(p, "PlazaLamp%d" % k, Vector3(-4.0 + k * 8.0, 0, 29.0), 90.0 + k * 180.0)
 
@@ -882,6 +893,7 @@ func _build_exit() -> void:
 	geo.add_child(portal)
 	portal.position = PORTAL
 	portal.rotation.y = PI
+	_player_block(geo, "PortalCap", Vector3(5.6, 2.0, 1.8), PORTAL + Vector3(0, 5.3, 0))
 	var lights := Node3D.new()
 	lights.name = "ExitLights"
 	level.add_child(lights)
@@ -1244,6 +1256,11 @@ func _module_row(row_name: String, model: String, length: float, module_len: flo
 	return modules
 
 
+## A player-only block on top of a post or pole (nobody perches up there).
+func _cap(parent: Node3D, cap_name: String, top: Vector3) -> void:
+	_player_block(parent, cap_name, Vector3(0.9, 6.0, 0.9), top + Vector3(0, 3.0, 0))
+
+
 ## Invisible player-only collider (physics layer 5).
 func _player_block(parent: Node3D, block_name: String, size: Vector3, pos: Vector3, yaw := 0.0) -> StaticBody3D:
 	var body := StaticBody3D.new()
@@ -1297,6 +1314,8 @@ func _solid_prop(parent: Node3D, model: String, prop_name: String, pos: Vector3,
 	var node := _prop(parent, model, prop_name, pos, yaw_degrees, size)
 	var c := _collider(parent, prop_name + "Collision", size, pos + Vector3(0, size.y * 0.5, 0))
 	c.rotation.y = deg_to_rad(yaw_degrees)
+	if size.y >= 2.4:
+		_player_block(parent, prop_name + "Cap", Vector3(size.x + 0.4, 6.0, size.z + 0.4), pos + Vector3(0, size.y + 3.0, 0), deg_to_rad(yaw_degrees))
 	return node
 
 

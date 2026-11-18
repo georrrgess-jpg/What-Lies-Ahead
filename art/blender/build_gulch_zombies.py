@@ -52,7 +52,7 @@ def materials():
         orange=mat("GulchZOrange", "#ff8a2a", rough=0.5),
         hat=mat("GulchZHat", "#c48a50", rough=0.7),
         hat_band=mat("GulchZHatBand", "#5c3520", rough=0.6),
-        black=mat("GulchZBlack", "#2b2230", rough=0.6),
+        black=mat("GulchZBlack", "#3b2a24", rough=0.6),
         beard=mat("GulchZBeard", "#e8e2d6", rough=0.9),
         yellow=mat("GulchZYellow", "#ffd23c", rough=0.5),
         lamp=mat("GulchZLamp", "#fff2b8", rough=0.2, emit=3.0),
@@ -210,16 +210,16 @@ def sheriff(m):
     t = tor[0]
     coat = []
     # Toy skeleton ribs painted on the shirt, a sternum and the star badge.
-    coat.append(patch(p + "Sternum", t, (0, body.front(0, 1.2), 1.2), (0.06, 0.02, 0.4), m["bone"], bevel=0.005))
+    coat.append(patch(p + "Sternum", t, (0, body.front(0, 1.2), 1.2), (0.08, 0.025, 0.46), m["bone"], bevel=0.008))
     for i in range(4):
         z = 1.34 - i * 0.12
         for s in (-1, 1):
             x = s * 0.15
-            coat.append(patch(f"{p}Rib{i}{s}", t, (x, body.front(x, z), z), (0.2 - i * 0.015, 0.02, 0.045), m["bone"], bevel=0.005))
-    coat.append(star(p + "Star", 0.13, 0.04, (0.3, body.front(0.3, 1.3) - 0.03, 1.3), rot=(math.pi / 2, 0, 0), m=m["gold"]))
+            coat.append(patch(f"{p}Rib{i}{s}", t, (x, body.front(x, z), z), (0.24 - i * 0.02, 0.025, 0.065), m["bone"], bevel=0.008))
+    coat.append(star(p + "Star", 0.15, 0.05, (0.38, body.front(0.38, 1.3) - 0.08, 1.3), rot=(math.pi / 2, 0, 0), m=m["gold"]))
     # The duster: lapels and long tails.
     for s in (-1, 1):
-        coat.append(patch(f"{p}Lapel{s}", t, (s * 0.38, body.front(s * 0.38, 1.15), 1.15), (0.14, 0.03, 0.62), m["leather"], bevel=0.01))
+        coat.append(patch(f"{p}Lapel{s}", t, (s * 0.4, body.front(s * 0.4, 1.15), 1.15), (0.12, 0.03, 0.62), m["leather"], bevel=0.01))
     coat.append(band(p + "CoatBack", (0, 0, 1.44), (0, 0, 0.9), 0.52, 0.36, m["leather"], n=2.8, thick=0.015, segs=24))
     for s in (-1, 1):
         coat.append(box(f"{p}Epaulette{s}", (0.26, 0.24, 0.06), (s * 0.5, 0.0, 1.47), bevel=0.03, m=m["leather_dark"]))
