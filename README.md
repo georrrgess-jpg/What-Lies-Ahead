@@ -338,15 +338,16 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
   Madame Fortuna after about eighteen. Four items a day are featured at 20% off (always a round number). Every item
   has a 3D preview and a confirm step. Station prices in tickets are multiples of 25 and
   rise world by world.
-- **Locker**: 510 cosmetics in eleven categories: 19 operators (characters that also set
+- **Locker**: 512 cosmetics in eleven categories: 19 operators (characters that also set
   your first-person arms; the Mythic **Madame Fortuna** wears an animated aura of a floor
   sigil, a crystal ball, orbiting fortune cards and sparkles wherever she is shown),
-  103 weapon finishes (including 23 animated shaders: marquee bulbs, data rain, lightning,
+  129 weapon finishes (including 27 animated shaders: marquee bulbs, data rain, lightning,
   aurora, warp speed, liquid mercury, stained glass, Insert Coin's arcade screen, Kintsugi's
-  gold seams, a Koi Pond, ticking Clockwork, Hot Rod flames, Holo Tiger foil…), 26 sights
+  gold seams, a Koi Pond, ticking Clockwork, Hot Rod flames, Holo Tiger foil, a Treasure Map
+  that draws itself, a flickering Ghost Train, Jackpot reels, a Multiball pinball table…), 26 sights
   (Mission Control's radar reticle sweeps), 45 energy cells (with moving patterns: bubbles,
   lava, slosh, warp, a pixel chomper, circling koi…), 35 decals, 34 charms (a Ferris wheel,
-  a UFO, a teacup, a pinwheel and a disco ball that spin), 24 gloves (with real shapes:
+  a UFO, a teacup, a pinwheel and a disco ball that spin), 28 gloves (with real shapes:
   gauntlets, tape, mitts, wraps, fins, studs, crystals, claws), 28 kill effects (disco
   ball, slot-machine 7s, black hole, snow globe, an arcade K.O.!, balloons that lift the
   zombie away, a rainbow with a pot of gold, a flying-saucer abduction…), 21 tracers, 57
@@ -392,7 +393,10 @@ then holds on *PRESS ANY KEY* over the live menu backdrop; any key skips it, and
 once per session. The menu is styled as a **carnival arcade at sunset** (marquee signs,
 riveted teal frames, cream signboards; see **[docs/UI_STYLE.md](docs/UI_STYLE.md)**) over a
 live 3D booth and the selected world. A top bar shows your level, XP and Sparks on every
-page. Pages: **Play** (world track with key art, progress stars, the zombies that wait
+page. The **home screen** leads with a hero card for the world PLAY opens (its key art,
+your progress and a pager through the worlds you have opened), and the live world behind the
+menu follows it; ENDLESS sits beside PLAY, and section tiles (Arsenal, Locker, Shop, Prizes,
+Career, Settings) say what is new in each. Pages: **Play** (world track with key art, progress stars, the zombies that wait
 there, difficulty, loadout, Deploy), **Arsenal** (the weapon on a workbench in a booth, PRIMARIES and SECONDARIES sections,
 stats, mastery, sights and the two-slot loadout), **Locker**, **Shop**, **Career**
 (level track, contracts, milestones) and **Settings**. The live backdrop loads worlds on
