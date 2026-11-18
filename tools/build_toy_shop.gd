@@ -100,6 +100,7 @@ func _initialize() -> void:
 	_build_block_walls()
 	_build_station()
 	_build_arena_props()
+	_build_play_mat()
 	_build_gamebox_stack()
 	_build_dollhouse()
 	_build_train()
@@ -556,6 +557,44 @@ func _crayon(parent: Node3D, crayon_name: String, pos: Vector3, yaw: float) -> v
 	_prop(dressing, "toy_crayon", crayon_name, pos, yaw, Vector3(7.4, 1, 1))
 	var body := _collider(parent, crayon_name + "Collision", Vector3(7.4, 1.0, 1.0), pos + Vector3(0, 0.5, 0))
 	body.rotation.y = deg_to_rad(yaw)
+
+
+## Interlocking foam play-mat tiles under the ball pit: one flat mesh in
+## primary colours (vertex colours, one draw call), each tile with a raised
+## letter square, the floor showing through the seams.
+func _build_play_mat() -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var colours := [Color(0.89, 0.27, 0.23), Color(0.95, 0.76, 0.23), Color(0.23, 0.44, 0.82), Color(0.31, 0.68, 0.35)]
+	var tile := 2.8
+	var cols := 5
+	var rows := 5
+	var origin := BALLPIT - Vector3(tile * cols * 0.5, 0, tile * rows * 0.5)
+	for r in rows:
+		for c in cols:
+			var c0 := origin + Vector3(c * tile + 0.04, 0.03, r * tile + 0.04)
+			var colour: Color = colours[(r * 2 + c) % 4]
+			_mat_quad(st, c0, tile - 0.08, colour)
+			_mat_quad(st, c0 + Vector3(tile * 0.3, 0.012, tile * 0.3), tile * 0.4 - 0.08, colour.lightened(0.35))
+	var mi := MeshInstance3D.new()
+	mi.name = "PlayMat"
+	mi.mesh = st.commit()
+	var m := StandardMaterial3D.new()
+	m.resource_name = "play_mat"
+	m.vertex_color_use_as_albedo = true
+	m.roughness = 0.9
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dressing.add_child(mi)
+
+
+func _mat_quad(st: SurfaceTool, corner: Vector3, size: float, colour: Color) -> void:
+	var pts := [corner, corner + Vector3(size, 0, 0), corner + Vector3(size, 0, size), corner + Vector3(0, 0, size)]
+	for k in [0, 1, 2, 0, 2, 3]:
+		st.set_color(colour)
+		st.set_normal(Vector3.UP)
+		st.add_vertex(pts[k])
 
 
 func _build_gamebox_stack() -> void:
