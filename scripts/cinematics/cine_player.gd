@@ -232,11 +232,12 @@ func _process(delta: float) -> void:
 	_collect_jobs()
 	_tick_warming()
 	if _stage:
-		_stage.update(_clock - shots[_index].start, delta)
+		_stage.update(maxf(0.0, _clock - shots[_index].start), delta)
 
 
 ## The shot playing at `time`. Shot ends are summed floats (30.400000000000002),
-## so a time on a cut within a microsecond belongs to the next shot.
+## so a time on a cut within a microsecond belongs to the next shot (whose
+## clock then starts at 0, not a hair before).
 func _shot_at(time: float) -> int:
 	for i in shots.size():
 		if time < shots[i].start + shots[i].length - 0.000001:
@@ -285,7 +286,7 @@ func _cut(i: int) -> void:
 		_stage = CineStage.new(_actors, camera, overlay, null, shot.length)
 		shot.build.call(_stage)
 	_stage.set_root = _sets[shot.set_id]
-	_stage.update(_clock - shot.start, 0.0)
+	_stage.update(maxf(0.0, _clock - shot.start), 0.0)
 
 
 func _new_actor_root(shot: CineShot) -> Node3D:

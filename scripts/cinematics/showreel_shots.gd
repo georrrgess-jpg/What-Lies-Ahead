@@ -885,8 +885,8 @@ func _finale(st: CineStage) -> void:
 	st.fov(40.0, 50.0)
 	st.spline([
 		[0.0, Vector3(1.6, 0.6, 18.4), Vector3(-8, 1.8, 13)],
-		[3.2, Vector3(5.0, 3.6, 22.0), Vector3(-9, 2.2, 12)],
-		[6.4, Vector3(9.0, 7.5, 26.0), Vector3(-11, 3.0, 9)],
+		[3.2, Vector3(3.2, 3.6, 22.4), Vector3(-9, 2.2, 12)],
+		[6.4, Vector3(4.2, 7.5, 27.0), Vector3(-11, 3.0, 9)],
 	])
 	st.slowmo(0.4, 3.0, 0.4, 0.3, 0.6)
 	_squad_fire(st, squad, guns, horde)
