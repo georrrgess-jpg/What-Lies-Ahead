@@ -220,6 +220,7 @@ CEILING_DB = -2.0      # sample-peak ceiling (Vorbis encoding overshoots by up t
 MUSIC_EQ = {"hp": 50.0, "bells": ((100.0, -5.0, 0.7), (2500.0, 3.5, 0.55)), "shelf": (8000.0, 1.5)}
 BED_EQ = {"hp": 40.0}
 TRAILER_EQ = {"hp": 28.0}   # keeps the sub booms; the pack does its own voicing
+TRAILER_CEILING_DB = -2.6   # a trailer is played back as is: true peaks stay under -1 dBTP after Vorbis
 # Vorbis quality per kind of loop (see write_music).
 MUSIC_Q, FINAL_Q, AMBIENCE_Q = 6, 6, 5
 
@@ -304,11 +305,11 @@ def limit(x, ceiling_db=CEILING_DB, release=0.06, block=32, lookahead=4):
     return np.clip(x * per_sample[:, None], -ceiling, ceiling)
 
 
-def master(x, target_lufs, voicing):
+def master(x, target_lufs, voicing, ceiling_db=CEILING_DB):
     """EQ, then normalise to `target_lufs` under the peak ceiling."""
     x = eq(np.asarray(x, dtype=np.float64), **voicing)
     for _ in range(4):
-        x = limit(x * 10 ** ((target_lufs - lufs(x)) / 20.0))
+        x = limit(x * 10 ** ((target_lufs - lufs(x)) / 20.0), ceiling_db)
     return x
 
 
@@ -316,12 +317,13 @@ def write_music(name, stereo):
     """Masters and writes a loop at full quality (builds ship as GitHub
     Releases, so there is no size budget): names ending in _ambience are
     stereo beds at Vorbis q5, everything else q6. A *_trailer is a one-shot
-    cue: -14 LUFS with only a 28 Hz high-pass (its pack voices and glues it)."""
+    cue: -14 LUFS with only a 28 Hz high-pass (its pack voices and glues it)
+    and a lower peak ceiling (true peaks under -1 dBTP once encoded)."""
     stereo = sound_tuning.apply(name, stereo, loop=True)
     if name.endswith("_ambience"):
         return write_ogg(name, master(stereo, BED_LUFS, BED_EQ), peak=None, quality=AMBIENCE_Q)
     if name.endswith("_trailer"):
-        return write_ogg(name, master(stereo, TRAILER_LUFS, TRAILER_EQ), peak=None, quality=MUSIC_Q)
+        return write_ogg(name, master(stereo, TRAILER_LUFS, TRAILER_EQ, TRAILER_CEILING_DB), peak=None, quality=MUSIC_Q)
     final = name.endswith("_final")
     x = master(stereo, FINAL_LUFS if final else MUSIC_LUFS, MUSIC_EQ)
     return write_ogg(name, x, peak=None, quality=FINAL_Q if final else MUSIC_Q)
