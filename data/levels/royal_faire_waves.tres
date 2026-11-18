@@ -6,8 +6,8 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 9,
-"faire_jester": 4,
+"tourist_shambler": 10,
+"faire_jester": 5,
 "faire_knight": 2,
 "lifeguard_runner": 2
 }
@@ -24,7 +24,7 @@ hint = "Knights block from the front: aim over the shield or go round it."
 [sub_resource type="Resource" id="wave_2"]
 script = ExtResource("2")
 spawns = {
-"faire_jester": 10,
+"faire_jester": 12,
 "lifeguard_runner": 6,
 "tourist_shambler": 5
 }
@@ -43,9 +43,9 @@ surge_count = 4
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"faire_knight": 5,
+"faire_knight": 6,
 "tourist_shambler": 8,
-"faire_jester": 4
+"faire_jester": 5
 }
 spawn_interval = 1.35
 burst = 1
@@ -61,8 +61,8 @@ hint = "When a knight raps its shield, step out of its charge, then shoot."
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 10,
-"faire_jester": 7,
-"faire_knight": 3,
+"faire_jester": 8,
+"faire_knight": 4,
 "sky_diver": 3
 }
 spawn_interval = 1.2
@@ -81,8 +81,8 @@ bounty_tickets = 225
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 10,
-"faire_jester": 6,
-"faire_knight": 4,
+"faire_jester": 7,
+"faire_knight": 5,
 "lava_fire_dancer": 3,
 "mall_walker": 2
 }
@@ -100,8 +100,8 @@ hint = "Every gate at once: put your back to the stands or the wall-walk."
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 9,
-"faire_jester": 7,
-"faire_knight": 3,
+"faire_jester": 8,
+"faire_knight": 4,
 "sky_balloon_vendor": 3
 }
 spawn_interval = 1.05
@@ -120,9 +120,9 @@ twist = &"catapult"
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"faire_jester": 7,
+"faire_jester": 8,
 "tourist_shambler": 12,
-"faire_knight": 3,
+"faire_knight": 4,
 "lifeguard_runner": 3
 }
 spawn_interval = 1.9
