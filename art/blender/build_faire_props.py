@@ -525,12 +525,39 @@ def build_bird():
     save("faire_bird", [merge("Bird", p)])
 
 
+def build_maypole():
+    """The maypole: a 9 m striped pole on a stone foot, a flower crown with gold
+    bells at the top and eight ribbons fanned out to stakes 3.4 m round it (the
+    level turns the whole pole slowly). Collide with the foot (r 0.6)."""
+    reset_scene()
+    white, gold = fmat("White", rough=0.6), fmat("Gold", rough=0.35)
+    ribbons = [fmat("Red", rough=0.55), fmat("Blue", rough=0.55), fmat("Gold", rough=0.45), fmat("Green", rough=0.55)]
+    p = [cyl("Foot", 0.6, 0.5, (0, 0, 0.25), segs=12, bevel=0.05, m=fmat("StoneDark")),
+         cyl("Pole", 0.14, 9.0, (0, 0, 4.5), segs=10, bevel=0.0, m=white)]
+    for k in range(9):
+        p.append(cyl(f"Stripe{k}", 0.145, 0.35, (0, 0, 0.9 + k * 0.9), rot=(0.25, 0, 0), segs=10, bevel=0.0, m=ribbons[k % 2]))
+    p += [torus("Crown", 0.55, 0.16, (0, 0, 8.6), m=fmat("LeafDark", rough=0.8), major_segs=18, minor_segs=6),
+          sphere("Top", 0.25, (0, 0, 9.15), m=gold, segs=10, rings=6)]
+    for k in range(10):
+        a = math.tau * k / 10
+        p.append(sphere(f"Bloom{k}", 0.12, (math.cos(a) * 0.55, math.sin(a) * 0.55, 8.75), m=fmat("Flower") if k % 2 else fmat("Yellow"), segs=8, rings=5))
+    for k in range(8):
+        a = math.tau * (k + 0.5) / 8
+        top = (math.cos(a) * 0.5, math.sin(a) * 0.5, 8.4)
+        bot = (math.cos(a) * 3.4, math.sin(a) * 3.4, 0.35)
+        mid = ((top[0] + bot[0]) / 2, (top[1] + bot[1]) / 2, (top[2] + bot[2]) / 2 - 0.35)
+        p.append(tube(f"Ribbon{k}", [top, mid, bot], 0.05, m=ribbons[k % 4], segs=4))
+        p += [cyl(f"Stake{k}", 0.06, 0.5, (bot[0], bot[1], 0.25), segs=6, bevel=0.0, m=fmat("Timber")),
+              sphere(f"Bell{k}", 0.09, (top[0] * 1.1, top[1] * 1.1, 8.25), m=gold, segs=8, rings=5)]
+    save("faire_maypole", [merge("Maypole", p)])
+
+
 BUILDERS = {"tent": build_tent, "stall": build_stall, "house": build_house, "stands": build_stands, "tilt": build_tilt,
             "palisade": build_palisade, "fence": build_fence, "banner": build_banner, "brazier": build_brazier,
             "exit_lantern": build_exit_lantern, "tree": build_tree, "pine": build_pine, "hay": build_hay,
             "hay_target": build_hay_target, "barrels": build_barrels, "crates": build_crates, "catapult": build_catapult,
             "well": build_well, "dummy": build_dummy, "cart": build_cart, "bench": build_bench, "dragon": build_dragon,
-            "bird": build_bird}
+            "bird": build_bird, "maypole": build_maypole}
 
 if __name__ == "__main__":
     for key in sys.argv[1:] or list(BUILDERS):

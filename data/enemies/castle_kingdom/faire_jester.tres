@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/faire_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/faire_jester_tricks.gd" id="4"]
+
+[sub_resource type="Resource" id="tricks"]
+script = ExtResource("4")
+min_range = 6.0
+max_range = 20.0
+cooldown = 6.5
+windup = 0.9
+damage = 6.0
+projectile_speed = 14.0
+arc = 0.7
+size = 0.22
+lead = 0.35
+color = Color(0.98, 0.94, 0.86, 1)
+windup_sound = &"faire_jester_call"
+throw_sound = &"faire_pin_throw"
+cartwheel_cooldown = 6.0
+cartwheel_time = 0.55
+cartwheel_speed = 6.5
+cartwheel_on_hit = 0.3
+
+[resource]
+script = ExtResource("1")
+id = &"faire_jester"
+display_name = "Jester"
+max_health = 70.0
+move_speed = 3.3
+speed_variance = 0.1
+turn_speed = 7.0
+tickets = 20
+score = 230
+xp = 20
+damage = 10.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.5
+attack_recover = 0.7
+lunge_speed = 4.0
+mass = 0.9
+flank_degrees = 80.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Jester"
+body_scale = 0.96
+capsule_radius = 0.4
+capsule_height = 1.9
+head_height = 1.25
+shirt_colors = Array[Color]([Color(0.85, 0.2, 0.25, 1), Color(0.18, 0.36, 0.83, 1), Color(0.25, 0.66, 0.36, 1), Color(1, 0.55, 0.23, 1)])
+skin_colors = Array[Color]([Color(0.65, 0.83, 0.42, 1), Color(0.58, 0.8, 0.5, 1), Color(0.7, 0.82, 0.45, 1)])
+accessory_slots = PackedStringArray("Acc_Jester_Hat", "Acc_Jester_Bauble|")
+move_animation = &"Run"
+animation_reference_speed = 4.2
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("tricks")])
+voice_sounds = Array[StringName]([&"faire_jester_laugh_1", &"faire_jester_laugh_2"])
+voice_interval = Vector2(2.5, 5.0)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

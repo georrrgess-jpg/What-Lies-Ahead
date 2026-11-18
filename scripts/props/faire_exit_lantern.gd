@@ -16,7 +16,11 @@ func _ready() -> void:
 	add_to_group("exit_lights")
 	_material = StandardMaterial3D.new()
 	_material.emission_enabled = true
-	for node in find_children("*", "MeshInstance3D", true, false):
+	var nodes := find_children("*", "MeshInstance3D", true, false)
+	nodes.append(self)
+	for node in nodes:
+		if not node is MeshInstance3D:
+			continue
 		var mi := node as MeshInstance3D
 		for i in mi.mesh.get_surface_count():
 			var m := mi.mesh.surface_get_material(i)

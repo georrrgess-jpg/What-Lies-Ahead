@@ -161,7 +161,7 @@ func _build_environment() -> void:
 	env.glow_hdr_threshold = 1.1
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.8, 0.88, 0.98)
-	env.fog_density = 0.0022
+	env.fog_density = 0.0012
 	env.fog_sky_affect = 0.0
 	env.adjustment_enabled = true
 	env.adjustment_saturation = 1.06
@@ -666,6 +666,12 @@ func _build_south() -> void:
 	_collider(s, "DragonBase", Vector3(7.2, 2.7, 6.2), dragon_at + Vector3(0, 1.35, 0))
 	_post(s, "DragonNeck", 1.6, 7.5, dragon_at + Vector3(0, 0, -3.4))
 	_player_block(s, "DragonCap", Vector3(8.0, 4.0, 8.0), dragon_at + Vector3(0, 6.0, 0))
+	# The maypole (it turns slowly, ribbons and all).
+	var pole_at := Vector3(2.5, 0, 23.5)
+	var pole := _prop(dressing, "faire_maypole", "Maypole", pole_at, 0.0, Vector3(0.6, 9, 0.6))
+	_late(pole, "res://scripts/props/ambient_motion.gd", {"spin_degrees_per_second": 9.0})
+	_post(s, "MaypoleFoot", 0.65, 2.0, pole_at)
+	_player_block(s, "MaypoleCap", Vector3(1.2, 8.0, 1.2), pole_at + Vector3(0, 6.0, 0))
 	# The catapult range.
 	_solid_prop(s, "faire_catapult", "Catapult", Vector3(13.5, 0, 28.5), 200.0, Vector3(2.4, 2.4, 3.4))
 	_player_block(s, "CatapultCap", Vector3(2.6, 3.0, 3.6), Vector3(13.5, 3.9, 28.5), deg_to_rad(200.0))
@@ -1170,7 +1176,7 @@ func _stone() -> StandardMaterial3D:
 
 
 func _stone_trim() -> StandardMaterial3D:
-	return _mat("stone_trim", Color(0.86, 0.84, 0.88), 0.8)
+	return _mat("stone_trim", Color(0.8, 0.78, 0.82), 0.8)
 
 
 ## Swaps every "FaireStone" surface under `node` for the block-textured stone.
@@ -1471,12 +1477,15 @@ func _solid_prop(parent: Node3D, model: String, prop_name: String, pos: Vector3,
 	return node
 
 
-## Instances art/models/<model>.glb, or a grey stand-in box if it is missing.
+## The mesh of art/models/<model>.glb as the level's own MeshInstance3D (so
+## surface recolours save with the scene), or a grey stand-in box if missing.
 func _prop(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_degrees: float, placeholder_size: Vector3) -> Node3D:
 	var path := MODELS + model + ".glb"
 	var node: Node3D
 	if ResourceLoader.exists(path):
-		node = (load(path) as PackedScene).instantiate()
+		var mi := MeshInstance3D.new()
+		mi.mesh = _model_mesh(model)
+		node = mi
 	else:
 		var mi := MeshInstance3D.new()
 		mi.mesh = _box_mesh(placeholder_size, _mat("placeholder", Color(0.75, 0.72, 0.8), 0.8))

@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/faire_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/faire_knight_charge.gd" id="4"]
+
+[sub_resource type="Resource" id="charge"]
+script = ExtResource("4")
+front_cone = 0.3
+block_fraction = 0.85
+shield_health = 300.0
+shield_mesh = "Acc_Knight_Shield"
+rage_seconds = 4.0
+spark_color = Color(1, 0.85, 0.4, 1)
+block_sound = &"faire_shield_clang"
+break_sound = &"faire_shield_break"
+min_range = 3.5
+max_range = 11.0
+cooldown = 9.0
+drum_time = 1.1
+rush_speed = 9.0
+rush_time = 0.75
+damage = 14.0
+shove = 7.0
+exposed_time = 1.5
+drum_sound = &"faire_knight_rap"
+rush_sound = &"faire_knight_charge"
+bash_sound = &"faire_knight_bash"
+
+[resource]
+script = ExtResource("1")
+id = &"faire_knight"
+display_name = "Armored Knight"
+max_health = 230.0
+move_speed = 1.75
+speed_variance = 0.06
+turn_speed = 3.4
+tickets = 40
+score = 450
+xp = 40
+damage = 16.0
+attack_range = 1.9
+attack_reach = 2.6
+attack_windup = 1.0
+attack_recover = 1.1
+lunge_speed = 3.2
+mass = 2.6
+flank_degrees = 25.0
+enrage_radius = 0.0
+model_scene = ExtResource("2")
+outfit = &"Knight"
+body_scale = 1.08
+capsule_radius = 0.56
+capsule_height = 1.95
+head_height = 1.45
+head_guard_mesh = "Acc_Knight_Shield"
+shirt_colors = Array[Color]([Color(0.85, 0.2, 0.25, 1), Color(0.18, 0.36, 0.83, 1), Color(0.25, 0.62, 0.35, 1), Color(0.55, 0.32, 0.75, 1)])
+skin_colors = Array[Color]([Color(0.6, 0.8, 0.44, 1), Color(0.52, 0.76, 0.5, 1), Color(0.66, 0.82, 0.42, 1)])
+accessory_slots = PackedStringArray("Acc_Knight_Shield", "Acc_Knight_Plume|Acc_Knight_Plume|")
+move_animation = &"Walk"
+clip_style = &"Knight"
+heavy = true
+animation_reference_speed = 1.6
+avoidance_radius = 0.72
+behaviours = Array[ExtResource("3")]([SubResource("charge")])
+voice_sounds = Array[StringName]([&"faire_knight_grunt_1", &"faire_knight_grunt_2"])
+voice_interval = Vector2(4, 7)
+voice_pitch = 0.95
+attack_sound = &"faire_knight_bash"

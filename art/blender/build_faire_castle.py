@@ -235,10 +235,10 @@ def build_drawbridge():
         p.append(box(f"Strap{y}", (W + 0.05, 0.22, 0.08), (0, y, 0.02), bevel=0.02, m=iron))
     for s in (-1, 1):
         p.append(box(f"Edge{s}", (0.25, L, 0.45), (s * (W / 2 + 0.05), -L / 2, -0.05), bevel=0.04, m=dark))
-        p.append(tube(f"Chain{s}", [(s * 2.35, -L + 0.3, 0.25), (s * 2.5, 0.8, 6.3)], 0.07, m=iron, segs=6))
+        p.append(tube(f"Chain{s}", [(s * 2.35, -L + 0.3, 0.25), (s * 2.5, 1.85, 6.3)], 0.07, m=iron, segs=6))
         for k in range(8):
             t = (k + 0.5) / 8
-            pos = (s * (2.35 + 0.15 * t), -L + 0.3 + (L + 0.5) * t, 0.25 + 6.05 * t)
+            pos = (s * (2.35 + 0.15 * t), -L + 0.3 + (L + 1.55) * t, 0.25 + 6.05 * t)
             p.append(torus(f"Link{s}{k}", 0.12, 0.035, pos, rot=(0.7, 0, math.pi / 2 * (k % 2)), m=iron, major_segs=8, minor_segs=4))
         p.append(box(f"Eye{s}", (0.3, 0.3, 0.3), (s * 2.35, -L + 0.3, 0.2), bevel=0.04, m=iron))
     save("faire_drawbridge", [merge("Drawbridge", p)])

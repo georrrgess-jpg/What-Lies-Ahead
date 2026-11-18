@@ -121,7 +121,7 @@ def make_stone(size=512, seed=1405):
     rh = size // rows
     albedo = np.zeros((size, size, 3))
     height = np.ones((size, size))
-    tones = [hexc(c) for c in ("#d5d0db", "#c9c3d0", "#dcd6d2", "#c4c0cc", "#d9d2c8", "#cfcad6")]
+    tones = [hexc(c) for c in ("#bfb9c6", "#b1acbb", "#c6bfb8", "#aca8b6", "#c2b9ad", "#b8b3c1")]
     fine = periodic_noise(rng, size, beta=1.4, low_cut=4.0)
     for r in range(rows):
         y0, y1 = r * rh, (r + 1) * rh
@@ -140,7 +140,7 @@ def make_stone(size=512, seed=1405):
             mort[4:, 4:7] = np.minimum(mort[4:, 4:7], 0.6)
             height[y0:y1][:, xs] = mort
     albedo = albedo * (0.9 + fine[..., None] * 0.14)
-    albedo = albedo * (0.6 + 0.4 * height[..., None]) + hexc("#9a93a3") * (1 - height[..., None]) * 0.25
+    albedo = albedo * (0.6 + 0.4 * height[..., None]) + hexc("#7d7688") * (1 - height[..., None]) * 0.3
     save_rgb("faire_stone.png", albedo)
     save_rgb("faire_stone_normal.png", normal_from_height(blur(height, 2), 2.0))
 
