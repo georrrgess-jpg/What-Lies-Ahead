@@ -74,6 +74,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_left()
 	_build_right()
+	_wire_focus()
 	_tip_index = randi() % TIPS.size()
 	_rotate_tip()
 	var timer := Timer.new()
@@ -176,6 +177,14 @@ func _build_left() -> void:
 	_tip.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	ticker.add_child(_tip)
 	_entrance = [_hero, cta, _news, ticker]
+
+
+## Up from PLAY reaches the pager; down from the pager comes back to PLAY.
+func _wire_focus() -> void:
+	var arrows := _hero.pager_buttons()
+	_play.focus_neighbor_top = _play.get_path_to(arrows[1])
+	for arrow in arrows:
+		arrow.focus_neighbor_bottom = arrow.get_path_to(_play)
 
 
 ## TRAILER and TUTORIAL, small, over the operator, when the game has them.

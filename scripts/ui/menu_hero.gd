@@ -230,6 +230,11 @@ func _fit_pager() -> void:
 	var at := _open.find(world_index)
 	_prev.disabled = at <= 0
 	_next.disabled = at >= _open.size() - 1
+	# An arrow that greys out under the keyboard hands focus to the other one.
+	if _prev.disabled and _prev.has_focus() and not _next.disabled:
+		_next.grab_focus()
+	elif _next.disabled and _next.has_focus() and not _prev.disabled:
+		_prev.grab_focus()
 	var worlds := GameData.worlds()
 	var after := world_index + 1
 	if _next.disabled and after < worlds.size() and worlds[after].requirement:
@@ -263,6 +268,8 @@ func _fit_art() -> void:
 
 ## Slow pan along a figure of eight plus the lean towards the mouse.
 func _process(delta: float) -> void:
+	if not is_visible_in_tree():
+		return
 	_time += delta
 	var view := get_viewport_rect().size
 	var mouse := (get_viewport().get_mouse_position() / view - Vector2(0.5, 0.5)) * 2.0
