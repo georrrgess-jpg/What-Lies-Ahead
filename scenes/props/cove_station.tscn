@@ -27,7 +27,7 @@ ring_segments = 8
 
 [node name="CoveStation" type="Node3D"]
 script = ExtResource("1")
-beacon_height_offset = 3.6
+beacon_height_offset = 4.2
 
 [node name="Model" parent="." instance=ExtResource("2")]
 
