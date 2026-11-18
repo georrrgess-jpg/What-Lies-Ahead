@@ -2,7 +2,7 @@
 
 A single-player, first-person arcade zombie survival game made with Godot 4.
 
-Ten worlds, each one level: hold the ground around a loadout station through six or
+Fifteen worlds, each one level: hold the ground around a loadout station through six or
 seven waves (rushes, sieges, ambushes, bounties, a twist and a named alpha boss at the
 end), spend tickets between waves, then follow the exit lights to the portal and step
 through. Clearing a level unlocks the next world. Every zombie carries a stolen **Spark**;
@@ -23,6 +23,11 @@ city you buy your way through gate by gate (see [Endless](#endless-ashfall-city)
 | 8 | Sugar Rush Factory | Candy Works | A sunlit candy factory hall: chocolate river, striped bridges, a colossal gumball machine and a taffy puller | Gummy Bear, Taffy Puller |
 | 9 | Volcano Isle | Lava Lagoon | Tiki resort under an erupting volcano at dusk: lava river and stone bridges, observatory terrace, hot springs, beach | Fire Dancer, Tiki Bartender |
 | 10 | Sky Carnival | Sky Harbor | Sunrise carnival on floating islands above a sea of clouds, with an airship at its mooring tower | Sky Diver, Balloon Vendor |
+| 11 | Fright Fair | Ghost Train | Haunted midnight fairground under a full moon: a skull-mouthed ghost train, hall of mirrors, skeletal carousel, misty graveyard and a manor on the hill | Bedsheet Ghost, Pumpkin Head |
+| 12 | Gold Rush Gulch | Boomtown | High-noon Wild West theme park: Main Street, a walk-in saloon and a runaway mine train looping over the street | Cowpoke, Prospector |
+| 13 | Pirate Cove | Skull Harbor | Pirate harbour ride in a cliff-ringed cove at sunset: the boardable galleon Barnacle Queen, the Kraken Swing, stilt huts and a waterfall | Deckhand, Powder Monkey |
+| 14 | Castle Kingdom | Royal Faire | A storybook faire on a spring morning before a toy castle: moat and drawbridge, wall-walks, jousting list, market and a dragon bouncy castle | Armored Knight, Jester |
+| 15 | Toybox Town | Toy Shop | A giant toy shop at midnight, seen at toy size: letter-block towers, a two-storey dollhouse and a toy train looping overhead | Wind-up Soldier, Plush Brute |
 
 ![Reference art (left) and the game (right)](references/comparison.png)
 
@@ -102,9 +107,10 @@ fullscreen.
   rush, siege (heavies first), ambush (every entrance at once), ranged, a **bounty**
   (a golden runner that flees with a ticket prize), a world **twist** (Jackpot double
   tickets, Blackout, Frenzy, Low Gravity, Whiteout, Power Cut, Monsoon, Sugar Rush,
-  Eruption, Gale) and a **finale** against the world's named alpha (Big Bruno, Captain
+  Eruption, Gale, Lights Out, Dust Storm, Broadside, Siege Engines, Wind-up) and a **finale** against the world's named alpha (Big Bruno, Captain
   Lockdown, Inky the Great, Chief Burnout, Old Frostbite, The Night Manager, The Idol
-  Keeper, The Confectioner, Kahuna Krakatoa, Captain Cumulus). Every alpha has its own
+  Keeper, The Confectioner, Kahuna Krakatoa, Captain Cumulus, Ringmaster Rictus, Sheriff Rattlebones, Captain
+  Barnacle, The Black Knight, The Toymaker). Every alpha has its own
   signature kit built from telegraphed moves (floor strikes in patterns, charges, sweeping
   beams to jump or hide from, shockwave rings, burrows, summons, arena events such as
   lights-out or ink at the screen edges), three phases with roars, armour plates that
