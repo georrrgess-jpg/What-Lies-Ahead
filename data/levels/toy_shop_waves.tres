@@ -95,7 +95,7 @@ spawns = {
 spawn_interval = 1.05
 burst = 1
 max_alive = 16
-speed_scale = 1.09
+speed_scale = 1.11
 late_types_after = 0.25
 banner = ""
 kind = &"siege"
@@ -114,7 +114,7 @@ spawns = {
 spawn_interval = 0.85
 burst = 1
 max_alive = 16
-speed_scale = 1.1
+speed_scale = 1.12
 late_types_after = 0.15
 banner = ""
 kind = &"standard"
@@ -129,14 +129,14 @@ script = ExtResource("2")
 spawns = {
 "tourist_shambler": 14,
 "toy_windup_soldier": 12,
-"toy_plush_brute": 4,
+"toy_plush_brute": 5,
 "lava_fire_dancer": 3,
 "sky_balloon_vendor": 3
 }
 spawn_interval = 1.5
 burst = 2
-max_alive = 16
-speed_scale = 1.12
+max_alive = 17
+speed_scale = 1.14
 late_types_after = 0.1
 banner = ""
 kind = &"finale"
