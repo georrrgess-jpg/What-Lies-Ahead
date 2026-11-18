@@ -213,11 +213,13 @@ def write_ogg(name, stereo, peak=0.8, quality=3, mono=False):
 MUSIC_LUFS = -15.0     # level loops and the menu theme
 FINAL_LUFS = -14.0     # final-wave variants sit 1 dB hotter
 BED_LUFS = -18.0       # ambience beds
+TRAILER_LUFS = -14.0   # one-shot trailer cues (names ending in _trailer), voiced in their pack
 CEILING_DB = -2.0      # sample-peak ceiling (Vorbis encoding overshoots by up to ~0.7 dB)
 # Music voicing: high-pass the sub rumble small speakers cannot play, thin the
 # 60-180 Hz build-up, and lift 1-5 kHz (melody, hats) and the air above 8 kHz.
 MUSIC_EQ = {"hp": 50.0, "bells": ((100.0, -5.0, 0.7), (2500.0, 3.5, 0.55)), "shelf": (8000.0, 1.5)}
 BED_EQ = {"hp": 40.0}
+TRAILER_EQ = {"hp": 28.0}   # keeps the sub booms; the pack does its own voicing
 # Vorbis quality per kind of loop (see write_music).
 MUSIC_Q, FINAL_Q, AMBIENCE_Q = 6, 6, 5
 
@@ -313,10 +315,13 @@ def master(x, target_lufs, voicing):
 def write_music(name, stereo):
     """Masters and writes a loop at full quality (builds ship as GitHub
     Releases, so there is no size budget): names ending in _ambience are
-    stereo beds at Vorbis q5, everything else q6."""
+    stereo beds at Vorbis q5, everything else q6. A *_trailer is a one-shot
+    cue: -14 LUFS with only a 28 Hz high-pass (its pack voices and glues it)."""
     stereo = sound_tuning.apply(name, stereo, loop=True)
     if name.endswith("_ambience"):
         return write_ogg(name, master(stereo, BED_LUFS, BED_EQ), peak=None, quality=AMBIENCE_Q)
+    if name.endswith("_trailer"):
+        return write_ogg(name, master(stereo, TRAILER_LUFS, TRAILER_EQ), peak=None, quality=MUSIC_Q)
     final = name.endswith("_final")
     x = master(stereo, FINAL_LUFS if final else MUSIC_LUFS, MUSIC_EQ)
     return write_ogg(name, x, peak=None, quality=FINAL_Q if final else MUSIC_Q)
