@@ -105,6 +105,7 @@ func _initialize() -> void:
 	_build_gate_and_plaza()
 	_build_station()
 	_build_street_props()
+	_build_bunting()
 	_build_coaster()
 	_build_backdrop()
 	_build_lights()
@@ -473,8 +474,16 @@ func _build_edges() -> void:
 		_cap(e, "CactusCap%d" % int(c[0].z), c[0] + Vector3(0, 3.0, 0))
 
 
+## A red-rock cliff block. It casts no shadow: its broad faces only ever
+## shadowed themselves (acne) under the high sun.
 func _cliff(pos: Vector3, yaw: float, scale: Vector3) -> void:
-	var c := _prop(dressing, "gulch_cliff", "Cliff%d_%d" % [int(pos.x), int(pos.z)], pos, yaw, Vector3(30, 16, 10))
+	var c := MeshInstance3D.new()
+	c.name = "Cliff%d_%d" % [int(pos.x), int(pos.z)]
+	c.mesh = _model_mesh("gulch_cliff")
+	c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dressing.add_child(c)
+	c.position = pos
+	c.rotation.y = deg_to_rad(yaw)
 	c.scale = scale
 
 
@@ -558,6 +567,63 @@ func _build_street_props() -> void:
 		var z := -32.0 + i * 10.6
 		_lamp(s, "StreetLampW%d" % i, Vector3(-7.25, WALK_Y, z + 2.0), 0.0)
 		_lamp(s, "StreetLampE%d" % i, Vector3(7.25, WALK_Y, z - 3.0), 180.0)
+
+
+## Pennant strings across Main Street from facade to facade (one fluttering
+## mesh, shaded by the shared bunting shader) and their ropes.
+func _build_bunting() -> void:
+	var flags := SurfaceTool.new()
+	flags.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var lines := SurfaceTool.new()
+	lines.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var strings := [[Vector3(-9.5, 6.0, -31.0), Vector3(9.5, 6.2, -31.0)], [Vector3(-9.5, 5.6, -19.0), Vector3(9.5, 6.0, -20.0)],
+		[Vector3(-9.5, 6.4, -1.0), Vector3(12.3, 6.0, -1.3)], [Vector3(-9.5, 6.4, 15.0), Vector3(9.5, 6.4, 17.0)],
+		[Vector3(-9.5, 6.4, 21.0), Vector3(9.5, 6.4, 20.5)], [Vector3(-9.5, 6.0, -26.0), Vector3(9.5, 5.8, -15.0)]]
+	var colors := [Color(0.82, 0.23, 0.18), Color(1.0, 0.79, 0.24), Color(0.18, 0.72, 0.69), Color(0.98, 0.91, 0.78), Color(0.95, 0.54, 0.24)]
+	for n in strings.size():
+		var a: Vector3 = strings[n][0]
+		var b: Vector3 = strings[n][1]
+		var sag := 0.9
+		var count := int(a.distance_to(b) / 0.6)
+		var normal := Vector3(b.x - a.x, 0, b.z - a.z).normalized().cross(Vector3.UP).normalized()
+		for k in count:
+			var t0 := (k + 0.1) / count
+			var t1 := (k + 0.9) / count
+			var tm := (k + 0.5) / count
+			var p0 := a.lerp(b, t0) - Vector3.UP * sag * 4.0 * t0 * (1.0 - t0)
+			var p1 := a.lerp(b, t1) - Vector3.UP * sag * 4.0 * t1 * (1.0 - t1)
+			var tip := a.lerp(b, tm) - Vector3.UP * (sag * 4.0 * tm * (1.0 - tm) + 0.42)
+			var c: Color = colors[(n + k) % colors.size()]
+			for v in [[p0, 0.0], [p1, 0.0], [tip, 1.0]]:
+				flags.set_color(c)
+				flags.set_normal(normal)
+				flags.set_uv(Vector2(0.5, v[1]))
+				flags.add_vertex(v[0])
+		for k in 12:
+			var ta := k / 12.0
+			var tb := (k + 1) / 12.0
+			var pa := a.lerp(b, ta) - Vector3.UP * sag * 4.0 * ta * (1.0 - ta)
+			var pb := a.lerp(b, tb) - Vector3.UP * sag * 4.0 * tb * (1.0 - tb)
+			var up := Vector3.UP * 0.025
+			for v in [pa + up, pb + up, pb - up, pa + up, pb - up, pa - up]:
+				lines.set_normal(normal)
+				lines.add_vertex(v)
+	var mi := MeshInstance3D.new()
+	mi.name = "Bunting"
+	mi.mesh = flags.commit()
+	var m := ShaderMaterial.new()
+	m.shader = load(SHADERS + "sky_bunting.gdshader")
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dressing.add_child(mi)
+	var ropes := MeshInstance3D.new()
+	ropes.name = "BuntingLines"
+	ropes.mesh = lines.commit()
+	var rope := _mat("rope", Color(0.9, 0.82, 0.62), 0.9)
+	rope.cull_mode = BaseMaterial3D.CULL_DISABLED
+	ropes.material_override = rope
+	ropes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	dressing.add_child(ropes)
 
 
 # ---------------------------------------------------------------------------
@@ -844,6 +910,7 @@ func _build_backdrop() -> void:
 	for i in buttes.size():
 		var m := _prop(b, "gulch_butte", "Butte%d" % i, buttes[i][0], i * 47.0, Vector3(12, 28, 12))
 		m.scale = Vector3(1.0, buttes[i][1], 1.0)
+	_build_vultures(b)
 	_prop(b, "gulch_windmill", "Windmill", Vector3(-26.0, 0, 52.0), 30.0, Vector3(3, 11, 3))
 	var wheel := _prop(b, "gulch_windmill_wheel", "WindmillWheel", Vector3(-26.0, 10.3, 52.0) + Basis(Vector3.UP, deg_to_rad(30.0)) * Vector3(0, 0, 0.5),
 		30.0, Vector3(3.6, 3.6, 0.3))
@@ -855,6 +922,37 @@ func _build_backdrop() -> void:
 	for i in 6:
 		var p := Vector3(-30.0 + i * 13.0, 0, 44.0 + (i % 3) * 5.0)
 		_prop(b, "gulch_boulder", "FarRock%d" % i, p, i * 37.0, Vector3(2, 1.4, 2))
+
+
+## Vultures gliding in slow circles high over the mesa (each on a turning pivot).
+func _build_vultures(parent: Node3D) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# A gliding bird along +Z: two raked wings, a body and a fanned tail.
+	var tris := [[Vector3(0, 0, 0.5), Vector3(-1.4, 0.25, -0.15), Vector3(0, 0, -0.2)], [Vector3(0, 0, 0.5), Vector3(0, 0, -0.2), Vector3(1.4, 0.25, -0.15)],
+		[Vector3(-0.12, 0, 0.7), Vector3(0.12, 0, 0.7), Vector3(0, 0, -0.6)], [Vector3(0, 0, -0.45), Vector3(-0.3, 0, -0.9), Vector3(0.3, 0, -0.9)]]
+	for tri in tris:
+		for v: Vector3 in tri:
+			st.set_normal(Vector3.UP)
+			st.add_vertex(v)
+	var body := _mat("vulture", Color(0.2, 0.15, 0.14), 0.9)
+	body.cull_mode = BaseMaterial3D.CULL_DISABLED
+	st.set_material(body)
+	var mesh := st.commit()
+	for i in 3:
+		var pivot := Node3D.new()
+		pivot.name = "VulturePivot%d" % i
+		parent.add_child(pivot)
+		pivot.position = Vector3(-10.0 + i * 14.0, 34.0 + i * 3.0, -62.0 + i * 6.0)
+		var bird := MeshInstance3D.new()
+		bird.name = "Vulture"
+		bird.mesh = mesh
+		bird.position = Vector3(9.0 + i * 3.0, 0, 0)
+		bird.rotation = Vector3(0, PI, deg_to_rad(18.0))
+		bird.scale = Vector3.ONE * 1.4
+		bird.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		pivot.add_child(bird)
+		_late(pivot, "res://scripts/props/ambient_motion.gd", {"spin_degrees_per_second": 11.0 + i * 3.0, "bob_height": 1.2, "bob_seconds": 7.0})
 
 
 # ---------------------------------------------------------------------------
