@@ -613,6 +613,10 @@ func _build_mirror_hall() -> void:
 	_player_block(hall, "HallCap", Vector3(11.0, 6.0, 15.0), HALL + Vector3(0, h + 3.4, 0))
 	_omni(hall, "HallGlowS", HALL + Vector3(0.5, 3.2, 3.5), Color(0.75, 0.45, 1.0), 1.4, 7.0)
 	_omni(hall, "HallGlowN", HALL + Vector3(0.5, 3.2, -3.5), Color(0.45, 1.0, 0.6), 1.2, 7.0)
+	# Inside: a goo barrel and a jack-o'-lantern in the south-west corner,
+	# clear of the doors, the turn and the mirrors.
+	_kit_prop(hall, "GooBarrel", "HallGoo", HALL + Vector3(-4.3, 0, 6.3), 0.0, Vector3(0.9, 0.95, 0.9))
+	_row_add("Pumpkin", Transform3D(Basis(Vector3.UP, PI * 0.25), HALL + Vector3(-4.3, 0, 4.9)))
 	# Outside: a ticket barrel and pumpkins at the east door.
 	_kit_prop(hall, "GooBarrel", "HallBarrel", HALL + Vector3(6.2, 0, 5.6), 0.0, Vector3(0.9, 0.95, 0.9))
 	_row_add("Pumpkin", Transform3D(Basis(Vector3.UP, -PI * 0.5), HALL + Vector3(5.8, 0, 1.2)))
