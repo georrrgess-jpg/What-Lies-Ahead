@@ -114,7 +114,7 @@ attract mode), and renders to a video.
   `staged_slide`, `staged_mantle` and `staged_gait` drive the movement poses.
 * **Words**: none in the first eight seconds. Every section lands on a card
   slammed on its hit (`overlay.card`: a dark band wipes across, the title
-  punches in with a settling tilt while an accent echo of it bursts outward,
+  punches in with a settling tilt while its band flashes the accent colour and cools,
   a rule wipes out under it; an alpha's epithet sits under its name): 15
   WORLDS, the five alphas, 42 ZOMBIES · 15 ALPHAS (the zombie kinds other
   than the alphas), LOCK AND LOAD, RELOADS,

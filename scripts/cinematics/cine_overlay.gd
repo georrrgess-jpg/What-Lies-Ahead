@@ -355,8 +355,8 @@ func stamp(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 1.0, ac
 
 ## A section card on a hit (15 WORLDS, RELOADS, ENDLESS, an alpha's name): a
 ## dark band wipes across the frame, the title slams in over it (a scale
-## punch with a tilt that settles) while an echo of it in `accent` bursts
-## outward, the kicker sits above and an accent rule wipes out from the
+## punch with a tilt that settles) while the band flashes `accent` and
+## cools to dark, the kicker sits above and an accent rule wipes out from the
 ## middle under it, with `note` (an epithet) below. It holds `hold` seconds,
 ## drifting larger, and snaps out.
 func card(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 0.8, accent := UiKit.AMBER, title_size := 150, note := "") -> Control:
@@ -386,28 +386,20 @@ func card(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 0.8, acc
 	band.color = Color(0.03, 0.0, 0.06, 0.55)
 	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_text_layer.add_child(band)
-	var echo := t.duplicate() as Label
-	echo.add_theme_color_override("font_color", accent)
-	echo.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0))
-	_text_layer.add_child(echo)
 	_text_layer.add_child(col)
 	col.reset_size()
-	# Lay the column out now, so the echo can sit exactly on the title.
+	# Lay the column out now, so the band can fit it.
 	col.notification(Container.NOTIFICATION_SORT_CHILDREN)
 	col.position = _inside(root.size * at - col.size * 0.5, col.size)
 	col.pivot_offset = col.size * 0.5
 	band.position = Vector2(0.0, col.position.y - 18.0)
 	band.size = Vector2(root.size.x, col.size.y + 36.0)
 	band.pivot_offset = band.size * 0.5
-	echo.position = col.position + t.position
-	echo.size = t.size
-	echo.pivot_offset = t.size * 0.5
 	rule.pivot_offset = rule.size * 0.5
 	band.scale = Vector2(0.0, 1.0)
 	col.scale = Vector2.ONE * 2.1
 	col.rotation_degrees = -5.0
 	col.modulate.a = 0.0
-	echo.modulate.a = 0.0
 	rule.scale = Vector2(0.0, 1.0)
 	var tw := _tween().set_parallel(true)
 	tw.tween_property(band, "scale:x", 1.0, 0.12).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
@@ -415,15 +407,15 @@ func card(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 0.8, acc
 	tw.tween_property(col, "rotation_degrees", 0.0, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(col, "modulate:a", 1.0, 0.05)
 	tw.tween_property(rule, "scale:x", 1.0, 0.18).set_delay(0.08).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
-	tw.tween_property(echo, "modulate:a", 0.8, 0.01).set_delay(0.12)
-	tw.tween_property(echo, "scale", Vector2.ONE * 1.45, 0.4).set_delay(0.12).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
-	tw.tween_property(echo, "modulate:a", 0.0, 0.38).set_delay(0.14)
+	var dark := band.color
+	band.color = Color(accent, 0.75)
+	tw.tween_property(band, "color", dark, 0.3).set_delay(0.04).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(col, "scale", Vector2.ONE * 1.05, hold).set_delay(0.13).set_trans(Tween.TRANS_SINE)
 	var out := 0.13 + hold
 	for c in [band, col]:
 		tw.tween_property(c, "modulate:a", 0.0, 0.1).set_delay(out)
 	# Freed at the cut (clear_text) if the shot ends first.
-	var parts: Array[Node] = [band, col, echo]
+	var parts: Array[Node] = [band, col]
 	tw.chain().tween_callback(func():
 		for c in parts:
 			if is_instance_valid(c):
