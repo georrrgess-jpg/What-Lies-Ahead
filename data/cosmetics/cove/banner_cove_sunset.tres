@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 2
+target = &"skull_harbor"
+
+[resource]
+script = ExtResource("1")
+id = &"banner_cove_sunset"
+display_name = "Skull Harbor Sunset"
+description = "Teal swells under a coral and gold sky: the cove at the end of the day."
+slot = &"banner"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(1.0, 0.478, 0.361, 1, 1.0, 0.761, 0.29, 1, 0.122, 0.659, 0.62, 1)
+params = {
+"pattern": "waves"
+}
+sort_order = 10432
