@@ -12,7 +12,7 @@ extends WeaponMode
 ## Tilt: hold the trigger past TILT_DELAY and the machine tilts over
 ## TILT_RAMP: the rate climbs from BASE_INTERVAL to the data rate
 ## (WeaponData.fire_interval, the fastest it goes) while the cone widens by
-## up to TILT_SPREAD degrees, and the red TILT dome lights. Resting the
+## up to TILT_SPREAD degrees, and the red TILT lamp lights. Resting the
 ## trigger for REST_RESET clears it, so short bursts stay accurate.
 ##
 ## Tokens glance off heavies and alphas (HEAVY_SCALE): it picks off the rank
@@ -20,7 +20,7 @@ extends WeaponMode
 ## scripts/weapons/views/coin_op_view.gd (reads tilt, credits, since_payout).
 
 ## Seconds between tokens before the tilt (12 a second).
-const BASE_INTERVAL := 1.0 / 12.0
+const BASE_INTERVAL := 0.08333
 const TILT_DELAY := 1.0
 const TILT_RAMP := 0.6
 const TILT_SPREAD := 1.7
@@ -131,4 +131,4 @@ func _pay_out(enemy: Node3D, headshot: bool) -> void:
 	if view:
 		view.weapon_event(data, PAYOUT_EVENT)
 	if is_instance_valid(enemy) and enemy.is_inside_tree():
-		CoinOpPopup.spawn(enemy.get_parent(), enemy.global_position + Vector3.UP * 2.1, PAYOUT_ROUNDS, headshot)
+		CoinOpPopup.spawn(enemy.get_parent(), enemy.global_position + Vector3.UP * 1.2, PAYOUT_ROUNDS, headshot)

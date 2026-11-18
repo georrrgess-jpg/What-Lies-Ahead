@@ -4,8 +4,8 @@ extends RefCounted
 ## Token0 at the front goes first); when one leaves, the rest advance with a
 ## little ease, and every shot clicks the coin mech star wheel round a notch
 ## and throws a glint of brass from the chute. While the machine tilts
-## (CoinOpMode.tilt) the red TILT dome blinks faster and faster and the wheel
-## whirs on. The three CREDIT lamps show the kills banked toward the next
+## (CoinOpMode.tilt) the red TILT lamp blinks faster and faster, the wheel
+## whirs on and the cabinet rattles in the hands. The three CREDIT lamps show the kills banked toward the next
 ## Free Play token; a payout flashes them, kicks the coin-return flap open
 ## and spits brass out of the cup while the new tokens drop into the tube.
 ## The reload (coin_op_reload.gd) slaps the coin return and feeds a roll.
@@ -25,6 +25,10 @@ const FLAP_DEG := 70.0
 const FLAP_TIME := 0.35
 const FLASH_TIME := 0.6
 const DROP := 0.03
+## Tilt rattle of the whole cabinet at full tilt: roll (degrees), lift (model units), rate (rad/s).
+const RATTLE_ROLL := 0.9
+const RATTLE_LIFT := 0.0015
+const RATTLE_RATE := 52.0
 const BRASS := [Color(1.0, 0.79, 0.24), Color(1.0, 0.93, 0.62), Color(0.85, 0.54, 0.11)]
 const PAYOUT_SPARKS := [Color(1.0, 0.79, 0.24), Color(1.0, 0.93, 0.62), Color(1.0, 0.35, 0.82)]
 
@@ -45,6 +49,8 @@ var _whir := 0.0
 var _blink := 0.0
 var _since_payout := 10.0
 var _shots := 0
+var _clock := 0.0
+var _rattling := false
 
 
 func setup(v: WeaponView) -> void:
@@ -88,8 +94,10 @@ func update(v: WeaponView, delta: float) -> void:
 		_advance = 1.0
 		_drop = 1.0
 		_show_tilt(false)
+		_rattling = false
 		return
 	_pose_tokens(v, delta)
+	_rattle(v, mode, delta)
 	_pose_wheel(v, mode, delta)
 	_pose_tilt(mode, delta)
 	_pose_credits(mode)
@@ -156,7 +164,7 @@ func _pose_wheel(v: WeaponView, mode: CoinOpMode, delta: float) -> void:
 	_wheel.transform = v.rest_transform("Wheel") * Transform3D(Basis(Vector3.RIGHT, deg_to_rad(-angle)), Vector3.ZERO)
 
 
-## The TILT dome blinks from slow to frantic as the machine tilts.
+## The TILT lamp blinks from slow to frantic as the machine tilts.
 func _pose_tilt(mode: CoinOpMode, delta: float) -> void:
 	var tilt := mode.tilt if mode else 0.0
 	if tilt <= 0.0:
@@ -171,6 +179,21 @@ func _pose_tilt(mode: CoinOpMode, delta: float) -> void:
 func _show_tilt(on: bool) -> void:
 	if _tilt_glow:
 		_tilt_glow.visible = on
+
+
+## A tilted machine rattles in the hands (the root of the model).
+func _rattle(v: WeaponView, mode: CoinOpMode, delta: float) -> void:
+	var tilt := mode.tilt if mode else 0.0
+	if tilt <= 0.0:
+		if _rattling:
+			v.model.transform = v.rest_transform("Root")
+			_rattling = false
+		return
+	_rattling = true
+	_clock += delta
+	var roll := sin(_clock * RATTLE_RATE) * RATTLE_ROLL * tilt
+	var lift := sin(_clock * RATTLE_RATE * 1.37) * RATTLE_LIFT * tilt
+	v.model.transform = v.rest_transform("Root") * Transform3D(Basis(Vector3.FORWARD, deg_to_rad(roll)), Vector3(0.0, lift, 0.0))
 
 
 ## Lamps for the banked credits; a payout flashes all three.

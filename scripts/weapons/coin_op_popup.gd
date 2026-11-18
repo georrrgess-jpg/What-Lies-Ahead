@@ -2,9 +2,9 @@ class_name CoinOpPopup
 extends Node3D
 ## The Coin-Op's "FREE PLAY" popup over a zombie that paid out a bonus token
 ## (CoinOpMode): arcade letters that pop in, rise a little and fade, with
-## the rounds it gave back ("+4") under them; a headshot payout reads
-## "HEADSHOT +4". The same size on screen at any distance. Pooled, like
-## StrikeZoneBanner.
+## the rounds it gave back ("+4 TOKENS") under them, beside the zombie so
+## the kill popup over its head stays readable; a headshot payout is pink.
+## The same size on screen at any distance. Pooled, like StrikeZoneBanner.
 
 const LIFE := 0.8
 const FADE := 0.25
@@ -12,12 +12,15 @@ const RISE := 0.45
 const TITLE := Color(1.0, 0.82, 0.24)
 const SUB := Color(1.0, 0.42, 0.85)
 const OUTLINE := Color(0.12, 0.05, 0.24)
+## Pixels to the right of the zombie, so the kill popup over its head stays clear.
+const SIDE := 230.0
 
 static var _pool: Array = []
 
 var _title: Label3D
 var _sub: Label3D
 var _tween: Tween
+var _headshot := false
 
 
 ## Pops the popup at `at` under `parent` for `rounds` rounds given back.
@@ -39,11 +42,12 @@ static func spawn(parent: Node, at: Vector3, rounds: int, headshot: bool) -> voi
 
 
 func _init() -> void:
-	_title = _label(64, 0.0)
-	_sub = _label(44, -62.0)
+	_title = _label(56, Vector2(SIDE, 0.0))
+	_sub = _label(40, Vector2(SIDE, -54.0))
 
 
-func _label(font_size: int, drop: float) -> Label3D:
+## A label offset by `at` pixels from the popup's centre.
+func _label(font_size: int, at: Vector2) -> Label3D:
 	var l := Label3D.new()
 	l.font = UiKit.display_font()
 	l.font_size = font_size
@@ -54,7 +58,7 @@ func _label(font_size: int, drop: float) -> Label3D:
 	l.fixed_size = true
 	l.render_priority = 10
 	l.outline_render_priority = 9
-	l.offset = Vector2(0.0, drop)
+	l.offset = at
 	add_child(l)
 	return l
 
@@ -63,7 +67,8 @@ func _play(at: Vector3, rounds: int, headshot: bool) -> void:
 	visible = true
 	global_position = at
 	_title.text = "FREE PLAY!"
-	_sub.text = ("HEADSHOT  +%d" if headshot else "+%d") % rounds
+	_sub.text = "+%d TOKENS" % rounds
+	_headshot = headshot
 	_set_alpha(1.0)
 	_title.scale = Vector3.ONE * 1.8
 	_sub.scale = Vector3.ONE * 0.01
@@ -78,9 +83,9 @@ func _play(at: Vector3, rounds: int, headshot: bool) -> void:
 
 
 func _set_alpha(alpha: float) -> void:
-	_title.modulate = Color(TITLE, alpha)
+	_title.modulate = Color(SUB if _headshot else TITLE, alpha)
 	_title.outline_modulate = Color(OUTLINE, alpha)
-	_sub.modulate = Color(SUB, alpha)
+	_sub.modulate = Color(Color.WHITE, alpha)
 	_sub.outline_modulate = Color(OUTLINE, alpha)
 
 

@@ -1,8 +1,10 @@
 """First-person viewmodel of the Coin-Op (coin_op), the arcade token machine
 pistol: a cobalt mini arcade cabinet with a lit magenta marquee head at the
-back, a clear coin tube of brass tokens down its left flank (the magazine), a
-coin mech star wheel on the deck, a flat brass coin-chute muzzle, a red TILT
-dome and three CREDIT lamps, and a coin-return button and cup up front.
+back, an open coin tube of brass tokens along its top-left shoulder (the
+magazine, fed through an INSERT COIN slot at its back), a coin mech star
+wheel on the deck, a flat brass coin-chute muzzle, a score screen on the
+cabinet's back (the side the player sees) with a red TILT lamp and three
+CREDIT lamps, and a coin-return cup with a slap paddle under the nose.
 
 Same conventions and node contract as build_weapons.py (documented at the top
 of weapon_kit.py): origin at the top of the grip, pointing along +Y, its own
@@ -15,8 +17,8 @@ scripts/weapons/reloads/coin_op_reload.gd:
   Token0..14   the brass tokens standing in the coin tube, Token0 at the
                front (one per two rounds; the view hides the spent ones)
   Wheel        the coin mech star wheel (axle along X; a notch per shot)
-  Cell         the glowing lip of the INSERT COIN slot on the deck
-  TiltGlow     the lit TILT dome (shown while the gun is tilted)
+  Cell         the glowing lip of the INSERT COIN slot on the tube's back cap
+  TiltGlow     the lit TILT lamp on the back screen (shown while tilted)
   Credit0..2   the lit CREDIT lamps (kills toward the next Free Play token)
   ReturnButton the pink coin-return paddle under the cup (slapped in the reload)
   ReturnFlap   the coin-return cup's flap (pivot at its hinge)
@@ -129,7 +131,7 @@ def build_coin_op():
         # The coin return: a hood over the cup under the nose, and the button's bezel.
         box("ReturnHood", (0.05, 0.034, 0.014), (0, 0.18, -0.026), bevel=0.005, m=M["dark"]),
         box("ReturnCup", (0.044, 0.03, 0.012), (0, 0.18, -0.038), bevel=0.004, m=M["steel"]),
-        # The TILT dome's base on the head's left shoulder and the CREDIT lamp strip.
+        # The TILT lamp's bezel on the back screen.
         box("TiltBezel", (0.036, 0.004, 0.014), (0, -0.0925, 0.0895), bevel=0.0015, m=M["dark"]),
     ]
     # A chequered arcade band round the cabinet's waist.
