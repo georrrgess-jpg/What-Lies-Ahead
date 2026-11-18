@@ -235,9 +235,11 @@ func _process(delta: float) -> void:
 		_stage.update(_clock - shots[_index].start, delta)
 
 
+## The shot playing at `time`. Shot ends are summed floats (30.400000000000002),
+## so a time on a cut within a microsecond belongs to the next shot.
 func _shot_at(time: float) -> int:
 	for i in shots.size():
-		if time < shots[i].start + shots[i].length:
+		if time < shots[i].start + shots[i].length - 0.000001:
 			return i
 	return shots.size() - 1
 

@@ -69,7 +69,7 @@ const LUNGES := [
 	["neon_skyline", &"neon_punk", Vector3(5.0, 0, 6.5), 200.0],
 	["tidal_tunnels", &"jelly_head", Vector3(0.3, 0, 12.0), 0.0],
 	["launch_pad", &"dune_space_cadet", Vector3(2.0, 0, 5.0), 160.0],
-	["midnight_mall", &"mall_walker", Vector3(0.5, 0, 12.5), 0.0],
+	["midnight_mall", &"mall_walker", Vector3(-1.0, 0, 13.5), 0.0],
 ]
 ## Reloads, close up: the weapon reloading in the dark open, and the showcase cuts.
 const DARK_RELOAD := &"rail_lancer"
@@ -606,7 +606,7 @@ func _reload_tminus(st: CineStage) -> void:
 	var view := _viewmodel(st, &"t_minus_six", &"fin_treasure_map", GLOVES[0], &"", CLOSE_UP)
 	var eye := Vector3(0.0, 1.6, 21.5)
 	st.fov(38.0, 34.0)
-	_eye_track(st, eye, eye + Vector3(-0.2, -0.12, -1), eye + Vector3(-0.1, -0.05, -1), Vector3(0, 0, -0.1), 1.0)
+	_eye_track(st, eye, eye + Vector3(-0.35, -0.15, -1), eye + Vector3(0.05, -0.02, -1), Vector3(0.15, 0.05, -0.6), -1.3)
 	var d := GameData.weapon(&"t_minus_six").reload_time
 	_reload(st, view, &"t_minus_six", 0.0, d * 0.75, d * 0.25)
 	_lens_light(st, UiKit.CYAN, Vector3(0.15, -0.15, -0.45), func(t: float) -> float: return 0.8 + 1.5 * smoothstep(0.5, 0.75, t))
@@ -687,7 +687,7 @@ func _parade(st: CineStage) -> void:
 	st.lighting(1.1, 1.0, 1.3)
 	var zs := _pack(st, [&"mall_walker", &"mall_flinger", &"mall_walker"], Vector3(0, 0, 4.0), Vector3(0, 0, 14), 2.2, 0.8)
 	st.fov(44.0, 40.0)
-	st.dolly(Vector3(-4.0, 1.5, 11.0), Vector3(-1.5, 1.2, 4.0), Vector3(-1.0, 1.5, 11.5), Vector3(1.5, 1.2, 4.0), 1.0)
+	st.dolly(Vector3(-4.0, 1.5, 11.0), Vector3(-1.5, 1.2, 4.0), Vector3(-2.6, 1.6, 11.6), Vector3(1.0, 1.2, 4.0), 1.0)
 	var muzzle := Vector3(-6.0, 1.4, 12.0)
 	for i in 3:
 		st.at(0.06 + i * 0.2, func():
