@@ -17,8 +17,8 @@ drop's lead (doubled by the band-organ calliope), in major for the finale.
      6.0  IMPACT     sub boom, punch, metal, brass + choir stab; logo hold with
                      a ticking hat, a lift into
      8.0  15 worlds  the groove: taiko pattern, 16th hats, gallop bass, a whoosh
-                     into every cut (0.4 s grid) and a clang on it; strings from
-                     9.6, choir from 11.2, a roll into
+                     into every cut (0.4 s grid) and a clang on it; string
+                     ostinato growing, choir from 11.2, a roll into
     14.0  alphas     a heavy hit + brass/choir stab at 14.0 14.8 15.6 16.4 (Dm Bb
                      Gm A), pounding eighths, a snare roll into nothing
     17.2  cut-out    dead silence but a reversed choir swell
@@ -33,7 +33,7 @@ drop's lead (doubled by the band-organ calliope), in major for the finale.
     32.0  arsenal    a 16th pluck arp over Bb then C, a bell glint on every beat
     35.2  FINALE     the biggest hit, the full theme in D major (brass, lead,
                      choir, calliope), half-time drums, D | Bb C |
-    38.4  SLAM       the final slam on D major, ring-out with the music box
+    38.4  SLAM       the final slam on D major, ringing down under the music box
                      closing the motif; the picture fades at 41.6
 
 Mastered as a one-shot by write_music (names ending in _trailer): -14 LUFS,
@@ -233,7 +233,7 @@ def _brass_note(semis, seconds, bright=3200.0, attack=0.018, decay=0.3, sustain=
     dark = filt(raw, low=max(220.0, f * 1.6))
     opened = filt(raw, low=bright)
     x = dark + (opened - dark) * np.maximum(np.exp(-t / 0.14), 0.22)
-    return np.tanh(1.7 * x) * adsr(seconds, attack, decay, sustain, release)
+    return filt(np.tanh(1.7 * x), low=6000) * adsr(seconds, attack, decay, sustain, release)
 
 
 def _brass_chord(name_or_notes, seconds, **kw):
@@ -306,7 +306,7 @@ def _lead_note(semis, seconds, cutoff=3600.0):
     curve = f * 2 ** (0.15 * np.clip((t - 0.18) / 0.3, 0, 1) * np.sin(2 * np.pi * 5.6 * t) / 12)
     v = (bl_osc(curve * 2 ** (0.07 / 12), None, "saw") + bl_osc(curve * 2 ** (-0.07 / 12), None, "square", 0.32) * 0.6
          + bl_osc(curve, None, "sine") * 0.5)
-    return np.tanh(1.5 * filt(v, low=cutoff, slope=1.5)) * adsr(seconds, 0.008, 0.3, 0.8, 0.06)
+    return filt(np.tanh(1.5 * filt(v, low=cutoff, slope=1.5)), low=6000) * adsr(seconds, 0.008, 0.3, 0.8, 0.06)
 
 
 def _calliope(semis, seconds):
@@ -319,7 +319,7 @@ def _music_box(semis, seconds=1.0, wow=0.0, flat=0.0):
     t = t_axis(seconds)
     curve = _hz(semis + flat) * 2 ** (wow * np.sin(2 * np.pi * 3.1 * t + rng.uniform(0, 6.28)) / 12)
     partials = [(1, 1.0, 0.7), (2, 0.22, 0.25), (3.0, 0.08, 0.1), (4.2, 0.05, 0.05), (5.4, 0.025, 0.03)]
-    return additive(curve, None, partials) * adsr(seconds, 0.0015, seconds, 1.0, 0.05)
+    return additive(curve, None, [p for p in partials if _hz(semis) * p[0] < 4500]) * adsr(seconds, 0.0015, seconds, 1.0, 0.05)
 
 
 def _bell(semis, seconds=1.4):
@@ -360,7 +360,7 @@ def _snare(seconds=0.45):
 def _hat(seconds=0.05, tail=0.25):
     n = noise(seconds)
     x = band(n, 7400, 1500) * 0.7 + band(n, 5200, 1100) * 0.5
-    return x * adsr(seconds, 0.0006, seconds * tail, 0.0, 0.01) * 1.6
+    return x * adsr(seconds, 0.0006, seconds * tail, 0.0, 0.01) * 2.0
 
 
 def _tick(high=True):
@@ -373,7 +373,7 @@ def _crash(seconds=2.6):
     """A dark crash: band-limited, so it washes rather than hisses."""
     n = noise(seconds)
     x = filt(n, high=2400, low=7000) + band(n, 3900, 900) * 0.8
-    return x * adsr(seconds, 0.002, seconds * 0.3, 0.0, 0.4)
+    return x * adsr(seconds, 0.002, seconds * 0.3, 0.0, 0.4) * 1.4
 
 
 def _heart():
@@ -591,7 +591,7 @@ def _cold_open(m):
         if at > 4.6:
             break
         x = _music_box(s + 12, 1.6, wow=0.18, flat=-0.08 * i - rng.uniform(0, 0.12))
-        m.add("music", filt(x, low=3200), at, 0.16 * (1.0 - 0.08 * max(0, i - 4)), 0.62, hall=0.9)
+        m.add("music", x, at, 0.16 * (1.0 - 0.08 * max(0, i - 4)), 0.62, hall=0.9)
     # The heartbeat on the beats, doubling over the flashes.
     hb = _heart()
     for b in range(4):
@@ -649,8 +649,8 @@ GALLOP = (0, 2, 3)     # bass: "dum da-da" on every beat
 
 def _world_groove(m, kicks):
     """8.0-14.0: the 15-world montage. Toms, 16th hats, the gallop bass, a
-    whoosh into every cut (one per beat) and an accent on it; strings from
-    9.6, the choir from 11.2, building into the alphas."""
+    whoosh into every cut (one per beat) and an accent on it; a string
+    ostinato growing bar by bar, the choir from 11.2, building into the alphas."""
     order = ["Dm", "Bb", "F", "C"]
     for bar in range(4):
         t0 = GROOVE + bar * BAR
@@ -671,20 +671,20 @@ def _world_groove(m, kicks):
             if s in GALLOP:
                 semis = root + (12 if b == 3 and s == 0 else 0)
                 m.add("bass", _bass(semis, 0.19 if s == 0 else 0.09, 900 + 200 * bar, grit=0.15), at, 0.5)
-            if bar >= 1 and step % 2 == 0:
+            if step % 2 == 0:
                 tones = _voicing(name, "pad")[1:]
-                m.add("music", _strings(tones[(step // 2) % 3] + 12 * (step // 2 % 2), 0.19), at, 0.1 + 0.02 * bar,
-                      0.25 if step % 4 else 0.75, room=0.4)
-        m.add("music", _spad(name, BAR + 0.4, 1100 + 250 * bar, 0.2, 0.4), t0, 0.12, hall=0.2)
+                m.add("music", _strings(tones[(step // 2) % 3] + 12 * (step // 2 % 2), 0.19), at, 0.13 + 0.04 * bar,
+                      0.15 if step % 4 else 0.85, room=0.4)
+        m.add("music", _spad(name, BAR + 0.4, 1100 + 250 * bar, 0.2, 0.4), t0, 0.16, hall=0.2)
         if bar >= 2:
             cl, cr = _choir(name, BAR + 0.3, attack=0.25, release=0.3)
-            m.add2("music", cl, cr, t0, 0.16 + 0.05 * (bar - 2), hall=0.5)
+            m.add2("music", cl, cr, t0, 0.24 + 0.06 * (bar - 2), hall=0.5)
     # The cuts: a whoosh into each and an accent on it (alternating directions).
     for k in range(15):
         at = GROOVE + k * BEAT
         m.add("fx", _whoosh(0.28, 0.15), at - 0.28, 0.14 + 0.006 * k, 0.25 if k % 2 else 0.75)
         m.add("hits", _metal(196.0 if k % 2 else 165.0, 0.6, 0.18), at, 0.035 + 0.002 * k, 0.4 if k % 2 else 0.6, hall=0.4)
-    m.add("hits", _impact(0.6), GROOVE, 0.75, hall=0.25)
+    m.add("hits", _impact(0.7), GROOVE, 0.85, hall=0.3)
     m.add("drums", _crash(2.4), GROOVE, 0.12, 0.45, hall=0.2)
     # The run-up into the alphas: a riser, a taiko roll and a reversed crash.
     m.add("fx", _riser(1.6, -14, 2.0), 12.4, 0.24, 0.5, hall=0.2)
@@ -719,7 +719,7 @@ def _alphas(m, kicks):
     for k in range(8):
         m.add("drums", _snare(0.2), 16.8 + k * 0.05, 0.12 + 0.03 * k, 0.4 + 0.03 * k, room=0.3)
     m.add("fx", _riser(0.8, -12, 1.0), 16.4, 0.18, 0.5)
-    m.add("breath", _reverse_swell("Dm", DROP - CUT), CUT, 0.8)
+    m.add("breath", _reverse_swell("Dm", DROP - CUT), CUT, 0.6)
 
 
 def _drop(m, kicks):
@@ -754,9 +754,9 @@ def _drop(m, kicks):
                 m.add("bass", _bass(semis, 0.19 if s == 0 else 0.09, 1500, drive=2.2, grit=0.55), at, 0.55)
         # Pads and choir under the chord, a brass stab on the downbeat.
         chord = name if bar < 5 else "Bb"
-        m.add("music", _spad(chord, BAR + 0.4 if bar < 5 else BAR / 2 + 0.3, 1800, 0.05, 0.3), t0, 0.14, hall=0.25)
+        m.add("music", _spad(chord, BAR + 0.4 if bar < 5 else BAR / 2 + 0.3, 1800, 0.05, 0.3), t0, 0.2, hall=0.25)
         cl, cr = _choir(chord, BAR if bar < 5 else BAR / 2, attack=0.08, release=0.3)
-        m.add2("music", cl, cr, t0, 0.15, hall=0.4)
+        m.add2("music", cl, cr, t0, 0.22, hall=0.4)
         if bar == 5:
             m.add("music", _spad("A", BAR / 2 + 0.3, 1800, 0.05, 0.3), t0 + BAR / 2, 0.14, hall=0.25)
             cl, cr = _choir("A", BAR / 2, attack=0.08, release=0.3)
@@ -768,7 +768,7 @@ def _drop(m, kicks):
         for semis, beat, beats in DROP_LEAD[bar]:
             at = t0 + beat * BEAT
             ln = beats * BEAT * 0.96
-            m.add("lead", _lead_note(semis, ln + 0.05), at, 0.3, 0.5, room=0.45)
+            m.add("lead", _lead_note(semis, ln + 0.05), at, 0.27, 0.5, room=0.45)
             m.add("lead", _calliope(semis + 12, ln), at, 0.075, 0.62, room=0.5)
     m.add("hits", _impact(1.0), DROP, 0.95, hall=0.35)
     m.add("music", _brass_chord("Dm", 0.9, attack=0.008, decay=0.3, sustain=0.35, release=0.3), DROP, 0.25, hall=0.4)
@@ -809,7 +809,7 @@ def _endless(m, kicks):
         # The choir climbs: the top line a step a beat over D and A held below.
         voices = [-19, -12, top[b] - 9 if b < 4 else top[b] - 8, top[b]]
         cl, cr = _choir(voices, BEAT + 0.25, attack=0.06, release=0.22)
-        m.add2("music", cl, cr, at, 0.2 + 0.03 * b, hall=0.5)
+        m.add2("music", cl, cr, at, 0.28 + 0.04 * b, hall=0.5)
     m.add("music", _tremolo([-31, -19, -12, -7], 3.2, cutoff=2600), ENDLESS, 0.12, hall=0.3)
     for k in range(16):
         t = ENDLESS + 4 * BEAT + k * STEP * (1.0 if k < 8 else 1.0)
@@ -900,7 +900,7 @@ def _finale(m, kicks):
         for s in range(4):
             m.add("drums", _hat(0.045), at + s * STEP, 0.04 if s == 2 else 0.026, 0.68)
     for k in range(8):
-        m.add("drums", _taiko(150 - 11 * k, 0.5, 0.12), SLAM - 0.8 + k * STEP, 0.3 + 0.05 * k, 0.75 - 0.06 * k, room=0.4)
+        m.add("drums", _taiko(150 - 11 * k, 0.5, 0.12), SLAM - 0.8 + k * STEP, 0.26 + 0.03 * k, 0.75 - 0.06 * k, room=0.4)
     # The theme: brass section and choir on the motif, the calliope an octave up.
     for semis, beat, beats in FINALE_LEAD:
         at = FINALE + beat * BEAT
@@ -921,16 +921,16 @@ def _finale(m, kicks):
     m.add("bass", _bass(-31, 2.2, 600) * np.exp(-t_axis(2.2) / 0.9), SLAM, 0.5)
     # The music box closes the motif in major over the logo.
     for i, (s, b, ln) in enumerate(HOOK_MAJOR + [(5, 4, 2.0)]):
-        m.add("music", filt(_music_box(s + 12, 1.8), low=3600), 39.2 + b * BEAT, 0.13, 0.62, hall=0.9)
+        m.add("music", _music_box(s + 12, 1.8), 39.2 + b * BEAT, 0.2, 0.62, hall=0.9)
 
 
 # The arranger's fader (seconds, dB): the cold open far under the rest, the
 # logo hold settling, the montage building, a dip for the slow-mo, the
 # finale on top. Changes at a hit land in the 5 ms before it.
-FADER = ((0.0, -10.0), (4.8, -5.0), (5.995, -5.0), (6.0, 0.0), (7.0, -2.0), (7.995, -2.0), (8.0, -2.0),
+FADER = ((0.0, -10.0), (4.8, -5.0), (5.995, -5.0), (6.0, 0.0), (7.0, -2.0), (7.995, -1.0), (8.0, -1.0),
          (13.99, 0.0), (14.0, -0.5), (17.595, -0.5), (17.6, 0.5), (21.995, 0.5), (22.06, -5.0), (22.4, -5.0),
          (22.8, 0.5), (27.195, 0.5), (27.2, 0.0), (30.395, 2.0), (30.4, 0.5), (31.995, -0.5), (32.0, 0.0),
-         (35.195, 0.0), (35.2, 2.5), (TOTAL + 4.0, 2.5))
+         (35.195, 0.0), (35.2, 2.5), (38.4, 2.5), (39.4, 0.5), (41.6, -5.0), (TOTAL + 4.0, -8.0))
 
 
 def _slowmo_cutoff(t):
@@ -974,9 +974,9 @@ def showreel_trailer():
     ft, fdb = zip(*FADER)
     mix = mix * (10 ** (np.interp(np.arange(n) / SR, ft, fdb) / 20))[:, None]
     mix = mix * _gate(n, ((4.8, IMPACT), (CUT, DROP)))[:, None] + m.bus["breath"]
-    # Keep the low end in the middle: the side channel is high-passed at 140 Hz.
+    # Keep the low end in the middle (the side channel is high-passed at 140 Hz) and open up the rest.
     mid, side = (mix[:, 0] + mix[:, 1]) * 0.5, (mix[:, 0] - mix[:, 1]) * 0.5
-    side = filt(side, high=140)
+    side = filt(side, high=140) * 1.4
     mix = np.stack([mid + side, mid - side], axis=1)
     # Voicing: a little less 200-400 Hz mud, a touch of presence, the air kept gentle.
     mix = eq(mix, bells=((50.0, -4.0, 0.7), (300.0, -2.0, 0.8), (1600.0, 2.0, 0.6), (3000.0, 1.5, 0.7), (9000.0, 0.0, 0.6)), shelf=(4500.0, 3.0))
