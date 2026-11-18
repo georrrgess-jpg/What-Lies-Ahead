@@ -362,7 +362,8 @@ func _build_ghost_train() -> void:
 	var walls := _player_walls()
 	_player_wall(walls, "MouthGate", Vector3(-MOUTH_HALF, 0, FACADE_Z + 2.2), Vector3(MOUTH_HALF, 0, FACADE_Z + 2.2), PLAYER_WALL_H)
 	_player_block(gt, "SkullCap", Vector3(31.0, 6.0, 8.0), Vector3(0, 10.5, FACADE_Z - 3.0))
-	_omni(gt, "MouthGlow", Vector3(0, 2.2, FACADE_Z - 1.0), Color(0.45, 1.0, 0.4), 2.2, 9.0)
+	var mouth := _omni(gt, "MouthGlow", Vector3(0, 2.2, FACADE_Z - 1.0), Color(0.45, 1.0, 0.4), 2.2, 9.0)
+	_late(mouth, "res://scripts/props/city_flicker_light.gd", {"mode": "neon"})
 	_omni(gt, "EyeGlow", Vector3(0, 7.0, FACADE_Z + 1.0), Color(0.45, 1.0, 0.4), 1.4, 10.0)
 	# Boarding platforms either side of the skull, stairs down at the front.
 	var boards := _textured("boards", "fright_boards", 0.35, 0.85)
@@ -694,7 +695,8 @@ func _build_graveyard() -> void:
 	for s: float in [-1.0, 1.0]:
 		_post(g, "CryptColumn%d" % int(s), 0.24, 3.8, CRYPT + Vector3(s * 1.45, 0.28, -2.4))
 	_player_wall(_player_walls(), "CryptGate", CRYPT + Vector3(-1.9, 0.28, -2.6), CRYPT + Vector3(1.9, 0.28, -2.6), PLAYER_WALL_H)
-	_omni(g, "CryptGlow", CRYPT + Vector3(0, 2.0, -3.0), Color(0.45, 1.0, 0.45), 1.6, 8.0)
+	var crypt := _omni(g, "CryptGlow", CRYPT + Vector3(0, 2.0, -3.0), Color(0.45, 1.0, 0.45), 1.6, 8.0)
+	_late(crypt, "res://scripts/props/city_flicker_light.gd", {"mode": "neon"})
 	_omni(g, "YardGlow", Vector3(19.0, 2.5, 17.0), Color(0.5, 0.9, 0.7), 0.9, 11.0)
 	# Mist over the graves.
 	var mist := ShaderMaterial.new()
