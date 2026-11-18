@@ -97,7 +97,8 @@ among the picks. An item is in the shop when its
 `CosmeticItem.price` is above 0; it is owned once bought. A `requirement` on a priced
 item only gates the purchase (sights that open at a mastery rank).
 
-For sale (239 items, 376,500 Sparks, sights included and Madame Fortuna's 20,000; 206 items
+For sale (262 items, 405,750 Sparks, sights included and Madame Fortuna's 20,000; 239 items and
+376,500 Sparks before the update 16 skins; 206 items
 and 315,000 Sparks before the update 13 cosmetics and the Mythic operator; 277,350 before the
 price rule):
 the original 69 plus 31 new weapon finishes,
@@ -123,6 +124,23 @@ styles 8-10):
 | Clockwork (finish) | Legendary | 17,500 lifetime kills |
 | Hot Rod (finish) | Epic | Shop: 2,500 |
 | Holo Tiger (finish) | Epic | Shop: 2,000 |
+
+**Update 16 skins** (19 weapon finishes and 4 gloves; the finishes are in `data/cosmetics/finishes`,
+all `weapon_finish`; the world patterns live in `art/shaders/finish_world.gdshader`, the animated
+showpieces each have their own `finish_*.gdshader`). 23 items are for sale (29,250 Sparks):
+
+| Item | Rarity | How |
+| --- | --- | --- |
+| Tooled Leather, Sailcloth, Chainmail, Building Blocks, Glow Bones (world finishes) | Rare | Shop: 750 |
+| Motherlode, Sunken Doubloons, Quartered Arms (world finishes) | Epic | Shop: 2,000 |
+| Tin Robot, Jack-o'-Lantern (world finishes, animated) | Epic | Shop: 2,500 |
+| Amber Mosaic, Boiler Plate, Berry Tartan, Sunset Tiger (finishes) | Rare | Shop: 750 |
+| Confetti Pop, Picnic Gingham, Mint Candy (finishes) | Common | Shop: 250 |
+| Sheriff's Gauntlets, Deckhand Wraps, Knight's Mail, Brick Mitts (gloves) | Rare | Shop: 750 |
+| Treasure Map (finish that draws itself) | Legendary | Shop: 4,250 |
+| Ghost Train (finish, rushing carriage windows) | Legendary | Shop: 3,500 |
+| Jackpot (finish, slot-machine reels) | Legendary | 25,000 lifetime kills |
+| Multiball (finish, pinball playfield) | Legendary | Endless wave 30 |
 
 **Featured.** Four items a day are 20% off (`featured_count`, `featured_discount`).
 On the 250 rule a 20% cut is always a round number: 200, 600, 1,200, 2,400, and 2,600 to

@@ -10,7 +10,7 @@ uniform vec3 shell_color : source_color = vec3(0.91, 0.82, 0.58);
 uniform vec3 trim_color : source_color = vec3(0.3, 0.17, 0.09);
 uniform bool is_trim = false;
 uniform vec3 ink_color : source_color = vec3(0.25, 0.14, 0.07);
-uniform vec3 sea_color : source_color = vec3(0.45, 0.66, 0.62);
+uniform vec3 sea_color : source_color = vec3(0.3, 0.6, 0.68);
 uniform vec3 mark_color : source_color = vec3(0.85, 0.12, 0.1);
 uniform float panel = 0.1;
 uniform float cycle = 11.0;
@@ -75,13 +75,13 @@ void fragment() {
 	vec2 c = vec2(0.5 + (seed - 0.5) * 0.2, 0.0);
 	float shape = length((q - c) * vec2(0.9, 1.25)) - 0.27 - (ffbm2(q * 5.0 + seed * 20.0) - 0.5) * 0.45;
 	float land = smoothstep(0.02, -0.02, shape);
-	float coast = smoothstep(0.022, 0.0, abs(shape)) * ink_on;
+	float coast = smoothstep(0.03, 0.0, abs(shape)) * ink_on;
 	float sea = smoothstep(0.1, -0.06, -shape) * (1.0 - land) * 0.0 + smoothstep(0.4, 0.0, shape) * (1.0 - land);
 	// Contour ripples round the coast, as on an old chart.
 	float ripple = smoothstep(0.1, 0.0, abs(fract(shape * 11.0) - 0.5) * 2.0 - 0.8) * step(0.03, shape) * step(shape, 0.3) * (1.0 - land);
-	vec3 col = mix(paper, mix(paper, sea_color, 0.6), sea * sketch);
+	vec3 col = mix(paper, mix(paper, sea_color, 0.75), sea * sketch * fade);
 	col = mix(col, paper * 1.06, land * sketch * 0.5);
-	col = mix(col, ink_color, max(coast * 0.95, ripple * 0.4 * ink_on));
+	col = mix(col, ink_color, max(coast, ripple * 0.5 * ink_on));
 	// Little hatching on the land: a mountain range.
 	float hill = smoothstep(0.012, 0.0, abs(fract((q.x + q.y * 0.5) * 22.0) - 0.5) * 0.045 - 0.006) * land * ink_on * 0.2;
 	col = mix(col, ink_color, hill);
@@ -99,8 +99,8 @@ void fragment() {
 
 	// The X at the end of the route: two inked bars, pulsing once the route lands.
 	vec2 xp = q - vec2(0.9, route_y(0.9, seed));
-	float arm = min(seg_dist(xp, vec2(-0.075, -0.075), vec2(0.075, 0.075)), seg_dist(xp, vec2(-0.075, 0.075), vec2(0.075, -0.075)));
-	float xmark = smoothstep(0.032, 0.02, arm) * smoothstep(0.96, 1.0, route_t) * fade;
+	float arm = min(seg_dist(xp, vec2(-0.12, -0.12), vec2(0.12, 0.12)), seg_dist(xp, vec2(-0.12, 0.12), vec2(0.12, -0.12)));
+	float xmark = smoothstep(0.045, 0.03, arm) * smoothstep(0.96, 1.0, route_t) * fade;
 	float pulse = 0.5 + 0.5 * sin(TIME * 7.0);
 	float xglow = smoothstep(0.1, 0.0, arm) * smoothstep(0.96, 1.0, route_t) * fade;
 	col = mix(col, mark_color, xmark);
