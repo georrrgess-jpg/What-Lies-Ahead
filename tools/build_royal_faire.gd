@@ -110,6 +110,10 @@ func _initialize() -> void:
 	_build_markers()
 	_finish_bunting()
 	_finish_scatter()
+	var dresser := Node.new()
+	dresser.name = "FaireDresser"
+	level.add_child(dresser)
+	_late(dresser, "res://scripts/props/faire_dresser.gd", {})
 	var volley := Node3D.new()
 	volley.name = "CatapultVolley"
 	level.add_child(volley)
@@ -1243,49 +1247,30 @@ func _stone_trim() -> StandardMaterial3D:
 	return _mat("stone_trim", Color(0.8, 0.78, 0.82), 0.8)
 
 
-## Swaps every "FaireStone" surface under `node` for the block-textured stone.
+## Castle stone for an instanced model: the level's FaireDresser swaps its
+## "FaireStone" surfaces for the block-textured stone at load. A MultiMesh
+## row takes the stone as its override.
 func _restone(node: Node) -> void:
-	_override_surfaces(node, "FaireStone", _stone())
+	if node is MultiMeshInstance3D:
+		(node as MultiMeshInstance3D).material_override = _stone()
+	else:
+		_dress(node, "FaireStone", "stone")
 
 
-## Recolours every surface named `material_name` under `node`.
+## Recolours every surface named `material_name` of an instanced model (at load).
 func _recolour(node: Node, material_name: String, color: Color) -> void:
-	_override_surfaces(node, material_name, _mat("%s_%s" % [material_name, color.to_html(false)], color, 0.6))
+	_dress(node, material_name, color)
 
 
-func _override_surfaces(node: Node, material_name: String, material: Material) -> void:
-	if node is MeshInstance3D:
-		var mi := node as MeshInstance3D
-		for i in mi.mesh.get_surface_count():
-			var m := mi.mesh.surface_get_material(i)
-			if m and m.resource_name == material_name:
-				mi.set_surface_override_material(i, material)
-	elif node is MultiMeshInstance3D:
-		var mmi := node as MultiMeshInstance3D
-		var mesh := mmi.multimesh.mesh
-		for i in mesh.get_surface_count():
-			var m := mesh.surface_get_material(i)
-			if m and m.resource_name == material_name:
-				var copy: Mesh = _mesh_with(mesh, material_name, material)
-				mmi.multimesh.mesh = copy
-				break
-	for child in node.get_children():
-		_override_surfaces(child, material_name, material)
-
-
-## A copy of `mesh` with every `material_name` surface set to `material`
-## (MultiMeshes have no per-surface override), cached per mesh.
-func _mesh_with(mesh: Mesh, material_name: String, material: Material) -> Mesh:
-	var key := "%d|%s" % [mesh.get_instance_id(), material_name]
-	if _mesh_cache.has(key):
-		return _mesh_cache[key]
-	var copy: Mesh = mesh.duplicate()
-	for i in copy.get_surface_count():
-		var m := copy.surface_get_material(i)
-		if m and m.resource_name == material_name:
-			copy.surface_set_material(i, material)
-	_mesh_cache[key] = copy
-	return copy
+## Marks an instanced model for scripts/props/faire_dresser.gd: overrides on
+## the children of an instanced scene do not save with the level, so the
+## wish (a surface name to "stone" or a colour, or "range" to a draw distance)
+## is stored on the instance and applied once at load.
+func _dress(node: Node, key: String, value: Variant) -> void:
+	var wishes: Dictionary = node.get_meta(&"faire_dress", {})
+	wishes[key] = value
+	node.set_meta(&"faire_dress", wishes)
+	node.add_to_group(&"faire_dress", true)
 
 
 func _model_mesh(model: String) -> Mesh:
@@ -1541,17 +1526,14 @@ func _solid_prop(parent: Node3D, model: String, prop_name: String, pos: Vector3,
 	return node
 
 
-## The mesh of art/models/<model>.glb as the level's own MeshInstance3D (so
-## surface recolours save with the scene), or a grey stand-in box if missing.
+## Instances art/models/<model>.glb, or a grey stand-in box if it is missing.
 func _prop(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw_degrees: float, placeholder_size: Vector3) -> Node3D:
 	var path := MODELS + model + ".glb"
 	var node: Node3D
 	if ResourceLoader.exists(path):
-		var mi := MeshInstance3D.new()
-		mi.mesh = _model_mesh(model)
+		node = (load(path) as PackedScene).instantiate()
 		if model in SMALL_PROPS:
-			mi.visibility_range_end = SMALL_RANGE
-		node = mi
+			_dress(node, "range", SMALL_RANGE)
 	else:
 		var mi := MeshInstance3D.new()
 		mi.mesh = _box_mesh(placeholder_size, _mat("placeholder", Color(0.75, 0.72, 0.8), 0.8))
