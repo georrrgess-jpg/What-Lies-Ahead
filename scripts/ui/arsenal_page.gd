@@ -40,6 +40,8 @@ const LAMP_AT := Vector3(-0.42, 0.57, -0.3)
 const FIT := Vector2(0.92, 0.38)
 ## Width of the signboard.
 const BOARD_WIDTH := 640.0
+## Longest role summary (characters) that fits the board's two lines.
+const ROLE_CHARS := 96
 ## The weapon's lowest point rests this far above the turntable (just touching).
 const REST_GAP := 0.002
 ## A fork needs this much height over the turntable for its yoke and collar;
@@ -700,7 +702,7 @@ func _select(w: WeaponData) -> void:
 	var tags := _trait_tags(w)
 	_chip.set_text("%s  ·  %s" % [tags[0] if not tags.is_empty() else w.category.to_upper(), UiKit.rank_name(rank, w.max_rank())])
 	_chip.set_color(w.tracer_color.lerp(Color.WHITE, 0.25))
-	_role.text = w.role.get_slice(".", 0)
+	_role.text = _summary(w.role)
 	_role.tooltip_text = w.role
 	_fill_traits(tags, w)
 	for i in STATS.size():
@@ -717,6 +719,15 @@ func _select(w: WeaponData) -> void:
 		_screen_material.set_shader_parameter("thumb", _thumb_textures[w.id])
 	if changed and is_visible_in_tree():
 		UiFx.pop_in(_name, 0.0, 0.9)
+
+
+## The role's first sentence for the two-line summary, cut at a word with an
+## ellipsis when it is longer than the board can show (the tooltip has it all).
+static func _summary(role: String) -> String:
+	var first := role.get_slice(".", 0)
+	if first.length() <= ROLE_CHARS:
+		return first
+	return first.left(ROLE_CHARS).rsplit(" ", true, 1)[0] + "…"
 
 
 ## Up from any card in the tray reaches EQUIP (when shown) and down from it
