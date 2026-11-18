@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_fright_pumpkin"
+display_name = "Jack-o'-Lantern"
+description = "A ribbed pumpkin carved into grinning faces with a candle flickering inside every one. The glow is warmest in the dark."
+slot = &"weapon_finish"
+rarity = 2
+price = 2500
+colors = PackedColorArray(0.9412, 0.4471, 0.1020, 1, 0.2980, 0.3529, 0.1098, 1)
+params = {
+"shader": "res://art/shaders/finish_world.gdshader",
+"shader_params": {
+"pattern": 9,
+"color_b": Color(0.5412, 0.1843, 0.0314, 1),
+"color_c": Color(1.0000, 0.8314, 0.2902, 1)
+}
+}
+sort_order = 2419

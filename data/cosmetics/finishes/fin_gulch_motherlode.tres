@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_gulch_motherlode"
+display_name = "Motherlode"
+description = "Black rock cracked open on the motherlode: seams of white quartz, threads of gold, and fat nuggets that wink as you turn the weapon. Dark iron trim."
+slot = &"weapon_finish"
+rarity = 2
+price = 2000
+colors = PackedColorArray(0.1843, 0.1647, 0.1725, 1, 0.1255, 0.1098, 0.1176, 1)
+params = {
+"shader": "res://art/shaders/finish_world.gdshader",
+"shader_params": {
+"pattern": 1,
+"color_b": Color(0.9098, 0.8863, 0.8471, 1),
+"color_c": Color(1.0000, 0.7843, 0.2392, 1)
+}
+}
+sort_order = 2411
