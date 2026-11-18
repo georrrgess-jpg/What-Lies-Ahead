@@ -431,6 +431,18 @@ func card(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 0.8, acc
 	return col
 
 
+## Draws every letter of the display face once at each of `sizes` (sign and
+## arcade lettering) under the black of the warm-up, so the first card at a
+## new size does not rasterise its glyphs on its cut. Gone at the first cut.
+func warm_type(sizes: PackedInt32Array) -> void:
+	var glyphs := "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 !?·:,.'-&"
+	for size in sizes:
+		_text_layer.add_child(UiKit.sign_label(glyphs, size))
+		_text_layer.add_child(UiKit.arcade_label(glyphs, size))
+	for size in [UiKit.SIZE_SMALL, UiKit.SIZE_BODY, UiKit.SIZE_LABEL, UiKit.SIZE_HEADING]:
+		_text_layer.add_child(UiKit.label(glyphs, size, Color.WHITE, true))
+
+
 ## A small tag low on the left for a fast cut (a world, a weapon): a bright
 ## kicker over a name, sliding in from the edge in 0.1 s. Gone at the cut.
 func tag(kicker: String, title: String, accent := UiKit.CYAN) -> Control:

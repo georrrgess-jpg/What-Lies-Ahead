@@ -134,6 +134,13 @@ const BUILT_AHEAD: Array[String] = ["dark_reload", "lunge_0", "lunge_1", "lunge_
 	"ads", "cryo", "lobber", "coin_op", "parade", "city_wide", "city_street", "last_ride", "arsenal", "operators",
 	"prints", "finale", "title_end"]
 
+## Sets loaded behind the black before the first shot (CinePlayer.early_sets):
+## Ashfall City's set-up took a 90 ms frame when it loaded mid-reel.
+const EARLY_SETS: PackedStringArray = ["endless_city"]
+## Sizes of the cards, stamps and counters (their glyphs are drawn once
+## behind the black, so no card rasterises them on its cut).
+const TYPE_SIZES: PackedInt32Array = [84, 96, 104, 110, 120, 160, 170]
+
 ## The low sun over the sea behind the Ferris wheel (Prize Pier), for flares.
 const PIER_SUN := Vector3(-120, 9, -70)
 const SUN_COLOR := Color(1.0, 0.62, 0.38)
