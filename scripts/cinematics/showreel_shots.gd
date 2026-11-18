@@ -474,7 +474,8 @@ func _ripper(st: CineStage) -> void:
 	var view := _viewmodel(st, &"ticket_ripper", &"fin_jackpot", GLOVES[0])
 	st.fov(64.0)
 	st.track(func(k: float) -> Transform3D:
-		var a := deg_to_rad(lerpf(-34.0, 30.0, ease(clampf(k * 1.4, 0.0, 1.0), -1.4)))
+		# Mostly an eased sweep, with a steady drift so it never stops.
+		var a := deg_to_rad(lerpf(-34.0, 30.0, 0.8 * ease(clampf(k * 1.4, 0.0, 1.0), -1.4) + 0.2 * k))
 		var look := eye + Vector3(-cos(a), -0.06, sin(a))
 		return Transform3D(Basis.looking_at(look - eye), eye))
 	# Fifteen a second along the pack; three drop, then the winner.
@@ -802,12 +803,16 @@ func _arsenal(st: CineStage) -> void:
 		for i in pivots.size():
 			pivots[i].visible = i == k
 		pivots[k].rotation.y = deg_to_rad(-70.0 + t * 60.0))
+	var shown: Array[Control] = []
 	for i in ARSENAL.size():
 		st.at(i * step + 0.01, func():
 			if i > 0:
 				st.overlay.flash(Color.WHITE, 0.1, 0.25)
-			st.overlay.clear_text()
-			st.overlay.tag("%d weapons" % GameData.weapons().size(), _cosmetic_name(ARSENAL_FINISHES[i]), _rarity_color(ARSENAL_FINISHES[i])))
+			for old in shown:
+				if is_instance_valid(old):
+					old.queue_free()
+			shown.clear()
+			shown.append(st.overlay.tag("%d weapons" % GameData.weapons().size(), _cosmetic_name(ARSENAL_FINISHES[i]), _rarity_color(ARSENAL_FINISHES[i]))))
 	st.at(0.05, func(): st.overlay.stamp("Make it yours", "", Vector2(0.5, 0.2), 1.4, UiKit.AMBER, 88))
 	st.focus_on(func(): return Vector3(0, 1.3, 0), 0.35, 0.006)
 
