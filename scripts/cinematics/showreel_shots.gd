@@ -38,7 +38,7 @@ const WORLDS := [
 		[&"dune_space_cadet", &"dune_hazmat_worker", &"dune_jet_mechanic"], Vector3.ZERO],
 	["summit_lodge", Vector3(23.5, 2.6, 19.5), Vector3(-4, 5, -12), Vector3(20.5, 2.0, 16.0), Vector3(-4, 5.5, -12),
 		[&"frost_ski_racer", &"frost_yeti", &"frost_frozen_tourist"], Vector3(16.0, 0, 11.0)],
-	["midnight_mall", Vector3(-7.4, 3.6, 14.8), Vector3(0, 3.2, -9), Vector3(-6.5, 3.0, 11.5), Vector3(0, 3.0, -10),
+	["midnight_mall", Vector3(-4.8, 3.4, 14.8), Vector3(1, 3.2, -9), Vector3(-4.2, 2.9, 11.5), Vector3(1, 3.0, -10),
 		[&"mall_walker", &"mall_flinger", &"mall_walker"], Vector3(-4.0, 0, 3.4)],
 	["lost_temple", Vector3(7.0, 1.6, 15.0), Vector3(0, 7.0, -24), Vector3(6.5, 3.2, 10.5), Vector3(0, 8.0, -25),
 		[&"jungle_explorer", &"jungle_overgrown", &"jungle_explorer"], Vector3.ZERO],
@@ -703,7 +703,7 @@ func _showcase(st: CineStage, index: int) -> void:
 	var view := _dressed_view(st, weapon_id, spec[1], GLOVES[index % 2])
 	var eye: Vector3 = spec[3]
 	var look: Vector3 = spec[4]
-	_eye_track(st, eye, look, look + Vector3(0, 0.1, 0), (look - eye).normalized() * 0.04, 1.0)
+	_eye_track(st, eye, look, look + Vector3(0.3, 0.15, 0), (look - eye).normalized() * 0.12, 1.0)
 	# The gun's hip position in the lens's space (metres).
 	var pivot := w.view_position * WeaponView.VIEW_SCALE
 	st.after_camera(func(t: float):
