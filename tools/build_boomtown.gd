@@ -467,7 +467,7 @@ func _build_edges() -> void:
 	_solid_prop(e, "gulch_hay", "CorralHay", Vector3(26.5, 0, 6.0), 30.0, Vector3(1.6, 1.6, 1.0))
 	_solid_prop(e, "gulch_wagon", "CorralWagon", Vector3(25.5, 0, 15.0), 10.0, Vector3(2.0, 3.0, 4.4))
 	_solid_prop(e, "gulch_hay", "BackLaneHay", Vector3(-23.5, 0, -24.0), 80.0, Vector3(1.6, 1.6, 1.0))
-	_solid_prop(e, "gulch_barrels", "BackLaneBarrels", Vector3(-21.0, 0, 18.0), 120.0, Vector3(1.6, 1.8, 1.0))
+	_solid_prop(e, "gulch_barrels", "BackLaneBarrels", Vector3(-23.6, 0, 17.0), 100.0, Vector3(1.6, 1.8, 1.0))
 	_solid_prop(e, "gulch_crates", "BackLaneCrates", Vector3(-21.2, 0, -6.0), 80.0, Vector3(1.6, 1.5, 1.2))
 	for c in [[Vector3(23.0, 0, -32.0), "a"], [Vector3(27.5, 0, -2.0), "b"], [Vector3(-24.0, 0, 3.0), "b"]]:
 		_prop(dressing, "gulch_cactus_" + c[1], "Cactus%d" % int(c[0].z), c[0], c[0].x * 7.0, Vector3(1, 3, 1))
@@ -558,10 +558,13 @@ func _build_street_props() -> void:
 	_solid_prop(s, "gulch_hay", "HayE", Vector3(4.2, 0, 7.5), 20.0, Vector3(1.6, 1.6, 1.0))
 	_solid_prop(s, "gulch_hay", "HayN", Vector3(3.6, 0, -11.5), -15.0, Vector3(1.6, 1.6, 1.0))
 	_solid_prop(s, "gulch_barrels", "BarrelsW", Vector3(-4.4, 0, -30.0), 10.0, Vector3(1.6, 1.8, 1.0))
-	_solid_prop(s, "gulch_crates", "CratesS", Vector3(3.8, 0, 16.5), 30.0, Vector3(1.6, 1.5, 1.2))
+	_solid_prop(s, "gulch_crates", "CratesS", Vector3(4.3, 0, 21.6), 30.0, Vector3(1.6, 1.5, 1.2))
 	# On the boardwalks: hitching rails, barrels, crates, benches of hay.
 	for h in [[Vector3(-6.4, 0, -19.0)], [Vector3(-6.4, 0, 12.0 + 5.5)], [Vector3(6.4, 0, -31.0)], [Vector3(6.4, 0, 16.0)]]:
 		_solid_prop(s, "gulch_hitch", "Hitch%d" % int(h[0].z * 10 + h[0].x), h[0], 90.0, Vector3(3.0, 1.1, 0.25))
+	# Two toy horses tied at the rails, noses to the boardwalk.
+	_solid_prop(s, "gulch_horse_a", "HorseW", Vector3(-4.6, 0, 18.1), -90.0, Vector3(0.8, 1.9, 2.5))
+	_solid_prop(s, "gulch_horse_b", "HorseE", Vector3(4.6, 0, 15.4), 90.0, Vector3(0.8, 1.9, 2.5))
 	_solid_prop(s, "gulch_barrels", "WalkBarrelsE", Vector3(8.7, WALK_Y, 21.5), 90.0, Vector3(1.6, 1.8, 1.0))
 	_solid_prop(s, "gulch_crates", "WalkCratesW", Vector3(-8.7, WALK_Y, -33.6), 100.0, Vector3(1.6, 1.5, 1.2))
 	for i in 6:

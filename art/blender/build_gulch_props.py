@@ -23,6 +23,7 @@ face -Y (+Z in Godot).
     gulch_butte          a tall butte (12 x 12 x 28)
     gulch_mesa_far       a wide far mesa (70 x 30 x 22)
     gulch_coaster_lamp   a marker lamp on the coaster track
+    gulch_horse_a/b      toy horses tied at the hitching rails (2.3 m long, facing -Y)
 
     python art/blender/build_gulch_props.py [names...]
 """
@@ -363,12 +364,55 @@ def build_coaster_lamp():
     save("gulch_coaster_lamp", [merge("CoasterLamp", p)])
 
 
+def horse(name, coat, mane, seed):
+    """A toy horse tied at a hitching rail: a rounded barrel body, a long neck,
+    a blocky head with a blaze, stubby legs, a mane and tail, a saddle on a
+    striped blanket and a bridle. Faces -Y; 2.3 m nose to tail, 2.1 m tall."""
+    reset_scene()
+    coat_m, mane_m = gmat(coat, rough=0.6), gmat(mane, rough=0.8)
+    dark, white = gmat("Ink", rough=0.6), gmat("White", rough=0.6)
+    p = [sphere("Barrel", 0.5, (0, 0.05, 1.12), scale=(0.62, 1.6, 0.68), m=coat_m, segs=16, rings=10),
+         sphere("Chest", 0.36, (0, -0.62, 1.2), scale=(0.8, 0.9, 0.95), m=coat_m, segs=12, rings=8),
+         sphere("Rump", 0.38, (0, 0.62, 1.18), scale=(0.85, 0.9, 0.9), m=coat_m, segs=12, rings=8),
+         tube("Neck", [(0, -0.72, 1.3), (0, -0.9, 1.62), (0, -1.0, 1.86)], 0.2, m=coat_m, segs=10, radius_end=0.15),
+         box("Head", (0.26, 0.62, 0.3), (0, -1.22, 1.86), rot=(math.radians(-28), 0, 0), bevel=0.1, m=coat_m),
+         box("Blaze", (0.08, 0.5, 0.02), (0, -1.26, 2.0), rot=(math.radians(-28), 0, 0), bevel=0.0, m=white),
+         box("Muzzle", (0.24, 0.16, 0.2), (0, -1.47, 1.72), rot=(math.radians(-28), 0, 0), bevel=0.07, m=gmat("Sand", rough=0.7))]
+    for s in (-1, 1):
+        p += [prism(f"Ear{s}", [(-0.05, 0), (0.05, 0), (0, 0.16)], 0.04, (s * 0.08, -1.05, 2.06), rot=(0, 0, 0), m=coat_m),
+              sphere(f"Eye{s}", 0.035, (s * 0.13, -1.2, 1.97), m=dark, segs=6, rings=4)]
+    # Mane along the neck and a forelock, tail.
+    for k in range(6):
+        t = k / 5
+        p.append(box(f"Mane{k}", (0.1, 0.16, 0.18), (0, -0.72 - 0.3 * t, 1.5 + 0.42 * t), rot=(math.radians(-30), 0, 0), bevel=0.04, m=mane_m))
+    p.append(tube("Tail", [(0, 0.95, 1.3), (0, 1.12, 1.05), (0, 1.15, 0.65)], 0.1, m=mane_m, segs=8, radius_end=0.06))
+    # Legs with hooves, a white sock on one.
+    for i, (x, y) in enumerate(((-0.18, -0.55), (0.18, -0.55), (-0.18, 0.58), (0.18, 0.58))):
+        p += [cyl(f"Leg{i}", 0.085, 0.86, (x, y, 0.5), segs=10, bevel=0.03, m=white if i == seed % 4 else coat_m),
+              cyl(f"Hoof{i}", 0.1, 0.1, (x, y, 0.05), segs=10, bevel=0.03, m=dark)]
+    # Saddle on a striped blanket, a horn and stirrups; the bridle and reins.
+    for k in range(3):
+        p.append(box(f"Blanket{k}", (0.98, 0.2, 0.05), (0, -0.25 + k * 0.2, 1.5), bevel=0.02, m=gmat(("Red", "Cream", "Turq")[k], rough=0.8)))
+    p += [sphere("Saddle", 0.3, (0, -0.05, 1.58), scale=(1.0, 1.4, 0.4), m=gmat("WoodDark", rough=0.6), segs=12, rings=6),
+          cyl("SaddleHorn", 0.04, 0.16, (0, -0.42, 1.7), segs=8, bevel=0.01, m=gmat("Gold", rough=0.3, metal=0.4))]
+    for s in (-1, 1):
+        p += [box(f"Stirrup{s}", (0.04, 0.12, 0.38), (s * 0.4, -0.05, 1.25), bevel=0.0, m=gmat("WoodDark")),
+              box(f"Bridle{s}", (0.02, 0.4, 0.04), (s * 0.135, -1.3, 1.82), rot=(math.radians(-28), 0, 0), bevel=0.0, m=gmat("RedDark"))]
+    p.append(tube("Reins", [(0.13, -1.45, 1.72), (0.2, -1.75, 1.3), (0.15, -1.9, 1.05)], 0.015, m=gmat("RedDark"), segs=4))
+    save(name, [merge("Horse", p)])
+
+
+def build_horses():
+    horse("gulch_horse_a", "Wood", "WoodDark", 1)
+    horse("gulch_horse_b", "Straw", "White", 2)
+
+
 BUILDERS = {
     "wagon": build_wagon, "hay": build_hay, "barrels": build_barrels, "crates": build_crates, "cactus_a": build_cactus_a,
     "cactus_b": build_cactus_b, "trough": build_trough, "hitch": build_hitch, "lamp": build_lamp, "fence": build_fence,
     "palisade": build_palisade, "windmill": build_windmill, "coaster": build_coaster, "tumbleweed": build_tumbleweed,
     "exit_lantern": build_exit_lantern, "boulder": build_boulder, "cliff": build_cliff, "butte": build_butte, "mesa_far": build_mesa_far,
-    "coaster_lamp": build_coaster_lamp,
+    "coaster_lamp": build_coaster_lamp, "horses": build_horses,
 }
 
 if __name__ == "__main__":
