@@ -73,18 +73,18 @@ prop_height = 1.0
 hits_airborne = true
 hit_sound = &"faire_boulder_impact"
 
-[sub_resource type="Resource" id="squires"]
+[sub_resource type="Resource" id="fools"]
 script = ExtResource("b_summon")
-move_name = &"squires"
+move_name = &"fools"
 min_phase = 1
 cooldown = 16.0
 first_delay = 6.0
 windup = 1.0
 windup_clip = &"Roar"
-callout = "TO ARMS, SQUIRES! — CLEAR THE KNIGHTS"
-enemy = &"faire_knight"
-count = 2
-max_alive = 3
+callout = "SEND IN THE FOOLS! — CLEAR THE JESTERS"
+enemy = &"faire_jester"
+count = 3
+max_alive = 4
 color = Color(1, 0.3, 0.3, 1)
 
 [sub_resource type="Resource" id="blade_sweep"]
@@ -110,7 +110,7 @@ color = Color(1, 0.3, 0.3, 1)
 script = ExtResource("alpha_script")
 color = Color(1, 0.3, 0.3, 1)
 title = "CHAMPION OF THE LISTS"
-phase_callouts = PackedStringArray("THE BLACK KNIGHT CALLS HIS SQUIRES AND THE SIEGE ENGINES", "THE BLACK KNIGHT DRAWS HIS GREATSWORD — BLADE SWEEPS!")
+phase_callouts = PackedStringArray("THE BLACK KNIGHT CALLS HIS FOOLS AND THE SIEGE ENGINES", "THE BLACK KNIGHT DRAWS HIS GREATSWORD — BLADE SWEEPS!")
 expose_callout = "THE BLACK KNIGHT REELS — SHOOT THE GLOW!"
 slam_damage = 14.0
 slam_cooldown = 9.0
@@ -121,7 +121,7 @@ volley_spread_degrees = 15.0
 volley_arc = 0.45
 volley_cooldown = 11.0
 volley_size = 0.35
-moves = Array[ExtResource("b_move")]([SubResource("lance_charge"), SubResource("sword_slam"), SubResource("siege_call"), SubResource("squires"), SubResource("blade_sweep")])
+moves = Array[ExtResource("b_move")]([SubResource("lance_charge"), SubResource("sword_slam"), SubResource("siege_call"), SubResource("fools"), SubResource("blade_sweep")])
 
 [resource]
 script = ExtResource("1")

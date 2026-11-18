@@ -496,14 +496,14 @@ func _build_courtyard() -> void:
 		var arm := _prop(dressing, "faire_dummy", entry[0], entry[1], 0.0, Vector3(2.4, 2.6, 0.3))
 		arm.name = entry[0]
 		_late(arm, "res://scripts/props/ambient_motion.gd", {"spin_degrees_per_second": 22.0 if entry[1].x < 10.0 else -16.0})
-	# The smithy corner (north-west): a stall with an anvil and a forge glow.
-	_solid_prop(y, "faire_stall", "Smithy", Vector3(-14.4, 0, -34.5), 90.0, Vector3(3.2, 2.8, 2.0)).name = "Smithy"
-	_solid_prop(y, "faire_barrels", "SmithyBarrels", Vector3(-14.6, 0, -30.2), 30.0, Vector3(1.9, 1.3, 1.4))
-	_box(y, "Anvil", Vector3(0.9, 0.8, 0.45), Vector3(-11.6, 0.4, -34.6), _mat("iron", Color(0.17, 0.18, 0.22), 0.5))
-	_brazier(y, "Forge", Vector3(-11.8, 0, -36.6))
-	# The stable corner (north-east): hay, a cart, crates.
-	_solid_prop(y, "faire_cart", "StableCart", Vector3(13.6, 0, -34.0), 160.0, Vector3(1.8, 1.8, 3.3))
-	_solid_prop(y, "faire_hay", "StableHay", Vector3(14.6, 0, -30.0), 90.0, Vector3(2.4, 1.4, 1.2))
+	# The smithy corner (north-east): a stall with an anvil and a forge glow.
+	_solid_prop(y, "faire_stall", "Smithy", Vector3(14.4, 0, -34.5), -90.0, Vector3(3.2, 2.8, 2.0)).name = "Smithy"
+	_box(y, "Anvil", Vector3(0.9, 0.8, 0.45), Vector3(11.6, 0.4, -34.6), _mat("iron", Color(0.17, 0.18, 0.22), 0.5))
+	_brazier(y, "Forge", Vector3(11.8, 0, -36.8))
+	_solid_prop(y, "faire_hay", "StableHay", Vector3(14.6, 0, -30.4), 90.0, Vector3(2.4, 1.4, 1.2))
+	# The north-west corner stays clear for the postern; a cart and barrels by the walls.
+	_solid_prop(y, "faire_cart", "StableCart", Vector3(-10.6, 0, -37.4), 95.0, Vector3(1.8, 1.8, 3.3))
+	_solid_prop(y, "faire_barrels", "SmithyBarrels", Vector3(-15.0, 0, -30.6), 30.0, Vector3(1.9, 1.3, 1.4))
 	_solid_prop(y, "faire_crates", "CourtCratesW", Vector3(-14.8, 0, -19.6), 15.0, Vector3(1.6, 1.5, 1.2))
 	_solid_prop(y, "faire_hay", "CourtHayE", Vector3(4.2, 0, -20.0), 20.0, Vector3(2.4, 1.4, 1.2))
 	_solid_prop(y, "faire_barrels", "CourtBarrels", Vector3(-4.6, 0, -21.4), 200.0, Vector3(1.9, 1.3, 1.4))
@@ -846,7 +846,7 @@ func _build_lights() -> void:
 	_omni(lights, "StationGlow", STATION + Vector3(0, 3.5, 3.0), Color(1.0, 0.86, 0.62), 1.0, 9.0)
 	_omni(lights, "GatePassage", GATE + Vector3(0, 3.2, 0), Color(1.0, 0.78, 0.5), 1.4, 7.0)
 	_omni(lights, "KeepDoor", KEEP + Vector3(0, 3.5, 6.5), Color(1.0, 0.78, 0.5), 1.4, 9.0)
-	_omni(lights, "Forge", Vector3(-11.8, 2.0, -36.0), Color(1.0, 0.55, 0.25), 1.2, 6.0)
+	_omni(lights, "Forge", Vector3(11.8, 2.0, -36.4), Color(1.0, 0.55, 0.25), 1.2, 6.0)
 
 
 func _omni(parent: Node3D, light_name: String, pos: Vector3, color: Color, energy: float, light_range: float) -> OmniLight3D:

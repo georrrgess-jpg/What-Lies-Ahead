@@ -99,9 +99,9 @@ hint = "Every gate at once: put your back to the stands or the wall-walk."
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 11,
+"tourist_shambler": 9,
 "faire_jester": 7,
-"faire_knight": 4,
+"faire_knight": 3,
 "sky_balloon_vendor": 3
 }
 spawn_interval = 1.05
@@ -121,13 +121,13 @@ twist = &"catapult"
 script = ExtResource("2")
 spawns = {
 "faire_jester": 7,
-"tourist_shambler": 12,
-"faire_knight": 4,
+"tourist_shambler": 11,
+"faire_knight": 2,
 "lifeguard_runner": 3
 }
 spawn_interval = 1.9
 burst = 2
-max_alive = 13
+max_alive = 12
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
