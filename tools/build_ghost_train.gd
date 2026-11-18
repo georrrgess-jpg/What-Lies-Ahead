@@ -22,7 +22,7 @@ extends SceneTree
 ##   - Arena x -31..31, z -24..27.5, fenced; the ghost-train façade closes the
 ##     north side (x -15..15) with the skull's mouth at x 0.
 ##   - Station at (0, 0, 1); the track loop (centre (0, -12.5), radius 5) and its
-##     spur into the mouth; boarding platforms (y 1.8) x +-5.2..12.2.
+##     spur into the mouth; boarding platforms (y 1.8) x +-3.9..12.2.
 ##   - Hall of mirrors x -28..-18, z -10..4 (doors east, north, west).
 ##   - Carousel at (19, 0, -3); graveyard maze x 9..29, z 9..26, crypt in its
 ##     south-east corner; front gate and portal at z 27.5.
@@ -40,7 +40,7 @@ const STATION := Vector3(0.0, 0.0, 1.0)
 const FACADE_Z := -24.0
 const MOUTH_HALF := 2.3
 const PLATFORM_Y := 1.8
-const PLATFORM_X := Vector2(5.2, 12.2)
+const PLATFORM_X := Vector2(3.9, 12.2)
 const PLATFORM_Z := Vector2(-23.9, -19.5)
 const TRACK_C := Vector3(0.0, 0.0, -12.5)
 const TRACK_R := 5.0
@@ -379,13 +379,15 @@ func _build_ghost_train() -> void:
 		_visual_box(dressing, "PlatformTop%d" % int(s), Vector3(w + 0.2, 0.2, d + 0.2), Vector3(cx, PLATFORM_Y - 0.1, cz), boards)
 		_visual_box(dressing, "PlatformTrim%d" % int(s), Vector3(w + 0.3, 0.16, d + 0.3), Vector3(cx, PLATFORM_Y - 0.32, cz),
 			_mat("orange", Color(0.95, 0.5, 0.12), 0.5))
+		# Crates fill the nook under the skull's cheek.
+		_box(gt, "CheekCrates%d" % int(s), Vector3(1.3, 1.8, 1.9), Vector3(s * 4.6, PLATFORM_Y + 0.9, PLATFORM_Z.x + 0.95), boards)
 		var sx := s * 10.4
 		_stairs(gt, "Stair%d" % int(s), Vector3(sx, PLATFORM_Y, PLATFORM_Z.y), Vector3(sx, 0.0, PLATFORM_Z.y + 4.8), 2.2)
 		# Railings: the front (open at the stair head) and the inner end.
 		var y := PLATFORM_Y
 		_low_fence(gt, "RailFrontA%d" % int(s), Vector3(xa, y, PLATFORM_Z.y - 0.15), Vector3(sx - s * 1.2, y, PLATFORM_Z.y - 0.15))
 		_low_fence(gt, "RailFrontB%d" % int(s), Vector3(sx + s * 1.2, y, PLATFORM_Z.y - 0.15), Vector3(xb, y, PLATFORM_Z.y - 0.15))
-		_low_fence(gt, "RailEnd%d" % int(s), Vector3(xa + s * 0.15, y, PLATFORM_Z.x), Vector3(xa + s * 0.15, y, PLATFORM_Z.y - 0.15))
+		_low_fence(gt, "RailEnd%d" % int(s), Vector3(xa + s * 0.15, y, PLATFORM_Z.x + 1.95), Vector3(xa + s * 0.15, y, PLATFORM_Z.y - 0.15))
 		_low_fence(gt, "RailOuter%d" % int(s), Vector3(xb - s * 0.15, y, PLATFORM_Z.y - 0.15), Vector3(xb - s * 0.15, y, PLATFORM_Z.x))
 		# Dressing up top: a bench, lamps, a pumpkin pile, and a lantern string.
 		_kit_prop(gt, "Bench", "PlatformBench%d" % int(s), Vector3(cx - s * 1.2, y, PLATFORM_Z.x + 0.7), 180.0, Vector3(1.8, 0.9, 0.6))
@@ -649,6 +651,7 @@ func _build_graveyard() -> void:
 		_row_add("Hedge", Transform3D(Basis(Vector3.UP, deg_to_rad(entry[1])), p))
 		var c := _collider(g, "Hedge%d" % i, Vector3(2.0, 1.6, 0.9), p + Vector3(0, 0.8, 0))
 		c.rotation.y = deg_to_rad(entry[1])
+		_player_block(g, "HedgeCap%d" % i, Vector3(2.0, 2.0, 0.9), p + Vector3(0, 2.6, 0), deg_to_rad(entry[1]))
 		i += 1
 	# Gravestones: rows between the hedges (snag-free clutter).
 	var rng := RandomNumberGenerator.new()
