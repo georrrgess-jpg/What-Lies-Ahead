@@ -1,0 +1,157 @@
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
+
+[sub_resource type="Resource" id="wave_1"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 9,
+"faire_jester": 4,
+"faire_knight": 2,
+"lifeguard_runner": 2
+}
+spawn_interval = 1.6
+burst = 1
+max_alive = 9
+speed_scale = 1.0
+late_types_after = 0.3
+banner = ""
+kind = &"standard"
+title = "OPEN THE GATES"
+hint = "Knights block from the front: aim over the shield or go round it."
+
+[sub_resource type="Resource" id="wave_2"]
+script = ExtResource("2")
+spawns = {
+"faire_jester": 10,
+"lifeguard_runner": 6,
+"tourist_shambler": 5
+}
+spawn_interval = 1.05
+burst = 1
+max_alive = 11
+speed_scale = 1.0
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "JESTER'S PARADE"
+hint = "Jesters tumble out of your aim: a headshot spills their throw."
+surge_at = 0.5
+surge_count = 4
+
+[sub_resource type="Resource" id="wave_3"]
+script = ExtResource("2")
+spawns = {
+"faire_knight": 5,
+"tourist_shambler": 8,
+"faire_jester": 4
+}
+spawn_interval = 1.35
+burst = 1
+max_alive = 10
+speed_scale = 1.0
+late_types_after = 0.2
+banner = ""
+kind = &"siege"
+title = "SHIELD WALL"
+hint = "When a knight raps its shield, step out of its charge, then shoot."
+
+[sub_resource type="Resource" id="wave_4"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 10,
+"faire_jester": 7,
+"faire_knight": 3,
+"sky_diver": 3
+}
+spawn_interval = 1.2
+burst = 1
+max_alive = 13
+speed_scale = 1.05
+late_types_after = 0.2
+banner = ""
+kind = &"bounty"
+title = "THE GOLDEN JESTER"
+hint = "Pop the golden jester before it cartwheels away."
+bounty = &"faire_jester"
+bounty_tickets = 225
+
+[sub_resource type="Resource" id="wave_5"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 10,
+"faire_jester": 6,
+"faire_knight": 4,
+"lava_fire_dancer": 3,
+"mall_walker": 2
+}
+spawn_interval = 1.15
+burst = 1
+max_alive = 14
+speed_scale = 1.06
+late_types_after = 0.25
+banner = ""
+kind = &"ambush"
+title = "TOURNEY DAY"
+hint = "Every gate at once: put your back to the stands or the wall-walk."
+
+[sub_resource type="Resource" id="wave_6"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 11,
+"faire_jester": 7,
+"faire_knight": 4,
+"sky_balloon_vendor": 3
+}
+spawn_interval = 1.05
+burst = 1
+max_alive = 13
+speed_scale = 1.08
+late_types_after = 0.15
+banner = ""
+kind = &"standard"
+title = "SIEGE ENGINES"
+hint = "Boulders fall where the gold rings glow: keep moving."
+surge_at = 0.5
+surge_count = 6
+twist = &"catapult"
+
+[sub_resource type="Resource" id="wave_7"]
+script = ExtResource("2")
+spawns = {
+"faire_jester": 7,
+"tourist_shambler": 12,
+"faire_knight": 4,
+"lifeguard_runner": 3
+}
+spawn_interval = 1.9
+burst = 2
+max_alive = 13
+speed_scale = 1.1
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "THE BLACK KNIGHT"
+hint = "Off his lane, over his rings, and shoot the glow when he reels."
+boss = &"alpha_black_knight"
+boss_at = 0.45
+rest_before = 24.0
+
+[resource]
+script = ExtResource("1")
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
+prep_seconds = 12.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 525
+break_refill_fraction = 0.3
+ammo_topup_price = 250
+heal_price = 375
+heal_amount = 60.0
+heals_per_break = 1
+wave_bonus_base = 20
+wave_bonus_per_wave = 5
+overshield_price = 750
+overshield_amount = 25.0
+damage_boost_price = 725

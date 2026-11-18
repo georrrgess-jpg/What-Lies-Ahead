@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WorldData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/world_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="2"]
+[ext_resource type="Resource" path="res://data/levels/royal_faire.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("4")
+kind = 2
+target = &"skull_harbor"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"castle_kingdom"
+display_name = "Castle Kingdom"
+blurb = "A storybook faire on a spring morning, on the green before the King's castle: pavilions, a jousting list, a market and a dragon bouncy castle. The knights are back from the tourney, and they are not well."
+levels = Array[ExtResource("2")]([ExtResource("3")])
+sort_order = 140
+tagline = "Hold the green. Take the keep."
+requirement = SubResource("unlock")
+accent_color = Color(0.95, 0.76, 0.31, 1)
+secondary_color = Color(0.18, 0.36, 0.83, 1)
+backdrop_color = Color(0.12, 0.17, 0.35, 1)
