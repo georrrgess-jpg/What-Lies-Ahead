@@ -6,13 +6,13 @@
 [sub_resource type="Resource" id="wave_1"]
 script = ExtResource("2")
 spawns = {
-"cove_deckhand": 6,
-"tourist_shambler": 9,
-"cove_powder_monkey": 3
+"cove_deckhand": 8,
+"tourist_shambler": 10,
+"cove_powder_monkey": 4
 }
 spawn_interval = 1.6
 burst = 1
-max_alive = 10
+max_alive = 11
 speed_scale = 1.0
 late_types_after = 0.3
 banner = ""
@@ -23,13 +23,13 @@ hint = "Deckhands crouch before they lunge: step out of the line."
 [sub_resource type="Resource" id="wave_2"]
 script = ExtResource("2")
 spawns = {
-"cove_deckhand": 13,
-"lifeguard_runner": 6,
-"tourist_shambler": 4
+"cove_deckhand": 15,
+"lifeguard_runner": 7,
+"tourist_shambler": 5
 }
 spawn_interval = 1.0
 burst = 1
-max_alive = 12
+max_alive = 13
 speed_scale = 1.0
 late_types_after = 0.0
 banner = ""
@@ -43,11 +43,11 @@ surge_count = 5
 script = ExtResource("2")
 spawns = {
 "cove_powder_monkey": 8,
-"tourist_shambler": 7,
+"tourist_shambler": 9,
 "lava_tiki_bartender": 2,
-"cove_deckhand": 5
+"cove_deckhand": 6
 }
-spawn_interval = 1.2
+spawn_interval = 1.25
 burst = 1
 max_alive = 12
 speed_scale = 1.0
@@ -62,15 +62,15 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"cove_deckhand": 12,
-"tourist_shambler": 9,
-"cove_powder_monkey": 4,
-"boardwalk_bruiser": 1
+"cove_deckhand": 14,
+"tourist_shambler": 10,
+"cove_powder_monkey": 5,
+"boardwalk_bruiser": 2
 }
 spawn_interval = 1.15
 burst = 1
-max_alive = 13
-speed_scale = 1.05
+max_alive = 14
+speed_scale = 1.08
 late_types_after = 0.2
 banner = ""
 kind = &"bounty"
@@ -84,13 +84,13 @@ script = ExtResource("2")
 spawns = {
 "cove_deckhand": 9,
 "cove_powder_monkey": 5,
-"tourist_shambler": 10,
+"tourist_shambler": 11,
 "frost_yeti": 1,
 "boardwalk_bruiser": 2
 }
-spawn_interval = 3.2
+spawn_interval = 3.4
 burst = 5
-max_alive = 15
+max_alive = 14
 speed_scale = 1.06
 late_types_after = 0.25
 banner = ""
@@ -101,15 +101,15 @@ hint = "They come from the cave, the tunnel, the warehouse and the water at once
 [sub_resource type="Resource" id="wave_6"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 10,
-"cove_deckhand": 10,
-"cove_powder_monkey": 5,
-"lava_fire_dancer": 3
+"tourist_shambler": 11,
+"cove_deckhand": 12,
+"cove_powder_monkey": 6,
+"lava_fire_dancer": 4
 }
 spawn_interval = 1.05
 burst = 1
-max_alive = 14
-speed_scale = 1.08
+max_alive = 15
+speed_scale = 1.12
 late_types_after = 0.15
 banner = ""
 kind = &"standard"
@@ -122,10 +122,10 @@ twist = &"barrage"
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 12,
-"cove_deckhand": 9,
-"cove_powder_monkey": 4,
-"lava_fire_dancer": 3
+"tourist_shambler": 13,
+"cove_deckhand": 11,
+"cove_powder_monkey": 5,
+"lava_fire_dancer": 4
 }
 spawn_interval = 1.9
 burst = 2
