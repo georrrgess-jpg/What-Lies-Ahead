@@ -270,7 +270,7 @@ func shown_spread() -> float:
 func _spread(bloom: float, aim: float) -> float:
 	if current == null:
 		return 0.0
-	var spread := current.spread_degrees + bloom
+	var spread := current.spread_degrees + bloom + (mode.spread_bonus() if mode else 0.0)
 	if current.first_shot_accurate and _since_shot > 0.32 and current.pellets == 1:
 		spread = 0.0
 	# Moving fast or in the air costs accuracy (shown live on the reticle).

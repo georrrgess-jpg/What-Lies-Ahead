@@ -97,3 +97,9 @@ func dispose() -> void:
 ## long. 0 keeps charging.
 func charging(_charge: float, _delta: float) -> float:
 	return 0.0
+
+
+## Extra spread (degrees) on top of the data spread and bloom (the Coin-Op's
+## tilt); the reticle shows it.
+func spread_bonus() -> float:
+	return 0.0

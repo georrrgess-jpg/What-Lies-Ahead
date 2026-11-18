@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/coin_op.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/coin_op_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/coin_op_view.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/coin_op_mode.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 22
+
+[resource]
+script = ExtResource("1")
+id = &"coin_op"
+sort_order = 101
+category = "Token Machine Pistol"
+slot_class = "secondary"
+display_name = "Coin-Op"
+role = "Arcade token machine pistol: sprays brass tokens full-auto, 12 a second. Free Play: every third kill, and every headshot kill, spits back a bonus token that puts 4 rounds straight back in the magazine, so a streak keeps it firing. Hold the trigger past a second and it tilts: the rate climbs to 15 a second but the spray widens (the red TILT light); let go briefly to straighten it out. Tokens glance off heavies and alphas (70%): pick off the rank and file."
+unlock = SubResource("unlock")
+magazine_size = 30
+reserve_start = 180
+reserve_max = 300
+reload_time = 1.55
+emergency_recharge_interval = 0.4
+automatic = true
+fire_interval = 0.0625
+damage = 13.0
+pellets = 1
+spread_degrees = 0.7
+spread_bloom = 0.09
+spread_bloom_max = 1.6
+spread_recovery = 7.0
+max_range = 55.0
+falloff_start = 15.0
+falloff_end = 34.0
+falloff_min_scale = 0.55
+headshot_multiplier = 1.7
+knockback = 0.3
+ads_fov_scale = 0.84
+ads_time = 0.12
+ads_spread_scale = 0.5
+ads_depth = 0.08
+first_shot_accurate = false
+reticle_style = "bracket"
+recoil_kick = 0.3
+recoil_yaw = 0.2
+view_kick = 0.02
+shake = 0.045
+tracer_color = Color(1, 0.8, 0.28, 1)
+tracer_width = 0.03
+viewmodel = ExtResource("3")
+view_position = Vector3(0.22, -0.215, -0.55)
+view_rotation_degrees = Vector3(0, 0, -2.5)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"cop_fire"
+reload_sound = &"cop_reload"
+empty_sound = &"empty_click"
+equip_sound = &"cop_equip"
+fire_pitch_variance = 0.05
+move_speed_scale = 1.0
+equip_time = 0.24
+mode_script = ExtResource("6")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)
