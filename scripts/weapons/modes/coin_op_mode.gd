@@ -27,7 +27,7 @@ const TILT_SPREAD := 1.2
 const REST_RESET := 0.22
 const PAYOUT_EVERY := 3
 const PAYOUT_ROUNDS := 4
-const HEAVY_SCALE := 0.8
+const HEAVY_SCALE := 0.85
 const PAYOUT_SOUND := &"cop_payout"
 const TILT_SOUND := &"cop_tilt"
 ## Controller metadata that keeps the credits while another weapon is out.
