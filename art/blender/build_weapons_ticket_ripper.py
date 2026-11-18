@@ -188,6 +188,9 @@ def build_ticket_ripper():
         xcyl("DrumPlateL", DRUM_R + 0.003, 0.006, (-DRUM_HALF, dy, dz), m=M["steel"], segs=36),
         xcyl("CounterFace", 0.026, 0.004, (-DRUM_HALF - 0.004, dy, dz), m=face_m, segs=28),
         torus("CounterBezel", 0.027, 0.0026, (-DRUM_HALF - 0.005, dy, dz), rot=rad(0, 90, 0), m=M["pink"], major_segs=28, minor_segs=5),
+        # Its inside face: a purple disc with a gold star, seen when the door swings open.
+        xcyl("DoorInner", DRUM_R - 0.004, 0.002, (-DRUM_HALF + 0.0035, dy, dz), m=M["trim"], segs=32),
+        star("DoorStar", 0.018, 0.002, (-DRUM_HALF + 0.0048, dy, dz), rot=rad(0, 0, 90), m=M["steel"], inner=0.008),
         box("DoorLatch", (0.008, 0.012, 0.016), (-DRUM_HALF - 0.003, dy - DRUM_R + 0.004, dz), bevel=0.003, m=M["trim"]),
     ]
     door += [xcyl(f"DoorHinge{i}", 0.0045, 0.006, (-DRUM_HALF - 0.001, dy + DRUM_R + 0.002, dz + z), m=M["dark"], segs=10)

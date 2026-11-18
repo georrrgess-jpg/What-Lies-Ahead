@@ -86,7 +86,7 @@ def tkr_pop():
     rnd = np.random.default_rng(11)
     for _ in range(12):
         place(out, _paper(0.025, rnd.uniform(1500, 3000), 900, rnd.uniform(0.15, 0.35), seed=int(rnd.integers(1, 999))), rnd.uniform(0.03, 0.45), 1.0)
-    place(out, _bell((1047, 1319), 0.05, 0.5, 0.6), 0.03, 1.0)
+    place(out, _bell((880, 1047), 0.05, 0.5, 0.3), 0.03, 1.0)
     return filt(out, low=8000)
 
 

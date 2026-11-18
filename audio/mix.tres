@@ -545,5 +545,8 @@ sound_trim_db = Dictionary[StringName, float]({
 &"cove_cannon_whistle": -2.0,
 &"cove_cannon_boom": -2.5,
 &"cove_broadside_call": -3.0,
-&"tkr_fire": -3.0
+&"tkr_fire": 2.5,
+&"tkr_door": -2.0,
+&"tkr_holo": -4.0,
+&"tkr_ready": -5.0
 })
