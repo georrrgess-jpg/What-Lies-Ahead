@@ -19,6 +19,7 @@ z 0 with its front toward -Y (+Z in Godot).
     cove_cliff_b      a second cliff chunk
     cove_stack        a tall sea stack with a grassy top (unit height)
     cove_fern         a low bush of ferns for the cliff tops
+    cove_gull         a gliding gull (the level circles flocks of them)
 
     python art/blender/build_cove_props.py [names...]
 """
@@ -287,8 +288,26 @@ def exit_lantern():
 
 
 def cliff(seed, name):
-    ob = rock_lump(name, (1.0, 1.0, 1.0), seed=seed, segs=12, rings=7)
-    return [merge(name, [ob])]
+    ob = rock_lump(name, (1.0, 1.0, 1.0), seed=seed, segs=13, rings=8, taper=0.32)
+    # A ragged grass cap overhanging the top edge.
+    cap = rock_lump(name + "Cap", (0.62, 0.62, 0.08), seed=seed + 1, segs=10, rings=1, taper=0.1,
+                    mats=[cmat("GrassDark", rough=0.9), cmat("Grass", rough=0.9), cmat("Grass", rough=0.9)])
+    cap.location = (0, 0, 0.96)
+    return [merge(name, [ob, cap])]
+
+
+def gull():
+    """A gliding gull: white body, grey-tipped wings in a shallow V (2 m span)."""
+    white, grey = cmat("Cream", rough=0.6), cmat("IronLight", rough=0.6)
+    p = [sphere("Body", 0.12, (0, 0, 0), scale=(1.0, 2.6, 0.9), m=white, segs=10, rings=6),
+         sphere("Head", 0.08, (0, -0.28, 0.06), m=white, segs=8, rings=5),
+         prism("Beak", [(-0.025, 0), (0.025, 0), (0, -0.1)], 0.03, (0, -0.36, 0.06), rot=(math.pi / 2, 0, 0), m=cmat("Gold")),
+         prism("Tail", [(-0.1, 0), (0.1, 0), (0, 0.18)], 0.02, (0, 0.28, 0.0), rot=(math.pi / 2, 0, 0), m=white)]
+    for s in (-1, 1):
+        p.append(prism(f"Wing{s}", [(0, -0.12), (s * 0.55, -0.02), (s * 0.55, 0.12), (0, 0.14)], 0.03, (0, 0, 0.02), rot=(math.pi / 2, s * -0.25, 0),
+                       m=white))
+        p.append(prism(f"Tip{s}", [(s * 0.55, -0.02), (s * 1.0, 0.12), (s * 0.55, 0.12)], 0.03, (0, 0, 0.02), rot=(math.pi / 2, s * -0.25, 0), m=grey))
+    return [merge("Gull", p)]
 
 
 def stack():
@@ -318,6 +337,7 @@ ALL = {
     "cove_lamp": lamp, "cove_rail": rail, "cove_bridge": bridge, "cove_rowboat": rowboat, "cove_sloop": sloop, "cove_palm": palm,
     "cove_stall": stall, "cove_flagpole": flagpole, "cove_exit_lantern": exit_lantern,
     "cove_cliff": lambda: cliff(11, "Cliff"), "cove_cliff_b": lambda: cliff(17, "CliffB"), "cove_stack": stack, "cove_fern": fern,
+    "cove_gull": gull,
 }
 
 if __name__ == "__main__":

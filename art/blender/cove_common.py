@@ -161,9 +161,10 @@ def planks(name, size, loc, m_a=None, m_b=None, along="x", gap=0.02, count=None)
     return out
 
 
-def rock_lump(name, size, seed=1, mats=None, segs=10, rings=6, top_grass=True):
+def rock_lump(name, size, seed=1, mats=None, segs=10, rings=6, top_grass=True, taper=0.55):
     """A faceted sandstone lump (unit-ish, scaled to `size`), base at z 0,
-    banded in two rock tones with an optional grassy cap."""
+    in uneven strata of two rock tones, with an optional grassy cap.
+    `taper` is how much narrower the top is than the base."""
     rng = random.Random(seed)
     mats = mats or [cmat("Rock", rough=0.9), cmat("RockDark", rough=0.9), cmat("Grass", rough=0.9)]
     sx, sy, sz = size
@@ -171,7 +172,7 @@ def rock_lump(name, size, seed=1, mats=None, segs=10, rings=6, top_grass=True):
     layers = []
     for k in range(rings + 1):
         t = k / rings
-        shrink = 1.0 - 0.55 * t ** 1.6
+        shrink = 1.0 - taper * t ** 1.6
         z = sz * t
         ring = []
         for i in range(segs):
@@ -179,10 +180,11 @@ def rock_lump(name, size, seed=1, mats=None, segs=10, rings=6, top_grass=True):
             r = shrink * rng.uniform(0.82, 1.08)
             ring.append(bm.verts.new((math.cos(a) * r * sx * 0.5, math.sin(a) * r * sy * 0.5, z + rng.uniform(-0.03, 0.03) * sz * (0 < k < rings))))
         layers.append(ring)
+    strata = [1 if rng.random() < 0.4 else 0 for _ in range(rings)]
     for k in range(rings):
         for i in range(segs):
             f = bm.faces.new((layers[k][i], layers[k][(i + 1) % segs], layers[k + 1][(i + 1) % segs], layers[k + 1][i]))
-            f.material_index = 1 if k % 2 else 0
+            f.material_index = strata[k] if rng.random() > 0.12 else 1 - strata[k]
     top = bm.faces.new(layers[-1])
     top.material_index = 2 if top_grass else 0
     bottom = bm.faces.new(list(reversed(layers[0])))

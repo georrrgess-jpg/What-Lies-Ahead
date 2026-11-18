@@ -80,6 +80,7 @@ var _bunting: SurfaceTool
 var _lines: SurfaceTool
 var _bunting_count := 0
 var _clutter: Array[CollisionShape3D] = []
+var _cliffs := {}        # cliff model -> Array of Transform3D
 ## Rails baked as walls but player-only afterwards: zombies cut the corners at
 ## their ends and would stand pushing into them.
 var _soft: Array[StaticBody3D] = []
@@ -115,6 +116,7 @@ func _initialize() -> void:
 	_build_lights()
 	_build_sea_and_cliffs()
 	_build_backdrop()
+	_finish_cliffs()
 	_build_exit()
 	_build_markers()
 	_finish_bunting()
@@ -1099,14 +1101,28 @@ func _build_sea_and_cliffs() -> void:
 		fern.scale = Vector3.ONE * 2.2
 
 
-func _cliff(parent: Node3D, cliff_name: String, base: Vector3, size: Vector3, yaw: float, alt: bool) -> void:
-	var mi := MeshInstance3D.new()
-	mi.name = cliff_name
-	mi.mesh = _glb_mesh("cove_cliff_b" if alt else "cove_cliff", "")
-	mi.position = base
-	mi.rotation.y = deg_to_rad(yaw)
-	mi.scale = Vector3(size.x, size.y, size.z)
-	parent.add_child(mi)
+## One cliff chunk (unit model scaled to `size`); all are drawn by two
+## MultiMeshes, one per model (_finish_cliffs).
+func _cliff(_parent: Node3D, _cliff_name: String, base: Vector3, size: Vector3, yaw: float, alt: bool) -> void:
+	var key := "cove_cliff_b" if alt else "cove_cliff"
+	if not _cliffs.has(key):
+		_cliffs[key] = []
+	(_cliffs[key] as Array).append(Transform3D(Basis(Vector3.UP, deg_to_rad(yaw)).scaled_local(size), base))
+
+
+func _finish_cliffs() -> void:
+	for key in _cliffs:
+		var xforms: Array = _cliffs[key]
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = _glb_mesh(key, "")
+		mm.instance_count = xforms.size()
+		for i in xforms.size():
+			mm.set_instance_transform(i, xforms[i])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "Cliffs_" + key.trim_prefix("cove_")
+		mmi.multimesh = mm
+		dressing.add_child(mmi)
 
 
 # ---------------------------------------------------------------------------
@@ -1142,8 +1158,29 @@ func _build_backdrop() -> void:
 		[Vector3(420, -4, 120), Vector3(120, 36, 90)], [Vector3(-460, -4, -60), Vector3(150, 55, 120)], [Vector3(80, -4, 520), Vector3(90, 24, 70)]]
 	for i in isles.size():
 		_cliff(back, "FarIsle%d" % i, isles[i][0], isles[i][1], rng.randf_range(0, 360), i % 2 == 0)
+	# Gulls circling over the cove.
+	for flock in [[Vector3(4.0, 21.0, -6.0), 13.0, 5, 16.0], [Vector3(-30.0, 26.0, 20.0), -10.0, 4, 22.0], [Vector3(34.0, 18.0, -4.0), 15.0, 3, 10.0]]:
+		var holder := Node3D.new()
+		holder.name = "Gulls%d" % int(flock[0].x)
+		holder.position = flock[0]
+		back.add_child(holder)
+		for g in int(flock[2]):
+			var a := TAU * g / float(flock[2]) + rng.randf_range(-0.3, 0.3)
+			var r: float = flock[3] * rng.randf_range(0.75, 1.1)
+			var bird := MeshInstance3D.new()
+			bird.name = "Gull%d" % g
+			bird.mesh = _glb_mesh("cove_gull", "")
+			bird.position = Vector3(cos(a) * r, rng.randf_range(-2.0, 2.0), sin(a) * r)
+			# Facing along the circle (clockwise or anticlockwise with the spin), banked in.
+			var heading := Vector3(-sin(a), 0, cos(a)) * signf(flock[1])
+			bird.basis = Basis.looking_at(-heading, Vector3.UP).rotated(heading.normalized(), deg_to_rad(18.0) * signf(flock[1]))
+			bird.scale = Vector3.ONE * 0.9
+			bird.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			holder.add_child(bird)
+			_late(bird, "res://scripts/props/ambient_motion.gd", {"bob_height": 0.6, "bob_seconds": 3.0 + g * 0.4, "rock_degrees": 6.0})
+		_late(holder, "res://scripts/props/ambient_motion.gd", {"spin_degrees_per_second": flock[1]})
 	# Ships on the horizon, at anchor.
-	for entry in [[Vector3(-150, SEA_Y - 0.5, 200), 0.7, 60.0], [Vector3(120, SEA_Y - 0.5, 250), 0.55, -30.0]]:
+	for entry in [[Vector3(-150, SEA_Y - 0.5, 200), 0.7, 60.0]]:
 		var ship := _prop(back, "cove_galleon", "FarGalleon%d" % int(entry[0].x), entry[0], entry[2], Vector3(9, 20, 34))
 		ship.scale = Vector3.ONE * entry[1]
 		_late(ship, "res://scripts/props/ambient_motion.gd", {"bob_height": 0.3, "bob_seconds": 7.0, "rock_degrees": 0.8})
