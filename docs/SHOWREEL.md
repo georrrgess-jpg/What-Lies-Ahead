@@ -1,8 +1,9 @@
-# The showreel (animated short) and the startup screen
+# The trailer (in-engine showreel) and the startup screen
 
-An 88-second trailer made in the engine from the game's real levels, zombies,
-operators, weapons, skins and effects. It plays from the title screen (WATCH
-TRAILER, or as an attract mode), and renders to a video.
+A 41.6-second trailer (and a 1.6 s ring-out on black) made in the engine from the game's real levels, zombies,
+alphas, operators, weapons (with their real reloads), skins and effects, cut to
+a 150 BPM score. It plays from the title screen (WATCH TRAILER, or as an
+attract mode), and renders to a video.
 
 | What | Where |
 | --- | --- |
@@ -10,10 +11,11 @@ TRAILER, or as an attract mode), and renders to a video.
 | The shot list (staging of every shot) and the featured items (ids at the top) | `scripts/cinematics/showreel_shots.gd` |
 | Timeline player: sets, cuts, music, skip, hand-back to the menu | `scripts/cinematics/cine_player.gd` (`CinePlayer`) |
 | Per-shot toolkit: camera moves (dolly, orbit, follow, spline), whip pans, speed ramps, relighting, focus, flares, actors, kills | `scripts/cinematics/cine_stage.gd` (`CineStage`) |
-| First-person weapon without a player: `WeaponView.staged_aim`, `staged_sprint`/`slide`/`mantle`, `staged_gait`, `refit_sight()` | `scripts/player/weapon_view.gd` |
+| First-person weapon without a player: `WeaponView.staged_aim`, `staged_sprint`/`slide`/`mantle`, `staged_gait`, `refit_sight()`, `play_reload()` + `seek_reload()` | `scripts/player/weapon_view.gd` |
+| The Ticket Ripper's WINNER pop without damage: `TicketRipperBurst.show_at(parent, at)` | `scripts/weapons/ticket_ripper_burst.gd` |
 | The Eruption twist on cue: `LavaEruption.erupt_now()`, `strike_at(point)` | `scripts/props/lava_eruption.gd` |
-| Lens and colour grade, letterbox, flashes, wipes, title cards (UI kit) | `scripts/cinematics/cine_overlay.gd`, `art/shaders/cine_grade.gdshader`, `art/shaders/cine_wipe.gdshader` |
-| The studio set (arsenal, line-up) | `scripts/cinematics/cine_studio.gd` |
+| Lens and colour grade, letterbox, flashes, fades, backdrop, title cards, stamps, tags, counters (UI kit) | `scripts/cinematics/cine_overlay.gd`, `art/shaders/cine_grade.gdshader`, `art/shaders/cine_wipe.gdshader` |
+| The studio set (arsenal, line-up, prints) | `scripts/cinematics/cine_studio.gd` |
 | Music: `showreel_trailer` and the startup score `cine_startup` | `tools/audio_packs/showreel.py` (`python3 tools/gen_audio.py showreel`) |
 | Start straight into the reel / contact-sheet frames / timings | `scripts/cinematics/showreel_render.gd` (`-- --showreel ...`) |
 | Render the video and contact sheet | `tools/render_showreel.sh` |
@@ -28,12 +30,15 @@ TRAILER, or as an attract mode), and renders to a video.
   cuts stay on the music's beat even in slow motion.
 * **Sets** are level scenes (scenery only: the `RunDirector` is removed, as on
   the menu backdrop; Boot Camp's comes from `data/tutorial/`) or the
-  code-built studio. They load on the engine's loader
-  threads and are instantiated on a worker thread four shots ahead, attached at
-  their first cut and freed after their last, so at most three are alive.
+  code-built studio. They load on the engine's loader threads and are
+  instantiated on a worker thread four shots ahead, and for every shot that
+  starts within the next 3.2 s (`LOOKAHEAD_SECONDS`, so a run of one-beat
+  cuts across fifteen worlds is loaded in time); a set is attached at its
+  first cut and freed after its last.
 * Each shot's actors hang off one node that is freed at the cut (effects spawn
   under it). Zombies are the real `Zombie` scene with no target: they never
-  chase; the shot moves them and plays their clips. Kills go through
+  chase; the shot moves them and plays their clips, and they show from
+  their first frame (`Zombie.skip_emerge`). Kills go through
   `Zombie.take_hit`, so death clips, the head pop, confetti, freezes and
   shatters are the game's own; kill-effect cosmetics are played with
   `KillEffects.play`, tracers with `WeaponFx.shot`, beams with `BeamVisual`,
@@ -43,8 +48,8 @@ TRAILER, or as an attract mode), and renders to a video.
 * **Warm-up, so no cut hitches.** Before the first frame the player holds
   black while `FxWarmup` draws one of every enemy, kill effect, tracer,
   projectile and weapon (their shaders compile there), and the heavy shots
-  (`CineShot.prebuild`, the list `BUILT_AHEAD`: first-person views, line-ups,
-  hordes) are built one per frame, hidden and paused; their cut only shows
+  (`CineShot.prebuild`, the list `BUILT_AHEAD`: nearly every shot of this
+  reel) are built one per frame, hidden and paused; their cut only shows
   them. A shot's effects on the frame, the grade and the light all go through
   `stage.at(0.0, ...)` (so building it early touches nothing on screen) and
   its set is handed over at the cut (`stage.set_root`). Each level set, once
@@ -64,99 +69,98 @@ TRAILER, or as an attract mode), and renders to a video.
 ## The look
 
 * **Grade**: every shot picks a look (`overlay.grade`: dusk, day, night,
-  studio, golden) for one full-screen pass of `cine_grade.gdshader` drawn
-  over the 3D frame and under the type: lift, gain, contrast, saturation and
-  a vignette. The same pass fakes a shallow depth of field
-  (`overlay.focus`, `stage.focus_on`: a blur growing away from a point; a
-  rack focus is a tween between two points), the smear of a whip pan
-  (`stage.whip`) and anamorphic flares pinned to a world point
-  (`stage.flare_at`: the low sun, a pair of eyes, an impact). The blurs only
-  sample while switched on; each cut resets the lens.
+  studio, golden, and for this reel dark, ember and blood) for one
+  full-screen pass of `cine_grade.gdshader` drawn over the 3D frame and under
+  the type: lift, gain, contrast, saturation and a vignette. *Dark* crushes
+  the cold open so a muzzle flash or a hologram lights the frame; *ember* is
+  Ashfall City's hot orange; *blood* is Last Ride's red. The same pass fakes a
+  shallow depth of field (`overlay.focus`, `stage.focus_on`), the smear of a
+  whip pan (`stage.whip`) and anamorphic flares pinned to a world point
+  (`stage.flare_at`: the low sun, a pair of eyes, a blast). Each cut resets the
+  lens.
 * **Light**: `stage.lighting(ambient, exposure, glow, sun)` relights a level
-  set for one shot (a copy of its Environment, restored at the next cut):
-  the cold open drops the ambient and the sun so the cast reads as shapes
-  against the dusk sky and the bulbs bloom through the game's own glow.
+  set for one shot (restored at the next cut): the cold open drops the
+  ambient to near black; the title brings the glow up in eight steps on the
+  16ths after the slam, so the pier's bulbs snap on. Shots add their own
+  lights: the muzzle flash that lights each lunging zombie, the cyan glow of a
+  hologram reload on the hands (pinned to the lens), pink and cyan rims on the
+  alphas and the line-up.
 * **Time**: `stage.slowmo(from, to, scale, ramp_in, ramp_out)` is a speed
-  ramp: a quick drop into slow motion on an impact, a slow climb out. The
-  camera and the titles run on the reel's own (unscaled) clock, so a ramp
-  never jolts the camera; only the world slows.
-* **Smooth moves**: `stage.spline(keys)` runs the camera through
-  `[time, position, look_at]` keys on a Catmull-Rom curve whose tangents are
-  scaled by the key spacing, so its speed never jumps at a key (the
-  first-person mantle, vault and slide is one such curve). Shakes run at
-  4-6 Hz so they read as a jolt at 30 fps, not as frame-to-frame jitter.
+  ramp on every impact: the WINNER round, the Cryo shatter, the gumball
+  blast, the Last Ride charge, the finale; the headshot through the sight
+  drops to 0.2x exactly on the 22.0 half-time. The camera and the titles run
+  on the reel's own (unscaled) clock, so a ramp never jolts the camera, and
+  reloads (tweens on the game clock) slow with the world.
+* **Cuts**: every cut lands on a beat (0.4 s). The world montage moves at a
+  constant speed (linear dollies) with a short white accent on each cut, and
+  the last four carry the "15 worlds" title across their cuts
+  (`overlay.stamp(..., pop = false)`).
 * **First person** uses the game's own viewmodel (`WeaponView`): sway, kick,
-  the muzzle flash and the weapon's real reload, with gloves on the arms; with
-  no player behind it `staged_aim` brings the real sight to the eye on the same
-  eye line the game aims along (its reticle lit), and `staged_sprint`,
-  `staged_slide`, `staged_mantle` and `staged_gait` drive the movement poses
-  and the run bob.
-* **Words**: none in the cold open. A few title cards in the kit's sign face
-  (`overlay.title_card`: a spaced kicker over a title, fading and drifting in)
-  and small spaced captions for place and item names (`overlay.caption`).
+  the muzzle flash and the weapon's real reload (`play_reload`; a showcase
+  cuts in on its middle with `seek_reload`), with gloves on the arms; a reload
+  close-up leans the viewmodel toward the middle of the frame and narrows the
+  lens. `staged_aim` brings the real sight to the eye, and `staged_sprint`,
+  `staged_slide`, `staged_mantle` and `staged_gait` drive the movement poses.
+* **Words**: none in the first six seconds. Fast type for fast cuts:
+  `overlay.stamp` (a big title that slams in in 0.14 s: alpha names, Endless,
+  Last Ride), `overlay.tag` (a small kicker and name sliding in low left in
+  0.1 s: each world's number and name, each weapon), `overlay.counter` (the
+  wave count), `overlay.backdrop` (black under the type), and the game's own
+  UI pieces placed on the type layer (`overlay.place`: the capsule machine).
 
 ## Featured items
 
 The constants at the top of `showreel_shots.gd` pick every featured item by
-id: the operator line-up (front row = newest), the action hero and squads,
-the kill effects and tracers of the kill shots, the gloves, the arsenal's
-animated finishes, the finishes the camera lingers on with their cells, the
-charm rigs (weapon, finish, charm, cell, decal) and the sights. Swap an id
-there; counts on the cards come from `GameData`.
+id: the fifteen worlds (camera move and their own zombies), the four alphas,
+the four lunging zombies, the reloads (Rail Lancer in the dark; Ticket
+Ripper, Lava Lampoon, T-Minus Six and Coin-Op in the drop), the line-up
+(Madame Fortuna in the centre), the finale squad and their guns, the kill
+effects, tracers and gloves, the eight weapons of the arsenal and their
+animated Legendary finishes (Jackpot, Ghost Train, Treasure Map, Multiball,
+Marquee Lights, Thunderhead, Galaxy) and the Mythic Last Light, the sight and
+the print. Counts on the cards (worlds, weapons, zombies, alphas, operators,
+cosmetics) come from `GameData`.
 
-## Shot list (120 BPM, a bar is 2 s)
+## Shot list (150 BPM: a beat is 0.4 s, a bar 1.6 s; 41.6 s and a ring-out)
 
-Three acts in 88 s: the owner-approved wordless dusk opening and the title;
-the ten worlds (each of the five new ones gets its landmark and then its alpha
-on a hit) and the whole cast; then the drop into play (kills, sights, Boot Camp
-and the moves, a bounty and its Sparks, an alpha), what you make yours (the
-arsenal, finishes and the Shop, sights, operators) and the title card.
+The music (`showreel_trailer`) is written to these times; the section
+boundaries and the bold hits are locked.
 
 | Time | Shot | Set | What | Music |
 | --- | --- | --- | --- | --- |
-| **Act I: cold open (no words)** | | | | |
-| 0-6 | open_sunset | Prize Pier | Fade up from black; a low crane past a lamp post toward the Ferris wheel at dusk, a lone tourist shambles across in silhouette; sun flare | pad from silence, sea wind, a distant band organ |
-| 6-9 | open_eyes | Prize Pier | Slow push on the tourist's face, pink rim light; its eyes catch cyan light (flare), a slow silent roar; shallow focus | deep heartbeat |
-| 9-12 | open_horde | Prize Pier | Ground level, slow motion: feet pass the lens, the focus racks to the horde walking out of the sunset | heartbeat doubles, low swell, a breath |
-| 12-16 | title | Prize Pier | Crane up out of the horde to the Ferris wheel; the logo rises in (no slam), dusk grade warms to gold | **low boom** |
-| **Ten worlds** | | | | |
-| 16-18 | world_neon | Neon Skyline | Rooftops at night, punks below; whip pan out | the beat comes in |
-| 18-20 | world_tidal | Tidal Tunnels | Whip in to the shark tank, whip out | whoosh + low tom |
-| 20-22 | world_dune | Launch Pad 9 | Whip in, crane up the rocket, whip out | whoosh + low tom |
-| 22-24 | world_frost | Summit Lodge | Whip in to the lodge under the aurora, whip out | whoosh + low tom |
-| 24-26 | world_mall | Midnight Mall | Whip in; down from the glass dome toward the Moonfall Fountain as Mall Walkers and Flingers come | whoosh + low tom |
-| 26-27 | alpha_mall | Midnight Mall | The Night Manager walks at a low lens, name card | boom |
-| 27-29 | world_temple | Lost Temple | Rising toward the Jade Idol's carved face at golden hour; explorers and Overgrowns | low tom |
-| 29-30 | alpha_temple | Lost Temple | The Idol Keeper | boom |
-| 30-32 | world_candy | Candy Works | Low across the factory floor to the colossal gumball machine; Gummy Bears and a Taffy Puller | low tom |
-| 32-33 | alpha_candy | Candy Works | The Confectioner | boom |
-| 33-35 | world_lava | Lava Lagoon | Mount Kahuna erupts (the Eruption twist): the sky flares, ember bombs drop into their glowing rings among the fire dancers | low tom |
-| 35-36 | alpha_lava | Lava Lagoon | Kahuna Krakatoa, the eruption still glowing | boom |
-| 36-38 | world_sky | Sky Harbor | Across the hub isle to the airship Cumulus at its mooring; Sky Divers and Balloon Vendors | low tom |
-| 38-39 | alpha_sky | Sky Harbor | Captain Cumulus on the dock isle | boom |
-| 39-42 | cast_horde | Prize Pier | Twenty kinds of zombie from all ten worlds march at the lens in slow motion; card "N kinds of trouble" | breath: pulse, riser, snare |
-| **Act II: the drop, play** | | | | |
-| 42-44 | kill_headshot | Prize Pier | Speed ramp to 0.12x into a Neon Tube bolt to the head; the pop in slow motion | **DROP** |
-| 44-47 | kill_sweep | Prize Pier | First person (Data Rain carbine, Iron Knuckle gloves): five kills in five kill effects and tracers, then the real reload | |
-| 47-49 | ads | Prize Pier | Aim down sights: the cannon comes up to the eye, the Gemcut optic's reticle lights on a far head, the view zooms, a headshot in slow motion | |
-| 49-51 | boot_camp | Boot Camp | Up the training midway past its arches as an operator sprints the course; card "Boot Camp" | |
-| 51-54 | moves | Boot Camp | First person on one camera curve: mantle onto the crates, vault the barrier, slide under the low sign | whoosh on the slide |
-| 54-56 | kill_cryo | Prize Pier | The Cryo Beam freezes three (real `StatusEffects`); they shatter in slow motion | |
-| 56-58 | kill_lobber | Neon Skyline | A gumball arcs in, a ring of five blown apart, speed ramp and flare | |
-| 58-60 | bounty | Prize Pier | The golden bounty runner bolts and drops to a headshot (Jackpot kill effect); its Sparks fly to the lens and the counter ticks up; card "Bounty" | |
-| 60-62 | kill_alpha | Neon Skyline | Captain Lockdown soaks cannon hits, falls to a rail shot in slow motion with the Event Horizon kill effect | |
+| **Cold open** | | | | |
+| 0.0-1.6 | cold_open | Prize Pier | Out of black: a slow push on a tourist's face at dusk, pink rim; its eyes catch cyan light, it starts to roar | drone from silence, sea wind, the band organ detuned |
+| 1.6-3.2 | dark_reload | Prize Pier | Near darkness, first person: the Rail Lancer's capacitor swap, the hologram's cyan glow lighting the hands; the charge rings snap on | the reload, close; heartbeat sub |
+| 3.2-4.8 | lunge_0-3 | Neon Skyline, Tidal Tunnels, Launch Pad 9, Midnight Mall | Four 0.4 s flashes: a zombie of each world runs at the lens out of the dark, lit only by two muzzle flashes; the last one's head pops | riser, pulse doubles |
+| 4.8-6.0 | roar | Prize Pier | A Boardwalk Bruiser in silhouette lifts its head and roars, red flare in its eyes; sinks to black | suck-back, a breath of silence |
+| **6.0-8.0** | title | Prize Pier | **HIT 6.0**: white flash, the logo slams in with the tagline, the pier's lights come up in steps, crane toward the Ferris wheel over the horde | **big impact**, choir chord |
+| **Fifteen worlds** | | | | |
+| **8.0-14.0** | world_0-14 | each world's level | One world a beat in unlock order (Prize Pier to Toy Shop): a fast push on its landmark (the Ferris wheel, the shark tank, the rocket, the lodge, the Moonfall fountain, the Jade Idol, the gumball machine, the erupting volcano, the airship Cumulus, the Ghost Train, the mine-train loop, the Barnacle Queen, the toy castle, the toy shop) with its own zombies walking in; "World 07 · Jungle Expedition" low left; "15 worlds" over the last four | **the groove at 8.0**, an accent per cut |
+| **Alphas** | | | | |
+| **14.0-17.2** | alpha_0-3 | Ghost Train, Boomtown, Skull Harbor, Toy Shop | Ringmaster Rictus, Sheriff Rattlebones, Captain Barnacle, The Toymaker: a low lens pushing in as each roars, the frame jolts, the name slams in | **hits 14.0, 14.8, 15.6, 16.4** |
+| **17.2-17.6** | lock_load | (black) | "Lock and load" on black | **cut-out** |
+| **The drop: combat** | | | | |
+| **17.6-19.2** | ripper | Prize Pier | **DROP**. First person, Ticket Ripper (Jackpot finish): 15 rounds a second through a pack, three drop, then the golden WINNER round pierces the last two and pops its ticket burst and WINNER! sign in slow motion | the drop |
+| 19.2-20.0 | reload_lava | Lava Lagoon | Close on the Lava Lampoon's reload at dusk, in slow motion: the lamp lifts out on its hologram ring and cartwheels | |
+| 20.0-20.8 | moves | Boot Camp | First person: out of a vault into a sprint and a slide under the DUCK! sign | whoosh |
+| 20.8-21.6 | cryo | Prize Pier | The Cryo Beam freezes three; they shatter in slow motion | |
+| 21.6-22.8 | ads | Prize Pier | Aim down sights: the Comet cannon's Gemcut optic lights on a far head; **22.0** the head pops at 0.2x | **slow motion 22.0-22.8** |
+| 22.8-23.6 | reload_tminus | Launch Pad 9 | Close on the T-Minus Six's reload: rockets slide down the hologram gantry, the countdown, the pod flares | |
+| 23.6-24.4 | lobber | Candy Works | A gumball arcs into a ring of five; the blast throws them apart in slow motion | |
+| 24.4-25.6 | coin_op | Neon Skyline | First person, Coin-Op at night: a spray, a headshot pays FREE PLAY +4 TOKENS (ka-ching), then the coin-return reload | |
+| 25.6-26.4 | parade | Midnight Mall | Three kills in three kill effects (Confetti Pop, Disco Fever, Pinata Party) and three tracers as the camera trucks past | |
+| 26.4-27.2 | horde | Prize Pier | The horde charges the lens at a run, low at dusk | |
+| **Endless, Last Ride** | | | | |
+| **27.2-28.8** | city_wide | Ashfall City | A crane down over the burning square as the city's horde (Riot Shields, Tunnel Crawlers...) floods in; "Endless · Ashfall City" | **hit 27.2**, toms double |
+| 28.8-30.4 | city_street | Ashfall City | Street level: runners and a Firebug at the lens, WAVE 5 counting to 30, the Wrecker roaring behind | rising choir |
+| **30.4-32.0** | last_ride | Prize Pier | Blood-red grade: the Black Knight charges a low lens in slow motion with his knights; "Last Ride · the hardest difficulty", "No healing · no checkpoints / Double XP and Sparks" | **stop-hit 30.4** |
 | **Make it yours** | | | | |
-| 62-66 | arsenal | Studio | All 8 weapons on the turntable, one per beat, each in a new animated finish; card "The arsenal" | arp, a soft tom per weapon |
-| 66-70 | finishes | Studio | Macro glide along the carbine; four animated finishes with cells and the Ferris wheel charm; card "N cosmetics / Sparks buy them in the Shop" | |
-| 70-72 | sights | Studio | The cannon in profile, the sight swaps on each beat (match cuts); whip out | whoosh |
-| 72-75 | operators | Studio | Whip in; the 18 operators in two rows (newest in front) strike their poses under pink and cyan rims; card "N operators" low in frame | lift |
-| 75-78 | op_action | Prize Pier | Chase camera on Wind-Up Wally running, aiming and firing (Gift Ribbon tracer), Pinata Party kill, slow motion; whip out | whoosh |
-| **Act III: title card** | | | | |
-| 78-88 | finale | Prize Pier | Three operators hold the line at dusk as the horde comes; crane up and back; logo, feature chips (real counts and the three difficulties), PLAY NOW marquee at 82, fade at 86.4 | **HIT** 78, **HIT** 82 |
-
-The other five alphas are represented by Captain Lockdown, the twists by the
-Eruption (the others are lighting changes the grade would hide); the loadout
-station stands on Boot Camp's course and the Shop is named on its card.
+| **32.0-33.6** | arsenal | Studio | Eight weapons on the turntable, one a half beat, each in an animated Legendary (and the Mythic Last Light) finish, its name and the weapon count low left; "Make it yours" | **32.0**, a sparkle per beat |
+| 33.6-34.4 | operators | Studio | The 19 operators posing in two rows, Madame Fortuna in her aura in the centre | |
+| 34.4-35.2 | prints | Studio | Prize Prints: the capsule machine turns a Legendary capsule, a print lands on the plinth in a gold burst; the cosmetic count | |
+| **Finale** | | | | |
+| **35.2-41.6** | finale | Prize Pier | **HIT 35.2**: three operators (Madame Fortuna in the middle) hold the line at dusk as a horde of every world charges; slow motion, kill effects, crane up and back. **HIT 38.4**: the logo slams in, the feature chips (worlds, weapons, zombies, alphas, Endless, operators, Last Ride), PLAY NOW; fade to black on **41.6** | the full theme, final slam |
+| 41.6-43.2 | ring_out | (black) | The tagline fades on black while the score rings out | ring-out |
 
 ## Smoothness
 
@@ -181,14 +185,14 @@ beat by the end).
 
 ```bash
 tools/render_showreel.sh            # media/what-lies-ahead-showreel.mp4 + ...-sheet.jpg
-tools/render_showreel.sh --to 16    # a test of the first 16 s
+tools/render_showreel.sh --to 14    # a test of the first 14 s (through the worlds)
 ```
 
 Godot's movie maker (`--write-movie`, `--fixed-fps 30`, OpenGL under xvfb)
 renders segments of whole shots into `build/showreel/`; a finished segment is
 kept, so the command can be re-run after an interruption (delete the folder
 after changing shots). The segments are joined, scaled to 1280x720 and encoded
-(H.264 at about 2.2 Mbit/s, AAC), about 24 MB. The software renderer takes
+(H.264 at about 2.2 Mbit/s, AAC), about 12 MB for the 41.6 s reel. The software renderer takes
 roughly half a minute per second of film.
 
 Contact-sheet frames without a video (fast, low resolution):

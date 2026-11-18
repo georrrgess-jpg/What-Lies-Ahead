@@ -8,7 +8,7 @@ extends RefCounted
 ## slam), 8.0 (the groove: fifteen worlds), 14.0-16.4 (an alpha a hit),
 ## 17.2 (cut-out), 17.6 (the drop), 22.0-22.8 (slow motion), 27.2 (Endless),
 ## 30.4 (Last Ride), 32.0 (make it yours), 35.2 and 38.4 (the finale) and
-## 41.6 (the end).
+## 41.6 (the picture is black; the score rings out under a last line).
 ##
 ## Actors, levels and cosmetics are referenced by id, so the reel always shows
 ## the game's current models and effects. The picks below are the only place
@@ -61,7 +61,7 @@ const WORLDS := [
 const ALPHAS := [
 	["ghost_train", &"alpha_ringmaster", Vector3(0.5, 0, 8.0), 20.0],
 	["boomtown", &"alpha_rattlebones", Vector3(0.5, 0, 14.5), 180.0],
-	["skull_harbor", &"alpha_barnacle", Vector3(2.0, 0, 4.5), 80.0],
+	["skull_harbor", &"alpha_barnacle", Vector3(2.0, 0, 4.5), 105.0],
 	["toy_shop", &"alpha_toymaker", Vector3(-4.0, 0, 15.0), -40.0],
 ]
 ## The zombies that lunge at the lens in the muzzle-flash cold open: [level, zombie, where, yaw].
@@ -75,7 +75,7 @@ const LUNGES := [
 const DARK_RELOAD := &"rail_lancer"
 ## Where a reload close-up moves the viewmodel (metres in the lens's space):
 ## left and up toward the middle of the frame, a little nearer.
-const CLOSE_UP := Vector3(-0.05, 0.035, 0.02)
+const CLOSE_UP := Vector3(-0.035, 0.025, 0.0)
 ## Operators: the line-up (Madame Fortuna in the centre), the three who hold
 ## the line in the finale.
 const LINEUP_FRONT: Array[StringName] = [&"op_stunt_ace", &"op_halfpipe", &"op_top_dog", &"op_pixel_pal",
@@ -156,6 +156,8 @@ static func build() -> Array[CineShot]:
 		CineShot.make("prints", STUDIO, 2 * BEAT, s._prints),
 		# The finale: hold the line (35.2), the title (38.4), black (41.6)
 		CineShot.make("finale", PIER, 16 * BEAT, s._finale),
+		# The music's ring-out on black (41.6-43.2)
+		CineShot.make("ring_out", PIER, 4 * BEAT, s._ring_out),
 	])
 	for shot in list:
 		shot.prebuild = shot.id in BUILT_AHEAD
@@ -291,15 +293,15 @@ func _cold_open(st: CineStage) -> void:
 ## hologram and the glow lights the hands; the charge rings snap on.
 func _dark_reload(st: CineStage) -> void:
 	st.at(0.0, st.overlay.grade.bind(&"dark"))
-	st.lighting(0.12, 0.55, 1.6, 0.05)
+	st.lighting(0.22, 0.6, 1.6, 0.05)
 	var view := _viewmodel(st, DARK_RELOAD, &"fin_thunderhead", GLOVES[1], &"", CLOSE_UP)
 	var eye := Vector3(-3.0, 1.6, 6.0)
 	st.fov(42.0, 38.0)
 	_eye_track(st, eye, eye + Vector3(-1, -0.2, -1), eye + Vector3(-1, -0.1, -0.75), Vector3(-0.1, 0.03, -0.15), 1.0)
 	var d := GameData.weapon(DARK_RELOAD).reload_time
 	_reload(st, view, DARK_RELOAD, 0.0, d * 0.85)
-	_lens_light(st, UiKit.CYAN, Vector3(0.1, -0.12, -0.35), func(t: float) -> float:
-		return 0.3 + 3.5 * smoothstep(0.3, 0.6, t) * (1.0 - smoothstep(1.2, 1.5, t)) + 4.0 * exp(-pow((t - 1.3) * 7.0, 2.0)), 1.6)
+	_lens_light(st, UiKit.CYAN, Vector3(-0.02, 0.02, -0.12), func(t: float) -> float:
+		return 0.6 + 2.6 * smoothstep(0.25, 0.55, t) * (1.0 - smoothstep(1.15, 1.45, t)) + 3.5 * exp(-pow((t - 1.3) * 7.0, 2.0)), 1.4)
 
 
 ## Four flashes in four worlds: a zombie lunges at the lens out of the dark,
@@ -913,3 +915,13 @@ func _finale_titles(st: CineStage) -> void:
 	st.at(3.5, st.overlay.chips.bind(counts, Vector2(0.5, 0.6), 0.08, [UiKit.CYAN, UiKit.PINK, UiKit.AMBER]))
 	st.at(4.0, func(): st.overlay.marquee("PLAY NOW", 84, Vector2(0.5, 0.8)))
 	st.at(5.6, st.overlay.fade.bind(1.0, 0.8))
+
+
+## The score rings out on black under the tagline, which fades away.
+func _ring_out(st: CineStage) -> void:
+	st.at(0.0, st.overlay.fade.bind(0.0, 0.0))
+	st.at(0.0, st.overlay.backdrop.bind(1.0))
+	st.at(0.0, func():
+		var l := st.overlay.caption("An arcade zombie survival", 0.85, UiKit.CREAM)
+		l.position.y = st.overlay.root.size.y * 0.5 - l.size.y * 0.5)
+	st.dolly(Vector3(0, 2, 10), Vector3.ZERO, Vector3(0, 2, 9), Vector3.ZERO)
