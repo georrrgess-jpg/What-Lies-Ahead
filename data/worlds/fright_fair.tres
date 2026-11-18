@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WorldData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/world_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="2"]
+[ext_resource type="Resource" path="res://data/levels/ghost_train.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="4"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("4")
+kind = 2
+target = &"sky_harbor"
+amount = 0
+
+[resource]
+script = ExtResource("1")
+id = &"fright_fair"
+display_name = "Fright Fair"
+blurb = "A haunted fairground at midnight under a huge full moon. The ghost train is running, the carousel creaks round on its own, and the crowd came up out of the graveyard."
+levels = Array[ExtResource("2")]([ExtResource("3")])
+sort_order = 110
+tagline = "Every ride has a last stop."
+requirement = SubResource("unlock")
+accent_color = Color(0.49, 1, 0.42, 1)
+secondary_color = Color(1, 0.54, 0.12, 1)
+backdrop_color = Color(0.12, 0.07, 0.22, 1)

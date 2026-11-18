@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/fright_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/fright_ghost_fade.gd" id="4"]
+
+[sub_resource type="Resource" id="fade"]
+script = ExtResource("4")
+interval = Vector2(5, 8)
+tell = 0.6
+fade_seconds = 2.2
+fade_amount = 0.62
+dash_speed = 1.5
+max_range = 22.0
+hover_height = 0.07
+hover_seconds = 1.3
+tell_clip = &"Roar"
+tell_sound = &"fright_ghost_wail"
+fade_sound = &"fright_ghost_fade"
+
+[resource]
+script = ExtResource("1")
+id = &"fright_ghost"
+display_name = "Bedsheet Ghost"
+max_health = 70.0
+move_speed = 3.4
+speed_variance = 0.1
+turn_speed = 7.0
+tickets = 18
+score = 230
+xp = 18
+damage = 12.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.45
+attack_recover = 0.7
+lunge_speed = 4.0
+mass = 0.9
+flank_degrees = 70.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Ghost"
+body_scale = 0.98
+capsule_radius = 0.44
+capsule_height = 1.9
+head_height = 1.25
+shirt_colors = Array[Color]([Color(0.96, 0.94, 0.98, 1), Color(0.88, 0.84, 1, 1), Color(0.84, 0.98, 0.9, 1), Color(1, 0.9, 0.82, 1)])
+skin_colors = Array[Color]([Color(0.62, 0.82, 0.42, 1), Color(0.56, 0.8, 0.5, 1), Color(0.7, 0.82, 0.45, 1)])
+accessory_slots = PackedStringArray("Acc_Ghost_Bow|", "Acc_Ghost_Chain||")
+move_animation = &"Run"
+clip_style = &"Ghost"
+animation_reference_speed = 4.85
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("fade")])
+voice_sounds = Array[StringName]([&"fright_ghost_moan_1", &"fright_ghost_moan_2"])
+voice_interval = Vector2(2.5, 5.5)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

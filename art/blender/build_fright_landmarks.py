@@ -200,8 +200,8 @@ def mirror_hall():
             p.append(box(f"DoorFrame{i}", fsize, floc, bevel=0.04, m=orange))
     # Funhouse mirrors on the inner faces, wavy gold frames.
     rng = random.Random(6)
-    spots = [((x, -6.8), 0.0) for x in (-3.5, -1.0, 1.5, 3.8)] + [((x, -0.2), 0.0) for x in (0.2, 2.6)] + [((x, 0.2), math.pi) for x in (0.6, 3.2)]
-    spots += [((x, 6.8), math.pi) for x in (-3.5, -1.0, 3.8)] + [((-4.8, y), math.pi / 2) for y in (-4.5, 3.5, 5.5)] + [((4.8, y), -math.pi / 2) for y in (-5.8, 1.2, 4.5)]
+    spots = [((x, -6.8), math.pi) for x in (-3.5, -1.0, 1.5, 3.8)] + [((x, -0.2), 0.0) for x in (0.2, 2.6)] + [((x, 0.2), math.pi) for x in (0.6, 3.2)]
+    spots += [((x, 6.8), 0.0) for x in (-3.5, -1.0, 3.8)] + [((-4.8, y), math.pi / 2) for y in (-4.5, 3.5, 5.5)] + [((4.8, y), -math.pi / 2) for y in (-5.8, 1.2, 4.5)]
     for k, ((x, y), yaw) in enumerate(spots):
         h = rng.uniform(2.0, 2.6)
         w = rng.uniform(0.9, 1.3)
@@ -209,6 +209,17 @@ def mirror_hall():
                 box(f"Frame{k}", (w + 0.2, 0.06, h + 0.2), (0, 0.03, 0.5 + h / 2), bevel=0.04, m=gold),
                 sphere(f"Crest{k}", 0.22, (0, 0.0, 0.62 + h), scale=(1.4, 0.3, 1.0), m=gold, segs=10, rings=6)]
         p += place(part, loc=(x, y, 0), rot_z=yaw)
+    # Inside: a striped dado round the walls and a row of bulbs under the ceiling.
+    for k in range(9):
+        y = -6.4 + k * 1.6
+        for sx in (-1, 1):
+            p.append(box(f"Dado{sx}{k}", (0.04, 0.7, 1.1), (sx * 4.83, y, 0.6), bevel=0.0, m=orange if k % 2 else ink))
+    for k in range(7):
+        x = -4.2 + k * 1.4
+        for sy in (-1, 1):
+            p.append(box(f"DadoY{sy}{k}", (0.7, 0.04, 1.1), (x, sy * 6.83, 0.6), bevel=0.0, m=orange if k % 2 else ink))
+    for k in range(6):
+        p.append(bulb(f"CeilBulb{k}", 0.09, (-3.5 + (k % 3) * 3.5, -3.5 if k < 3 else 3.5, H - 0.15), bulb_green() if k % 2 else bulb_orange()))
     # The crooked roof: a leaning gable over a ceiling, a cupola and a big eye window.
     p += [box("Ceiling", (10.4, 14.4, 0.2), (0, 0, H + 0.1), bevel=0.0, m=ink)]
     roof_l = box("RoofL", (6.2, 15.0, 0.3), (-2.6, 0, H + 1.5), rot=(0, math.radians(32), 0), bevel=0.05, m=roof)

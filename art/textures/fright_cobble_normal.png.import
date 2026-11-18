@@ -2,7 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-path="res://.godot/imported/fright_cobble_normal.png-b9c6ca28a52a80532cac4f23b28848be.ctex"
+uid="uid://bo4k5wli8elbs"
+path="res://.godot/imported/fright_cobble_normal.png-096d309d82f20e712ef935853aa73d9f.ctex"
 metadata={
 "vram_texture": false
 }
@@ -10,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://art/textures/fright_cobble_normal.png"
-dest_files=["res://.godot/imported/fright_cobble_normal.png-b9c6ca28a52a80532cac4f23b28848be.ctex"]
+dest_files=["res://.godot/imported/fright_cobble_normal.png-096d309d82f20e712ef935853aa73d9f.ctex"]
 
 [params]
 

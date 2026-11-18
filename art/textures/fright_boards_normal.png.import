@@ -2,7 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-path="res://.godot/imported/fright_boards_normal.png-b9c6ca28a52a80532cac4f23b28848be.ctex"
+uid="uid://fpgd2p6epx7e"
+path="res://.godot/imported/fright_boards_normal.png-52af8579c8f200274de2dcab7b7d39f0.ctex"
 metadata={
 "vram_texture": false
 }
@@ -10,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://art/textures/fright_boards_normal.png"
-dest_files=["res://.godot/imported/fright_boards_normal.png-b9c6ca28a52a80532cac4f23b28848be.ctex"]
+dest_files=["res://.godot/imported/fright_boards_normal.png-52af8579c8f200274de2dcab7b7d39f0.ctex"]
 
 [params]
 

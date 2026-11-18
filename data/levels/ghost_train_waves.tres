@@ -1,0 +1,159 @@
+[gd_resource type="Resource" script_class="WaveSet" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="2"]
+
+[sub_resource type="Resource" id="wave_1"]
+script = ExtResource("2")
+spawns = {
+"fright_ghost": 6,
+"tourist_shambler": 9,
+"fright_pumpkin_head": 2
+}
+spawn_interval = 1.6
+burst = 1
+max_alive = 10
+speed_scale = 1.0
+late_types_after = 0.35
+banner = ""
+kind = &"standard"
+title = "LAST ENTRY"
+hint = "Ghosts shiver before they fade: keep shooting, they still feel it."
+
+[sub_resource type="Resource" id="wave_2"]
+script = ExtResource("2")
+spawns = {
+"fright_ghost": 14,
+"lifeguard_runner": 5,
+"tourist_shambler": 4
+}
+spawn_interval = 1.0
+burst = 1
+max_alive = 12
+speed_scale = 1.0
+late_types_after = 0.0
+banner = ""
+kind = &"rush"
+title = "BOO RUSH"
+hint = "The ghosts come out of the skull in a swarm: back up and keep firing."
+surge_at = 0.5
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_3"]
+script = ExtResource("2")
+spawns = {
+"fright_pumpkin_head": 7,
+"tourist_shambler": 7,
+"lava_tiki_bartender": 2,
+"fright_ghost": 5
+}
+spawn_interval = 1.25
+burst = 1
+max_alive = 12
+speed_scale = 1.0
+late_types_after = 0.15
+banner = ""
+kind = &"ranged"
+title = "PUMPKIN PATCH"
+hint = "Pumpkin bombs land where the ring glows: step out of it, or headshot the throw."
+surge_at = 0.55
+surge_count = 5
+
+[sub_resource type="Resource" id="wave_4"]
+script = ExtResource("2")
+spawns = {
+"fright_ghost": 11,
+"tourist_shambler": 9,
+"fright_pumpkin_head": 4,
+"boardwalk_bruiser": 1
+}
+spawn_interval = 1.15
+burst = 1
+max_alive = 13
+speed_scale = 1.05
+late_types_after = 0.2
+banner = ""
+kind = &"bounty"
+title = "THE GOLDEN GHOST"
+hint = "Pop the golden ghost before it slips back into the dark."
+bounty = &"fright_ghost"
+bounty_tickets = 250
+
+[sub_resource type="Resource" id="wave_5"]
+script = ExtResource("2")
+spawns = {
+"boardwalk_bruiser": 2,
+"frost_yeti": 1,
+"tourist_shambler": 10,
+"fright_ghost": 9,
+"fright_pumpkin_head": 5
+}
+spawn_interval = 1.2
+burst = 1
+max_alive = 14
+speed_scale = 1.07
+late_types_after = 0.25
+banner = ""
+kind = &"siege"
+title = "THE MIDNIGHT PARADE"
+hint = "The heavies march in first: hold them at the plaza's edge."
+
+[sub_resource type="Resource" id="wave_6"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 11,
+"fright_ghost": 10,
+"fright_pumpkin_head": 5,
+"mall_walker": 3
+}
+spawn_interval = 1.05
+burst = 1
+max_alive = 14
+speed_scale = 1.09
+late_types_after = 0.15
+banner = ""
+kind = &"standard"
+title = "LIGHTS OUT"
+hint = "The power fails: only the green lights stay on. Watch for glowing eyes."
+surge_at = 0.5
+surge_count = 6
+twist = &"fright_lights_out"
+
+[sub_resource type="Resource" id="wave_7"]
+script = ExtResource("2")
+spawns = {
+"tourist_shambler": 12,
+"fright_ghost": 9,
+"fright_pumpkin_head": 4,
+"lava_fire_dancer": 3
+}
+spawn_interval = 1.85
+burst = 2
+max_alive = 14
+speed_scale = 1.1
+late_types_after = 0.1
+banner = ""
+kind = &"finale"
+title = "RINGMASTER RICTUS"
+hint = "Out of his spotlight, out from under the lanterns, and mind the parade."
+boss = &"alpha_ringmaster"
+boss_at = 0.45
+rest_before = 24.0
+
+[resource]
+script = ExtResource("1")
+waves = Array[ExtResource("2")]([SubResource("wave_1"), SubResource("wave_2"), SubResource("wave_3"), SubResource("wave_4"), SubResource("wave_5"), SubResource("wave_6"), SubResource("wave_7")])
+prep_seconds = 12.0
+break_seconds = 18.0
+checkpoint_wave = 4
+checkpoint_tickets = 525
+break_refill_fraction = 0.3
+ammo_topup_price = 240
+heal_price = 375
+heal_amount = 60.0
+heals_per_break = 1
+wave_bonus_base = 20
+wave_bonus_per_wave = 5
+overshield_price = 750
+overshield_amount = 25.0
+damage_boost_price = 725

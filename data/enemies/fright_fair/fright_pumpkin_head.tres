@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/fright_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/fright_pumpkin_bomb.gd" id="4"]
+
+[sub_resource type="Resource" id="bomb"]
+script = ExtResource("4")
+min_range = 6.0
+max_range = 22.0
+cooldown = 6.5
+windup = 1.0
+damage = 10.0
+damage_per_second = 0.0
+radius = 1.9
+linger = 0.0
+projectile_speed = 12.0
+lead = 0.5
+apex = 3.2
+color = Color(1, 0.55, 0.15, 1)
+bottle_mesh = "Acc_Pumpkin_Bomb"
+throw_clip = &"Throw_Bottle"
+windup_sound = &"fright_pumpkin_fuse"
+throw_sound = &"fright_pumpkin_throw"
+smash_sound = &"fright_pumpkin_splat"
+retreat_range = 0.0
+
+[resource]
+script = ExtResource("1")
+id = &"fright_pumpkin_head"
+display_name = "Pumpkin Head"
+max_health = 210.0
+move_speed = 1.55
+speed_variance = 0.1
+turn_speed = 4.5
+tickets = 26
+score = 300
+xp = 26
+damage = 16.0
+attack_range = 1.7
+attack_reach = 2.3
+attack_windup = 0.8
+attack_recover = 0.9
+lunge_speed = 2.6
+mass = 2.2
+flank_degrees = 35.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Pumpkin"
+body_scale = 1.06
+capsule_radius = 0.5
+capsule_height = 1.95
+head_height = 1.3
+shirt_colors = Array[Color]([Color(0.78, 0.2, 0.28, 1), Color(0.24, 0.5, 0.36, 1), Color(0.42, 0.3, 0.62, 1), Color(0.86, 0.6, 0.2, 1)])
+skin_colors = Array[Color]([Color(0.65, 0.83, 0.42, 1), Color(0.58, 0.8, 0.5, 1)])
+accessory_slots = PackedStringArray("Acc_Pumpkin_Hat|Acc_Pumpkin_Hat|")
+move_animation = &"Walk"
+animation_reference_speed = 2.0
+avoidance_radius = 0.6
+behaviours = Array[ExtResource("3")]([SubResource("bomb")])
+voice_sounds = Array[StringName]([&"fright_pumpkin_groan_1", &"fright_pumpkin_groan_2"])
+voice_interval = Vector2(3.0, 6.5)
+voice_pitch = 0.9
+attack_sound = &"zombie_swipe"

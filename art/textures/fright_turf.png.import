@@ -2,7 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-path="res://.godot/imported/fright_turf.png-6f56dc52d85156d674f65c29d2ca42df.ctex"
+uid="uid://bxawdvkmogt3t"
+path="res://.godot/imported/fright_turf.png-18c2706babbd51f5d271bcd92913ce58.ctex"
 metadata={
 "vram_texture": false
 }
@@ -10,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://art/textures/fright_turf.png"
-dest_files=["res://.godot/imported/fright_turf.png-6f56dc52d85156d674f65c29d2ca42df.ctex"]
+dest_files=["res://.godot/imported/fright_turf.png-18c2706babbd51f5d271bcd92913ce58.ctex"]
 
 [params]
 
