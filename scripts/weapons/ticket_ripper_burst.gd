@@ -26,13 +26,7 @@ var _tween: Tween
 
 ## The pop at `at` for `weapon`, sparing the zombies the winner already struck.
 static func pop(controller: WeaponController, weapon: WeaponData, at: Vector3, struck: Array[Zombie]) -> void:
-	var level := controller.player.get_parent()
-	WeaponFx.burst(level, at, Vector3.UP, TICKETS, 24, 5.5, 0.9, 0.06, 170.0, Vector3(0, -5.0, 0))
-	WeaponFx.burst(level, at, Vector3.UP, GOLD, 10, 4.0, 0.6, 0.035, 120.0, Vector3(0, -9.0, 0))
-	WeaponFx.flash(level, at, GOLD[0], 1.0, 0.16)
-	WeaponFx.shockwave(level, Vector3(at.x, at.y - 0.9, at.z), GOLD[0], RADIUS)
-	Sfx.play_at(POP_SOUND, at, 0.0, randf_range(0.97, 1.04))
-	_sign(level, at + Vector3.UP * 0.5)
+	show_at(controller.player.get_parent(), at)
 	var space := controller.player.get_world_3d().direct_space_state
 	for node in controller.get_tree().get_nodes_in_group("zombies"):
 		var z := node as Zombie
@@ -45,6 +39,17 @@ static func pop(controller: WeaponController, weapon: WeaponData, at: Vector3, s
 		var away := (chest - at).normalized() if d > 0.01 else Vector3.UP
 		var dmg := BURST_DAMAGE * lerpf(1.0, EDGE_SCALE, d / RADIUS) * (HEAVY_SCALE if z.data.heavy else 1.0)
 		controller.ring_hit(weapon, z, chest - away * z.data.capsule_radius * z.data.body_scale, away, dmg, false)
+
+
+## The pop's look and sound alone (tickets, gold, the ring and the WINNER!
+## sign) at `at` under `parent`, with no damage (also the trailer's).
+static func show_at(parent: Node, at: Vector3) -> void:
+	WeaponFx.burst(parent, at, Vector3.UP, TICKETS, 24, 5.5, 0.9, 0.06, 170.0, Vector3(0, -5.0, 0))
+	WeaponFx.burst(parent, at, Vector3.UP, GOLD, 10, 4.0, 0.6, 0.035, 120.0, Vector3(0, -9.0, 0))
+	WeaponFx.flash(parent, at, GOLD[0], 1.0, 0.16)
+	WeaponFx.shockwave(parent, Vector3(at.x, at.y - 0.9, at.z), GOLD[0], RADIUS)
+	Sfx.play_at(POP_SOUND, at, 0.0, randf_range(0.97, 1.04))
+	_sign(parent, at + Vector3.UP * 0.5)
 
 
 static func _sign(parent: Node, at: Vector3) -> void:

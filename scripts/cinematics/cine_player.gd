@@ -15,6 +15,9 @@ extends Node3D
 signal ended
 
 const LOOKAHEAD := 4
+## ...and every shot that starts within this many seconds (a run of fast cuts
+## across many sets, like the trailer's world montage, loads all of them).
+const LOOKAHEAD_SECONDS := 3.2
 const MUSIC_DB := -3.0
 ## Frames of black before the first shot while FxWarmup draws every effect,
 ## enemy and weapon of the reel once, so their shaders compile up front
@@ -120,6 +123,8 @@ func _warm_up() -> void:
 func _begin() -> void:
 	_running = true
 	overlay.fade(0.0, 0.0)
+	# The first shot is on this very frame (not the warm-up view behind it).
+	_cut(_shot_at(_clock))
 	_music.play(_clock)
 	if render_mode:
 		print("[showreel] start frame %d at %.2f s" % [Engine.get_process_frames(), _clock])
@@ -227,12 +232,15 @@ func _process(delta: float) -> void:
 	_collect_jobs()
 	_tick_warming()
 	if _stage:
-		_stage.update(_clock - shots[_index].start, delta)
+		_stage.update(maxf(0.0, _clock - shots[_index].start), delta)
 
 
+## The shot playing at `time`. Shot ends are summed floats (30.400000000000002),
+## so a time on a cut within a microsecond belongs to the next shot (whose
+## clock then starts at 0, not a hair before).
 func _shot_at(time: float) -> int:
 	for i in shots.size():
-		if time < shots[i].start + shots[i].length:
+		if time < shots[i].start + shots[i].length - 0.000001:
 			return i
 	return shots.size() - 1
 
@@ -278,7 +286,7 @@ func _cut(i: int) -> void:
 		_stage = CineStage.new(_actors, camera, overlay, null, shot.length)
 		shot.build.call(_stage)
 	_stage.set_root = _sets[shot.set_id]
-	_stage.update(_clock - shot.start, 0.0)
+	_stage.update(maxf(0.0, _clock - shot.start), 0.0)
 
 
 func _new_actor_root(shot: CineShot) -> Node3D:
@@ -374,10 +382,13 @@ func _release_unused(i: int) -> void:
 			_sets.erase(id)
 
 
-## Starts loading the sets of the next few shots: the level scene loads on
+## Starts loading the sets of the next few shots (LOOKAHEAD, LOOKAHEAD_SECONDS): the level scene loads on
 ## the engine's loader threads, then a worker thread instantiates it.
 func _prepare_from(i: int) -> void:
-	for k in range(i, mini(i + LOOKAHEAD, shots.size())):
+	var horizon := shots[i].start + LOOKAHEAD_SECONDS if i < shots.size() else 0.0
+	var k := i - 1
+	while k + 1 < shots.size() and (k + 1 < i + LOOKAHEAD or shots[k + 1].start < horizon):
+		k += 1
 		var id := shots[k].set_id
 		if _sets.has(id) or _jobs.has(id) or _loading.has(id):
 			continue

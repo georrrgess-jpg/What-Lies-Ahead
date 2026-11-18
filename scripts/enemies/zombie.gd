@@ -287,6 +287,14 @@ func _ready() -> void:
 			b.on_ready(self)
 
 
+## Shows the model at once instead of on the first physics tick, with no
+## climb-in (a staged zombie that must be on screen from its first frame).
+func skip_emerge() -> void:
+	_emerge_pending = false
+	if model_root:
+		model_root.visible = true
+
+
 ## True while winding up an attack that has not landed yet (for threat indicators).
 func is_winding_up() -> bool:
 	if (state == State.WINDUP and not _struck) or _charge_telegraph > 0.0:

@@ -23,12 +23,20 @@ const GRADES := {
 	&"night": [Vector3(0.03, 0.0, 0.06), Vector3(1.0, 0.96, 1.08), 1.1, 1.14, 0.42],
 	&"studio": [Vector3(0.02, 0.0, 0.045), Vector3(1.04, 1.0, 1.05), 1.08, 1.1, 0.48],
 	&"golden": [Vector3(0.05, 0.02, 0.06), Vector3(1.12, 0.98, 0.86), 1.1, 1.04, 0.5],
+	## Near darkness: crushed, cool shadows (a hologram or a flash lights the frame).
+	&"dark": [Vector3(0.0, 0.01, 0.03), Vector3(0.95, 1.0, 1.1), 1.22, 0.9, 0.75],
+	## Ashfall City: hot orange highlights over smoky shadows.
+	&"ember": [Vector3(0.04, 0.0, 0.0), Vector3(1.18, 0.92, 0.72), 1.14, 1.02, 0.55],
+	## Last Ride: blood red, hard contrast.
+	&"blood": [Vector3(0.06, 0.0, 0.01), Vector3(1.25, 0.62, 0.55), 1.25, 0.8, 0.7],
 }
 
 var root: Control
 var _bars: Array[ColorRect] = []
 var _flash: ColorRect
 var _fade: ColorRect
+## Black under the type (a title on black); cleared at every cut.
+var _backdrop: ColorRect
 var _wipe: ColorRect
 var _wipe_mat: ShaderMaterial
 var _text_layer: Control
@@ -53,6 +61,8 @@ func _ready() -> void:
 	_grade_mat = ShaderMaterial.new()
 	_grade_mat.shader = load(GRADE_SHADER)
 	_grade.material = _grade_mat
+	_backdrop = _full(ColorRect.new())
+	_backdrop.color = Color(0.0, 0.0, 0.0, 0.0)
 	_text_layer = _full(Control.new())
 	for top in [true, false]:
 		var bar := ColorRect.new()
@@ -150,11 +160,12 @@ func flare(at: Vector2, color: Color, strength: float) -> void:
 	_grade_mat.set_shader_parameter("flare_color", Vector4(color.r, color.g, color.b, strength))
 
 
-## Every lens effect off (each shot starts clean).
+## Every lens effect and the backdrop off (each shot starts clean).
 func reset_lens() -> void:
 	if _lens_tween and _lens_tween.is_valid():
 		_lens_tween.kill()
 	_grade_mat.set_shader_parameter("defocus", 0.0)
+	_backdrop.color.a = 0.0
 	smear(Vector2.ZERO)
 	flare(Vector2.ZERO, Color.BLACK, 0.0)
 
@@ -189,6 +200,11 @@ func fade(alpha: float, seconds: float, color := Color.BLACK) -> void:
 		_fade.color.a = alpha
 		return
 	_tween().tween_property(_fade, "color:a", alpha, seconds)
+
+
+## Black over the picture but under the type (a title on black), to `alpha`.
+func backdrop(alpha: float) -> void:
+	_backdrop.color.a = alpha
 
 
 ## The striped neon wipe: covers the frame at the half-way point.
@@ -300,6 +316,96 @@ func title_card(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 1.
 	tw.chain().tween_property(col, "modulate:a", 0.0, 0.4)
 	tw.chain().tween_callback(col.queue_free)
 	return col
+
+
+## A fast title for quick cuts: a small spaced kicker over a big title that
+## slams in (a scale punch in 0.14 s) and holds `hold` seconds. With `pop`
+## false it is simply there (the same title carried on across a cut).
+func stamp(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 1.0, accent := UiKit.CYAN, title_size := 96, pop := true) -> Control:
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", -4)
+	if kicker != "":
+		var k := UiKit.label(_spaced(kicker.to_upper()), UiKit.SIZE_LABEL, accent, true)
+		k.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(k)
+	var t := UiKit.sign_label(title.to_upper(), title_size)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.55))
+	t.add_theme_constant_override("shadow_offset_y", 4)
+	col.add_child(t)
+	_text_layer.add_child(col)
+	col.reset_size()
+	col.position = _inside(root.size * at - col.size * 0.5, col.size)
+	col.pivot_offset = col.size * 0.5
+	var tw := _tween()
+	if pop:
+		col.scale = Vector2.ONE * 1.7
+		col.modulate.a = 0.0
+		tw.set_parallel(true)
+		tw.tween_property(col, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+		tw.tween_property(col, "modulate:a", 1.0, 0.06)
+		tw.chain().tween_property(col, "scale", Vector2.ONE * 1.04, hold).set_trans(Tween.TRANS_SINE)
+	else:
+		tw.tween_property(col, "scale", Vector2.ONE * 1.04, hold).from(Vector2.ONE * 1.02)
+	tw.chain().tween_property(col, "modulate:a", 0.0, 0.12)
+	tw.chain().tween_callback(col.queue_free)
+	return col
+
+
+## A small tag low on the left for a fast cut (a world, a weapon): a bright
+## kicker over a name, sliding in from the edge in 0.1 s. Gone at the cut.
+func tag(kicker: String, title: String, accent := UiKit.CYAN) -> Control:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", -6)
+	var k := UiKit.label(_spaced(kicker.to_upper()), UiKit.SIZE_SMALL, accent, true)
+	col.add_child(k)
+	var t := UiKit.sign_label(title.to_upper(), UiKit.SIZE_HEADING)
+	t.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	t.add_theme_constant_override("shadow_offset_y", 3)
+	col.add_child(t)
+	_text_layer.add_child(col)
+	col.reset_size()
+	var home := _inside(Vector2(72.0, root.size.y - bar_height() - col.size.y - 30.0), col.size)
+	col.position = home - Vector2(60.0, 0.0)
+	col.modulate.a = 0.0
+	var tw := _tween().set_parallel(true).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tw.tween_property(col, "position:x", home.x, 0.1)
+	tw.tween_property(col, "modulate:a", 1.0, 0.05)
+	return col
+
+
+## A counter in the arcade face ("WAVE 30") counting from `from` to `to`
+## over `seconds`, punching on every step; stays until the cut.
+func counter(prefix: String, from: int, to: int, seconds: float, at := Vector2(0.5, 0.2), color := UiKit.AMBER, font_size := 96) -> Label:
+	var l := UiKit.arcade_label("%s %d" % [prefix, from], font_size, color)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_place(l, at)
+	var shown := [from]
+	var tw := _tween()
+	tw.tween_method(func(v: float):
+		var n := int(v)
+		if n == shown[0]:
+			return
+		shown[0] = n
+		l.text = "%s %d" % [prefix, n]
+		l.reset_size()
+		l.position.x = root.size.x * at.x - l.size.x * 0.5
+		l.pivot_offset = l.size * 0.5
+		l.scale = Vector2.ONE * 1.12
+		var punch := _tween()
+		punch.tween_property(l, "scale", Vector2.ONE, 0.08), float(from), float(to) + 0.5, seconds).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	return l
+
+
+## Puts any control (a UI piece of the game: the capsule machine) on the
+## type layer at `at` (its centre, fractions of the screen); gone at the cut.
+func place(c: Control, at: Vector2) -> Control:
+	_text_layer.add_child(c)
+	c.reset_size()
+	c.position = root.size * at - c.size * 0.5
+	c.pivot_offset = c.size * 0.5
+	return c
 
 
 ## A small spaced caption low in the frame (a place name), fading in and out.
