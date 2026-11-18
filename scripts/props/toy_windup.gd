@@ -12,7 +12,7 @@ const TWIST := &"wind_up"
 @export var wound_seconds := 6.0
 @export var rundown_seconds := 2.6
 ## Chase-speed multipliers while wound and while run down.
-@export var wound_speed := 1.35
+@export var wound_speed := 1.3
 @export var rundown_speed := 0.35
 ## Multiplier change per second (how fast the spring catches or slips).
 @export var ease_rate := 1.8

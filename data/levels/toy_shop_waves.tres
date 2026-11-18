@@ -87,7 +87,7 @@ script = ExtResource("2")
 spawns = {
 "toy_plush_brute": 5,
 "frost_yeti": 1,
-"boardwalk_bruiser": 1,
+"boardwalk_bruiser": 2,
 "tourist_shambler": 12,
 "toy_windup_soldier": 10,
 "mall_flinger": 2
@@ -108,7 +108,7 @@ spawns = {
 "toy_windup_soldier": 14,
 "tourist_shambler": 13,
 "lifeguard_runner": 5,
-"toy_plush_brute": 3,
+"toy_plush_brute": 2,
 "sky_balloon_vendor": 2
 }
 spawn_interval = 0.85
@@ -128,10 +128,10 @@ twist = &"wind_up"
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 14,
-"toy_windup_soldier": 11,
+"toy_windup_soldier": 12,
 "toy_plush_brute": 4,
 "lava_fire_dancer": 3,
-"sky_balloon_vendor": 2
+"sky_balloon_vendor": 3
 }
 spawn_interval = 1.5
 burst = 2

@@ -72,7 +72,7 @@ windup = 1.0
 windup_clip = &"Roar"
 callout = "WIND-UP ARMY — CLEAR THE SOLDIERS"
 enemy = &"toy_windup_soldier"
-count = 3
+count = 2
 max_alive = 3
 color = Color(1.0, 0.8, 0.3, 1.0)
 
@@ -149,7 +149,7 @@ events = Array[ExtResource("b_event")]([SubResource("event_0")])
 script = ExtResource("1")
 id = &"alpha_toymaker"
 display_name = "The Toymaker"
-max_health = 3600.0
+max_health = 3450.0
 move_speed = 2.0
 speed_variance = 0.0
 turn_speed = 3.5
