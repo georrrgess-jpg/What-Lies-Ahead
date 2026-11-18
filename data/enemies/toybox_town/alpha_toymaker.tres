@@ -1,0 +1,186 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/toy_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/toy_key_spin.gd" id="4"]
+[ext_resource type="PackedScene" path="res://art/models/toy_key.glb" id="5"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_arena_event.gd" id="b_event"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_strike_zones.gd" id="b_zones"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_charge.gd" id="b_charge"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_summon.gd" id="b_summon"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_shockwave.gd" id="b_shock"]
+
+[sub_resource type="Resource" id="key"]
+script = ExtResource("4")
+key_scene = ExtResource("5")
+mount = Vector3(0, 1.24, -0.36)
+key_scale = 2.0
+walk_rate = 90.0
+windup_rate = 1200.0
+
+[sub_resource type="Resource" id="block_drop"]
+script = ExtResource("b_zones")
+move_name = &"block_drop"
+cooldown = 9.0
+first_delay = 2.5
+max_range = 30.0
+callout = "BUILDING BLOCKS — KEEP MOVING!"
+windup = 0.8
+windup_clip = &"Throw"
+pattern = 0
+count = 5
+stagger = 0.45
+radius = 1.7
+telegraph = 1.15
+damage = 7.5
+color = Color(1.0, 0.8, 0.3, 1.0)
+style = 1
+prop = 3
+prop_color = Color(0.95, 0.76, 0.23, 1.0)
+prop_height = 2.0
+hits_airborne = true
+
+[sub_resource type="Resource" id="wind_up_rush"]
+script = ExtResource("b_charge")
+move_name = &"wind_up_rush"
+cooldown = 12.0
+first_delay = 6.0
+min_range = 6.0
+max_range = 22.0
+needs_sight = true
+callout = "WIND-UP RUSH — STEP ASIDE, THEN SHOOT THE GLOW"
+windup = 1.1
+windup_clip = &"Roar"
+speed = 13.0
+width = 2.4
+damage = 12.0
+shove = 9.0
+color = Color(1.0, 0.8, 0.3, 1.0)
+dash_clip = &"Run"
+dazed = 2.4
+
+[sub_resource type="Resource" id="wind_up_army"]
+script = ExtResource("b_summon")
+move_name = &"wind_up_army"
+min_phase = 1
+cooldown = 16.0
+first_delay = 1.0
+windup = 1.0
+windup_clip = &"Roar"
+callout = "WIND-UP ARMY — CLEAR THE SOLDIERS"
+enemy = &"toy_windup_soldier"
+count = 3
+max_alive = 4
+color = Color(1.0, 0.8, 0.3, 1.0)
+
+[sub_resource type="Resource" id="jack_spring"]
+script = ExtResource("b_shock")
+move_name = &"jack_spring"
+min_phase = 1
+cooldown = 12.0
+first_delay = 4.0
+max_range = 14.0
+callout = "JACK-IN-THE-BOX — JUMP THE RINGS"
+windup = 0.9
+windup_clip = &"Roar"
+waves = 2
+gap = 0.8
+speed = 8.5
+max_radius = 16.0
+damage = 8.0
+thickness = 0.55
+color = Color(0.95, 0.35, 0.3, 1.0)
+pound_clip = &"Attack_Heavy"
+
+[sub_resource type="Resource" id="toy_train"]
+script = ExtResource("b_zones")
+move_name = &"toy_train"
+min_phase = 2
+cooldown = 10.0
+first_delay = 1.5
+max_range = 26.0
+callout = "ALL ABOARD — GET OFF THE LINE!"
+windup = 0.9
+windup_clip = &"Throw"
+pattern = 2
+count = 6
+stagger = 0.22
+radius = 1.7
+telegraph = 1.2
+damage = 8.0
+color = Color(0.95, 0.35, 0.3, 1.0)
+style = 1
+prop = 3
+prop_color = Color(0.89, 0.27, 0.23, 1.0)
+prop_height = 2.0
+hits_airborne = true
+
+[sub_resource type="Resource" id="event_0"]
+script = ExtResource("b_event")
+kind = &"darkness"
+phase = 2
+strength = 0.35
+color = Color(1.0, 0.8, 0.3, 1.0)
+callout = "CLOSING TIME — THE SHOP LIGHTS GO OUT"
+
+[sub_resource type="Resource" id="alpha"]
+script = ExtResource("alpha_script")
+color = Color(1.0, 0.8, 0.3, 1.0)
+title = "MASTER OF THE MIDNIGHT WORKSHOP"
+phase_callouts = PackedStringArray("THE TOYMAKER WINDS UP HIS ARMY", "CLOSING TIME — ONE LAST TOY")
+slam_damage = 14.0
+slam_cooldown = 9.0
+volley_shots = 5
+volley_damage = 3.6
+volley_speed = 13.0
+volley_spread_degrees = 14.0
+volley_arc = 0.4
+volley_cooldown = 11.0
+volley_size = 0.36
+volley_clip = &"Throw"
+expose_callout = "HE'S WOUND DOWN — SHOOT THE GLOW!"
+moves = Array[ExtResource("b_move")]([SubResource("block_drop"), SubResource("wind_up_rush"), SubResource("wind_up_army"), SubResource("jack_spring"), SubResource("toy_train")])
+events = Array[ExtResource("b_event")]([SubResource("event_0")])
+
+[resource]
+script = ExtResource("1")
+id = &"alpha_toymaker"
+display_name = "The Toymaker"
+max_health = 3700.0
+move_speed = 2.0
+speed_variance = 0.0
+turn_speed = 3.5
+tickets = 220
+score = 3000
+xp = 180
+damage = 24.0
+attack_range = 2.5
+attack_reach = 3.3
+attack_windup = 1.0
+attack_recover = 1.15
+lunge_speed = 3.2
+mass = 7.5
+flank_degrees = 10.0
+enrage_radius = 0.0
+model_scene = ExtResource("2")
+outfit = &"Toymaker"
+body_scale = 1.45
+capsule_radius = 0.64
+capsule_height = 1.95
+head_height = 1.3
+shirt_colors = Array[Color]([Color(0.23, 0.44, 0.82, 1)])
+skin_colors = Array[Color]([Color(0.62, 0.8, 0.46, 1)])
+accessory_slots = PackedStringArray("Acc_Toymaker_Loupe", "Acc_Toymaker_Mallet")
+move_animation = &"Walk"
+clip_style = &"Heavy"
+heavy = true
+animation_reference_speed = 2.0
+avoidance_radius = 1.0
+behaviours = Array[ExtResource("3")]([SubResource("key"), SubResource("alpha")])
+voice_sounds = Array[StringName]([&"toy_toymaker_laugh_1", &"toy_toymaker_laugh_2"])
+voice_interval = Vector2(3.5, 6.5)
+voice_pitch = 0.8
+attack_sound = &"bruiser_slam"

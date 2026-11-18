@@ -323,24 +323,11 @@ func _build_podium() -> void:
 ## A stair of stacked hardbacks from `top` down to `bottom` along X: a sloped
 ## collider (as _stairs in the other generators) under columns of books.
 func _book_stairs(parent: Node3D, stair_name: String, top: Vector3, bottom: Vector3, width: float) -> void:
+	_ramp_collider(parent, stair_name, top, bottom, width)
 	var run := Vector3(bottom.x - top.x, 0, bottom.z - top.z)
 	var length := run.length()
 	var rise := top.y - bottom.y
 	var dir := run / length
-	var body := StaticBody3D.new()
-	body.name = stair_name
-	parent.add_child(body)
-	body.position = (top + bottom) * 0.5
-	body.rotation.y = atan2(-dir.z, dir.x)
-	var angle := atan2(rise, length)
-	var shape := CollisionShape3D.new()
-	shape.name = "CollisionShape3D"
-	var box := BoxShape3D.new()
-	box.size = Vector3(sqrt(length * length + rise * rise) + 0.3, 0.4, width)
-	shape.shape = box
-	shape.rotation.z = -angle
-	shape.position = Vector3(0, -0.2 / cos(angle) + 0.06, 0)
-	body.add_child(shape)
 	var steps := int(round(rise / 0.48))
 	var colours := ["red", "blue", "green", "yellow"]
 	for k in steps:
@@ -487,6 +474,7 @@ func _build_arena_props() -> void:
 	_block_tower(props, "TowerSE", Vector3(12.0, 0, 7.5), -1.0)
 	# The jack-in-the-box, its jester bobbing on the spring.
 	_solid_prop(props, "toy_jack_box", "JackBox", JACK, -30.0, Vector3(4.7, 4.6, 4.7))
+	_player_block(props, "JackCap", Vector3(4.7, 4.0, 4.7), JACK + Vector3(0, 6.6, 0), deg_to_rad(-30.0))
 	var pop := _prop(dressing, "toy_jack_pop", "JackPop", JACK + Vector3(0, 4.6, 0), -30.0, Vector3(2, 6, 2))
 	_late(pop, "res://scripts/props/ambient_motion.gd", {"bob_height": 0.35, "bob_seconds": 2.2, "rock_degrees": 7.0})
 	# Ball pit (cover you can climb into), the crayon box and loose crayons.
@@ -500,7 +488,7 @@ func _build_arena_props() -> void:
 	_solid_prop(props, "toy_teddy", "Teddy", Vector3(-33.5, 0, -2.0), 80.0, Vector3(4.6, 6.0, 4.0))
 	_solid_prop(props, "toy_robot", "Robot", Vector3(33.0, 0, 31.0), -150.0, Vector3(3.6, 7.0, 2.4), 0.85)
 	_solid_prop(props, "toy_drum", "DrumA", Vector3(-8.0, 0, 13.5), 0.0, Vector3(2.5, 1.6, 2.5), 0.6)
-	_solid_prop(props, "toy_drum", "DrumB", Vector3(4.0, 0, -21.0), 30.0, Vector3(2.5, 1.6, 2.5), 0.6)
+	_solid_prop(props, "toy_drum", "DrumB", Vector3(6.5, 0, -17.0), 30.0, Vector3(2.5, 1.6, 2.5), 0.6)
 	# Single blocks scattered as low cover.
 	_block(props, "LooseA", Vector3(-16.0, 0, 16.0), "green", -12.0)
 	_block(props, "LooseB", Vector3(20.0, 0, -21.0), "red", 22.0)
@@ -529,6 +517,8 @@ func _block(parent: Node3D, block_name: String, pos: Vector3, colour: String, ya
 	_add_multi("toy_block_" + colour, Transform3D(Basis(Vector3.UP, deg_to_rad(yaw)).scaled(Vector3.ONE * scale), pos))
 	var body := _collider(parent, block_name, Vector3(size, size, size), pos + Vector3(0, size * 0.5, 0))
 	body.rotation.y = deg_to_rad(yaw)
+	# Nobody perches out of reach on a block.
+	_player_block(parent, block_name + "Cap", Vector3(size, 2.0, size), pos + Vector3(0, size + 1.0, 0), deg_to_rad(yaw))
 
 
 func _crayon(parent: Node3D, crayon_name: String, pos: Vector3, yaw: float) -> void:
@@ -588,25 +578,25 @@ func _build_dollhouse() -> void:
 	_omni(d, "DollhouseLampUp", _dh(2.0, 0.5, 7.2), Color(1.0, 0.82, 0.6), 0.9, 7.0)
 
 
-## A collider-only stair slope from `top` down to `bottom` (the model draws the steps).
+## A solid stair wedge from `top` down to `bottom` (its top face is the slope;
+## the models draw the steps), so nothing walks in under the high end.
 func _ramp_collider(parent: Node3D, ramp_name: String, top: Vector3, bottom: Vector3, width: float) -> void:
-	var run := Vector3(bottom.x - top.x, 0, bottom.z - top.z)
-	var length := run.length()
-	var rise := top.y - bottom.y
-	var dir := run / length
+	var dir := Vector3(bottom.x - top.x, 0, bottom.z - top.z).normalized()
+	var side := Vector3(-dir.z, 0, dir.x) * width * 0.5
+	var foot := Vector3(top.x, bottom.y, top.z)
+	var pts := PackedVector3Array()
+	for s: float in [-1.0, 1.0]:
+		pts.append(top + side * s)
+		pts.append(foot + side * s)
+		pts.append(bottom + side * s)
 	var body := StaticBody3D.new()
 	body.name = ramp_name
 	parent.add_child(body)
-	body.position = (top + bottom) * 0.5
-	body.rotation.y = atan2(-dir.z, dir.x)
-	var angle := atan2(rise, length)
 	var shape := CollisionShape3D.new()
 	shape.name = "CollisionShape3D"
-	var box := BoxShape3D.new()
-	box.size = Vector3(sqrt(length * length + rise * rise) + 0.3, 0.4, width)
-	shape.shape = box
-	shape.rotation.z = -angle
-	shape.position = Vector3(0, -0.2 / cos(angle) + 0.06, 0)
+	var convex := ConvexPolygonShape3D.new()
+	convex.points = pts
+	shape.shape = convex
 	body.add_child(shape)
 
 
@@ -639,6 +629,7 @@ func _build_train() -> void:
 		var yaw := rad_to_deg(atan2(-(p.z / TRACK_R.y), p.x / TRACK_R.x))
 		_add_multi("toy_pier", Transform3D(Basis(Vector3.UP, deg_to_rad(yaw)), p))
 		_collider(t, "Pier%d" % i, Vector3(1.4, TRACK_Y - 0.8, 1.4), p + Vector3(0, (TRACK_Y - 0.8) * 0.5, 0)).rotation.y = deg_to_rad(yaw)
+		_player_block(t, "PierCap%d" % i, Vector3(1.8, 2.0, 1.8), p + Vector3(0, TRACK_Y + 0.2, 0), deg_to_rad(yaw))
 	# The train itself (no collision: it runs above everyone's heads).
 	var train := Node3D.new()
 	train.name = "Train"

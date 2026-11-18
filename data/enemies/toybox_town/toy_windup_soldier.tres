@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/toy_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/mall_power_walk.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/toy_key_spin.gd" id="5"]
+[ext_resource type="PackedScene" path="res://art/models/toy_key.glb" id="6"]
+
+[sub_resource type="Resource" id="march"]
+script = ExtResource("4")
+min_range = 5.0
+max_range = 17.0
+windup = 0.85
+burst_speed = 7.6
+burst_time = 1.6
+steer_degrees = 30.0
+recover_time = 1.4
+cooldown = 6.0
+damage = 9.0
+hit_radius = 1.2
+shove = 6.5
+windup_sound = &"toy_soldier_ratchet"
+burst_sound = &"toy_soldier_march"
+
+[sub_resource type="Resource" id="key"]
+script = ExtResource("5")
+key_scene = ExtResource("6")
+mount = Vector3(0, 1.2, -0.24)
+key_scale = 1.15
+
+[resource]
+script = ExtResource("1")
+id = &"toy_windup_soldier"
+display_name = "Wind-up Soldier"
+max_health = 78.0
+move_speed = 2.75
+speed_variance = 0.06
+turn_speed = 6.0
+tickets = 20
+score = 240
+xp = 20
+damage = 11.0
+attack_range = 1.6
+attack_reach = 2.2
+attack_windup = 0.5
+attack_recover = 0.75
+lunge_speed = 3.8
+mass = 1.1
+flank_degrees = 60.0
+enrage_radius = 9.0
+model_scene = ExtResource("2")
+outfit = &"Soldier"
+body_scale = 1.0
+capsule_radius = 0.42
+capsule_height = 1.9
+head_height = 1.25
+shirt_colors = Array[Color]([Color(0.89, 0.27, 0.23, 1), Color(0.23, 0.44, 0.82, 1), Color(0.31, 0.68, 0.35, 1), Color(0.95, 0.76, 0.23, 1)])
+skin_colors = Array[Color]([Color(0.66, 0.82, 0.42, 1), Color(0.6, 0.8, 0.5, 1), Color(0.7, 0.82, 0.46, 1)])
+accessory_slots = PackedStringArray("Acc_Soldier_Shako", "Acc_Soldier_Drum|")
+move_animation = &"Walk"
+animation_reference_speed = 2.6
+avoidance_radius = 0.5
+behaviours = Array[ExtResource("3")]([SubResource("march"), SubResource("key")])
+voice_sounds = Array[StringName]([&"toy_soldier_hup_1", &"toy_soldier_hup_2"])
+voice_interval = Vector2(2.5, 5.0)
+voice_pitch = 1.0
+attack_sound = &"zombie_swipe"

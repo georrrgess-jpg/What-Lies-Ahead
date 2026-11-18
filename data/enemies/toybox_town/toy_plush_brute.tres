@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/toy_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/toy_plush_bounce.gd" id="4"]
+
+[sub_resource type="Resource" id="bounce"]
+script = ExtResource("4")
+bounce_push = 8.5
+bounce_lift = 3.5
+marker_color = Color(1, 0.55, 0.75, 1)
+chute_sound = &""
+lead = 0.35
+first_dive = Vector2(2.0, 4.0)
+min_range = 5.0
+max_range = 15.0
+cooldown = 6.5
+windup = 0.95
+flight_time = 1.05
+apex = 4.2
+land_offset = 0.3
+landing_damage = 14.0
+landing_radius = 2.4
+windup_clip = &"Crouch"
+flight_clip = &"Leap"
+windup_sound = &"toy_plush_squash"
+launch_sound = &"toy_plush_boing"
+land_sound = &"toy_plush_thump"
+dust_color = Color(1, 0.92, 0.8, 1)
+
+[resource]
+script = ExtResource("1")
+id = &"toy_plush_brute"
+display_name = "Plush Brute"
+max_health = 240.0
+move_speed = 2.05
+speed_variance = 0.06
+turn_speed = 4.0
+tickets = 36
+score = 420
+xp = 36
+damage = 20.0
+attack_range = 2.0
+attack_reach = 2.7
+attack_windup = 0.9
+attack_recover = 1.0
+lunge_speed = 3.4
+mass = 2.6
+flank_degrees = 30.0
+enrage_radius = 0.0
+model_scene = ExtResource("2")
+outfit = &"Plush"
+body_scale = 1.12
+capsule_radius = 0.6
+capsule_height = 1.95
+head_height = 1.3
+shirt_colors = Array[Color]([Color(0.23, 0.44, 0.82, 1), Color(0.89, 0.27, 0.23, 1), Color(0.31, 0.68, 0.35, 1), Color(0.54, 0.36, 0.79, 1)])
+skin_colors = Array[Color]([Color(0.79, 0.6, 0.41, 1), Color(0.86, 0.66, 0.5, 1), Color(0.95, 0.7, 0.72, 1), Color(0.72, 0.62, 0.54, 1)])
+accessory_slots = PackedStringArray("Acc_Plush_Ears", "Acc_Plush_Bow||")
+move_animation = &"Walk"
+clip_style = &"Heavy"
+heavy = true
+animation_reference_speed = 2.0
+avoidance_radius = 0.8
+behaviours = Array[ExtResource("3")]([SubResource("bounce")])
+voice_sounds = Array[StringName]([&"toy_plush_grunt_1", &"toy_plush_grunt_2"])
+voice_interval = Vector2(3.5, 6.5)
+voice_pitch = 1.0
+attack_sound = &"bruiser_slam"
