@@ -294,7 +294,22 @@ sound_category = Dictionary[StringName, StringName]({
 &"sz_bonk": &"impact",
 &"sz_thud": &"impact",
 &"sz_gutter": &"impact",
-&"prz_": &"ui"
+&"prz_": &"ui",
+&"faire_": &"enemy_voice",
+&"faire_shield_clang": &"impact",
+&"faire_shield_break": &"enemy_special",
+&"faire_knight_rap": &"enemy_telegraph",
+&"faire_knight_charge": &"enemy_telegraph",
+&"faire_knight_bash": &"enemy_attack",
+&"faire_jester_call": &"enemy_telegraph",
+&"faire_jester_jingle": &"enemy_telegraph",
+&"faire_pin_throw": &"enemy_telegraph",
+&"faire_boulder_whistle": &"enemy_telegraph",
+&"faire_boulder_impact": &"enemy_attack",
+&"faire_siege_horn": &"cue",
+&"faire_loop": &"music",
+&"faire_final": &"music",
+&"faire_ambience": &"ambience"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -479,5 +494,8 @@ sound_trim_db = Dictionary[StringName, float]({
 &"weap_lava_ripple": -2.0,
 &"sz_roll_up": -1.5,
 &"hub_spin_loop": -0.5,
-&"weap_ripsaw_idle": -0.5
+&"weap_ripsaw_idle": -0.5,
+&"faire_knight_bash": -2.5,
+&"faire_boulder_whistle": -1.5,
+&"faire_siege_horn": -2.0
 })

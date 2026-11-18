@@ -1,0 +1,164 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/models/faire_zombies.glb" id="2"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_behaviour.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/alpha_boss.gd" id="alpha_script"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_move.gd" id="b_move"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_charge.gd" id="b_charge"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_shockwave.gd" id="b_wave"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_strike_zones.gd" id="b_zones"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_beam.gd" id="b_beam"]
+[ext_resource type="Script" path="res://scripts/enemies/behaviours/boss_summon.gd" id="b_summon"]
+
+[sub_resource type="Resource" id="lance_charge"]
+script = ExtResource("b_charge")
+move_name = &"lance_charge"
+cooldown = 10.0
+first_delay = 4.0
+min_range = 6.0
+max_range = 22.0
+needs_sight = true
+callout = "THE BLACK KNIGHT CHARGES — SIDESTEP, THEN SHOOT THE GLOW!"
+windup = 1.15
+windup_clip = &"Roar"
+windup_sound = &"rounds_boss_charge_windup"
+speed = 14.0
+width = 2.6
+damage = 19.0
+lock_fraction = 0.65
+color = Color(1, 0.3, 0.3, 1)
+dazed = 2.6
+
+[sub_resource type="Resource" id="sword_slam"]
+script = ExtResource("b_wave")
+move_name = &"sword_slam"
+min_phase = 1
+cooldown = 11.0
+first_delay = 0.0
+max_range = 15.0
+callout = "SWORD SLAM — JUMP THE RINGS!"
+windup = 1.0
+windup_clip = &"Roar"
+waves = 2
+gap = 0.85
+speed = 8.0
+max_radius = 15.0
+damage = 10.0
+color = Color(1, 0.78, 0.25, 1)
+
+[sub_resource type="Resource" id="siege_call"]
+script = ExtResource("b_zones")
+move_name = &"siege_call"
+min_phase = 1
+cooldown = 12.0
+first_delay = 3.0
+max_range = 30.0
+callout = "TO ME, ENGINES! — WATCH THE GOLD RINGS"
+windup = 0.9
+windup_clip = &"Throw"
+windup_sound = &"faire_siege_horn"
+pattern = 1
+count = 5
+stagger = 0.25
+spread = 4.0
+radius = 2.0
+telegraph = 1.4
+damage = 8.0
+color = Color(1, 0.78, 0.25, 1)
+style = 1
+prop = 4
+prop_color = Color(0.62, 0.6, 0.66, 1)
+prop_height = 1.0
+hits_airborne = true
+hit_sound = &"faire_boulder_impact"
+
+[sub_resource type="Resource" id="fools"]
+script = ExtResource("b_summon")
+move_name = &"fools"
+min_phase = 1
+cooldown = 16.0
+first_delay = 6.0
+windup = 1.0
+windup_clip = &"Roar"
+callout = "SEND IN THE FOOLS! — CLEAR THE JESTERS"
+enemy = &"faire_jester"
+count = 2
+max_alive = 3
+color = Color(1, 0.3, 0.3, 1)
+
+[sub_resource type="Resource" id="blade_sweep"]
+script = ExtResource("b_beam")
+move_name = &"blade_sweep"
+min_phase = 2
+cooldown = 12.0
+first_delay = 2.0
+max_range = 22.0
+callout = "BLADE SWEEP — JUMP IT!"
+windup = 1.2
+windup_clip = &"Roar"
+sweep_degrees = 140.0
+sweep_time = 2.2
+beam_range = 22.0
+height = 0.55
+half_width = 0.5
+jumpable = true
+dps = 20.0
+color = Color(1, 0.3, 0.3, 1)
+
+[sub_resource type="Resource" id="alpha"]
+script = ExtResource("alpha_script")
+color = Color(1, 0.3, 0.3, 1)
+title = "CHAMPION OF THE LISTS"
+phase_callouts = PackedStringArray("THE BLACK KNIGHT CALLS HIS FOOLS AND THE SIEGE ENGINES", "THE BLACK KNIGHT DRAWS HIS GREATSWORD — BLADE SWEEPS!")
+expose_callout = "THE BLACK KNIGHT REELS — SHOOT THE GLOW!"
+slam_damage = 14.0
+slam_cooldown = 9.0
+volley_shots = 4
+volley_damage = 3.6
+volley_speed = 13.0
+volley_spread_degrees = 15.0
+volley_arc = 0.45
+volley_cooldown = 11.0
+volley_size = 0.35
+moves = Array[ExtResource("b_move")]([SubResource("lance_charge"), SubResource("sword_slam"), SubResource("siege_call"), SubResource("fools"), SubResource("blade_sweep")])
+
+[resource]
+script = ExtResource("1")
+id = &"alpha_black_knight"
+display_name = "The Black Knight"
+max_health = 3800.0
+move_speed = 2.0
+speed_variance = 0.0
+turn_speed = 3.5
+tickets = 200
+score = 2900
+xp = 175
+damage = 24.0
+attack_range = 2.5
+attack_reach = 3.3
+attack_windup = 1.0
+attack_recover = 1.15
+lunge_speed = 3.2
+mass = 7.5
+flank_degrees = 10.0
+enrage_radius = 0.0
+model_scene = ExtResource("2")
+outfit = &"BlackKnight"
+body_scale = 1.45
+capsule_radius = 0.64
+capsule_height = 1.95
+head_height = 1.3
+shirt_colors = Array[Color]([Color(0.72, 0.12, 0.16, 1)])
+skin_colors = Array[Color]([Color(0.58, 0.78, 0.44, 1)])
+accessory_slots = PackedStringArray("Acc_BKnight_Helm", "Acc_BKnight_Sword")
+move_animation = &"Walk"
+clip_style = &"Heavy"
+heavy = true
+animation_reference_speed = 2.0
+avoidance_radius = 1.0
+behaviours = Array[ExtResource("3")]([SubResource("alpha")])
+voice_sounds = Array[StringName]([&"faire_bknight_grunt_1", &"faire_bknight_grunt_2"])
+voice_interval = Vector2(3.5, 6.5)
+voice_pitch = 0.74
+attack_sound = &"bruiser_slam"

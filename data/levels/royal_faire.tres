@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/levels/royal_faire_waves.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"royal_faire"
+display_name = "Royal Faire"
+blurb = "Hold the faire green round the Royal Armoury, between the market and the jousting list, then cross the drawbridge and follow the lanterns to the portal at the keep."
+scene_path = "res://scenes/levels/royal_faire.tscn"
+wave_set = ExtResource("2")
+requires_level = &""
+sort_order = 10
+music = &"faire_loop"
+music_final = &"faire_final"
+ambience = &"faire_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(0.95, 0.76, 0.31, 1)
+menu_camera_from = Vector3(13, 7, 27)
+menu_camera_to = Vector3(-3, 6, -22)
+heal_item_name = "Giant turkey leg"
+loading_tips = PackedStringArray("Armored Knights block body shots from the front: aim over the shield, or flank them.", "A knight that raps its sword on its shield is about to charge: step out of its line, then shoot while its guard is wide.", "Jesters juggle before they throw a pin. A headshot spills the throw.", "The south wall-walk is high ground with a view over the moat: two stairs climb to it from the courtyard.", "The stands beside the jousting list are high ground too, with stairs at both ends.", "When the siege engines fire, a gold ring marks every boulder: step out of it.", "The Black Knight charges down a lane and is dazed after it: punish the glow.")
