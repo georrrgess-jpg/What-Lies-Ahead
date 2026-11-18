@@ -42,6 +42,13 @@ var render_mode := false
 var on_finished: Callable
 ## Print set load times and the worst frame times at the end.
 var report := false
+## Sets heavy enough to enter the tree (their scripts' set-up, the warm-up
+## draw) that they load behind the black before the first shot, not a few
+## seconds before their cut, where that frame would hitch.
+var early_sets: PackedStringArray = []
+## Sizes of the reel's big type, drawn once behind the black
+## (CineOverlay.warm_type).
+var type_sizes: PackedInt32Array = []
 
 var camera: Camera3D
 var overlay: CineOverlay
@@ -101,6 +108,9 @@ func _ready() -> void:
 	var first := maxi(0, _shot_at(start_at))
 	_clock = shots[first].start if not shots.is_empty() else 0.0
 	_prepare_from(first)
+	for k in range(first, shots.size()):
+		if shots[k].set_id in early_sets and shots[k].start < stop_at:
+			_request_set(shots[k].set_id)
 	_warm_up()
 	for k in range(first, shots.size()):
 		if shots[k].prebuild and shots[k].start < stop_at:
@@ -118,6 +128,7 @@ func _warm_up() -> void:
 	add_child(warm)
 	camera.global_transform = Transform3D(Basis.IDENTITY, Vector3(0, -400, 0))
 	warm.run(camera, GameData.enemies(), GameData.weapons())
+	overlay.warm_type(type_sizes)
 
 
 func _begin() -> void:
@@ -219,7 +230,7 @@ func _process(delta: float) -> void:
 		# One heavy shot is built per frame, behind the black.
 		if not _build_queue.is_empty():
 			_build_ahead(_build_queue.pop_front())
-		elif _warmup_left <= 0 and first >= 0 and _sets.has(shots[first].set_id):
+		elif _warmup_left <= 0 and first >= 0 and _sets.has(shots[first].set_id) and _early_sets_ready():
 			_begin()
 		return
 	_clock += delta / maxf(Engine.time_scale, 0.0001)
@@ -389,20 +400,32 @@ func _prepare_from(i: int) -> void:
 	var k := i - 1
 	while k + 1 < shots.size() and (k + 1 < i + LOOKAHEAD or shots[k + 1].start < horizon):
 		k += 1
-		var id := shots[k].set_id
-		if _sets.has(id) or _jobs.has(id) or _loading.has(id):
-			continue
-		if id == "studio":
-			_sets[id] = CineStudio.new()
-			continue
-		var level := _level_data(id)
-		if level == null:
-			push_warning("showreel: unknown set " + id)
-			_sets[id] = CineStudio.new()
-			continue
-		_loading[id] = level.scene_path
-		_load_ms[id + " requested"] = snappedf(_clock, 0.01)
-		ResourceLoader.load_threaded_request(level.scene_path)
+		_request_set(shots[k].set_id)
+
+
+## Starts loading set `id` (a level on the loader threads; the studio at once).
+func _request_set(id: String) -> void:
+	if _sets.has(id) or _jobs.has(id) or _loading.has(id):
+		return
+	if id == "studio":
+		_sets[id] = CineStudio.new()
+		return
+	var level := _level_data(id)
+	if level == null:
+		push_warning("showreel: unknown set " + id)
+		_sets[id] = CineStudio.new()
+		return
+	_loading[id] = level.scene_path
+	_load_ms[id + " requested"] = snappedf(_clock, 0.01)
+	ResourceLoader.load_threaded_request(level.scene_path)
+
+
+## True once every early set that was asked for is built and warmed.
+func _early_sets_ready() -> bool:
+	for id in early_sets:
+		if _loading.has(id) or _jobs.has(id) or _warming.has(id):
+			return false
+	return true
 
 
 func _level_data(id: String) -> LevelData:

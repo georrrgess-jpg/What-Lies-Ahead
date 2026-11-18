@@ -407,12 +407,15 @@ key art with a slow pan, the difficulty and a tip. The HUD, pause menu, loadout 
 panel and results use the same kit.
 
 **The trailer.** *WATCH TRAILER* on the title screen (it also plays as an attract mode
-when the menu sits idle) runs a 41.6-second in-engine trailer cut to a 150 BPM score built on
+when the menu sits idle) runs a 56-second in-engine trailer cut to a 120 BPM score built on
 the menu theme's hook: a wordless cold open (a holographic reload in the dark, muzzle-flash
-lunges), the logo slam, all fifteen worlds a beat each and four alphas on the hits, then the
-drop into play (the Ticket Ripper's WINNER round, close-up reloads, vaults and slides, Cryo
-shatters, a slow-motion headshot through a sight, Coin-Op's FREE PLAY), Endless in Ashfall
-City, Last Ride, animated finishes, the 19 operators and Prize Prints, and a finale at dusk.
+lunges), the logo slam, all fifteen worlds a beat each, five alphas with their epithets on the
+hits and the march of the whole cast, "lock and load", then the drop into play (the Ticket
+Ripper's WINNER round in slow motion, four close-up reloads each from its own angle, a vault
+and a slide, a half-time headshot through a sight, Cryo shatters, a gumball blast, Coin-Op's
+FREE PLAY), Endless in Ashfall City, Last Ride, animated finishes, the 19 operators and Prize
+Prints, and a finale at dusk with the squad facing the horde. Every section lands on a bold
+card slammed on its musical hit.
 Heavy shots are built ahead and every set's materials are warmed before its cut, so playback
 never hitches at a cut. Any key returns to the menu. A rendered copy is in
 [`media/what-lies-ahead-showreel.mp4`](media/) (`tools/render_showreel.sh` renders it;

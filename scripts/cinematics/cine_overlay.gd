@@ -353,6 +353,96 @@ func stamp(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 1.0, ac
 	return col
 
 
+## A section card on a hit (15 WORLDS, RELOADS, ENDLESS, an alpha's name): a
+## dark band wipes across the frame, the title slams in over it (a scale
+## punch with a tilt that settles) while an echo of it in `accent` bursts
+## outward, the kicker sits above and an accent rule wipes out from the
+## middle under it, with `note` (an epithet) below. It holds `hold` seconds,
+## drifting larger, and snaps out.
+func card(title: String, kicker := "", at := Vector2(0.5, 0.5), hold := 0.8, accent := UiKit.AMBER, title_size := 150, note := "") -> Control:
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", -6)
+	if kicker != "":
+		var k := UiKit.label(_spaced(kicker.to_upper()), UiKit.SIZE_LABEL, accent, true)
+		k.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(k)
+	var t := UiKit.sign_label(title.to_upper(), title_size)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	t.add_theme_constant_override("shadow_offset_y", 6)
+	col.add_child(t)
+	var rule := ColorRect.new()
+	rule.color = accent
+	rule.custom_minimum_size = Vector2(0.0, 8.0)
+	col.add_child(rule)
+	if note != "":
+		var n := UiKit.label(_spaced(note.to_upper()), UiKit.SIZE_BODY, accent.lerp(Color.WHITE, 0.45), true)
+		n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		n.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+		n.add_theme_constant_override("shadow_offset_y", 2)
+		col.add_child(n)
+	var band := ColorRect.new()
+	band.color = Color(0.03, 0.0, 0.06, 0.55)
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_text_layer.add_child(band)
+	var echo := t.duplicate() as Label
+	echo.add_theme_color_override("font_color", accent)
+	echo.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0))
+	_text_layer.add_child(echo)
+	_text_layer.add_child(col)
+	col.reset_size()
+	# Lay the column out now, so the echo can sit exactly on the title.
+	col.notification(Container.NOTIFICATION_SORT_CHILDREN)
+	col.position = _inside(root.size * at - col.size * 0.5, col.size)
+	col.pivot_offset = col.size * 0.5
+	band.position = Vector2(0.0, col.position.y - 18.0)
+	band.size = Vector2(root.size.x, col.size.y + 36.0)
+	band.pivot_offset = band.size * 0.5
+	echo.position = col.position + t.position
+	echo.size = t.size
+	echo.pivot_offset = t.size * 0.5
+	rule.pivot_offset = rule.size * 0.5
+	band.scale = Vector2(0.0, 1.0)
+	col.scale = Vector2.ONE * 2.1
+	col.rotation_degrees = -5.0
+	col.modulate.a = 0.0
+	echo.modulate.a = 0.0
+	rule.scale = Vector2(0.0, 1.0)
+	var tw := _tween().set_parallel(true)
+	tw.tween_property(band, "scale:x", 1.0, 0.12).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.tween_property(col, "scale", Vector2.ONE, 0.13).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.tween_property(col, "rotation_degrees", 0.0, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(col, "modulate:a", 1.0, 0.05)
+	tw.tween_property(rule, "scale:x", 1.0, 0.18).set_delay(0.08).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tw.tween_property(echo, "modulate:a", 0.8, 0.01).set_delay(0.12)
+	tw.tween_property(echo, "scale", Vector2.ONE * 1.45, 0.4).set_delay(0.12).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tw.tween_property(echo, "modulate:a", 0.0, 0.38).set_delay(0.14)
+	tw.tween_property(col, "scale", Vector2.ONE * 1.05, hold).set_delay(0.13).set_trans(Tween.TRANS_SINE)
+	var out := 0.13 + hold
+	for c in [band, col]:
+		tw.tween_property(c, "modulate:a", 0.0, 0.1).set_delay(out)
+	# Freed at the cut (clear_text) if the shot ends first.
+	var parts: Array[Node] = [band, col, echo]
+	tw.chain().tween_callback(func():
+		for c in parts:
+			if is_instance_valid(c):
+				c.queue_free())
+	return col
+
+
+## Draws every letter of the display face once at each of `sizes` (sign and
+## arcade lettering) under the black of the warm-up, so the first card at a
+## new size does not rasterise its glyphs on its cut. Gone at the first cut.
+func warm_type(sizes: PackedInt32Array) -> void:
+	var glyphs := "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 !?·:,.'-&"
+	for size in sizes:
+		_text_layer.add_child(UiKit.sign_label(glyphs, size))
+		_text_layer.add_child(UiKit.arcade_label(glyphs, size))
+	for size in [UiKit.SIZE_SMALL, UiKit.SIZE_BODY, UiKit.SIZE_LABEL, UiKit.SIZE_HEADING]:
+		_text_layer.add_child(UiKit.label(glyphs, size, Color.WHITE, true))
+
+
 ## A small tag low on the left for a fast cut (a world, a weapon): a bright
 ## kicker over a name, sliding in from the edge in 0.1 s. Gone at the cut.
 func tag(kicker: String, title: String, accent := UiKit.CYAN) -> Control:

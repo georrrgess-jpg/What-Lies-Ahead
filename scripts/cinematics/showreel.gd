@@ -37,6 +37,8 @@ static func play(host: Node, finished: Callable = Callable()) -> CinePlayer:
 static func make() -> CinePlayer:
 	var p := CinePlayer.new()
 	p.shots = ShowreelShots.build()
+	p.early_sets = ShowreelShots.EARLY_SETS
+	p.type_sizes = ShowreelShots.TYPE_SIZES
 	return p
 
 
