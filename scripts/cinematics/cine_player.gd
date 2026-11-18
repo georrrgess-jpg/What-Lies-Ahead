@@ -123,6 +123,8 @@ func _warm_up() -> void:
 func _begin() -> void:
 	_running = true
 	overlay.fade(0.0, 0.0)
+	# The first shot is on this very frame (not the warm-up view behind it).
+	_cut(_shot_at(_clock))
 	_music.play(_clock)
 	if render_mode:
 		print("[showreel] start frame %d at %.2f s" % [Engine.get_process_frames(), _clock])

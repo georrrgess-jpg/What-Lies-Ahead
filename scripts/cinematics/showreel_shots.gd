@@ -320,13 +320,17 @@ func _lunge(st: CineStage, index: int) -> void:
 	st.track(func(k: float) -> Transform3D:
 		var from := cam + fwd * 0.25 * k
 		return Transform3D(Basis.looking_at(st.head(z) + Vector3(0, -0.25, 0) - from), from))
-	var muzzle := func() -> Vector3: return st.camera.global_transform * Vector3(0.28, -0.3, -0.6)
+	var muzzle := func() -> Vector3: return st.camera.global_transform * Vector3(0.35, -0.35, -1.2)
 	var flash := st.light(Vector3.ZERO, Color(1.0, 0.8, 0.55), 0.0, 9.0)
 	st.after_camera(func(t: float):
 		flash.global_position = muzzle.call()
 		flash.light_energy = 6.0 * maxf(exp(-pow((t - 0.05) * 22.0, 2.0)), exp(-pow((t - 0.22) * 22.0, 2.0))))
+	# The tracer and the sound only: the flash is the light on the zombie.
+	var gun := GameData.weapon(&"comet_cannon")
 	for when in [0.04, 0.21]:
-		st.at(when, func(): st.shoot(&"comet_cannon", muzzle.call(), st.chest(z) + Vector3(0, 0.2, 0), 1.0, when < 0.1))
+		st.at(when, func():
+			WeaponFx.shot(st.actors, muzzle.call(), st.chest(z) + Vector3(0, 0.2, 0), gun, 1.0)
+			Sfx.play(gun.fire_sound, -6.0))
 	if index == LUNGES.size() - 1:
 		st.at(0.21, st.kill.bind(z, &"comet_cannon", true, -fwd, 4.0))
 	else:
