@@ -887,6 +887,11 @@ func _finale(st: CineStage) -> void:
 	for i in kinds.size():
 		var p := Vector3(-10.0 - (i % 5) * 1.8 - (i / 5) * 1.2, 0, 11.5 + (i / 5) * 2.4 + (i % 2) * 0.9)
 		horde.append(st.walker(kinds[i], p, 90.0 + randf_range(-8.0, 8.0), 0.9, i % 2 == 0))
+	# The crane rises past the pier gate's pillar: hide the gate (the last pier shot).
+	st.at(0.0, func():
+		var gate := st.set_root.find_child("PierEntrance", true, false) as Node3D
+		if gate:
+			gate.visible = false)
 	st.fov(40.0, 50.0)
 	st.spline([
 		[0.0, Vector3(1.6, 0.6, 18.4), Vector3(-8, 1.8, 13)],

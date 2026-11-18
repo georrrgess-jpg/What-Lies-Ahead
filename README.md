@@ -407,14 +407,14 @@ key art with a slow pan, the difficulty and a tip. The HUD, pause menu, loadout 
 panel and results use the same kit.
 
 **The trailer.** *WATCH TRAILER* on the title screen (it also plays as an attract mode
-when the menu sits idle) runs an 88-second in-engine short made from the real levels,
-zombies, operators, weapons, skins and kill effects. It opens on the Prize Pier at dusk
-with no words, on a low, warm score, then tours all ten worlds and their alphas, the cast
-of 35 zombies, the kills, aiming down sights, Boot Camp moves, bounties and Sparks, the
-arsenal and the Shop, and all 18 operators, graded per act with in-engine rack focus,
-lens flares, spline cameras and speed ramps into slow motion. Heavy shots are built ahead
-and every set's materials are warmed before its cut, so playback never hitches at a cut.
-Any key returns to the menu. A rendered copy is in
+when the menu sits idle) runs a 41.6-second in-engine trailer cut to a 150 BPM score built on
+the menu theme's hook: a wordless cold open (a holographic reload in the dark, muzzle-flash
+lunges), the logo slam, all fifteen worlds a beat each and four alphas on the hits, then the
+drop into play (the Ticket Ripper's WINNER round, close-up reloads, vaults and slides, Cryo
+shatters, a slow-motion headshot through a sight, Coin-Op's FREE PLAY), Endless in Ashfall
+City, Last Ride, animated finishes, the 19 operators and Prize Prints, and a finale at dusk.
+Heavy shots are built ahead and every set's materials are warmed before its cut, so playback
+never hitches at a cut. Any key returns to the menu. A rendered copy is in
 [`media/what-lies-ahead-showreel.mp4`](media/) (`tools/render_showreel.sh` renders it;
 see **[docs/SHOWREEL.md](docs/SHOWREEL.md)**; `tools/video_motion_report.py` flags
 repeated frames, hitches and speed jumps in a render).
