@@ -4,7 +4,7 @@ render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled, blend_m
 // Fright Fair graveyard mist: a low, drifting sheet of soft violet-green
 // haze on a flat plane, faded to nothing at its edges. No textures.
 uniform vec3 mist_color : source_color = vec3(0.7, 0.78, 0.9);
-uniform float strength = 0.55;
+uniform float strength = 0.7;
 uniform float drift = 0.05;
 
 float hash(vec2 p) {

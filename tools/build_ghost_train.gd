@@ -513,6 +513,16 @@ func _build_pumpkin_patch(props: Node3D) -> void:
 	_kit_prop(props, "GooBarrel", "BarrelPatch", Vector3(-15.5, 0, 18.3), 0.0, Vector3(0.9, 0.95, 0.9))
 	_kit_prop(props, "PumpkinPile", "PumpkinsPatch", Vector3(-27.5, 0, 18.5), 90.0, Vector3(1.5, 0.8, 0.8))
 	_kit_prop(props, "Bench", "BenchPatch", Vector3(-15.0, 0, 12.0), 200.0, Vector3(1.8, 0.9, 0.6))
+	_kit_prop(props, "AppleCart", "CartPatch", Vector3(-19.5, 0, 25.0), 10.0, Vector3(1.6, 1.2, 0.9))
+	_kit_prop(props, "Booth", "BoothPatchN", Vector3(-21.0, 0, 9.6), 180.0, Vector3(3.2, 2.6, 2.0))
+	_lantern_string(Vector3(-17.0, 3.7, 13.0), Vector3(-26.0, 3.7, 12.0), 0.6)
+	_lantern_string(Vector3(-26.0, 3.7, 12.0), Vector3(-28.5, 3.7, 23.0), 0.7)
+	_lamp(props, "LampPatchS", Vector3(-28.5, 0, 23.0))
+	_kit_prop(props, "Booth", "BoothNE2", Vector3(20.5, 0, -16.0), 0.0, Vector3(3.2, 2.6, 2.0))
+	_kit_prop(props, "Booth", "BoothNW2", Vector3(-21.0, 0, -20.6), 0.0, Vector3(3.2, 2.6, 2.0))
+	_kit_prop(props, "AppleCart", "CartNW", Vector3(-17.0, 0, -18.0), 300.0, Vector3(1.6, 1.2, 0.9))
+	_lantern_string(Vector3(-16.0, 3.7, -15.0), Vector3(-29.0, 3.7, -15.0), 0.6)
+	_lamp(props, "LampNW2", Vector3(-29.0, 0, -15.0))
 	# The far corners by the façade.
 	_kit_prop(props, "PumpkinPile", "PumpkinsNW", Vector3(-25.5, 0, -15.5), 30.0, Vector3(1.5, 0.8, 0.8))
 	_kit_prop(props, "GooBarrel", "BarrelNW", Vector3(-28.8, 0, -21.5), 0.0, Vector3(0.9, 0.95, 0.9))
@@ -685,14 +695,14 @@ func _build_graveyard() -> void:
 	# Mist over the graves.
 	var mist := ShaderMaterial.new()
 	mist.shader = load(SHADERS + "fright_mist.gdshader")
-	for k in 4:
+	var sheet := PlaneMesh.new()
+	sheet.size = Vector2(11.0, 9.0)
+	for k in 8:
 		var mi := MeshInstance3D.new()
 		mi.name = "Mist%d" % k
-		var q := PlaneMesh.new()
-		q.size = Vector2(11.0, 9.0)
-		mi.mesh = q
+		mi.mesh = sheet
 		mi.material_override = mist
-		mi.position = Vector3(14.5 + (k % 2) * 10.0, 0.35 + k * 0.12, 13.5 + (k / 2) * 9.0)
+		mi.position = Vector3(14.5 + (k % 2) * 10.0, 0.3 + (k / 4) * 0.45 + (k % 3) * 0.08, 13.5 + ((k / 2) % 2) * 9.0)
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		dressing.add_child(mi)
 
