@@ -42,8 +42,8 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"fright_pumpkin_head": 6,
-"tourist_shambler": 8,
+"fright_pumpkin_head": 5,
+"tourist_shambler": 9,
 "lava_tiki_bartender": 2,
 "fright_ghost": 5
 }
@@ -88,9 +88,9 @@ spawns = {
 "fright_ghost": 9,
 "fright_pumpkin_head": 5
 }
-spawn_interval = 1.15
+spawn_interval = 1.2
 burst = 1
-max_alive = 15
+max_alive = 14
 speed_scale = 1.07
 late_types_after = 0.25
 banner = ""
@@ -106,9 +106,9 @@ spawns = {
 "fright_pumpkin_head": 5,
 "mall_walker": 3
 }
-spawn_interval = 1.0
+spawn_interval = 1.05
 burst = 1
-max_alive = 15
+max_alive = 14
 speed_scale = 1.09
 late_types_after = 0.15
 banner = ""
@@ -122,9 +122,9 @@ twist = &"fright_lights_out"
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 10,
+"tourist_shambler": 11,
 "fright_ghost": 8,
-"fright_pumpkin_head": 4,
+"fright_pumpkin_head": 3,
 "lava_fire_dancer": 3
 }
 spawn_interval = 1.9

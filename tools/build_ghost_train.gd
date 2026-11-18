@@ -102,6 +102,10 @@ func _initialize() -> void:
 	twist.name = "LightsOut"
 	level.add_child(twist)
 	_late(twist, "res://scripts/props/fright_lights_out.gd", {})
+	var warm := Node3D.new()
+	warm.name = "FrightWarmup"
+	level.add_child(warm)
+	_late(warm, "res://scripts/props/fright_warmup.gd", {})
 
 	get_root().add_child(level)
 	await process_frame
