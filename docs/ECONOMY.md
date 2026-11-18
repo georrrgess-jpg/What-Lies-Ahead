@@ -264,7 +264,8 @@ title. The full track is printed by the model.
 
 **Levels 41-50** (update 12). The curve is unchanged, so levels 1-40 cost exactly what
 they did. One reward per level: 41 Harlequin Tea (finish), 42 Peppermint Tea Cell, 43
-Teacup Twister (moved from 12; 12 now gives the Midway Regular title), 44 Spinning Teacup
+Teacup Twister (moved from 12; 12 gave the Midway Regular title until update 16, when the Ticket Ripper took level 12
+and the title moved to the Shop at 750), 44 Spinning Teacup
 (charm with a spinning cup), 45 Teacup Ride (animated finish, `finish_teacups.gdshader`),
 46 Tea Swirl (banner), 47 Last Ride Home (title), 48 Hall of Fame (decal), 49 Starlight
 Cell, 50 Grand Finale (animated finish, `finish_fireworks.gdshader`) and Living Legend

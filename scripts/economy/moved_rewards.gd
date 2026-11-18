@@ -1,6 +1,6 @@
 class_name MovedRewards
 extends RefCounted
-## One-time carry-over for level rewards that moved to the Shop (updates 12
+## One-time carry-over for level rewards that moved to the Shop (updates 12,
 ## and 13: new guns took their levels). A save that had already reached the
 ## level keeps the item it earned there (granted "cosmetic:<id>"); everyone
 ## else buys it in the Shop. "moved_rewards" in the progression section
@@ -11,6 +11,8 @@ const BATCHES := {
 	"u12": {&"charm_duck": 11, &"cell_blue_raspberry": 24, &"banner_ferris_glow": 28, &"banner_night_shift": 32},
 	# Update 13: Jack Pot (16), Popcorn Popper (19), Yo-Yo Loco (27) and Strike Zone (38).
 	"u13": {&"title_funnel_cake_fiend": 16, &"title_sharpshooter": 19, &"title_ferris_wheel_fighter": 27, &"title_neon_nightmare": 38},
+	# Update 16: Ticket Ripper (12) and Coin-Op (22).
+	"u16": {&"title_midway_regular": 12},
 }
 
 
