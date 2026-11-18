@@ -42,7 +42,7 @@ surge_count = 4
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"gulch_cowpoke": 8,
+"gulch_cowpoke": 7,
 "tourist_shambler": 7,
 "gulch_prospector": 3,
 "lava_tiki_bartender": 2
@@ -121,14 +121,14 @@ twist = &"dust_storm"
 [sub_resource type="Resource" id="wave_7"]
 script = ExtResource("2")
 spawns = {
-"tourist_shambler": 11,
-"gulch_cowpoke": 7,
+"tourist_shambler": 10,
+"gulch_cowpoke": 5,
 "gulch_prospector": 4,
-"sky_diver": 3
+"sky_diver": 2
 }
-spawn_interval = 1.9
+spawn_interval = 2.0
 burst = 2
-max_alive = 13
+max_alive = 12
 speed_scale = 1.1
 late_types_after = 0.1
 banner = ""
