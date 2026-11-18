@@ -438,13 +438,21 @@ func _build_block_walls() -> void:
 			i += 1
 		# The player-only boundary along the block faces (gaps included).
 		_player_wall(_player_walls(), "Boundary%d" % int(s), Vector3(s * ARENA_X, 0, WINDOW_Z), Vector3(s * ARENA_X, 0, COUNTER_Z), PLAYER_WALL_H)
-	# Gap dressing: a block on its corner at each side, and the corridor ends.
+	# Gap dressing: a block on its corner beside each gap, and what each
+	# entrance is named for, in the corridors behind the walls.
 	for e in ENTRANCES:
 		var g: Vector3 = e[1]
 		if absf(g.x) < ARENA_X - 1.0:
 			continue
 		var out := signf(g.x)
 		_block(walls, "Gate%sA" % e[0], Vector3(g.x + out * 3.6, 0, g.z - 3.5), colours[int(absf(g.z)) % 4], 25.0, 0.7)
+	var cx := (ARENA_X + BLOCK + SHELF_X) * 0.5
+	_solid_prop(walls, "toy_jack_box", "ToyBox", Vector3(cx, 0, WINDOW_Z + 3.0), 180.0, Vector3(4.7, 4.6, 4.7), 0.95)
+	_solid_prop(walls, "toy_gamebox_b", "StockBoxes", Vector3(cx, 0, 27.0), 90.0, Vector3(7.0, 1.3, 5.0))
+	_add_multi("toy_gamebox_a", Transform3D(Basis(Vector3.UP, deg_to_rad(84.0)).scaled(Vector3.ONE * 0.85), Vector3(cx, 1.3, 27.3)))
+	for k in 4:
+		_add_multi("toy_book_" + colours[k], Transform3D(Basis(Vector3.UP, deg_to_rad(90.0 + k * 9.0)), Vector3(-cx, k * 0.5, 26.0)))
+	_collider(walls, "BookPile", Vector3(3.2, 2.0, 4.4), Vector3(-cx, 1.0, 26.0))
 
 
 # ---------------------------------------------------------------------------

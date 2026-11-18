@@ -13,7 +13,7 @@ spawns = {
 }
 spawn_interval = 1.35
 burst = 1
-max_alive = 13
+max_alive = 12
 speed_scale = 1.03
 late_types_after = 0.4
 banner = ""
@@ -31,7 +31,7 @@ spawns = {
 }
 spawn_interval = 0.85
 burst = 1
-max_alive = 15
+max_alive = 14
 speed_scale = 1.05
 late_types_after = 0.0
 banner = ""
@@ -44,14 +44,14 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_3"]
 script = ExtResource("2")
 spawns = {
-"toy_plush_brute": 6,
-"sky_balloon_vendor": 6,
-"tourist_shambler": 10,
-"mall_flinger": 4
+"toy_plush_brute": 5,
+"sky_balloon_vendor": 4,
+"tourist_shambler": 11,
+"mall_flinger": 2
 }
 spawn_interval = 1.0
 burst = 1
-max_alive = 15
+max_alive = 14
 speed_scale = 1.06
 late_types_after = 0.15
 banner = ""
@@ -64,15 +64,15 @@ surge_count = 5
 [sub_resource type="Resource" id="wave_4"]
 script = ExtResource("2")
 spawns = {
-"toy_windup_soldier": 13,
-"tourist_shambler": 11,
-"toy_plush_brute": 4,
+"toy_windup_soldier": 12,
+"tourist_shambler": 10,
+"toy_plush_brute": 3,
 "boardwalk_bruiser": 1,
-"sky_balloon_vendor": 3
+"sky_balloon_vendor": 2
 }
 spawn_interval = 1.0
 burst = 1
-max_alive = 16
+max_alive = 15
 speed_scale = 1.08
 late_types_after = 0.2
 banner = ""
@@ -85,16 +85,16 @@ bounty_tickets = 240
 [sub_resource type="Resource" id="wave_5"]
 script = ExtResource("2")
 spawns = {
-"toy_plush_brute": 6,
-"frost_yeti": 2,
-"boardwalk_bruiser": 2,
+"toy_plush_brute": 5,
+"frost_yeti": 1,
+"boardwalk_bruiser": 1,
 "tourist_shambler": 12,
 "toy_windup_soldier": 10,
-"mall_flinger": 3
+"mall_flinger": 2
 }
 spawn_interval = 1.05
 burst = 1
-max_alive = 17
+max_alive = 16
 speed_scale = 1.09
 late_types_after = 0.25
 banner = ""
@@ -107,13 +107,13 @@ script = ExtResource("2")
 spawns = {
 "toy_windup_soldier": 14,
 "tourist_shambler": 13,
-"lifeguard_runner": 6,
-"toy_plush_brute": 4,
-"sky_balloon_vendor": 3
+"lifeguard_runner": 5,
+"toy_plush_brute": 3,
+"sky_balloon_vendor": 2
 }
 spawn_interval = 0.85
 burst = 1
-max_alive = 17
+max_alive = 16
 speed_scale = 1.1
 late_types_after = 0.15
 banner = ""
@@ -128,14 +128,14 @@ twist = &"wind_up"
 script = ExtResource("2")
 spawns = {
 "tourist_shambler": 14,
-"toy_windup_soldier": 12,
-"toy_plush_brute": 5,
-"lava_fire_dancer": 4,
-"sky_balloon_vendor": 3
+"toy_windup_soldier": 11,
+"toy_plush_brute": 4,
+"lava_fire_dancer": 3,
+"sky_balloon_vendor": 2
 }
 spawn_interval = 1.5
 burst = 2
-max_alive = 17
+max_alive = 16
 speed_scale = 1.12
 late_types_after = 0.1
 banner = ""
