@@ -4,7 +4,7 @@ render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled, blend_m
 // Fright Fair graveyard mist: a low, drifting sheet of soft violet-green
 // haze on a flat plane, faded to nothing at its edges. No textures.
 uniform vec3 mist_color : source_color = vec3(0.7, 0.78, 0.9);
-uniform float strength = 0.7;
+uniform float strength = 0.55;
 uniform float drift = 0.05;
 
 float hash(vec2 p) {
@@ -30,5 +30,8 @@ void fragment() {
 	vec2 e = min(UV, 1.0 - UV);
 	float edge = smoothstep(0.0, 0.25, min(e.x, e.y));
 	ALBEDO = mist_color;
-	ALPHA = smoothstep(0.3, 0.8, n) * edge * strength;
+	// Seen from above (a rooftop, the skull's balcony) the sheet thins out, so
+	// it reads as haze rather than as blotches on the ground.
+	float from_above = smoothstep(0.55, 0.95, abs(dot(NORMAL, VIEW)));
+	ALPHA = smoothstep(0.15, 0.95, n) * edge * strength * mix(1.0, 0.3, from_above);
 }

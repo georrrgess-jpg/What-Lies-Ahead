@@ -283,7 +283,8 @@ func _build_saloon() -> void:
 	s.name = "Saloon"
 	rows.add_child(s)
 	var zc := SALOON_Z
-	_prop(s, "gulch_saloon", "SaloonModel", Vector3(-FACADE, 0, zc), 90.0, Vector3(10, 9, 14))
+	var model := _prop(s, "gulch_saloon", "SaloonModel", Vector3(-FACADE, 0, zc), 90.0, Vector3(10, 9, 14))
+	_late(model, "res://scripts/props/gulch_saloon_doors.gd", {})
 	var back := -FACADE - 10.0
 	var f := 9.6
 	# Front wall (with the parapet: x -9.9..-9.3), the doorway z zc-1.2..zc+1.2.
