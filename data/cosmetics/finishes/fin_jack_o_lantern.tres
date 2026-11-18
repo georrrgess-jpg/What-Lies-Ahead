@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-id = &"fin_fright_pumpkin"
+id = &"fin_jack_o_lantern"
 display_name = "Jack-o'-Lantern"
 description = "A ribbed pumpkin carved into grinning faces with a candle flickering inside every one. The glow is warmest in the dark."
 slot = &"weapon_finish"

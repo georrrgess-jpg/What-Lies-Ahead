@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-id = &"fin_fright_bones"
+id = &"fin_glow_bones"
 display_name = "Glow Bones"
 description = "Skulls, crossbones and thigh bones painted in glow-in-the-dark green over a night-purple coat. They pulse softly, brightest where the lights are low."
 slot = &"weapon_finish"
