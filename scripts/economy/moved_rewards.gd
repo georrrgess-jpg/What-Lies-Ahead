@@ -12,7 +12,7 @@ const BATCHES := {
 	# Update 13: Jack Pot (16), Popcorn Popper (19), Yo-Yo Loco (27) and Strike Zone (38).
 	"u13": {&"title_funnel_cake_fiend": 16, &"title_sharpshooter": 19, &"title_ferris_wheel_fighter": 27, &"title_neon_nightmare": 38},
 	# Update 16: Ticket Ripper (12) and Coin-Op (22).
-	"u16": {&"title_midway_regular": 12},
+	"u16": {&"title_midway_regular": 12, &"fin_gunmetal_gold": 22},
 }
 
 

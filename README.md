@@ -121,7 +121,7 @@ fullscreen.
 - **Checkpoint.** Clearing wave 3 reaches the checkpoint: lose on wave 4 or later and the
   results screen offers **Continue** from wave 4 (full health, some tickets, 75% rewards).
 - **Two weapons.** You carry a primary and a secondary, each picked from its own section
-  in the **Arsenal** (16 primaries, 11 secondaries; a slot only takes its own class). Each
+  in the **Arsenal** (17 primaries, 12 secondaries; a slot only takes its own class). Each
   keeps its own ammo for the whole run. Switching cancels a reload.
 - **The loadout station** (each world has its own, with a tall beacon; a waypoint points
   to it during breaks) sells an energy top-up for both weapons, one heal per break (a
@@ -256,6 +256,7 @@ sub and a longer tail, fast autos stay tight and sit under the big single shots
 | Shutterbug | Secondary | Crowd stun | Player level 13 | Flash camera: each shot hits every zombie in a 12 m cone (no headshots, weaker toward the rim and far end) and dazzles it: knocked out of its swing, staggered (each zombie once per 2.5 s; heavies and alphas are only slowed) and seeing stars; aiming zooms the flash (narrower, longer, x1.3) |
 | Jack Pot | Secondary | Area denial | Player level 16 | Mortar pistol that lobs jack-in-the-box mines (up to three out; one more pops the oldest): each lands, winds up for 0.8 s and arms; a zombie within 2.5 m sets it off and a clown on a spring punches it into the air (85, stunned, seeing stars) while the burst hits everything within 2.6 m; a box that hits a zombie in flight pops at once; heavies only hop and stagger, bosses take 90% and are never launched or stunned; boxes stay out when you switch guns |
 | Sparkler | Secondary | Spray and burn | Player level 18 | Full-auto firework machine pistol; every hit adds a fizz burn stack (up to six) that keeps burning; the fuse burns down with the magazine |
+| Coin-Op | Secondary | Streak sustain | Player level 22 | Full-auto arcade token machine pistol (12 a second): every third kill and every headshot kill pays a Free Play token, 4 rounds straight back in the magazine; held past a second it tilts (up to 15 a second, wider spray, TILT lamp and rattle); tokens glance off heavies and alphas (85%); the reload slaps the coin return and breaks a hologram token roll into the slot |
 | Ring Toss | Secondary | Ricochet | Player level 26 | Throws a glowing hoop that ricochets through up to three zombies (each ricochet 65% of the last; the first hit, all a lone boss takes, is full damage) and flies back to be caught; a headshot "Ringer" does double damage and refunds the hoop |
 | Yo-Yo Loco | Secondary | Precision and grind | Player level 27 | Snaps a yo-yo out on a glowing string (15 m) and zips it back: one zombie per throw, headshots double (one drops a tourist), the round trip sets the pace; hold the trigger through a hit for a Sleeper that grinds that zombie harder and harder (up to 300 a second) and slows it, at a round of string wear per 0.55 s; aimed, it Walks the Dog along the floor, tripping every zombie it passes (a small hit and a slow, light ones stumble) |
 | T-Minus Six | Secondary | Lock-on swarm | Player level 32 | Six-rocket pod: hold aim and the radar paints the zombie nearest the crosshair every 0.33 s (one lock per rocket, spread over a pack, one spare on a zombie already painted to drop); the trigger launches the swarm, corkscrewing onto the painted heads (46 a rocket, x1.6 on heads, less on heavies, small splash); unpainted it dumb-fires one straight rocket; faster reload with rockets left |
@@ -337,7 +338,7 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
   Madame Fortuna after about eighteen. Four items a day are featured at 20% off (always a round number). Every item
   has a 3D preview and a confirm step. Station prices in tickets are multiples of 25 and
   rise world by world.
-- **Locker**: 472 cosmetics in eleven categories: 19 operators (characters that also set
+- **Locker**: 510 cosmetics in eleven categories: 19 operators (characters that also set
   your first-person arms; the Mythic **Madame Fortuna** wears an animated aura of a floor
   sigil, a crystal ball, orbiting fortune cards and sparkles wherever she is shown),
   103 weapon finishes (including 23 animated shaders: marquee bulbs, data rain, lightning,

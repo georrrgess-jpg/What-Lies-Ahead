@@ -137,6 +137,20 @@ func level_weapons(lvl: int) -> Array[WeaponData]:
 	return out
 
 
+func _weapon_names(weapons: Array[WeaponData]) -> PackedStringArray:
+	var out := PackedStringArray()
+	for w in weapons:
+		out.append(w.display_name)
+	return out
+
+
+func _weapon_categories(weapons: Array[WeaponData]) -> PackedStringArray:
+	var out := PackedStringArray()
+	for w in weapons:
+		out.append(String(w.category))
+	return out
+
+
 ## True when the save already holds `w` before its level: kept when it moved
 ## to a later level (CapRaise, MovedRewards), so reaching it is not news.
 func is_weapon_kept(w: WeaponData) -> bool:
@@ -157,9 +171,11 @@ func is_milestone_level(lvl: int) -> bool:
 ## it unlocks, or a stamp from the rules. [] if it has neither.
 func stamp(lvl: int) -> PackedStringArray:
 	var weapons := level_weapons(lvl)
-	if not weapons.is_empty():
+	if weapons.size() == 1:
 		var kept := is_weapon_kept(weapons[0])
 		return PackedStringArray([weapons[0].display_name, ("Already yours: %s" if kept else "New weapon: %s") % weapons[0].category])
+	if weapons.size() > 1:
+		return PackedStringArray([" + ".join(_weapon_names(weapons)), "New weapons: %s" % " + ".join(_weapon_categories(weapons))])
 	return rules.stamp(lvl)
 
 
@@ -171,8 +187,10 @@ func stamp_kind(lvl: int) -> String:
 ## One line naming what `lvl` gives, e.g. "Weapon: Arc Coil" or "Title: Pier Rat".
 func reward_text(lvl: int) -> String:
 	var weapons := level_weapons(lvl)
-	if not weapons.is_empty():
+	if weapons.size() == 1:
 		return ("%s: already yours" if is_weapon_kept(weapons[0]) else "New weapon: %s") % weapons[0].display_name
+	if weapons.size() > 1:
+		return "New weapons: %s" % ", ".join(_weapon_names(weapons))
 	var items := level_rewards(lvl)
 	if not items.is_empty():
 		return "%s: %s" % [items[0].slot_label(), items[0].display_name]

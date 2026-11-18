@@ -97,8 +97,8 @@ among the picks. An item is in the shop when its
 `CosmeticItem.price` is above 0; it is owned once bought. A `requirement` on a priced
 item only gates the purchase (sights that open at a mastery rank).
 
-For sale (262 items, 405,750 Sparks, sights included and Madame Fortuna's 20,000; 239 items and
-376,500 Sparks before the update 16 skins; 206 items
+For sale (264 items, 407,250 Sparks, sights included and Madame Fortuna's 20,000; 239 items and
+376,500 Sparks before the update 16 skins and the two rewards the new guns moved to the Shop; 206 items
 and 315,000 Sparks before the update 13 cosmetics and the Mythic operator; 277,350 before the
 price rule):
 the original 69 plus 31 new weapon finishes,
