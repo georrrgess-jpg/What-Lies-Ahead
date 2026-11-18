@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_cove_sailcloth"
+display_name = "Sailcloth"
+description = "Patched canvas from a weathered main sail: navy stripes faded by the sun, tarred double stitching down the panel seams, and a sewn patch where the cannon ball went through."
+slot = &"weapon_finish"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.9098, 0.8627, 0.7216, 1, 0.4196, 0.2902, 0.1686, 1)
+params = {
+"shader": "res://art/shaders/finish_world.gdshader",
+"shader_params": {
+"pattern": 2,
+"color_b": Color(0.1647, 0.3098, 0.5255, 1),
+"color_c": Color(0.2902, 0.2078, 0.1412, 1)
+}
+}
+sort_order = 2412

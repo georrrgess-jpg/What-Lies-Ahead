@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_glow_bones"
+display_name = "Glow Bones"
+description = "Skulls, crossbones and thigh bones painted in glow-in-the-dark green over a night-purple coat. They pulse softly, brightest where the lights are low."
+slot = &"weapon_finish"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.1059, 0.0706, 0.1882, 1, 0.1647, 0.1098, 0.2667, 1)
+params = {
+"shader": "res://art/shaders/finish_world.gdshader",
+"shader_params": {
+"pattern": 8,
+"color_b": Color(0.7216, 1.0000, 0.4784, 1)
+}
+}
+sort_order = 2418

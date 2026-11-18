@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_toy_tin"
+display_name = "Tin Robot"
+description = "A lithographed tin toy from the bottom of the toy chest: printed panels of stripes, starbursts, speaker grilles and dials with a needle that swings and lamps that blink, rubbed through to bare tin at the edges."
+slot = &"weapon_finish"
+rarity = 2
+price = 2500
+colors = PackedColorArray(0.2902, 0.5608, 0.8392, 1, 0.7843, 0.2039, 0.1216, 1)
+params = {
+"shader": "res://art/shaders/finish_world.gdshader",
+"shader_params": {
+"pattern": 7,
+"color_b": Color(0.8314, 0.2275, 0.1647, 1),
+"color_c": Color(0.9686, 0.8039, 0.2275, 1),
+"color_d": Color(0.8118, 0.8314, 0.8549, 1)
+}
+}
+sort_order = 2417

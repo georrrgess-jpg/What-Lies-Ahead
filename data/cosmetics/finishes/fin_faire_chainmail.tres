@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_faire_chainmail"
+display_name = "Chainmail"
+description = "Riveted steel rings, each linked through the next, under a cobalt surcoat hemmed in gold. Ready for the joust."
+slot = &"weapon_finish"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.6039, 0.6392, 0.6980, 1, 0.4353, 0.4627, 0.5176, 1)
+params = {
+"shader": "res://art/shaders/finish_world.gdshader",
+"shader_params": {
+"pattern": 5,
+"color_b": Color(0.1725, 0.3725, 0.7020, 1),
+"color_c": Color(0.9451, 0.7529, 0.2902, 1)
+}
+}
+sort_order = 2415

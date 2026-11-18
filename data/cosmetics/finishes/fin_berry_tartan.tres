@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_berry_tartan"
+display_name = "Berry Tartan"
+description = "A plum tartan crossed with navy and raspberry threads, with a thin cream pinstripe."
+slot = &"weapon_finish"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.3569, 0.1137, 0.4314, 1, 0.1255, 0.0824, 0.2902, 1)
+params = {
+"shader": "res://art/shaders/finish_textile.gdshader",
+"shader_params": {
+"pattern": 1,
+"color_b": Color(0.1098, 0.1647, 0.3686, 1),
+"color_c": Color(0.8471, 0.2275, 0.4784, 1),
+"color_d": Color(0.9569, 0.9020, 0.7529, 1)
+}
+}
+sort_order = 2434

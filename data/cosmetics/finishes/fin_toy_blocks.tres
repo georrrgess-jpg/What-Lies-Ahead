@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_toy_blocks"
+display_name = "Building Blocks"
+description = "Snap-together bricks in red, blue, yellow and white, studs and all, stacked like a wall. Every one is a perfect fit."
+slot = &"weapon_finish"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.8510, 0.2275, 0.2275, 1, 0.1686, 0.3725, 0.7882, 1)
+params = {
+"shader": "res://art/shaders/finish_world.gdshader",
+"shader_params": {
+"pattern": 6,
+"color_b": Color(0.1686, 0.4353, 0.8510, 1),
+"color_c": Color(0.9647, 0.7765, 0.1569, 1),
+"color_d": Color(0.9569, 0.9451, 0.9098, 1)
+}
+}
+sort_order = 2416
