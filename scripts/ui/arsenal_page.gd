@@ -1,193 +1,289 @@
 class_name ArsenalPage
 extends MenuPage
-## Arsenal: the selected weapon sits on the stand of a carnival workbench
-## booth (a 3D diorama with Prize Pier's Ferris wheel at sunset behind it;
-## drag to turn the weapon). Over it: the loadout's two slot plates in the
-## header, a signboard with the weapon's name, firing mode and mastery rank,
-## its role, six stats computed from WeaponData and the button that equips it,
-## and a metal tray split into two sections, PRIMARIES and SECONDARIES (one
-## per loadout slot, by WeaponData.slot_class), with every weapon of the class
-## as a card (locked ones show what unlocks them). A weapon only goes in its
-## own class's slot. The section tabs, the slot plates, the 1 / 2 keys and the
-## gamepad triggers switch sections; the cards slide across.
+## Arsenal: the weapon showroom. Five regions, each in its own box:
+##   - the shell's top bar (destinations, level, Sparks, settings);
+##   - the left sidebar (ArsenalSidebar): PRIMARY / SECONDARY categories and
+##     the two loadout slots;
+##   - the preview (ArsenalPreview): the selected weapon's real model on a
+##     teal pedestal over the sunset pier; drag to turn it;
+##   - the right panel (ArsenalDetails): name, what it does, stats, mastery
+##     and the EQUIP button;
+##   - the bottom dock (ArsenalDock): the category's weapons as wide cards,
+##     a page at a time.
+## Browsing and equipping are separate: a card click (or A / Enter on it)
+## previews the weapon (cyan outline); only EQUIP (or F / the pad's Y) puts it
+## in the loadout (the EQUIPPED tag). A weapon only goes in its own class's
+## slot. ArsenalLayout decides the card count and spacing from the window.
+##
+## Keys: 1 / 2 (pad LB / RB) switch category, the triggers turn the dock's
+## pages, F (pad Y) equips, Esc (pad B) goes back.
 
-## Card size at its widest; cards share the tray's width (the longer section
-## fills it) and narrow, down to CARD_MIN_WIDTH, so every card stays on screen.
-const CARD_SIZE := Vector2(150, 196)
-const CARD_MIN_WIDTH := 80.0
-const SECTION_NAMES := ["PRIMARIES", "SECONDARIES"]
-## Shown in the empty part of a section's row when the other has more weapons.
-const SECTION_NOTES := [
-	"Primaries ride in slot 1: the weapon you fight with.",
-	"Secondaries ride in slot 2: press 2 or roll the wheel to draw one while the primary reloads.",
-]
-const SECTION_TAB_WIDTH := 208.0
-## How far the cards slide when the section changes (px).
-const SECTION_SLIDE := 90.0
-const THUMB_SIZE := Vector2i(252, 104)
-const BOOTH_SCENE := "res://art/models/menu_booth.glb"
-const WHEEL_SCENE := "res://art/models/ferris_wheel.glb"
-## Loaded on a thread before the shell builds this page (see MenuPage).
-const HEAVY_RESOURCES := [BOOTH_SCENE, WHEEL_SCENE]
-const BLUEPRINT_SHADER := "res://art/shaders/ui_blueprint.gdshader"
-## Height of the stand's turntable above the bench (see build_menu_booth.py).
-const TURNTABLE_TOP := 0.085
-const CAMERA_FROM := Vector3(0.33, 0.5, 2.6)
-const CAMERA_TO := Vector3(0.33, 0.22, 0.0)
-## The work lamp's bulb (see LAMP in build_menu_booth.py).
-const LAMP_AT := Vector3(-0.42, 0.57, -0.3)
-## The previewed weapon is scaled to fit this length and height on the stand.
-const FIT := Vector2(0.92, 0.38)
-## Width of the signboard.
-const BOARD_WIDTH := 640.0
-## Longest role summary (characters) that fits the board's two lines.
-const ROLE_CHARS := 96
-## The weapon's lowest point rests this far above the turntable (just touching).
-const REST_GAP := 0.002
-## A fork needs this much height over the turntable for its yoke and collar;
-## where the weapon is lower it sits on the turntable instead.
-const FORK_MIN := 0.075
-## Tags for weapon mode scripts that do not declare `const TRAIT`, by a word in the file name.
-const MODE_TRAITS := {"whirligig": "SPIN-UP", "riptide": "REELS IN", "saw": "CHAINSAW", "drum_popper": "BANK SHOTS"}
-## Half size of a cradle pad: along the weapon, across it.
-const PAD := Vector2(0.035, 0.055)
-## Stats on the signboard, three per column: [label, getter].
-const STATS := [
-	["DPS", "_stat_dps"],
-	["BURST", "_stat_burst"],
-	["RANGE", "_stat_range"],
-	["HANDLING", "_stat_handling"],
-	["MOBILITY", "_stat_mobility"],
-	["MAGAZINE", "_stat_magazine"],
-]
+## The set's Ferris wheel is loaded on a thread before the shell builds the page.
+const HEAVY_RESOURCES := [ArsenalShowroom.WHEEL_SCENE]
 
 var _weapon: WeaponData
-var _cards := {}
-## Weapon id -> what its card's thumbnail was last rendered with.
-var _thumb_state := {}
-## Thumbnails and far scenery are made a few per frame, after the page itself.
-var _build: BuildQueue
-## Card thumbnail pivots by weapon id (rebuilt when cosmetics change).
-var _thumb_pivots := {}
-var _thumb_textures := {}
-var _name: Label
-var _chip: KitChip
-var _role: Label
-var _traits: HFlowContainer
-var _stat_rows: Array[StatRow] = []
-var _rank_label: Label
-var _rank_bar: ProgressBar
-## Under the stats: the EQUIP button, or a banner saying the weapon is
-## equipped or locked (the coach mark's anchor).
-var _action: VBoxContainer
-var _equip: SignButton
-var _banner: KitPanel
-var _banner_icon: TextureRect
-var _banner_text: Label
-## The tray's sections: the shown one (a Loadout slot), its tab buttons and card rows.
-var _section := Loadout.PRIMARY
-var _section_tabs: Array[SignButton] = []
-var _section_counts: Array[Label] = []
-var _rows: Array[HBoxContainer] = []
-var _section_tween: Tween
+var _category := Loadout.PRIMARY
+var _layout: ArsenalLayout
+var _thumbs: WeaponThumbs
+var _sidebar: ArsenalSidebar
+var _preview: ArsenalPreview
+var _details: ArsenalDetails
+var _dock: ArsenalDock
+var _root: VBoxContainer
+var _upper: HBoxContainer
+var _backdrop: TextureRect
+## Cosmetics changed while the page was away: pictures and the model are redone.
+var _look_changed := false
 var _trigger_held := 0
-var _plates: Array[SlotPlate] = []
-var _plate_row: HBoxContainer
-var _board: KitPanel
-# The diorama.
-var _stage_view: SubViewportContainer
-var _viewport: SubViewport
-var _turntable: Node3D
-var _pivot: Node3D
-var _model: Node3D
-var _ring: MeshInstance3D
-var _forks: Array[Node3D] = []
-var _collars: Array[Node3D] = []
-var _screen_material: ShaderMaterial
-## Where each weapon sits on the stand, by weapon id (see _seat_on_stand).
-var _seats := {}
-## The weapon rests with its muzzle to the left, turned a little to the camera.
-var _yaw := PI
-var _hold := 0.0
-var _time := 0.0
 
 
 func uses_shell_header() -> bool:
 	return true
 
 
-func header_extra() -> Control:
-	return _plate_row
+func shows_header_row() -> bool:
+	return false
 
 
 func backdrop() -> Control:
-	return _stage_view
+	return _backdrop
 
 
 func _ready() -> void:
-	_build = BuildQueue.new()
-	add_child(_build)
-	_build_stage()
-	_build_plates()
-	var col := VBoxContainer.new()
-	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	col.add_theme_constant_override("separation", UiKit.GAP_M)
-	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(col)
-	var top := HBoxContainer.new()
-	top.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_child(top)
-	top.add_child(_build_drag_area())
-	top.add_child(_build_board())
-	col.add_child(_build_tray())
-	visibility_changed.connect(func(): set_process(is_visible_in_tree()))
-	set_process(false)
-	# The weapon on the stand comes a frame later (refresh() selects at once
-	# when the page opens first).
-	_build.add(func(): if _weapon == null: _select(GameData.weapon(Loadout.primary())))
+	_thumbs = WeaponThumbs.new()
+	add_child(_thumbs)
+	_backdrop = _dusk()
+	_root = VBoxContainer.new()
+	_root.name = "ArsenalRoot"
+	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_root)
+	_upper = HBoxContainer.new()
+	_upper.name = "Upper"
+	_upper.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_upper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_upper)
+	_build_regions()
+	resized.connect(_apply_layout)
+	get_tree().root.size_changed.connect(_apply_layout)
+	Cosmetics.equipped_changed.connect(func(_slot: StringName, _weapon_id: StringName): _look_changed = true)
+	_apply_layout()
 
 
-func _process(delta: float) -> void:
-	_time += delta
-	# The weapon sways on the turntable; a drag turns it and holds it a moment.
-	_hold = maxf(0.0, _hold - delta)
-	var target := _yaw if _hold > 0.0 else _yaw + sin(_time * 0.45) * 0.32
-	_turntable.rotation.y = lerp_angle(_turntable.rotation.y, target, minf(1.0, delta * 6.0))
+func _build_regions() -> void:
+	_sidebar = ArsenalSidebar.new()
+	_sidebar.name = "Sidebar"
+	_sidebar.category_pressed.connect(_on_category_pressed)
+	_sidebar.slot_pressed.connect(_on_slot_pressed)
+	_sidebar.back_pressed.connect(func(): back.emit())
+	_upper.add_child(_sidebar)
+	_preview = ArsenalPreview.new()
+	_preview.name = "Preview"
+	_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_upper.add_child(_preview)
+	_details = ArsenalDetails.new()
+	_details.name = "Details"
+	_details.equip_pressed.connect(_equip_selected)
+	_upper.add_child(_details)
+	_dock = ArsenalDock.new()
+	_dock.name = "Dock"
+	_dock.chosen.connect(_select)
+	_root.add_child(_dock)
+	_dock.build(Loadout.weapons_for(Loadout.PRIMARY) + Loadout.weapons_for(Loadout.SECONDARY))
+
+
+## The full-screen layer behind the page: a dusk gradient instead of the live world.
+func _dusk() -> TextureRect:
+	var grad := Gradient.new()
+	grad.colors = PackedColorArray([Color("2a1a55"), Color("120c2e")])
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill_from = Vector2(0.5, 0.0)
+	tex.fill_to = Vector2(0.5, 1.0)
+	var rect := TextureRect.new()
+	rect.name = "ArsenalDusk"
+	rect.texture = tex
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
 
 
 func refresh() -> void:
-	# Skins may have changed in the Locker since the cards were drawn.
-	for id in _thumb_pivots:
-		_build.add(_redo_thumb.bind(id))
-	_select(_weapon if _weapon else GameData.weapon(Loadout.primary()))
-	_refresh_counts()
-	UiFx.stagger_in(_rows[_section].get_children())
-	UiFx.pop_in(_board, 0.05, 0.94)
+	if _look_changed and _weapon:
+		_preview.rebuild()
+	_look_changed = false
+	var w := _weapon if _weapon else GameData.weapon(Loadout.slot(_category))
+	_weapon = null
+	_select(w)
+	_refresh_states()
+	_apply_layout()
+	# The pictures on screen first, then the rest.
+	var first: Array[WeaponData] = []
+	for c in _dock.visible_cards():
+		first.append(c.weapon)
+	_thumbs.bake(first)
+	_thumbs.bake(GameData.weapons())
 
 
 func first_focus() -> Control:
-	return _cards.get(_weapon.id) if _weapon else null
+	return _dock.card(_weapon.id) if _weapon else null
 
+
+# --- responsive layout -------------------------------------------------------------
+
+## Re-applies ArsenalLayout's rules for the page's size and the window's scale.
+func _apply_layout() -> void:
+	if not is_inside_tree() or size.x < 1.0:
+		return
+	var win := get_tree().root
+	var screen_scale := float(win.size.x) / maxf(1.0, win.get_visible_rect().size.x)
+	_layout = ArsenalLayout.compute(size, screen_scale)
+	_root.add_theme_constant_override("separation", _layout.gap)
+	_upper.add_theme_constant_override("separation", _layout.gap)
+	_sidebar.custom_minimum_size.x = _layout.sidebar_width
+	_sidebar.set_padding(_layout.padding, _layout.padding)
+	_sidebar.set_spacing(_layout.gap)
+	_details.custom_minimum_size.x = _layout.details_width
+	_details.set_padding(_layout.padding, _layout.padding)
+	_details.set_stat_columns(_layout.stat_columns)
+	_dock.custom_minimum_size.y = _layout.dock_height
+	_dock.set_spacing(_layout.gap, _layout.padding)
+	_dock.set_per_page(_layout.cards)
+	_dock.set_room(size.x)
+	if _weapon:
+		_dock.show_weapon(_weapon.id, false)
+
+
+## The rules in force (for the probe).
+func layout() -> ArsenalLayout:
+	return _layout
+
+
+# --- browsing ------------------------------------------------------------------------
+
+## Previews `w`: the card's outline, the details and the model (the screenshot
+## launcher calls this too).
+func _select(w: WeaponData) -> void:
+	if w == null:
+		return
+	var changed := w != _weapon
+	_weapon = w
+	var slot := Loadout.slot_for(w)
+	if slot != _category or _dock.cards().is_empty():
+		_show_category(slot)
+	_dock.show_weapon(w.id)
+	for c: ArsenalCard in _dock.cards():
+		c.selected = c.weapon == w
+	_details.show_weapon(w, changed)
+	_preview.show_weapon(w)
+
+
+## Shows category `slot` in the sidebar and the dock (its page with the weapon shown).
+func _show_category(slot: int) -> void:
+	_category = slot
+	_sidebar.set_category(slot)
+	var focus_id := _weapon.id if _weapon and Loadout.slot_for(_weapon) == slot else Loadout.slot(slot)
+	_dock.show_list(Loadout.weapons_for(slot), focus_id)
+	_dock.refresh(_weapon.id if _weapon else &"", _picture)
+
+
+## A category tab, the 1 / 2 keys or LB / RB: show the category and preview
+## the weapon equipped in it (the focus follows if it was on a card).
+func _switch_category(slot: int) -> void:
+	if slot == _category:
+		return
+	UiSound.tab()
+	var focus := get_viewport().gui_get_focus_owner()
+	var on_card := focus is ArsenalCard
+	_show_category(slot)
+	_select(GameData.weapon(Loadout.slot(slot)))
+	if on_card:
+		_dock.card(_weapon.id).grab_focus()
+
+
+func _on_category_pressed(slot: int) -> void:
+	if slot == _category:
+		_sidebar.set_category(slot)
+		return
+	_switch_category(slot)
+
+
+## A loadout slot: preview the weapon in it.
+func _on_slot_pressed(slot: int) -> void:
+	_select(GameData.weapon(Loadout.slot(slot)))
+
+
+func _picture(w: WeaponData) -> Texture2D:
+	return WeaponThumbs.texture(w)
+
+
+## Cards (tags, locks, pictures) and the loadout slots, after anything changed.
+func _refresh_states() -> void:
+	_dock.refresh(_weapon.id if _weapon else &"", _picture)
+	_sidebar.refresh(_picture)
+	if _weapon:
+		_details.refresh_action(_weapon)
+
+
+# --- equipping ------------------------------------------------------------------------
+
+## Puts the previewed weapon in its class's slot (EQUIP, F, the pad's Y).
+func _equip_selected() -> void:
+	if _weapon == null:
+		return
+	var button := _details.equip_button()
+	if not GameData.is_weapon_unlocked(_weapon) or Loadout.slot_of(_weapon.id) >= 0:
+		UiFx.deny(button)
+		return
+	var had_focus := button.has_focus()
+	if not Loadout.equip(_weapon.id):
+		UiFx.deny(button)
+		return
+	UiSound.equip()
+	_refresh_states()
+	# EQUIP just went quiet (EQUIPPED): the focus goes back to the card.
+	if had_focus:
+		_dock.card(_weapon.id).grab_focus()
+
+
+# --- keys and pad ------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or KitDialog.open_count > 0:
 		return
-	var slot := -1
+	var handled := true
 	if event.is_action_pressed("weapon_1"):
-		slot = Loadout.PRIMARY
+		_switch_category(Loadout.PRIMARY)
 	elif event.is_action_pressed("weapon_2"):
-		slot = Loadout.SECONDARY
+		_switch_category(Loadout.SECONDARY)
+	elif _pad_pressed(event, JOY_BUTTON_LEFT_SHOULDER):
+		_switch_category(Loadout.PRIMARY)
+	elif _pad_pressed(event, JOY_BUTTON_RIGHT_SHOULDER):
+		_switch_category(Loadout.SECONDARY)
+	elif _pad_pressed(event, JOY_BUTTON_Y) or _key_pressed(event, KEY_F):
+		_equip_selected()
 	elif event is InputEventJoypadMotion:
 		var step := _trigger_step(event as InputEventJoypadMotion)
-		if step != 0:
-			slot = Loadout.SECONDARY if step > 0 else Loadout.PRIMARY
-	if slot >= 0:
-		_use_slot(slot)
+		handled = step != 0
+		if handled:
+			_dock.turn(step)
+	else:
+		handled = false
+	if handled:
 		get_viewport().set_input_as_handled()
 
 
-## -1 / 1 once per pull of the left / right trigger.
+static func _pad_pressed(event: InputEvent, button: JoyButton) -> bool:
+	var pad := event as InputEventJoypadButton
+	return pad != null and pad.pressed and pad.button_index == button
+
+
+static func _key_pressed(event: InputEvent, key: Key) -> bool:
+	var k := event as InputEventKey
+	return k != null and k.pressed and not k.echo and k.physical_keycode == key
+
+
+## -1 / 1 once per pull of the left / right trigger (0 otherwise).
 func _trigger_step(event: InputEventJoypadMotion) -> int:
 	var side := 0
 	if event.axis == JOY_AXIS_TRIGGER_LEFT:
@@ -204,984 +300,27 @@ func _trigger_step(event: InputEventJoypadMotion) -> int:
 	return 0
 
 
-# --- layout ----------------------------------------------------------------------
+# --- for the probe and the screenshot launcher -----------------------------------------------
 
-## The loadout's two plates, shown by the shell to the right of the marquee.
-func _build_plates() -> void:
-	_plate_row = HBoxContainer.new()
-	_plate_row.alignment = BoxContainer.ALIGNMENT_END
-	_plate_row.add_theme_constant_override("separation", UiKit.GAP_L)
-	for slot in 2:
-		var plate := UiKit.slot_plate("%s  [%d]" % [String(Loadout.SLOT_NAMES[slot]).to_upper(), slot + 1], "")
-		plate.custom_minimum_size.x = 430
-		# A click opens the slot's section (and equips the weapon picked there).
-		plate.mouse_filter = Control.MOUSE_FILTER_STOP
-		plate.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		plate.tooltip_text = "Show the %s" % String(SECTION_NAMES[slot]).to_lower()
-		plate.gui_input.connect(_on_plate_input.bind(slot))
-		_plate_row.add_child(plate)
-		_plates.append(plate)
+func preview() -> ArsenalPreview:
+	return _preview
 
 
-func _on_plate_input(event: InputEvent, slot: int) -> void:
-	var click := event as InputEventMouseButton
-	if click and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
-		UiSound.click()
-		_use_slot(slot)
+func details() -> ArsenalDetails:
+	return _details
 
 
-## The open area over the diorama: dragging it turns the weapon.
-func _build_drag_area() -> Control:
-	var area := Control.new()
-	area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	area.mouse_default_cursor_shape = Control.CURSOR_DRAG
-	area.gui_input.connect(_on_drag_input)
-	var hint := UiKit.key_prompt("LMB", "Drag to turn")
-	hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-	hint.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	hint.offset_right = -UiKit.GAP_L
-	hint.modulate.a = 0.85
-	area.add_child(hint)
-	return area
+func dock() -> ArsenalDock:
+	return _dock
 
 
-func _on_drag_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and (event as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT:
-		_yaw += (event as InputEventMouseMotion).relative.x * 0.008
-		_hold = 2.5
+func sidebar() -> ArsenalSidebar:
+	return _sidebar
 
 
-func _build_board() -> Control:
-	_board = UiKit.signboard()
-	_board.custom_minimum_size.x = BOARD_WIDTH
-	_board.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", UiKit.GAP_S)
-	_board.add_child(v)
-	_name = UiKit.sign_label("", 56)
-	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(_name)
-	_chip = UiKit.chip("", UiKit.CYAN, 26)
-	v.add_child(_chip)
-	_role = UiKit.body("", BOARD_WIDTH - 90.0, UiKit.SIZE_BODY)
-	_role.max_lines_visible = 2
-	_role.add_theme_constant_override("line_spacing", -6)
-	_role.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_role.mouse_filter = Control.MOUSE_FILTER_STOP
-	v.add_child(_role)
-	_traits = HFlowContainer.new()
-	_traits.alignment = FlowContainer.ALIGNMENT_CENTER
-	_traits.add_theme_constant_override("h_separation", UiKit.GAP_S)
-	_traits.add_theme_constant_override("v_separation", UiKit.GAP_XS)
-	v.add_child(_traits)
-	v.add_child(_rule())
-	v.add_child(_build_stats())
-	v.add_child(_rule())
-	v.add_child(_build_mastery())
-	v.add_child(_build_action())
-	return _board
+func selected() -> WeaponData:
+	return _weapon
 
 
-## The EQUIP button and, in its place when there is nothing to equip, a
-## banner: EQUIPPED (cyan) or LOCKED with what unlocks it (amber).
-func _build_action() -> Control:
-	_action = VBoxContainer.new()
-	_action.name = "CoachAnchor"
-	_action.custom_minimum_size.y = 78
-	_equip = UiKit.sign_button("EQUIP", SignButton.Kind.PRIMARY, 40)
-	_equip.name = "EquipButton"
-	_equip.custom_minimum_size.y = 78
-	_equip.pressed.connect(_equip_selected)
-	_action.add_child(_equip)
-	_banner = UiKit.neon_panel(UiKit.CYAN)
-	_banner.set_padding(20, 8)
-	_banner.custom_minimum_size.y = 78
-	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_action.add_child(_banner)
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", UiKit.GAP_M)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_banner.add_child(row)
-	_banner_icon = UiKit.icon(&"icon_check", 34.0)
-	row.add_child(_banner_icon)
-	_banner_text = UiKit.label("", UiKit.SIZE_LABEL, UiKit.CYAN, true)
-	_banner_text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(_banner_text)
-	return _action
-
-
-func _rule() -> ColorRect:
-	var line := ColorRect.new()
-	line.color = Color(UiKit.CREAM, 0.35)
-	line.custom_minimum_size.y = 2
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return line
-
-
-## Six stats in two columns with a divider between them.
-func _build_stats() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiKit.GAP_L)
-	for column in 2:
-		var v := VBoxContainer.new()
-		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		v.add_theme_constant_override("separation", 0)
-		for i in 3:
-			var stat := UiKit.stat_row(STATS[column * 3 + i][0])
-			v.add_child(stat)
-			_stat_rows.append(stat)
-		row.add_child(v)
-		if column == 0:
-			var divider := _rule()
-			divider.custom_minimum_size = Vector2(2, 0)
-			row.add_child(divider)
-	return row
-
-
-func _build_mastery() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiKit.GAP_M)
-	_rank_label = UiKit.label("", 22, UiKit.AMBER, true)
-	row.add_child(_rank_label)
-	_rank_bar = UiKit.progress(0.0, 14.0, UiKit.AMBER)
-	_rank_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_rank_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(_rank_bar)
-	return row
-
-
-## The riveted tray along the bottom: the two section tabs, then the shown
-## section's weapons as cards. Both sections' rows sit on one deck; only the
-## shown one is visible.
-func _build_tray() -> Control:
-	var tray := UiKit.metal_frame()
-	tray.set_padding(36, 32)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", UiKit.GAP_M)
-	tray.add_child(row)
-	row.add_child(_build_section_tabs())
-	var deck := Control.new()
-	deck.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	deck.custom_minimum_size.y = CARD_SIZE.y
-	deck.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	deck.resized.connect(_fit_cards.bind(deck))
-	row.add_child(deck)
-	var columns := maxi(Loadout.weapons_for(Loadout.PRIMARY).size(), Loadout.weapons_for(Loadout.SECONDARY).size())
-	var group := ButtonGroup.new()
-	for slot in 2:
-		var cards := HBoxContainer.new()
-		cards.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		cards.add_theme_constant_override("separation", UiKit.GAP_S)
-		cards.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		cards.visible = slot == _section
-		deck.add_child(cards)
-		_rows.append(cards)
-		var weapons := Loadout.weapons_for(slot)
-		for w in weapons:
-			cards.add_child(_new_card(w, group))
-		if weapons.size() < columns:
-			cards.add_child(_row_note(slot, columns - weapons.size()))
-	return tray
-
-
-## Narrows the cards so the longer section's row fits the deck's width
-## (a row wider than the deck would run off the side of the screen).
-func _fit_cards(deck: Control) -> void:
-	var columns := maxi(Loadout.weapons_for(Loadout.PRIMARY).size(), Loadout.weapons_for(Loadout.SECONDARY).size())
-	if columns == 0 or deck.size.x <= 0.0:
-		return
-	var gaps := UiKit.GAP_S * (columns - 1)
-	var card_w := clampf(floorf((deck.size.x - gaps) / columns), CARD_MIN_WIDTH, CARD_SIZE.x)
-	for row in _rows:
-		for child in row.get_children():
-			# Cards, and the note that fills a shorter section's spare room.
-			(child as Control).custom_minimum_size.x = card_w
-	# A row that once grew past the deck keeps that size until told otherwise;
-	# the deck also grows to the tallest row (locked cards carry a level line).
-	var height := CARD_SIZE.y
-	for row in _rows:
-		height = maxf(height, row.get_combined_minimum_size().y)
-	deck.custom_minimum_size.y = height
-	for row in _rows:
-		row.size = Vector2(deck.size.x, height)
-
-
-func _new_card(w: WeaponData, group: ButtonGroup) -> ItemCard:
-	var card := UiKit.item_card(w.display_name.to_upper(), CARD_SIZE)
-	card.button_group = group
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.pressed.connect(_select.bind(w))
-	_thumb_textures[w.id] = _thumbnail(w, card)
-	card.set_image(_thumb_textures[w.id])
-	_cards[w.id] = card
-	return card
-
-
-## A line about the section, in the room `columns` cards would take.
-func _row_note(slot: int, columns: int) -> Control:
-	var note := UiKit.body(SECTION_NOTES[slot], 0.0, UiKit.SIZE_SMALL, UiKit.MUTED)
-	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	note.size_flags_stretch_ratio = columns
-	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	note.custom_minimum_size.x = CARD_SIZE.x
-	# A wrapped label asks for the height of its lines at the width it last
-	# had: while its row is hidden (the other section is shown) that width is
-	# stale, and a note wrapped to a card's width would make the tray too tall
-	# for the screen. Capped, it never asks for more than the cards do.
-	note.max_lines_visible = 3
-	note.text_overrun_behavior = TextServer.OVERRUN_TRIM_WORD_ELLIPSIS
-	return note
-
-
-## The two section tabs stacked at the tray's left end, each with how many
-## of its weapons are unlocked.
-func _build_section_tabs() -> Control:
-	var col := VBoxContainer.new()
-	col.custom_minimum_size.x = SECTION_TAB_WIDTH
-	col.add_theme_constant_override("separation", 0)
-	var group := ButtonGroup.new()
-	for slot in 2:
-		var tab := SignButton.make_tab(SECTION_NAMES[slot], group, 28)
-		tab.name = "Section%s" % String(Loadout.SLOT_NAMES[slot])
-		tab.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		tab.set_pressed_no_signal(slot == _section)
-		tab.pressed.connect(_on_section_tab.bind(slot))
-		col.add_child(tab)
-		_section_tabs.append(tab)
-		var count := UiKit.label("", UiKit.SIZE_SMALL, UiKit.MUTED)
-		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		col.add_child(count)
-		_section_counts.append(count)
-	return col
-
-
-func _on_section_tab(slot: int) -> void:
-	UiSound.tab()
-	_show_section(slot, true)
-
-
-## "[1]  5 / 8 unlocked" under each tab.
-func _refresh_counts() -> void:
-	for slot in 2:
-		_section_counts[slot].text = "[%d]   %d / %d unlocked" % [slot + 1, Loadout.available(slot).size(), Loadout.weapons_for(slot).size()]
-
-
-## A small one-shot render of the weapon for its card.
-func _thumbnail(w: WeaponData, holder: Node) -> Texture2D:
-	var vp := SubViewport.new()
-	vp.size = THUMB_SIZE * 2
-	vp.own_world_3d = true
-	vp.transparent_bg = true
-	vp.msaa_3d = Viewport.MSAA_4X
-	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
-	holder.add_child(vp)
-	_add_lights(vp)
-	var pivot := Node3D.new()
-	vp.add_child(pivot)
-	_thumb_pivots[w.id] = pivot
-	vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
-	_build.add(_redo_thumb.bind(w.id))
-	var cam := Camera3D.new()
-	cam.position = Vector3(0, 0.02, 1.25)
-	cam.fov = 26.0
-	vp.add_child(cam)
-	return vp.get_texture()
-
-
-## Re-renders a card's thumbnail if the weapon's look changed since the last one.
-func _redo_thumb(id: StringName) -> void:
-	var state := hash([Cosmetics.weapon_loadout(id), GameData.is_weapon_unlocked(GameData.weapon(id))])
-	if _thumb_state.get(id) == state:
-		return
-	_thumb_state[id] = state
-	var pivot: Node3D = _thumb_pivots[id]
-	_fill_thumb(pivot, GameData.weapon(id))
-	(pivot.get_parent() as SubViewport).render_target_update_mode = SubViewport.UPDATE_ONCE
-
-
-## Puts a fresh model of `w` (with its equipped cosmetics) in a card's pivot.
-func _fill_thumb(pivot: Node3D, w: WeaponData) -> void:
-	for c in pivot.get_children():
-		c.queue_free()
-	var model := _weapon_model(w)
-	if model == null:
-		return
-	var bounds := _bounds(model)
-	model.position = -bounds.get_center()
-	pivot.add_child(model)
-	# Side-on, slightly from above, filling the card.
-	pivot.rotation_degrees = Vector3(8, 82, 0)
-	pivot.scale = Vector3.ONE * (1.0 / maxf(0.01, maxf(bounds.size.z, bounds.size.y * 2.2)))
-
-
-func _add_lights(vp: SubViewport) -> void:
-	var key := DirectionalLight3D.new()
-	key.rotation_degrees = Vector3(-35, 35, 0)
-	key.light_energy = 1.4
-	key.light_color = Color(1.0, 0.93, 0.85)
-	vp.add_child(key)
-	var fill := DirectionalLight3D.new()
-	fill.rotation_degrees = Vector3(-10, -140, 0)
-	fill.light_energy = 0.7
-	fill.light_color = Color(0.75, 0.6, 1.0)
-	vp.add_child(fill)
-	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0, 0, 0, 0)
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.75, 0.65, 0.95)
-	env.ambient_light_energy = 0.7
-	var we := WorldEnvironment.new()
-	we.environment = env
-	vp.add_child(we)
-
-
-# --- the diorama -------------------------------------------------------------------
-
-## The booth scene in its own viewport: sunset sky, the booth model, the
-## Ferris wheel far behind, the sea, warm lamp light and the stand's moving parts.
-func _build_stage() -> void:
-	_stage_view = SubViewportContainer.new()
-	_stage_view.stretch = true
-	_stage_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_viewport = SubViewport.new()
-	_viewport.own_world_3d = true
-	_viewport.msaa_3d = Viewport.MSAA_4X
-	_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
-	_stage_view.add_child(_viewport)
-	_add_stage_environment()
-	_add_stage_lights()
-	var booth := _instance(BOOTH_SCENE)
-	if booth:
-		_viewport.add_child(booth)
-		_take_stand_parts(booth)
-	_build.add(_add_scenery)
-	var cam := Camera3D.new()
-	cam.fov = 30.0
-	cam.far = 400.0
-	cam.transform = Transform3D(Basis.IDENTITY, CAMERA_FROM).looking_at(CAMERA_TO, Vector3.UP)
-	_viewport.add_child(cam)
-	_turntable = Node3D.new()
-	_viewport.add_child(_turntable)
-	_pivot = Node3D.new()
-	_turntable.add_child(_pivot)
-	for part: Node3D in _forks + _collars:
-		part.get_parent().remove_child(part)
-		part.owner = null
-		_turntable.add_child(part)
-	_ring = MeshInstance3D.new()
-	var torus := TorusMesh.new()
-	torus.inner_radius = 0.262
-	torus.outer_radius = 0.278
-	torus.rings = 48
-	torus.ring_segments = 6
-	_ring.mesh = torus
-	_ring.position.y = TURNTABLE_TOP
-	_viewport.add_child(_ring)
-
-
-static func _instance(path: String) -> Node3D:
-	return (load(path) as PackedScene).instantiate() as Node3D if ResourceLoader.exists(path) else null
-
-
-func _add_stage_environment() -> void:
-	# Dusk: deep violet overhead falling to a coral horizon.
-	var dusk := ProceduralSkyMaterial.new()
-	dusk.sky_top_color = Color("2a1d63")
-	dusk.sky_horizon_color = Color("f47f86")
-	dusk.sky_curve = 0.09
-	dusk.ground_horizon_color = Color("a8507e")
-	dusk.ground_bottom_color = Color("1a1238")
-	dusk.sun_angle_max = 0.0
-	var sky := Sky.new()
-	sky.sky_material = dusk
-	var env := Environment.new()
-	env.background_mode = Environment.BG_SKY
-	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.5, 0.36, 0.8)
-	env.ambient_light_energy = 0.42
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	var we := WorldEnvironment.new()
-	we.environment = env
-	_viewport.add_child(we)
-
-
-## A low pink sun from behind, the work lamp (a spot, the only shadow caster,
-## and a soft glow that warms the booth around it) and a cool fill from the
-## camera side.
-func _add_stage_lights() -> void:
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-18, -150, 0)
-	sun.light_energy = 0.45
-	sun.light_color = Color(1.0, 0.62, 0.55)
-	_viewport.add_child(sun)
-	var lamp := SpotLight3D.new()
-	lamp.transform = Transform3D(Basis.IDENTITY, LAMP_AT).looking_at(Vector3(0.0, 0.1, 0.05), Vector3.UP)
-	lamp.spot_range = 3.0
-	lamp.spot_angle = 58.0
-	lamp.spot_angle_attenuation = 0.7
-	lamp.light_energy = 2.0
-	lamp.light_color = Color(1.0, 0.82, 0.55)
-	lamp.shadow_enabled = true
-	_viewport.add_child(lamp)
-	var glow := OmniLight3D.new()
-	glow.position = LAMP_AT + Vector3(0.0, -0.08, 0.1)
-	glow.omni_range = 2.4
-	glow.light_energy = 1.3
-	glow.light_color = Color(1.0, 0.8, 0.55)
-	_viewport.add_child(glow)
-	var fill := OmniLight3D.new()
-	fill.position = Vector3(-0.4, 0.9, 1.9)
-	fill.omni_range = 7.0
-	fill.light_energy = 1.1
-	fill.light_color = Color(0.6, 0.75, 1.0)
-	_viewport.add_child(fill)
-
-
-## Pulls the stand's moving parts out of the booth model: the fork and collar
-## become two of each on the turntable; the monitor gets its blueprint shader.
-func _take_stand_parts(booth: Node3D) -> void:
-	var fork := booth.find_child("StandFork", true, false) as Node3D
-	var collar := booth.find_child("StandCollar", true, false) as Node3D
-	if fork and collar:
-		_forks = [fork, fork.duplicate() as Node3D]
-		_collars = [collar, collar.duplicate() as Node3D]
-		fork.get_parent().add_child(_forks[1])
-		collar.get_parent().add_child(_collars[1])
-	var screen := booth.find_child("BlueprintScreen", true, false) as MeshInstance3D
-	if screen and ResourceLoader.exists(BLUEPRINT_SHADER):
-		_screen_material = ShaderMaterial.new()
-		_screen_material.shader = load(BLUEPRINT_SHADER)
-		_screen_material.set_shader_parameter("thumb_aspect", float(THUMB_SIZE.x) / THUMB_SIZE.y)
-		var screen_size := screen.mesh.get_aabb().size
-		_screen_material.set_shader_parameter("screen_size", Vector2(screen_size.x, screen_size.y))
-		screen.material_override = _screen_material
-	var gull := booth.find_child("Gull", true, false) as Node3D
-	if gull:
-		gull.position = Vector3(1.3, 0.215, -7.0)
-
-
-## The sea and the Ferris wheel on the horizon.
-func _add_scenery() -> void:
-	var sea := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(900, 900)
-	sea.mesh = plane
-	var water := StandardMaterial3D.new()
-	water.albedo_color = Color("3b2a6b")
-	water.roughness = 0.3
-	water.metallic = 0.4
-	sea.material_override = water
-	sea.position = Vector3(0, -3.4, -200)
-	_viewport.add_child(sea)
-	var wheel := _instance(WHEEL_SCENE)
-	if wheel:
-		wheel.set_script(load("res://scripts/props/ferris_wheel.gd"))
-		wheel.position = Vector3(2.2, -4.3, -62.0)
-		wheel.scale = Vector3.ONE * 0.33
-		wheel.rotation_degrees.y = -12.0
-		_viewport.add_child(wheel)
-
-
-# --- selection ---------------------------------------------------------------------
-
-func _select(w: WeaponData) -> void:
-	if w == null:
-		return
-	var changed := w != _weapon
-	_weapon = w
-	if Loadout.slot_for(w) != _section:
-		_show_section(Loadout.slot_for(w), is_visible_in_tree(), false)
-	(_cards[w.id] as ItemCard).selected = true
-	_fit_name(w.display_name.to_upper())
-	var rank := Mastery.rank(w.id)
-	var tags := _trait_tags(w)
-	_chip.set_text("%s  ·  %s" % [tags[0] if not tags.is_empty() else w.category.to_upper(), UiKit.rank_name(rank, w.max_rank())])
-	_chip.set_color(w.tracer_color.lerp(Color.WHITE, 0.25))
-	_role.text = _summary(w.role)
-	_role.tooltip_text = w.role
-	_fill_traits(tags, w)
-	for i in STATS.size():
-		_stat_rows[i].set_value(String(call(STATS[i][1], w)[1]))
-	_rank_label.text = "MASTERY  %d / %d" % [rank, w.max_rank()]
-	_rank_bar.value = Mastery.rank_progress(w.id) if rank < w.max_rank() else 1.0
-	_refresh_action()
-	_refresh_cards()
-	_refresh_loadout()
-	_link_focus()
-	_build_preview_model()
-	_seat_on_stand()
-	if _screen_material:
-		_screen_material.set_shader_parameter("thumb", _thumb_textures[w.id])
-	if changed and is_visible_in_tree():
-		UiFx.pop_in(_name, 0.0, 0.9)
-
-
-## The role's first sentence for the two-line summary, cut at a word with an
-## ellipsis when it is longer than the board can show (the tooltip has it all).
-static func _summary(role: String) -> String:
-	var first := role.get_slice(".", 0)
-	if first.length() <= ROLE_CHARS:
-		return first
-	return first.left(ROLE_CHARS).rsplit(" ", true, 1)[0] + "…"
-
-
-## Up from any card in the tray reaches EQUIP (when shown) and down from it
-## returns to the selected card; left of a section's first card is its tab,
-## right of its last card is nothing, and right of a tab is the selected card.
-func _link_focus() -> void:
-	var card: Control = _cards[_weapon.id]
-	if not card.is_inside_tree():
-		return
-	for id in _cards:
-		var c: Control = _cards[id]
-		c.focus_neighbor_top = c.get_path_to(_equip) if _equip.visible else NodePath()
-	_equip.focus_neighbor_bottom = _equip.get_path_to(card)
-	for slot in 2:
-		var row := _rows[slot].get_children().filter(func(c: Node): return c is ItemCard)
-		if not row.is_empty():
-			row[0].focus_neighbor_left = row[0].get_path_to(_section_tabs[slot])
-			row[-1].focus_neighbor_right = NodePath(".")
-		_section_tabs[slot].focus_neighbor_right = _section_tabs[slot].get_path_to(card)
-	_section_tabs[0].focus_neighbor_bottom = _section_tabs[0].get_path_to(_section_tabs[1])
-	_section_tabs[1].focus_neighbor_top = _section_tabs[1].get_path_to(_section_tabs[0])
-
-
-## Shows EQUIP for an unlocked weapon that is not equipped, else the banner.
-func _refresh_action() -> void:
-	var unlocked := GameData.is_weapon_unlocked(_weapon)
-	var slot := Loadout.slot_for(_weapon)
-	var slot_text := "%s [%d]" % [String(Loadout.SLOT_NAMES[slot]).to_upper(), slot + 1]
-	var was_equip := _equip.visible
-	_equip.visible = unlocked and Loadout.slot_of(_weapon.id) < 0
-	_equip.text = "EQUIP AS %s" % slot_text
-	_banner.visible = not _equip.visible
-	var color := UiKit.CYAN if unlocked else UiKit.AMBER
-	_banner.accent = color
-	_banner_icon.texture = KitTex.tex(&"icon_check" if unlocked else &"icon_lock")
-	_banner_icon.modulate = color
-	_banner_text.add_theme_color_override("font_color", color)
-	_banner_text.text = "EQUIPPED AS %s" % slot_text if unlocked else "LOCKED  ·  %s" % (_weapon.unlock.describe() if _weapon.unlock else "")
-	if not was_equip and _equip.visible and is_visible_in_tree():
-		UiFx.pop_in(_equip, 0.0, 0.94)
-
-
-## The name in the biggest size that fits the board.
-func _fit_name(text: String) -> void:
-	var font_size := 56
-	var room := BOARD_WIDTH - 90.0
-	while font_size > 34 and UiKit.display_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > room:
-		font_size -= 2
-	_name.text = text
-	_name.add_theme_font_size_override("font_size", font_size)
-
-
-## Puts the selected weapon in the slot of its class.
-func _equip_selected() -> void:
-	if _weapon == null or Loadout.slot_of(_weapon.id) >= 0:
-		return
-	var had_focus := _equip.has_focus()
-	if Loadout.equip(_weapon.id):
-		UiSound.equip()
-		_select(_weapon)
-		var slot := Loadout.slot_for(_weapon)
-		UiFx.pulse(_plates[slot], 1.06)
-		UiFx.pop_in(_banner, 0.0, 0.9)
-		# EQUIP just gave way to the banner: the focus goes back to the card.
-		if had_focus:
-			(_cards[_weapon.id] as Control).grab_focus()
-	else:
-		UiFx.deny(_board)
-
-
-## The 1 / 2 keys, the gamepad triggers and a click on a slot plate: show
-## that slot's section, or, when it is already shown, equip the weapon picked in it.
-func _use_slot(slot: int) -> void:
-	if slot != _section:
-		UiSound.tab()
-		_show_section(slot, true)
-	elif _weapon and GameData.is_weapon_unlocked(_weapon) and Loadout.slot_of(_weapon.id) < 0:
-		_equip_selected()
-
-
-## Shows the tray section of `slot` (sliding the cards across when
-## `animate`); `pick` also selects the weapon equipped in that slot.
-func _show_section(slot: int, animate: bool, pick := true) -> void:
-	var from := _section
-	_section = slot
-	for i in 2:
-		_section_tabs[i].set_pressed_no_signal(i == slot)
-	if from != slot:
-		_slide_rows(from, slot, animate)
-	if pick:
-		var focus := get_viewport().gui_get_focus_owner()
-		var focus_in_tray := focus != null and _rows[from].is_ancestor_of(focus)
-		_select(GameData.weapon(Loadout.slot(slot)))
-		if focus_in_tray:
-			(_cards[_weapon.id] as Control).grab_focus()
-	_refresh_loadout()
-
-
-## The old section's cards slide out and fade, the new one's slide in from
-## the side they are on (secondaries to the right) and pop in one by one.
-func _slide_rows(from: int, to: int, animate: bool) -> void:
-	if _section_tween:
-		_section_tween.kill()
-	var out_row := _rows[from]
-	var in_row := _rows[to]
-	for r in _rows:
-		r.position.x = 0.0
-		r.modulate.a = 1.0
-	in_row.visible = true
-	if not animate:
-		out_row.visible = false
-		return
-	var dir := 1.0 if to > from else -1.0
-	in_row.position.x = dir * SECTION_SLIDE
-	in_row.modulate.a = 0.0
-	_section_tween = create_tween().set_parallel(true)
-	_section_tween.tween_property(out_row, "position:x", -dir * SECTION_SLIDE, 0.16).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	_section_tween.tween_property(out_row, "modulate:a", 0.0, 0.14)
-	_section_tween.tween_property(in_row, "position:x", 0.0, 0.24).set_delay(0.08).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_section_tween.tween_property(in_row, "modulate:a", 1.0, 0.16).set_delay(0.08)
-	_section_tween.chain().tween_callback(func():
-		out_row.visible = false
-		out_row.position.x = 0.0
-		out_row.modulate.a = 1.0)
-	UiFx.stagger_in(in_row.get_children(), 0.08)
-	UiFx.pulse(_section_tabs[to], 1.06)
-
-
-func _refresh_cards() -> void:
-	for id in _cards:
-		var w := GameData.weapon(id)
-		var card: ItemCard = _cards[id]
-		if GameData.is_weapon_unlocked(w):
-			card.set_status("")
-		else:
-			card.set_locked(_short_lock(w))
-		card.set_tag("EQUIPPED" if Loadout.slot_of(w.id) >= 0 else "")
-
-
-## "Lv 5" for a player-level lock, "Wave 10" for an Endless one, else the
-## requirement's own text.
-func _short_lock(w: WeaponData) -> String:
-	if w.unlock == null:
-		return "Locked"
-	if w.unlock.kind == Requirement.Kind.PLAYER_LEVEL and w.unlock.all_of.is_empty():
-		return "Lv %d" % w.unlock.amount
-	if w.unlock.kind == Requirement.Kind.ENDLESS_WAVE and w.unlock.all_of.is_empty():
-		return "Wave %d" % w.unlock.amount
-	return w.unlock.describe()
-
-
-## The slot plates: what each slot holds; the shown section's plate glows.
-func _refresh_loadout() -> void:
-	var held := Loadout.slots()
-	for slot in 2:
-		var w := GameData.weapon(held[slot])
-		_plates[slot].set_value(w.display_name.to_upper() if w else "EMPTY")
-		_plates[slot].active = slot == _section
-
-
-## Short tags for how the weapon fires and what its shots do.
-func _trait_tags(w: WeaponData) -> Array[String]:
-	var tags: Array[String] = []
-	if w.charge_time <= 0.0:
-		tags.append("AUTO" if w.automatic or w.beam else "SEMI")
-	if w.burst_count > 1:
-		tags.append("BURST ×%d" % w.burst_count)
-	if w.charge_time > 0.0:
-		tags.append("CHARGE %.1fs" % w.charge_time)
-	if w.beam:
-		tags.append("BEAM")
-	if w.pellets > 1:
-		tags.append("%d PELLETS" % w.pellets)
-	if w.pierce > 0:
-		tags.append("PIERCES %d" % w.pierce)
-	if w.chain_count > 0:
-		tags.append("CHAINS ×%d" % w.chain_count)
-	if w.seek_cone_degrees > 0.0:
-		tags.append("SEEKING")
-	if w.splash_radius > 0.0:
-		tags.append("BLAST %.1f m" % w.splash_radius)
-	if w.projectile_speed > 0.0 and w.projectile_gravity > 0.0:
-		tags.append("LOBBED")
-	if w.ricochet_count > 0:
-		tags.append("RICOCHET ×%d" % w.ricochet_count)
-	elif w.projectile_bounces > 0 and w.projectile_gravity <= 0.0:
-		tags.append("BOUNCES ×%d" % w.projectile_bounces)
-	match w.status_effect:
-		&"chill":
-			tags.append("FREEZES")
-		&"shock":
-			tags.append("SHOCKS")
-		&"fizz":
-			tags.append("FIZZ BURN")
-	var special := _mode_trait(w)
-	if special != "":
-		tags.insert(mini(1, tags.size()), special)
-	if w.uses_heat():
-		tags.append("HEAT")
-	return tags
-
-
-## The mechanic a weapon's mode script adds, as a tag: the script's own
-## `const TRAIT := "..."` if it has one, else known modes by file name.
-func _mode_trait(w: WeaponData) -> String:
-	if w.mode_script == null:
-		return ""
-	var own: Dictionary = w.mode_script.get_script_constant_map()
-	if own.has("TRAIT"):
-		return String(own["TRAIT"])
-	var file := w.mode_script.resource_path.get_file()
-	for key in MODE_TRAITS:
-		if file.contains(key):
-			return MODE_TRAITS[key]
-	return ""
-
-
-## The tags after the first (which is on the chip) as small pills.
-func _fill_traits(tags: Array[String], w: WeaponData) -> void:
-	for c in _traits.get_children():
-		_traits.remove_child(c)
-		c.queue_free()
-	_traits.visible = tags.size() > 1
-	for i in range(1, mini(tags.size(), 5)):
-		_traits.add_child(UiKit.chip(tags[i], w.tracer_color.lerp(UiKit.INK, 0.72), 18, false))
-
-
-# --- stats: [value, text] -------------------------------------------------------------
-
-## Sustained single-target damage per second at the real fire rate, reloads
-## (or overheat vents) included, so a big magazine and a fast reload count.
-func _stat_dps(w: WeaponData) -> Array:
-	var dps := w.damage_per_second()
-	if w.status_effect == &"fizz":
-		# A sprayed target carries about three quarters of the full fizz burn.
-		dps += w.status_amount * FizzBurn.MAX_STACKS * 0.75
-	if w.mode_script != null:
-		var mode: WeaponMode = w.mode_script.new()
-		mode.data = w
-		dps = mode.arsenal_dps(dps)
-	return [dps, "%d" % roundi(dps)]
-
-
-## Damage of one trigger pull: a whole burst, every pellet, a full charge.
-func _stat_burst(w: WeaponData) -> Array:
-	return [w.burst_damage(), "%d" % roundi(w.burst_damage())]
-
-
-func _stat_range(w: WeaponData) -> Array:
-	return [w.effective_range(), "%d m" % roundi(w.effective_range())]
-
-
-## Aiming, reloading and switching speed, 0-1.
-func _stat_handling(w: WeaponData) -> Array:
-	var ads := inverse_lerp(0.26, 0.1, w.ads_time)
-	var reload := inverse_lerp(2.6, 1.1, w.reload_time)
-	var equip := inverse_lerp(0.5, 0.2, w.equip_time)
-	var k := clampf((ads + reload + equip) / 3.0, 0.0, 1.0)
-	return [k, "%d" % roundi(k * 100.0)]
-
-
-func _stat_mobility(w: WeaponData) -> Array:
-	var k := clampf(inverse_lerp(0.8, 1.0, w.move_speed_scale), 0.0, 1.0)
-	return [k, "%d%%" % roundi(w.move_speed_scale * 100.0)]
-
-
-## Magazine size on a square-root scale (a 6-round rail and a 50-tick beam both read).
-func _stat_magazine(w: WeaponData) -> Array:
-	var text := "%d" % w.magazine_size
-	if w.uses_heat():
-		text = "%.0fs" % (w.magazine_size * w.fire_interval)
-	return [sqrt(w.magazine_size / 50.0), text]
-
-
-# --- preview --------------------------------------------------------------------------
-
-func _build_preview_model() -> void:
-	if _model:
-		_model.queue_free()
-		_model = null
-	_model = _weapon_model(_weapon)
-	if _model == null:
-		return
-	_pivot.add_child(_model)
-	var bounds := _bounds(_model)
-	_model.position = -bounds.get_center()
-	var largest := maxf(bounds.size.x, maxf(bounds.size.y, bounds.size.z))
-	_pivot.scale = Vector3.ONE * (0.74 / maxf(0.01, largest))
-	# Start side-on (the side the player sees), then keep turning.
-	_pivot.rotation = Vector3(0, deg_to_rad(-75), 0)
-	var m := StandardMaterial3D.new()
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.albedo_color = _weapon.tracer_color
-	_ring.material_override = m
-	if not GameData.is_weapon_unlocked(_weapon):
-		_tint_locked(_model)
-
-
-## Rests the previewed weapon on the stand: lifts it clear of the turntable
-## and raises the two cradle forks until their pads touch its underside, so
-## nothing floats and nothing cuts into the model. Worked out once per weapon
-## from the model's triangles.
-func _seat_on_stand() -> void:
-	if _model == null or _forks.is_empty():
-		for part: Node3D in _forks + _collars:
-			part.visible = false
-		return
-	_fit_to_stand()
-	if not _seats.has(_weapon.id):
-		_pivot.position = Vector3.ZERO
-		_seats[_weapon.id] = _measure_seat()
-	var seat: Dictionary = _seats[_weapon.id]
-	_pivot.position = Vector3(0.0, seat["lift"], 0.0)
-	var along: Vector3 = seat["along"]
-	for i in 2:
-		var height: float = seat["pads"][i]
-		_forks[i].visible = height > -INF
-		_collars[i].visible = height > -INF
-		_forks[i].position = along * seat["stations"][i] + Vector3(0.0, height, 0.0)
-		_forks[i].rotation = Vector3(0.0, atan2(-along.z, along.x), 0.0)
-		_collars[i].position = along * seat["stations"][i] + Vector3(0.0, TURNTABLE_TOP, 0.0)
-
-
-## Sizes the preview for the stand: every weapon fits the same length and
-## height, so a pistol stays smaller than a rifle instead of filling the booth.
-func _fit_to_stand() -> void:
-	var extent := _bounds(_model).size
-	_pivot.scale = Vector3.ONE * minf(FIT.x / maxf(0.01, extent.z), FIT.y / maxf(0.01, extent.y))
-
-
-## Where the weapon rests: {lift, along, stations[2], pads[2]} in turntable
-## space. `along` is the weapon's long axis; a pad height of -INF means the
-## weapon has nothing over that fork.
-func _measure_seat() -> Dictionary:
-	var along := (_pivot.basis * _model.basis * Vector3.FORWARD)
-	along.y = 0.0
-	along = along.normalized() if along.length() > 0.001 else Vector3.RIGHT
-	var corners := _corners(along)
-	var low := INF
-	var near := INF
-	var far := -INF
-	for c in corners:
-		low = minf(low, c.z)
-		near = minf(near, c.x)
-		far = maxf(far, c.x)
-	var stations := [lerpf(near, far, 0.27), lerpf(near, far, 0.73)]
-	var pads := [_underside(corners, stations[0]), _underside(corners, stations[1])]
-	# The weapon stands on the turntable on its lowest point (the grip, a
-	# drum, a stock); a fork props it wherever its underside is high enough
-	# for one. Where it is lower, the weapon sits on the turntable there.
-	var lift := TURNTABLE_TOP + REST_GAP - low
-	for i in 2:
-		var height: float = pads[i] + lift if pads[i] < INF else -INF
-		pads[i] = height if height - TURNTABLE_TOP >= FORK_MIN else -INF
-	return {"lift": lift, "along": along, "stations": stations, "pads": pads}
-
-
-## Every triangle corner of the shown model as (along, across, height) in
-## turntable space, `along` being the weapon's long axis.
-func _corners(along: Vector3) -> PackedVector3Array:
-	var across := Vector3(-along.z, 0.0, along.x)
-	var corners := PackedVector3Array()
-	for mi in _model.find_children("*", "MeshInstance3D", true, false):
-		var m := mi as MeshInstance3D
-		if m.mesh == null or not _shown(m):
-			continue
-		var xf := _pivot.transform * _relative(_pivot, m)
-		for v in m.mesh.get_faces():
-			var p := xf * v
-			corners.append(Vector3(p.dot(along), p.dot(across), p.y))
-	return corners
-
-
-## The lowest point of the model over a cradle pad centred at `station`
-## along the weapon (INF if nothing is above the pad). Samples a grid of
-## points across the pad against every triangle that overlaps it.
-func _underside(corners: PackedVector3Array, station: float) -> float:
-	var lowest := INF
-	for t in range(0, corners.size(), 3):
-		var a := corners[t]
-		var b := corners[t + 1]
-		var c := corners[t + 2]
-		if maxf(a.x, maxf(b.x, c.x)) < station - PAD.x or minf(a.x, minf(b.x, c.x)) > station + PAD.x:
-			continue
-		if maxf(a.y, maxf(b.y, c.y)) < -PAD.y or minf(a.y, minf(b.y, c.y)) > PAD.y:
-			continue
-		for corner: Vector3 in [a, b, c]:
-			if absf(corner.x - station) <= PAD.x and absf(corner.y) <= PAD.y:
-				lowest = minf(lowest, corner.z)
-		var det := (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y)
-		if absf(det) < 1e-9:
-			continue
-		for ix in 5:
-			var px := station + PAD.x * (ix - 2) * 0.5
-			for iy in 7:
-				var py := PAD.y * (iy - 3) / 3.0
-				var wa := ((b.y - c.y) * (px - c.x) + (c.x - b.x) * (py - c.y)) / det
-				var wb := ((c.y - a.y) * (px - c.x) + (a.x - c.x) * (py - c.y)) / det
-				var wc := 1.0 - wa - wb
-				if wa >= 0.0 and wb >= 0.0 and wc >= 0.0:
-					lowest = minf(lowest, wa * a.z + wb * b.z + wc * c.z)
-	return lowest
-
-
-## True when `node` and everything between it and the preview pivot is visible.
-func _shown(node: Node3D) -> bool:
-	var n: Node = node
-	while n and n != _pivot:
-		if n is Node3D and not (n as Node3D).visible:
-			return false
-		n = n.get_parent()
-	return true
-
-
-## The viewmodel without arms, with the weapon's equipped cosmetics.
-func _weapon_model(w: WeaponData) -> Node3D:
-	if w == null or w.viewmodel == null:
-		return null
-	var model: Node3D = w.viewmodel.instantiate()
-	WeaponCosmetics.prepare_preview(model)
-	WeaponCosmetics.apply(model, w, Cosmetics.weapon_loadout(w.id))
-	return model
-
-
-## Locked weapons preview as a dark silhouette with a faint rim.
-func _tint_locked(node: Node) -> void:
-	var m := StandardMaterial3D.new()
-	m.albedo_color = Color(0.16, 0.13, 0.26)
-	m.rim_enabled = true
-	m.rim = 0.6
-	m.roughness = 0.8
-	for mi in node.find_children("*", "MeshInstance3D", true, false):
-		(mi as MeshInstance3D).material_override = m
-
-
-func _bounds(node: Node3D) -> AABB:
-	var result := AABB()
-	var first := true
-	for mi in node.find_children("*", "MeshInstance3D", true, false):
-		var m := mi as MeshInstance3D
-		if not m.visible or m.mesh == null:
-			continue
-		var xf := _relative(node, m)
-		var box := xf * m.mesh.get_aabb()
-		result = box if first else result.merge(box)
-		first = false
-	return result
-
-
-## `child`'s transform in `root`'s space (works before the nodes enter the tree).
-func _relative(root: Node3D, child: Node3D) -> Transform3D:
-	var xf := Transform3D.IDENTITY
-	var n: Node = child
-	while n and n != root:
-		xf = (n as Node3D).transform * xf
-		n = n.get_parent()
-	return xf
+func category() -> int:
+	return _category

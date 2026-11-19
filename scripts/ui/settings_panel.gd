@@ -82,6 +82,7 @@ func _ready() -> void:
 	_slider("camera_shake", "Camera shake", 0.0, 1.0, 0.05, _percent)
 	_slider("flashes", "Flashes", 0.0, 1.0, 0.05, _percent)
 	_choice("tips", "Gameplay tips", [[true, "On"], [false, "Off"]])
+	_choice("reduce_motion", "Reduce menu motion", [[false, "Off"], [true, "On"]])
 	_section("DISPLAY")
 	_choice("graphics", "Graphics", [["high", "High"], ["low", "Low"]])
 	_choice("fullscreen", "Window", [[false, "Windowed"], [true, "Fullscreen"]])

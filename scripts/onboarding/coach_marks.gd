@@ -13,7 +13,7 @@ extends Control
 const HOLD := 14.0
 ## page id -> [seen id, text, anchor candidates]
 const MARKS := {
-	"arsenal": [&"coach_arsenal", "Primaries and secondaries each have a section. Pick a weapon, then EQUIP it.",
+	"arsenal": [&"coach_arsenal", "Pick Primary or Secondary, browse the cards below, then EQUIP the weapon you want.",
 		["CoachAnchor", "text:EQUIP"]],
 	"locker": [&"coach_locker", "Pick a tab, then a card to try it on. Looks only, never power.",
 		["CoachAnchor", "LockerTabs", "class:KitTabs"]],
@@ -56,8 +56,10 @@ func _ready() -> void:
 	_callout = UiKit.neon_panel(UiKit.AMBER)
 	_callout.set_padding(20, 12)
 	_callout.custom_minimum_size.x = 420
+	_callout.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_callout)
 	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_theme_constant_override("separation", UiKit.GAP_M)
 	_callout.add_child(row)
 	_text = UiKit.body("", 380, UiKit.SIZE_BODY, UiKit.CREAM)

@@ -11,7 +11,7 @@ const LOOK_RADIANS := TAU / (34.0 / 2.54 * 800.0)
 const LEGACY_LOOK_RADIANS := 0.0022
 const LOOK_RANGE := Vector2(0.1, 5.0)
 ## Defaults of options newer than Profile.DEFAULT_SETTINGS.
-const EXTRA_DEFAULTS := {"look_sensitivity": 1.0, "camera_motion": 1.0, "aim_mode": "hold", "sight_color": "auto", "tips": true}
+const EXTRA_DEFAULTS := {"look_sensitivity": 1.0, "camera_motion": 1.0, "aim_mode": "hold", "sight_color": "auto", "tips": true, "reduce_motion": false}
 
 var _headless := false
 
@@ -74,6 +74,12 @@ func shake_scale() -> float:
 ## Multiplier for head bob, roll, landing dips, sway and speed FOV (0 = off).
 func camera_motion() -> float:
 	return clampf(float(value("camera_motion")), 0.0, 1.0)
+
+
+## True when menus should skip decorative movement (idle turning, slides,
+## bounces): changes happen at once or with a very short fade.
+func reduce_motion() -> bool:
+	return bool(value("reduce_motion"))
 
 
 ## Multiplier for screen flashes and muzzle light (0 = off).
