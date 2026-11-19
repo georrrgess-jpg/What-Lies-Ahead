@@ -5,7 +5,8 @@ extends RefCounted
 ## the thumbnails to settle and checks that the case's model and every
 ## visible card's thumbnail belong to the weapon now customised.
 ## (12 s at most for the thumbnails to catch up after each run.)
-## Run on a real display so the 3D work is timed too:
+## Headless times the page's own work; on a real display the 3D work is
+## timed too, and the thumbnails are checked:
 ##
 ##   xvfb-run -a godot --rendering-driver opengl3 --path . --resolution 1600x900 -- \
 ##       --profile=<copy> --shot=/tmp/x.png --shot-scene=locker \
@@ -31,8 +32,9 @@ func run(shot: Node, menu: Node) -> void:
 	await _check(slot)
 	await _measure("5 per second", 200)
 	await _check(slot)
-	var image := _tree.root.get_texture().get_image()
-	image.save_png(String(shot.call("_arg", "shot", "/tmp/locker_switch.png")))
+	if DisplayServer.get_name() != "headless":
+		await RenderingServer.frame_post_draw
+		_tree.root.get_texture().get_image().save_png(String(shot.get("path")))
 	print("[switch] DONE %d mismatches" % _mismatches)
 
 
@@ -64,7 +66,7 @@ func _measure(phase: String, gap_ms: int) -> void:
 
 func _busy() -> bool:
 	var thumbs := _page._thumbs
-	return thumbs.is_processing() or not thumbs._queue.is_empty() or not _page._weapon_timer.is_stopped()
+	return thumbs.is_processing() or not thumbs._queue.is_empty() or "_weapon_timer" in _page and not (_page.get("_weapon_timer") as Timer).is_stopped()
 
 
 func _wait_settled() -> void:

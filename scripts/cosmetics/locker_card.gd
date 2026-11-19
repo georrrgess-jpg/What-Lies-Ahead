@@ -18,6 +18,8 @@ var shop_mode := false
 var _art: Control
 ## The Prize Print stack chip of a finish the player holds prints of.
 var _prints: KitChip
+## The item the title and rarity line show.
+var _titled: CosmeticItem
 
 
 static func create(card_size := CARD_SIZE) -> LockerCard:
@@ -30,14 +32,22 @@ static func create(card_size := CARD_SIZE) -> LockerCard:
 ## Shows `it` on this card. `thumbs` bakes the thumbnail when none is cached.
 ## The same item again (on another weapon) keeps its title and rarity line.
 func show_item(it: CosmeticItem, shown_on: WeaponData, thumbs: CosmeticThumbs) -> void:
-	var same := it == item
 	item = it
 	weapon = shown_on
-	if not same:
+	if it != _titled:
+		_titled = it
 		set_title(it.display_name.to_upper())
 		set_item_rarity(it)
 	_show_art(thumbs)
 	refresh_state()
+
+
+## Takes `it` (on `shown_on`) as the card's item without showing it yet: a
+## show_item() with the same arguments follows (the Locker dresses a long
+## tray over a few frames).
+func hold_item(it: CosmeticItem, shown_on: WeaponData) -> void:
+	item = it
+	weapon = shown_on
 
 
 ## Re-reads ownership, price and badges (after equipping, buying, browsing).

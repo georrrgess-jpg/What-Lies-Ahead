@@ -28,6 +28,9 @@ const PREVIEW_DELAY := 0.09
 ## Stepping through weapons refills the tray once the picker rests (holding
 ## an arrow or clicking fast would otherwise rebuild every card each step).
 const WEAPON_DELAY := 0.12
+## Cards dressed per frame: the first rows at once, the rest over the next
+## frames (a full tray at once is a visible hitch).
+const CARDS_PER_FRAME := 24
 ## The class choice beside the weapon picker, in Loadout slot order.
 const CLASS_TABS := ["PRIMARIES", "SECONDARIES"]
 const CLASS_TAB_WIDTH := 176.0
@@ -62,6 +65,8 @@ var _empty_title: Label
 var _empty_text: Label
 var _empty_button: SignButton
 var _cards: Array[LockerCard] = []
+## Cards that hold their new item but still show the old one (see _process).
+var _undressed: Array[LockerCard] = []
 var _print_cards: Array[PrintCard] = []
 var _card_group := ButtonGroup.new()
 var _thumbs: CosmeticThumbs
@@ -83,6 +88,7 @@ func header_extra() -> Control:
 
 
 func _ready() -> void:
+	set_process(false)
 	_weapon_id = _first_weapon()
 	_thumbs = CosmeticThumbs.new()
 	add_child(_thumbs)
@@ -511,13 +517,31 @@ func _fill_grid() -> void:
 	_thumbs.drop_queued()
 	for card in _print_cards:
 		card.visible = false
+	_undressed.clear()
 	for i in _cards.size():
 		var card := _cards[i]
 		card.visible = i < items.size()
-		if card.visible:
+		if not card.visible:
+			continue
+		if i < CARDS_PER_FRAME:
 			card.show_item(items[i], weapon, _thumbs)
+		else:
+			card.hold_item(items[i], weapon)
+			_undressed.append(card)
+	set_process(not _undressed.is_empty())
 	_refresh_caption()
 	_show_empty(items.is_empty())
+
+
+## Dresses the cards _fill_grid() left for later, a few rows a frame.
+func _process(_delta: float) -> void:
+	for i in mini(CARDS_PER_FRAME, _undressed.size()):
+		var card: LockerCard = _undressed.pop_front()
+		if card.visible:
+			card.show_item(card.item, card.weapon, _thumbs)
+	if _undressed.is_empty():
+		set_process(false)
+		_refresh_caption()
 
 
 func _fill_prints() -> void:
@@ -533,6 +557,7 @@ func _fill_prints() -> void:
 		_print_cards.append(card)
 	for card in _cards:
 		card.visible = false
+	_undressed.clear()
 	var weapon := _weapon()
 	_thumbs.drop_queued()
 	for i in _print_cards.size():
