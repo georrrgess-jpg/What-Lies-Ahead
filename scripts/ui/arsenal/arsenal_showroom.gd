@@ -50,7 +50,7 @@ void fragment() {
 ## side (so the pedestal's shaft never hazes over the weapon); a disc both.
 const _LIGHT_SHADER := """
 shader_type spatial;
-render_mode unshaded, blend_add, %s, depth_draw_never, shadows_disabled;
+render_mode unshaded, blend_add, %s, depth_draw_never, shadows_disabled, fog_disabled;
 uniform vec4 tint : source_color = vec4(1.0);
 uniform float energy = 1.0;
 uniform int mode = 0;
@@ -97,7 +97,6 @@ static func build(vp: SubViewport) -> MeshInstance3D:
 	var motion := ShowroomMotion.new()
 	motion.name = "ShowroomMotion"
 	motion.bulbs = bulbs.multimesh
-	motion.halos = bulbs.halos
 	motion.chase = bulbs.chase
 	motion.beams = _add_beams(vp)
 	vp.add_child(motion)
@@ -491,14 +490,10 @@ static func _instance(path: String) -> Node3D:
 	return (load(path) as PackedScene).instantiate() as Node3D if ResourceLoader.exists(path) else null
 
 
-## Collects every bulb of the hall into one MultiMesh (one draw call), with
-## a soft halo round each in a second one; the bulbs marked `chases` take
-## part in the chase.
+## Collects every bulb of the hall into one MultiMesh (one draw call); the
+## ones marked `chases` take part in the chase.
 class _Bulbs:
-	## Halo size, in bulb radii.
-	const HALO := 9.0
 	var multimesh: MultiMesh
-	var halos: MultiMesh
 	## Index of each chasing bulb -> its lit colour.
 	var chase := {}
 	var _at: PackedVector3Array = []
@@ -512,38 +507,24 @@ class _Bulbs:
 		_size.append(radius)
 		_colors.append(color)
 
-	func make() -> Node3D:
+	func make() -> MultiMeshInstance3D:
 		var sphere := SphereMesh.new()
 		sphere.radius = 1.0
 		sphere.height = 2.0
 		sphere.radial_segments = 8
 		sphere.rings = 4
-		multimesh = _multimesh(sphere, 1.0)
-		# The camera always looks down -Z, so flat quads facing it will do.
-		var quad := QuadMesh.new()
-		quad.size = Vector2.ONE
-		halos = _multimesh(quad, HALO)
-		var node := Node3D.new()
-		node.name = "Bulbs"
-		node.add_child(_node(multimesh, ArsenalShowroom._glow(Color.WHITE, 1.9)))
-		node.add_child(_node(halos, ArsenalShowroom._light(Color.WHITE, 0.5, 1)))
-		return node
-
-	func _multimesh(mesh: Mesh, scale: float) -> MultiMesh:
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.use_colors = true
-		mm.mesh = mesh
-		mm.instance_count = _at.size()
+		multimesh = MultiMesh.new()
+		multimesh.transform_format = MultiMesh.TRANSFORM_3D
+		multimesh.use_colors = true
+		multimesh.mesh = sphere
+		multimesh.instance_count = _at.size()
 		for i in _at.size():
-			mm.set_instance_transform(i, Transform3D(Basis.from_scale(Vector3.ONE * _size[i] * scale), _at[i]))
-			mm.set_instance_color(i, _colors[i])
-		return mm
-
-	func _node(mm: MultiMesh, material: Material) -> MultiMeshInstance3D:
+			multimesh.set_instance_transform(i, Transform3D(Basis.from_scale(Vector3.ONE * _size[i]), _at[i]))
+			multimesh.set_instance_color(i, _colors[i])
 		var node := MultiMeshInstance3D.new()
-		node.multimesh = mm
-		node.material_override = material
+		node.name = "Bulbs"
+		node.multimesh = multimesh
+		node.material_override = ArsenalShowroom._glow(Color.WHITE, 1.9)
 		return node
 
 
@@ -559,7 +540,6 @@ class ShowroomMotion:
 	const SWEEP_RATE := 0.22
 
 	var bulbs: MultiMesh
-	var halos: MultiMesh
 	var chase := {}
 	var beams: Array[Node3D] = []
 	var _time := 0.0
@@ -580,8 +560,6 @@ class ShowroomMotion:
 			_step = step
 			for i: int in chase:
 				var lit: Color = chase[i]
-				var shown := lit if step < 0 or i % 3 == step else lit.darkened(0.72)
-				bulbs.set_instance_color(i, shown)
-				halos.set_instance_color(i, shown if shown == lit else Color.BLACK)
+				bulbs.set_instance_color(i, lit if step < 0 or i % 3 == step else lit.darkened(0.72))
 		for k in beams.size():
 			beams[k].rotation.z = _rest[k] + sin(_time * SWEEP_RATE * TAU * 0.25 + k * 1.7) * SWEEP
