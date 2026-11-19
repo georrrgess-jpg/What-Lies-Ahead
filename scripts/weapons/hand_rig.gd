@@ -14,9 +14,11 @@ extends Node
 ##   ArmS<Finger>1..3     phalanges, Finger = Index, Middle, Ring, Pinky; Thumb1..3
 ##   ArmSThumbBase        the ball of the thumb (turns to oppose)
 ##   ArmS<Finger>Tip      empty on each tip (child of the third phalanx)
+##   ArmSPalmPoint        empty on the middle of the palm's face (a catch lands here)
 ## Every phalanx runs along its local -Z with its nail side +Y and flexes about
-## its local X (rest rotation = Basis(X, -flex)); the knuckle (…1) also spreads
-## about its local Y.
+## its local X (rest rotation = twist * Basis(X, -flex), the twist a knuckle's
+## splay about Y that closes the fingers square round the handle; it fades out
+## as the finger opens); the knuckle (…1) also spreads about its local Y.
 ##
 ## Usage (a view's setup):  var rig := HandRig.of(view.model)
 ##   rig.set_pose(&"R", HandRig.Pose.OPEN, 0.2)          # every finger of the right hand
@@ -65,6 +67,9 @@ class _Hand:
 	var rest_flex := {}
 	## Node -> rest Transform3D.
 	var rest := {}
+	## Node -> the part of its rest turn that is not flex (the knuckle's splay
+	## that closes the fingers square round the handle), as a Quaternion.
+	var twist := {}
 	var thumb_base: Node3D
 	## Finger -> the empty on its tip.
 	var tips := {}
@@ -128,7 +133,9 @@ func setup(model: Node3D) -> void:
 					break
 				chain.append(bone)
 				h.rest[bone] = bone.transform
-				flex.append(_flex_of(bone.transform.basis))
+				var f0 := _flex_of(bone.transform.basis)
+				flex.append(f0)
+				h.twist[bone] = Quaternion((bone.transform.basis * Basis(Vector3.RIGHT, deg_to_rad(f0))).orthonormalized())
 				parent = bone
 			if chain.size() < 3:
 				continue
@@ -178,6 +185,11 @@ func fingertip(side: StringName, finger: StringName) -> Vector3:
 	return tip.global_position if tip else Vector3.ZERO
 
 
+## The empty on the middle of the palm's face (ArmSPalmPoint), or null.
+func palm_point(side: StringName) -> Node3D:
+	return (_hands[side] as _Hand).hand.get_node_or_null("Arm%sPalmPoint" % side) as Node3D if _hands.has(side) else null
+
+
 ## World transform of the hand's grip (on the handle's axis, turned like the Grip* anchors).
 func grip_transform(side: StringName) -> Transform3D:
 	var h: _Hand = _hands.get(side)
@@ -212,11 +224,16 @@ func set_curl(side: StringName, finger: StringName, curl: float) -> void:
 	var h: _Hand = _hands.get(side)
 	if h == null or not h.bones.has(finger):
 		return
+	# Written in place: cheap enough to call for every finger every frame.
 	var open: Array = FINGER_POSES[Pose.OPEN][finger]
 	var f: Array = h.rest_flex[finger]
-	var v := [lerpf(open[0], f[0], curl), lerpf(open[1], f[1], curl), lerpf(open[2], f[2], curl), lerpf(open[3], 0.0, clampf(curl, 0.0, 1.0)),
-		clampf(1.0 - curl, 0.0, 1.0) if finger == &"Thumb" else 0.0]
-	_blend_to(h, finger, v, 0.0)
+	var v: Array = h.now[finger]
+	for i in 3:
+		v[i] = lerpf(open[i], f[i], curl)
+	v[3] = lerpf(open[3], 0.0, clampf(curl, 0.0, 1.0))
+	v[4] = clampf(1.0 - curl, 0.0, 1.0) if finger == &"Thumb" else 0.0
+	h.t[finger] = 1.0
+	_apply(h, finger)
 
 
 ## Sets a finger at once to explicit angles: flex per phalanx (degrees), spread
@@ -226,7 +243,14 @@ func set_angles(side: StringName, finger: StringName, flex: Vector3, spread := 0
 	var h: _Hand = _hands.get(side)
 	if h == null or not h.bones.has(finger):
 		return
-	_blend_to(h, finger, [flex.x, flex.y, flex.z, spread, thumb_out], 0.0)
+	var v: Array = h.now[finger]
+	v[0] = flex.x
+	v[1] = flex.y
+	v[2] = flex.z
+	v[3] = spread
+	v[4] = thumb_out
+	h.t[finger] = 1.0
+	_apply(h, finger)
 
 
 ## The solved grip flex of a finger (degrees per phalanx).
@@ -296,10 +320,9 @@ func update(delta: float) -> void:
 				var k := smoothstep(0.0, 1.0, h.t[finger])
 				var a: Array = h.from[finger]
 				var b: Array = h.to[finger]
-				var v: Array = []
+				var v: Array = h.now[finger]
 				for i in 5:
-					v.append(lerpf(a[i], b[i], k))
-				h.now[finger] = v
+					v[i] = lerpf(a[i], b[i], k)
 				_apply(h, finger)
 		_hold(h, delta)
 
@@ -319,9 +342,12 @@ func _apply(h: _Hand, finger: StringName) -> void:
 	var chain: Array = h.bones[finger]
 	# Spread turns the knuckle about the back-of-hand axis, away from the middle finger.
 	var away := _spread_sign(h, finger)
+	var rest_flex: Array = h.rest_flex[finger]
 	for k in 3:
 		var b: Node3D = chain[k]
-		var basis := Basis(Vector3.RIGHT, deg_to_rad(-float(v[k])))
+		# The knuckle's splay comes in as the finger closes (none on an open hand).
+		var w := clampf(float(v[k]) / maxf(float(rest_flex[k]), 1.0), 0.0, 1.0) if k == 0 else 1.0
+		var basis := Basis(Quaternion.IDENTITY.slerp(h.twist[b], w)) * Basis(Vector3.RIGHT, deg_to_rad(-float(v[k])))
 		if k == 0 and finger != &"Thumb":
 			basis = Basis(Vector3.UP, deg_to_rad(float(v[3]) * away)) * basis
 		b.transform = Transform3D(basis, (h.rest[b] as Transform3D).origin)
@@ -368,9 +394,11 @@ func _hold(h: _Hand, delta: float) -> void:
 
 
 static func _flex_of(basis: Basis) -> float:
-	# Rest basis = Basis(X, -flex): the bone's -Z swung towards -Y by flex.
+	# Rest basis = twist * Basis(X, -flex), the twist turning about Y: the bone's
+	# -Z swung towards -Y by flex, its nail side (+Y) tipped back by the same.
 	var along := basis * Vector3(0, 0, -1)
-	return rad_to_deg(atan2(-along.y, -along.z))
+	var back := basis * Vector3.UP
+	return rad_to_deg(atan2(-along.y, back.y))
 
 
 ## The ball of the thumb's open turn, in the palm's space: the thumb beside
