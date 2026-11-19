@@ -33,7 +33,7 @@ const LENGTHS: Array[float] = [3.0, 3.0, 3.0, 3.2, 3.2, 5.8]
 ## One inspect in this many is the JACKPOT.
 const RARE_EVERY := 15
 ## The knife side on to the eye, the fist low right (camera space; see WeaponInspect.POSES).
-const SIDE_POS := Vector3(0.05, -0.09, -0.52)
+const SIDE_POS := Vector3(0.015, -0.07, -0.45)
 const SIDE_ROT := Vector3(4.0, 68.0, 6.0)
 ## The latch's turn when it is swung out (Latch.x).
 const LATCH_OUT := -150.0
@@ -42,6 +42,8 @@ const SIDE_X := -0.072
 ## The roll round the hand: its radius and how far forward of the fist it rides.
 const ROLL_R := 0.088
 const ROLL_FWD := -0.13
+## How far ahead of the grip the fan spins (view units, -z).
+const FAN_FWD := -0.06
 ## Eases for the stretch ending at a key.
 const L := 0   # linear (a knife spinning free)
 const S := 1   # ease in and out
@@ -119,7 +121,7 @@ func poses() -> Array:
 		return [
 			[0.0, SIDE_POS + Vector3(0.02, -0.01, 0.0), SIDE_ROT + Vector3(-4.0, -10.0, 0.0)],
 			[0.1, SIDE_POS, SIDE_ROT],
-			[0.22, SIDE_POS + Vector3(0.0, -0.1, -0.04), SIDE_ROT + Vector3(-8.0, 4.0, 0.0)],
+			[0.22, SIDE_POS + Vector3(0.0, -0.13, -0.06), SIDE_ROT + Vector3(-8.0, 4.0, 0.0)],
 			[0.36, SIDE_POS, SIDE_ROT],
 			[0.72, SIDE_POS + Vector3(0.01, 0.0, 0.0), SIDE_ROT + Vector3(10.0, -16.0, 0.0)],
 			[0.88, SIDE_POS + Vector3(-0.01, 0.01, 0.01), SIDE_ROT + Vector3(2.0, -4.0, 4.0)],
@@ -259,6 +261,8 @@ func _fan() -> Dictionary:
 	var centre := _pin.lerp(_butt, 0.5)
 	var up := Vector3(0.0, 0.07, 0.0)
 	var side := Vector3(SIDE_X, 0.0, 0.0)
+	# It spins a little ahead of the knuckles, so the disc it sweeps clears the fist.
+	var spin := side + Vector3(0.0, 0.01, FAN_FWD)
 	return {
 		"wp": [[0.0, Vector3.ZERO], [0.3, Vector3(0.0, 0.012, 0.0), O], [0.5, Vector3.ZERO], [0.85, Vector3(0.0, 0.01, 0.0)],
 			[1.4, Vector3(0.0, -0.012, 0.0)], [1.95, Vector3(0.0, 0.01, 0.0)], [2.4, Vector3.ZERO], [2.55, Vector3(0.0, 0.014, 0.0), O],
@@ -266,8 +270,8 @@ func _fan() -> Dictionary:
 		"wr": [[0.0, Vector3.ZERO], [0.3, Vector3(14.0, 0.0, 0.0), O], [0.5, Vector3(0.0, 0.0, 8.0)], [0.85, Vector3(4.0, 0.0, 14.0)],
 			[1.4, Vector3(-4.0, 0.0, 10.0)], [1.95, Vector3(4.0, 0.0, 14.0)], [2.35, Vector3.ZERO], [2.55, Vector3(14.0, 0.0, 0.0), O],
 			[2.85, Vector3.ZERO]],
-		"kp": [[0.0, Vector3.ZERO], [0.42, Vector3.ZERO], [0.52, up, O], [0.62, up + side, S], [0.72, side, S],
-			[2.05, side], [2.13, up + side, S], [2.23, up, S], [2.33, Vector3.ZERO, I]],
+		"kp": [[0.0, Vector3.ZERO], [0.42, Vector3.ZERO], [0.52, up, O], [0.62, up + side, S], [0.72, spin, S],
+			[2.05, spin], [2.13, up + side, S], [2.23, up, S], [2.33, Vector3.ZERO, I]],
 		"kr": [[0.0, Vector3.ZERO], [0.72, Vector3.ZERO], [2.05, Vector3(-1080.0, 0.0, 0.0), S]],
 		"kc": [[0.0, centre]],
 		"ko": [[0.0, Vector3.ZERO]],
@@ -338,7 +342,7 @@ func _jackpot() -> Dictionary:
 			[1.95, Vector3(-8.0, 0.0, 0.0)], [2.12, Vector3(10.0, 0.0, 0.0), O], [2.5, Vector3(2.0, 0.0, 10.0)], [3.3, Vector3(4.0, 0.0, 14.0)],
 			[3.8, Vector3(4.0, 0.0, -10.0)], [4.3, Vector3(0.0, 0.0, 8.0)], [4.6, Vector3.ZERO], [4.75, Vector3(16.0, 0.0, 0.0), O],
 			[4.95, Vector3(-10.0, 0.0, -6.0), O], [5.4, Vector3(4.0, 0.0, 4.0)], [5.8, Vector3.ZERO]],
-		"kp": [[0.0, Vector3.ZERO], [0.58, Vector3.ZERO], [1.35, Vector3(0.0, 0.42, -0.02), UP], [2.12, Vector3.ZERO, DN],
+		"kp": [[0.0, Vector3.ZERO], [0.58, Vector3.ZERO], [1.35, Vector3(0.0, 0.3, -0.02), UP], [2.12, Vector3.ZERO, DN],
 			[2.3, Vector3.ZERO], [2.4, up, O], [2.5, up + side, S], [2.6, side, S], [3.5, side], [3.6, side + up, S], [3.7, up, S],
 			[3.72, Vector3.ZERO]],
 		"kr": [[0.0, Vector3.ZERO], [0.58, Vector3.ZERO], [2.12, Vector3(1080.0, 360.0, 0.0), L], [2.6, Vector3(1080.0, 360.0, 0.0)],
@@ -428,8 +432,8 @@ func _jackpot_flair(v: WeaponView, t: float) -> void:
 		return
 	var latch_at := WeaponInspect.in_model(v, v.part("Latch")) if v.part("Latch") else _butt
 	var mid := WeaponInspect.in_model(v, handle_a).lerp(latch_at, 0.5)
-	v.spark_burst(latch_at, Vector3(0.0, 1.0, 0.0), SPARKLE, 14, 0.5, 0.45, 0.0045)
-	v.spark_burst(mid + Vector3(0.0, 0.04, 0.0), Vector3(0.0, 1.0, -0.3), CONFETTI, 26, 0.9, 0.9, 0.009)
+	v.spark_burst(latch_at, Vector3(0.0, 1.0, 0.0), SPARKLE, 22, 0.6, 0.5, 0.006)
+	v.spark_burst(mid + Vector3(0.0, 0.04, 0.0), Vector3(0.0, 1.0, -0.3), CONFETTI, 44, 1.1, 1.0, 0.012)
 	Sfx.play(&"tflip_jackpot", -4.0)
 	if v.player:
 		v.player.add_shake(0.12)

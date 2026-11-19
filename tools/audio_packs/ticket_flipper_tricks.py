@@ -29,7 +29,7 @@ def tflip_latch():
     d = 0.12
     out = silence(d)
     place(out, _tick(2.6, 91), 0.0, 1.0)
-    ring_ = (tone(2960, 0.1) * 0.22 + tone(4410, 0.1) * 0.08) * env(0.1, 0.0004, 0.07, power=2.4)
+    ring_ = band(_n(0.06, 93), 2900, 700) * env(0.06, 0.0004, 0.03, power=2.4) * 0.5
     place(out, ring_, 0.001, 1.0)
     place(out, sweep(700, 380, 0.03, "tri") * env(0.03, 0.0005, 0.02, power=2.0) * 0.35, 0.0, 1.0)
     place(out, band(_n(0.02, 92), 3000, 900) * env(0.02, 0.0002, 0.006, power=2.6) * 0.9, 0.018, 1.0)
@@ -43,11 +43,13 @@ def tflip_jackpot():
     out = silence(d)
     place(out, _tick(1.8, 96), 0.0, 1.0)
     for i, f in enumerate((1568, 1976, 2349, 3136)):
-        bell = (tone(f, 0.5) * 0.5 + tone(f * 2.0, 0.5) * 0.12 + tone(f * 3.01, 0.5) * 0.05) * env(0.5, 0.002, 0.45, power=2.0)
-        place(out, bell * (0.32 + 0.04 * i), 0.03 + i * 0.07, 1.0)
-    place(out, band(_n(0.7, 95), 7000, 3000) * env(0.7, 0.05, 0.6, power=1.6) * 0.18, 0.2, 1.0)
+        # Short glassy pings, each roughened by a little band noise so no one tone rings on.
+        bell = (tone(f, 0.22) * 0.4 + tone(f * 2.76, 0.22) * 0.1) * env(0.22, 0.002, 0.07, power=2.6)
+        bell += band(_n(0.22, 110 + i), f, f * 0.3) * env(0.22, 0.002, 0.08, power=2.0) * 0.3
+        place(out, bell * 0.1, 0.03 + i * 0.07, 1.0)
+    place(out, band(_n(0.7, 95), 7000, 3000) * env(0.7, 0.05, 0.6, power=1.6) * 0.04, 0.2, 1.0)
     for k in range(9):
-        place(out, band(_n(0.03, 100 + k), 2200 + 300 * (k % 3), 1200) * env(0.03, 0.001, 0.02, power=2.2) * 0.25, 0.25 + k * 0.06, 1.0)
+        place(out, band(_n(0.03, 100 + k), 2200 + 300 * (k % 3), 1200) * env(0.03, 0.001, 0.02, power=2.2) * 0.12, 0.25 + k * 0.06, 1.0)
     return filt(out, low=11000, high=180)
 
 

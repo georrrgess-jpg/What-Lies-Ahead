@@ -39,7 +39,7 @@ func run(shot: Node, director: RunDirector) -> void:
 		var sheet := Image.create(CELL.x * COLUMNS, CELL.y * rows, false, frames[0].get_format())
 		for i in frames.size():
 			sheet.blit_rect(frames[i], Rect2i(Vector2i.ZERO, CELL), Vector2i(i % COLUMNS * CELL.x, i / COLUMNS * CELL.y))
-		var out := shot.path.get_basename() + "_%s.png" % id
+		var out: String = String(shot.path).get_basename() + "_%s.png" % id
 		sheet.save_png(out)
 		print("[tricks] saved %s (%d frames)" % [out, frames.size()])
 		while view.is_inspecting():
