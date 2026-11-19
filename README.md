@@ -5,8 +5,8 @@ A single-player, first-person arcade zombie survival game made with Godot 4.
 Fifteen worlds, each one level: hold the ground around a loadout station through six or
 seven waves (rushes, sieges, ambushes, bounties, a twist and a named alpha boss at the
 end), spend tickets between waves, then follow the exit lights to the portal and step
-through. Clearing a level unlocks the next world. Every zombie carries a stolen **Spark**;
-pop it and you bank it, and Sparks buy the best skins, sights, cells, gloves and more in
+through. Clearing a level unlocks the next world. The zombies hoard the arcade's **Arcade Tokens**;
+pop one and you bank its token, and Tokens buy the best skins, sights, cells, gloves and more in
 the **Shop**. New players start in **Boot Camp**, a short, skippable tutorial.
 **Endless** mode (open from player level 1) is a run that never stops, in a burnt-out
 city you buy your way through gate by gate (see [Endless](#endless-ashfall-city)).
@@ -102,7 +102,7 @@ fullscreen.
   angrier, 130% rewards) or **Last Ride** (opens at player level 20: zombies 30% tougher,
   20% harder-hitting and faster, bigger hordes that never let up, frequent specials, no
   healing, no relief and no checkpoints, so a fallen run is over; **double XP and
-  Sparks**). The score is never scaled.
+  Arcade Tokens**). The score is never scaled.
 - **Rounds with a purpose.** Each wave has a kind and a name on its banner: standard,
   rush, siege (heavies first), ambush (every entrance at once), ranged, a **bounty**
   (a golden runner that flees with a ticket prize), a world **twist** (Jackpot double
@@ -293,10 +293,10 @@ Popper's ricochet rounds (`RicochetRound`), the Riptide's reel (`HarpoonLine`), 
 the `melee` action (`WeaponMode.melee`, damage through `WeaponController.melee_hit`), the Shutterbug's
 flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
 
-## Progression, Sparks and the Shop
+## Progression, Arcade Tokens and the Shop
 
 - **Prize Prints.** The **Prizes** page has five tabs: **Capsules** (the machine, with
-  OPEN, OPEN 5 and BUY), **Collection**, **Trade-Up**, **Token Counter** and **Odds &
+  OPEN, OPEN 5 and BUY), **Collection**, **Trade-Up**, **Credit Counter** and **Odds &
   Info**. An opening plays full screen: the crank turns, the capsule wobbles longer the
   rarer it is with coloured light leaking from its seam, bursts in a rarity reveal
   (Legendary turns the screen gold), and the print lands on a 3D turntable while its
@@ -308,28 +308,28 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
   number per finish (#001 First Edition, #002-#010 Low Serial, #007/#077/#777 Lucky 7s).
   Odds are published (62 / 27 / 9 / 2%) and a luck meter guarantees an Epic within 10
   capsules and a Legendary within 40. Capsules come from alphas, bounties, the day's first
-  clear, contracts and milestones, or 500 Sparks each (never real money). Prints are
+  clear, contracts and milestones, or 500 Arcade Tokens each (never real money). Prints are
   collected, inspected, favourited and equipped per weapon; five prints trade up into one
-  of the next rarity, and repeats recycle into Prize Tokens for the Token Counter.
+  of the next rarity, and repeats recycle into Capsule Credits for the Credit Counter.
   `tools/print_probe.gd` simulates 10,000 capsules against the published odds.
 
-- **Sparks** are the permanent currency. Popping a zombie banks its Spark (you see it fly
-  into the counter), and waves, clears, leftover tickets, every player level, every
-  mastery rank and contracts pay more. Sparks buy **cosmetics only**, never power.
+- **Arcade Tokens** ("Tokens") are the permanent base currency. Popping a zombie banks the token it hoarded (you see
+  it spin into the counter), and waves, clears, leftover tickets, every player level, every
+  mastery rank and contracts pay more. Arcade Tokens buy **cosmetics only**, never power.
   Numbers and design: **[docs/ECONOMY.md](docs/ECONOMY.md)**.
-- **Player level** (1–50): every level pays Sparks and gives exactly one thing (a weapon
+- **Player level** (1–50): every level pays Arcade Tokens and gives exactly one thing (a weapon
   or a cosmetic); every fifth level is a bigger reward. A first session of three runs
   reaches about level 7, the cap about 64 clears. Levels 41-50 carry the Teacup Twister
   (43) and a teacup-ride set: the Spinning Teacup charm, the animated Teacup Ride (45) and
   Grand Finale (50) finishes, and the Living Legend title. A save from before the cap went
-  up keeps its XP (XP past 40 counts, its levels' Sparks are paid once) and keeps the
+  up keeps its XP (XP past 40 counts, its levels' Arcade Tokens are paid once) and keeps the
   Teacup Twister if it already had it.
 - **Contracts** (Career page): three active goals at a time (kills with a weapon,
-  headshots, waves, bounties…) that pay XP and Sparks and are replaced when done, plus
+  headshots, waves, bounties…) that pay XP and Arcade Tokens and are replaced when done, plus
   eleven one-time milestones.
 - **Weapon mastery**: 10 ranks per weapon in Bronze, Silver, Gold, Diamond and Prismatic
-  tiers, earned by using that weapon. Ranks unlock mastery camos and badges and pay Sparks.
-- **Shop**: 239 items (376,500 Sparks in all), every price a multiple of 250: Common 250,
+  tiers, earned by using that weapon. Ranks unlock mastery camos and badges and pay Arcade Tokens.
+- **Shop**: 239 items (376,500 Arcade Tokens in all), every price a multiple of 250: Common 250,
   Rare 750, Epic 1,500, Legendary 3,000, and the best items each on their own price up to
   Wind-Up Wally at 10,000 (operators, then animated finishes, gloves and kill effects).
   The Mythic operator **Madame Fortuna** costs 20,000, twice Wind-Up Wally: she has her own
@@ -359,25 +359,25 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
   live preview; double-click to equip.
   Earned items (level track, world sets for each first clear, mastery camos, milestones)
   are never sold.
-- **Results screen**: score count-up with breakdown, wave grades, Sparks earned with their
+- **Results screen**: score count-up with breakdown, wave grades, Arcade Tokens earned with their
   sources, mastery XP per weapon, the Career card (XP bar, level-ups, contracts, new
   rewards) and your player card; after a clear, **NEXT WORLD** goes straight on; after a
   defeat past the checkpoint, **CONTINUE**.
 - Progress is kept whether you win, lose or quit from the pause menu. Saves from before
-  this update are migrated and get **back pay** in Sparks for the levels, ranks and clears
+  this update are migrated and get **back pay** in Arcade Tokens for the levels, ranks and clears
   they already earned.
 
 ## First steps: Boot Camp and onboarding
 
 On a fresh save the game welcomes you with three short cards (who you are, the outbreak,
-Sparks), then offers **Boot Camp**: a 4–6 minute hands-on course on a training midway
+Arcade Tokens), then offers **Boot Camp**: a 4–6 minute hands-on course on a training midway
 behind the pier, run by BOLT, a carnival barker-bot. It teaches one idea at a time with a
 checklist: look, move, sprint, jump, mantle, vault and slide; pop-up targets, aiming down
 sights at a far target, headshots, reload and switching; then live fire against slow
 zombies, a telegraphed attack to dodge, a ranged special, the loadout station with free
 tickets, a mini wave and the portal. There is no fail state. It can be skipped at any
 time (hold to skip at each section, or *Skip tutorial* in the pause menu) and replayed
-from the title screen; finishing pays 200 Sparks and the *Pier Patrol* title once, then
+from the title screen; finishing pays 200 Arcade Tokens and the *Pier Patrol* title once, then
 **Deploy to Prize Pier** starts the first real run with a guided first deployment.
 During the first runs, small one-time hint cards explain the station, low energy, each
 special enemy's tell, the portal and the checkpoint (switch them off with *Gameplay
@@ -392,7 +392,7 @@ game, reveals the logo as a marquee sign with chasing bulbs, shows the feature c
 then holds on *PRESS ANY KEY* over the live menu backdrop; any key skips it, and it plays
 once per session. The menu is styled as a **carnival arcade at sunset** (marquee signs,
 riveted teal frames, cream signboards; see **[docs/UI_STYLE.md](docs/UI_STYLE.md)**) over a
-live 3D booth and the selected world. A top bar shows your level, XP and Sparks on every
+live 3D booth and the selected world. A top bar shows your level, XP and Arcade Tokens on every
 page. The **home screen** leads with a hero card for the world PLAY opens (its key art,
 your progress and a pager through the worlds you have opened), and the live world behind the
 menu follows it; ENDLESS sits beside PLAY, and section tiles (Arsenal, Locker, Shop, Prizes,
@@ -474,7 +474,7 @@ scenes/
   ui/                    main_menu, hud, pause_menu, results
 scripts/
   autoload/   profile (save), game_data (folder scan), settings, events, unlocks,
-              progression, mastery, wallet (Sparks), cosmetics, sfx, game (scene flow)
+              progression, mastery, wallet (Arcade Tokens), cosmetics, sfx, game (scene flow)
   data/       Resource classes (weapons, enemies, waves, levels, worlds, requirements,
               cosmetics, UI extensions)
   player/     player (movement, ADS, jump, slide), weapon_controller (shared combat),
@@ -485,7 +485,7 @@ scripts/
   run/        run_director (run state machine, waves, station economy), spawn planner,
               pacing director, wave twists, difficulty, score_keeper, level environments
   progression/  run tracker, contracts, Career page, HUD widget, results card
-  economy/    Sparks rules, shop catalog, Spark pickups, results section
+  economy/    token rules (sparks_* in code), shop catalog, token pickups, results
   onboarding/ welcome flow, Boot Camp tutorial, hints, coach marks
   cinematics/ the in-engine trailer (shots, stage, overlay, render entry point)
   cosmetics/  operators, kill effects, tracers, charms, player card, Locker support
@@ -640,7 +640,7 @@ GODOT=godot tools/render_showreel.sh                                         # r
 ```
 
 Other checks: `tools/ads_audit.gd` (every weapon × sight lines up), `tools/economy_probe.gd`
-and `python3 tools/economy_model.py` (Sparks and level pacing), `tools/map_audit.gd`,
+and `python3 tools/economy_model.py` (Arcade Tokens and level pacing), `tools/map_audit.gd`,
 `scripts/dev/meta_pages_probe.gd` (Shop, Locker and Career flows), `tools/weapon_sheet.gd`
 and `tools/weapon_charm_stress.gd` (weapon models and charms).
 
@@ -689,10 +689,10 @@ checked together:
   out structurally identical to the committed ones.
 - **Maps**: `tools/map_audit.gd` flood-fill on all five levels (falls out of the world,
   stuck spots, snags, navmesh) with the findings fixed; key art re-captured.
-- **Boot Camp**: the bot completes it twice (pays 200 Sparks once, then nothing), skips
+- **Boot Camp**: the bot completes it twice (pays 200 Arcade Tokens once, then nothing), skips
   it from the pause menu at three different steps back to the menu, and the first-run
   flow appears on a fresh save only.
-- **Economy**: `tools/economy_model.py` and `tools/economy_probe.gd` (Sparks per run,
+- **Economy**: `tools/economy_model.py` and `tools/economy_probe.gd` (Arcade Tokens per run,
   level pacing, shop prices, save migration with back pay).
 - **Performance**: `tools/perf_probe.gd` before/after: audio players created per second
   10–54 → about 0, node creation roughly halved while firing, a flat node count over a

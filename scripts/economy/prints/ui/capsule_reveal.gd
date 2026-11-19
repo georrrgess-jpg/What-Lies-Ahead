@@ -365,7 +365,7 @@ func _multi_finish() -> void:
 		elif not bool(r.get("repeat", false)):
 			fresh += 1
 	_multi_summary.text = "%d NEW  ·  %d REPEATS%s  ·  CLICK A PRINT FOR ITS DETAILS" % [fresh, _results.size() - fresh,
-		("  ·  +%d PRIZE TOKENS" % tokens) if tokens > 0 else ""]
+		("  ·  +%d CAPSULE CREDITS" % tokens) if tokens > 0 else ""]
 	UiFx.fade_in(_multi_summary, 0.25)
 	UiFx.fade_in(_multi_more.get_parent(), 0.25)
 	(_multi_more if _multi_more.visible else _multi_done).grab_focus.call_deferred()

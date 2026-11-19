@@ -220,7 +220,7 @@ func _fill_outcome() -> void:
 	var text := "NEW FOR YOUR COLLECTION!"
 	var col := UiKit.GREEN
 	if bool(result.get("recycled", false)):
-		text = "REPEAT  ·  RECYCLED INTO +%d PRIZE TOKENS" % int(result["tokens"])
+		text = "REPEAT  ·  RECYCLED INTO +%d CAPSULE CREDITS" % int(result["tokens"])
 		col = UiKit.AMBER
 	elif bool(result.get("repeat", false)):
 		text = "REPEAT  ·  A KEEPER, ADDED TO YOUR STACK"

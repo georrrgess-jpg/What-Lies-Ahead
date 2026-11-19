@@ -11,8 +11,8 @@ const CARDS := [
 		"text": "You just joined the Pier Patrol. Sunset, string lights, cotton candy. And zombies. Lots of zombies."},
 	{"title": "THE OUTBREAK", "art": "res://art/keyart/neon_skyline.jpg",
 		"text": "The tourists have turned, and five worlds are overrun. Good news: they pop into confetti."},
-	{"title": "SPARKS", "art": "res://art/keyart/summit_lodge.jpg", "spark": true,
-		"text": "Every zombie carries a stolen Spark: the glow in its eyes. Pop it and bank it, then spend Sparks on cosmetics. Never on power."},
+	{"title": "ARCADE TOKENS", "art": "res://art/keyart/summit_lodge.jpg", "spark": true,
+		"text": "The zombies hoard the arcade's tokens: every one carries a token. Pop it and bank the token, then spend Arcade Tokens on cosmetics. Never on power."},
 ]
 
 var _index := 0
@@ -112,7 +112,7 @@ func _show_card(i: int) -> void:
 		next.grab_focus.call_deferred()
 	else:
 		_title.text = "READY, RECRUIT?"
-		_text.text = "Boot Camp is a 5-minute training run on the midway: moves, aiming, zombies and the Loadout Station. Skip it any time. It pays %d Sparks the first time." % Onboarding.REWARD_SPARKS
+		_text.text = "Boot Camp is a 5-minute training run on the midway: moves, aiming, zombies and the Loadout Station. Skip it any time. It pays %d Tokens the first time." % Onboarding.REWARD_SPARKS
 		_art.texture = load(CARDS[0]["art"])
 		_art.modulate = Color.WHITE
 		_spark.visible = false

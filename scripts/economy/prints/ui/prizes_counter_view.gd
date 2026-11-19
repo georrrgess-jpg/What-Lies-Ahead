@@ -1,9 +1,9 @@
 class_name PrizesCounterView
 extends VBoxContainer
-## The TOKEN COUNTER tab: a fairground prize counter. The tokens held and
-## when the shelf changes on a signboard, today's four finishes (one per
-## rarity) as big cards with their token price, and how repeats become
-## tokens. Every buy is a fresh print with its own rolls, revealed like a
+## The CREDIT COUNTER tab: a fairground prize counter. The Capsule Credits
+## held (PrizePrints "tokens" in code) and when the shelf changes on a
+## signboard, today's four finishes (one per rarity) as big cards with their
+## credit price, and how repeats become credits. Every buy is a fresh print with its own rolls, revealed like a
 ## capsule.
 
 const CARD := Vector2(300, 330)
@@ -26,16 +26,21 @@ func _init(page: PrizesPage) -> void:
 	titles.add_theme_constant_override("separation", 0)
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(titles)
-	titles.add_child(UiKit.sign_label("THE TOKEN COUNTER", 52))
-	titles.add_child(UiKit.body("Repeats become Prize Tokens. Trade them here for a fresh print of today's finishes: each can be bought once a day, and each still rolls its own shine, rare print and serial.",
+	titles.add_child(UiKit.sign_label("THE CREDIT COUNTER", 52))
+	titles.add_child(UiKit.body("Repeats become Capsule Credits. Trade them here for a fresh print of today's finishes: each can be bought once a day, and each still rolls its own shine, rare print and serial.",
 		980.0, UiKit.SIZE_SMALL, UiKit.MUTED))
 	var right := VBoxContainer.new()
 	right.alignment = BoxContainer.ALIGNMENT_CENTER
 	right.add_theme_constant_override("separation", 0)
 	head.add_child(right)
+	var credits := HBoxContainer.new()
+	credits.alignment = BoxContainer.ALIGNMENT_END
+	credits.add_theme_constant_override("separation", UiKit.GAP_S)
+	right.add_child(credits)
+	credits.add_child(UiKit.icon(&"icon_credit", 96.0))
 	_tokens = UiKit.arcade_label("", 64, UiKit.AMBER)
 	_tokens.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	right.add_child(_tokens)
+	credits.add_child(_tokens)
 	_clock = UiKit.label("", UiKit.SIZE_SMALL, UiKit.CYAN, true)
 	_clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	right.add_child(_clock)
@@ -60,7 +65,7 @@ func _init(page: PrizesPage) -> void:
 func refresh() -> void:
 	for c in _shelf.get_children():
 		c.queue_free()
-	_tokens.text = "%d TOKENS" % PrizePrints.tokens()
+	_tokens.text = "%d CREDITS" % PrizePrints.tokens()
 	var minutes := ceili(ShopCatalog.seconds_to_rotation() / 60.0)
 	_clock.text = "NEW SHELF IN %d H %02d MIN" % [minutes / 60, minutes % 60]
 	var weapon := _page.default_weapon()
@@ -83,7 +88,8 @@ func _offer(fid: StringName, weapon: WeaponData) -> Control:
 	_page.thumbs.request(fin, func(tex: Texture2D): card.set_image(tex), weapon)
 	col.add_child(card)
 	var price := PrizePrints.counter_price(fid)
-	var buy := UiKit.sign_button("SOLD TODAY" if PrizePrints.counter_sold(fid) else "%d TOKENS" % price, SignButton.Kind.GOLD, 26)
+	var buy := UiKit.sign_button("SOLD TODAY" if PrizePrints.counter_sold(fid) else "%d CREDITS" % price, SignButton.Kind.GOLD, 26)
+	buy.icon = KitTex.tex(&"icon_credit")
 	buy.disabled = not PrizePrints.can_buy_at_counter(fid)
 	buy.pressed.connect(_buy.bind(fid))
 	card.pressed.connect(_buy.bind(fid))
@@ -96,7 +102,7 @@ func _buy(fid: StringName) -> void:
 		UiSound.deny()
 		return
 	var fin := Cosmetics.item(fid)
-	UiKit.confirm(self, "BUY A FRESH PRINT?", "A new %s print for %d Prize Tokens, with its own rolls." % [fin.display_name, PrizePrints.counter_price(fid)], "BUY", func():
+	UiKit.confirm(self, "BUY A FRESH PRINT?", "A new %s print for %d Capsule Credits, with its own rolls." % [fin.display_name, PrizePrints.counter_price(fid)], "BUY", func():
 		var res := PrizePrints.buy_at_counter(fid)
 		if res.is_empty():
 			return

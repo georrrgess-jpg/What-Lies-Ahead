@@ -5,7 +5,7 @@ extends Control
 ## the way to the Shop. Shown instead of the first-run flow (see Onboarding).
 
 const NEWS := [
-	"Sparks: every zombie drops one. Spend them in the Shop on cosmetics.",
+	"Arcade Tokens: every zombie drops one. Spend them in the Shop on cosmetics.",
 	"Sights you can swap, rebuilt weapons, operators and zombies.",
 	"New rounds and difficulties, and Boot Camp on the title screen.",
 ]

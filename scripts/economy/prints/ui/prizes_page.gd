@@ -8,14 +8,14 @@ extends MenuPage
 ##                  (wear, keep, recycle) (PrizesCollectionView);
 ##   TRADE-UP       Prize Fusion: five prints of a rarity into one of the next
 ##                  (PrizesFusionView);
-##   TOKEN COUNTER  today's shelf of fresh prints for Prize Tokens;
+##   CREDIT COUNTER today's shelf of fresh prints for Capsule Credits;
 ##   ODDS & INFO    the published odds, luck meter, rare prints, grades,
 ##                  earning capsules and the series.
 ## Openings play full screen over the menu (CapsuleReveal, FusionReveal).
 ## Keys: A / D change tab; Enter on OPEN opens a capsule.
 
 const VIEWS := [[&"capsules", "CAPSULES"], [&"collection", "COLLECTION"], [&"tradeup", "TRADE-UP"],
-	[&"counter", "TOKEN COUNTER"], [&"odds", "ODDS & INFO"]]
+	[&"counter", "CREDIT COUNTER"], [&"odds", "ODDS & INFO"]]
 ## The overlays sit above the menu's top bar.
 const OVERLAY_LAYER := 20
 
@@ -212,7 +212,7 @@ func buy_capsule() -> void:
 		Sfx.play(&"eco_deny")
 		capsules_view.deny_buy()
 		return
-	UiKit.confirm(self, "BUY A PRIZE CAPSULE?", "One capsule for %s Sparks. The odds are always on ODDS & INFO; no real money, ever." % Wallet.format(price), "BUY", func():
+	UiKit.confirm(self, "BUY A PRIZE CAPSULE?", "One capsule for %s Tokens. The odds are always on ODDS & INFO; no real money, ever." % Wallet.format(price), "BUY", func():
 		if PrizePrints.buy_capsule():
 			Sfx.play(&"eco_purchase", -4.0)
 			capsules_view.bought())
@@ -225,7 +225,7 @@ func play_fusion(res: Dictionary, picked: Array) -> void:
 	_fusion.play(res, picked, weapon_for(res["print"]), thumbs)
 
 
-## Plays the reveal of a Token Counter buy.
+## Plays the reveal of a Credit Counter buy.
 func play_counter(res: Dictionary) -> void:
 	busy = true
 	_pending = [res]

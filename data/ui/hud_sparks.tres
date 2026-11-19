@@ -7,7 +7,7 @@
 script = ExtResource("1")
 kind = 1
 id = &"hud_sparks"
-title = "Sparks"
+title = "Arcade Tokens"
 script_ref = ExtResource("2")
 order = 70
 show_on_title = false

@@ -1,11 +1,15 @@
 extends Node
-## The player's Sparks: the permanent currency.
+## The player's Arcade Tokens: the permanent base currency. In code and saves
+## they are still "sparks" (this API, the `sparks` keys, price fields, stat ids
+## and file names); every player-facing name comes from CURRENCY and its
+## siblings below, and the icon is the gold token (SparkIcon, art/ui/icon_spark).
 ##
-## Every zombie carries a stolen Spark (the glow in its eyes). Popping one
-## sets it free, and the player banks it. Sparks are earned by playing (kills,
-## waves, clears, level-ups, mastery, contracts, leftover tickets) and spent in
-## the shop on cosmetics that are for sale (CosmeticItem.price > 0). They never
-## buy power: weapons and anything that changes combat come from progression.
+## The zombies hoard the arcade's tokens: every one carries a token it took
+## from the midway. Popping a zombie drops its token, and the player banks
+## it. Tokens are earned by playing (kills, waves, clears, level-ups, mastery,
+## contracts, leftover tickets) and spent in the shop on cosmetics that are
+## for sale (CosmeticItem.price > 0). They never buy power: weapons and
+## anything that changes combat come from progression.
 ##
 ## State lives in Profile.section("wallet"). Earning during a run only changes
 ## memory; the run director's commits save it. Spending saves immediately.
@@ -18,15 +22,18 @@ extends Node
 signal balance_changed(balance: int)
 signal earned(amount: int, source: StringName)
 signal spent(amount: int, what: StringName)
-## A zombie popped at `at` (world space) and dropped `amount` Sparks, already
-## banked: the cue for the pickup stars (scripts/economy/spark_field.gd).
+## A zombie popped at `at` (world space) and dropped `amount` tokens, already
+## banked: the cue for the flying pickup tokens (scripts/economy/spark_field.gd).
 signal sparks_dropped(at: Vector3, amount: int)
 ## A run's Sparks were settled; `summary` is SparkLedger.summary().
 signal run_settled(summary: Dictionary)
 
-const CURRENCY := "Sparks"
-const CURRENCY_SINGULAR := "Spark"
-## Colour used for Sparks everywhere in the UI.
+## The currency's player-facing name (plural, singular and the short form for
+## tight counts: "1,250 Tokens").
+const CURRENCY := "Arcade Tokens"
+const CURRENCY_SINGULAR := "Arcade Token"
+const CURRENCY_SHORT := "Tokens"
+## Colour used for Arcade Tokens everywhere in the UI.
 const COLOR := Color("ffd84a")
 const COLOR_GLOW := Color("38f0ff")
 const RULES_PATH := "res://data/progression/economy.tres"

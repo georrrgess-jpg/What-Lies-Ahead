@@ -137,7 +137,7 @@ static func unlock_text(it: CosmeticItem) -> String:
 	if it.params.has("unlock_text"):
 		return String(it.params["unlock_text"])
 	if Cosmetics.is_for_sale(it):
-		var price := "In the shop for %s %s" % [Wallet.format(Cosmetics.price_of(it)), Wallet.CURRENCY]
+		var price := "In the shop for %s %s" % [Wallet.format(Cosmetics.price_of(it)), Wallet.CURRENCY_SHORT]
 		return price if it.requirement == null else "%s. %s" % [it.requirement.describe(), price]
 	if it.requirement == null:
 		return "Yours from the start"

@@ -51,7 +51,7 @@ the right or bottom edge; use anchors and containers. All sizes below are canvas
 | `UiKit.INK` / `UiKit.NAVY` | `#120c2e` / `#1b1446` | Text on bright chips, darkest fills |
 | `UiKit.PURPLE` | `#6a34b8` | Neutral buttons, the off state of toggles |
 | `UiKit.GREEN` / `UiKit.RED` | `#52f060` / `#ff4d6a` | Success / cannot afford, danger |
-| `Wallet.COLOR` / `Wallet.COLOR_GLOW` | `#ffd84a` / `#38f0ff` | Sparks, everywhere |
+| `Wallet.COLOR` / `Wallet.COLOR_GLOW` | `#ffd84a` / `#38f0ff` | Arcade Tokens, everywhere |
 
 World and weapon accents (`WorldData.accent_color`, `WeaponData.tracer_color`) colour
 content, never chrome.
@@ -92,7 +92,7 @@ from the screen edge. Use these for container separations; do not invent values.
 ```gdscript
 var deploy := UiKit.sign_button("DEPLOY")                               # pink: THE action
 var arsenal := UiKit.sign_button("OPEN ARSENAL", SignButton.Kind.SECONDARY)   # teal
-var buy := UiKit.sign_button("BUY", SignButton.Kind.GOLD)               # gold: spend Sparks, claim
+var buy := UiKit.sign_button("BUY", SignButton.Kind.GOLD)               # gold: spend Tokens, claim
 var more := UiKit.sign_button("DETAILS", SignButton.Kind.NEUTRAL)       # purple: quiet
 var back := UiKit.back_button()                                         # the BACK sign
 var gear := UiKit.icon_button(&"icon_gear", "Settings")                 # 64 px, with a tooltip
@@ -150,7 +150,7 @@ card.button_group = group
 card.set_image(thumbnail)            # any Texture2D; set_preview(control) for a live view
 card.set_status("Carbine")           # plain line under the name
 card.set_locked("Lv 5")              # padlock + requirement, picture dimmed
-card.set_price(450, Wallet.can_afford(450))   # Spark icon + price (red if too dear)
+card.set_price(450, Wallet.can_afford(450))   # token icon + price (red if too dear)
 card.set_tag("EQUIPPED")             # corner tag
 card.set_new(true)                   # NEW badge
 card.set_rarity(rarity_colour)       # line under the picture
@@ -180,18 +180,21 @@ tabs.tab_changed.connect(_show_tab)
 tabs.step(1)                                          # bind to a shoulder button
 ```
 
-### Player, Sparks, prompts
+### Player, Arcade Tokens, prompts
 
 ```gdscript
 bar.add_child(UiKit.level_badge())            # follows Progression
 bar.add_child(UiKit.sparks_chip())            # follows Wallet, counts up on change
-row.add_child(UiKit.price_tag(450))           # Spark + amount, for prices and rewards
+row.add_child(UiKit.price_tag(450))           # token + amount, for prices and rewards
 row.add_child(UiKit.spark_icon(32.0))
 row.add_child(UiKit.key_prompt("ESC", "Back"))    # "LMB" / "RMB" draw a mouse
 ```
 
-Sparks are always the gold four-point star with a cyan glow and gold numbers; amounts go
-through `Wallet.format()`.
+Arcade Tokens (the Wallet's currency, `sparks` in code and saves) are always the gold
+token coin (star stamp, notched rim; `icon_spark` / `SparkIcon`) and gold numbers; amounts
+go through `Wallet.format()`, and names come from `Wallet.CURRENCY` ("Arcade Tokens") or
+`Wallet.CURRENCY_SHORT` ("Tokens") for counts. Capsule Credits (recycled Prize Prints) use
+the teal capsule chip, `icon_credit`.
 
 ### Scrolling, tooltips, toasts, dialogs
 
@@ -199,9 +202,9 @@ through `Wallet.format()`.
 var scroll := UiKit.scroll(Vector2(0, 420))   # styled bar, follows keyboard focus
 UiKit.tooltip(button, "What this does")
 UiKit.toast("Loadout saved")
-UiKit.toast("Not enough Sparks", UiKit.RED)
-UiKit.toast("450 Sparks banked", Wallet.COLOR, &"icon_spark")
-UiKit.confirm(self, "BUY COMET TRAIL?", "450 Sparks", "BUY", _buy)   # modal; Esc cancels
+UiKit.toast("Not enough Arcade Tokens", UiKit.RED)
+UiKit.toast("450 Tokens banked", Wallet.COLOR, &"icon_spark")
+UiKit.confirm(self, "BUY COMET TRAIL?", "450 Tokens", "BUY", _buy)   # modal; Esc cancels
 KitDialog.notice(self, "SAVED", "Your settings were saved.")
 ```
 
@@ -217,7 +220,7 @@ All motion comes from `UiFx`; it is tween based and nothing runs once it has fin
 | `UiFx.hover(c, on)`, `UiFx.squash(c)` | Hover / press on custom controls (kit buttons do it themselves) |
 | `UiFx.pulse(c)` | A value changed, a reward landed |
 | `UiFx.deny(c)` | Refused: shake + the deny sound |
-| `UiFx.count_up(label, from, to)` | Numbers: scores, Sparks, XP |
+| `UiFx.count_up(label, from, to)` | Numbers: scores, Arcade Tokens, XP |
 | `UiFx.fill_to(bar, value)` | Bars |
 
 The Play page's world carousel (`MenuPlay`, `WorldCard`) is the model for a browsable
@@ -290,7 +293,7 @@ func first_focus() -> Control:
 | The shell draws | The page draws |
 | --- | --- |
 | The live world behind (or the page's `backdrop()`, a full-screen Control such as the Arsenal's dusk) | Its content, in the rectangle it is given |
-| Top bar: home, tabs, level and title, Sparks, settings, quit | Extra header controls through `header_extra()` |
+| Top bar: home, tabs, level and title, Arcade Tokens, settings, quit | Extra header controls through `header_extra()` |
 | Header row: BACK sign, marquee with the page title | Sub-views and their back step (`handle_back()`) |
 | Page transition, Esc / BACK, Q / E, initial focus, toasts | Its own stagger-in on `refresh()` |
 

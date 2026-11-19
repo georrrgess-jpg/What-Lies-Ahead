@@ -247,7 +247,7 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 | Spawn pause for a player in trouble | 6 s per wave | 3.5 s | none | none |
 | Health back at every wave clear | +20 | - | - | - |
 | Ticket income | +25% (paid at the wave clear) | - | - | - |
-| Rewards (`reward_scale()`: account XP, Sparks) | 80% | 100% | 130% | 200% |
+| Rewards (`reward_scale()`: account XP, Arcade Tokens) | 80% | 100% | 130% | 200% |
 | Continue from a checkpoint | yes | yes | yes | no |
 | Unlocks at | - | - | - | player level 20 |
 
@@ -261,7 +261,7 @@ best scores stay comparable. The tier is shown on the HUD chip and is in the
 result (`difficulty`, `difficulty_label`).
 
 **Last Ride** is the skill tier: every lever turned past Hard and nothing to
-lean on (no relief, no healing, no checkpoint continue), for double XP and Sparks.
+lean on (no relief, no healing, no checkpoint continue), for double XP and Arcade Tokens.
 Tuned with the bot (level-40 profile): at the bot's precise aim (1.2 degrees) it
 clears Prize Pier with ~80 health left and wins about half of its Lava Lagoon runs
 with a strong weapon (the rest fall at the finale), while at an average aim (2.5
@@ -379,7 +379,7 @@ together (bot, max profile, one run per cell per weapon, Pulse Pistol and Ion
 Carbine on Standard, the Ion Carbine on Hard and Casual). Clears, and the mean
 health left over the clears; run time is in game seconds (waves and breaks).
 
-| World | Alpha health | Standard before | Standard after | Hard before / after | Casual before / after | Run time (s) | Clear bonus (Sparks) |
+| World | Alpha health | Standard before | Standard after | Hard before / after | Casual before / after | Run time (s) | Clear bonus (Arcade Tokens) |
 |---|---|---|---|---|---|---|---|
 | Prize Pier | 1800 | 2/2, 60 | 2/2, 55 | - | - | 220 | 150 |
 | Neon Skyline | 1900 + 500 | 1/2, 82 | 2/2, 82 | - | - | 250 | 175 |

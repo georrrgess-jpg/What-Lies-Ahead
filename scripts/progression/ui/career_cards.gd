@@ -87,7 +87,7 @@ static func road_detail(lvl: int, current: int) -> String:
 	var reward := Progression.reward_text(lvl)
 	if reward != "":
 		parts.append(reward)
-	parts.append("+%d %s" % [Progression.level_sparks(lvl), Wallet.CURRENCY])
+	parts.append("+%d %s" % [Progression.level_sparks(lvl), Wallet.CURRENCY_SHORT])
 	if lvl <= current:
 		parts.append("claimed")
 	elif lvl == current + 1:
@@ -141,7 +141,7 @@ static func contract_tile(entry: Dictionary) -> CareerTile:
 	if template:
 		tile.body.add_child(_pay_row(template.sparks, template.xp))
 		tile.detail = "%s  ·  %s  ·  pays %d %s and %s XP%s" % [ContractBoard.title(entry).to_upper(), ContractBoard.describe(entry),
-			template.sparks, Wallet.CURRENCY, Wallet.format(template.xp), ". Done: a new one is dealt after the run" if done else ""]
+			template.sparks, Wallet.CURRENCY_SHORT, Wallet.format(template.xp), ". Done: a new one is dealt after the run" if done else ""]
 	return tile
 
 
@@ -158,7 +158,7 @@ static func milestone_tile(ch: Challenge) -> CareerTile:
 	tile.body.add_child(medal)
 	var pay := "%s XP" % Wallet.format(ch.xp)
 	if ch.sparks > 0:
-		pay = "%d %s, %s" % [ch.sparks, Wallet.CURRENCY, pay]
+		pay = "%d %s, %s" % [ch.sparks, Wallet.CURRENCY_SHORT, pay]
 	for reward in ChallengeBook.rewards(ch):
 		pay += ", %s %s" % [reward.display_name, reward.slot_label().to_lower()]
 	var count := "reached" if done else "%s / %s" % [Wallet.format(ChallengeBook.progress(ch)), Wallet.format(ch.goal)]

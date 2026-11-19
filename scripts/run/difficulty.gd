@@ -116,7 +116,7 @@ static func color(id: StringName) -> Color:
 static func effects(id: StringName) -> PackedStringArray:
 	var row: Dictionary = TABLE.get(id, TABLE[DEFAULT])
 	var out := PackedStringArray()
-	for item in [["damage", "Enemy damage"], ["health", "Enemy health"], ["max_alive", "Horde size"], ["reward", "XP & Sparks"]]:
+	for item in [["damage", "Enemy damage"], ["health", "Enemy health"], ["max_alive", "Horde size"], ["reward", "XP & Tokens"]]:
 		var percent := int(round((float(row[item[0]]) - 1.0) * 100.0))
 		if percent != 0:
 			out.append("%s %+d%%" % [item[1], percent])
