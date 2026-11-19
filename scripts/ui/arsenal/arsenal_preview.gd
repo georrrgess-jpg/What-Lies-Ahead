@@ -1,7 +1,7 @@
 class_name ArsenalPreview
 extends Control
 ## The Arsenal's showroom: the selected weapon's real model, with its equipped
-## cosmetics, turning slowly over a teal pedestal at the end of the pier
+## cosmetics, turning slowly over a teal pedestal in a night arcade hall
 ## (ArsenalShowroom). This Control is the reserved rectangle the weapon is
 ## framed in; drag on it (or push the right stick) to turn the weapon. Its
 ## overlays (frame, vignette, hint) ignore the mouse.
