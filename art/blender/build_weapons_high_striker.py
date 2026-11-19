@@ -149,7 +149,9 @@ def build_high_striker():
     arm_r, elbow_r = fist("R", (0, 0, 0), (0, 1, 0), (1, 0, 0), bar, M, (0.3, -0.6, -0.5), -0.056, 0.058,
                           palm_s=(3.6, 0.08), finger_len=0.095, thumb="wrap", wrist=(0.2, 0.035, 0.046))
     hw = HANDLE_R + 0.0035
-    arm_l, elbow_l = support_hand((0, GRIP_L, 0), hw, hw, M, (-0.35, -0.3, -0.75), corner=hw * 0.95)
+    # The left forearm runs down and back beside the right one (towards the bottom right of the
+    # screen), not off to the left: crossing to the left it lay across the frame in the wind-up.
+    arm_l, elbow_l = support_hand((0, GRIP_L, 0), hw, hw, M, (0.17, -0.41, -0.72), corner=hw * 0.95)
     groups = {
         "Handle": (handle, (0, 0, 0), None),
         "Head": (head, (0, HEAD_Y, 0), "Handle"),
