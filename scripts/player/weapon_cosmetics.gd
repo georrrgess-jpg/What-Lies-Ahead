@@ -322,10 +322,11 @@ static func _apply_glove_kit(model: Node3D, arms: CosmeticItem) -> void:
 		var arm := model.find_child(arm_name, true, false)
 		if arm == null:
 			continue
-		for child in arm.get_children():
+		# Articulated hands (hand_kit.py) carry their shapes on the palm and each
+		# phalanx too: Arm<S><Part>Kit<Shape>, anywhere under the arm.
+		for child in arm.find_children(arm_name + "*Kit*", "Node3D", true, false):
 			var child_name := String(child.name)
-			if child is Node3D and child_name.begins_with(arm_name + "Kit"):
-				(child as Node3D).visible = child_name.trim_prefix(arm_name + "Kit") in wanted
+			(child as Node3D).visible = child_name.get_slice("Kit", 1) in wanted
 
 
 # --- decals -------------------------------------------------------------------
