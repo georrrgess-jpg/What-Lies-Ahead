@@ -111,8 +111,12 @@ func _build_actions() -> Control:
 	held.add_child(_count)
 	_count_note = UiKit.label("", UiKit.SIZE_SMALL, UiKit.MUTED)
 	held.add_child(_count_note)
+	var credits := HBoxContainer.new()
+	credits.add_theme_constant_override("separation", UiKit.GAP_S)
+	held.add_child(credits)
+	credits.add_child(UiKit.icon(&"icon_credit", UiKit.SIZE_BODY * 2.2))
 	_tokens = UiKit.label("", UiKit.SIZE_BODY, UiKit.CREAM, true)
-	held.add_child(_tokens)
+	credits.add_child(_tokens)
 	_open = UiKit.sign_button("OPEN CAPSULE", SignButton.Kind.PRIMARY, 34)
 	_open.name = "FirstFocus"
 	_open.custom_minimum_size.y = 84
@@ -129,6 +133,7 @@ func _build_actions() -> Control:
 	_buy = UiKit.sign_button("", SignButton.Kind.GOLD, 26)
 	_buy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_buy.icon = UiKit.spark_icon(28).texture
+	_buy.add_theme_constant_override("icon_max_width", 44)
 	_buy.pressed.connect(_page.buy_capsule)
 	row.add_child(_buy)
 	var odds := UiKit.card_panel(16)
@@ -157,7 +162,7 @@ func refresh() -> void:
 	_machine.capsule_count = n
 	_count.text = "x%d" % n
 	_count_note.text = "ready to open" if n > 0 else "earn them in runs, or buy one"
-	_tokens.text = "%d PRIZE TOKENS" % PrizePrints.tokens()
+	_tokens.text = "%d CAPSULE CREDITS" % PrizePrints.tokens()
 	_open.text = "OPEN CAPSULE" if n > 0 else "NO CAPSULES"
 	_open.disabled = n <= 0 or _page.busy
 	_open_five.disabled = n < CapsuleReveal.MULTI or _page.busy

@@ -2,7 +2,7 @@
 
     painted teal metal with rivets and light wear, cream-trimmed signboards,
     marquee signs and their bulbs, sign-shaped buttons in every state, neon
-    plates, cards, keycaps and the icon set (Spark, padlock, ...).
+    plates, cards, keycaps and the icon set (Arcade Token, Capsule Credit, padlock, ...).
 
     python3 tools/gen_ui_textures.py            (needs numpy + Pillow)
 
@@ -524,28 +524,68 @@ def star_pts(cx, cy, r_out, r_in, points, rot=-90.0):
     return pts
 
 
-def icon_spark():
-    """The Spark: a four-point star, gold with a cyan glow."""
-    w = h = 96
-    a = blank(w, h)
-    big = poly(w, h, star_pts(48, 48, 40, 11, 4))
-    over(a, hexc("#38f0ff", 0.85), blur(big, 7))
-    over(a, hexc("#38f0ff", 0.6), blur(big, 3))
-    over(a, hexc("#7a3c00"), blur((blur(poly(w, h, star_pts(48, 48, 43, 13, 4)), 1.2) > 0.4).astype(np.float64), 0.5))
+def radial(w, h, cx, cy, r, stops):
+    """A radial RGBA gradient (alpha 1) from `stops` [(t, "#hex"), ...], t 0-1 of `r`."""
     yy, xx = np.mgrid[0:h * SS, 0:w * SS] / SS
-    d = np.hypot(xx - 48, yy - 48) / 40.0
-    grad = np.zeros(big.shape + (4,))
-    stops = [(0.0, hexc("#fffbe0")), (0.3, hexc("#ffe66b")), (0.7, hexc("#ffc531")), (1.0, hexc("#f08c1a"))]
+    d = np.clip(np.hypot(xx - cx, yy - cy) / r, 0, 1)
+    grad = np.zeros(d.shape + (4,))
+    stops = [(t, hexc(c)) for t, c in stops]
     for (p0, c0), (p1, c1) in zip(stops, stops[1:]):
         t = np.clip((d - p0) / (p1 - p0), 0, 1)[..., None]
         grad = np.where((d >= p0)[..., None], c0 + (c1 - c0) * t, grad)
     grad[..., 3] = 1.0
-    over(a, grad, big)
-    # Facet: the lower-right half of every arm sits in shade.
-    facet = poly(w, h, [(48, 48), (88, 48), (56, 56), (48, 88), (40, 56)])
-    over(a, hexc("#c86a10", 0.35), facet * big)
-    over(a, hexc("#ffffff", 0.9), blur(poly(w, h, star_pts(41, 41, 9, 2.5, 4)), 0.5))
+    return grad
+
+
+def icon_spark():
+    """The Arcade Token (the base currency; the file keeps its old name so every
+    caller still finds it): a gold coin with an embossed, notched rim and a star
+    stamped in the middle."""
+    w = h = 96
+    a = blank(w, h)
+    c = 48
+    over(a, hexc("#000000", 0.4), blur(circle(w, h, c, c + 2.5, 44), 2.5))
+    over(a, hexc("#5a2a04"), circle(w, h, c, c, 45))
+    rim = circle(w, h, c, c, 42.5)
+    over(a, lit(rim, "#f2b233", depth=6.0, hi=0.7, lo=0.5), rim)
+    # Arcade-token notches around the rim.
+    for i in range(16):
+        ang = math.radians(i * 22.5)
+        x, y = c + math.cos(ang) * 38.5, c + math.sin(ang) * 38.5
+        dx, dy = math.cos(ang) * 3.2, math.sin(ang) * 3.2
+        over(a, hexc("#9a5408", 0.75), stroke(w, h, [(x - dx, y - dy), (x + dx, y + dy)], 3.0))
+    over(a, hexc("#7a3c06"), circle(w, h, c, c, 34))
+    face = circle(w, h, c, c, 32)
+    over(a, radial(w, h, c - 8, c - 10, 44, [(0.0, "#fff3b0"), (0.35, "#ffd84a"), (0.75, "#f2a52a"), (1.0, "#c9700f")]), face)
+    # The stamp: a five-point star pressed into the face (dark lower edge, lit upper edge).
+    star = poly(w, h, star_pts(c, c + 1, 22, 9.5, 5))
+    over(a, hexc("#fff6c8", 0.9), shift(star, 0, -1.4))
+    over(a, hexc("#7a3a04"), shift(star, 0.6, 2.0))
+    over(a, radial(w, h, c - 6, c - 8, 30, [(0.0, "#ffe680"), (0.6, "#f7b632"), (1.0, "#d98314")]), star)
+    over(a, hexc("#ffffff", 0.8), blur(circle(w, h, c - 15, c - 17, 4.5), 1.5))
     save(a, "icon_spark", w, h)
+
+
+def icon_credit():
+    """The Capsule Credit (prints recycle into these): a small teal capsule-shaped
+    chip, split in two halves like a prize capsule, with a gloss highlight."""
+    w = h = 96
+    a = blank(w, h)
+    box = (10, 30, 86, 66)
+    over(a, hexc("#000000", 0.4), blur(shift(rrect(w, h, box, 18), 0, 3), 2.5))
+    over(a, hexc("#062c33"), rrect(w, h, (7, 27, 89, 69), 21))
+    body = rrect(w, h, box, 18)
+    left = body * poly(w, h, [(0, 0), (48, 0), (48, 96), (0, 96)])
+    right = body - left
+    over(a, lit(left, "#1fc7c0", depth=5.0, hi=0.6, lo=0.5), left)
+    over(a, lit(right, "#bff7f2", depth=5.0, hi=0.5, lo=0.35), right)
+    over(a, hexc("#063a40", 0.85), body * poly(w, h, [(46.5, 0), (49.5, 0), (49.5, 96), (46.5, 96)]))
+    # A chip's notch ring in the middle of each half.
+    for cx, col in ((29, "#0d6f72"), (67, "#58cfc7")):
+        ring = np.clip(circle(w, h, cx, 48, 8) - circle(w, h, cx, 48, 4.5), 0, 1)
+        over(a, hexc(col, 0.9), ring)
+    over(a, hexc("#ffffff", 0.7), blur(rrect(w, h, (18, 34, 78, 40), 3), 1.2))
+    save(a, "icon_credit", w, h)
 
 
 def icon_lock():
@@ -660,6 +700,7 @@ def main():
     rivet_sprite()
     level_badge()
     icon_spark()
+    icon_credit()
     icon_lock()
     icons()
     names = [f for f in os.listdir(OUT) if f.endswith(".png")]

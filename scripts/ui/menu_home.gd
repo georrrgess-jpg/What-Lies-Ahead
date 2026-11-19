@@ -24,7 +24,7 @@ const TIPS := [
 	"Between waves, spend tickets at the Loadout Station on boosts, or swap weapons for free.",
 	"Zombies flank. Keep moving and use both lanes around the station.",
 	"A flawless wave doubles the wave-clear bonus.",
-	"Every zombie carries a stolen Spark. Pop it, bank it, spend it in the shop.",
+	"The zombies hoard the arcade's tokens. Pop one to win back an Arcade Token, then spend Tokens in the shop.",
 ]
 
 ## Width of the left column (the hero, PLAY row, news row).

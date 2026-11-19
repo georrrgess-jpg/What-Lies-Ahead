@@ -483,9 +483,9 @@ def main():
             shop_run, shop_clear = i, p.clears
         history.append((victory, row['sparks']))
         capsule_history.append(row.get('capsules', 0))
-    print('== %s: %s ==' % ('Data at ' + REV if REV else 'Current data', 'no currency' if not eco else 'Sparks economy'))
+    print('== %s: %s ==' % ('Data at ' + REV if REV else 'Current data', 'no currency' if not eco else 'Arcade Tokens economy'))
     print()
-    table(rows, ['Run', 'Level', 'Result', 'XP', 'Player level', 'Sparks', 'Saved (if unspent)', 'The run buys', 'Unlocks'], markdown)
+    table(rows, ['Run', 'Level', 'Result', 'XP', 'Player level', 'Arcade Tokens', 'Saved (if unspent)', 'The run buys', 'Unlocks'], markdown)
     print()
     # one weapon as a main: runs to max rank (clears of the world cycle, main share of the kills)
     curve = d['curve']
@@ -507,29 +507,29 @@ def main():
               ['Goals on the Career page', '%d' % (sum(len(d['weapons']) if m.get('scope') == 1 else 1 for m in d['milestones']) + (3 if d['contracts'] else 0))]]
     if eco:
         earned = sum(at_cap.values())
-        totals += [['Sparks earned by the cap', '{:,}'.format(earned)],
-                   ['Items for sale', '%d, %s Sparks in total' % (len(shop), '{:,}'.format(shop_total))],
+        totals += [['Arcade Tokens earned by the cap', '{:,}'.format(earned)],
+                   ['Items for sale', '%d, %s Arcade Tokens in total' % (len(shop), '{:,}'.format(shop_total))],
                    ['Clears to buy everything', '%s (%s runs)' % (shop_clear, shop_run)],
-                   ['Sparks per session of 3 runs: first five sessions / after the cap', '%d / %d' % (
+                   ['Arcade Tokens per session of 3 runs: first five sessions / after the cap', '%d / %d' % (
                        sum(x for _, x in history[:15]) / 5, sum(x for _, x in history[cap_run:cap_run + 30]) / 10)],
-                   ['Sparks per run: first 15 runs / after the cap', '%d / %d' % (
+                   ['Arcade Tokens per run: first 15 runs / after the cap', '%d / %d' % (
                        sum(x for _, x in history[:15]) / 15, sum(x for _, x in history[cap_run:cap_run + 30]) / 30)],
                    ['Runs of saving (new profile) to afford a', ', '.join(
                        '%s %s: %s' % (name, '{:,}'.format(price), reached.get((name, price), '-')) for name, price in goals)],
-                   ['Where Sparks come from (up to the cap)', ', '.join('%s %d%%' % (k, round(100.0 * v / earned)) for k, v in sorted(at_cap.items(), key=lambda kv: -kv[1]) if v * 100 >= earned)]]
+                   ['Where Arcade Tokens come from (up to the cap)', ', '.join('%s %d%%' % (k, round(100.0 * v / earned)) for k, v in sorted(at_cap.items(), key=lambda kv: -kv[1]) if v * 100 >= earned)]]
     table(totals, ['Totals', ''], markdown)
     if eco:
         print()
         by = {}
         for c in shop:
             by.setdefault(c['slot'], []).append(c['price'])
-        table([[slot, len(v), '{:,}'.format(sum(v))] for slot, v in sorted(by.items(), key=lambda kv: -sum(kv[1]))], ['Shop section', 'Items', 'Sparks'], markdown)
+        table([[slot, len(v), '{:,}'.format(sum(v))] for slot, v in sorted(by.items(), key=lambda kv: -sum(kv[1]))], ['Shop section', 'Items', 'Arcade Tokens'], markdown)
         print()
         track = []
         for lvl in range(2, cap + 1):
             what = [w['name'] + ' (weapon)' for w in d['weapons'] if w['level'] == lvl] + [c['name'] for c in d['cosmetics'] if c['kind'] == 1 and c['amount'] == lvl and not c['price']]
             track.append([lvl, '{:,}'.format(p.table[lvl]), level_sparks(eco, lvl), ', '.join(what) or '(nothing!)'])
-        table(track, ['Level', 'Total XP', 'Sparks', 'Reward'], markdown)
+        table(track, ['Level', 'Total XP', 'Arcade Tokens', 'Reward'], markdown)
     if d['prints']:
         print()
         prize_capsules(d, capsule_history, history, markdown)
@@ -599,12 +599,12 @@ def prize_capsules(d, capsule_history, history, markdown):
     later = capsule_history[60:90]
     rows = [['Capsules per run: first 15 runs / runs 61-90', '%.1f / %.1f' % (sum(per_run) / 15.0, sum(later) / 30.0)],
             ['Capsules per session of 3 runs: first five sessions / later', '%.1f / %.1f' % (first_sessions, sum(later) / 10.0)],
-            ['Capsule price', '%s Sparks (a run pays %d-%d, so one run buys about two)' % ('{:,}'.format(s['capsule_price']),
+            ['Capsule price', '%s Arcade Tokens (a run pays %d-%d, so one run buys about two)' % ('{:,}'.format(s['capsule_price']),
                 min(x for _, x in history[:15]), max(x for _, x in history[:15]))],
             ['Runs to the first Legendary print (median / 90%)', '%s / %s' % (q(first_leg, 0.5), q(first_leg, 0.9))],
             ['Runs to the first Holo (median / 90%)', '%s / %s' % (q(first_holo, 0.5), q(first_holo, 0.9))],
             ['Runs to the first Mint Holo (median / 90%)', '%s / %s' % (q(first_mint_holo, 0.5), q(first_mint_holo, 0.9))],
-            ['Runs to %d Prize Tokens (a Legendary at the Token Counter), auto-recycle on' % s['counter_price'][3], '%s / %s' % (q(legend_counter, 0.5), q(legend_counter, 0.9))],
+            ['Runs to %d Capsule Credits (a Legendary at the Credit Counter), auto-recycle on' % s['counter_price'][3], '%s / %s' % (q(legend_counter, 0.5), q(legend_counter, 0.9))],
             ['Series 1 by rarity', ', '.join('%s %d' % (n, len(by_rarity.get(i, []))) for i, n in enumerate(['Common', 'Rare', 'Epic', 'Legendary']))]]
     table(rows, ['Prize Capsules (earned only, every capsule opened)', ''], markdown)
 

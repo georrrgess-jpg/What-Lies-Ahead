@@ -2,7 +2,7 @@ class_name PrizesOddsView
 extends ScrollContainer
 ## The ODDS & INFO tab: three columns of panels. The published odds per
 ## capsule (with bars) and the luck meter; what a print rolls (rare prints,
-## shine grades, serials); how capsules are earned, repeats and tokens, and
+## shine grades, serials); how capsules are earned, repeats and Capsule Credits, and
 ## every finish of the series with how many of its prints are held.
 
 const COLUMN := 520.0
@@ -38,7 +38,7 @@ func _init(page: PrizesPage) -> void:
 	var earn: Array = []
 	for line in ["%d per alpha defeated" % s.capsules_per_alpha, "%d per bounty claimed" % s.capsules_per_bounty,
 			"%d for the day's first clear" % s.capsules_daily_clear, "1 for every %d contracts" % s.contracts_per_capsule,
-			"%d per milestone" % s.capsules_per_milestone, "Buy with Sparks: %s each (no real money)" % Wallet.format(s.capsule_price)]:
+			"%d per milestone" % s.capsules_per_milestone, "Buy with Arcade Tokens: %s each (no real money)" % Wallet.format(s.capsule_price)]:
 		earn.append(UiKit.label("·  " + line, UiKit.SIZE_SMALL, UiKit.CREAM))
 	c.add_child(_panel("EARN CAPSULES", "", earn))
 	_series = GridContainer.new()

@@ -5,7 +5,7 @@ extends VBoxContainer
 ## serial and what makes it special, pattern, mint date, fit, where it came
 ## from), and what can be done with it: wear it on a weapon (picked with the
 ## arrows), favourite it (protected from recycling and trade-ups), recycle it
-## into Prize Tokens.
+## into Capsule Credits.
 
 ## Something about the print changed (worn, favourite, recycled).
 signal changed
@@ -153,7 +153,7 @@ func show_print(p: Dictionary, weapon_id: StringName = &"") -> void:
 	(_rows["SERIAL"] as Label).add_theme_color_override("font_color", UiKit.AMBER if tag != "" else UiKit.CREAM)
 	_rows["PATTERN"].text = "Seed %d" % int(p["seed"])
 	_rows["MINTED"].text = PrintLook.minted_text(p)
-	_rows["FROM"].text = {"capsule": "A Prize Capsule", "tradeup": "A trade-up", "counter": "The Token Counter"}.get(String(p.get("src", "")), "?")
+	_rows["FROM"].text = {"capsule": "A Prize Capsule", "tradeup": "A trade-up", "counter": "The Credit Counter"}.get(String(p.get("src", "")), "?")
 	_show_on_stage()
 	_refresh_actions()
 
@@ -223,7 +223,7 @@ func _on_recycle() -> void:
 		return
 	var p := print_data
 	var value := PrizePrints.token_value(p)
-	var text := "%s %s becomes %d Prize Token%s. This cannot be undone." % [PrintLook.title(p), PrintLook.serial_text(int(p["serial"])), value, "" if value == 1 else "s"]
+	var text := "%s %s becomes %d Capsule Credit%s. This cannot be undone." % [PrintLook.title(p), PrintLook.serial_text(int(p["serial"])), value, "" if value == 1 else "s"]
 	UiKit.confirm(self, "RECYCLE THIS PRINT?", text, "RECYCLE", func():
 		if PrizePrints.recycle(p) > 0:
 			Sfx.play(&"prz_token", -4.0)

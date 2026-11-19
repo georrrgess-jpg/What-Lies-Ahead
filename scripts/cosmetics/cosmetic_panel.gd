@@ -209,7 +209,7 @@ func refresh() -> void:
 	_deal.text = "TODAY'S PICK: %d%% OFF, WAS %s" % [roundi(off * 100.0), Wallet.format(ShopCatalog.base_price(item))]
 	var missing := PurchaseFlow.shortfall(item) if purchasable else 0
 	_shortfall.visible = missing > 0
-	_shortfall.text = "%s more %s needed. %s" % [Wallet.format(missing), Wallet.CURRENCY, PurchaseFlow.EARN_HINT]
+	_shortfall.text = "%s more %s needed. %s" % [Wallet.format(missing), Wallet.CURRENCY_SHORT, PurchaseFlow.EARN_HINT]
 	_equip.visible = owned and not worn and not shop_mode
 	_equipped.visible = worn and not shop_mode
 	_locker.visible = owned and shop_mode

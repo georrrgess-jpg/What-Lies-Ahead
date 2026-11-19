@@ -45,7 +45,7 @@ const STEPS := [
 		"lines": ["See the big one at the back? Hold right mouse to aim down your sights. Steady... steady..."]},
 	{"id": "headshot", "section": 1, "title": "Headshots", "objective": "Hit the three zombie cut-outs in the head.",
 		"keys": [["RMB", "Aim"], ["LMB", "Fire"]],
-		"lines": ["Zombie cut-outs! Go for the head: headshots score extra and shake loose bonus Sparks."]},
+		"lines": ["Zombie cut-outs! Go for the head: headshots score extra and shake loose bonus tokens."]},
 	{"id": "reload", "section": 1, "title": "Reload", "objective": "You are nearly empty: reload.",
 		"keys": [["reload", "Reload"]],
 		"lines": ["Running dry! Press R to reload. Never wait for the click."]},
@@ -54,7 +54,7 @@ const STEPS := [
 		"lines": ["You carry two weapons. Press 2 for the pistol and pop a tin with it. 1 brings the carbine back."]},
 	{"id": "zombies", "section": 2, "title": "First zombies", "objective": "Go through the gate and pop the three zombies.",
 		"keys": [["LMB", "Fire"], ["RMB", "Aim"]],
-		"lines": ["Gate's open! Those are real zombies. Slow ones. I asked nicely.", "Every one carries a stolen Spark: pop it and the Spark is yours."]},
+		"lines": ["Gate's open! Those are real zombies. Slow ones. I asked nicely.", "Every one is hoarding an arcade token: pop it and the token is yours."]},
 	{"id": "dodge", "section": 2, "title": "Dodge a charge", "objective": "The Bruiser roars, then charges: step aside and pop it.",
 		"keys": [["WASD", "Sidestep"], ["dash", "Dash"]],
 		"lines": ["Uh-oh. A Bruiser. When it roars, it charges in a straight line: sidestep, or press V to dash clear, then pop it!"]},
@@ -82,4 +82,4 @@ const LINE_BODY_SHOT := "Higher! The head ring, recruit."
 const LINE_SECTION_SKIPPED := "Skipping ahead? Fine by me. Show-off."
 const LINE_SWAP_NONE := "Only one weapon to swap to? Level up and the rack fills up."
 const LINE_DODGED := "Olé! Nice footwork."
-const LINE_DONE := "You're a natural. Prize Pier needs you. Go get those Sparks back!"
+const LINE_DONE := "You're a natural. Prize Pier needs you. Go win those tokens back!"

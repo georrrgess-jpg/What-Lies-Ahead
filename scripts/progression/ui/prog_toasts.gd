@@ -29,7 +29,7 @@ static func level_up(lvl: int, gained := 1) -> PanelContainer:
 	var shown := rewards.slice(maxi(0, rewards.size() - 2))
 	if not shown.is_empty():
 		v.add_child(UiKit.label("  ·  ".join(shown), 24, UiKit.CREAM))
-	v.add_child(UiKit.label("+%s %s" % [Wallet.format(sparks), Wallet.CURRENCY], 24, Wallet.COLOR, true))
+	v.add_child(UiKit.label("+%s %s" % [Wallet.format(sparks), Wallet.CURRENCY_SHORT], 24, Wallet.COLOR, true))
 	var items := Progression.level_rewards(lvl)
 	if not items.is_empty():
 		row.add_child(RewardArt.new(items[0], false, Vector2(120, 84)))
@@ -53,7 +53,7 @@ static func rank_up(weapon: WeaponData, rank: int) -> PanelContainer:
 	if not rewards.is_empty():
 		v.add_child(UiKit.label("Unlocked: %s (%s)" % [rewards[0].display_name, rewards[0].slot_label()], 24, UiKit.CREAM))
 		row.add_child(RewardArt.new(rewards[0], false, Vector2(84, 84)))
-	v.add_child(UiKit.label("+%s %s" % [Wallet.format(Wallet.rules.rank_sparks(rank)), Wallet.CURRENCY], 24, Wallet.COLOR, true))
+	v.add_child(UiKit.label("+%s %s" % [Wallet.format(Wallet.rules.rank_sparks(rank)), Wallet.CURRENCY_SHORT], 24, Wallet.COLOR, true))
 	return panel
 
 
@@ -74,7 +74,7 @@ static func challenge(ch: Challenge, weapon_id: StringName) -> PanelContainer:
 	var w := GameData.weapon(weapon_id)
 	var detail := "+%s XP" % ProgStyle.num(ch.xp)
 	if ch.sparks > 0:
-		detail += "  ·  +%s %s" % [Wallet.format(ch.sparks), Wallet.CURRENCY]
+		detail += "  ·  +%s %s" % [Wallet.format(ch.sparks), Wallet.CURRENCY_SHORT]
 	if w:
 		detail += "  ·  %s" % w.display_name
 	v.add_child(UiKit.label(detail, 20, UiKit.AMBER, true))

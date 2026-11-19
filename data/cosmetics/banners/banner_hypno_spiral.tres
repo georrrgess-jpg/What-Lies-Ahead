@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"banner_hypno_spiral"
 display_name = "Hypno Spiral"
-description = "You are getting very... sleepy... spend Sparks."
+description = "You are getting very... sleepy... spend Tokens."
 slot = &"banner"
 rarity = 0
 price = 250

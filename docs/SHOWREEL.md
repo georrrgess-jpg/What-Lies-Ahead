@@ -44,7 +44,7 @@ attract mode), and renders to a video.
   `Zombie.take_hit`, so death clips, the head pop, confetti, freezes and
   shatters are the game's own; kill-effect cosmetics are played with
   `KillEffects.play`, tracers with `WeaponFx.shot`, beams with `BeamVisual`,
-  chains with `LightningBolt`, blasts with `WeaponFx.explosion`, Sparks with
+  chains with `LightningBolt`, blasts with `WeaponFx.explosion`, Arcade Tokens with
   `SparkField`. Everything is referenced by id, so the reel shows whatever the
   models, maps and effects look like today.
 * **Warm-up, so no cut hitches.** Before the first frame the player holds
@@ -169,7 +169,7 @@ boundaries and the bold hits are locked.
 | **37.0-40.0** | cryo, lobber, coin_op, parade | Prize Pier, Candy Works, Neon Skyline, Midnight Mall | The Cryo Beam freezes three and they shatter (1 s); a gumball blast throws a ring of five (1 s); Coin-Op FREE PLAY (0.5 s); three kills in three kill effects and tracers (0.5 s) | **37.0** full band |
 | **Endless, Last Ride** | | | | |
 | **40.0-44.0** | city_wide, city_street | Ashfall City | **ENDLESS**: a crane down over the burning square as the city's horde floods in; street level, WAVE 5 counting to 30, the Wrecker roars in slow motion | **40.0** double-time toms, choir |
-| **44.0-46.0** | last_ride | Prize Pier | Blood-red grade, **LAST RIDE**: Big Bruno (The Prize Booth Bully) charges a low lens in slow motion with his pack; "No healing · no checkpoints / Double XP and Sparks" | **stop-hit 44.0** |
+| **44.0-46.0** | last_ride | Prize Pier | Blood-red grade, **LAST RIDE**: Big Bruno (The Prize Booth Bully) charges a low lens in slow motion with his pack; "No healing · no checkpoints / Double XP and Arcade Tokens" | **stop-hit 44.0** |
 | **Make it yours** | | | | |
 | **46.0-50.0** | arsenal, operators, prints | Studio | **MAKE IT YOURS**: four weapons on the turntable, one a beat, in Jackpot, Thunderhead, Galaxy and the Mythic Last Light; the 19 operators posing; Prize Prints: the capsule machine turns and a print lands in a gold burst | **46.0**, arp and bells |
 | **Finale** | | | | |
@@ -225,7 +225,7 @@ A still at a time from the menu: `-- --shot=x.png --shot-scene=showreel --shot-t
 
 ## The startup screen
 
-`IntroOverlay` (about 8 s, then holds): a Spark glows up in the dark with a
+`IntroOverlay` (about 8 s, then holds): an Arcade Token glows up in the dark with a
 soft ring (0-1.4 s); four 0.8 s vignettes on the studio set cut on the score's
 low pulses (a zombie, the carbine in Marquee Lights with the Ferris wheel
 charm, a Disco Fever kill, three new operators posing), no words; the logo

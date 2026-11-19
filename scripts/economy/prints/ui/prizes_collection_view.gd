@@ -111,7 +111,7 @@ func _build_toggles() -> Control:
 	row.add_child(_finish_chip)
 	row.add_child(UiKit.filler())
 	_auto_button = UiKit.sign_button("", SignButton.Kind.NEUTRAL, 18)
-	_auto_button.tooltip_text = "Plain repeats (Factory or Polished, no rare print, serial above #%03d) become Prize Tokens as they drop." % PrizePrints.series().low_serial
+	_auto_button.tooltip_text = "Plain repeats (Factory or Polished, no rare print, serial above #%03d) become Capsule Credits as they drop." % PrizePrints.series().low_serial
 	_auto_button.pressed.connect(func():
 		PrizePrints.set_auto_recycle(not PrizePrints.auto_recycle())
 		_refresh_auto())

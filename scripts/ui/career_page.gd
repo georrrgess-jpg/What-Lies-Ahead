@@ -122,7 +122,7 @@ func _build_road() -> Control:
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", UiKit.GAP_XS)
 	row.add_child(col)
-	col.add_child(UiKit.section("LEVEL ROAD", "Every level pays Sparks and gives one thing"))
+	col.add_child(UiKit.section("LEVEL ROAD", "Every level pays Arcade Tokens and gives one thing"))
 	_road_scroll = ScrollContainer.new()
 	_road_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_road_scroll.follow_focus = true
@@ -211,7 +211,7 @@ func _fill_header() -> void:
 	_header.add_child(CareerCards.stat_tile("LEVEL CLEARS", Wallet.format(clears)))
 	_header.add_child(CareerCards.stat_tile("RUNS", Wallet.format(int(Profile.section("progression").get("runs_played", 0)))))
 	_header.add_child(CareerCards.stat_tile("CONTRACTS", Wallet.format(ContractBoard.completed_count())))
-	_header.add_child(CareerCards.stat_tile("SPARKS EARNED", Wallet.format(Wallet.lifetime_earned()), Wallet.COLOR))
+	_header.add_child(CareerCards.stat_tile("TOKENS EARNED", Wallet.format(Wallet.lifetime_earned()), Wallet.COLOR))
 
 
 func _start_road() -> void:

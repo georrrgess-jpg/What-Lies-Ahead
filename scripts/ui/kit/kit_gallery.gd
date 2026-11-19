@@ -20,7 +20,7 @@ func _ready() -> void:
 	cols.add_child(_signs())
 	cols.add_child(_board())
 	cols.add_child(_tray())
-	UiKit.toast("Toast: 450 Sparks banked", Wallet.COLOR, &"icon_spark", 600.0)
+	UiKit.toast("Toast: 450 Tokens banked", Wallet.COLOR, &"icon_spark", 600.0)
 
 
 func _column(width: float) -> VBoxContainer:

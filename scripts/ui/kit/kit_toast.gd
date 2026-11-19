@@ -4,8 +4,8 @@ extends CanvasLayer
 ## themselves. One shared layer above every screen (it works while paused).
 ##
 ##   UiKit.toast("Loadout saved")
-##   UiKit.toast("Not enough Sparks", UiKit.RED)
-##   UiKit.toast("450 Sparks banked", Wallet.COLOR, &"icon_spark")
+##   UiKit.toast("Not enough Arcade Tokens", UiKit.RED)
+##   UiKit.toast("450 Tokens banked", Wallet.COLOR, &"icon_spark")
 
 const MAX_WIDTH := 760.0
 const TOP := 108.0

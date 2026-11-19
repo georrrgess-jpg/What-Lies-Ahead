@@ -1,10 +1,10 @@
 class_name SparkField
 extends MultiMeshInstance3D
-## The Sparks that fly out of popped zombies: small glowing stars that burst
-## up and out, then home to the player and are "picked up". Purely a show:
-## the Sparks are banked by the SparkLedger the moment the zombie pops, and
-## each star carries the amount it stands for so the HUD counter can tick up
-## as it arrives (signal `collected`).
+## The Arcade Tokens (Sparks in code) that fly out of popped zombies: small
+## spinning gold coins that burst up and out, then home to the player and are
+## "picked up". Purely a show: the tokens are banked by the SparkLedger the
+## moment the zombie pops, and each one (a "star" below) carries the amount it
+## stands for so the HUD counter can tick up as it arrives (signal `collected`).
 ##
 ## One MultiMesh of camera-facing quads (scripts/economy/spark_pickup.gdshader)
 ## holds every star and its short trail, so a crowd dying at once costs one
@@ -58,7 +58,6 @@ func _init() -> void:
 	var material := ShaderMaterial.new()
 	material.shader = load(SHADER)
 	material.set_shader_parameter("core_color", Wallet.COLOR)
-	material.set_shader_parameter("glow_color", Wallet.COLOR_GLOW)
 	material.render_priority = RENDER_PRIORITY
 	quad.material = material
 	multimesh = MultiMesh.new()
@@ -140,7 +139,7 @@ func _process(delta: float) -> void:
 		_vel[i] = v
 		var grow := clampf((age + 0.06) / 0.12, 0.0, 1.0)
 		var size := maxf(_size[i], p.distance_to(eye_pos) * MIN_ANGULAR_SIZE) * grow
-		var spin := age * 5.0 + float(i)
+		var spin := age * 9.0 + float(i)
 		var back := v * TRAIL_SECONDS
 		var quad := i * QUADS
 		multimesh.set_instance_transform(quad, Transform3D(Basis.IDENTITY, p))

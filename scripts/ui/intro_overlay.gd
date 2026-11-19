@@ -72,7 +72,7 @@ func _ready() -> void:
 	_view.visible = false
 	add_child(_view)
 	_shade = _rect(Color(0.02, 0.0, 0.08, 0.0))
-	_spark = UiKit.icon(SPARK_TEX, 240.0, Wallet.COLOR)
+	_spark = UiKit.icon(SPARK_TEX, 240.0)
 	_spark.pivot_offset = Vector2(120, 120)
 	_spark.scale = Vector2.ONE * 0.6
 	_spark.modulate.a = 0.0

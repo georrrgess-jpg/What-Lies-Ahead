@@ -28,9 +28,9 @@ extends Resource
 @export var low_serial := 10
 ## Sparks for one capsule.
 @export var capsule_price := 500
-## Prize Tokens a recycled print gives, by rarity.
+## Capsule Credits a recycled print gives, by rarity.
 @export var token_value := PackedInt32Array([1, 3, 8, 25])
-## Prize Tokens a fresh print costs at the Token Counter, by rarity.
+## Capsule Credits a fresh print costs at the Credit Counter, by rarity.
 @export var counter_price := PackedInt32Array([6, 18, 60, 200])
 ## Prints of one rarity a trade-up takes.
 @export var trade_up_count := 5

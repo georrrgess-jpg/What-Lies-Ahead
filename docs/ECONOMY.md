@@ -1,25 +1,28 @@
 # Economy and progression
 
-How Sparks, player levels, weapon mastery, contracts and the shop fit together, the
+How Arcade Tokens, player levels, weapon mastery, contracts and the shop fit together, the
 numbers behind them, and the API the menus read. Everything is data: tune it in
 `data/progression/` and check the result with `python3 tools/economy_model.py`.
 
 ## The idea in one paragraph
 
-Every zombie carries a stolen **Spark** (the glow in its eyes). Pop it and the Spark flies
-to you. Sparks are the permanent currency: they come from playing (kills, waves, clears,
-leftover tickets), from progress (every player level, every mastery rank) and from
+The zombies hoard the arcade's tokens: every one carries an **Arcade Token** ("Token" for
+short). Pop it and its token spins out to you. Arcade Tokens are the permanent base currency
+(still `sparks` in code, saves, price fields and stat ids; display names come from
+`Wallet.CURRENCY`). Repeated Prize Prints recycle into **Capsule Credits** (`tokens` in
+the prints save), a separate currency for the Credit Counter. Arcade Tokens come from
+playing (kills, waves, clears, leftover tickets), from progress (every player level, every mastery rank) and from
 **contracts**, and they buy **cosmetics only**. Weapons and anything that changes combat
 come from player levels. Two reward tracks run side by side: things you **earn** (a
 reward at every level, world sets for clears, mastery camos, milestone rewards) and
 things you **buy** (the animated finishes, energy cells, gloves, charms, kill effects,
 tracers, some decals, banners and titles, and sights).
 
-## Earning Sparks
+## Earning Arcade Tokens
 
 All amounts are in `data/progression/economy.tres` (`EconomyRules`).
 
-| Source | Sparks | Notes |
+| Source | Arcade Tokens | Notes |
 | --- | --- | --- |
 | Popping a zombie | ticket value / 10, at least 1 | 1 for tourists, runners and punks, 2 for specials, 4-5 for heavies |
 | Headshot finishing blow | +1 | |
@@ -37,11 +40,11 @@ Kills, waves, the clear and the tickets are multiplied by `Difficulty.reward_sca
 milestone payouts are fixed. A defeat keeps everything banked so far and loses only
 the clear bonus and the ticket cash-in.
 
-**Tickets, score and Sparks.** Tickets stay the run-only currency of the loadout
+**Tickets, score and Arcade Tokens.** Tickets stay the run-only currency of the loadout
 station. Whatever is left when you step through the portal still turns into score
-(`WaveSet.ticket_score_rate`) and is now also cashed into Sparks. A clear earns about
-1,800-2,600 tickets, so buying nothing is worth roughly 100 Sparks on top of the 500-700 a
-clear pays: a heal or an overshield costs you 12-30 Sparks, dying costs the clear bonus,
+(`WaveSet.ticket_score_rate`) and is now also cashed into Arcade Tokens. A clear earns about
+1,800-2,600 tickets, so buying nothing is worth roughly 100 Arcade Tokens on top of the 500-700 a
+clear pays: a heal or an overshield costs you 12-30 Arcade Tokens, dying costs the clear bonus,
 the cash-in and the rest of the run. Spending to survive is the right call; hoarding is a
 small, real reward for a clean run.
 
@@ -50,12 +53,12 @@ shows it: stars burst out of the zombie, home to the player (`SparkField`: one M
 pooled, a short trail per star) and land in the run counter at the bottom centre, with a
 pickup tick that climbs a semitone per pickup while they keep coming. Payouts that are
 not stars (wave clear, level-up, contract) add up in one "+N" above the counter. The
-results screen (`data/ui/results_sparks.tres`) counts up the run's Sparks with the
+results screen (`data/ui/results_sparks.tres`) counts up the run's Arcade Tokens with the
 breakdown and the contracts.
 
-## Spending Sparks
+## Spending Arcade Tokens
 
-**The price rule.** Every price is a multiple of 250 Sparks (`EconomyRules.price_step`)
+**The price rule.** Every price is a multiple of 250 Arcade Tokens (`EconomyRules.price_step`)
 and at least its rarity's ladder price: **Common 250, Rare 750, Epic 1,500,
 Legendary 3,000** (`EconomyRules.prices`). The rarities do not overlap (the dearest
 rare costs less than the cheapest epic, and so on). An ordinary item costs its ladder
@@ -97,9 +100,9 @@ among the picks. An item is in the shop when its
 `CosmeticItem.price` is above 0; it is owned once bought. A `requirement` on a priced
 item only gates the purchase (sights that open at a mastery rank).
 
-For sale (264 items, 407,250 Sparks, sights included and Madame Fortuna's 20,000; 239 items and
-376,500 Sparks before the update 16 skins and the two rewards the new guns moved to the Shop; 206 items
-and 315,000 Sparks before the update 13 cosmetics and the Mythic operator; 277,350 before the
+For sale (264 items, 407,250 Arcade Tokens, sights included and Madame Fortuna's 20,000; 239 items and
+376,500 Arcade Tokens before the update 16 skins and the two rewards the new guns moved to the Shop; 206 items
+and 315,000 Arcade Tokens before the update 13 cosmetics and the Mythic operator; 277,350 before the
 price rule):
 the original 69 plus 31 new weapon finishes,
 5 operators, 9 gloves, and the new cells, charms, decals, sights, kill effects, tracers,
@@ -127,7 +130,7 @@ styles 8-10):
 
 **Update 16 skins** (19 weapon finishes and 4 gloves; the finishes are in `data/cosmetics/finishes`,
 all `weapon_finish`; the world patterns live in `art/shaders/finish_world.gdshader`, the animated
-showpieces each have their own `finish_*.gdshader`). 23 items are for sale (29,250 Sparks):
+showpieces each have their own `finish_*.gdshader`). 23 items are for sale (29,250 Arcade Tokens):
 
 | Item | Rarity | How |
 | --- | --- | --- |
@@ -153,11 +156,11 @@ at local midnight.
 
 **Mythic.** Mythic (`CosmeticItem.Rarity.MYTHIC`, above Legendary) is earned in
 Endless, with one exception sold in the shop: **Madame Fortuna**, the fortune-teller
-operator, at 20,000 Sparks, twice Wind-Up Wally and the dearest item. She has no ladder
+operator, at 20,000 Arcade Tokens, twice Wind-Up Wally and the dearest item. She has no ladder
 price (the rule's floor for Mythic is 0) and stays out of the daily picks: the Shop
 shows her in its own spotlight before today's picks (`ShopCatalog.spotlight()`,
 `scripts/ui/shop_spotlight.gd`: a glowing red-gold frame under a MYTHIC ribbon), always
-at full price. Saving for her takes about 18 runs from a new profile (1,137 Sparks a
+at full price. Saving for her takes about 18 runs from a new profile (1,137 Arcade Tokens a
 run in the first 15) or 28 after the level cap (723 a run). Everywhere she is shown
 in 3D (Locker, Shop, home menu, player card) she wears her animated Mythic aura
 (`scripts/cosmetics/operator_aura.gd`).
@@ -172,19 +175,19 @@ requirement that has just been met.
 
 | Member | |
 | --- | --- |
-| `balance() -> int` | Sparks to spend |
-| `lifetime_earned() -> int` | Sparks ever earned |
+| `balance() -> int` | Arcade Tokens to spend |
+| `lifetime_earned() -> int` | Arcade Tokens ever earned |
 | `can_afford(amount) -> bool` | |
 | `earn(amount, source := &"")` | sources: `kill headshot combo wave flawless clear first_clear tickets level_up mastery contract milestone welcome` |
 | `spend(amount, what := &"") -> bool` | saves the profile; false and no change if too expensive |
 | `Wallet.format(n) -> String` | `"1,250"` |
-| `run_total() -> int` | Sparks earned in the current or last run |
+| `run_total() -> int` | Arcade Tokens earned in the current or last run |
 | `settle(result) -> Dictionary` | settles the run once (also on `Events.run_finished`); returns `{ total, lines: [[label, sparks]], balance_before, balance, tickets_cashed, victory }` |
 | `rules: EconomyRules` | the numbers above |
 | signals | `balance_changed(balance)`, `earned(amount, source)`, `spent(amount, what)`, `sparks_dropped(at, amount)`, `run_settled(summary)` |
-| constants | `CURRENCY` "Sparks", `CURRENCY_SINGULAR`, `COLOR` (gold), `COLOR_GLOW` (cyan) |
+| constants | `CURRENCY` "Arcade Tokens", `CURRENCY_SINGULAR`, `CURRENCY_SHORT` "Tokens", `COLOR` (gold), `COLOR_GLOW` (cyan) |
 
-`SparkIcon.new(px)` (`scripts/economy/spark_icon.gd`) is the Sparks symbol as a Control;
+`SparkIcon.new(px)` (`scripts/economy/spark_icon.gd`) is the Arcade Tokens symbol as a Control;
 set `flash = 1.0` for a flare. Sounds: `eco_spark_tick`, `eco_spark_bank`, `eco_purchase`,
 `eco_deny`, `eco_contract`.
 
@@ -205,7 +208,7 @@ set `flash = 1.0` for a flare. Sounds: `eco_spark_tick`, `eco_spark_bank`, `eco_
 | `affordable()` | everything that can be bought right now |
 | `is_new(it)`, `mark_seen(it)`, `new_count(slot := &"")` | NEW flags; call `Profile.save_profile()` after browsing |
 | `progress(slot := &"")` | `Vector2i(owned, total)` |
-| `remaining_cost()` | Sparks to buy everything still for sale |
+| `remaining_cost()` | Arcade Tokens to buy everything still for sale |
 
 A Shop page in outline:
 
@@ -253,7 +256,7 @@ else:
 per world for a clear, 1,500 for a first clear), plus contracts and milestones; wave and
 clear XP follow `Difficulty.reward_scale()`.
 
-Every level pays Sparks and gives exactly one thing. Weapons: Comet Hand Cannon 2, Arc
+Every level pays Arcade Tokens and gives exactly one thing. Weapons: Comet Hand Cannon 2, Arc
 Coil 4, Bumper Lobber 6, Frostbite Cryo Beam 9, ... Rail Lancer 34, Balloon Darter 37,
 Teacup Twister 43 (the full list is in the README). Every fifth level is a
 showpiece: Pixel Burst (kill effect) 5, Chrome Cherry 10, Midway Maestro (operator) 15,
@@ -269,20 +272,20 @@ and the title moved to the Shop at 750), 44 Spinning Teacup
 (charm with a spinning cup), 45 Teacup Ride (animated finish, `finish_teacups.gdshader`),
 46 Tea Swirl (banner), 47 Last Ride Home (title), 48 Hall of Fame (decal), 49 Starlight
 Cell, 50 Grand Finale (animated finish, `finish_fireworks.gdshader`) and Living Legend
-(title). Level Sparks follow the same rule (255 at 41 up to 400 at 50).
+(title). Level Arcade Tokens follow the same rule (255 at 41 up to 400 at 50).
 
 | | Cap 40 | Cap 50 |
 | --- | --- | --- |
 | XP to the cap | 366,600 | 558,600 |
 | Clears to the cap (typical player) | 40 (60 runs) | 64 (95 runs) |
 | All weapons unlocked | 35 clears, level 37 | 47 clears (70 runs), level 43 |
-| Sparks earned by the cap | 55,965 | 84,697 |
-| Sparks per run, first 15 runs / after the cap | 1,126 / 744 | 1,124 / 737 |
+| Arcade Tokens earned by the cap | 55,965 | 84,697 |
+| Arcade Tokens per run, first 15 runs / after the cap | 1,126 / 744 | 1,124 / 737 |
 
 **Saves from before the cap went up** (`scripts/economy/cap_raise.gd`, once per profile,
 marked by `level_cap` in the progression section). XP is kept and XP banked past level 40
 counts: a save at 40 moves straight to the level its XP buys (a save with 17,400 or more
-spare XP is at 41 or above), the Sparks of those levels are paid once (source `level_up`,
+spare XP is at 41 or above), the Arcade Tokens of those levels are paid once (source `level_up`,
 recorded in `cap_raise`), and their cosmetics unlock through their own requirements. A save
 that already had the Teacup Twister (XP for level 12) keeps it: `weapon:teacup_twister` is
 granted and `GameData.is_weapon_unlocked` honours it. A pre-economy save is left to
@@ -294,13 +297,13 @@ Ten ranks, shared curve (`data/progression/mastery_curve.tres`): 400, 1,200, 2,4
 4,000, 6,000, 8,500, 11,500, 15,500, 21,000, 28,000 XP (was 600 ... 38,000). A weapon
 carried as the main for one clear reaches rank 2, and rank 10 after about 14 runs.
 Tiers and rewards are unchanged (decal 1, Bronze 2, cell 3, Silver 4, finish 5, Silver
-cell 6, Gold 7, Gold cell 8, Diamond 9, Prismatic 10); every rank also pays Sparks, and
+cell 6, Gold 7, Gold cell 8, Diamond 9, Prismatic 10); every rank also pays Arcade Tokens, and
 sights can ask for a rank to be bought.
 
 ## Contracts and milestones
 
 **Contracts** (`data/progression/contracts/*.tres`, `Challenge` resources) are the
-day-to-day goals: three at a time, each doable in a run or two, each paying Sparks and
+day-to-day goals: three at a time, each doable in a run or two, each paying Arcade Tokens and
 XP. A finished contract stays ticked until the run ends, then a new one is dealt, so
 there are always exactly three. A new profile starts with the three simplest (pop 100
 zombies, clear 8 waves, 30 headshot kills); after that the pick is random among
@@ -311,12 +314,12 @@ multi_kills longshots close_calls heavy_kills sparks flawless_waves waves clears
 best_combo run_score`.
 
 **Milestones** (`data/progression/challenges/*.tres`) are the eleven long-term account
-goals; they pay XP and Sparks once, and seven of them unlock a cosmetic
+goals; they pay XP and Arcade Tokens once, and seven of them unlock a cosmetic
 (`Requirement.Kind.CHALLENGE`, unchanged). The per-weapon challenges (5 x 8 weapons)
 became weapon contracts; the Career page went from 52 goals to 14.
 
 **Fewer notices.** Level-up and rank-up toasts wait until no wave is running, several
-levels or ranks gained at once share one toast (with the Sparks they paid), they play
+levels or ranks gained at once share one toast (with the Arcade Tokens they paid), they play
 one at a time and at most three wait. Contracts show as a compact list between waves
 and for a moment when one is completed.
 
@@ -332,7 +335,7 @@ the game data is loaded):
    50 became 40, and is 50 again since the cap went back to 50); where a weapon would have been lost (old level 9, 10), XP is raised
    to that weapon's new level.
 3. Mastery XP is kept; every new rank threshold is lower.
-4. Back pay: the Sparks the new rules pay for the levels, mastery ranks and first clears
+4. Back pay: the Arcade Tokens the new rules pay for the levels, mastery ranks and first clears
    the save already has (source `welcome`).
 
 `godot --headless --path . --script res://tools/economy_probe.gd` checks this against
@@ -360,26 +363,26 @@ headshots, combo multiplier 1.35, the first two waves flawless, half the tickets
 | Mastery rank after the first run as a main | 2 | 2 |
 | Runs as a main to mastery rank 10 | 19 | 14 |
 | Goals on the Career page | 52 | 14 (3 contracts + 11 milestones) |
-| Currency | none | Sparks: 55,700 earned by the cap |
-| Items for sale | 0 | 239, 376,500 Sparks (69 and 47,150 before the price rise and the new cosmetics) |
-| Clears to buy everything | - | about 344 (516 runs): the 259 (388 runs) of the 283,250-Sparks shop, scaled to 376,500 |
+| Currency | none | Arcade Tokens: 55,700 earned by the cap |
+| Items for sale | 0 | 239, 376,500 Arcade Tokens (69 and 47,150 before the price rise and the new cosmetics) |
+| Clears to buy everything | - | about 344 (516 runs): the 259 (388 runs) of the 283,250-Token shop, scaled to 376,500 |
 | Runs of saving from a new profile to afford | - | a common or a rare 1, an epic 2, a legendary 4, the cheapest showpiece above the ladder (3,250) 4, a 6,500 showpiece 7, the dearest Legendary (Wind-Up Wally, 10,000) 9, the Mythic Madame Fortuna (20,000) about 18 |
-| Sparks per run | - | 1,137 in the first 15 runs, 723 after the cap |
-| Sparks per session of three runs | - | 3,412 in the first five sessions, 2,170 after the cap |
+| Arcade Tokens per run | - | 1,137 in the first 15 runs, 723 after the cap |
+| Arcade Tokens per session of three runs | - | 3,412 in the first five sessions, 2,170 after the cap |
 
 The price rule of update 6 (multiples of 250, 20% featured, a spread at the top) moved
-the shop from 277,350 to 283,250 Sparks (+2%) and the runs to afford each ladder price
+the shop from 277,350 to 283,250 Arcade Tokens (+2%) and the runs to afford each ladder price
 not at all; before it, 20 items cost exactly 5,600 and 10 cost 2,800 (the 1,250 / 2,800 /
 5,600 showpieces took 2, 4 and 5 runs of saving). Ten worlds since update 5: the rows
 above come from the current model.
 
-Where the Sparks come from, up to the cap: zombies 22%, level clears 17%, waves 17%,
+Where the Arcade Tokens come from, up to the cap: zombies 22%, level clears 17%, waves 17%,
 level-ups 12%, contracts 8%, mastery ranks 8%, headshots 5%, tickets 5%, milestones 3%,
 combos 3%, first clears 1%.
 
-The first twelve runs (after; "The run buys" is what that run's Sparks alone would buy):
+The first twelve runs (after; "The run buys" is what that run's Arcade Tokens alone would buy):
 
-| Run | Level | Result | XP | Player level | Sparks | Saved (if unspent) | The run buys | Unlocks |
+| Run | Level | Result | XP | Player level | Arcade Tokens | Saved (if unspent) | The run buys | Unlocks |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Prize Pier | clear | 7628 | 4 (+3) | 1143 | 1143 | 1 rare | Life Ring, Gold Star, Surf Rescue, Boardwalk Boss +7 more |
 | 2 | Neon Skyline | clear | 7433 | 6 (+2) | 1253 | 2396 | 1 rare | Neon Grid, Crimson Core, Neon Heart, Circuit Pulse +10 more |
@@ -395,9 +398,9 @@ The first twelve runs (after; "The run buys" is what that run's Sparks alone wou
 | 12 | Launch Pad 9 | defeat w5 | 2515 | 17 | 409 | 12266 | 1 common | Midnight Run, Scatter r5, Comet r4 |
 
 Measured against the game: a bot clear of Prize Pier from a new profile (near-perfect
-aim, 82 headshots, every wave flawless, which a person will not match) paid 1,625 Sparks
-and 9,862 XP and ended on level 5; the model's typical player gets 1,143 Sparks, 7,628 XP
-and level 4 from the same run. A bot defeat on wave 7 of Tidal Tunnels paid 584 Sparks.
+aim, 82 headshots, every wave flawless, which a person will not match) paid 1,625 Arcade Tokens
+and 9,862 XP and ended on level 5; the model's typical player gets 1,143 Arcade Tokens, 7,628 XP
+and level 4 from the same run. A bot defeat on wave 7 of Tidal Tunnels paid 584 Arcade Tokens.
 
 ## Prize Prints
 
@@ -427,7 +430,7 @@ The print layer lives in `art/shaders/finish_common.gdshaderinc` (uniforms `prin
 **Prize Capsules.** Earned: 1 per alpha defeated, 1 per bounty claimed, 1 for the day's
 first clear, 1 for every third contract, 1 per milestone (`PrizePrints.settle(result)`
 pays the run once, on `Events.run_finished` or the results section, whichever is first;
-contracts and milestones pay as they happen). Bought: 500 Sparks each (on the price rule;
+contracts and milestones pay as they happen). Bought: 500 Arcade Tokens each (on the price rule;
 no real money). Published odds per capsule: **Common 62%, Rare 27%, Epic 9%,
 Legendary 2%**. The **luck meter** guarantees an Epic or better within 10 capsules and a
 Legendary within 40 (a forced Epic keeps Legendary's share of the top two); with it the
@@ -436,12 +439,12 @@ real rates are about 58 / 26 / 12.5 / 4%. Series 1 "Boardwalk" holds 36 finishes
 Quicksilver, Solar Flare, Thunderhead); level-track showpieces and mastery camos are left
 out.
 
-**Repeats, Prize Tokens, the Token Counter.** A drop of a finish already held is a
+**Repeats, Capsule Credits, the Credit Counter.** A drop of a finish already held is a
 repeat. With *auto-recycle repeats* on (the default, a toggle on the collection), a plain
-repeat (Factory or Polished, no rare print, serial above #010) becomes Prize Tokens at
+repeat (Factory or Polished, no rare print, serial above #010) becomes Capsule Credits at
 once and the reveal says so; a notable repeat is always kept. Any print can be recycled by
 hand; favourites and worn prints never. Tokens: Common 1, Rare 3, Epic 8, Legendary 25.
-The **Token Counter** shelves one finish per rarity a day (the same all day, new at local
+The **Credit Counter** shelves one finish per rarity a day (the same all day, new at local
 midnight) as a fresh print: Common 6, Rare 18, Epic 60, Legendary 200 tokens, each once a
 day.
 
@@ -533,11 +536,11 @@ Prize Fusion, frame by frame; `--shot-only=tabs` for other window sizes).
 | --- | --- |
 | Capsules per run: first 15 runs / runs 61-90 | 3.3 / 2.1 |
 | Capsules per session of three runs: first five sessions / later | 9.9 / 6.3 |
-| One capsule | 500 Sparks (a run pays 430-1,790: about two capsules) |
+| One capsule | 500 Arcade Tokens (a run pays 430-1,790: about two capsules) |
 | Runs to the first Legendary print (median / 90%) | 7 / 11 |
 | Runs to the first Holo (median / 90%) | 9 / 44 |
 | Runs to the first Mint Holo (median / 90%) | 155 / 400+ |
-| Runs to 200 Prize Tokens (a Legendary at the counter) | 53 / 60 |
+| Runs to 200 Capsule Credits (a Legendary at the counter) | 53 / 60 |
 
 The first sessions run high because the early milestones pay 2 each.
 
@@ -545,7 +548,7 @@ The first sessions run high because the early milestones pay 2 each.
 
 | To change | Edit |
 | --- | --- |
-| What anything pays in Sparks, the price ladder, the featured count and discount | `data/progression/economy.tres` |
+| What anything pays in Arcade Tokens, the price ladder, the featured count and discount | `data/progression/economy.tres` |
 | The level curve and XP payouts | `data/progression/rules.tres` |
 | The mastery curve | `data/progression/mastery_curve.tres` |
 | A contract or milestone | `data/progression/contracts/`, `data/progression/challenges/` |

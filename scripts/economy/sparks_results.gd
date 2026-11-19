@@ -65,7 +65,7 @@ func _build_total(col: VBoxContainer) -> void:
 	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	names.alignment = BoxContainer.ALIGNMENT_CENTER
 	head.add_child(names)
-	names.add_child(UiKit.label("SPARKS EARNED", 30, Wallet.COLOR, true))
+	names.add_child(UiKit.label("TOKENS EARNED", 30, Wallet.COLOR, true))
 	names.add_child(UiKit.label("Wallet: %s  ·  spend them in the Shop" % Wallet.format(int(_summary["balance"])), 20, UiKit.CREAM))
 	_total = UiKit.arcade_label("+0", 64, Wallet.COLOR)
 	_total.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -85,7 +85,7 @@ func _show_total(value: float) -> void:
 func _build_breakdown(col: VBoxContainer) -> void:
 	var lines: Array = _summary["lines"]
 	if lines.is_empty():
-		col.add_child(UiKit.label("No Sparks this run. Pop a zombie to free its Spark.", 22, Color(1, 1, 1, 0.6)))
+		col.add_child(UiKit.label("No Arcade Tokens this run. Pop a zombie to win back its token.", 22, Color(1, 1, 1, 0.6)))
 		return
 	var grid := GridContainer.new()
 	grid.columns = COLUMNS

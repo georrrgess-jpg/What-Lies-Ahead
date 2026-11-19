@@ -17,7 +17,7 @@ func _init() -> void:
 	sb.content_margin_right = 20
 	add_theme_stylebox_override("panel", sb)
 	size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	tooltip_text = "%s: set free from every zombie you pop. Spend them on cosmetics." % Wallet.CURRENCY
+	tooltip_text = "%s: every zombie you pop drops one. Spend them on cosmetics." % Wallet.CURRENCY
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE

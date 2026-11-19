@@ -46,7 +46,7 @@ pause menu (`result["abandoned"] == true`). `result` is `RunDirector.result()`.
   curve in `data/progression/mastery_curve.tres`, copied into every weapon's
   `rank_xp` at startup, so new weapons need no rank table of their own.
 * Account XP rules (per kill, wave, clear, first clear) and the level curve are in
-  `data/progression/rules.tres`; Sparks payouts and shop prices in
+  `data/progression/rules.tres`; Arcade Tokens payouts and shop prices in
   `data/progression/economy.tres`; contracts are `.tres` files in
   `data/progression/contracts/` and milestones in `data/progression/challenges/`.
   The whole economy, its numbers and the `Wallet` / `ShopCatalog` API are in
@@ -56,7 +56,7 @@ pause menu (`result["abandoned"] == true`). `result` is `RunDirector.result()`.
 
 * `CosmeticItem` (`scripts/data/cosmetic_item.gd`): `id`, `display_name`,
   `slot`, `weapon_id` (empty = fits all), `rarity`, `requirement`, `colors`,
-  `params`, `price` (Sparks; above 0 puts it in the Shop, and then `requirement`
+  `params`, `price` (Arcade Tokens; above 0 puts it in the Shop, and then `requirement`
   only gates the purchase).
 * Slots in use: `weapon_finish`, `weapon_cell`, `weapon_decal`, `weapon_charm`,
   `weapon_sight` (per weapon; a sight's model is a glb built by

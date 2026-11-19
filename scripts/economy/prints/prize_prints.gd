@@ -281,7 +281,8 @@ static func roll_capsule() -> Dictionary:
 
 
 ## Makes a new print of `finish_id` with fresh rolls and the next serial.
-## A plain repeat from a capsule becomes Prize Tokens when auto-recycle is on.
+## A plain repeat from a capsule becomes Capsule Credits ("tokens" in code and
+## saves) when auto-recycle is on.
 ## Returns { "print", "repeat", "recycled", "tokens", "rarity" }.
 static func _mint(finish_id: StringName, src: String) -> Dictionary:
 	var s := _sec()
@@ -315,7 +316,7 @@ static func can_recycle(p: Dictionary) -> bool:
 	return not p.is_empty() and not bool(p.get("fav", false)) and worn_on(p).is_empty()
 
 
-## Turns a print into Prize Tokens. Returns the tokens (0 if it may not go).
+## Turns a print into Capsule Credits. Returns the tokens (0 if it may not go).
 static func recycle(p: Dictionary) -> int:
 	if not can_recycle(p) or not held().has(p):
 		return 0
@@ -399,7 +400,7 @@ static func can_buy_at_counter(finish_id: StringName) -> bool:
 	return finish_id in counter_shelf() and not counter_sold(finish_id) and tokens() >= counter_price(finish_id)
 
 
-## A fresh print of a shelf finish for Prize Tokens. Returns the _mint result or {}.
+## A fresh print of a shelf finish for Capsule Credits. Returns the _mint result or {}.
 static func buy_at_counter(finish_id: StringName) -> Dictionary:
 	if not can_buy_at_counter(finish_id):
 		return {}

@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = &"c_sparks"
-display_name = "Spark Collector"
-description = "Free %s Sparks from zombies"
+display_name = "Token Collector"
+description = "Win back %s Arcade Tokens from zombies"
 scope = 0
 stat = &"sparks"
 mode = 0

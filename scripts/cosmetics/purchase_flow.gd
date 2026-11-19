@@ -30,10 +30,10 @@ static func request(from: Control, it: CosmeticItem, weapon_id: StringName, on_b
 	var price := Cosmetics.price_of(it)
 	if not Wallet.can_afford(price):
 		UiSound.deny()
-		UiKit.toast("%s more %s needed. %s" % [Wallet.format(shortfall(it)), Wallet.CURRENCY, EARN_HINT], UiKit.RED, &"icon_spark", 5.0)
+		UiKit.toast("%s more %s needed. %s" % [Wallet.format(shortfall(it)), Wallet.CURRENCY_SHORT, EARN_HINT], UiKit.RED, &"icon_spark", 5.0)
 		return null
 	var left := Wallet.balance() - price
-	var text := "%s for %s %s.\nYou keep %s." % [LockerCatalog.category_label(it), Wallet.format(price), Wallet.CURRENCY, Wallet.format(left)]
+	var text := "%s for %s %s.\nYou keep %s." % [LockerCatalog.category_label(it), Wallet.format(price), Wallet.CURRENCY_SHORT, Wallet.format(left)]
 	return UiKit.confirm(_host(from), "BUY %s?" % it.display_name.to_upper(), text, "BUY",
 		func(): _buy(it, weapon_id, on_bought, price))
 

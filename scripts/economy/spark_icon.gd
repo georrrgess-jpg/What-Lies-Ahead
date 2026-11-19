@@ -1,10 +1,17 @@
 class_name SparkIcon
 extends Control
-## The Sparks symbol: a gold four-point star with a white centre and a cyan
-## glow. Use it next to every Sparks amount (HUD, results, shop, price tags).
+## The Arcade Token symbol (Wallet's currency, still called Sparks in code and
+## saves): a gold coin with a notched rim and a stamped star, drawn at any size.
+## Use it next to every token amount (HUD, results, reward rows).
+
+const RIM := Color("f2b233")
+const RIM_DARK := Color("6a3306")
+const RIM_LIGHT := Color("ffe9a0")
+const STAMP := Color("ffc23a")
+const STAMP_SHADOW := Color("8a4606")
 
 var _px := 32.0
-## 0-1: a brief extra flare (set to 1 when Sparks arrive; it fades by itself).
+## 0-1: a brief extra flare (set to 1 when tokens arrive; it fades by itself).
 var flash := 0.0:
 	set(value):
 		flash = value
@@ -26,18 +33,24 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var centre := size * 0.5
-	var radius := _px * 0.5
-	draw_circle(centre, radius * (0.95 + 0.25 * flash), Color(Wallet.COLOR_GLOW, 0.16 + 0.3 * flash))
-	draw_circle(centre, radius * 0.66, Color(Wallet.COLOR_GLOW, 0.2))
-	draw_colored_polygon(star(centre, radius * (1.0 + 0.15 * flash), 0.36), Wallet.COLOR)
-	draw_colored_polygon(star(centre, radius * 0.5, 0.42), Color(1.0, 0.98, 0.88))
+	var radius := _px * 0.5 * (1.0 + 0.1 * flash)
+	if flash > 0.0:
+		draw_circle(centre, radius * 1.25, Color(Wallet.COLOR, 0.35 * flash))
+	draw_circle(centre, radius * 0.96, RIM_DARK)
+	draw_circle(centre, radius * 0.88, RIM)
+	draw_arc(centre, radius * 0.8, PI * 0.9, PI * 1.85, 24, RIM_LIGHT, maxf(1.0, radius * 0.08), true)
+	draw_circle(centre, radius * 0.7, RIM_DARK)
+	draw_circle(centre, radius * 0.64, Wallet.COLOR)
+	draw_colored_polygon(star(centre + Vector2(0.0, radius * 0.07), radius * 0.48, 0.42), STAMP_SHADOW)
+	draw_colored_polygon(star(centre, radius * 0.46, 0.42), STAMP)
+	draw_circle(centre + Vector2(-0.32, -0.36) * radius, radius * 0.1, Color(1.0, 1.0, 1.0, 0.75))
 
 
-## A four-point star: tips at `radius`, waist at `radius * pinch`.
+## A five-point star: tips at `radius`, inner corners at `radius * pinch`.
 static func star(centre: Vector2, radius: float, pinch: float) -> PackedVector2Array:
 	var points := PackedVector2Array()
-	for i in 8:
+	for i in 10:
 		var r := radius if i % 2 == 0 else radius * pinch
-		var angle := -PI / 2.0 + TAU * i / 8.0
+		var angle := -PI / 2.0 + TAU * i / 10.0
 		points.append(centre + Vector2(cos(angle), sin(angle)) * r)
 	return points

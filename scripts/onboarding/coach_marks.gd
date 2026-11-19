@@ -17,9 +17,9 @@ const MARKS := {
 		["CoachAnchor", "text:EQUIP"]],
 	"locker": [&"coach_locker", "Pick a tab, then a card to try it on. Looks only, never power.",
 		["CoachAnchor", "LockerTabs", "class:KitTabs"]],
-	"shop": [&"coach_shop", "Sparks buy cosmetics here. The featured row is on sale today.",
+	"shop": [&"coach_shop", "Arcade Tokens buy cosmetics here. The featured row is on sale today.",
 		["CoachAnchor", "ShopTabs", "class:ItemCard"]],
-	"career": [&"coach_career", "Your level track: every level pays Sparks and unlocks something.",
+	"career": [&"coach_career", "Your level track: every level pays Arcade Tokens and unlocks something.",
 		["CoachAnchor", "LevelTrack", "class:KitTabs"]],
 }
 ## The guided first deployment: home -> PLAY, Play page -> DEPLOY.
