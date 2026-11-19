@@ -1,7 +1,7 @@
 extends Control
 ## Main menu: the shell every menu page lives in.
 ##   - The live 3D world behind everything, cross-fading as the player browses
-##     worlds (or a page's own backdrop, such as the Arsenal's booth).
+##     worlds (or a page's own backdrop, such as the Arsenal's dusk).
 ##   - The top bar, always there: home, a tab per section (Play, then every
 ##     page registered in data/ui/*.tres as a UiExtension MENU_PAGE, by
 ##     `order`), the player's level and Sparks, settings and quit.
@@ -246,6 +246,14 @@ func _register(id: String, page: Control, title: String, frame_kind: Frame) -> v
 
 ## Header row (BACK, marquee, the page's extras) and the content rectangle.
 func _frame_shell_page(frame: Control, page: MenuPage, title: String) -> void:
+	_frame_backdrop(page)
+	if not page.shows_header_row():
+		page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		page.offset_left = UiKit.GAP_L
+		page.offset_right = -UiKit.GAP_L
+		page.offset_top = MenuPage.TOP_BAR + UiKit.GAP_M
+		page.offset_bottom = -UiKit.GAP_M
+		return
 	var top := MenuPage.TOP_BAR + UiKit.GAP_S
 	var head := HBoxContainer.new()
 	head.name = "Header"
@@ -274,6 +282,10 @@ func _frame_shell_page(frame: Control, page: MenuPage, title: String) -> void:
 	page.offset_right = -UiKit.PAGE_MARGIN
 	page.offset_top = top + MenuPage.HEADER + UiKit.GAP_S
 	page.offset_bottom = -UiKit.GAP_L
+
+
+## The page's own full-screen backdrop (if it has one), shown only while it is open.
+func _frame_backdrop(page: MenuPage) -> void:
 	var own := page.backdrop()
 	if own:
 		own.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

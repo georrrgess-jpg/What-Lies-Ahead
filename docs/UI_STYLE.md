@@ -161,7 +161,7 @@ card.pressed.connect(_select.bind(item))
 States: normal, hover (lighter rim, +3.5%), focus (warm white ring), selected (cyan
 outline and glow), locked (dim picture, amber padlock line). Cards go in a `metal_frame()`.
 
-### Stats, bars, tabs
+### Stats, bars, tabs, rank pips
 
 ```gdscript
 var dps := UiKit.stat_row("DPS", "131")
@@ -169,6 +169,9 @@ var reach := UiKit.stat_row("RANGE", "", true)        # with a bar
 reach.set_value("36 m", 0.6)                          # animates when visible
 var xp := UiKit.progress(0.45, 18.0, UiKit.AMBER)     # a ProgressBar
 UiFx.fill_to(xp, 0.8)
+
+var pips := RankPips.make(UiKit.AMBER)              # one rounded pip per mastery rank
+pips.set_ranks(2, 10, 0.4)                            # two earned, 40% into the third
 
 var tabs := UiKit.tabs()
 tabs.add_tab(&"mastery", "WEAPON MASTERY")
@@ -222,6 +225,10 @@ row: one tweened scroll position places every card (scale, drop, fan, fade and a
 parallax from the distance to the middle); only the selected card animates (its bulbs step
 at 7 Hz, one light sweep when picked); held arrows step at most every 0.09 s; the wheel,
 a drag and the pips browse too.
+
+**Reduce menu motion** (Settings > Comfort, `Settings.reduce_motion()`): decorative movement
+(idle turning, slides, bounces, page fades) is skipped or made instant. Check it in any
+animation that is not feedback for a click.
 
 Rules: a page change takes `UiFx.PAGE` (0.24 s) or less; hover and focus react within
 `UiFx.FAST` (0.1 s); a staggered list starts its last item within 0.3 s; animate only
@@ -282,16 +289,38 @@ func first_focus() -> Control:
 
 | The shell draws | The page draws |
 | --- | --- |
-| The live world behind (or the page's `backdrop()`, a full-screen Control such as the Arsenal booth) | Its content, in the rectangle it is given |
+| The live world behind (or the page's `backdrop()`, a full-screen Control such as the Arsenal's dusk) | Its content, in the rectangle it is given |
 | Top bar: home, tabs, level and title, Sparks, settings, quit | Extra header controls through `header_extra()` |
 | Header row: BACK sign, marquee with the page title | Sub-views and their back step (`handle_back()`) |
 | Page transition, Esc / BACK, Q / E, initial focus, toasts | Its own stagger-in on `refresh()` |
 
-At 1920x1080 the content rectangle is 1824 x 840 (taller on 16:10). `MenuPage.TOP_BAR`
+At 1920x1080 the content rectangle is 1824 x 840 (taller on 16:10). A page that needs the
+header row's height returns false from `shows_header_row()`: the shell then draws no BACK
+or marquee and gives it everything under the top bar (1872 x 956 at 1920x1080); it must
+show its own BACK (Esc / B still call `handle_back()`). `MenuPage.TOP_BAR`
 and `MenuPage.HEADER` are the heights of the two shell rows. To open another page emit
 `open_page(&"locker")`; BACK then returns to yours. A page that returns false from
 `uses_shell_header()` (the default) is treated as a page from before the shell: it keeps
 its own title and BACK and is scaled to fit under the top bar.
+
+## The Arsenal (a worked example)
+
+`scripts/ui/arsenal_page.gd` composes five regions from containers, each in its own box:
+the top bar, `ArsenalSidebar` (categories, loadout slots, BACK), `ArsenalPreview` (the
+model in a reserved rectangle), `ArsenalDetails` (name, description, stats, mastery,
+EQUIP) and `ArsenalDock` (paged wide cards, `ArsenalCard`), all in `scripts/ui/arsenal/`.
+`ArsenalLayout.compute()` turns the page size and the window's scale into the card count
+(6 at 1920 and 1600 wide, 5 at 1366 and 1280, 4 at 1024), gaps, paddings and the stat
+columns. Patterns worth copying:
+
+* Hover and selection animate the card's picture inside its clipped box, never the card,
+  so nothing grows over a neighbour; badges have a reserved row, never cover a name.
+* Long text: names shrink to a floor, then end in "…" with the full name in the tooltip;
+  the description scrolls in its own box, so the stats and the button never move off.
+* A 3D preview fits the camera to the model's turning envelope (every mesh and the
+  charm's swing) inside a safe rectangle, recomputed per weapon and on resize.
+* Overlays on an interactive area ignore the mouse; `scripts/dev/arsenal_probe.gd` hit-tests
+  every button and checks regions, labels, paging and framing at five window sizes.
 
 ## Do / don't
 

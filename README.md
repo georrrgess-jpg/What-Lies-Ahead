@@ -397,8 +397,10 @@ page. The **home screen** leads with a hero card for the world PLAY opens (its k
 your progress and a pager through the worlds you have opened), and the live world behind the
 menu follows it; ENDLESS sits beside PLAY, and section tiles (Arsenal, Locker, Shop, Prizes,
 Career, Settings) say what is new in each. Pages: **Play** (world track with key art, progress stars, the zombies that wait
-there, difficulty, loadout, Deploy), **Arsenal** (the weapon on a workbench in a booth, PRIMARIES and SECONDARIES sections,
-stats, mastery, sights and the two-slot loadout), **Locker**, **Shop**, **Career**
+there, difficulty, loadout, Deploy), **Arsenal** (a showroom over the sunset pier: the weapon's
+real model on a teal pedestal, drag to turn it; Primary / Secondary categories and the two
+loadout slots on the left, name, stats, mastery and EQUIP on the right, a paged dock of weapon
+cards below), **Locker**, **Shop**, **Career**
 (level track, contracts, milestones) and **Settings**. The live backdrop loads worlds on
 a background thread and is trimmed for the menu (no gameplay nodes, hidden props it
 cannot see, short shadows), and pages are built lazily, so the menu stays smooth
@@ -544,7 +546,7 @@ They were written for Blender 5.3 and run here through the `bpy` Python module
 | `weapon_kit.py` | Shared weapon parts and the sight contract (`SightMount`, `SightPoint`, `IronSight*`, `CharmPoint`) used by both weapon builders |
 | `build_sights.py` | The optics (red dot, holo, prism, scope and the shop sights) |
 | `build_cosmetics.py` | Charms and sticker decals |
-| `build_menu_booth.py` | The carnival booth behind the Arsenal and Locker pages |
+| `build_menu_booth.py` | The carnival workbench booth (an earlier Arsenal backdrop; the model is kept) |
 | `audit_weapons.py`, `operator_audit.py`, `zombie_audit.py` | Intersection checks (BVH overlap between parts that must not touch, across sampled animation frames) |
 
 In the `.blend` files the *Source* collection holds the parts with live bevel

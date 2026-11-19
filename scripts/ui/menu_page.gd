@@ -35,15 +35,23 @@ func uses_shell_header() -> bool:
 	return false
 
 
+## False for a shell page that needs the header row's height for itself
+## (the Arsenal): the shell then draws no BACK sign or marquee, gives the page
+## everything under the top bar, and the page shows its own way back (Esc and
+## the pad's B still go back through handle_back()).
+func shows_header_row() -> bool:
+	return true
+
+
 ## Optional: a control for the right of the header row, next to the marquee
-## (the Arsenal's slot plates, a collection counter, a tab row). The shell
+## (a collection counter, a tab row, the Locker's controls). The shell
 ## calls this once, after the page is ready.
 func header_extra() -> Control:
 	return null
 
 
 ## Optional: a full-screen layer shown behind the shell and the page instead
-## of the live world (the Arsenal's booth diorama). The shell calls this
+## of the live world (the Arsenal's dusk gradient). The shell calls this
 ## once, after the page is ready, and shows it only while the page is open.
 func backdrop() -> Control:
 	return null
