@@ -557,6 +557,10 @@ func _update_weapon_status() -> void:
 	var progress := w.reload_progress() if reloading else -1.0
 	_reload_arc.progress = progress
 	_ammo.reload = progress
+	if w.mode is MeleeMode:
+		var melee := w.mode as MeleeMode
+		_ammo.swing_ready = melee.readiness()
+		_ammo.wind_up = melee.charge if melee.phase == MeleeMode.Phase.WINDUP else 0.0
 	var code := 0
 	if w.current == null:
 		code = 0
@@ -765,6 +769,7 @@ func _on_enemy_killed(enemy: Node, _weapon_id: StringName, headshot: bool, point
 
 func _on_weapon_changed(weapon: WeaponData) -> void:
 	_ammo.accent = weapon.tracer_color
+	_ammo.melee_name = weapon.display_name.to_upper() if weapon.is_melee() else ""
 	_on_ammo_changed(player.weapons.magazine(), player.weapons.reserve())
 
 

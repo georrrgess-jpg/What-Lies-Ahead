@@ -1,9 +1,10 @@
 class_name WeaponSlots
 extends HBoxContainer
-## HUD strip for the two carried weapons, right above the ammo counter: one
-## chip per slot with its key and name. The held one is a dark plate outlined
-## in its weapon colour; the other is dimmed and shows its own ammo. The held
-## chip pops when the player switches.
+## HUD strip for the carried weapons, right above the ammo counter: one chip
+## per slot (primary, secondary, melee) with its key and name. The held one is
+## a dark plate outlined in its weapon colour; the others are dimmed and show
+## their own ammo (a melee weapon has none). The held chip pops when the
+## player switches. An empty slot has no chip.
 
 const DIM := Color(0.62, 0.6, 0.72)
 
@@ -15,14 +16,14 @@ var _ammo: Array[Label] = []
 ## Per slot: [held plate, stowed plate, held key cap, stowed key cap].
 var _boxes: Array[Array] = []
 var _active := -1
-var _shown_ammo: Array[Vector2i] = [Vector2i(-1, -1), Vector2i(-1, -1)]
+var _shown_ammo: Array[Vector2i] = [Vector2i(-1, -1), Vector2i(-1, -1), Vector2i(-1, -1)]
 
 
 func _ready() -> void:
 	alignment = BoxContainer.ALIGNMENT_END
 	add_theme_constant_override("separation", 10)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for i in 2:
+	for i in Loadout.SLOT_COUNT:
 		var row := PanelContainer.new()
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.size_flags_vertical = Control.SIZE_SHRINK_END
@@ -64,11 +65,11 @@ func bind(weapons: WeaponController) -> void:
 	refresh()
 
 
-## Restyles both chips (slot or active weapon changed).
+## Restyles the chips (slot or active weapon changed).
 func refresh() -> void:
 	if _weapons == null:
 		return
-	for i in 2:
+	for i in Loadout.SLOT_COUNT:
 		var w := _weapons.slot_weapon(i)
 		_rows[i].visible = w != null
 		if w == null:
@@ -87,7 +88,7 @@ func refresh() -> void:
 		_names[i].add_theme_font_size_override("font_size", 28 if active else 21)
 		_names[i].add_theme_color_override("font_color", accent.lerp(Color.WHITE, 0.6) if active else Color(1, 1, 1, 0.85))
 		# The held weapon's ammo is the big counter; the other shows its own here.
-		_ammo[i].visible = not active
+		_ammo[i].visible = not active and not w.is_melee()
 		_shown_ammo[i] = Vector2i(-1, -1)
 	if _active != _weapons.active_slot:
 		if _active >= 0 and is_visible_in_tree():
@@ -100,7 +101,7 @@ func refresh() -> void:
 func _refresh_ammo() -> void:
 	if _weapons == null:
 		return
-	for i in 2:
+	for i in Loadout.SLOT_COUNT:
 		var w := _weapons.slot_weapon(i)
 		if w == null or not _ammo[i].visible:
 			continue

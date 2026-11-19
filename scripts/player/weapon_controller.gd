@@ -22,6 +22,12 @@ extends Node
 ## Ammo is tracked per weapon for the whole run, so switching slots or
 ## swapping at the loadout station and back returns exactly the ammo that
 ## weapon had. Switching cancels a reload.
+##
+## The third slot holds a melee weapon (Loadout.MELEE): it has no ammo and its
+## MeleeMode swings instead of shooting (fire light, aim held and released
+## heavy). With a gun in hand, the melee action makes a quick swing with it
+## and brings the gun back (quick_melee), unless the gun's mode has a melee
+## of its own (the Ripsaw's saw).
 
 signal weapon_changed(data: WeaponData)
 signal ammo_changed(magazine: int, reserve: int)
@@ -48,8 +54,8 @@ const MELEE_KEYS: Array[Key] = [KEY_T]
 const MELEE_BUTTONS: Array[MouseButton] = [MOUSE_BUTTON_MIDDLE]
 
 var current: WeaponData
-## Weapon ids of the primary and secondary slot.
-var slots: Array[StringName] = [&"", &""]
+## Weapon ids of the primary, secondary and melee slot ("" = empty).
+var slots: Array[StringName] = [&"", &"", &""]
 var active_slot := 0
 ## False between runs or while the results screen is up.
 var enabled := true
@@ -91,6 +97,8 @@ var _beam: BeamVisual
 var _arc: ArcPreview
 var _loop_player: AudioStreamPlayer
 var _charge_player: AudioStreamPlayer
+## The slot a quick melee swing returns to (-1 = none in progress).
+var _quick_return := -1
 
 @onready var player: Player = get_parent()
 
@@ -113,11 +121,12 @@ func begin_run() -> void:
 	_warm_up.call_deferred()
 
 
-## Carries `primary` and `secondary` and holds the one in slot `hold` (0 =
-## the primary; no switch animation).
-func set_loadout(primary: StringName, secondary: StringName, hold := 0) -> void:
-	slots = [primary, secondary] as Array[StringName]
-	active_slot = clampi(hold, 0, 1)
+## Carries `primary`, `secondary` and `melee` (may be empty) and holds the
+## one in slot `hold` (0 = the primary; no switch animation).
+func set_loadout(primary: StringName, secondary: StringName, hold := 0, melee: StringName = &"") -> void:
+	slots = [primary, secondary, melee] as Array[StringName]
+	active_slot = clampi(hold, 0, 2) if GameData.weapon(slots[clampi(hold, 0, 2)]) else 0
+	_quick_return = -1
 	current = null
 	var data := GameData.weapon(slots[active_slot])
 	if data:
@@ -125,35 +134,66 @@ func set_loadout(primary: StringName, secondary: StringName, hold := 0) -> void:
 	slots_changed.emit(slots, active_slot)
 
 
-## Puts `weapon_id` in the active slot (loadout station swaps). If the other
+## Puts `weapon_id` in the active slot (loadout station swaps). If another
 ## slot already holds it, switches to that slot instead.
 func equip(weapon_id: StringName) -> bool:
 	var data := GameData.weapon(weapon_id)
 	if data == null or data == current:
 		return false
-	if slots[1 - active_slot] == weapon_id:
-		return switch_to_slot(1 - active_slot)
+	var held_at := slots.find(weapon_id)
+	if held_at >= 0 and held_at != active_slot:
+		return switch_to_slot(held_at)
 	slots[active_slot] = weapon_id
 	_take(data, current != null)
 	slots_changed.emit(slots, active_slot)
 	return true
 
 
-## Switches to slot 0 (primary) or 1 (secondary). Cancels any reload.
+## Switches to slot 0 (primary), 1 (secondary) or 2 (melee). Cancels any
+## reload and any quick melee's return.
 func switch_to_slot(index: int) -> bool:
-	if index == active_slot or index < 0 or index > 1 or not player.alive:
+	if index == active_slot or index < 0 or index >= slots.size() or not player.alive:
 		return false
 	var data := GameData.weapon(slots[index])
 	if data == null:
 		return false
+	_quick_return = -1
 	active_slot = index
 	_take(data, true)
 	slots_changed.emit(slots, active_slot)
 	return true
 
 
-func switch_next() -> bool:
-	return switch_to_slot(1 - active_slot)
+## Switches to the next carried weapon (`step` 1) or the previous one (-1),
+## round all the filled slots.
+func switch_next(step := 1) -> bool:
+	for i in range(1, slots.size()):
+		var index := posmod(active_slot + step * i, slots.size())
+		if GameData.weapon(slots[index]):
+			return switch_to_slot(index)
+	return false
+
+
+## The melee action with a gun in hand: out comes the melee weapon, one light
+## swing, and the gun goes back up. With the melee weapon in hand it is a light swing.
+func quick_melee() -> bool:
+	if current == null or not player.alive:
+		return false
+	if current.is_melee():
+		(mode as MeleeMode).queue_light()
+		return true
+	var melee_slot := slots.size() - 1
+	var back := active_slot
+	if not switch_to_slot(melee_slot):
+		return false
+	_quick_return = back
+	(mode as MeleeMode).queue_light()
+	return true
+
+
+## True while a melee swing (or its recovery) keeps the player from sprinting.
+func is_swinging() -> bool:
+	return mode is MeleeMode and (mode as MeleeMode).blocks_sprint()
 
 
 func slot_weapon(index: int) -> WeaponData:
@@ -373,11 +413,23 @@ func _physics_process(delta: float) -> void:
 			start_reload()
 		if mode:
 			mode.melee(Input.is_action_pressed(MELEE_ACTION) and not _reloading and _switch_left <= 0.0 and player.weapon_ready(), delta)
+		if Input.is_action_just_pressed(MELEE_ACTION) and not (mode and mode.has_melee()):
+			quick_melee()
 		_handle_trigger(delta)
+		_quick_melee_return()
 	_update_aim_visuals()
 
 
 ## Heat weapons: the magazine refills from reserve once the trigger rests.
+## A quick melee swing is over: the gun it interrupted comes back up.
+func _quick_melee_return() -> void:
+	if _quick_return < 0 or not (mode is MeleeMode):
+		return
+	var melee := mode as MeleeMode
+	if melee.phase == MeleeMode.Phase.IDLE and not melee.has_queued():
+		switch_to_slot(_quick_return)
+
+
 func _cool_down(delta: float) -> void:
 	if not current.uses_heat() or _reloading or _since_shot < current.regen_delay:
 		_regen = 0.0
@@ -411,6 +463,11 @@ func _handle_trigger(delta: float) -> void:
 	if Input.is_action_just_pressed("fire"):
 		# Buffer clicks slightly so a click just before the weapon is ready still fires.
 		_fire_buffer = FIRE_BUFFER
+	if mode is MeleeMode:
+		var ready := _switch_left <= 0.0 and player.weapon_ready()
+		if (mode as MeleeMode).swing_input(held or _fire_buffer > 0.0, Input.is_action_pressed("aim"), ready, delta):
+			_fire_buffer = 0.0
+		return
 	# Not until the weapon is up out of a sprint or a mantle.
 	var can_shoot := _cooldown <= 0.0 and not _reloading and _switch_left <= 0.0 and player.weapon_ready()
 	if _burst_left > 0:

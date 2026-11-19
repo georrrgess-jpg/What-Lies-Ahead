@@ -38,6 +38,9 @@ extends Node
 ##   --shot-frames=n       frames to wait before capturing
 ##   --shot-reload=1       start a reload just before the wait (to check reload animations)
 ##   --shot-saw=1          hold the melee action (Ripsaw saw) with a zombie stepped into reach
+##   --shot-swing=light|windup|heavy   with a melee weapon (--shot-weapon=glow_blade): a zombie
+##                         steps into reach, then a light swing, a heavy wind-up held, or a full
+##                         heavy released; captured --shot-frames after the press (or the release)
 ##   --shot-portal=1       open the portal and light the exit route
 ##   --shot-fire=n         fire n shots at the nearest staged zombie, then wait --shot-frames
 ##   --shot-spray=n[,deg]  fire n shots from the pose at walls and floors (the aim wanders up to
@@ -325,6 +328,8 @@ func _run() -> void:
 		player.set_physics_process(false)
 	if _arg("saw", "0") == "1":
 		await _saw(director, player, int(_arg("frames", "20")))
+	if _arg("swing", "") != "":
+		await _swing(director, player, _arg("swing", ""), int(_arg("frames", "12")))
 	if _arg("spray", "") != "":
 		await _spray(player, _arg("spray", ""))
 	if _arg("marks", "1") == "0":
@@ -455,6 +460,38 @@ func _saw(director: RunDirector, player: Player, frames: int) -> void:
 	for z in director.alive_enemies():
 		if is_instance_valid(z):
 			print("[shot] after sawing: %s %.0f%s" % [z.data.id, z.health, " dead" if z.is_dead() else ""])
+
+
+## A melee swing with the nearest staged zombie stepped into reach: "light"
+## clicks fire, "windup" holds aim, "heavy" holds aim for a full wind-up and
+## releases it; the still is taken `frames` after the press (or the release).
+func _swing(director: RunDirector, player: Player, kind: String, frames: int) -> void:
+	await _wait(10)
+	var alive := director.alive_enemies()
+	if not alive.is_empty():
+		var z: Zombie = alive[0]
+		var ahead := -player.global_transform.basis.z
+		z.global_position = player.global_position + Vector3(ahead.x, 0.0, ahead.z).normalized() * 1.7
+		z.rotation.y = atan2(-ahead.x, -ahead.z)
+	player.set_physics_process(true)
+	player.controls_enabled = true
+	_aim_at_nearest(director, player)
+	await _wait(20)
+	if kind == "light":
+		_press("fire", true)
+		await _wait(2)
+		_press("fire", false)
+		await _wait(maxi(0, frames - 2))
+	else:
+		_press("aim", true)
+		if kind == "heavy":
+			await _wait(int(player.weapons.current.melee_charge_time * 60.0) + 4)
+			_press("aim", false)
+		await _wait(frames)
+	player.set_physics_process(false)
+	for z in director.alive_enemies():
+		if is_instance_valid(z):
+			print("[shot] after the swing: %s %.0f%s" % [z.data.id, z.health, " dead" if z.is_dead() else ""])
 
 
 func _press(action: String, down: bool) -> void:

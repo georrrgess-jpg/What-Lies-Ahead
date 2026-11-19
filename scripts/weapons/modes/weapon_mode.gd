@@ -12,11 +12,12 @@ var controller: WeaponController
 var data: WeaponData
 
 
-## The mode of `weapon` for `owner_controller`, or null when it has none.
+## The mode of `weapon` for `owner_controller`, or null when it has none. A
+## melee weapon without a mode script of its own gets the plain MeleeMode.
 static func create(weapon: WeaponData, owner_controller: WeaponController) -> WeaponMode:
-	if weapon.mode_script == null:
+	if weapon.mode_script == null and not weapon.is_melee():
 		return null
-	var mode: WeaponMode = weapon.mode_script.new()
+	var mode: WeaponMode = weapon.mode_script.new() if weapon.mode_script else MeleeMode.new()
 	mode.controller = owner_controller
 	mode.data = weapon
 	return mode
@@ -67,6 +68,13 @@ func move_scale() -> float:
 ## its hits go through WeaponController.melee_hit.
 func melee(_held: bool, _delta: float) -> void:
 	pass
+
+
+## True when the mode runs its own attack on the melee action (the Ripsaw's
+## saw); otherwise the melee action makes a quick swing with the carried
+## melee weapon (WeaponController.quick_melee).
+func has_melee() -> bool:
+	return false
 
 
 ## How close (metres) a zombie must be for the melee to reach it right now

@@ -26,6 +26,7 @@ var _pills: HFlowContainer
 var _about: Label
 var _stats: GridContainer
 var _stat_values: Array[Label] = []
+var _stat_captions: Array[Label] = []
 var _rank: Label
 var _tier: Label
 var _pips: RankPips
@@ -93,6 +94,7 @@ func _build_stats() -> void:
 		var caption := UiKit.label(entry[0], 24, UiKit.CREAM, true)
 		caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(caption)
+		_stat_captions.append(caption)
 		var value := UiKit.label("", 24, Color.WHITE)
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		row.add_child(value)
@@ -150,6 +152,7 @@ func show_weapon(w: WeaponData, changed: bool) -> void:
 	_fill_pills(tags, w)
 	_about.text = w.role
 	for i in ArsenalStats.STATS.size():
+		_stat_captions[i].text = ArsenalStats.caption(w, i)
 		_stat_values[i].text = ArsenalStats.stat(w, ArsenalStats.STATS[i][1])
 	_rank.text = "MASTERY  %d / %d" % [rank, w.max_rank()]
 	_tier.text = Mastery.rank_label(rank)

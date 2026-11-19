@@ -244,7 +244,7 @@ func _begin() -> void:
 	# The weapon the run was started with goes in its own class's slot and is
 	# the one in hand (the saved primary unless the dev tools picked one).
 	var carried := Loadout.run_slots(Game.weapon_id)
-	player.weapons.set_loadout(carried[0], carried[1], maxi(0, carried.find(Game.weapon_id)))
+	player.weapons.set_loadout(carried[0], carried[1], maxi(0, carried.find(Game.weapon_id)), carried[2])
 	if resumed_from > 0:
 		player.weapons.refill_fraction(CONTINUE_ENERGY)
 
@@ -1119,8 +1119,8 @@ func swap_weapon(weapon_id: StringName) -> bool:
 
 
 ## Weapons the held slot can be swapped to at the station: every unlocked
-## weapon of its class (primaries for slot 1, secondaries for slot 2), in menu
-## order.
+## weapon of its class (primaries for slot 1, secondaries for slot 2, melee
+## weapons for slot 3), in menu order.
 func station_weapons() -> Array[WeaponData]:
 	return Loadout.available(player.weapons.active_slot)
 

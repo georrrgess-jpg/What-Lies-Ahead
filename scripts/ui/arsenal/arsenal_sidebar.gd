@@ -1,16 +1,17 @@
 class_name ArsenalSidebar
 extends KitPanel
-## The Arsenal's left sidebar: the PRIMARY and SECONDARY category tabs (with
-## how many of each are unlocked and their key), the two loadout slots (what
-## is equipped in each, with its picture; a click shows that weapon) and,
-## at the bottom, the BACK sign.
+## The Arsenal's left sidebar: the PRIMARY, SECONDARY and MELEE category
+## tabs (with how many of each are unlocked and their key), the three loadout
+## slots (what is equipped in each, with its picture; a click shows that
+## weapon) and, at the bottom, the BACK sign. The slots share the spare
+## height, so on a short window they stay compact rather than crowd the tabs.
 
 signal category_pressed(slot: int)
 signal slot_pressed(slot: int)
 signal back_pressed
 
-const TAB_NAMES := ["PRIMARY", "SECONDARY"]
-const SLOT_HEIGHT := 118.0
+const TAB_NAMES := ["PRIMARY", "SECONDARY", "MELEE"]
+const SLOT_HEIGHT := 92.0
 
 var _tabs: Array[SignButton] = []
 var _counts: Array[Label] = []
@@ -27,11 +28,11 @@ func _init() -> void:
 	_col.add_theme_constant_override("separation", UiKit.GAP_S)
 	add_child(_col)
 	var group := ButtonGroup.new()
-	for slot in 2:
+	for slot in Loadout.SLOT_COUNT:
 		_add_tab(slot, group)
 	_col.add_child(UiKit.spacer(UiKit.GAP_XS))
 	_col.add_child(UiKit.section("LOADOUT"))
-	for slot in 2:
+	for slot in Loadout.SLOT_COUNT:
 		_col.add_child(_slot_button(slot))
 	var back := UiKit.back_button()
 	back.name = "BackButton"
@@ -76,7 +77,7 @@ func _slot_button(slot: int) -> Button:
 	col.add_theme_constant_override("separation", 0)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(col)
-	var caption := UiKit.label("%s  [%d]" % [String(Loadout.SLOT_NAMES[slot]).to_upper(), slot + 1], 20, UiKit.CYAN, true)
+	var caption := UiKit.label("%s  [%d]" % [String(Loadout.SLOT_NAMES[slot]).to_upper(), slot + 1], 18, UiKit.CYAN, true)
 	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(caption)
 	var picture := TextureRect.new()
@@ -85,7 +86,7 @@ func _slot_button(slot: int) -> Button:
 	picture.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(picture)
-	var label := UiKit.sign_label("", 26)
+	var label := UiKit.sign_label("", 23)
 	label.name = "SlotName"
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -100,14 +101,14 @@ func _slot_button(slot: int) -> Button:
 
 ## Lights the tab of the shown category.
 func set_category(slot: int) -> void:
-	for i in 2:
+	for i in _tabs.size():
 		_tabs[i].set_pressed_no_signal(i == slot)
 
 
 ## Re-reads the unlocked counts and the loadout; `picture` maps a weapon to its thumbnail.
 func refresh(picture: Callable) -> void:
 	var held := Loadout.slots()
-	for slot in 2:
+	for slot in Loadout.SLOT_COUNT:
 		_counts[slot].text = "[%d]   %d / %d unlocked" % [slot + 1, Loadout.available(slot).size(), Loadout.weapons_for(slot).size()]
 		var w := GameData.weapon(held[slot])
 		var text := w.display_name.to_upper() if w else "EMPTY"
