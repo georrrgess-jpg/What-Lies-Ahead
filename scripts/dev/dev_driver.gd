@@ -621,6 +621,9 @@ func _do_fight(delta: float) -> void:
 	if escape != Vector3.ZERO:
 		# An alpha is rearing up for a slam with the bot inside the ring: back out.
 		_walk_to(_player.global_position + escape * 4.0, delta, false)
+	elif target != null and w.current.slot_class == "melee":
+		# A melee weapon in hand never reaches from the ring: close in on the target.
+		_walk_to(target.global_position, delta, false)
 	elif should_move:
 		_walk_to(goal, delta, target == null)
 	else:
