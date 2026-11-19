@@ -13,9 +13,12 @@ extends MeleeView
 ## diagonal rip with a snap on release. The smear is the edge's colour.
 ##
 ## Inspect: one of three knife tricks (never the same twice running), played
-## on "Knife" (everything but the hand) and the Blade: a toss and catch end
-## over end, a barrel twirl popped out of the fist, and a snap shut and flick
-## open with a light-up flourish.
+## on "Knife" (everything but the hand) and the Blade, driven by the hand
+## (HandRig): a toss and catch end over end (the hand opens as it throws and
+## closes on the handle as it lands), a barrel twirl (the fingers loosen,
+## the knife slides out and rolls between the thumb and fingers, and they
+## close as it is pushed home), and a snap shut and flick open (the thumb
+## on the flip-button, the wrist rocking the shut knife).
 
 const FLICK_SOUND := &"glb_flick"
 ## Folded angle of the blade (degrees about X) and when the flick happens
@@ -76,6 +79,9 @@ const TRICK_SOUND := &"glb_flick"
 ## The last trick played (shared by every Glow Blade view), so the next differs.
 static var _last_trick := -1
 
+## Dev captures: play this trick every inspect (-1: the dice).
+var force := -1
+
 var _knife: Node3D
 var _blade: Node3D
 var _buttons: Node3D
@@ -96,6 +102,7 @@ var _idle_flick := -1.0
 ## The running trick (-1 none) and which of its cues have played.
 var _trick := -1
 var _cues := 0
+var _rig: HandRig
 
 
 func setup(view: WeaponView) -> void:
@@ -128,6 +135,9 @@ func setup(view: WeaponView) -> void:
 	# Menus and stills (no player) show it open.
 	if view.player == null:
 		_flicked = true
+	_rig = HandRig.of(view.model)
+	if not _rig.has_hand(&"R"):
+		_rig = null
 
 
 func light_keys() -> Array:
@@ -242,6 +252,8 @@ func inspect_length() -> float:
 	var pick := randi() % 3
 	if pick == _last_trick:
 		pick = (pick + 1 + randi() % 2) % 3
+	if force >= 0:
+		pick = force
 	_last_trick = pick
 	_trick = pick
 	return TRICK_LENGTHS[pick]
@@ -265,11 +277,18 @@ func inspect(v: WeaponView, t: float) -> void:
 	match _trick:
 		0:
 			knife = _toss(v, t)
+			_hand(1.0 - WeaponInspect.window(t, 0.62, 0.76) * (1.0 - WeaponInspect.window(t, 1.46, 1.56)), -1.0)
 		1:
 			knife = _twirl(v, t)
+			var loose := WeaponInspect.window(t, 0.36, 0.5) * (1.0 - WeaponInspect.window(t, 1.92, 2.06))
+			# The thumb rolls it: pushing on and easing off as it turns.
+			var roll := 0.18 * sin(clampf((t - 0.7) / 1.1, 0.0, 1.0) * TAU * 3.0)
+			_hand(1.0 - 0.42 * loose, 1.0 - loose * (0.5 + roll))
 		_:
 			blade = _snap(v, t)
-			knife = _snap_knife(t)
+			# The wrist rocks the shut knife (the whole hand turns with it).
+			v.model.transform = v.rest_transform("Root") * _snap_wrist(v, t)
+			_hand(1.0, 1.0 + 0.2 * (WeaponInspect.hump(t, 0.42, 0.6) + WeaponInspect.hump(t, 1.62, 1.78)))
 	_knife.transform = v.rest_transform("Knife") * knife
 	_blade.transform = v.rest_transform("Blade") * Transform3D(Basis(Vector3.RIGHT, deg_to_rad(blade)), Vector3.ZERO)
 
@@ -278,6 +297,8 @@ func inspect_end(v: WeaponView) -> void:
 	_trick = -1
 	if _knife:
 		_knife.transform = v.rest_transform("Knife")
+	if _rig:
+		_rig.set_pose(&"R", HandRig.Pose.GRIP, 0.12)
 	_press_button(v, 0.0)
 
 
@@ -329,10 +350,23 @@ func _snap(v: WeaponView, t: float) -> float:
 	return FOLDED * shut * (1.0 - open)
 
 
-## The closed knife rocks a quarter turn each way in the fist.
-func _snap_knife(t: float) -> Transform3D:
+## The wrist rocks the closed knife a quarter turn each way about its handle
+## (the model's offset from its rest: hand and knife turn together).
+func _snap_wrist(v: WeaponView, t: float) -> Transform3D:
 	var rock := sin(clampf((t - 0.8) / 0.8, 0.0, 1.0) * TAU) * WeaponInspect.hump(t, 0.75, 1.65)
-	return Transform3D(Basis(Vector3.BACK, rock * 0.9), Vector3.ZERO)
+	var axle := v.rest_transform("Knife")
+	var turn := Basis(axle.basis.z.normalized(), rock * 0.9)
+	return Transform3D(turn, axle.origin - turn * axle.origin)
+
+
+## The four fingers' and the thumb's curls (1 the solved grip, 0 open; the
+## thumb follows the fingers when `thumb` < 0).
+func _hand(fingers: float, thumb: float) -> void:
+	if _rig == null:
+		return
+	for finger in [&"Index", &"Middle", &"Ring", &"Pinky"]:
+		_rig.set_curl(&"R", finger, fingers)
+	_rig.set_curl(&"R", &"Thumb", fingers if thumb < 0.0 else thumb)
 
 
 ## Plays the trick's two sounds once each, at times `at` with pitches `pitch`.

@@ -28,7 +28,11 @@ Moving parts, driven by scripts/weapons/views/glow_blade_view.gd:
 
 Empties: Muzzle and BladeTip (the point of the blade, child of Blade),
 SwingPoint (middle of the edge, where the view draws the swing trail; child of
-Blade), CharmPoint (child of Knife), ElbowR.
+Blade), CharmPoint (child of Knife), ElbowR, GripMain (child of Knife: where
+the hand grips).
+
+  ArmR        the articulated hand (hand_kit.py: ArmRHand, ArmRIndex1..3 ...
+              ArmRThumb1..3, ArmRGrip) closed round the handle by the grip solver
 
     python art/blender/build_weapons_glow_blade.py
 """
@@ -37,7 +41,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from weapon_kit import *  # noqa: F401,F403
+from melee_kit import *  # noqa: F401,F403
 
 ## Handle: half width (X), half depth (Y), bottom and top (Z). The fist
 ## covers it down to about -0.084; the butt below shows the knurled grip,
@@ -48,6 +52,13 @@ H_BOTTOM = -0.106
 H_TOP = 0.05
 ## The hinge pin (Y, Z) and the blade's length from it.
 HINGE = (0.003, 0.06)
+## The hand on the handle (hand_kit.grip_hand, in the standing build frame):
+## the forearm's way from the wrist, the knuckle line's lean, the palm's turn
+## round the handle and where along the palm the handle lies.
+FOREARM = (0.18, -0.38, -0.82)
+GRIP_TILT = None
+GRIP_ROLL = 0.0
+GRIP_CONTACT = 0.058
 BLADE_LEN = 0.218
 ## Blade thickness: the spine's flats, the bevel's, the glowing edge halo's.
 SPINE_W = 0.0062
@@ -82,8 +93,11 @@ def lay_down(groups, empties):
     for parts, _pivot, _parent in groups.values():
         for p in parts:
             p.matrix_world = rot @ p.matrix_world
-    turned = {k: (parts, tuple(rot @ Vector(pivot)), parent) for k, (parts, pivot, parent) in groups.items()}
-    placed = {k: (tuple(rot @ Vector(loc)), parent) for k, (loc, parent) in empties.items()}
+    def turn(at):
+        # A hand's nodes and anchors are placed by whole matrices, the rest by points.
+        return rot @ at if isinstance(at, Matrix) else tuple(rot @ Vector(at))
+    turned = {k: (parts, turn(pivot), parent) for k, (parts, pivot, parent) in groups.items()}
+    placed = {k: (turn(loc), parent) for k, (loc, parent) in empties.items()}
     return turned, placed
 
 
@@ -212,22 +226,12 @@ def build_glow_blade():
     ]
     blade, edge = blade_parts(M, hy, hzp)
 
-    # The right hand round the handle: palm on the back and right side,
-    # fingers closing round the front, thumb over the left side.
-    fr = frame((0, 0, 0), (1, 0, 0), (0, 1, 0))
-    bar = (HX + 0.0045, HY + 0.003, 0.011)
-    r = FINGER_R
-    pitch = 2 * r + 0.0015
-    top_finger = H_TOP - 0.024 - GAP - r
-    finger_z = [top_finger - i * pitch for i in range(4)]
-    z0 = finger_z[-1] - r - 0.004
-    z1 = H_TOP - 0.02
-    thumb = dict(z=top_finger + 0.006, length=0.06)
-    # The forearm leaves the back of the wrist (-Y here: the spine side, away
-    # from the fingers) and runs on down along the handle's line, which the
-    # hold points at the lower right corner.
-    arm_r, elbow_r = hand("R", fr, bar, M, (0.18, -0.38, -0.82), finger_z, (z0, z1), s_web=2.85, palm_len=0.09,
-                          finger_len=0.078, thumb=thumb, wrist_s=3.5, wrist_z=z0 + 0.045)
+    # The articulated right hand (hand_kit.grip_hand) closed round the handle's
+    # rounded-box section: the forearm leaves the back of the wrist (-Y here: the
+    # spine side, away from the fingers) and runs on down along the handle's line,
+    # which the hold points at the lower right corner.
+    handle_box = box_sdf((0, 0, (H_TOP + H_BOTTOM) / 2), (1, 0, 0), (0, 1, 0), (HX + 0.001, HY + 0.001, (H_TOP - H_BOTTOM) / 2), corner=0.009)
+    hand_r = grip_hand("R", (0, 0, hz), (0, 0, 1), FOREARM, M, [handle_box], tilt=GRIP_TILT, roll=GRIP_ROLL, contact_y=GRIP_CONTACT)
 
     tip = (0, EDGE[-1][0], hzp + BLADE_LEN)
     groups = {
@@ -236,15 +240,14 @@ def build_glow_blade():
         "Buttons": (buttons, (-HX, 0, H_TOP), "Knife"),
         "Blade": (blade, (0, hy, hzp), "Knife"),
         "BladeEdge": (edge, (0, hy, hzp), "Blade"),
-        "ArmR": (arm_r, (0, 0, hz), None),
     }
     empties = {
         "Muzzle": (tip, "Blade"),
         "BladeTip": (tip, "Blade"),
         "SwingPoint": ((0, hy + 0.014, hzp + BLADE_LEN * 0.5), "Blade"),
         "CharmPoint": (charm_point, "Knife"),
-        "ElbowR": (elbow_r, "ArmR"),
     }
+    add_hand(groups, empties, hand_r, "GripMain", "Knife")
     groups, empties = lay_down(groups, empties)
     finish("glow_blade", groups, empties)
 

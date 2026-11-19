@@ -16,6 +16,9 @@ extends MeleeView
 ##   heavy   the wind-up flips it once (shut and open) and draws it back by
 ##           the cheek, point on the target, trembling as it charges; the
 ##           release is a lunging stab with a twist, then the pull-out
+## The hand (HandRig) keeps its solved grip on the bar, its fingertips and
+## thumb giving way a beat before the bite handle or the blade swings past
+## them (TicketFlipperTricks.shape_hand) and closing again behind it.
 ## A pin clack (tflip_flip) sounds each time it passes open or shut. While the
 ## view inspects, the parts are left to the inspect tricks.
 
@@ -68,6 +71,9 @@ var _fidget_t := -1.0
 var _fidgets := 0
 var _windup_t := -1.0
 var _last_half := 0
+var _rig: HandRig
+## The knife's shape last frame (blade, bite handle), to see where it is heading.
+var _was := Vector2.ZERO
 
 
 func setup(view: WeaponView) -> void:
@@ -83,6 +89,10 @@ func setup(view: WeaponView) -> void:
 	_rest = 0.0
 	_fidget_t = -1.0
 	_windup_t = -1.0
+	_rig = HandRig.of(view.model)
+	if not _rig.has_hand(&"R"):
+		_rig = null
+	_was = Vector2(_angle, 2.0 * _angle)
 
 
 func light_keys() -> Array:
@@ -146,6 +156,25 @@ func part_motion(view: WeaponView, mode: MeleeMode, delta: float) -> void:
 		var off := maxf(absf(_angle - _nearest_open(_angle)), absf(_bite))
 		var out := clampf(off / 30.0, 0.0, 1.0)
 		_latch.transform = view.rest_transform("Latch") * Transform3D(Basis(Vector3.RIGHT, deg_to_rad(LATCH_OPEN * out)), Vector3.ZERO)
+	_pose_hand(delta)
+
+
+## The fingers and thumb for the knife's shape now and where it is heading
+## (the blade at _angle, the bite handle at 2 _angle + _bite).
+func _pose_hand(delta: float) -> void:
+	var now := Vector2(_angle, 2.0 * _angle + _bite)
+	var step := now - _was
+	# A whole turn wrapped back to open in one frame is no motion.
+	if absf(step.x) > 90.0 or absf(step.y) > 180.0:
+		step = Vector2.ZERO
+	var ahead := now + step / maxf(delta, 0.001) * TicketFlipperTricks.LEAD
+	_was = now
+	if _rig == null:
+		return
+	var hand := TicketFlipperTricks.shape_hand(now.x, now.y).min(TicketFlipperTricks.shape_hand(ahead.x, ahead.y))
+	for finger in [&"Index", &"Middle", &"Ring", &"Pinky"]:
+		_rig.set_curl(&"R", finger, hand.x)
+	_rig.set_curl(&"R", &"Thumb", hand.y)
 
 
 func _advance(mode: MeleeMode, delta: float) -> void:
