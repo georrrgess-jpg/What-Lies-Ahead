@@ -13,6 +13,9 @@ extends RefCounted
 ##             chases gold round the ring and reads WIN!; a broken streak
 ##             flashes the figure red
 ##   flakes    a pinch of ticket confetti from the slot every other shot
+## Inspect: the gun shows its left flank and prints a long prize ticket out
+## of the feed slot, the roll whirring, its joke typing out as it feeds; a
+## tug tears it off and it flutters away.
 ## The static helpers are shared with the reload
 ## (scripts/weapons/reloads/ticket_ripper_reload.gd), which poses the same parts.
 
@@ -36,6 +39,30 @@ const REGROW_SHOTS := 6.0
 const HOLO_TINT := Color(1.0, 0.62, 0.82)
 const GOLD := Color(1.0, 0.84, 0.25)
 const RED := Color(1.0, 0.26, 0.3)
+## Inspect: length, the printed ticket (length, height, model units), when it
+## prints and tears (seconds), and its jokes (one at random).
+const INSPECT_LENGTH := 3.2
+const TICKET := Vector2(0.3, 0.032)
+const PRINT := Vector2(0.45, 1.85)
+const TEAR_AT := 2.15
+const PAPER := Color(1.0, 0.93, 0.76)
+const INK := Color(0.72, 0.08, 0.32)
+const JOKES: Array[String] = [
+	"ADMIT ONE - BRAINS NOT INCLUDED",
+	"WINNER! ...OF THIS TICKET",
+	"GOOD FOR ONE (1) FREE SCREAM",
+	"KEEP THIS TICKET. OR DON'T.",
+	"WHY DID THE ZOMBIE SKIP THE RIDE? NO GUTS",
+	"NOT VALID FOR UNDEAD PERSONS",
+]
+const INSPECT_POSES := [
+	[0.0, Vector3(0.14, -0.14, -0.62), Vector3(2.0, 14.0, -4.0)],
+	[0.14, Vector3(0.04, -0.12, -0.57), Vector3(8.0, 72.0, -4.0)],
+	[0.55, Vector3(0.02, -0.12, -0.56), Vector3(6.0, 80.0, -2.0)],
+	[0.72, Vector3(0.03, -0.13, -0.57), Vector3(10.0, 74.0, 2.0)],
+	[0.86, Vector3(0.08, -0.13, -0.6), Vector3(6.0, 34.0, 2.0)],
+	[1.0, Vector3(0.14, -0.15, -0.62), Vector3(2.0, 6.0, 0.0)],
+]
 const FLAKES := [Color(1.0, 0.95, 0.8), Color(1.0, 0.4, 0.55), Color(1.0, 0.84, 0.3)]
 
 var _roll_spin := 0.0
@@ -47,6 +74,11 @@ var _shots := 0
 var _time := 0.0
 var _label: Label3D
 var _pips: Array[Node3D] = []
+var _ticket: Node3D
+var _paper: MeshInstance3D
+var _joke: Label3D
+var _text := ""
+var _torn := false
 
 
 func setup(v: WeaponView) -> void:
@@ -89,6 +121,85 @@ func update(v: WeaponView, delta: float) -> void:
 	_update_ribbon(v, delta)
 	var mode := w.mode as TicketRipperMode if w else null
 	show_counter(_label, _pips, mode, _time)
+
+
+func inspect_length() -> float:
+	return INSPECT_LENGTH
+
+
+func inspect_poses() -> Array:
+	return INSPECT_POSES
+
+
+func inspect_start(v: WeaponView) -> void:
+	inspect_end(v)
+	_text = JOKES.pick_random()
+	_torn = false
+	_ticket = Node3D.new()
+	_ticket.name = "InspectTicket"
+	_ticket.visible = false
+	v.model.add_child(_ticket)
+	_paper = MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3.ONE
+	var paper := StandardMaterial3D.new()
+	paper.albedo_color = PAPER
+	paper.roughness = 0.85
+	box.material = paper
+	_paper.mesh = box
+	_paper.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_ticket.add_child(_paper)
+	_joke = Label3D.new()
+	_joke.font = UiKit.display_font()
+	_joke.font_size = 48
+	_joke.pixel_size = 0.00028
+	_joke.modulate = INK
+	_joke.outline_size = 0
+	_joke.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_joke.shaded = false
+	_joke.double_sided = false
+	_joke.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_joke.rotation_degrees = Vector3(0.0, -90.0, 0.0)
+	_joke.position = Vector3(-0.0012, 0.0, 0.01)
+	_ticket.add_child(_joke)
+
+
+func inspect(v: WeaponView, t: float) -> void:
+	if _ticket == null:
+		return
+	var slot := v.rest_transform("Rib0").origin + Vector3(-0.03, 0.012, 0.0)
+	var fed := WeaponInspect.window(t, PRINT.x, PRINT.y)
+	if t >= PRINT.x and t < PRINT.y:
+		_roll_vel = maxf(_roll_vel, ROLL_STEP * 14.0)
+		if not _ticket.visible:
+			Sfx.play(&"tkr_crank", -8.0, 1.1)
+	_ticket.visible = fed > 0.0
+	var length := maxf(0.002, TICKET.x * fed)
+	var b := Basis.IDENTITY
+	var at := slot
+	if t >= TEAR_AT:
+		if not _torn:
+			_torn = true
+			Sfx.play(&"tkr_tear", -6.0)
+			v.spark_burst(slot, Vector3(-1, 0.3, 0), FLAKES, 4, 0.5, 0.3, 0.005)
+		# Flutters down and away, rocking.
+		var f := t - TEAR_AT
+		b = Basis.from_euler(Vector3(sin(f * 9.0) * 0.5 * f, 0.4 * f, sin(f * 6.0) * 0.6 * f))
+		at += Vector3(-0.12 * f, -0.5 * f * f, 0.05 * f)
+		_ticket.visible = f < 0.8
+	_ticket.transform = Transform3D(b, at)
+	# The paper is a unit box stretched out of the slot (+Z); the joke types out on it.
+	_paper.transform = Transform3D(Basis.from_scale(Vector3(0.0015, TICKET.y, length)), Vector3(0.0, 0.0, length * 0.5))
+	var shown := clampi(int(_text.length() * WeaponInspect.window(t, PRINT.x + 0.05, PRINT.y - 0.1)), 0, _text.length())
+	_joke.text = _text.substr(0, shown)
+
+
+func inspect_end(_v: WeaponView) -> void:
+	if _ticket:
+		_ticket.queue_free()
+		_ticket = null
+		_paper = null
+		_joke = null
 
 
 ## Each ticket swings on its own spring toward a slow sway; shots flick them out.

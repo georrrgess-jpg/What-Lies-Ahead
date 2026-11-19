@@ -82,6 +82,7 @@ static func apply(model: Node3D, _weapon: WeaponData, loadout: Dictionary) -> vo
 	_apply_decal(model, loadout.get("decal"))
 	_apply_charm(model, loadout.get("charm"))
 	_apply_cell_animation(model, cell)
+	LavaLampoonView.dress_lamp(model, cell)
 	WeaponSights.apply(model, _weapon, loadout.get("sight"))
 
 

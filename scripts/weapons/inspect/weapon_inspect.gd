@@ -198,3 +198,36 @@ static func _skipped(node: Node, model: Node) -> bool:
 			return true
 		n = n.get_parent()
 	return false
+
+
+# --- helpers for the views' specials ----------------------------------------------
+
+## 0 before `a`, 1 after `b`, eased in between.
+static func window(t: float, a: float, b: float) -> float:
+	return smoothstep(a, b, t)
+
+
+## 0 outside `a`-`b`, rising to 1 in the middle (a sine hump).
+static func hump(t: float, a: float, b: float) -> float:
+	if t <= a or t >= b:
+		return 0.0
+	return sin((t - a) / (b - a) * PI)
+
+
+## A copy of `source`'s mesh (and its look) as a new prop under the model,
+## for a special to move about.
+static func prop_from(v: WeaponView, source: MeshInstance3D, prop_name: String) -> MeshInstance3D:
+	var prop := MeshInstance3D.new()
+	prop.name = prop_name
+	prop.mesh = source.mesh
+	for i in source.get_surface_override_material_count():
+		prop.set_surface_override_material(i, source.get_active_material(i))
+	prop.material_override = source.material_override
+	prop.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	v.model.add_child(prop)
+	return prop
+
+
+## `node`'s position in the model's space.
+static func in_model(v: WeaponView, node: Node3D) -> Vector3:
+	return v.model.global_transform.affine_inverse() * node.global_position
