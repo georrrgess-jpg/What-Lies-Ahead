@@ -199,6 +199,7 @@ func end_trigger() -> void:
 		charge = 0.0
 	_queued = false
 	_heavy_wait = 0.0
+	_aim_down = false
 
 
 func melee_reach() -> float:
