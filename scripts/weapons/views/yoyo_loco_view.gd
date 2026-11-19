@@ -28,17 +28,17 @@ const SPOOL_FOLLOW := 10.0
 ## Inspect: length, where the yo-yo sleeps under the fork and how far it
 ## walks (model space), its tether's rest length, and when each move starts.
 const INSPECT_LENGTH := 3.0
-const SLEEP_AT := Vector3(0.0, -0.2, -0.22)
-const WALK := Vector3(0.0, -0.025, -0.24)
+const SLEEP_AT := Vector3(0.0, -0.19, -0.03)
+const WALK := Vector3(0.0, -0.01, -0.2)
 const TETHER_LENGTH := 0.063
 const DROP := Vector2(0.35, 0.7)
 const WALK_TIME := Vector2(1.05, 1.85)
 const TUG := Vector2(1.95, 2.2)
 const INSPECT_POSES := [
 	[0.0, Vector3(0.14, -0.14, -0.62), Vector3(2.0, 12.0, -4.0)],
-	[0.14, Vector3(0.1, -0.02, -0.62), Vector3(4.0, 62.0, -4.0)],
-	[0.4, Vector3(0.12, 0.0, -0.62), Vector3(2.0, 70.0, -2.0)],
-	[0.68, Vector3(0.13, -0.02, -0.62), Vector3(2.0, 66.0, 0.0)],
+	[0.14, Vector3(0.08, -0.05, -0.66), Vector3(4.0, 40.0, -4.0)],
+	[0.4, Vector3(0.09, -0.04, -0.66), Vector3(2.0, 44.0, -2.0)],
+	[0.68, Vector3(0.1, -0.05, -0.66), Vector3(2.0, 40.0, 0.0)],
 	[0.84, Vector3(0.1, -0.1, -0.6), Vector3(4.0, 30.0, 2.0)],
 	[1.0, Vector3(0.14, -0.15, -0.62), Vector3(2.0, 6.0, 0.0)],
 ]

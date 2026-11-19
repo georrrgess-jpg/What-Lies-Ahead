@@ -4,6 +4,9 @@ extends SceneTree
 ##
 ##   godot --path . --resolution 1440x810 --script res://tools/finish_sheet.gd -- <out.png> --finishes=a,b,c --weapons=x,y [--cols=3] [--tile=480x270] [--time=0.0] [--zoom=0.85] [--dark=1]
 ##
+## --cells=a,b,c instead of --finishes puts those energy cells on the bare
+## finish (the Lava Lampoon's lamp takes the cell's colour).
+##
 ## Weapons run along the rows, finishes along the columns. --time advances the
 ## animated finishes by that many seconds before the capture (frames are
 ## stepped, so it is approximate). Script mode compiles this file before the
@@ -38,11 +41,12 @@ func _run() -> void:
 	await process_frame
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
 	var finishes := String(opts.get("finishes", "")).split(",", false)
+	var cells := String(opts.get("cells", "")).split(",", false)
 	var wanted := String(opts.get("weapons", "pulse_pistol")).split(",", false)
 	var parts := String(opts.get("tile", "480x270")).split("x")
 	var size := Vector2i(int(parts[0]), int(parts[1]))
 	var grid := GridContainer.new()
-	grid.columns = int(opts.get("cols", finishes.size()))
+	grid.columns = int(opts.get("cols", finishes.size() + cells.size()))
 	grid.add_theme_constant_override("h_separation", 0)
 	grid.add_theme_constant_override("v_separation", 0)
 	root.add_child(grid)
@@ -52,6 +56,8 @@ func _run() -> void:
 			if String(w.id) == wid:
 				for fid in finishes:
 					_tile(grid, size, w, _find(fid))
+				for cid in cells:
+					_tile(grid, size, w, null, _find(cid))
 	var t := float(opts.get("time", "0"))
 	var steps := int(t * 30.0) + 6
 	for i in steps:
@@ -61,7 +67,7 @@ func _run() -> void:
 	quit()
 
 
-func _tile(grid: GridContainer, size: Vector2i, w, finish) -> void:
+func _tile(grid: GridContainer, size: Vector2i, w, finish, cell = null) -> void:
 	var holder := SubViewportContainer.new()
 	holder.custom_minimum_size = size
 	grid.add_child(holder)
@@ -95,6 +101,8 @@ func _tile(grid: GridContainer, size: Vector2i, w, finish) -> void:
 	var lo := {}
 	if finish != null:
 		lo["finish"] = finish
+	if cell != null:
+		lo["cell"] = cell
 	load(COSMETICS_SCRIPT).apply(model, w, lo)
 	vp.add_child(model)
 	var box := AABB()
