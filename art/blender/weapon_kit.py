@@ -1023,19 +1023,26 @@ def finish(name, groups, empties, shading=True):
 
     groups:  {node_name: (parts, pivot, parent_name_or_None)}
     empties: {node_name: (location, parent_name_or_None)}
+    A pivot or location may be a 4x4 Matrix: the node is turned to it too.
     """
     exports = {}
     for key, (parts, pivot, parent_name) in groups.items():
         if not parts:
             continue
         parent = exports.get(parent_name) if parent_name else None
-        exports[key] = merge(key, [p for p in parts if "glove_kit" not in p], pivot=pivot, parent=parent)
+        turned = pivot if isinstance(pivot, Matrix) else None
+        exports[key] = merge(key, [p for p in parts if "glove_kit" not in p], pivot=turned.translation if turned else pivot, parent=parent)
+        if turned:
+            _turn_node(exports[key], turned)
         for shape in GLOVE_KITS:
             kit = [p for p in parts if p.get("glove_kit") == shape]
             if kit:
-                exports[f"{key}Kit{shape}"] = merge(f"{key}Kit{shape}", kit, pivot=pivot, parent=exports[key])
+                exports[f"{key}Kit{shape}"] = merge(f"{key}Kit{shape}", kit, pivot=turned.translation if turned else pivot, parent=exports[key])
     for key, (loc, parent_name) in empties.items():
-        exports[key] = empty(key, loc, parent=exports.get(parent_name) if parent_name else None)
+        turned = loc if isinstance(loc, Matrix) else None
+        exports[key] = empty(key, turned.translation if turned else loc, parent=exports.get(parent_name) if parent_name else None)
+        if turned:
+            exports[key].matrix_world = turned
     bpy.context.view_layer.update()
     if shading:
         meshes = {k: ob for k, ob in exports.items() if ob.type == "MESH" and not k.endswith("Holo") and k != "Decal"}
@@ -1049,6 +1056,15 @@ def finish(name, groups, empties, shading=True):
                 bake_shading([ob], body + arms + [ob], strength=0.42, gradient=0.0)
     _save(name, list(exports.values()))
     return exports
+
+
+def _turn_node(ob, world):
+    """Gives a merged node (origin already at world's translation) the turn of
+    `world` without moving its mesh: articulated hands (hand_kit.py)."""
+    rot = world.to_3x3().normalized().to_4x4()
+    ob.data.transform(rot.inverted())
+    ob.matrix_world = world
+    bpy.context.view_layer.update()
 
 
 def _save(name, export_objects):
