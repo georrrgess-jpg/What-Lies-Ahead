@@ -19,9 +19,9 @@ const EDGE_GLOW := 1.25
 ## Light slashes: flatter and quicker than the shared arcs.
 const GLOW_LIGHT_KEYS := [
 	[0.0, Vector3.ZERO, Vector3.ZERO],
-	[0.16, Vector3(0.1, 0.06, 0.04), Vector3(18.0, -6.0, -38.0)],
-	[0.4, Vector3(-0.14, -0.02, -0.1), Vector3(-26.0, 12.0, 50.0)],
-	[0.58, Vector3(-0.26, -0.1, -0.02), Vector3(-32.0, 18.0, 78.0)],
+	[0.14, Vector3(0.1, 0.08, 0.02), Vector3(6.0, -16.0, -26.0)],
+	[0.38, Vector3(-0.22, 0.01, -0.1), Vector3(-12.0, 22.0, 32.0)],
+	[0.56, Vector3(-0.33, -0.07, -0.02), Vector3(-15.0, 30.0, 40.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 
