@@ -127,7 +127,10 @@ func update(view: WeaponView, delta: float) -> void:
 		# The pose is in the view's axes: turned into the model's (held at view_rotation_degrees).
 		var hold := Basis.from_euler(view.data.view_rotation_degrees * (PI / 180.0))
 		var back := hold.inverse()
-		model.transform = rest * Transform3D(back * Basis.from_euler(rot) * hold, back * (_pos + jolt + equip[0] + idle[0]))
+		# Turned about swing_pivot() (the grip by default; a shoulder keeps the arm low).
+		var turn := Basis.from_euler(rot)
+		var pivot := swing_pivot()
+		model.transform = rest * Transform3D(back * turn * hold, back * (_pos + jolt + equip[0] + idle[0] + pivot - turn * pivot))
 	part_motion(view, mode, delta)
 	_update_trail(view, delta, mode != null and (mode.phase == MeleeMode.Phase.LIGHT or mode.phase == MeleeMode.Phase.HEAVY) and not inspecting)
 
@@ -159,6 +162,14 @@ func equip_pose(view: WeaponView, t: float) -> Array:
 		return [Vector3.ZERO, Vector3.ZERO]
 	var k := ease_out(t / length)
 	return [Vector3.ZERO, Vector3(0.0, (1.0 - k) * 360.0, 0.0)]
+
+
+## The point the swing poses turn about, in view units from the model's origin
+## (the grip) in the view's axes. ZERO turns the weapon in the hand; a point
+## back and down toward the shoulder swings the whole arm, so the forearm stays
+## low while the weapon sweeps across the screen.
+func swing_pivot() -> Vector3:
+	return Vector3.ZERO
 
 
 ## A slow idle sway at time `t` (seconds): [position, rotation].

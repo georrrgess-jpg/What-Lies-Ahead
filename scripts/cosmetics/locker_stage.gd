@@ -14,6 +14,8 @@ const BURST := [0.0, 0.08, 0.16]
 const TRACER_TARGET := Vector3(3.3, 1.0, -0.8)
 ## The weapon's longest side on the stand, in stage units.
 const WEAPON_SPAN := 0.62
+## How much more of the case a melee weapon's length fills.
+const MELEE_SPAN_SCALE := 1.9
 
 var mode := Mode.NONE
 var _viewport: SubViewport
@@ -89,10 +91,12 @@ func show_weapon(weapon: WeaponData, loadout: Dictionary) -> void:
 	WeaponCosmetics.apply(_model, weapon, loadout)
 	var box := WeaponCosmetics.visible_bounds(_model)
 	_model.position = -box.get_center()
-	var fit := WEAPON_SPAN / maxf(0.01, maxf(box.size.x, maxf(box.size.y, box.size.z)))
+	# A slim melee weapon fills more of the case, turned side-on.
+	var span := WEAPON_SPAN * (MELEE_SPAN_SCALE if weapon.is_melee() else 1.0)
+	var fit := span / maxf(0.01, maxf(box.size.x, maxf(box.size.y, box.size.z)))
 	_pivot.scale = Vector3.ONE * fit
 	_content.add_child(_stand(0.3, -box.size.y * fit * 0.5 - 0.07))
-	_yaw = 62.0
+	_yaw = 84.0 if weapon.is_melee() else 62.0
 	_idle = 0.0
 	_camera.fov = 40.0
 	_camera.look_at_from_position(Vector3(0, 0.16, 1.3), Vector3(0, -0.04, 0))
