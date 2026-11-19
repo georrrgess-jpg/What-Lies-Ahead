@@ -1,7 +1,8 @@
 class_name ArsenalSidebar
 extends KitPanel
 ## The Arsenal's left sidebar: the PRIMARY, SECONDARY and MELEE category
-## tabs (with how many of each are unlocked and their key), the three loadout
+## tabs (their tooltips say how many of each are unlocked and their key; three
+## tabs and three slots leave no room for a count line under each), the three loadout
 ## slots (what is equipped in each, with its picture; a click shows that
 ## weapon) and, at the bottom, the BACK sign. The slots share the spare
 ## height, so on a short window they stay compact rather than crowd the tabs.
@@ -11,10 +12,9 @@ signal slot_pressed(slot: int)
 signal back_pressed
 
 const TAB_NAMES := ["PRIMARY", "SECONDARY", "MELEE"]
-const SLOT_HEIGHT := 92.0
+const SLOT_HEIGHT := 56.0
 
 var _tabs: Array[SignButton] = []
-var _counts: Array[Label] = []
 var _slots: Array[Button] = []
 var _slot_names: Array[Label] = []
 var _slot_pictures: Array[TextureRect] = []
@@ -48,12 +48,6 @@ func _add_tab(slot: int, group: ButtonGroup) -> void:
 	tab.pressed.connect(func(): category_pressed.emit(slot))
 	_col.add_child(tab)
 	_tabs.append(tab)
-	var count := UiKit.label("", UiKit.SIZE_SMALL, UiKit.MUTED)
-	count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	count.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	count.clip_text = true
-	_col.add_child(count)
-	_counts.append(count)
 
 
 ## A loadout slot: caption, picture and name of the equipped weapon.
@@ -109,7 +103,7 @@ func set_category(slot: int) -> void:
 func refresh(picture: Callable) -> void:
 	var held := Loadout.slots()
 	for slot in Loadout.SLOT_COUNT:
-		_counts[slot].text = "[%d]   %d / %d unlocked" % [slot + 1, Loadout.available(slot).size(), Loadout.weapons_for(slot).size()]
+		_tabs[slot].tooltip_text = "[%d]   %d / %d unlocked" % [slot + 1, Loadout.available(slot).size(), Loadout.weapons_for(slot).size()]
 		var w := GameData.weapon(held[slot])
 		var text := w.display_name.to_upper() if w else "EMPTY"
 		if _slot_names[slot].text != text and is_visible_in_tree():

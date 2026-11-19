@@ -13,7 +13,8 @@ extends RefCounted
 ## [position offset (view units), rotation (degrees)] in the view's own axes
 ## (x right, y up, z back toward the eye; pitch tips the point toward the eye,
 ## yaw turns it left, roll turns it anticlockwise on screen), about the
-## model's origin (the grip), whatever the weapon's hold
+## model's origin (the grip; keep rolls under about 40 degrees or the forearm
+## swings up into view), whatever the weapon's hold
 ## (view_rotation_degrees). The light swing keys run from right to left and
 ## are mirrored for every other swing. A weapon's own
 ## view overrides the pose hooks (light_keys, heavy_keys, windup_pose,
@@ -25,16 +26,16 @@ extends RefCounted
 ## Light swing keys: [t (0-1 of the swing), position, rotation].
 const LIGHT_KEYS := [
 	[0.0, Vector3.ZERO, Vector3.ZERO],
-	[0.2, Vector3(0.1, 0.06, 0.05), Vector3(18.0, -8.0, -40.0)],
-	[0.42, Vector3(-0.12, -0.02, -0.1), Vector3(-28.0, 12.0, 48.0)],
-	[0.6, Vector3(-0.25, -0.1, -0.02), Vector3(-34.0, 20.0, 76.0)],
+	[0.16, Vector3(0.1, 0.08, 0.02), Vector3(5.0, -15.0, -25.0)],
+	[0.4, Vector3(-0.2, 0.0, -0.1), Vector3(-12.0, 20.0, 30.0)],
+	[0.58, Vector3(-0.32, -0.08, -0.02), Vector3(-15.0, 28.0, 38.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Heavy swing keys, from the wind-up pose (t 0) through the chop.
 const HEAVY_KEYS := [
-	[0.0, Vector3(0.1, 0.14, 0.1), Vector3(32.0, -10.0, -38.0)],
-	[0.24, Vector3(-0.08, -0.06, -0.14), Vector3(-48.0, 14.0, 40.0)],
-	[0.46, Vector3(-0.22, -0.22, -0.04), Vector3(-62.0, 22.0, 70.0)],
+	[0.0, Vector3(0.06, 0.16, 0.08), Vector3(20.0, -12.0, -28.0)],
+	[0.24, Vector3(-0.16, -0.06, -0.14), Vector3(-30.0, 18.0, 30.0)],
+	[0.46, Vector3(-0.3, -0.2, -0.04), Vector3(-38.0, 26.0, 38.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## How fast the pose follows the swing keys out of a swing (1/s).
@@ -88,7 +89,7 @@ func update(view: WeaponView, delta: float) -> void:
 	var follow := 1.0
 	var inspecting := view.has_method("is_inspecting") and bool(view.call("is_inspecting"))
 	if mode and not inspecting:
-		var side := 1.0 if mode.swing_index % 2 == 0 else -1.0
+		var side := 1.0 if mode.swing_index % 2 == 1 else -1.0
 		match mode.phase:
 			MeleeMode.Phase.LIGHT:
 				var pose := _sample(light_keys(), mode.progress())
