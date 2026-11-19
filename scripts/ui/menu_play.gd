@@ -1019,7 +1019,7 @@ func _place_cards(at: float) -> void:
 		card.rotation = clampf(d, -2.0, 2.0) * deg_to_rad(1.4)
 		card.z_index = 10 - roundi(ad * 3.0)
 		var shade := lerpf(1.0, 0.72, minf(ad, 1.0)) - 0.12 * clampf(ad - 1.0, 0.0, 1.0)
-		card.modulate = Color(shade, shade, shade + 0.06 * minf(ad, 1.0), 1.0 - smoothstep(2.0, CARDS_AROUND, ad))
+		card.modulate = Color(shade, shade, shade + 0.06 * minf(ad, 1.0), 1.0 - smoothstep(2.0, 2.18, ad))
 		card.mouse_filter = Control.MOUSE_FILTER_PASS if ad < 2.1 else Control.MOUSE_FILTER_IGNORE
 		card.set_depth(d)
 
