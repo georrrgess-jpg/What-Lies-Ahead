@@ -149,6 +149,7 @@ func _ready() -> void:
 		_vignette = AimVignette.new()
 		add_child(_vignette)
 		Settings.changed.connect(_on_settings_changed)
+		player.damaged.connect(func(_amount: float, _from: Vector3) -> void: cancel_inspect())
 
 
 ## The view turned by `look` radians (x right, y down) this frame: the
@@ -199,6 +200,7 @@ func show_weapon(weapon: WeaponData) -> void:
 
 
 func _build_model(weapon: WeaponData) -> void:
+	_end_inspect()
 	data = weapon
 	_kill_reload_tween()
 	if model:
@@ -364,6 +366,7 @@ func muzzle_position() -> Vector3:
 
 
 func on_fired(weapon: WeaponData) -> void:
+	_inspect.note_shot()
 	_kick_goal.x = minf(_kick_goal.x + weapon.view_kick, weapon.view_kick * 2.2)
 	_kick_goal.y = minf(_kick_goal.y + weapon.recoil_kick * 1.6, 14.0)
 	if _view_driver and weapon == data:
@@ -421,6 +424,7 @@ func _process(delta: float) -> void:
 		+ (look_pos + pose_pos * 0.5) * AIM_SWAY_POS + Vector3(0.0, 0.0, _kick * 0.5 + seat.z) + bob_pos * AIM_BOB
 	_holder.position = hip_pos.lerp(ads_pos + charge * 0.4, aim)
 	_holder.rotation_degrees = hip_rot.lerp(ads_rot, aim)
+	_apply_inspect(delta)
 	_update_sight(aim)
 
 	if _flash_time > 0.0:
@@ -507,6 +511,7 @@ func _weapon_state(delta: float) -> Vector3:
 # glow ramps, steam and sparks. Times are fractions of the reload duration.
 
 func play_reload(weapon: WeaponData, duration: float) -> void:
+	cancel_inspect()
 	_kill_reload_tween()
 	_reset_parts()
 	_reload_tween = create_tween().set_parallel(true)
@@ -865,6 +870,125 @@ func _reload_break_open(d: float) -> void:
 		var t0 := 0.74 + i * 0.12
 		_track("Pump", d, [[t0, Vector3.ZERO, Vector3.ZERO, 1.0, "hold"], [t0 + 0.05, Vector3(0, 0, 0.068), Vector3.ZERO], [t0 + 0.11, Vector3.ZERO, Vector3.ZERO]],
 			Tween.TRANS_QUAD, Tween.EASE_OUT)
+
+
+# --- inspect ------------------------------------------------------------------
+# The `inspect` action shows the weapon off (WeaponInspect: one generic, eased
+# turn for every weapon). A view_script may add to it with any of:
+#   inspect_length() -> float          seconds (default WeaponInspect.LENGTH)
+#   inspect_poses() -> Array           its own poses (see WeaponInspect.POSES)
+#   inspect_start(v)                   it begins
+#   inspect(v, t)                      every frame it plays, t seconds in
+#   inspect_end(v)                     it ended or was cancelled: tidy up
+# A WeaponView subclass (a melee view) overrides the _inspect_* methods instead.
+
+var _inspect := WeaponInspect.new()
+var _inspect_live := false
+## Dev captures: every inspect plays its rare easter egg.
+var inspect_force_rare := false
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if player == null or not event.is_action_pressed(&"inspect"):
+		return
+	# The pad's inspect button buys a snack at an open station instead.
+	if event is InputEventJoypadButton and event.is_action_pressed(&"interact_alt"):
+		var director := get_tree().get_first_node_in_group("run_director") as RunDirector
+		if director and director.kiosk_available():
+			return
+	inspect()
+
+
+## Starts an inspect when nothing is in the way. Returns true if it started.
+func inspect() -> bool:
+	if not _inspect.can_start(self):
+		return false
+	_inspect.begin(self, _inspect_length(), _inspect_poses())
+	_inspect_live = true
+	Sfx.play(WeaponController.SWITCH_SOUND, -14.0, 0.85)
+	_inspect_started()
+	return true
+
+
+## Blends a running inspect back to the hip.
+func cancel_inspect() -> void:
+	_inspect.cancel()
+
+
+func is_inspecting() -> bool:
+	return _inspect.running()
+
+
+## 0-1: how far the weapon is into its inspect pose (the HUD fades the reticle by it).
+func inspect_weight() -> float:
+	return _inspect.weight()
+
+
+## True for a rare inspect outcome (an easter egg), `chance` in 0-1.
+func inspect_rare(chance: float) -> bool:
+	return inspect_force_rare or randf() < chance
+
+
+## True while the weapon is being lowered for a switch.
+func is_lowering() -> bool:
+	return _lowering or _raise > 0.02
+
+
+## `node`'s transform in the holder's space (the model's parent).
+func holder_space(node: Node3D) -> Transform3D:
+	var xf := Transform3D.IDENTITY
+	var n: Node = node
+	while n and n != _holder:
+		xf = (n as Node3D).transform * xf
+		n = n.get_parent()
+	return xf
+
+
+func _inspect_length() -> float:
+	if _view_driver and _view_driver.has_method(&"inspect_length"):
+		return _view_driver.inspect_length()
+	return WeaponInspect.LENGTH
+
+
+func _inspect_poses() -> Array:
+	if _view_driver and _view_driver.has_method(&"inspect_poses"):
+		return _view_driver.inspect_poses()
+	return WeaponInspect.POSES
+
+
+func _inspect_started() -> void:
+	if _view_driver and _view_driver.has_method(&"inspect_start"):
+		_view_driver.inspect_start(self)
+
+
+## Every frame the inspect plays, `t` seconds in, after the weapon's own motion.
+func _inspect_special(t: float) -> void:
+	if _view_driver and _view_driver.has_method(&"inspect"):
+		_view_driver.inspect(self, t)
+
+
+func _inspect_finished() -> void:
+	if _view_driver and _view_driver.has_method(&"inspect_end"):
+		_view_driver.inspect_end(self)
+
+
+func _apply_inspect(delta: float) -> void:
+	var on := _inspect.advance(self, delta)
+	if _inspect_live and not _inspect.playing():
+		_inspect_live = false
+		_inspect_finished()
+	if not on:
+		return
+	if _inspect_live:
+		_inspect_special(_inspect.clock)
+	_holder.transform = _holder.transform.interpolate_with(_inspect.pose(), _inspect.weight())
+
+
+func _end_inspect() -> void:
+	if _inspect_live:
+		_inspect_live = false
+		_inspect_finished()
+	_inspect.clock = -1.0
 
 
 # --- helpers ------------------------------------------------------------------

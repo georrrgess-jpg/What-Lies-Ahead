@@ -23,6 +23,7 @@ const CONTROLS := [
 	["Dash", ["dash"]],
 	["Fire", ["fire"]],
 	["Aim down sights", ["aim"]],
+	["Inspect weapon", ["inspect"]],
 	["Reload", ["reload"]],
 	["Chain saw (Toxic Ripsaw)", ["melee"]],
 	["Primary / secondary weapon", ["weapon_1", "weapon_2"]],

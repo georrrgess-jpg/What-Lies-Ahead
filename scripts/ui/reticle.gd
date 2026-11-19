@@ -63,7 +63,15 @@ func _process(delta: float) -> void:
 	var k := 1.0 - exp(-40.0 * delta)
 	_gap_lead = lerpf(_gap_lead, maxf(spread_px, 6.0), k)
 	_shown_gap = lerpf(_shown_gap, _gap_lead, k)
+	# Hidden while the weapon is held up to be inspected.
+	modulate.a = 1.0 - _inspect_weight()
 	queue_redraw()
+
+
+func _inspect_weight() -> float:
+	if _player == null or not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group("player") as Player
+	return _player.view.inspect_weight() if _player != null and _player.view != null else 0.0
 
 
 func _color() -> Color:
