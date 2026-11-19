@@ -313,7 +313,8 @@ EQUIP) and `ArsenalDock` (paged wide cards, `ArsenalCard`), all in `scripts/ui/a
 (6 at 1920 and 1600 wide, 5 at 1366 and 1280, 4 at 1024), gaps, paddings and the stat
 columns. Patterns worth copying:
 
-* Hover and selection animate the card's picture inside its clipped box, never the card,
+* The dock's cards live in a clipped box over the frame's recess (a page slides in inside it);
+  hover and selection animate the card's picture inside its clipped box, never the card,
   so nothing grows over a neighbour; badges have a reserved row, never cover a name.
 * Long text: names shrink to a floor, then end in "…" with the full name in the tooltip;
   the description scrolls in its own box, so the stats and the button never move off.

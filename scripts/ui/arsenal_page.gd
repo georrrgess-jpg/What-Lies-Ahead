@@ -5,7 +5,7 @@ extends MenuPage
 ##   - the left sidebar (ArsenalSidebar): PRIMARY / SECONDARY categories and
 ##     the two loadout slots;
 ##   - the preview (ArsenalPreview): the selected weapon's real model on a
-##     teal pedestal over the sunset pier; drag to turn it;
+##     teal pedestal in a night arcade hall; drag to turn it;
 ##   - the right panel (ArsenalDetails): name, what it does, stats, mastery
 ##     and the EQUIP button;
 ##   - the bottom dock (ArsenalDock): the category's weapons as wide cards,

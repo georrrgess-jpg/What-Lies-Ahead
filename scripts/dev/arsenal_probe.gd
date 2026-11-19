@@ -275,6 +275,8 @@ func _check_cards(slot: int) -> void:
 	for p in dock.pages():
 		dock.turn(-99)
 		dock.turn(p)
+		while dock.sliding():
+			await _frames(1)
 		await _frames(2)
 		for c in dock.visible_cards():
 			seen[c.weapon.id] = true
@@ -403,7 +405,9 @@ func _check_rapid_clicks() -> void:
 		if i % 4 == 3:
 			dock.turn(1 if dock.page < dock.pages() - 1 else -99)
 			shown = dock.visible_cards()
-			await _frames(1)
+			# The new page slides in: click where its cards come to rest.
+			while dock.sliding():
+				await _frames(1)
 		var c: ArsenalCard = shown[i % shown.size()]
 		_click(_rect(c).get_center())
 		last = c.weapon
