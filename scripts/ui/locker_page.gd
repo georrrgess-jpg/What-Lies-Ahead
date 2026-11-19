@@ -32,7 +32,9 @@ const WEAPON_DELAY := 0.12
 ## frames (a full tray at once is a visible hitch).
 const CARDS_PER_FRAME := 24
 ## The class choice beside the weapon picker, in Loadout slot order.
-const CLASS_TABS := ["PRIMARIES", "SECONDARIES"]
+const CLASS_TABS := ["PRIMARIES", "SECONDARIES", "MELEE"]
+## Weapon tabs a melee weapon has no use for (it wears finishes and charms only).
+const NOT_FOR_MELEE: Array[StringName] = [&"weapon_sight", &"weapon_cell", &"weapon_decal"]
 const CLASS_TAB_WIDTH := 176.0
 ## Profile.section("menu") key: {"class": slot index, "primary": id, "secondary": id}.
 const MEMORY_KEY := "locker_weapons"
@@ -162,10 +164,12 @@ func _input(event: InputEvent) -> void:
 		return
 	if get_viewport().gui_get_focus_owner() is LineEdit:
 		return
-	if _weapon_box.is_visible_in_tree() and (event.is_action_pressed("weapon_1") or event.is_action_pressed("weapon_2")):
-		_pick_class(Loadout.PRIMARY if event.is_action_pressed("weapon_1") else Loadout.SECONDARY)
-		get_viewport().set_input_as_handled()
-		return
+	if _weapon_box.is_visible_in_tree():
+		for i in Loadout.SLOT_COUNT:
+			if event.is_action_pressed("weapon_%d" % (i + 1)):
+				_pick_class(i)
+				get_viewport().set_input_as_handled()
+				return
 	var step := 0
 	if event.is_action_pressed("move_left"):
 		step = -1
@@ -264,23 +268,23 @@ func _build_strip() -> Control:
 	return strip
 
 
-## PRIMARIES over SECONDARIES: the class the weapon picker steps through.
-## Compact tabs, so the two stack in the height of the weapon plate.
+## PRIMARIES over SECONDARIES over MELEE: the class the weapon picker steps
+## through. Compact tabs, so the three stack in the height of the weapon plate.
 func _build_class_tabs() -> Control:
 	var col := VBoxContainer.new()
 	col.name = "WeaponClass"
 	col.add_theme_constant_override("separation", UiKit.GAP_XS)
 	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var group := ButtonGroup.new()
-	for slot_index in 2:
-		var tab := SignButton.make_tab(CLASS_TABS[slot_index], group, 22)
+	for slot_index in Loadout.SLOT_COUNT:
+		var tab := SignButton.make_tab(CLASS_TABS[slot_index], group, 18)
 		tab.name = "Class%s" % String(Loadout.SLOT_NAMES[slot_index])
 		tab.custom_minimum_size.x = CLASS_TAB_WIDTH
 		tab.tooltip_text = "Customise a %s weapon [%d]" % [String(Loadout.SLOT_NAMES[slot_index]).to_lower(), slot_index + 1]
 		for state in [&"normal", &"hover", &"pressed", &"hover_pressed"]:
 			var box := tab.get_theme_stylebox(state).duplicate() as StyleBox
-			box.content_margin_top = 4
-			box.content_margin_bottom = 8
+			box.content_margin_top = 1
+			box.content_margin_bottom = 4
 			box.content_margin_left = 14
 			box.content_margin_right = 14
 			tab.add_theme_stylebox_override(state, box)
@@ -407,6 +411,15 @@ func set_show_filter(id: StringName) -> void:
 ## Opens a category and selects `prefer` if it is there, else its first item.
 func _open(slot: StringName, prefer: CosmeticItem) -> void:
 	_weapon_timer.stop()
+	# A melee weapon shows only the finish and charm tabs of the weapon row.
+	var melee := _weapon() != null and _weapon().is_melee()
+	for hidden in NOT_FOR_MELEE:
+		var tab := (_group_tabs[LockerFilters.group_of(hidden)["id"]] as KitTabs).button(hidden)
+		if tab:
+			tab.visible = not melee
+	if melee and slot in NOT_FOR_MELEE:
+		slot = &"weapon_finish"
+		prefer = null
 	_slot = slot
 	var group: Dictionary = LockerFilters.group_of(slot)
 	_groups.select(group["id"])
@@ -490,7 +503,8 @@ func _step_tab(direction: int) -> void:
 
 func _has_tab(slot: StringName) -> bool:
 	for id in _group_tabs:
-		if (_group_tabs[id] as KitTabs).button(slot):
+		var tab := (_group_tabs[id] as KitTabs).button(slot)
+		if tab and tab.visible:
 			return true
 	return false
 
@@ -890,7 +904,7 @@ func _refresh_states() -> void:
 ## class tabs), so the header totals what the home tile counts.
 func _refresh_badges() -> void:
 	var tab_counts := {LockerFilters.PRINTS: PrizePrints.new_count()}
-	var class_counts := [0, 0]
+	var class_counts := [0, 0, 0]
 	for it in GameData.cosmetics():
 		if not Cosmetics.is_new(it):
 			continue
@@ -901,7 +915,7 @@ func _refresh_badges() -> void:
 	var weapon_group: StringName = LockerFilters.group_of(&"weapon_finish")["id"]
 	for id in _group_tabs:
 		var tabs: KitTabs = _group_tabs[id]
-		var total: int = class_counts[0] + class_counts[1] if id == weapon_group else 0
+		var total: int = class_counts[0] + class_counts[1] + class_counts[2] if id == weapon_group else 0
 		for slot in tabs.ids():
 			var count: int = tab_counts.get(slot, 0)
 			total += count
@@ -1000,7 +1014,7 @@ func _new_elsewhere_note() -> String:
 ## last, else the weapon played last.
 func _first_weapon() -> StringName:
 	var memory := _memory()
-	var slot_index := clampi(int(memory.get("class", -1)), -1, 1)
+	var slot_index := clampi(int(memory.get("class", -1)), -1, Loadout.SLOT_COUNT - 1)
 	var id := StringName(String(memory.get(Loadout.SLOT_KEYS[slot_index], ""))) if slot_index >= 0 else &""
 	if GameData.weapon(id) == null:
 		id = StringName(String(Profile.data.get("last_weapon", "")))

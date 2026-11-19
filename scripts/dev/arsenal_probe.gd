@@ -6,8 +6,10 @@ extends RefCounted
 ##                are on screen and never overlap
 ##   labels       every label fits, or is cut with an ellipsis and has a tooltip
 ##   buttons      the topmost control under each button's centre is that button
-##   cards        every card of both categories is reachable by paging, and the
-##                selected one is on the shown page
+##   cards        every card of the three categories is reachable by paging, and
+##                the selected one is on the shown page
+##   melee        the MELEE tab and key 3 show the melee weapons with their own
+##                stat captions (HEAVY, REACH), the third loadout slot holds one
 ##   framing      every weapon's model (every visible mesh, the charm included)
 ##                projects inside the preview rectangle at several turns
 ##   browsing     category switches x20, 30 cards clicked one frame apart, drag
@@ -176,7 +178,7 @@ func _alpha(c: CanvasItem) -> float:
 
 func _check_size(cards: int) -> void:
 	_check(_page.dock().per_page == cards, "dock-card-count", "%d (want %d) %s" % [_page.dock().per_page, cards, _page.layout()])
-	for slot in 2:
+	for slot in Loadout.SLOT_COUNT:
 		_page._switch_category(slot)
 		await _settle(0.3)
 		_check_regions()
@@ -360,6 +362,7 @@ func _check_live_resize() -> void:
 
 func _check_interactions() -> void:
 	await _check_categories()
+	await _check_melee()
 	await _check_rapid_clicks()
 	await _check_drag()
 	await _check_keyboard()
@@ -393,6 +396,31 @@ func _check_categories() -> void:
 	await _settle(0.3)
 	_check_regions()
 	_check(problems.is_empty(), "category-switch-x20", "; ".join(problems))
+
+
+## The melee category: key 3 and its tab show the melee weapons, the details
+## name the melee stats, the third loadout slot is filled; key 1 goes back.
+func _check_melee() -> void:
+	var tabs := _page.sidebar().tabs()
+	_check(tabs.size() == Loadout.SLOT_COUNT and _page.sidebar().slots().size() == Loadout.SLOT_COUNT, "melee-tab-and-slot", "%d tabs, %d slots" % [tabs.size(), _page.sidebar().slots().size()])
+	await _key(KEY_3)
+	var w := _page.selected()
+	var ok := _page.category() == Loadout.MELEE and w != null and w.is_melee() and tabs[Loadout.MELEE].button_pressed
+	ok = ok and _page.dock().cards().size() == Loadout.weapons_for(Loadout.MELEE).size()
+	_check(ok, "melee-key-3", String(w.id) if w else "none")
+	var captions := []
+	for l in _page.details().find_children("*", "Label", true, false):
+		captions.append((l as Label).text)
+	_check(captions.has("HEAVY") and captions.has("REACH") and not captions.has("MAGAZINE"), "melee-stat-captions")
+	var slot_name := _page.sidebar().slots()[Loadout.MELEE].find_child("SlotName", true, false) as Label
+	var held := GameData.weapon(Loadout.slot(Loadout.MELEE))
+	_check(held != null and held.is_melee() and slot_name.text == held.display_name.to_upper(), "melee-slot-filled", slot_name.text)
+	await _key(KEY_1)
+	_check(_page.category() == Loadout.PRIMARY, "melee-back-to-primary")
+	_click(_rect(tabs[Loadout.MELEE]).get_center())
+	await _frames(2)
+	_check(_page.category() == Loadout.MELEE, "melee-tab-click")
+	await _key(KEY_1)
 
 
 ## 30 cards clicked, one per frame (turning pages as needed): the last one wins

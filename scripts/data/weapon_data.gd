@@ -16,9 +16,10 @@ extends Resource
 ## Unlock condition (null = available from the start).
 @export var unlock: Requirement
 ## Which loadout slot this weapon belongs to: &"primary" (rifles, shotguns,
-## launchers, beams) or &"secondary" (pistols and other sidearms). The Arsenal
-## lists the two classes separately and each slot only takes its own class.
-@export_enum("primary", "secondary") var slot_class: String = "primary"
+## launchers, beams), &"secondary" (pistols and other sidearms) or &"melee"
+## (knives and clubs: see the Melee group). The Arsenal lists the classes
+## separately and each slot only takes its own class.
+@export_enum("primary", "secondary", "melee") var slot_class: String = "primary"
 
 @export_group("Ammo")
 @export var magazine_size := 12
@@ -231,10 +232,48 @@ extends Resource
 ## Impact on scenery: "spark", "frost", "arc" or "rail".
 @export var impact_style: StringName = &"spark"
 
+@export_group("Melee")
+# A melee weapon (slot_class "melee") swings instead of shooting (MeleeMode,
+# scripts/weapons/modes/melee_mode.gd): fire is a light swing that deals
+# `damage` and pushes `knockback`, fire_interval is the light swing's length
+# and max_range its reach; aim held and released is a charged heavy swing.
+# It has no ammo: magazine 1, reserve 0. move_speed_scale is its mobility.
+## Damage of a fully charged heavy swing (a quick tap of aim deals less, see melee_heavy_min_scale).
+@export var melee_heavy_damage := 0.0
+## Push of a heavy swing (m/s): enough staggers a zombie out of its windup.
+@export var melee_heavy_knockback := 4.0
+## Seconds aim must be held for a full heavy wind-up.
+@export var melee_charge_time := 0.5
+## Damage share of a heavy released before its wind-up is full.
+@export_range(0.0, 1.0) var melee_heavy_min_scale := 0.55
+## Seconds of the heavy swing itself, from release to ready again.
+@export var melee_heavy_time := 1.0
+## Share of a swing (0-1) at which the blade connects.
+@export_range(0.0, 1.0) var melee_hit_at := 0.32
+## Half-angle (degrees) of the cone a swing hits in front of the player.
+@export var melee_arc_degrees := 42.0
+## Most zombies one swing can strike (the nearest first).
+@export var melee_max_targets := 2
+## Seconds after any swing before the player can sprint again (no swing-cancel spam).
+@export var melee_recovery := 0.25
+## Damage multiplier against heavies, alphas and bosses.
+@export_range(0.0, 1.0) var melee_heavy_target_scale := 0.55
+## Damage multiplier for a hit on a zombie's back (a zombie facing away).
+@export var melee_backstab_scale := 1.0
+## Sounds: the swish of a swing (pitch varies per swing), the hit and the heavy's release.
+@export var melee_swing_sound: StringName
+@export var melee_hit_sound: StringName
+@export var melee_heavy_sound: StringName
+
 @export_group("Mode")
 ## Optional behaviour on top of the fire modes above: a script extending
 ## WeaponMode (scripts/weapons/modes/), e.g. spin-up barrels, ricochet rounds.
 @export var mode_script: Script
+
+
+## True for knives and clubs (slot_class "melee").
+func is_melee() -> bool:
+	return slot_class == "melee"
 
 
 func max_rank() -> int:
@@ -255,12 +294,16 @@ func cycle_time() -> float:
 ## Sustained single-target damage per second with the trigger held (or
 ## clicked as fast as it fires), reloads and overheat vents included.
 func damage_per_second() -> float:
+	if is_melee():
+		return damage / maxf(0.05, fire_interval)
 	var pulls := ceilf(float(magazine_size) / maxi(1, burst_count))
 	return burst_damage() * pulls / maxf(0.05, pulls * cycle_time() + reload_time)
 
 
 ## Distance (m) at which the weapon still does most of its work.
 func effective_range() -> float:
+	if is_melee():
+		return max_range
 	if projectile_speed > 0.0:
 		return minf(max_range, projectile_speed * projectile_fuse * 0.6)
 	return minf(max_range, falloff_start + (falloff_end - falloff_start) * 0.35)
