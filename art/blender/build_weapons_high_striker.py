@@ -15,8 +15,13 @@ axis is Z: its faces strike towards -Z (a slam) and +Z.
           slides along +Y from PUCK_Y0 to PUCK_Y1 (local Y in Blender,
           -Z in Godot) to ring the bell
   Bell    child of Handle, pivot on its bracket: shakes when rung
-  ArmR    the right fist at the bottom of the grip (ElbowR)
-  ArmL    the left hand under the top of the grip (ElbowL)
+  ArmR    the right hand at the bottom of the grip (ElbowR), articulated
+          (hand_kit.py: ArmRHand, ArmRIndex1..3, ..., ArmRThumb1..3, ArmRGrip)
+  ArmL    the left hand under the top of the grip (ElbowL), the same nodes
+
+Grip anchors (children of Handle): GripLower (the right hand, at the
+origin) and GripUpper (the left hand, GRIP_L up the shaft); Y along the
+handle towards the head, Z towards the palm.
 
 Empties: Muzzle (the centre of the striking face), BladeTip and SwingPoint
 (the far and near edges of the head: the swing trail), BellPoint (in the bell's mouth, for the DING flash), CharmPoint (a
@@ -145,20 +150,18 @@ def build_high_striker():
     lug, charm_point = melee_lug(-HANDLE_R - 0.003, KNOB_Y + 0.008, 0.0, M)
     handle += lug
 
-    bar = (HANDLE_R + 0.0035, HANDLE_R + 0.0035, HANDLE_R + 0.003)
-    arm_r, elbow_r = fist("R", (0, 0, 0), (0, 1, 0), (1, 0, 0), bar, M, (0.3, -0.6, -0.5), -0.056, 0.058,
-                          palm_s=(3.6, 0.08), finger_len=0.095, thumb="wrap", wrist=(0.2, 0.035, 0.046))
-    hw = HANDLE_R + 0.0035
+    # Articulated hands closed round the grip wrap by the grip solver (hand_kit.py): the right
+    # hand at the bottom of the grip (GripLower, the origin), the left under the top (GripUpper).
     # The left forearm runs down and back beside the right one (towards the bottom right of the
     # screen), not off to the left: crossing to the left it lay across the frame in the wind-up.
-    arm_l, elbow_l = support_hand((0, GRIP_L, 0), hw, hw, M, (0.17, -0.41, -0.72), corner=hw * 0.95)
+    shaft = [cylinder_sdf((0, 0, 0), (0, 1, 0), HANDLE_R + 0.0035 + 0.0012)]
+    lower = grip_hand("R", (0, 0, 0), (0, 1, 0), (0.3, -0.6, -0.5), M, shaft)
+    upper = grip_hand("L", (0, GRIP_L, 0), (0, 1, 0), (0.17, -0.41, -0.72), M, shaft)
     groups = {
         "Handle": (handle, (0, 0, 0), None),
         "Head": (head, (0, HEAD_Y, 0), "Handle"),
         "Puck": (puck, (0, py, 0), "Handle"),
         "Bell": (bell, (0, BELL_Y + 0.004, HANDLE_R + 0.004), "Handle"),
-        "ArmR": (arm_r, (0, 0, 0), None),
-        "ArmL": (arm_l, (0, GRIP_L, 0), None),
     }
     empties = {
         "Muzzle": ((0, HEAD_Y, -HEAD_HALF - 0.01), "Head"),
@@ -166,9 +169,9 @@ def build_high_striker():
         "SwingPoint": ((0, HEAD_Y - HEAD_R, 0), "Head"),
         "BellPoint": ((bell_c[0], bell_c[1] - 0.008, bell_c[2]), "Bell"),
         "CharmPoint": (charm_point, "Handle"),
-        "ElbowR": (elbow_r, "ArmR"),
-        "ElbowL": (elbow_l, "ArmL"),
     }
+    add_hand(groups, empties, lower, "GripLower", "Handle")
+    add_hand(groups, empties, upper, "GripUpper", "Handle")
     finish("high_striker", groups, empties)
 
 

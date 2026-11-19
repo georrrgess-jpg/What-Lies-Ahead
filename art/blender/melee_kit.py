@@ -11,7 +11,10 @@ have no sights, rail, magazine or muzzle. Their contract:
               working end (blade tip, club head) points along +Y (Blender),
               -Z in Godot, its striking edge or face towards -Z (Blender).
   ArmR        the main hand (a fist round the handle), with ElbowR;
-              ArmL / ElbowL on two-handed weapons.
+              ArmL / ElbowL on two-handed weapons. Weapons built with
+              hand_kit.grip_hand() have articulated hands instead (ArmRHand,
+              ArmRIndex1..3, ArmRThumb1..3, ...; see hand_kit.py) and grip
+              anchors GripMain (one-handed) or GripUpper + GripLower.
   Muzzle      empty at the striking point (hit FX).
   BladeTip    empty at the far end of the striking part, SwingPoint nearer
               the hand: MeleeView draws the swing smear between them.
@@ -26,6 +29,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from weapon_kit import *  # noqa: F401,F403
 from weapon_kit import GAP, FINGER_R, _digit  # noqa: E402
+from hand_kit import *  # noqa: F401,F403,E402  (articulated hands and the grip solver)
 
 
 def fist(prefix, centre, forward, right, bar, M, toward, z_back, z_front, palm_s=(3.85, 0.075), finger_len=0.085,
