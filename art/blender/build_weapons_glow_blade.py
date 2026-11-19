@@ -149,7 +149,7 @@ def build_glow_blade():
     z0 = finger_z[-1] - r - 0.004
     z1 = H_TOP - 0.02
     thumb = dict(z=top_finger + 0.006, length=0.06)
-    arm_r, elbow_r = hand("R", fr, bar, M, (0.2, -0.62, -0.12), finger_z, (z0, z1), s_web=2.85, palm_len=0.09,
+    arm_r, elbow_r = hand("R", fr, bar, M, (0.1, -0.45, -0.75), finger_z, (z0, z1), s_web=2.85, palm_len=0.09,
                           finger_len=0.078, thumb=thumb, wrist_s=3.5, wrist_z=z0 + 0.045)
 
     tip = (0, hy + 0.003, hzp + BLADE_LEN)

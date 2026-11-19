@@ -15,7 +15,7 @@ const TRACER_TARGET := Vector3(3.3, 1.0, -0.8)
 ## The weapon's longest side on the stand, in stage units.
 const WEAPON_SPAN := 0.62
 ## How much more of the case a melee weapon's length fills.
-const MELEE_SPAN_SCALE := 1.35
+const MELEE_SPAN_SCALE := 1.9
 
 var mode := Mode.NONE
 var _viewport: SubViewport

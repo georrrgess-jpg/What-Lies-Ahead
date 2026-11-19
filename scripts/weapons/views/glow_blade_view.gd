@@ -16,22 +16,22 @@ const FLICK_AT := 0.1
 const FLICK_TIME := 0.16
 const EDGE_COLOR := Color(0.55, 0.97, 1.0)
 const EDGE_GLOW := 1.25
-## The swings turn about the shoulder (SHOULDER, from the grip in view
-## units), so the forearm stays low and the blade sweeps the frame.
-const SHOULDER := Vector3(0.12, -0.3, 0.55)
+## The swings turn about the forearm below the wrist (SHOULDER, from the grip
+## in view units), so the arm stays low and the blade sweeps the frame.
+const SHOULDER := Vector3(0.12, -0.4, 0.08)
 ## Light slash: a diagonal cut from high right to low left across the frame.
 const GLOW_LIGHT_KEYS := [
 	[0.0, Vector3.ZERO, Vector3.ZERO],
-	[0.16, Vector3(0.04, 0.04, 0.03), Vector3(16.0, -16.0, -22.0)],
-	[0.38, Vector3(-0.04, -0.02, -0.08), Vector3(-14.0, 24.0, 26.0)],
-	[0.56, Vector3(-0.06, -0.04, -0.04), Vector3(-24.0, 34.0, 32.0)],
+	[0.16, Vector3(0.03, 0.04, 0.02), Vector3(0.0, -4.0, -14.0)],
+	[0.38, Vector3(-0.1, 0.05, -0.05), Vector3(0.0, 6.0, 22.0)],
+	[0.56, Vector3(-0.16, 0.02, -0.03), Vector3(-4.0, 10.0, 30.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Heavy: wound up high over the shoulder, then a big chop down through the middle.
 const GLOW_HEAVY_KEYS := [
-	[0.0, Vector3(0.02, 0.05, 0.06), Vector3(30.0, -10.0, -24.0)],
-	[0.24, Vector3(-0.03, -0.03, -0.1), Vector3(-26.0, 18.0, 20.0)],
-	[0.46, Vector3(-0.05, -0.05, -0.05), Vector3(-38.0, 26.0, 26.0)],
+	[0.0, Vector3(0.02, 0.08, 0.0), Vector3(6.0, -2.0, -16.0)],
+	[0.24, Vector3(-0.08, 0.0, -0.06), Vector3(-6.0, 4.0, 20.0)],
+	[0.46, Vector3(-0.12, -0.04, -0.04), Vector3(-12.0, 8.0, 28.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Idle: every IDLE_FLICK_EVERY seconds at rest the thumb flicks the blade half
