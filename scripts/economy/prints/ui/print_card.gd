@@ -49,7 +49,7 @@ func show_print(p: Dictionary, shown_on: WeaponData, thumbs: CosmeticThumbs) -> 
 	set_tag(PrintLook.serial_text(serial), UiKit.AMBER if PrintLook.serial_tag(serial) != "" else UiKit.CYAN)
 	set_image(CosmeticThumbs.cached_print(p, shown_on))
 	if _picture.texture == null and thumbs:
-		thumbs.request_print(p, _on_thumbnail.bind(String(p.get("id", ""))), shown_on)
+		thumbs.request_print(p, _on_thumbnail.bind(String(p.get("id", "")), shown_on), shown_on)
 	refresh_state()
 
 
@@ -74,6 +74,6 @@ func set_pick(text: String) -> void:
 	_pick.set_text(text)
 
 
-func _on_thumbnail(texture: Texture2D, for_id: String) -> void:
-	if String(print_data.get("id", "")) == for_id:
+func _on_thumbnail(texture: Texture2D, for_id: String, for_weapon: WeaponData) -> void:
+	if String(print_data.get("id", "")) == for_id and for_weapon == weapon:
 		set_image(texture)

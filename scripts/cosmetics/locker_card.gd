@@ -28,11 +28,14 @@ static func create(card_size := CARD_SIZE) -> LockerCard:
 
 
 ## Shows `it` on this card. `thumbs` bakes the thumbnail when none is cached.
+## The same item again (on another weapon) keeps its title and rarity line.
 func show_item(it: CosmeticItem, shown_on: WeaponData, thumbs: CosmeticThumbs) -> void:
+	var same := it == item
 	item = it
 	weapon = shown_on
-	set_title(it.display_name.to_upper())
-	set_item_rarity(it)
+	if not same:
+		set_title(it.display_name.to_upper())
+		set_item_rarity(it)
 	_show_art(thumbs)
 	refresh_state()
 
@@ -95,7 +98,7 @@ func _show_art(thumbs: CosmeticThumbs) -> void:
 	if _picture.visible:
 		_picture.texture = CosmeticThumbs.cached(item, weapon)
 		if _picture.texture == null and thumbs:
-			thumbs.request(item, _on_thumbnail.bind(item), weapon)
+			thumbs.request(item, _on_thumbnail.bind(item, weapon), weapon)
 		if item.slot == &"weapon_sight" and WeaponSights.optic_name(item) != "":
 			_art = _reticle_inset()
 			_holder.add_child(_art)
@@ -112,9 +115,10 @@ func _show_art(thumbs: CosmeticThumbs) -> void:
 	_holder.add_child(_art)
 
 
-## A baked thumbnail arrived; ignored if the card moved on to another item.
-func _on_thumbnail(texture: Texture2D, for_item: CosmeticItem) -> void:
-	if for_item == item:
+## A baked thumbnail arrived; ignored if the card moved on to another item
+## or (the same skin) to another weapon.
+func _on_thumbnail(texture: Texture2D, for_item: CosmeticItem, for_weapon: WeaponData) -> void:
+	if for_item == item and for_weapon == weapon:
 		set_image(texture)
 
 

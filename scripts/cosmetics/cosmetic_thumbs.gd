@@ -81,6 +81,13 @@ func request(item: CosmeticItem, done: Callable, weapon: WeaponData = null) -> v
 	set_process(true)
 
 
+## Forgets the thumbnails asked for and not started yet (a page that shows
+## other items now asks again for what it still needs). The bake under way
+## finishes and is cached.
+func drop_queued() -> void:
+	_queue.clear()
+
+
 ## Like request(), for a Prize Print (its finish worn with the print's rolls)
 ## on `weapon`. Cached per print and weapon.
 func request_print(p: Dictionary, done: Callable, weapon: WeaponData = null) -> void:

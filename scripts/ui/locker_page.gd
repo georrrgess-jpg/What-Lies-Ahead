@@ -25,6 +25,9 @@ const CARD_GAP := 12
 const GRID_MARGIN := 14
 ## Browsing with the keyboard builds the 3D preview once the focus rests.
 const PREVIEW_DELAY := 0.09
+## Stepping through weapons refills the tray once the picker rests (holding
+## an arrow or clicking fast would otherwise rebuild every card each step).
+const WEAPON_DELAY := 0.12
 ## The class choice beside the weapon picker, in Loadout slot order.
 const CLASS_TABS := ["PRIMARIES", "SECONDARIES"]
 const CLASS_TAB_WIDTH := 176.0
@@ -68,6 +71,7 @@ var _panel: CosmeticPanel
 var _inspect: PrintInspect
 var _print_button: SignButton
 var _preview_timer: Timer
+var _weapon_timer: Timer
 
 
 func uses_shell_header() -> bool:
@@ -88,6 +92,11 @@ func _ready() -> void:
 	_preview_timer.wait_time = PREVIEW_DELAY
 	_preview_timer.timeout.connect(_show_preview.bind(false))
 	add_child(_preview_timer)
+	_weapon_timer = Timer.new()
+	_weapon_timer.one_shot = true
+	_weapon_timer.wait_time = WEAPON_DELAY
+	_weapon_timer.timeout.connect(_show_weapon)
+	add_child(_weapon_timer)
 	_build_header()
 	var col := VBoxContainer.new()
 	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -392,6 +401,7 @@ func set_show_filter(id: StringName) -> void:
 
 ## Opens a category and selects `prefer` if it is there, else its first item.
 func _open(slot: StringName, prefer: CosmeticItem) -> void:
+	_weapon_timer.stop()
 	_slot = slot
 	var group: Dictionary = LockerFilters.group_of(slot)
 	_groups.select(group["id"])
@@ -497,6 +507,8 @@ func _fill_grid() -> void:
 		for i in maxi(1, items.size()) - _cards.size():
 			_cards.append(_new_card())
 	var weapon := _weapon()
+	# Thumbnails still queued for what the cards showed before are not wanted.
+	_thumbs.drop_queued()
 	for card in _print_cards:
 		card.visible = false
 	for i in _cards.size():
@@ -522,6 +534,7 @@ func _fill_prints() -> void:
 	for card in _cards:
 		card.visible = false
 	var weapon := _weapon()
+	_thumbs.drop_queued()
 	for i in _print_cards.size():
 		var card := _print_cards[i]
 		card.visible = i < list.size()
@@ -859,6 +872,7 @@ func _refresh_badges() -> void:
 		group_counts[id] = total
 	for id in group_counts:
 		_groups.set_badge(id, group_counts[id])
+	_refresh_weapon_plate()
 
 
 ## Keeps a tab's count inside its top right corner.
@@ -904,10 +918,27 @@ func _refresh_weapon_plate() -> void:
 	_weapon_plate.set_caption("CUSTOMISING" if per_weapon else "SHOWN ON")
 	_weapon_plate.active = per_weapon
 	_weapon_plate.set_value(weapon.display_name.to_upper())
-	_weapon_plate.set_note(Mastery.rank_label(Mastery.rank(weapon.id)).capitalize())
+	var elsewhere := _new_elsewhere_note() if LockerCatalog.is_weapon_slot(_slot) else ""
+	_weapon_plate.set_note(elsewhere if elsewhere != "" else Mastery.rank_label(Mastery.rank(weapon.id)).capitalize())
 	var slot_index := Loadout.slot_for(weapon)
 	for i in _class_tabs.size():
 		_class_tabs[i].set_pressed_no_signal(i == slot_index)
+
+
+## Where the open category's NEW items made for one other weapon are (the
+## tab's count includes them, the tray of this weapon cannot show them):
+## "NEW ON ION CARBINE", "NEW ON 2 OTHER WEAPONS", or "".
+func _new_elsewhere_note() -> String:
+	var names: Array[String] = []
+	for it in Cosmetics.items_for(_slot):
+		if not it.fits_weapon(_weapon_id) and Cosmetics.is_new(it):
+			var w := GameData.weapon(it.weapon_id)
+			var label := w.display_name.to_upper() if w else String(it.weapon_id)
+			if not names.has(label):
+				names.append(label)
+	if names.is_empty():
+		return ""
+	return "NEW ON " + names[0] if names.size() == 1 else "NEW ON %d OTHER WEAPONS" % names.size()
 
 
 # --- the weapon picker ---------------------------------------------------------------
@@ -968,11 +999,21 @@ func _pick_class(slot_index: int) -> void:
 	_switch_weapon(id)
 
 
-## Customises `weapon_id`; focus on the cards moves to the selected one.
+## Customises `weapon_id`: the picker follows at once, the tray and the
+## case once the picker rests (see WEAPON_DELAY).
 func _switch_weapon(weapon_id: StringName) -> void:
+	_set_weapon(weapon_id)
+	_refresh_weapon_plate()
+	if _built:
+		_weapon_timer.start()
+
+
+## The tray and the case for the weapon picked last; focus on the cards
+## moves to the selected one.
+func _show_weapon() -> void:
 	var focus := get_viewport().gui_get_focus_owner()
 	var on_cards := focus != null and _grid.is_ancestor_of(focus)
-	select_weapon(weapon_id)
+	show_category(_slot)
 	_deal_cards()
 	if on_cards:
 		_focus_selected()
