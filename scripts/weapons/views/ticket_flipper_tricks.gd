@@ -184,6 +184,9 @@ func stop(v: WeaponView) -> void:
 		var handle_a := v.part("HandleA")
 		if handle_a:
 			handle_a.transform = v.rest_transform("HandleA")
+		# Open, latch home: where the view's own flips take over (also on a cancel).
+		_latch_out = 0.0
+		_pose_parts(v, 0.0, 0.0)
 	if _smear:
 		_smear.queue_free()
 		_smear = null
