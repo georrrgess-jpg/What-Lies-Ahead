@@ -32,7 +32,7 @@ const STRIKER_LIGHT_KEYS := [
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 const STRIKER_HEAVY_KEYS := [
-	[0.0, Vector3(0.04, 0.2, 0.12), Vector3(40.0, -6.0, -14.0)],
+	[0.0, Vector3(-0.04, 0.15, -0.1), Vector3(-10.0, -60.0, 10.0)],
 	[0.2, Vector3(-0.04, -0.08, -0.16), Vector3(-55.0, 4.0, 8.0)],
 	[0.42, Vector3(-0.06, -0.16, -0.08), Vector3(-66.0, 8.0, 12.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
