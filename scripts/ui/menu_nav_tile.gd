@@ -2,12 +2,19 @@ class_name MenuNavTile
 extends Button
 ## A section tile on the home screen (ARSENAL, LOCKER, SHOP, PRIZES, CAREER,
 ## SETTINGS): an icon, the section's name in sign lettering and one line of
-## what is waiting there ("95 new", "1 capsule", "2 / 3 contracts"), with a
-## pink count badge on the corner when something is new. A card that grows a
-## little and lifts its icon on hover and keyboard focus.
+## what is waiting there ("95 new", "1 capsule", "2 / 3 contracts"; cut with
+## an ellipsis when long, in full in the tooltip), with a pink count badge in
+## the top-right corner when something is new. The badge sits inside the
+## border, in a strip the content leaves free on every tile. A card that grows
+## a little and lifts its icon on hover and keyboard focus.
 
 const SIZE := Vector2(180, 100)
 const ICON := 40.0
+## The strip along the top kept for the badge, the badge's inset from the
+## corner and its font size.
+const BADGE_STRIP := 24.0
+const BADGE_INSET := Vector2(7, 5)
+const BADGE_FONT := 16
 
 ## The page the tile opens.
 var page_id := ""
@@ -34,6 +41,8 @@ func _build(title: String, icon: Control) -> void:
 	add_theme_stylebox_override("focus", KitTex.box(&"focus_ring"))
 	var col := VBoxContainer.new()
 	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 10)
+	col.offset_top = BADGE_STRIP
+	col.offset_bottom = -8
 	col.add_theme_constant_override("separation", -2)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -56,11 +65,13 @@ func _build(title: String, icon: Control) -> void:
 	_note.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_note)
-	_badge = UiKit.chip("", UiKit.PINK, UiKit.SIZE_SMALL, false)
+	_badge = UiKit.chip("", UiKit.PINK, BADGE_FONT, false)
 	_badge.visible = false
 	add_child(_badge)
 	_badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE)
-	_badge.position += Vector2(-10, -12)
+	_badge.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_badge.offset_right = -BADGE_INSET.x
+	_badge.offset_top = BADGE_INSET.y
 	mouse_entered.connect(func():
 		UiSound.hover()
 		_lift(true))
@@ -73,6 +84,7 @@ func _build(title: String, icon: Control) -> void:
 ## The line under the name: cream when it is news, muted when not.
 func set_note(text: String, news := false) -> void:
 	_note.text = text
+	tooltip_text = text
 	_note.add_theme_color_override("font_color", UiKit.CREAM if news else UiKit.MUTED)
 
 
@@ -81,6 +93,8 @@ func set_badge(count: int) -> void:
 	_badge.visible = count > 0
 	if count > 0:
 		_badge.set_text(str(count) if count < 100 else "99+")
+		# Keeps its right edge at the inset as the text widens.
+		_badge.offset_left = _badge.offset_right - _badge.get_combined_minimum_size().x
 
 
 func _lift(on: bool) -> void:
