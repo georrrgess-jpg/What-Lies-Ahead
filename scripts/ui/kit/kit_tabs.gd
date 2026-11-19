@@ -13,6 +13,9 @@ extends HBoxContainer
 ## The player picked another tab (not emitted by select() unless asked).
 signal tab_changed(id: StringName)
 
+## Padding (px) moved from a badged tab's left side to its right.
+const BADGE_ROOM := 14.0
+
 var current: StringName
 var _group := ButtonGroup.new()
 var _buttons := {}
@@ -65,10 +68,30 @@ func set_badge(id: StringName, count: int) -> void:
 		b.add_child(badge)
 		badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 		badge.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		# Over the tab's top right corner (the preset placed it inside).
-		badge.position += Vector2(10, -10)
+		# Inside the tab's top right corner, clear of the frame above the row
+		# and of the neighbouring tab (it grows to the left as the count widens).
+		badge.position += Vector2(-6, 4)
+		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_reserve_badge_room(b)
 	badge.visible = true
 	badge.set_text(str(count))
+
+
+## Shifts the tab's label left by moving `BADGE_ROOM` of padding from its
+## left side to its right, so the label never runs under the badge and the
+## tab keeps its width (rows of tabs such as the Shop's still fit).
+func _reserve_badge_room(b: SignButton) -> void:
+	for state in [&"normal", &"hover", &"pressed", &"hover_pressed", &"focus", &"disabled"]:
+		var box := b.get_theme_stylebox(state)
+		if box == null:
+			continue
+		var wide := box.duplicate() as StyleBox
+		var moved := minf(BADGE_ROOM, box.get_margin(SIDE_LEFT) - 8.0)
+		wide.content_margin_left = box.get_margin(SIDE_LEFT) - moved
+		wide.content_margin_right = box.get_margin(SIDE_RIGHT) + moved
+		# KitTex.fit_frames rebuilds a squeezed frame from this base.
+		wide.set_meta(&"kit_base", wide)
+		b.add_theme_stylebox_override(state, wide)
 
 
 ## The tab ids, left to right.
