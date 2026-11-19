@@ -7,8 +7,8 @@ extends MeleeView
 ## (BladeEdge) is a translucent additive glow in the colour of the edge core
 ## (the model's Cell, so a cell cosmetic recolours it); it brightens with a
 ## heavy's wind-up and flashes when a swing connects or the blade locks.
-## Slashes are quick alternating diagonals led by the wrist about a pivot just
-## behind it, so the forearm stays low in the corner and the blade sweeps the
+## Slashes are quick alternating diagonals turned about a point down the
+## forearm, so the forearm stays low in the corner and the blade sweeps the
 ## frame; the heavy is a coiled wind-up over the shoulder and a lunging
 ## diagonal rip with a snap on release. The smear is the edge's colour.
 ##
@@ -26,25 +26,26 @@ const FLICK_TIME := 0.15
 ## The edge's colour when the model's Cell can't be read, and its rest glow.
 const EDGE_COLOR := Color(0.18, 0.94, 1.0)
 const EDGE_GLOW := 1.25
-## The swings turn about the wrist (PIVOT, from the grip in view units): the
-## blade sweeps wide while the hand moves little and the forearm stays low.
-const PIVOT := Vector3(0.04, -0.12, 0.08)
+## The swings turn about a point PIVOT_SHARE of the way from the grip to the
+## elbow (ElbowR), on the forearm's own line: the forearm stays in the lower
+## right corner on its own axis while the hand and blade sweep the frame.
+const PIVOT_SHARE := 0.6
 ## Light slash: cocked up and right, ripped down to the lower left on a
 ## diagonal, a follow-through and back (mirrored every other swing).
 const GLOW_LIGHT_KEYS := [
 	[0.0, Vector3.ZERO, Vector3.ZERO],
-	[0.14, Vector3(0.025, 0.03, 0.02), Vector3(10.0, -16.0, -18.0)],
-	[0.36, Vector3(-0.07, -0.03, -0.05), Vector3(-16.0, 24.0, 30.0)],
-	[0.58, Vector3(-0.095, -0.06, -0.03), Vector3(-24.0, 30.0, 36.0)],
+	[0.14, Vector3(0.01, 0.015, 0.01), Vector3(8.0, -9.0, -10.0)],
+	[0.36, Vector3(-0.02, -0.02, -0.03), Vector3(-10.0, 16.0, 17.0)],
+	[0.58, Vector3(-0.03, -0.035, -0.02), Vector3(-14.0, 20.0, 21.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Heavy, from the wind-up: a lunging diagonal rip across the body, the arm
 ## driving forward, held through and drawn back.
 const GLOW_HEAVY_KEYS := [
-	[0.0, Vector3(0.05, 0.05, 0.07), Vector3(22.0, -20.0, -30.0)],
-	[0.2, Vector3(-0.06, -0.03, -0.1), Vector3(-22.0, 26.0, 32.0)],
-	[0.42, Vector3(-0.1, -0.08, -0.06), Vector3(-32.0, 34.0, 38.0)],
-	[0.62, Vector3(-0.08, -0.07, -0.03), Vector3(-26.0, 28.0, 30.0)],
+	[0.0, Vector3(-0.03, 0.03, 0.015), Vector3(18.0, -6.0, -8.0)],
+	[0.2, Vector3(-0.03, -0.02, -0.07), Vector3(-14.0, 19.0, 21.0)],
+	[0.42, Vector3(-0.05, -0.05, -0.05), Vector3(-20.0, 25.0, 27.0)],
+	[0.62, Vector3(-0.04, -0.04, -0.025), Vector3(-16.0, 20.0, 21.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Idle: every IDLE_FLICK_EVERY seconds at rest the thumb flicks the blade half
@@ -59,7 +60,17 @@ const KNIFE_MIDDLE := Vector3(0.0, 0.0, -0.06)
 ## The toss: when it leaves the fist and is caught (seconds), and how high it
 ## flies along the blade (model units; it clears the fist before it turns).
 const TOSS := Vector2(0.8, 1.5)
-const TOSS_HEIGHT := 0.27
+const TOSS_HEIGHT := 0.23
+## The inspect's own poses (see WeaponInspect.POSES): it stays close to the
+## hold (view_rotation_degrees), drawn in toward the middle and turned a little
+## to show the flat, so the forearm stays low in the corner and the knife and
+## its trick are the show.
+const TRICK_POSES := [
+	[0.0, Vector3(0.15, -0.09, -0.46), Vector3(55.4, 32.0, -26.7)],
+	[0.22, Vector3(0.09, -0.07, -0.46), Vector3(50.0, 40.0, -16.0)],
+	[0.78, Vector3(0.09, -0.07, -0.46), Vector3(52.0, 42.0, -14.0)],
+	[1.0, Vector3(0.15, -0.09, -0.46), Vector3(55.4, 32.0, -26.7)],
+]
 const TRICK_SOUND := &"glb_flick"
 
 ## The last trick played (shared by every Glow Blade view), so the next differs.
@@ -73,6 +84,8 @@ var _edge_mat: StandardMaterial3D
 var _core_mesh: MeshInstance3D
 var _core_surface := -1
 var _edge_color := EDGE_COLOR
+## The swing pivot in view units and axes (see PIVOT_SHARE).
+var _pivot := Vector3(0.1, -0.25, 0.12)
 var _flicked := false
 var _flash := 0.0
 var _hits := 0
@@ -94,6 +107,15 @@ func setup(view: WeaponView) -> void:
 	_buttons = view.part("Buttons")
 	_flicked = false
 	_find_core(_blade as MeshInstance3D)
+	var elbow := view.model.find_child("ElbowR", true, false) as Node3D
+	if elbow:
+		var hold := Basis.from_euler(view.data.view_rotation_degrees * (PI / 180.0))
+		var at := elbow.position
+		var n := elbow.get_parent() as Node3D
+		while n and n != view.model:
+			at = n.transform * at
+			n = n.get_parent() as Node3D
+		_pivot = hold * at * PIVOT_SHARE
 	var edge := view.model.find_child("BladeEdge", true, false) as MeshInstance3D
 	if edge:
 		_edge_mat = StandardMaterial3D.new()
@@ -117,7 +139,7 @@ func heavy_keys() -> Array:
 
 
 func swing_pivot() -> Vector3:
-	return PIVOT
+	return _pivot
 
 
 ## Coiled back over the shoulder, the point tipped back and the wrist cocked,
@@ -125,7 +147,7 @@ func swing_pivot() -> Vector3:
 func windup_pose(charge: float) -> Array:
 	var k := 1.0 - pow(1.0 - minf(1.0, charge * 2.2), 3.0)
 	var start: Array = GLOW_HEAVY_KEYS[0]
-	return [start[1] * k + Vector3(0.01, 0.01, 0.015) * charge, start[2] * k + Vector3(6.0, -4.0, -4.0) * charge]
+	return [start[1] * k + Vector3(0.005, 0.005, 0.012) * charge, start[2] * k + Vector3(5.0, -3.0, -3.0) * charge]
 
 
 ## A breathing sway with a lazy wrist roll, plus a little roll into each idle flick.
@@ -225,6 +247,10 @@ func inspect_length() -> float:
 	return TRICK_LENGTHS[pick]
 
 
+func inspect_poses() -> Array:
+	return TRICK_POSES
+
+
 func inspect_start(_v: WeaponView) -> void:
 	_cues = 0
 
@@ -270,16 +296,18 @@ func _toss(v: WeaponView, t: float) -> Transform3D:
 	return Transform3D(turn, KNIFE_MIDDLE - turn * KNIFE_MIDDLE + Vector3(0.0, 0.0, -lift))
 
 
-## Barrel twirl: the knife slides half out of the fist, spins twice about its
-## handle (the blade flashing flat, edge, flat), and is pushed home.
+## Barrel twirl: the knife slides half out of the fist, leans out and spins
+## three times about its handle (the blade flashing flat, edge, flat), and is
+## pushed home.
 func _twirl(v: WeaponView, t: float) -> Transform3D:
-	var out := WeaponInspect.window(t, 0.55, 0.8) * (1.0 - WeaponInspect.window(t, 1.75, 2.0))
-	var spin := MeleeView.ease_in_out(clampf((t - 0.75) / 1.05, 0.0, 1.0))
+	var out := WeaponInspect.window(t, 0.5, 0.75) * (1.0 - WeaponInspect.window(t, 1.75, 2.0))
+	var spin := MeleeView.ease_in_out(clampf((t - 0.7) / 1.1, 0.0, 1.0))
 	_cue(v, t, [0.78, 1.78], [1.0, 1.1])
 	if t > 1.8 and _cues & 4 == 0:
 		_cues |= 4
 		_flash = 1.0
-	return Transform3D(Basis(Vector3.BACK, spin * TAU * 2.0), Vector3(0.0, 0.0, -0.075 * out))
+	var lean := Basis(Vector3.RIGHT, -0.2 * out)
+	return Transform3D(lean * Basis(Vector3.BACK, spin * TAU * 3.0), Vector3(0.0, 0.0, -0.1 * out))
 
 
 ## Snap and flick: the blade snaps shut into the handle, the closed knife
