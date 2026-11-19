@@ -14,7 +14,8 @@ so a weapon finish recolours two of the six stripes and the stick ribbon.
   Bow     child of Stick, pivot at the knot: flutters
   ArmR    the fist round the stick (ElbowR)
 
-Empties: Tip (far rim of the candy), TrailBase (the candy's centre),
+Empties: Muzzle and BladeTip (far rim of the candy), SwingPoint (the candy's
+near half, where the swing trail starts),
 CharmPoint (a lug by the pommel, left side).
 
     python art/blender/build_weapons_swirl_smasher.py
@@ -161,8 +162,9 @@ def build_swirl_smasher():
         "ArmR": (arm_r, (0, 0, 0), None),
     }
     empties = {
-        "Tip": ((0, CANDY_Y + CANDY_R, 0), "Candy"),
-        "TrailBase": ((0, CANDY_Y, 0), "Candy"),
+        "Muzzle": ((0, CANDY_Y + CANDY_R, 0), "Candy"),
+        "BladeTip": ((0, CANDY_Y + CANDY_R, 0), "Candy"),
+        "SwingPoint": ((0, CANDY_Y - CANDY_R * 0.4, 0), "Candy"),
         "CharmPoint": (charm_point, "Stick"),
         "ElbowR": (elbow_r, "ArmR"),
     }

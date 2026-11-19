@@ -18,8 +18,8 @@ axis is Z: its faces strike towards -Z (a slam) and +Z.
   ArmR    the right fist at the bottom of the grip (ElbowR)
   ArmL    the left hand under the top of the grip (ElbowL)
 
-Empties: Tip (the centre of the striking face), TrailBase (the head's
-centre), BellPoint (in the bell's mouth, for the DING flash), CharmPoint (a
+Empties: Muzzle (the centre of the striking face), BladeTip and SwingPoint
+(the far and near edges of the head: the swing trail), BellPoint (in the bell's mouth, for the DING flash), CharmPoint (a
 lug by the knob, left side).
 
     python art/blender/build_weapons_high_striker.py
@@ -159,8 +159,9 @@ def build_high_striker():
         "ArmL": (arm_l, (0, GRIP_L, 0), None),
     }
     empties = {
-        "Tip": ((0, HEAD_Y, -HEAD_HALF - 0.01), "Head"),
-        "TrailBase": ((0, HEAD_Y, 0), "Head"),
+        "Muzzle": ((0, HEAD_Y, -HEAD_HALF - 0.01), "Head"),
+        "BladeTip": ((0, HEAD_Y + HEAD_R, 0), "Head"),
+        "SwingPoint": ((0, HEAD_Y - HEAD_R, 0), "Head"),
         "BellPoint": ((bell_c[0], bell_c[1] - 0.008, bell_c[2]), "Bell"),
         "CharmPoint": (charm_point, "Handle"),
         "ElbowR": (elbow_r, "ArmR"),

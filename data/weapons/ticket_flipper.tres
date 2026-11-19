@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/ticket_flipper.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/views/ticket_flipper_view.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/ticket_flipper_mode.gd" id="5"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 17
+
+[resource]
+script = ExtResource("1")
+id = &"ticket_flipper"
+display_name = "Ticket Flipper"
+role = "Prize-ticket butterfly knife that never stops flipping. Speed is the point: you run, sprint and slide 20% faster with it out and it comes up in a flash. A light slash (FIRE) is quick but light. Hold AIM to wind up and let go to lunge: you dash forward and cut everything in front of you. Heavies and alphas shrug off half of every cut. No ammo, no reload: press 3 to draw it, or MELEE for a quick slash with any gun."
+unlock = SubResource("unlock")
+sort_order = 310
+category = "Butterfly Knife"
+slot_class = "melee"
+magazine_size = 1
+reserve_start = 0
+reserve_max = 0
+reload_time = 0.1
+emergency_recharge_interval = 1000.0
+automatic = true
+spread_degrees = 0.0
+falloff_start = 10.0
+falloff_end = 10.0
+falloff_min_scale = 1.0
+headshot_multiplier = 1.0
+ads_fov_scale = 1.0
+ads_time = 0.12
+ads_spread_scale = 1.0
+first_shot_accurate = false
+reticle_style = "dot"
+recoil_kick = 0.0
+view_kick = 0.0
+shake = 0.0
+viewmodel = ExtResource("3")
+view_script = ExtResource("4")
+mode_script = ExtResource("5")
+fire_interval = 0.45
+damage = 36.0
+max_range = 2.3
+knockback = 2.0
+tracer_color = Color(1, 0.42, 0.62, 1)
+view_position = Vector3(0.2, -0.15, -0.42)
+view_rotation_degrees = Vector3(8, 14, -20)
+rank_xp = PackedInt32Array(450, 1100, 2300, 4000, 6200)
+move_speed_scale = 1.2
+equip_time = 0.26
+charge_move_scale = 0.95
+melee_heavy_damage = 105.0
+melee_heavy_knockback = 5.0
+melee_charge_time = 0.5
+melee_heavy_min_scale = 0.55
+melee_heavy_time = 0.85
+melee_hit_at = 0.4
+melee_arc_degrees = 42.0
+melee_max_targets = 2
+melee_recovery = 0.2
+melee_heavy_target_scale = 0.55
+melee_backstab_scale = 1.0
+melee_swing_sound = &"tflip_swish"
+melee_hit_sound = &"tflip_hit"
+melee_heavy_sound = &"tflip_lunge"
+equip_sound = &"tflip_open"

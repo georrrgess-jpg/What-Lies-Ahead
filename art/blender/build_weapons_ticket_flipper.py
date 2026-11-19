@@ -23,7 +23,7 @@ thumb lies along the right-hand top edge), so flips go over the top.
   Cell      not a separate node: the neon edge and the latch gem use the
             "Cell" material (tinted by an equipped cell)
 
-Empties: Tip (blade tip) and TrailBase (blade root) on the Blade,
+Empties: Muzzle and BladeTip (the point), SwingPoint (middle of the edge) on the Blade,
 CharmPoint (a lug on HandleA's butt, left side).
 
     python art/blender/build_weapons_ticket_flipper.py
@@ -188,8 +188,9 @@ def build_ticket_flipper():
         "ArmR": (arm_r, (0, 0, 0), None),
     }
     empties = {
-        "Tip": ((0, BLADE_TIP_Y * k, 0.0012 * k), "Blade"),
-        "TrailBase": ((0, (PIV_Y + 0.02) * k, 0.0), "Blade"),
+        "Muzzle": ((0, BLADE_TIP_Y * k, 0.0012 * k), "Blade"),
+        "BladeTip": ((0, BLADE_TIP_Y * k, 0.0012 * k), "Blade"),
+        "SwingPoint": ((0, 0.15 * k, -0.012 * k), "Blade"),
         "CharmPoint": (charm_point, "HandleA"),
         "ElbowR": (elbow_r, "ArmR"),
     }

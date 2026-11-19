@@ -12,8 +12,9 @@ have no sights, rail, magazine or muzzle. Their contract:
               -Z in Godot, its striking edge or face towards -Z (Blender).
   ArmR        the main hand (a fist round the handle), with ElbowR;
               ArmL / ElbowL on two-handed weapons.
-  Tip         empty at the far end of the striking part (trail end, hit FX).
-  TrailBase   empty where the swing trail starts (blade root, head centre).
+  Muzzle      empty at the striking point (hit FX).
+  BladeTip    empty at the far end of the striking part, SwingPoint nearer
+              the hand: MeleeView draws the swing smear between them.
   CharmPoint  the eye of a charm lug near the pommel.
   Animated    each weapon's own moving parts (origin = pivot), named in its
               build script.
