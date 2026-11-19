@@ -50,10 +50,10 @@ const FLIP_LIGHT_KEYS := [
 ## Heavy: from the wind-up (drawn back by the cheek, point on the target) the
 ## lunge drives the point straight down the middle, twists, and pulls out.
 const FLIP_HEAVY_KEYS := [
-	[0.0, Vector3(0.0, 0.06, 0.12), Vector3(8.0, 10.0, -8.0)],
-	[0.22, Vector3(-0.08, 0.1, -0.16), Vector3(-6.0, 10.0, 6.0)],
-	[0.44, Vector3(-0.09, 0.1, -0.18), Vector3(-6.0, 10.0, 16.0)],
-	[0.68, Vector3(-0.03, 0.04, -0.04), Vector3(0.0, 4.0, 8.0)],
+	[0.0, Vector3(0.02, 0.0, 0.03), Vector3(-4.0, 8.0, -6.0)],
+	[0.2, Vector3(-0.06, 0.03, -0.16), Vector3(-6.0, 10.0, 6.0)],
+	[0.4, Vector3(-0.07, 0.03, -0.18), Vector3(-6.0, 10.0, 16.0)],
+	[0.62, Vector3(-0.02, 0.01, -0.04), Vector3(0.0, 4.0, 8.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 
@@ -102,7 +102,7 @@ func swing_pivot() -> Vector3:
 func windup_pose(charge: float) -> Array:
 	var start: Array = FLIP_HEAVY_KEYS[0]
 	var k := ease_out(minf(1.0, charge * 3.0))
-	return [(start[1] as Vector3) * k + Vector3(0.0, 0.01, 0.025) * charge, (start[2] as Vector3) * k + Vector3(3.0, 0.0, -4.0) * charge]
+	return [(start[1] as Vector3) * k + Vector3(0.0, 0.0, 0.012) * charge, (start[2] as Vector3) * k + Vector3(0.0, 0.0, -4.0) * charge]
 
 
 ## The draw: the wrist rolls out and back as it flicks open, and the knife
