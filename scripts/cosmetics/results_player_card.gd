@@ -12,6 +12,8 @@ static func build(_result: Dictionary) -> Control:
 	row.add_theme_constant_override("separation", 18)
 	var card := PlayerCard.build(true) as PlayerCard
 	card.slim = true
+	# Its own height, however many new items the column beside it lists.
+	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(card)
 	var side := VBoxContainer.new()
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL

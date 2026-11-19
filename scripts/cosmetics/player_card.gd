@@ -51,6 +51,9 @@ func _ready() -> void:
 	_portrait.framing = OperatorPreview.Framing.PORTRAIT
 	_portrait.turntable_speed = 0.0
 	_portrait.custom_minimum_size = Vector2(custom_minimum_size.y - 16, custom_minimum_size.y - 16)
+	# Square whatever height the card is given: a taller 3D view would zoom
+	# the camera in and cut the operator off at the sides.
+	_portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_portrait)
 	row.add_child(_info_column())
 	var frame := Panel.new()
