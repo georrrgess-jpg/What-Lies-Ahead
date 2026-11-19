@@ -5,10 +5,13 @@ two arcade buttons and a coin slot, an arcade joystick for a pommel) and a
 dark steel clip-point blade with a glowing edge, flicked open on a hinge.
 
 Built the way build_weapons.py builds guns (see the node contract at the top
-of weapon_kit.py) so finishes and charms work, but held like a knife: the
-handle stands along +Z with the right hand's fist round it (the view tilts
-the whole model forward so the blade points up the screen), its front
-(+Y, where the fingers close) is the edge side. No sights, no cell, no decal.
+of weapon_kit.py) so finishes and charms work, but held like a knife. It is
+modelled standing (handle along +Z, the right hand's fist round it, the edge
+on the +Y side where the fingers close) and then laid down like a gun
+(lay_down): the blade points along +Y like a barrel, the edge down, so the
+Arsenal, Locker and thumbnails show it side-on like every weapon. The view
+(view_rotation_degrees) stands it back up in the hand. No sights, no cell, no
+decal.
 Moving parts, driven by scripts/weapons/views/glow_blade_view.gd:
 
   Blade       the blade and its glowing edge (pivot on the hinge pin, axis X):
@@ -24,6 +27,7 @@ Blade), CharmPoint, ElbowR.
 
     python art/blender/build_weapons_glow_blade.py
 """
+import math
 import os
 import sys
 
@@ -56,6 +60,17 @@ def blade_profile(scale=1.0, front=0.0):
            (0.0136 + front, 0.152), (0.0092 + front, 0.182), (0.003 + front * 0.6, BLADE_LEN), (-0.0035, 0.19),
            (-0.009, 0.165), (-0.011, 0.142)]
     return [(y * scale, z * scale) for y, z in pts]
+
+
+def lay_down(groups, empties):
+    """Turns the standing model -90 degrees about X (the blade to +Y, the edge down)."""
+    rot = Matrix.Rotation(math.radians(-90.0), 4, "X")
+    for parts, _pivot, _parent in groups.values():
+        for p in parts:
+            p.matrix_world = rot @ p.matrix_world
+    turned = {k: (parts, tuple(rot @ Vector(pivot)), parent) for k, (parts, pivot, parent) in groups.items()}
+    placed = {k: (tuple(rot @ Vector(loc)), parent) for k, (loc, parent) in empties.items()}
+    return turned, placed
 
 
 def build_glow_blade():
@@ -152,6 +167,7 @@ def build_glow_blade():
         "CharmPoint": (charm_point, None),
         "ElbowR": (elbow_r, "ArmR"),
     }
+    groups, empties = lay_down(groups, empties)
     finish("glow_blade", groups, empties)
 
 

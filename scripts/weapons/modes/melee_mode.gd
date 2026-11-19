@@ -119,9 +119,9 @@ func is_busy() -> bool:
 	return phase != Phase.IDLE or _queued or _recover > 0.0
 
 
-## True while a swing or its recovery keeps the player from sprinting.
+## True while a swing, a queued quick swing or a recovery keeps the player from sprinting.
 func blocks_sprint() -> bool:
-	return phase == Phase.LIGHT or phase == Phase.HEAVY or _recover > 0.0
+	return phase == Phase.LIGHT or phase == Phase.HEAVY or _recover > 0.0 or _queued
 
 
 func move_scale() -> float:
