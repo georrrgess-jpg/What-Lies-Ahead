@@ -178,6 +178,11 @@ func refresh_action(w: WeaponData) -> void:
 	_fit_button()
 
 
+## The description's font size (ArsenalLayout.about_size).
+func set_about_size(font_size: int) -> void:
+	_about.add_theme_font_size_override(&"font_size", font_size)
+
+
 ## Two columns of stats when the panel is short, one when it is tall.
 func set_stat_columns(columns: int) -> void:
 	_stats.columns = columns

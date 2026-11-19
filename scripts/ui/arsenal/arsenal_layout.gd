@@ -42,6 +42,9 @@ var details_width := 540.0
 var dock_height := 236.0
 ## The stats in two columns (saves height).
 var stat_columns := 1
+## Font size of the description: larger on narrow windows, so it reads on
+## screen at least as large as at 1366x768 (it scrolls instead of shrinking).
+var about_size := 22
 
 
 ## The rules for a page of `page_size` canvas pixels where one canvas pixel is
@@ -57,6 +60,7 @@ static func compute(page_size: Vector2, screen_scale: float) -> ArsenalLayout:
 	l.gap = UiKit.GAP_S if tight else UiKit.GAP_M
 	l.padding = 16.0 if tight else 22.0
 	var share := 1.12 if l.mode == Mode.NARROW else 1.0
+	l.about_size = 28 if l.mode == Mode.NARROW else 22
 	l.sidebar_width = clampf(page_size.x * 0.16 * share, 270.0, 340.0)
 	l.details_width = clampf(page_size.x * 0.29 * share, 500.0, 640.0)
 	var dock_screen := (page_size.x - DOCK_CHROME) * screen_scale

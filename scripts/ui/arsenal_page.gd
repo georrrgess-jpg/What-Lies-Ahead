@@ -146,6 +146,7 @@ func _apply_layout() -> void:
 	_details.custom_minimum_size.x = _layout.details_width
 	_details.set_padding(_layout.padding, _layout.padding)
 	_details.set_stat_columns(_layout.stat_columns)
+	_details.set_about_size(_layout.about_size)
 	_dock.custom_minimum_size.y = _layout.dock_height
 	_dock.set_spacing(_layout.gap, _layout.padding)
 	_dock.set_per_page(_layout.cards)

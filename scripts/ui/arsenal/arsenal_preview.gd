@@ -25,7 +25,7 @@ const ELEVATION := 0.12
 const REACH := 0.6
 ## Share of the rectangle kept clear on each side (x, y); the bottom also
 ## keeps HINT_ROOM pixels for the rotation hint (the top keeps as much).
-const SAFE_MARGIN := Vector2(0.06, 0.07)
+const SAFE_MARGIN := Vector2(0.1, 0.09)
 const HINT_ROOM := 64.0
 ## Resting yaw: the weapon side-on with its muzzle to the left, a little
 ## turned to the camera.
