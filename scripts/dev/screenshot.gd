@@ -40,7 +40,8 @@ extends Node
 ##   --shot-saw=1          hold the melee action (Ripsaw saw) with a zombie stepped into reach
 ##   --shot-swing=light|windup|heavy   with a melee weapon (--shot-weapon=glow_blade): a zombie
 ##                         steps into reach, then a light swing, a heavy wind-up held, or a full
-##                         heavy released; captured --shot-frames after the press (or the release)
+##                         heavy released, frozen --shot-swing-at=k (0-1, default 0.4) of the way
+##                         through the swing (the wind-up: its charge)
 ##   --shot-portal=1       open the portal and light the exit route
 ##   --shot-fire=n         fire n shots at the nearest staged zombie, then wait --shot-frames
 ##   --shot-spray=n[,deg]  fire n shots from the pose at walls and floors (the aim wanders up to
@@ -329,7 +330,7 @@ func _run() -> void:
 	if _arg("saw", "0") == "1":
 		await _saw(director, player, int(_arg("frames", "20")))
 	if _arg("swing", "") != "":
-		await _swing(director, player, _arg("swing", ""), int(_arg("frames", "12")))
+		await _swing(director, player, _arg("swing", ""), float(_arg("swing-at", "0.4")))
 	if _arg("spray", "") != "":
 		await _spray(player, _arg("spray", ""))
 	if _arg("marks", "1") == "0":
@@ -464,8 +465,10 @@ func _saw(director: RunDirector, player: Player, frames: int) -> void:
 
 ## A melee swing with the nearest staged zombie stepped into reach: "light"
 ## clicks fire, "windup" holds aim, "heavy" holds aim for a full wind-up and
-## releases it; the still is taken `frames` after the press (or the release).
-func _swing(director: RunDirector, player: Player, kind: String, frames: int) -> void:
+## releases it. The weapon stops (its physics is paused, the view keeps
+## drawing) once the swing is `at` of the way through (the wind-up: charged
+## that far), so the still shows that moment however slowly frames render.
+func _swing(director: RunDirector, player: Player, kind: String, at: float) -> void:
 	await _wait(10)
 	var alive := director.alive_enemies()
 	if not alive.is_empty():
@@ -477,18 +480,24 @@ func _swing(director: RunDirector, player: Player, kind: String, frames: int) ->
 	player.controls_enabled = true
 	_aim_at_nearest(director, player)
 	await _wait(20)
-	if kind == "light":
-		_press("fire", true)
-		await _wait(2)
-		_press("fire", false)
-		await _wait(maxi(0, frames - 2))
-	else:
-		_press("aim", true)
-		if kind == "heavy":
-			await _wait(int(player.weapons.current.melee_charge_time * 60.0) + 4)
+	var w := player.weapons
+	_press("aim" if kind != "light" else "fire", true)
+	for i in 600:
+		await get_tree().physics_frame
+		var mode := w.mode as MeleeMode
+		if mode == null:
+			break
+		if kind == "heavy" and mode.phase == MeleeMode.Phase.WINDUP and mode.charge >= 1.0:
 			_press("aim", false)
-		await _wait(frames)
+		if kind == "light" and mode.phase == MeleeMode.Phase.LIGHT:
+			_press("fire", false)
+		var phase := MeleeMode.Phase.WINDUP if kind == "windup" else (MeleeMode.Phase.LIGHT if kind == "light" else MeleeMode.Phase.HEAVY)
+		var k := mode.charge if kind == "windup" else mode.progress()
+		if mode.phase == phase and k >= at:
+			break
+	w.set_physics_process(false)
 	player.set_physics_process(false)
+	await _wait(8)
 	for z in director.alive_enemies():
 		if is_instance_valid(z):
 			print("[shot] after the swing: %s %.0f%s" % [z.data.id, z.health, " dead" if z.is_dead() else ""])
