@@ -9,6 +9,7 @@ open and close it (scripts/weapons/hand_rig.gd):
                        centre of the grip, unturned (the old contract)
     Elbow<S>           empty half way down the forearm
     Arm<S>Hand         the palm, back plate and knuckle roll; pivot = wrist
+      Arm<S>PalmPoint  empty on the middle of the palm's face
       Arm<S>Grip       empty on the handle's axis at the hand's grip, turned
                        like the weapon's grip anchor (Grip*)
       Arm<S>Index1     proximal phalanx, pivot on the knuckle
@@ -203,7 +204,7 @@ def _phalanx(name, W, length, r0, r1, M, k, thumb=False):
     X, Y, Z = _axes(W)
     m = M["tip"] if k == 3 else M["glove"]
     a, b = _p(W, 0, 0, 0), _p(W, 0, length, 0)
-    parts = [tube(name, [a, (a + b) / 2, b], r0, m=m, segs=12, radius_end=r1, cap=False),
+    parts = [tube(name + "Tube", [a, (a + b) / 2, b], r0, m=m, segs=12, radius_end=r1, cap=False),
              sphere(name + "Joint", r0 * (1.12 if thumb and k == 1 else 1.02), a, m=M["glove"] if k < 3 else m, segs=12, rings=8)]
     if k == 3:
         parts.append(sphere(name + "Tip", r1, b, m=m, segs=12, rings=7))
@@ -386,7 +387,8 @@ def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, conta
     arm_parts, elbow = _forearm(P, wrist, wrist + f, M)
     groups[P] = (arm_parts, c, None)
     anchor = _frame_matrix(c, a.cross(n), a, n)
-    empties = {"Elbow" + side: (elbow, P), P + "Grip": (anchor, P + "Hand"), **tips}
+    empties = {"Elbow" + side: (elbow, P), P + "Grip": (anchor, P + "Hand"),
+               P + "PalmPoint": (W @ Matrix.Translation((0, 0.05, PALM_Z[0])), P + "Hand"), **tips}
     bend = math.degrees(f.angle(-yh))
     print(f"[hand] {P}: tilt {tilt:.0f}, wrist bend {bend:.0f}, stand-off {_score * 1000:.1f} mm; flex " + ", ".join(report))
     return dict(groups=groups, empties=empties, anchor=anchor)
