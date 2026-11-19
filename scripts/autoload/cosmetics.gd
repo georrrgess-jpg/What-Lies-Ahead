@@ -23,6 +23,8 @@ signal purchased(item: CosmeticItem)
 signal prints_changed
 
 var _by_id := {}
+## Slot -> its default item (or null), filled by default_item().
+var _defaults := {}
 var _owned_at_run_start := {}
 
 
@@ -163,10 +165,14 @@ func equipped(slot: StringName, weapon_id: StringName = &"") -> CosmeticItem:
 
 ## The slot's default item (params.default), or null.
 func default_item(slot: StringName) -> CosmeticItem:
-	for it in GameData.cosmetics():
-		if it.slot == slot and bool(it.params.get("default", false)):
-			return it
-	return null
+	# Looked up for every card the Locker shows: found once per slot.
+	if not _defaults.has(slot):
+		_defaults[slot] = null
+		for it in GameData.cosmetics():
+			if it.slot == slot and bool(it.params.get("default", false)):
+				_defaults[slot] = it
+				break
+	return _defaults[slot]
 
 
 ## What the player is wearing in a slot: the equipped item or the slot default.
