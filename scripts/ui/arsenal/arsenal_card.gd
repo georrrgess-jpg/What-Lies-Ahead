@@ -74,6 +74,8 @@ func _build() -> void:
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_name.clip_text = true
 	_name.resized.connect(_fit_name)
 	col.add_child(_name)
 	_restyle()
@@ -141,8 +143,6 @@ func _fit_name() -> void:
 		font_size -= 1
 	if _name.get_theme_font_size(&"font_size") != font_size:
 		_name.add_theme_font_size_override(&"font_size", font_size)
-	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_name.clip_text = true
 
 
 ## True when the whole name shows (no ellipsis).
