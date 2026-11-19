@@ -114,7 +114,7 @@ func _build_actions() -> Control:
 	var credits := HBoxContainer.new()
 	credits.add_theme_constant_override("separation", UiKit.GAP_S)
 	held.add_child(credits)
-	credits.add_child(UiKit.icon(&"icon_credit", UiKit.SIZE_BODY * 1.4))
+	credits.add_child(UiKit.icon(&"icon_credit", UiKit.SIZE_BODY * 2.2))
 	_tokens = UiKit.label("", UiKit.SIZE_BODY, UiKit.CREAM, true)
 	credits.add_child(_tokens)
 	_open = UiKit.sign_button("OPEN CAPSULE", SignButton.Kind.PRIMARY, 34)
@@ -133,6 +133,7 @@ func _build_actions() -> Control:
 	_buy = UiKit.sign_button("", SignButton.Kind.GOLD, 26)
 	_buy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_buy.icon = UiKit.spark_icon(28).texture
+	_buy.add_theme_constant_override("icon_max_width", 44)
 	_buy.pressed.connect(_page.buy_capsule)
 	row.add_child(_buy)
 	var odds := UiKit.card_panel(16)

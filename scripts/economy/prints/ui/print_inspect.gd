@@ -97,7 +97,6 @@ func _init() -> void:
 	_fav.pressed.connect(_on_favourite)
 	actions.add_child(_fav)
 	_recycle = UiKit.sign_button("RECYCLE", SignButton.Kind.GOLD, 24)
-	_recycle.icon = KitTex.tex(&"icon_credit")
 	_recycle.pressed.connect(_on_recycle)
 	actions.add_child(_recycle)
 	var spot := Shader.new()
