@@ -19,9 +19,11 @@ extends WeaponMode
 ## (max_range from the player's centre to the zombie's surface, plus
 ## REACH_LEEWAY; the heavy adds HEAVY_REACH, a knife's heavy lunges LUNGE_REACH
 ## further) and whose body overlaps melee_arc_degrees of the facing, nearest
-## first, through WeaponController.melee_hit. The heavy locks on at release to
-## the zombie nearest the aim within ASSIST_DEGREES beyond the arc and keeps it
-## through the window. Light swings stagger the rank and file out of their
+## first, through WeaponController.melee_hit. Every swing locks on, as it
+## starts, to the zombies in its cone (the heavy's, at release, ASSIST_DEGREES
+## wider: aim assist) and keeps them through the window while they stay within
+## LOCK_REACH of its reach and LOCK_DEGREES of its arc, so a zombie the player
+## walks or strafes past mid-swing is still struck. Light swings stagger the rank and file out of their
 ## windup; heavies stagger anything but heavies, alphas and bosses, which take
 ## melee_heavy_target_scale of the damage. Each swing leaves melee_recovery
 ## seconds in which the player cannot sprint (no swing-sprint-swing spam). No
@@ -55,7 +57,9 @@ const TOUCHING := 0.3
 const TOUCHING_DEGREES := 80.0
 ## Degrees beyond the arc the heavy locks on at release, and keeps its lock.
 const ASSIST_DEGREES := 12.0
-const ASSIST_KEEP_DEGREES := 25.0
+## How far a zombie locked on at the start of a swing may drift and still be struck.
+const LOCK_DEGREES := 40.0
+const LOCK_REACH := 0.4
 ## The vertical band a swing reaches (metres from the player's feet): any part of the body inside it.
 const BAND_LOW := -1.2
 const BAND_HIGH := 2.0
@@ -83,7 +87,7 @@ var _queued := false
 var _heavy_wait := 0.0
 var _aim_down := false
 var _struck: Array[Zombie] = []
-var _lock: Zombie
+var _locked: Array[Zombie] = []
 
 
 ## Called by the controller every physics frame while the weapon is held.
@@ -123,7 +127,7 @@ func swing_input(fire: bool, aim: bool, ready: bool, delta: float) -> bool:
 				phase = Phase.IDLE
 				charge = 0.0
 				_recover = data.melee_recovery
-				_lock = null
+				_locked.clear()
 				_struck.clear()
 	return false
 
@@ -214,7 +218,7 @@ func _begin(next: Phase) -> void:
 	elapsed = 0.0
 	_connected = false
 	_struck.clear()
-	_lock = null
+	_locked.clear()
 	if next == Phase.WINDUP:
 		charge = 0.0
 		return
@@ -222,18 +226,20 @@ func _begin(next: Phase) -> void:
 	if next == Phase.LIGHT:
 		charge = 0.0
 		Sfx.play(data.melee_swing_sound, -4.0, randf_range(0.92, 1.1))
+		_lock_on(false, 0.0)
 
 
-## The wind-up is let go: the heavy swings, locked on to the zombie nearest the aim.
+## The wind-up is let go: the heavy swings, locked on a little wider than its arc.
 func _release() -> void:
 	_begin(Phase.HEAVY)
 	Sfx.play(data.melee_heavy_sound, -2.0, randf_range(0.95, 1.05))
-	var best := INF
-	for z in _candidates(true, ASSIST_DEGREES):
-		var score: float = z[1] + z[2] * 0.02
-		if score < best:
-			best = score
-			_lock = z[0]
+	_lock_on(true, ASSIST_DEGREES)
+
+
+## Locks the swing on to every zombie in its cone (`extra_degrees` wider) now.
+func _lock_on(heavy: bool, extra_degrees: float) -> void:
+	for entry in _candidates(heavy, extra_degrees, 0.0):
+		_locked.append(entry[0])
 
 
 ## Every physics frame of a swing: sweeps through the active window and
@@ -260,11 +266,11 @@ func _strike(heavy: bool) -> void:
 func _sweep(heavy: bool) -> void:
 	if _struck.size() >= data.melee_max_targets:
 		return
-	var found := _candidates(heavy, 0.0)
-	if heavy and is_instance_valid(_lock) and not _lock.is_dead() and not _struck.has(_lock):
-		var kept := _candidates(heavy, ASSIST_KEEP_DEGREES)
-		for entry in kept:
-			if entry[0] == _lock and not found.any(func(e: Array) -> bool: return e[0] == _lock):
+	var found := _candidates(heavy, 0.0, 0.0)
+	if not _locked.is_empty():
+		for entry in _candidates(heavy, LOCK_DEGREES, LOCK_REACH):
+			var z: Zombie = entry[0]
+			if _locked.has(z) and not found.any(func(e: Array) -> bool: return e[0] == z):
 				found.append(entry)
 	found.sort_custom(func(a: Array, b: Array) -> bool: return a[1] < b[1])
 	var player := controller.player
@@ -302,11 +308,12 @@ func _flat_forward() -> Vector3:
 
 
 ## [zombie, gap (m, surface), degrees off the facing beyond its body's edge] of
-## every live zombie the swing reaches, `extra_degrees` wider than the arc.
-func _candidates(heavy: bool, extra_degrees: float) -> Array:
+## every live zombie the swing reaches, `extra_degrees` wider than the arc and
+## `extra_reach` further.
+func _candidates(heavy: bool, extra_degrees: float, extra_reach: float) -> Array:
 	var player := controller.player
 	var forward := _flat_forward()
-	var reach := data.max_range + reach_bonus(heavy)
+	var reach := data.max_range + reach_bonus(heavy) + extra_reach
 	var arc := data.melee_arc_degrees + extra_degrees
 	var out := []
 	for node in player.get_tree().get_nodes_in_group("zombies"):

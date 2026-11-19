@@ -10,9 +10,12 @@ extends RefCounted
 ##
 ## A trial is "in" when, at the moment of the swing (the light's press, the
 ## heavy's release), the zombie's surface is within the weapon's max_range and
-## its centre within melee_arc_degrees of the facing; "out" when it is beyond
-## max_range + OUT_MARGIN or more than 90 degrees off the facing. Trials in
-## between are not counted. Then the input cases a player meets: the aim
+## its centre within melee_arc_degrees of the facing; "out" when it is more
+## than 90 degrees off the facing, or (standing or strafing: walking forward or
+## a zombie walking in closes the gap on purpose) beyond the swing's whole
+## reach (MeleeMode.reach_bonus and LOCK_REACH) + OUT_MARGIN. Trials in between
+## are not counted. The High Striker's heavy slam is an area blow round a point
+## ahead of the player (counted as out hits when it catches one). Then the input cases a player meets: the aim
 ## tapped during a light swing, tapped while sprinting, and released at once.
 
 const WEAPONS := "glow_blade,ticket_flipper,swirl_smasher,high_striker"
@@ -22,7 +25,7 @@ const DISTANCES := [0.8, 1.6, 2.4, 3.0, 3.5]
 ## Angles as shares of the weapon's melee_arc_degrees, and one from behind (degrees).
 const ANGLE_SHARES := [0.0, 0.5, 0.95]
 const BEHIND := 150.0
-const OUT_MARGIN := 0.5
+const OUT_MARGIN := 0.3
 const START := Vector3(5.0, 0.0, 15.5)
 
 var _shot: Node
@@ -117,7 +120,7 @@ func _trial(id: String, swing: String, kind: String, motion: String, d: float, a
 	if swing == "light":
 		if motion != "still":
 			await _frames(12)
-		verdict = _classify(z)
+		verdict = _classify(z, false, motion)
 		_shot._press("fire", true)
 		await _frames(2)
 		_shot._press("fire", false)
@@ -127,7 +130,7 @@ func _trial(id: String, swing: String, kind: String, motion: String, d: float, a
 		while not (melee.phase == MeleeMode.Phase.WINDUP and melee.charge >= 1.0) and guard < 200:
 			await _frames(1)
 			guard += 1
-		verdict = _classify(z)
+		verdict = _classify(z, true, motion)
 		_shot._press("aim", false)
 	var guard := 0
 	while (melee.phase != MeleeMode.Phase.IDLE or melee.swing_index == start_index) and guard < 240:
@@ -155,14 +158,16 @@ func _trial(id: String, swing: String, kind: String, motion: String, d: float, a
 
 
 ## "in", "out" or "" (between) for `z` right now.
-func _classify(z: Zombie) -> String:
+func _classify(z: Zombie, heavy: bool, motion: String) -> String:
 	var data := _player.weapons.current
+	var melee := _player.weapons.mode as MeleeMode
+	var whole := data.max_range + melee.reach_bonus(heavy) + MeleeMode.LOCK_REACH + OUT_MARGIN
 	var to := z.global_position - _player.global_position
 	var flat := Vector3(to.x, 0.0, to.z)
 	var gap := flat.length() - z.data.capsule_radius * z.data.body_scale
 	var forward := -_player.global_transform.basis.z
 	var angle := rad_to_deg(Vector3(forward.x, 0.0, forward.z).normalized().angle_to(flat.normalized()))
-	if gap > data.max_range + OUT_MARGIN or angle > 90.0:
+	if angle > 90.0 or (gap > whole and motion in ["still", "strafe"]):
 		return "out"
 	if gap <= data.max_range and angle <= data.melee_arc_degrees:
 		return "in"
