@@ -9,6 +9,10 @@ extends RefCounted
 ## Free Play token; a payout flashes them, kicks the coin-return flap open
 ## and spits brass out of the cup while the new tokens drop into the tube.
 ## The reload (coin_op_reload.gd) slaps the coin return and feeds a roll.
+## Inspect: the coin mech spits a token out of the feed slot on top, it flips
+## high over the cabinet and drops back into the slot (the CREDIT lamps wink).
+## One time in EDGE_CHANCE it lands on its edge beside the slot instead,
+## wobbles there, the hands shrug, and it topples off.
 
 const TOKENS := 15
 const CREDITS := 3
@@ -29,6 +33,23 @@ const DROP := 0.03
 const RATTLE_ROLL := 0.9
 const RATTLE_LIFT := 0.0015
 const RATTLE_RATE := 52.0
+## Inspect timing (seconds), the flip's height and turns (model units), and
+## where the token comes to rest on its edge (from the slot).
+const INSPECT_LENGTH := 3.0
+const FLIP_START := 0.55
+const FLIP_END := 1.45
+const FLIP_HEIGHT := 0.2
+const FLIP_TURNS := 5.0
+const EDGE_CHANCE := 1.0 / 15.0
+const EDGE_SPOT := Vector3(0.0, -0.02, 0.05)
+const INSPECT_POSES := [
+	[0.0, Vector3(0.14, -0.14, -0.62), Vector3(2.0, 14.0, -4.0)],
+	[0.16, Vector3(0.05, -0.12, -0.47), Vector3(16.0, 40.0, 6.0)],
+	[0.48, Vector3(0.04, -0.12, -0.46), Vector3(20.0, 34.0, 2.0)],
+	[0.56, Vector3(0.04, -0.14, -0.47), Vector3(15.0, 36.0, 4.0)],
+	[0.8, Vector3(0.05, -0.12, -0.47), Vector3(22.0, 44.0, 2.0)],
+	[1.0, Vector3(0.14, -0.15, -0.62), Vector3(4.0, 6.0, 0.0)],
+]
 const BRASS := [Color(1.0, 0.79, 0.24), Color(1.0, 0.93, 0.62), Color(0.85, 0.54, 0.11)]
 const PAYOUT_SPARKS := [Color(1.0, 0.79, 0.24), Color(1.0, 0.93, 0.62), Color(1.0, 0.35, 0.82)]
 
@@ -51,6 +72,9 @@ var _since_payout := 10.0
 var _shots := 0
 var _clock := 0.0
 var _rattling := false
+var _flip: MeshInstance3D
+var _edge := false
+var _landed := false
 
 
 func setup(v: WeaponView) -> void:
@@ -119,6 +143,94 @@ func event(v: WeaponView, name: StringName) -> void:
 	var p := v.owner as Player
 	if p:
 		p.add_shake(0.04)
+
+
+func inspect_length() -> float:
+	return INSPECT_LENGTH
+
+
+func inspect_poses() -> Array:
+	return INSPECT_POSES
+
+
+func inspect_start(v: WeaponView) -> void:
+	var token := _tokens[0] as MeshInstance3D if not _tokens.is_empty() else null
+	if token:
+		_flip = WeaponInspect.prop_from(v, token, "InspectToken")
+		_flip.visible = false
+	_edge = v.inspect_rare(EDGE_CHANCE)
+	_landed = false
+
+
+func inspect(v: WeaponView, t: float) -> void:
+	if _flip == null:
+		return
+	var slot := v.rest_transform("FeedHolo").origin + Vector3(0.0, 0.02, 0.0)
+	var face := v.rest_transform("Token0").basis
+	if t < FLIP_START:
+		_flip.visible = false
+		return
+	if t < FLIP_END:
+		if not _flip.visible:
+			Sfx.play(&"cop_fire", -10.0, 1.3)
+		_flip.visible = true
+		var u := (t - FLIP_START) / (FLIP_END - FLIP_START)
+		var land := slot + (EDGE_SPOT if _edge else Vector3.ZERO)
+		var at := slot.lerp(land, u) + Vector3(-0.015 * sin(u * PI), FLIP_HEIGHT * 4.0 * u * (1.0 - u), 0.0)
+		var spin := FLIP_TURNS * TAU * (1.0 - pow(1.0 - u, 1.6))
+		var turn := Basis(Vector3.UP, PI * 0.5 * u) if _edge else Basis.IDENTITY
+		_flip.transform = Transform3D(face * turn * Basis(Vector3.RIGHT, spin), at)
+		return
+	if not _landed:
+		_landed = true
+		_on_landed(v, slot)
+	if _edge:
+		_pose_edge(v, t - FLIP_END, slot + EDGE_SPOT, face)
+	else:
+		# Drops through the slot.
+		var k := clampf((t - FLIP_END) / 0.16, 0.0, 1.0)
+		_flip.visible = k < 1.0
+		_flip.transform = Transform3D(face, slot - Vector3(0.0, 0.035 * k * k, 0.0))
+		var lamps := fmod((t - FLIP_END) * 6.0, 1.0) < 0.6 and t < FLIP_END + 0.9
+		for c in _credits:
+			if c:
+				c.visible = lamps
+
+
+func inspect_end(v: WeaponView) -> void:
+	if _flip:
+		_flip.queue_free()
+		_flip = null
+	if v.model:
+		v.model.transform = v.rest_transform("Root")
+	_rattling = false
+
+
+func _on_landed(v: WeaponView, slot: Vector3) -> void:
+	if _edge:
+		Sfx.play(&"cop_fire", -8.0, 0.8)
+		return
+	Sfx.play(&"cop_payout", -14.0, 1.25)
+	v.spark_burst(slot + Vector3(0.0, 0.01, 0.0), Vector3.UP, BRASS, 6, 0.5, 0.25, 0.005)
+
+
+## On its edge: it wobbles to a stand, the hands shrug, then it tips over
+## and falls off the side.
+func _pose_edge(v: WeaponView, s: float, spot: Vector3, face: Basis) -> void:
+	var rock := sin(s * 22.0) * exp(-s * 4.5) * 0.35
+	var tip := WeaponInspect.window(s, 0.95, 1.2)
+	var fall := maxf(0.0, s - 1.2)
+	# Standing on its edge across the top; it tips over toward the left flank.
+	var b := Basis(Vector3.BACK, rock + tip * PI * 0.5 + fall * 6.0) * face * Basis(Vector3.UP, PI * 0.5)
+	var at := spot + Vector3(-0.016 * tip - fall * 0.12, -0.016 * tip - fall * fall * 1.6, 0.0)
+	_flip.transform = Transform3D(b, at)
+	_flip.visible = fall < 0.4
+	if s >= 0.95 and s - v.get_process_delta_time() < 0.95:
+		Sfx.play(&"cop_fire", -12.0, 0.7)
+	# The shrug: up, a palms-up roll each way, down.
+	var shrug := WeaponInspect.hump(s, 0.3, 0.95)
+	var roll := sin(clampf((s - 0.3) / 0.65, 0.0, 1.0) * TAU) * 7.0 * shrug
+	v.model.transform = v.rest_transform("Root") * Transform3D(Basis.from_euler(Vector3(deg_to_rad(-6.0 * shrug), 0.0, deg_to_rad(roll))), Vector3(0.0, 0.03 * shrug, 0.0))
 
 
 ## The stack: a spent token leaves the front and the rest ease forward; new

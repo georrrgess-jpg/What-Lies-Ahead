@@ -12,6 +12,7 @@ extends RefCounted
 ##   R3            chain saw (Toxic Ripsaw)
 ##   LB            station: next weapon of the slot
 ##   D-pad         station: up energy, down snack, left overshield, right boost
+##                 (away from the station, down inspects the weapon)
 ##   Start         pause                Back            start the next wave
 ##
 ## While a pad is in use, hits taken rumble it (rumble_hit), and the run
@@ -45,6 +46,7 @@ const LAYOUT := {
 	&"buy_damage_boost": [BUTTON, JOY_BUTTON_DPAD_RIGHT],
 	&"pause": [BUTTON, JOY_BUTTON_START],
 	&"start_wave": [BUTTON, JOY_BUTTON_BACK],
+	&"inspect": [BUTTON, JOY_BUTTON_DPAD_DOWN],
 }
 ## Stick deadzone for the actions this adds (look, and any action created here).
 const DEADZONE := 0.18

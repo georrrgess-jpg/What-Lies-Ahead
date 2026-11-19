@@ -12,6 +12,10 @@ render_mode unshaded, cull_back, shadows_disabled, fog_disabled;
 //   ripple  height (0-1, base to cap) of the glow ripple; below 0 none
 //   flare   a shot's pulse (fades in the view script)
 //   swirl   0-1 the liquid churns (the reload's flip)
+//   tint    the equipped energy cell's colour (alpha 1), or alpha 0 for the
+//           classic orange-to-magenta lamp: the wax takes the cell's hue and
+//           the liquid runs from just under it to a deeper neighbouring hue,
+//           the same steps the classic palette takes from its yellow wax
 uniform float count = 10.0;
 uniform float heat = 0.0;
 uniform float gather = 0.0;
@@ -19,15 +23,29 @@ uniform vec3 down = vec3(0.0, -1.0, 0.0);
 uniform float ripple = -1.0;
 uniform float flare = 0.0;
 uniform float swirl = 0.0;
+uniform vec4 tint = vec4(0.0);
 
 const int BLOBS = 10;
 const int STEPS = 18;
 // Glass height and radius profile (LAMP_PROFILE of the build script).
 const float H = 0.088;
-const vec3 WAX = vec3(1.0, 0.84, 0.26);
-const vec3 WAX_RIM = vec3(1.0, 0.45, 0.1);
-const vec3 LOW = vec3(1.0, 0.36, 0.08);
-const vec3 HIGH = vec3(0.95, 0.12, 0.5);
+const vec3 CLASSIC_WAX = vec3(1.0, 0.84, 0.26);
+const vec3 CLASSIC_RIM = vec3(1.0, 0.45, 0.1);
+const vec3 CLASSIC_LOW = vec3(1.0, 0.36, 0.08);
+const vec3 CLASSIC_HIGH = vec3(0.95, 0.12, 0.5);
+
+vec3 hsv(float h, float s, float v) {
+	vec3 k = clamp(abs(fract(h + vec3(0.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
+	return v * mix(vec3(1.0), k, s);
+}
+
+vec3 to_hsv(vec3 c) {
+	vec4 k = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	vec4 p = mix(vec4(c.bg, k.wz), vec4(c.gb, k.xy), step(c.b, c.g));
+	vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+	float d = q.x - min(q.w, q.y);
+	return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + 1e-10)), d / (q.x + 1e-10), q.x);
+}
 
 varying vec3 lp;
 varying vec3 cam;
@@ -67,6 +85,21 @@ void vertex() {
 }
 
 void fragment() {
+	vec3 WAX = CLASSIC_WAX;
+	vec3 WAX_RIM = CLASSIC_RIM;
+	vec3 LOW = CLASSIC_LOW;
+	vec3 HIGH = CLASSIC_HIGH;
+	if (tint.a > 0.5) {
+		// The classic palette's steps from its wax hue (0.12), kept for any cell.
+		vec3 c = to_hsv(tint.rgb);
+		float sat = c.y;
+		// The wax a pale, bright version of the hue so it stands out of the liquid
+		// whatever the hue (a yellow wax is bright by nature, a violet one is not).
+		WAX = mix(hsv(c.x, sat * 0.7, 1.0), vec3(1.0), 0.3);
+		WAX_RIM = hsv(c.x - 0.06, min(1.0, sat * 1.05), 1.0);
+		LOW = hsv(c.x - 0.07, sat * 0.92, mix(0.6, 0.85, sat));
+		HIGH = hsv(c.x - 0.2, sat * 0.87, mix(0.5, 0.75, sat));
+	}
 	// Where every blob is this frame (xyz) and its radius (w).
 	vec4 b[BLOBS + 1];
 	vec3 g = normalize(down);

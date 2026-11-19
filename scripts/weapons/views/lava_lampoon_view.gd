@@ -11,6 +11,11 @@ extends RefCounted
 ##   display   the holographic lamp icons on the left flank (Pip0..9), one per blob
 ##   prompt    the active-reload prompt over the lamp ("TAP R", then GROOVY!),
 ##             shown by the reload (scripts/weapons/reloads/lava_lampoon_reload.gd)
+## Inspect: the lamp is held up to the eye and the wax gets its groove on:
+## the blobs heat up and swirl round and up the glass, glow ripples run up it
+## twice, the gun sways to the beat and the cap bobs.
+## The lamp takes the colour of the equipped energy cell (dress_lamp), in
+## first person and in every menu preview.
 ## The static helpers here are shared with the reload, which poses the same
 ## parts while it runs.
 
@@ -25,6 +30,14 @@ const WOBBLE_KICK := 5.0
 const WOBBLE_K := 220.0
 const WOBBLE_DAMP := 11.0
 const CAP_RATTLE := 0.004
+const INSPECT_LENGTH := 3.0
+const INSPECT_POSES := [
+	[0.0, Vector3(0.14, -0.14, -0.62), Vector3(2.0, 12.0, -4.0)],
+	[0.16, Vector3(0.06, -0.16, -0.56), Vector3(4.0, 44.0, 4.0)],
+	[0.5, Vector3(0.05, -0.17, -0.54), Vector3(2.0, 36.0, -2.0)],
+	[0.8, Vector3(0.06, -0.16, -0.56), Vector3(6.0, 48.0, 2.0)],
+	[1.0, Vector3(0.14, -0.15, -0.62), Vector3(2.0, 6.0, 0.0)],
+]
 const PARTS: Array[String] = ["Lamp", "LampGlass", "LampCap", "LampRingHolo"]
 
 var _lamp: Node3D
@@ -48,9 +61,6 @@ func setup(v: WeaponView) -> void:
 	_mat = glass_material(v)
 	for i in PIPS:
 		_pips.append(v.part("Pip%d" % i))
-	var wax := v.model.find_child("LampWax", true, false) as Node3D
-	if wax:
-		wax.visible = false
 	var ring := v.part("LampRingHolo") as MeshInstance3D
 	if ring:
 		var holo := ShaderMaterial.new()
@@ -84,6 +94,42 @@ func update(v: WeaponView, delta: float) -> void:
 	set_lamp(_mat, _glass, mag / ROUNDS_PER_BLOB, _heat, 0.0, 0.0, -1.0, _flare)
 	show_pips(_pips, ceili(mag / ROUNDS_PER_BLOB))
 	_update_wobble(v, delta)
+
+
+func inspect_length() -> float:
+	return INSPECT_LENGTH
+
+
+func inspect_poses() -> Array:
+	return INSPECT_POSES
+
+
+func inspect_start(_v: WeaponView) -> void:
+	Sfx.play(&"weap_lava_groovy", -9.0)
+
+
+func inspect(v: WeaponView, t: float) -> void:
+	if _mat == null:
+		return
+	var groove := WeaponInspect.hump(t, 0.2, 2.8)
+	var w := weapons_of(v)
+	var mag := w.magazine() if w else v.data.magazine_size
+	var ripple := -1.0
+	for start in [0.9, 1.6]:
+		if t >= start and t < start + 0.6:
+			ripple = (t - start) / 0.6
+	set_lamp(_mat, _glass, mag / ROUNDS_PER_BLOB, maxf(_heat, groove), 0.0, groove, ripple, 0.25 * groove * (0.5 + 0.5 * sin(t * 9.0)))
+	# Sways to the beat (about two beats a second) and the cap bobs on it.
+	var beat := sin(t * PI * 2.0) * groove
+	v.model.transform = v.rest_transform("Root") * Transform3D(Basis(Vector3.BACK, deg_to_rad(6.0 * beat)), Vector3(0.0, 0.004 * absf(beat), 0.0))
+	if _cap:
+		var cap_rest := v.rest_transform("LampCap")
+		_cap.transform = Transform3D(cap_rest.basis, cap_rest.origin + Vector3.UP * 0.003 * absf(sin(t * PI * 4.0)) * groove)
+
+
+func inspect_end(v: WeaponView) -> void:
+	if v.model:
+		v.model.transform = v.rest_transform("Root")
 
 
 ## The lamp rocks on its socket after each shot and the cap rattles.
@@ -139,7 +185,10 @@ static func weapons_of(v: WeaponView) -> WeaponController:
 
 ## The lamp glass's wax shader, made on first use.
 static func glass_material(v: WeaponView) -> ShaderMaterial:
-	var glass := v.part("LampGlass") as MeshInstance3D
+	return _lamp_material(v.part("LampGlass") as MeshInstance3D)
+
+
+static func _lamp_material(glass: MeshInstance3D) -> ShaderMaterial:
 	if glass == null:
 		return null
 	if glass.material_override is ShaderMaterial:
@@ -148,6 +197,24 @@ static func glass_material(v: WeaponView) -> ShaderMaterial:
 	m.shader = load(LAMP_SHADER)
 	glass.material_override = m
 	return m
+
+
+## Fills a Lava Lampoon model's lamp (first person and every menu preview)
+## with the live wax, in the colour of the equipped energy cell `cell` (the
+## classic orange and magenta without one). WeaponCosmetics.apply calls this
+## for every model; models without a lamp are left alone.
+static func dress_lamp(model: Node3D, cell: CosmeticItem) -> void:
+	var glass := model.find_child("LampGlass", true, false) as MeshInstance3D
+	if glass == null:
+		return
+	var wax := model.find_child("LampWax", true, false) as Node3D
+	if wax:
+		wax.visible = false
+	var tint := Color(0, 0, 0, 0)
+	if cell:
+		tint = WeaponCosmetics.cell_glow_color(cell.color(0))
+		tint.a = 1.0
+	_lamp_material(glass).set_shader_parameter("tint", tint)
 
 
 ## Sets every wax parameter; gravity comes from the glass's place in the world.

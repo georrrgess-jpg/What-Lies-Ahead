@@ -9,6 +9,9 @@ extends RefCounted
 ## (RadarScreen, ground_control_radar.gdshader) sweeps and blips where
 ## zombies are around the player; the signal bars on the left flank (Bar0..4)
 ## show the magazine.
+## Inspect: the gun turns its dish to the eye, the solar wing unfolds tile by
+## tile, the dish sweeps the sky left and right, locks on and pings (the core
+## flashes, a ring of sparks, a chime), and the wing folds away again.
 
 const BARS := 5
 const WINGS := 3
@@ -27,6 +30,18 @@ const RADAR_RANGE := 30.0
 const RADAR_REFRESH := 0.2
 const LIME := Color(0.66, 0.9, 0.24)
 const PINK := Color(1.0, 0.37, 0.64)
+const INSPECT_LENGTH := 2.9
+const PING_AT := 1.95
+## The dish's sweep (degrees either way) and how long each pass takes.
+const SWEEP := 32.0
+const INSPECT_POSES := [
+	[0.0, Vector3(0.14, -0.14, -0.62), Vector3(2.0, -16.0, -2.0)],
+	[0.18, Vector3(0.06, -0.11, -0.6), Vector3(10.0, -92.0, 6.0)],
+	[0.45, Vector3(0.05, -0.1, -0.6), Vector3(12.0, -112.0, 4.0)],
+	[0.7, Vector3(0.05, -0.1, -0.6), Vector3(10.0, -118.0, 2.0)],
+	[0.86, Vector3(0.08, -0.12, -0.58), Vector3(6.0, -60.0, 0.0)],
+	[1.0, Vector3(0.14, -0.15, -0.62), Vector3(2.0, -6.0, 0.0)],
+]
 const CRACKLE := [Color(1.0, 0.45, 0.75), Color(1.0, 0.95, 1.0), Color(0.75, 0.95, 0.4)]
 
 var _wings: Array[Node3D] = []
@@ -45,6 +60,7 @@ var _since_shot := 10.0
 var _shot_power := 0.0
 var _crackle := 0.0
 var _was_stalled := false
+var _pinged := false
 
 
 func setup(v: WeaponView) -> void:
@@ -96,6 +112,61 @@ func update(v: WeaponView, delta: float) -> void:
 	_pose_beacon(delta, charge, over, stall)
 	_pose_dish(v, delta, over, stall)
 	_show_bars(v)
+
+
+func inspect_length() -> float:
+	return INSPECT_LENGTH
+
+
+func inspect_poses() -> Array:
+	return INSPECT_POSES
+
+
+func inspect_start(_v: WeaponView) -> void:
+	_pinged = false
+
+
+func inspect(v: WeaponView, t: float) -> void:
+	for k in _wings.size():
+		var open := WeaponInspect.window(t, 0.35 + k * 0.14, 0.55 + k * 0.14) * (1.0 - WeaponInspect.window(t, 2.25 + (2 - k) * 0.1, 2.45 + (2 - k) * 0.1))
+		_wing_open[k] = open
+		if _wings[k]:
+			var side := 1.0 if k % 2 == 0 else -1.0
+			var fold := deg_to_rad(FOLD * (1.0 - open) * side) - sin(open * PI) * 0.12 * side
+			_wings[k].transform = v.rest_transform("Wing%d" % (k + 1)) * Transform3D(Basis(Vector3.BACK, fold), Vector3.ZERO)
+	if _dish:
+		# Sweeps left and right, slows, locks on dead ahead; the ping kicks it back.
+		var sweep := sin(clampf((t - 0.7) / 1.1, 0.0, 1.0) * TAU * 1.5) * SWEEP * (1.0 - WeaponInspect.window(t, 1.45, 1.8))
+		var nod := 6.0 * WeaponInspect.hump(t, 0.7, 1.8)
+		var kick := WeaponInspect.hump(t, PING_AT, PING_AT + 0.3) * (1.0 - clampf((t - PING_AT) / 0.3, 0.0, 1.0))
+		var b := Basis.from_euler(Vector3(deg_to_rad(nod - 8.0 * kick), deg_to_rad(sweep), 0.0))
+		_dish.transform = v.rest_transform("Dish") * Transform3D(b, Vector3(0.0, 0.0, 0.03 * kick))
+	if _core_mat:
+		var flash := exp(-maxf(0.0, t - PING_AT) * 6.0) if t >= PING_AT else 0.0
+		_core_mat.emission = LIME.lerp(Color(0.9, 1.0, 0.85), flash)
+		_core_mat.albedo_color = _core_mat.emission
+		_core_mat.emission_energy_multiplier = 2.4 + flash * 5.0
+	if _beacon_mat and t > 0.6 and t < PING_AT:
+		_beacon_mat.emission_energy_multiplier = 0.3 + 3.2 * float(fmod(t * 5.0, 1.0) < 0.4)
+	if t >= PING_AT and not _pinged:
+		_pinged = true
+		_ping(v)
+
+
+func inspect_end(_v: WeaponView) -> void:
+	_wing_open = [0.0, 0.0, 0.0]
+
+
+## The lock-on ping: a chime and a ring of sparks off the dish's rim.
+func _ping(v: WeaponView) -> void:
+	Sfx.play(&"gc_chime", -8.0, 1.1)
+	if _dish == null:
+		return
+	var centre := _model_point(v, _dish) + Vector3(0.0, 0.0, -0.06)
+	for i in 10:
+		var a := TAU * i / 10.0
+		var out := Vector3(cos(a), sin(a), -0.25)
+		v.spark_burst(centre + Vector3(cos(a), sin(a), 0.0) * 0.1, out, CRACKLE if i % 2 == 0 else [LIME, Color.WHITE], 2, 0.8, 0.35, 0.007)
 
 
 ## Each step of the charge unfolds one more tile of the solar wing.
