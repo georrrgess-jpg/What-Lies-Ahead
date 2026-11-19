@@ -11,6 +11,13 @@ extends Node
 ##   rect.texture = WeaponThumbs.texture(weapon)
 
 const SIZE := Vector2i(288, 144)
+## How the weapon is turned: side-on with the barrel to the left, a little
+## from above.
+const TURN_DEGREES := Vector3(8, 82, 0)
+## Height of the frame in model units (the camera is orthographic).
+const VIEW_HEIGHT := 1.0
+## Share of the frame's width and height the weapon's silhouette may fill.
+const FILL := Vector2(0.9, 0.84)
 
 static var _cache := {}
 
@@ -102,45 +109,73 @@ func _build_stage() -> void:
 	_pivot = Node3D.new()
 	_viewport.add_child(_pivot)
 	var cam := Camera3D.new()
-	cam.position = Vector3(0, 0.02, 1.25)
-	cam.fov = 26.0
+	# Orthographic: no perspective to stretch the near end of a long weapon,
+	# and the frame is an exact VIEW_HEIGHT tall (twice that wide) to fit into.
+	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+	cam.size = VIEW_HEIGHT
+	cam.position = Vector3(0, 0, 4)
 	_viewport.add_child(cam)
 
 
-## Puts `weapon` (no arms, with its cosmetics) side-on in front of the camera.
+## Puts `weapon` (no arms, with its cosmetics) side-on in front of the camera,
+## scaled so its silhouette fills FILL of the frame and centred on it.
 func _pose(weapon: WeaponData) -> void:
 	for c in _pivot.get_children():
 		c.free()
 	var model: Node3D = weapon.viewmodel.instantiate()
-	for part_name in ["ArmL", "ArmR"]:
-		var part := model.find_child(part_name, true, false) as Node3D
-		if part:
-			part.visible = false
-	for holo in model.find_children("*Holo", "Node3D", true, false):
-		(holo as Node3D).visible = false
+	# The arms, the reload-only fists and the hologram copies are not part of
+	# the weapon (Jack Pot's fist alone is four times its height).
+	WeaponCosmetics.prepare_preview(model)
 	WeaponCosmetics.apply(model, weapon, Cosmetics.weapon_loadout(weapon.id))
-	var bounds := _bounds(model)
-	model.position = -bounds.get_center()
+	# Turned before it enters the tree, so a charm hangs from it the way it shows.
+	var turn := Basis.from_euler(TURN_DEGREES * PI / 180.0)
+	_pivot.transform = Transform3D(turn, Vector3.ZERO)
 	_pivot.add_child(model)
-	_pivot.rotation_degrees = Vector3(8, 82, 0)
-	_pivot.scale = Vector3.ONE * (1.0 / maxf(0.01, maxf(bounds.size.z, bounds.size.y * 2.2)))
+	var shape := silhouette(model, turn)
+	var view := Vector2(VIEW_HEIGHT * SIZE.x / SIZE.y, VIEW_HEIGHT)
+	var k := minf(view.x * FILL.x / maxf(0.001, shape.size.x), view.y * FILL.y / maxf(0.001, shape.size.y))
+	var centre := shape.get_center()
+	_pivot.transform = Transform3D(turn.scaled(Vector3.ONE * k), Vector3(-centre.x, -centre.y, 0.0) * k)
 
 
-## The box around every visible mesh of `root`, in root's space.
-static func _bounds(root: Node3D) -> AABB:
-	var result := AABB()
+## The rectangle the visible meshes of `model` cover on screen (x right, y up)
+## when it is turned by `turn` and seen from the front, in model units.
+## Measured mesh by mesh, so it is as tight as the parts themselves; a part
+## under a hidden node does not count.
+static func silhouette(model: Node3D, turn: Basis) -> Rect2:
+	var rect := Rect2()
 	var first := true
-	for node in root.find_children("*", "MeshInstance3D", true, false):
+	for node in model.find_children("*", "MeshInstance3D", true, false):
 		var mesh := node as MeshInstance3D
-		if not mesh.visible or mesh.mesh == null:
+		if mesh.mesh == null or not _shown(model, mesh):
 			continue
-		var xf := Transform3D.IDENTITY
-		var n: Node = mesh
-		while n != root and n != null:
-			if n is Node3D:
-				xf = (n as Node3D).transform * xf
-			n = n.get_parent()
-		var box := xf * mesh.mesh.get_aabb()
-		result = box if first else result.merge(box)
-		first = false
-	return result
+		var xf := Transform3D(turn, Vector3.ZERO) * _relative(model, mesh)
+		var box := mesh.mesh.get_aabb()
+		for i in 8:
+			var p := xf * box.get_endpoint(i)
+			if first:
+				rect = Rect2(p.x, p.y, 0.0, 0.0)
+				first = false
+			else:
+				rect = rect.expand(Vector2(p.x, p.y))
+	return rect
+
+
+static func _shown(root: Node3D, node: Node3D) -> bool:
+	var n: Node = node
+	while n and n != root:
+		if n is Node3D and not (n as Node3D).visible:
+			return false
+		n = n.get_parent()
+	return true
+
+
+## `child`'s transform in `root`'s space.
+static func _relative(root: Node3D, child: Node3D) -> Transform3D:
+	var xf := Transform3D.IDENTITY
+	var n: Node = child
+	while n and n != root:
+		if n is Node3D:
+			xf = (n as Node3D).transform * xf
+		n = n.get_parent()
+	return xf
