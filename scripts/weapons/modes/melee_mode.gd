@@ -33,7 +33,7 @@ var phase := Phase.IDLE
 var elapsed := 0.0
 ## 0-1 wind-up of the heavy swing (kept through the heavy swing it powers).
 var charge := 0.0
-## Counts the swings: even swings go right to left, odd ones left to right.
+## Counts the swings: the first (odd) swings go right to left, even ones left to right.
 var swing_index := 0
 ## Counts the swings that struck something (the view shakes on a change).
 var hits := 0

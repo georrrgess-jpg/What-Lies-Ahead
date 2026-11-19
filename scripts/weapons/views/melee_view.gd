@@ -89,7 +89,7 @@ func update(view: WeaponView, delta: float) -> void:
 	var follow := 1.0
 	var inspecting := view.has_method("is_inspecting") and bool(view.call("is_inspecting"))
 	if mode and not inspecting:
-		var side := 1.0 if mode.swing_index % 2 == 0 else -1.0
+		var side := 1.0 if mode.swing_index % 2 == 1 else -1.0
 		match mode.phase:
 			MeleeMode.Phase.LIGHT:
 				var pose := _sample(light_keys(), mode.progress())
