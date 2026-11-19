@@ -30,6 +30,9 @@ const ENEMY_ROWS := 2
 ## The level's name keeps to one line: its font shrinks to fit, down to this.
 const NAME_FONT := 68
 const NAME_FONT_MIN := 44
+## The Endless reward track keeps to this many rows: the rewards still to
+## earn first, the rest counted on "+N MORE" (so START stays on the page).
+const REWARD_ROWS := 2
 ## Lines of the level's blurb shown (the rest is cut and in its tooltip).
 const BLURB_LINES := 2
 ## Size of the level's key art on the details board.
@@ -105,6 +108,9 @@ var _enemies: HFlowContainer
 ## bosses) and how many kinds the level's waves have.
 var _more_chip: KitChip
 var _enemy_kinds := 0
+## The Endless reward track and its "+N MORE" chip (last in the track).
+var _reward_track: HFlowContainer
+var _reward_more: KitChip
 var _lock: Control
 var _art: TextureRect
 ## In ENDLESS, the endless level's card takes the key art's place on the
@@ -314,6 +320,9 @@ func _build_info() -> Control:
 	head.add_child(text)
 	head.add_child(_build_art())
 	_world_caption = UiKit.label("", UiKit.SIZE_LABEL, UiKit.CYAN, true)
+	# A long caption is cut rather than widening the board past the page.
+	_world_caption.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_world_caption.mouse_filter = Control.MOUSE_FILTER_PASS
 	text.add_child(_world_caption)
 	_level_name = UiKit.sign_label("", NAME_FONT)
 	_level_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -732,16 +741,26 @@ func _fill_endless(rules: EndlessRules) -> void:
 		var note := "START" if d.price == 0 else "%d TICKETS" % d.price
 		var lit := d.price == 0 or EndlessRecords.has_opened(d.id)
 		row.add_child(_pill(d.display_name.to_upper(), note, d.accent_color, lit, UiKit.AMBER if d.price > 0 else UiKit.GREEN))
-	_endless_box.add_child(UiKit.section("REWARD TRACK", "", UiKit.AMBER))
+	var rewards := EndlessRewards.track(rules)
+	var done := rewards.filter(func(e: Dictionary) -> bool: return bool(e["met"]))
+	var todo := rewards.filter(func(e: Dictionary) -> bool: return not bool(e["met"]))
+	_endless_box.add_child(UiKit.section("REWARD TRACK", "%d / %d earned" % [done.size(), rewards.size()] if not rewards.is_empty() else "", UiKit.AMBER))
 	var track := HFlowContainer.new()
 	track.add_theme_constant_override("h_separation", UiKit.GAP_S)
 	track.add_theme_constant_override("v_separation", UiKit.GAP_S)
 	_endless_box.add_child(track)
-	var rewards := EndlessRewards.track(rules)
+	_reward_track = null
 	if rewards.is_empty():
 		track.add_child(UiKit.body("Rewards arrive with the city's camos, its weapon and its Mythic finish.", 0, UiKit.SIZE_SMALL, UiKit.MUTED))
-	for e in rewards:
-		track.add_child(_reward_chip(e))
+	else:
+		for e in todo + done:
+			track.add_child(_reward_chip(e))
+		_reward_more = UiKit.chip("", UiKit.AMBER, 22, false)
+		_reward_more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		track.add_child(_reward_more)
+		_reward_track = track
+		track.resized.connect(_fit_rewards)
+		_fit_rewards()
 	_endless_box.add_child(UiKit.section("HOW IT PLAYS", "", EndlessCard.EMBER))
 	var rules_row := HFlowContainer.new()
 	rules_row.add_theme_constant_override("h_separation", UiKit.GAP_S)
@@ -879,22 +898,36 @@ func _fit_enemies() -> void:
 	kinds.assign(chips.slice(0, count))
 	var bosses: Array[Control] = []
 	bosses.assign(chips.slice(count))
-	var width := _enemies.size.x
-	var shown := kinds.size()
-	while shown > 0 and width > 0.0:
-		var hidden := _enemy_kinds - shown
-		_more_chip.set_text("+%d MORE" % hidden)
-		var row: Array[Control] = kinds.slice(0, shown)
-		if hidden > 0:
-			row.append(_more_chip)
-		row.append_array(bosses)
-		if _flow_rows(row, width) <= ENEMY_ROWS:
+	_fit_flow(_enemies, kinds, bosses, _more_chip, _enemy_kinds, ENEMY_ROWS)
+
+
+## Shows as many rewards as fit in REWARD_ROWS rows (the others are counted
+## on the "+N MORE" chip).
+func _fit_rewards() -> void:
+	if _reward_track == null or not is_instance_valid(_reward_track):
+		return
+	var items: Array[Control] = []
+	items.assign(_reward_track.get_children().filter(func(c: Node) -> bool: return c != _reward_more))
+	_fit_flow(_reward_track, items, [], _reward_more, items.size(), REWARD_ROWS)
+
+
+## Shows the first of `items` that fit in `rows` rows of `flow` with the
+## `tail` after them, and counts the rest (of `total`) on the `more` chip.
+func _fit_flow(flow: HFlowContainer, items: Array[Control], tail: Array[Control], more: KitChip, total: int, rows: int) -> void:
+	var shown := items.size()
+	while shown > 0 and flow.size.x > 0.0:
+		more.set_text("+%d MORE" % (total - shown))
+		var row: Array[Control] = items.slice(0, shown)
+		if shown < total:
+			row.append(more)
+		row.append_array(tail)
+		if _flow_rows(row, flow.size.x) <= rows:
 			break
 		shown -= 1
-	for i in kinds.size():
-		kinds[i].visible = i < shown
-	_more_chip.set_text("+%d MORE" % (_enemy_kinds - shown))
-	_more_chip.visible = shown < _enemy_kinds
+	for i in items.size():
+		items[i].visible = i < shown
+	more.set_text("+%d MORE" % (total - shown))
+	more.visible = shown < total
 
 
 ## Rows an HFlowContainer `width` wide takes for `items`.
@@ -912,8 +945,10 @@ func _flow_rows(items: Array[Control], width: float) -> int:
 	return rows
 
 
-## Sets the level's name and blurb (each in full in its tooltip).
+## Sets the level's name and blurb (each in full in its tooltip, as is the
+## caption over them).
 func _set_name(title: String, blurb: String) -> void:
+	_world_caption.tooltip_text = _world_caption.text
 	_level_name.text = title
 	_level_name.tooltip_text = title
 	_blurb.text = blurb
