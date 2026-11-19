@@ -93,10 +93,12 @@ void fragment() {
 		// The classic palette's steps from its wax hue (0.12), kept for any cell.
 		vec3 c = to_hsv(tint.rgb);
 		float sat = c.y;
-		WAX = hsv(c.x, sat * 0.75, 1.0);
+		// The wax a pale, bright version of the hue so it stands out of the liquid
+		// whatever the hue (a yellow wax is bright by nature, a violet one is not).
+		WAX = mix(hsv(c.x, sat * 0.7, 1.0), vec3(1.0), 0.3);
 		WAX_RIM = hsv(c.x - 0.06, min(1.0, sat * 1.05), 1.0);
-		LOW = hsv(c.x - 0.07, sat * 0.92, mix(0.75, 1.0, sat));
-		HIGH = hsv(c.x - 0.2, sat * 0.87, mix(0.6, 0.95, sat));
+		LOW = hsv(c.x - 0.07, sat * 0.92, mix(0.6, 0.85, sat));
+		HIGH = hsv(c.x - 0.2, sat * 0.87, mix(0.5, 0.75, sat));
 	}
 	// Where every blob is this frame (xyz) and its radius (w).
 	vec4 b[BLOBS + 1];
