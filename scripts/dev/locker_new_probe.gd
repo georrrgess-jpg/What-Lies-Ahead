@@ -1,59 +1,84 @@
 extends RefCounted
-## The Locker's NEW markers: lists every item counted as new (the home
-## tile's "N new to try on") with where the Locker shows it, then looks at
-## every card of every tab on the weapon being customised (what is left, and
-## what the weapon plate says about it), then on every weapon, as a player
-## clicking through would, and reports what is still counted as new.
+## The Locker's NEW markers, played like a player clearing them: every card
+## of every tab on the weapon being customised is looked at, then every tab
+## badge on that weapon must read 0 (each badge counts only NEW cards its
+## tray can show). Then the picker visits each weapon whose class tab still
+## shows a count, and the home tile's count must reach 0. Also checks that
+## the header's group badges add up to the home tile's count throughout.
 ##
 ##   godot --headless --path . -- --profile=<copy> --shot=/tmp/x.png \
 ##       --shot-scene=locker --shot-run=res://scripts/dev/locker_new_probe.gd
 ##
-## Prints "[new] item <id> ..." lines and "[new] DONE before N, after M".
+## Prints "[new] ..." lines and "[new] DONE before N, after M, problems P".
+
+var _problems := 0
 
 
 func run(_shot: Node, menu: Node) -> void:
 	var page: LockerPage = menu.page("locker")
 	var before := Cosmetics.new_count()
-	for it in GameData.cosmetics():
-		if Cosmetics.is_new(it):
-			print("[new] item %s slot %s weapon '%s' tab %s shown on %s" % [it.id, it.slot, it.weapon_id,
-					page._has_tab(it.slot), _shown_on(page, it)])
-	# A player who looks at every card of every tab on the weapon they customise.
+	_check_totals(page, "start")
 	for slot in _tabs(page):
 		page.show_category(slot)
+		_check_tab(page, slot)
 		_look_at_all(page)
-	print("[new] after every card on %s: %d still new" % [page._weapon_id, Cosmetics.new_count()])
+	var left := 0
 	for slot in _tabs(page):
-		if Cosmetics.new_count(slot) > 0:
+		page.show_category(slot)
+		left += _badge(page._tabs.button(slot))
+	print("[new] after every card on %s: tab badges %d, still new %d, class badges %d / %d" % [page._weapon_id, left,
+			Cosmetics.new_count(), _badge(page._class_tabs[0]), _badge(page._class_tabs[1])])
+	if left != 0:
+		_fail("tab badges left on %s: %d" % [page._weapon_id, left])
+	_check_totals(page, "after one weapon")
+	# Visit each weapon the class tabs point to, as the arrows would.
+	var visits := 0
+	for w in GameData.weapons():
+		if not _has_new_specific(w.id):
+			continue
+		visits += 1
+		page.select_weapon(w.id)
+		for slot in _tabs(page):
 			page.show_category(slot)
-			print("[new]   tab %s badge %d, cards marked NEW %d, weapon note '%s'" % [slot, Cosmetics.new_count(slot),
-					page._cards.filter(func(c: LockerCard) -> bool: return c.visible and Cosmetics.is_new(c.item)).size(),
-					page._weapon_plate._note.text])
-	# ... and then on every weapon.
-	for slot in _tabs(page):
-		var weapons: Array = GameData.weapons() if LockerCatalog.is_weapon_slot(slot) else [page._weapon()]
-		for w in weapons:
-			page.select_weapon((w as WeaponData).id)
-			page.show_category(slot)
+			_check_tab(page, slot)
 			_look_at_all(page)
 		await menu.get_tree().process_frame
+	_check_totals(page, "end")
 	for it in GameData.cosmetics():
 		if Cosmetics.is_new(it):
-			print("[new] still new %s slot %s" % [it.id, it.slot])
-	var badges := 0
-	for id in page._group_tabs:
-		for slot in (page._group_tabs[id] as KitTabs).ids():
-			badges += PrizePrints.new_count() if slot == LockerFilters.PRINTS else Cosmetics.new_count(slot)
-	print("[new] DONE before %d, after %d (tab badges %d)" % [before, Cosmetics.new_count(), badges])
+			_fail("still new %s (%s)" % [it.id, it.slot])
+	print("[new] DONE before %d, after %d (weapons visited %d), problems %d" % [before, Cosmetics.new_count(), visits, _problems])
 
 
-## The weapons whose tray (unfiltered) shows `it`, or "-" when none does.
-func _shown_on(page: LockerPage, it: CosmeticItem) -> String:
-	var out: Array[String] = []
-	for w in GameData.weapons():
-		if LockerFilters.items(it.slot, w.id, LockerFilters.State.new()).has(it):
-			out.append(String(w.id))
-	return ", ".join(out) if not out.is_empty() else "-"
+## A tab's badge equals the NEW cards on show.
+func _check_tab(page: LockerPage, slot: StringName) -> void:
+	var shown := page._cards.filter(func(c: LockerCard) -> bool: return c.visible and Cosmetics.is_new(c.item)).size()
+	var badge := _badge(page._tabs.button(slot))
+	if badge != shown:
+		_fail("%s on %s: badge %d, NEW cards %d" % [slot, page._weapon_id, badge, shown])
+
+
+## The header's groups add up to the home tile's count (plus new prints).
+func _check_totals(page: LockerPage, when: String) -> void:
+	var total := 0
+	for g in LockerFilters.GROUPS:
+		total += _badge(page._groups.button(g["id"]))
+	var home := Cosmetics.new_count() + PrizePrints.new_count()
+	print("[new] %s: header %d, home tile %d (+%d prints)" % [when, total, Cosmetics.new_count(), PrizePrints.new_count()])
+	if total != home:
+		_fail("%s: header %d != home %d" % [when, total, home])
+
+
+func _has_new_specific(weapon_id: StringName) -> bool:
+	for it in GameData.cosmetics():
+		if it.weapon_id == weapon_id and Cosmetics.is_new(it):
+			return true
+	return false
+
+
+func _badge(button: Control) -> int:
+	var chip := button.get_node_or_null("Badge") as KitChip if button else null
+	return int(chip._label.text) if chip and chip.visible else 0
 
 
 func _tabs(page: LockerPage) -> Array[StringName]:
@@ -66,3 +91,8 @@ func _look_at_all(page: LockerPage) -> void:
 	for card in page._cards:
 		if card.visible:
 			page._select(card.item, false)
+
+
+func _fail(what: String) -> void:
+	_problems += 1
+	print("[new] PROBLEM " + what)

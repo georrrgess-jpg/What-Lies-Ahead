@@ -137,7 +137,6 @@ func _prewarm_cards(count: int) -> void:
 func refresh() -> void:
 	_built = true
 	_refresh_collection()
-	_refresh_badges()
 	_open(_slot, _selected)
 	_deal_cards()
 
@@ -420,7 +419,7 @@ func _open(slot: StringName, prefer: CosmeticItem) -> void:
 	_item_side.visible = not prints
 	_inspect.visible = prints
 	_toolbar.set_state(_state(slot), prints, _weapon_class())
-	_refresh_weapon_plate()
+	_refresh_badges()
 	if not _built:
 		return
 	_scroll.scroll_vertical = 0
@@ -884,20 +883,49 @@ func _refresh_states() -> void:
 			card.refresh_state()
 
 
+## NEW counts where they can be cleared: a category tab counts what its
+## tray shows NEW for the weapon being customised; items made for one other
+## weapon count on that weapon's class tab (PRIMARIES / SECONDARIES) until
+## the picker reaches it. The groups add up their tabs (WEAPON also the
+## class tabs), so the header totals what the home tile counts.
 func _refresh_badges() -> void:
-	var group_counts := {}
+	var tab_counts := {LockerFilters.PRINTS: PrizePrints.new_count()}
+	var class_counts := [0, 0]
+	for it in GameData.cosmetics():
+		if not Cosmetics.is_new(it):
+			continue
+		if not it.is_weapon_slot() or it.fits_weapon(_weapon_id):
+			tab_counts[it.slot] = int(tab_counts.get(it.slot, 0)) + 1
+		else:
+			class_counts[Loadout.slot_for(GameData.weapon(it.weapon_id))] += 1
+	var weapon_group: StringName = LockerFilters.group_of(&"weapon_finish")["id"]
 	for id in _group_tabs:
 		var tabs: KitTabs = _group_tabs[id]
-		var total := 0
+		var total: int = class_counts[0] + class_counts[1] if id == weapon_group else 0
 		for slot in tabs.ids():
-			var count := PrizePrints.new_count() if slot == LockerFilters.PRINTS else Cosmetics.new_count(slot)
+			var count: int = tab_counts.get(slot, 0)
 			total += count
 			tabs.set_badge(slot, count)
 			_tuck_badge(tabs.button(slot))
-		group_counts[id] = total
-	for id in group_counts:
-		_groups.set_badge(id, group_counts[id])
+		_groups.set_badge(id, total)
+	for i in _class_tabs.size():
+		_set_class_badge(_class_tabs[i], class_counts[i])
 	_refresh_weapon_plate()
+
+
+## A class tab's count of NEW items made for its other weapons.
+func _set_class_badge(tab: SignButton, count: int) -> void:
+	var badge := tab.get_node_or_null("Badge") as KitChip
+	if badge == null:
+		if count <= 0:
+			return
+		badge = KitChip.make("", UiKit.AMBER, 14, false)
+		badge.name = "Badge"
+		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tab.add_child(badge)
+		_tuck_badge(tab)
+	badge.visible = count > 0
+	badge.set_text(str(count))
 
 
 ## Keeps a tab's count inside its top right corner.
@@ -1028,7 +1056,7 @@ func _pick_class(slot_index: int) -> void:
 ## case once the picker rests (see WEAPON_DELAY).
 func _switch_weapon(weapon_id: StringName) -> void:
 	_set_weapon(weapon_id)
-	_refresh_weapon_plate()
+	_refresh_badges()
 	if _built:
 		_weapon_timer.start()
 
