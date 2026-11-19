@@ -952,7 +952,7 @@ func _refresh_weapon_plate() -> void:
 
 ## Where the open category's NEW items made for one other weapon are (the
 ## tab's count includes them, the tray of this weapon cannot show them):
-## "NEW ON ION CARBINE", "NEW ON 2 OTHER WEAPONS", or "".
+## "NEW ON ION CARBINE", "NEW ON ION CARBINE  +2" (two more weapons), or "".
 func _new_elsewhere_note() -> String:
 	var names: Array[String] = []
 	for it in Cosmetics.items_for(_slot):
@@ -963,7 +963,7 @@ func _new_elsewhere_note() -> String:
 				names.append(label)
 	if names.is_empty():
 		return ""
-	return "NEW ON " + names[0] if names.size() == 1 else "NEW ON %d OTHER WEAPONS" % names.size()
+	return "NEW ON " + names[0] + ("" if names.size() == 1 else "  +%d" % (names.size() - 1))
 
 
 # --- the weapon picker ---------------------------------------------------------------
