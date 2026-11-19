@@ -22,16 +22,16 @@ const SHOULDER := Vector3(0.12, -0.4, 0.08)
 ## Light slash: a diagonal cut from high right to low left across the frame.
 const GLOW_LIGHT_KEYS := [
 	[0.0, Vector3.ZERO, Vector3.ZERO],
-	[0.16, Vector3(0.03, 0.04, 0.02), Vector3(0.0, -4.0, -14.0)],
-	[0.38, Vector3(-0.1, 0.05, -0.05), Vector3(0.0, 6.0, 22.0)],
-	[0.56, Vector3(-0.16, 0.02, -0.03), Vector3(-4.0, 10.0, 30.0)],
+	[0.16, Vector3(0.05, 0.05, 0.02), Vector3(0.0, -6.0, -8.0)],
+	[0.38, Vector3(-0.16, 0.04, -0.05), Vector3(-4.0, 10.0, 8.0)],
+	[0.56, Vector3(-0.22, 0.0, -0.03), Vector3(-8.0, 14.0, 12.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Heavy: wound up high over the shoulder, then a big chop down through the middle.
 const GLOW_HEAVY_KEYS := [
-	[0.0, Vector3(0.02, 0.08, 0.0), Vector3(6.0, -2.0, -16.0)],
-	[0.24, Vector3(-0.08, 0.0, -0.06), Vector3(-6.0, 4.0, 20.0)],
-	[0.46, Vector3(-0.12, -0.04, -0.04), Vector3(-12.0, 8.0, 28.0)],
+	[0.0, Vector3(0.03, 0.09, 0.02), Vector3(8.0, -4.0, -10.0)],
+	[0.24, Vector3(-0.12, -0.02, -0.07), Vector3(-10.0, 8.0, 10.0)],
+	[0.46, Vector3(-0.16, -0.06, -0.04), Vector3(-16.0, 12.0, 14.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Idle: every IDLE_FLICK_EVERY seconds at rest the thumb flicks the blade half
