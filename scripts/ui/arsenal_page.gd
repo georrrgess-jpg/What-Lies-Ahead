@@ -88,6 +88,7 @@ func _build_regions() -> void:
 	_dock = ArsenalDock.new()
 	_dock.name = "Dock"
 	_dock.chosen.connect(_select)
+	_dock.page_shown.connect(_bake_shown)
 	_root.add_child(_dock)
 	_dock.build(Loadout.weapons_for(Loadout.PRIMARY) + Loadout.weapons_for(Loadout.SECONDARY))
 
@@ -118,11 +119,16 @@ func refresh() -> void:
 	_refresh_states()
 	_apply_layout()
 	# The pictures on screen first, then the rest.
-	var first: Array[WeaponData] = []
-	for c in _dock.visible_cards():
-		first.append(c.weapon)
-	_thumbs.bake(first)
+	_bake_shown()
 	_thumbs.bake(GameData.weapons())
+
+
+## Moves the pictures of the dock's shown page to the front of the baking queue.
+func _bake_shown() -> void:
+	var shown: Array[WeaponData] = []
+	for c in _dock.visible_cards():
+		shown.append(c.weapon)
+	_thumbs.bake(shown, true)
 
 
 func first_focus() -> Control:

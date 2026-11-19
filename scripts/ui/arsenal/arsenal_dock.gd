@@ -7,6 +7,8 @@ extends KitPanel
 ## past the first or last card of a page. Showing a weapon turns to its page.
 
 signal chosen(w: WeaponData)
+## A page of cards was shown (paging, a category switch, a resize).
+signal page_shown
 
 const PAGER_WIDTH := 64.0
 
@@ -155,6 +157,7 @@ func refresh(selected_id: StringName, picture: Callable) -> void:
 
 func _apply_page(animate: bool) -> void:
 	var shown := visible_cards()
+	page_shown.emit()
 	for id in _cards:
 		var c: ArsenalCard = _cards[id]
 		c.visible = shown.has(c)

@@ -33,13 +33,21 @@ static func _key(weapon: WeaponData) -> String:
 	return "%s|%s" % [weapon.id, Cosmetics.weapon_loadout(weapon.id)]
 
 
-## Renders the pictures of `weapons` that are still blank, a few frames apart.
-func bake(weapons: Array[WeaponData]) -> void:
+## Renders the pictures of `weapons` that are still blank, a few frames apart;
+## with `first`, ahead of the ones already waiting (the pictures on screen).
+func bake(weapons: Array[WeaponData], first := false) -> void:
 	# The headless bot has no renderer to bake with.
 	if DisplayServer.get_name() == "headless":
 		return
+	var at := 0
 	for w in weapons:
-		if w and w.viewmodel and not texture(w).get_meta("baked") and not _queue.has(w):
+		if not w or not w.viewmodel or texture(w).get_meta("baked"):
+			continue
+		if first:
+			_queue.erase(w)
+			_queue.insert(at, w)
+			at += 1
+		elif not _queue.has(w):
 			_queue.append(w)
 	if not _busy and not _queue.is_empty():
 		_run()
