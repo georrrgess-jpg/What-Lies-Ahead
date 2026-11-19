@@ -110,6 +110,10 @@ func end_trigger() -> void:
 	biting = false
 
 
+func has_melee() -> bool:
+	return true
+
+
 func melee_reach() -> float:
 	return REACH if not _flooded and fuel > 0.0 else 0.0
 

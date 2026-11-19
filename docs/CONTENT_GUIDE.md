@@ -123,6 +123,22 @@ UI style lives in `UiKit` (`scripts/ui/ui_kit.gd`): palette constants,
   it in hand. A new weapon file needs nothing else; the starters are
   `Loadout.STARTERS` (Ion Carbine + Pulse Pistol). Saves with a weapon in the
   wrong slot are repaired when the loadout is read (`Loadout.resolve`).
+* Melee weapons (`slot_class = "melee"`, loadout slot 3, `Loadout.MELEE`) swing
+  instead of shooting: `MeleeMode` (`scripts/weapons/modes/melee_mode.gd`) is used
+  when `mode_script` is empty, or extended by a weapon's own mode (hooks
+  `hit_scale`, `struck_zombie`). `damage` / `fire_interval` / `max_range` /
+  `knockback` are the light swing; the Melee group (`melee_heavy_damage`,
+  `melee_charge_time`, `melee_heavy_time`, `melee_arc_degrees`,
+  `melee_max_targets`, `melee_recovery`, `melee_heavy_target_scale`,
+  `melee_backstab_scale`, the three sounds) the rest; `move_speed_scale` is its
+  mobility, `charge_move_scale` the speed while winding up. Give it
+  `magazine_size = 1`, `reserve_start = reserve_max = 0`. Its `view_script`
+  extends `MeleeView` (`scripts/weapons/views/melee_view.gd`: swing keys in view
+  space, the wind-up, hit shake, the smear from `BladeTip` to `SwingPoint`, an
+  equip flourish; `part_motion` for its own parts). Model it laid down like a gun
+  (blade or head along +Y, see `art/blender/build_weapons_glow_blade.py`) so the
+  Arsenal, Locker and thumbnails show it side-on; no sights, cell or decal (the
+  Locker hides those tabs for melee). The Glow Blade is the reference.
 * A viewmodel `.glb` follows the node contract documented at the top of
   `art/blender/build_weapons.py` and `art/blender/weapon_kit.py` (Shell, Cell,
   CellHolo, ArmL/ArmR, Muzzle, SightPoint, EjectPoint, VentPoint...). For aiming:

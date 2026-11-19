@@ -267,14 +267,19 @@ func _aim_look_scale() -> float:
 	return lerpf(1.0, zoom * float(Settings.value("ads_sensitivity")), aim_blend)
 
 
-## 1 / 2 pick the primary / secondary slot; the mouse wheel flips between them.
+## 1 / 2 / 3 pick the primary / secondary / melee slot; the mouse wheel and
+## the gamepad's switch button cycle round them.
 func _weapon_switch_input(event: InputEvent) -> void:
 	if event.is_action_pressed("weapon_1"):
 		weapons.switch_to_slot(0)
 	elif event.is_action_pressed("weapon_2"):
 		weapons.switch_to_slot(1)
-	elif event.is_action_pressed("weapon_next") or event.is_action_pressed("weapon_prev"):
-		weapons.switch_next()
+	elif event.is_action_pressed("weapon_3"):
+		weapons.switch_to_slot(2)
+	elif event.is_action_pressed("weapon_next"):
+		weapons.switch_next(1)
+	elif event.is_action_pressed("weapon_prev"):
+		weapons.switch_next(-1)
 
 
 ## The aim-down-sights FOV as a share of the normal FOV: the held weapon's
@@ -379,7 +384,7 @@ func _tick_timers(delta: float, can_act: bool, on_floor: bool) -> void:
 	if can_act and Input.is_action_just_pressed(&"dash"):
 		_dash_buffer = DASH_BUFFER
 	# Firing ends a sprint at once and keeps it off while the trigger is busy.
-	if can_act and Input.is_action_pressed("fire"):
+	if can_act and (Input.is_action_pressed("fire") or weapons.is_swinging()):
 		_sprint_block = SPRINT_BLOCK
 	else:
 		_sprint_block = maxf(0.0, _sprint_block - delta)
@@ -389,7 +394,8 @@ func _tick_timers(delta: float, can_act: bool, on_floor: bool) -> void:
 ## "aim_mode"). Sliding and mantling drop the aim; a reload or a weapon switch
 ## lowers the sight and it comes back up afterwards.
 func _update_aim(delta: float, can_act: bool) -> void:
-	var able := can_act and not sliding and not _traverse.is_active() and weapons.current != null
+	# A melee weapon has no sights: aim winds up its heavy swing instead.
+	var able := can_act and not sliding and not _traverse.is_active() and weapons.current != null and not weapons.current.is_melee()
 	if not Settings.aim_toggles():
 		_aim_latched = false
 		_aim_held = able and Input.is_action_pressed("aim")

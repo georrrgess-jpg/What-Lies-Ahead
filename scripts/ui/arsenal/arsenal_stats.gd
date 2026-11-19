@@ -13,12 +13,22 @@ const STATS := [
 	["MOBILITY", &"mobility"],
 	["MAGAZINE", &"magazine"],
 ]
+## A melee weapon's captions for the same six tiles: light-swing DPS, the
+## full heavy's damage, its reach, its light swing's length, mobility, ammo.
+const MELEE_CAPTIONS := ["DPS", "HEAVY", "REACH", "SWING", "MOBILITY", "AMMO"]
 ## Tags for weapon mode scripts that do not declare `const TRAIT`, by a word in the file name.
 const MODE_TRAITS := {"whirligig": "SPIN-UP", "riptide": "REELS IN", "saw": "CHAINSAW", "drum_popper": "BANK SHOTS"}
 
 
+## The caption of stat tile `index` for `w` (melee weapons name theirs differently).
+static func caption(w: WeaponData, index: int) -> String:
+	return MELEE_CAPTIONS[index] if w != null and w.is_melee() else String(STATS[index][0])
+
+
 ## The text of stat `id` (one of STATS) for `w`.
 static func stat(w: WeaponData, id: StringName) -> String:
+	if w.is_melee():
+		return _melee_stat(w, id)
 	match id:
 		&"dps":
 			return "%d" % roundi(_dps(w))
@@ -32,6 +42,22 @@ static func stat(w: WeaponData, id: StringName) -> String:
 			return "%d%%" % roundi(w.move_speed_scale * 100.0)
 		_:
 			return _magazine(w)
+
+
+## A melee weapon's tiles (see MELEE_CAPTIONS).
+static func _melee_stat(w: WeaponData, id: StringName) -> String:
+	match id:
+		&"dps":
+			return "%d" % roundi(_dps(w))
+		&"burst":
+			return "%d" % roundi(w.melee_heavy_damage)
+		&"range":
+			return "%.1f m" % w.max_range
+		&"handling":
+			return "%.2fs" % w.fire_interval
+		&"mobility":
+			return "%d%%" % roundi(w.move_speed_scale * 100.0)
+	return "NONE"
 
 
 ## Sustained single-target damage per second at the real fire rate, reloads
@@ -66,6 +92,8 @@ static func _magazine(w: WeaponData) -> String:
 ## Short tags for how the weapon fires and what its shots do.
 static func tags(w: WeaponData) -> Array[String]:
 	var out: Array[String] = []
+	if w.is_melee():
+		return _melee_tags(w)
 	if w.charge_time <= 0.0:
 		out.append("AUTO" if w.automatic or w.beam else "SEMI")
 	if w.burst_count > 1:
@@ -92,6 +120,20 @@ static func tags(w: WeaponData) -> Array[String]:
 		out.insert(mini(1, out.size()), special)
 	if w.uses_heat():
 		out.append("HEAT")
+	return out
+
+
+## A melee weapon's tags: what it is, its mobility, its heavy and its trick.
+static func _melee_tags(w: WeaponData) -> Array[String]:
+	var out: Array[String] = ["MELEE"]
+	if w.move_speed_scale > 1.0:
+		out.append("+%d%% SPEED" % roundi((w.move_speed_scale - 1.0) * 100.0))
+	out.append("HEAVY %.1fs" % w.melee_charge_time)
+	if w.melee_backstab_scale > 1.0:
+		out.append("BACKSTAB ×%d" % roundi(w.melee_backstab_scale))
+	var special := mode_trait(w)
+	if special != "":
+		out.append(special)
 	return out
 
 

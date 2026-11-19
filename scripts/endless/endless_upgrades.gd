@@ -57,6 +57,8 @@ func next_perk(w: WeaponData) -> String:
 		0:
 			return "+%d%% damage" % int(round((rules.bench_damage[0] - 1.0) * 100.0))
 		1:
+			if w.is_melee():
+				return "faster swings"
 			return "magazine %d → %d, faster reload" % [_stat(w, 0), int(round(_stat(w, 0) * MAG_SCALE))]
 		2:
 			return "+%d%% damage and the glow" % int(round((rules.bench_damage[2] - 1.0) * 100.0))
@@ -110,7 +112,8 @@ func _stat(w: WeaponData, index: int) -> int:
 func _apply(w: WeaponData) -> void:
 	var b: Array = _base[w.id]
 	var mk2 := tier(w.id) >= 2
-	w.magazine_size = int(round(b[0] * MAG_SCALE)) if mk2 else b[0]
+	# A melee weapon has no magazine: its Mk II swings faster instead.
+	w.magazine_size = int(round(b[0] * MAG_SCALE)) if mk2 and not w.is_melee() else b[0]
 	w.reload_time = float(b[1]) * (RELOAD_SCALE if mk2 else 1.0) * (RAPID_RELOAD if rapid else 1.0)
-	w.fire_interval = float(b[2]) * (RAPID_FIRE if rapid else 1.0)
+	w.fire_interval = float(b[2]) * (RAPID_FIRE if rapid else 1.0) * (RELOAD_SCALE if mk2 and w.is_melee() else 1.0)
 	w.burst_interval = float(b[3]) * (RAPID_FIRE if rapid else 1.0)

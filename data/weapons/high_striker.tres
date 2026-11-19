@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/high_striker.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/views/high_striker_view.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/high_striker_mode.gd" id="5"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 39
+
+[resource]
+script = ExtResource("1")
+id = &"high_striker"
+display_name = "High Striker"
+role = "The strongman game's mallet. Very slow and very heavy: a light swing (FIRE) clobbers up to three zombies and throws them back, and you walk a little slower with it out. Hold AIM to haul it overhead and let go to slam the ground: the puck flies up the scale, rings the bell and the shock stuns every zombie round you. Heavies and alphas take less from every swing. No ammo, no reload: press 3 to draw it, or MELEE for a quick swing with any gun."
+unlock = SubResource("unlock")
+sort_order = 330
+category = "Strongman Mallet"
+slot_class = "melee"
+magazine_size = 1
+reserve_start = 0
+reserve_max = 0
+reload_time = 0.1
+emergency_recharge_interval = 1000.0
+automatic = true
+spread_degrees = 0.0
+falloff_start = 10.0
+falloff_end = 10.0
+falloff_min_scale = 1.0
+headshot_multiplier = 1.0
+ads_fov_scale = 1.0
+ads_time = 0.12
+ads_spread_scale = 1.0
+first_shot_accurate = false
+reticle_style = "dot"
+recoil_kick = 0.0
+view_kick = 0.0
+shake = 0.0
+viewmodel = ExtResource("3")
+view_script = ExtResource("4")
+mode_script = ExtResource("5")
+fire_interval = 1.0
+damage = 105.0
+max_range = 2.9
+knockback = 6.0
+tracer_color = Color(1, 0.8, 0.3, 1)
+view_position = Vector3(0.35, -0.42, -0.6)
+view_rotation_degrees = Vector3(62, 16, -24)
+rank_xp = PackedInt32Array(550, 1300, 2700, 4600, 7000)
+move_speed_scale = 0.9
+equip_time = 0.5
+charge_move_scale = 0.7
+melee_heavy_damage = 240.0
+melee_heavy_knockback = 9.0
+melee_charge_time = 1.0
+melee_heavy_min_scale = 0.5
+melee_heavy_time = 1.6
+melee_hit_at = 0.42
+melee_arc_degrees = 50.0
+melee_max_targets = 3
+melee_recovery = 0.4
+melee_heavy_target_scale = 0.6
+melee_backstab_scale = 1.0
+melee_swing_sound = &"hstrk_whoosh"
+melee_hit_sound = &"hstrk_thud"
+melee_heavy_sound = &"hstrk_whoosh"
+equip_sound = &"hstrk_equip"

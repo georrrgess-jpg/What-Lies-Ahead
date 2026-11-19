@@ -451,17 +451,17 @@ func buy_upgrade(bench: EndlessBench) -> bool:
 	_glow_follow()
 	bench.celebrate()
 	Sfx.play(&"prog_level_up", -3.0)
-	run.notice.emit("%s %s  ·  %s" % [w.display_name.to_upper(), EndlessUpgrades.NAMES[t], _perk_done(t)], &"good")
+	run.notice.emit("%s %s  ·  %s" % [w.display_name.to_upper(), EndlessUpgrades.NAMES[t], _perk_done(t, w)], &"good")
 	upgraded.emit(w, t)
 	return true
 
 
-func _perk_done(t: int) -> String:
+func _perk_done(t: int, w: WeaponData) -> String:
 	match t:
 		1:
 			return "+%d%% DAMAGE" % int(round((rules.bench_damage[0] - 1.0) * 100.0))
 		2:
-			return "BIGGER MAGAZINE, FASTER RELOAD"
+			return "FASTER SWINGS" if w.is_melee() else "BIGGER MAGAZINE, FASTER RELOAD"
 	return "+%d%% DAMAGE, FULLY UPGRADED" % int(round((rules.bench_damage[2] - 1.0) * 100.0))
 
 

@@ -2,8 +2,8 @@ class_name ArsenalPage
 extends MenuPage
 ## Arsenal: the weapon showroom. Five regions, each in its own box:
 ##   - the shell's top bar (destinations, level, Sparks, settings);
-##   - the left sidebar (ArsenalSidebar): PRIMARY / SECONDARY categories and
-##     the two loadout slots;
+##   - the left sidebar (ArsenalSidebar): PRIMARY / SECONDARY / MELEE
+##     categories and the three loadout slots;
 ##   - the preview (ArsenalPreview): the selected weapon's real model on a
 ##     teal pedestal in a night arcade hall; drag to turn it;
 ##   - the right panel (ArsenalDetails): name, what it does, stats, mastery
@@ -15,7 +15,7 @@ extends MenuPage
 ## in the loadout (the EQUIPPED tag). A weapon only goes in its own class's
 ## slot. ArsenalLayout decides the card count and spacing from the window.
 ##
-## Keys: 1 / 2 (pad LB / RB) switch category, the triggers turn the dock's
+## Keys: 1 / 2 / 3 (pad LB / RB step) switch category, the triggers turn the dock's
 ## pages, F (pad Y) equips, Esc (pad B) goes back.
 
 ## The set's Ferris wheel is loaded on a thread before the shell builds the page.
@@ -90,7 +90,7 @@ func _build_regions() -> void:
 	_dock.chosen.connect(_select)
 	_dock.page_shown.connect(_bake_shown)
 	_root.add_child(_dock)
-	_dock.build(Loadout.weapons_for(Loadout.PRIMARY) + Loadout.weapons_for(Loadout.SECONDARY))
+	_dock.build(Loadout.weapons_for(-1))
 
 
 ## The full-screen layer behind the page: a dusk gradient instead of the live world.
@@ -194,7 +194,7 @@ func _show_category(slot: int) -> void:
 	_dock.refresh(_weapon.id if _weapon else &"", _picture)
 
 
-## A category tab, the 1 / 2 keys or LB / RB: show the category and preview
+## A category tab, the 1 / 2 / 3 keys or LB / RB: show the category and preview
 ## the weapon equipped in it (the focus follows if it was on a card).
 func _switch_category(slot: int) -> void:
 	if slot == _category:
@@ -263,10 +263,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		_switch_category(Loadout.PRIMARY)
 	elif event.is_action_pressed("weapon_2"):
 		_switch_category(Loadout.SECONDARY)
+	elif event.is_action_pressed("weapon_3"):
+		_switch_category(Loadout.MELEE)
 	elif _pad_pressed(event, JOY_BUTTON_LEFT_SHOULDER):
-		_switch_category(Loadout.PRIMARY)
+		_switch_category(maxi(Loadout.PRIMARY, _category - 1))
 	elif _pad_pressed(event, JOY_BUTTON_RIGHT_SHOULDER):
-		_switch_category(Loadout.SECONDARY)
+		_switch_category(mini(Loadout.MELEE, _category + 1))
 	elif _pad_pressed(event, JOY_BUTTON_Y) or _key_pressed(event, KEY_F):
 		_equip_selected()
 	elif event is InputEventJoypadMotion:

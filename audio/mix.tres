@@ -368,9 +368,27 @@ sound_category = Dictionary[StringName, StringName]({
 &"tkr_winner": &"weapon",
 &"tkr_pop": &"impact",
 &"tkr_ready": &"confirm",
+&"glb_": &"handling",
+&"glb_swish": &"weapon",
+&"glb_heavy": &"weapon",
+&"glb_hit": &"impact",
 &"cop_": &"handling",
 &"cop_fire": &"weapon",
-&"cop_payout": &"impact"
+&"cop_payout": &"impact",
+&"tflip_": &"handling",
+&"tflip_swish": &"weapon",
+&"tflip_lunge": &"weapon",
+&"tflip_hit": &"impact",
+&"swirl_": &"handling",
+&"swirl_whoosh": &"weapon",
+&"swirl_hit": &"impact",
+&"swirl_crack": &"impact",
+&"swirl_shatter": &"impact",
+&"hstrk_": &"handling",
+&"hstrk_whoosh": &"weapon",
+&"hstrk_thud": &"impact",
+&"hstrk_slam": &"impact",
+&"hstrk_ding": &"confirm"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -568,5 +586,14 @@ sound_trim_db = Dictionary[StringName, float]({
 &"tkr_door": -2.0,
 &"tkr_holo": -4.0,
 &"tkr_ready": -5.0,
-&"cop_equip": 2.0
+&"cop_equip": 2.0,
+&"tflip_swish": -5.0,
+&"swirl_whoosh": -3.5,
+&"swirl_hit": 1.5,
+&"swirl_shatter": -4.0,
+&"swirl_windup": -7.0,
+&"hstrk_whoosh": -3.0,
+&"hstrk_puck": -5.0,
+&"hstrk_windup": -9.0,
+&"hstrk_ding": -6.5
 })

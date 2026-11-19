@@ -216,9 +216,9 @@ func set_swap(slot_name: String, weapons: Array[WeaponData], index: int, prev_ke
 	if held == null:
 		_swap_note.text = ""
 	elif count <= 1:
-		_swap_note.text = "Level up to unlock more %s" % ("secondaries" if held.slot_class == "secondary" else "primaries")
+		_swap_note.text = "Level up to unlock more %s" % {"secondary": "secondaries", "melee": "melee weapons"}.get(held.slot_class, "primaries")
 	else:
-		_swap_note.text = "%s  ·  %d of %d  ·  1 / 2 picks the slot" % [held.category, index + 1, count]
+		_swap_note.text = "%s  ·  %d of %d  ·  1 / 2 / 3 picks the slot" % [held.category, index + 1, count]
 	if not first and is_visible_in_tree():
 		UiFx.pulse(_swap_cards[1], 1.06)
 
