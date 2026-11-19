@@ -25,16 +25,16 @@ extends RefCounted
 ## Light swing keys: [t (0-1 of the swing), position, rotation].
 const LIGHT_KEYS := [
 	[0.0, Vector3.ZERO, Vector3.ZERO],
-	[0.2, Vector3(0.1, 0.05, 0.05), Vector3(10.0, -30.0, -40.0)],
-	[0.42, Vector3(-0.1, -0.02, -0.12), Vector3(-50.0, 30.0, 50.0)],
-	[0.6, Vector3(-0.25, -0.12, -0.02), Vector3(-60.0, 55.0, 80.0)],
+	[0.2, Vector3(0.1, 0.06, 0.05), Vector3(18.0, -8.0, -40.0)],
+	[0.42, Vector3(-0.12, -0.02, -0.1), Vector3(-28.0, 12.0, 48.0)],
+	[0.6, Vector3(-0.25, -0.1, -0.02), Vector3(-34.0, 20.0, 76.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Heavy swing keys, from the wind-up pose (t 0) through the chop.
 const HEAVY_KEYS := [
-	[0.0, Vector3(0.08, 0.14, 0.12), Vector3(35.0, -20.0, -30.0)],
-	[0.24, Vector3(-0.06, -0.08, -0.2), Vector3(-100.0, 20.0, 30.0)],
-	[0.46, Vector3(-0.2, -0.25, -0.05), Vector3(-120.0, 40.0, 60.0)],
+	[0.0, Vector3(0.1, 0.14, 0.1), Vector3(32.0, -10.0, -38.0)],
+	[0.24, Vector3(-0.08, -0.06, -0.14), Vector3(-48.0, 14.0, 40.0)],
+	[0.46, Vector3(-0.22, -0.22, -0.04), Vector3(-62.0, 22.0, 70.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## How fast the pose follows the swing keys out of a swing (1/s).
