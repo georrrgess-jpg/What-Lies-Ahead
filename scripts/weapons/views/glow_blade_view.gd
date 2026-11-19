@@ -34,18 +34,18 @@ const PIVOT_SHARE := 0.6
 ## diagonal, a follow-through and back (mirrored every other swing).
 const GLOW_LIGHT_KEYS := [
 	[0.0, Vector3.ZERO, Vector3.ZERO],
-	[0.14, Vector3(0.01, 0.015, 0.01), Vector3(8.0, -9.0, -10.0)],
-	[0.36, Vector3(-0.02, -0.02, -0.03), Vector3(-10.0, 16.0, 17.0)],
-	[0.58, Vector3(-0.03, -0.035, -0.02), Vector3(-14.0, 20.0, 21.0)],
+	[0.14, Vector3(0.01, 0.0, 0.01), Vector3(6.0, -8.0, -8.0)],
+	[0.36, Vector3(0.0, 0.04, -0.03), Vector3(-8.0, 18.0, 11.0)],
+	[0.58, Vector3(0.005, 0.05, -0.02), Vector3(-11.0, 22.0, 14.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Heavy, from the wind-up: a lunging diagonal rip across the body, the arm
 ## driving forward, held through and drawn back.
 const GLOW_HEAVY_KEYS := [
-	[0.0, Vector3(-0.03, 0.03, 0.015), Vector3(18.0, -6.0, -8.0)],
-	[0.2, Vector3(-0.03, -0.02, -0.07), Vector3(-14.0, 19.0, 21.0)],
-	[0.42, Vector3(-0.05, -0.05, -0.05), Vector3(-20.0, 25.0, 27.0)],
-	[0.62, Vector3(-0.04, -0.04, -0.025), Vector3(-16.0, 20.0, 21.0)],
+	[0.0, Vector3(0.0, -0.025, -0.03), Vector3(8.0, -8.0, -10.0)],
+	[0.2, Vector3(0.0, 0.05, -0.07), Vector3(-10.0, 20.0, 13.0)],
+	[0.42, Vector3(-0.01, 0.045, -0.05), Vector3(-14.0, 26.0, 17.0)],
+	[0.62, Vector3(0.0, 0.035, -0.03), Vector3(-12.0, 22.0, 14.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Idle: every IDLE_FLICK_EVERY seconds at rest the thumb flicks the blade half
@@ -147,7 +147,7 @@ func swing_pivot() -> Vector3:
 func windup_pose(charge: float) -> Array:
 	var k := 1.0 - pow(1.0 - minf(1.0, charge * 2.2), 3.0)
 	var start: Array = GLOW_HEAVY_KEYS[0]
-	return [start[1] * k + Vector3(0.005, 0.005, 0.012) * charge, start[2] * k + Vector3(5.0, -3.0, -3.0) * charge]
+	return [start[1] * k + Vector3(0.0, 0.004, -0.01) * charge, start[2] * k + Vector3(3.0, -3.0, -3.0) * charge]
 
 
 ## A breathing sway with a lazy wrist roll, plus a little roll into each idle flick.
