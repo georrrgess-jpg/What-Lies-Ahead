@@ -119,3 +119,28 @@ static func _half(a: float) -> int:
 
 static func _nearest_open(a: float) -> float:
 	return roundf(a / 360.0) * 360.0
+
+
+# --- inspect: the balisong tricks (TicketFlipperTricks) --------------------------------
+
+var _tricks := TicketFlipperTricks.new()
+
+
+func inspect_length() -> float:
+	return _tricks.choose()
+
+
+func inspect_poses() -> Array:
+	return _tricks.poses()
+
+
+func inspect_start(v: WeaponView) -> void:
+	_tricks.start(v)
+
+
+func inspect(v: WeaponView, t: float) -> void:
+	_tricks.play(v, t)
+
+
+func inspect_end(v: WeaponView) -> void:
+	_tricks.stop(v)
