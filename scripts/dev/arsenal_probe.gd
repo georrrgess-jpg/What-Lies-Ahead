@@ -275,6 +275,8 @@ func _check_cards(slot: int) -> void:
 	for p in dock.pages():
 		dock.turn(-99)
 		dock.turn(p)
+		while dock.sliding():
+			await _frames(1)
 		await _frames(2)
 		for c in dock.visible_cards():
 			seen[c.weapon.id] = true

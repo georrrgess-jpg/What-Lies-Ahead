@@ -27,7 +27,7 @@ const CARD_MIN_SCREEN := 210.0
 const CARDS_MAX := 6
 const CARDS_MIN := 3
 ## Width the dock's paging buttons and gaps take out of the row (canvas px).
-const DOCK_CHROME := 2 * 64.0 + 4 * UiKit.GAP_S + 2 * 22.0
+const DOCK_CHROME := 2 * ArsenalDock.PAGER_WIDTH + 2 * UiKit.GAP_S + 2 * (ArsenalDock.RECESS + ArsenalDock.CARD_INSET)
 ## Screen widths (pixels) under which the layout tightens and reflows.
 const COMPACT_BELOW := 1500.0
 const NARROW_BELOW := 1100.0
@@ -39,7 +39,7 @@ var gap := UiKit.GAP_M
 var padding := 22.0
 var sidebar_width := 300.0
 var details_width := 540.0
-var dock_height := 236.0
+var dock_height := 248.0
 ## The stats in two columns (saves height).
 var stat_columns := 1
 ## Font size of the description: larger on narrow windows, so it reads on
@@ -66,7 +66,7 @@ static func compute(page_size: Vector2, screen_scale: float) -> ArsenalLayout:
 	var dock_screen := (page_size.x - DOCK_CHROME) * screen_scale
 	l.cards = clampi(int(dock_screen / CARD_MIN_SCREEN), CARDS_MIN, CARDS_MAX)
 	# Fewer, wider cards are also taller, so their names stay one size.
-	l.dock_height = 236.0 if l.cards >= 6 else 256.0
+	l.dock_height = 248.0 if l.cards >= 6 else 268.0
 	# One stat per row needs the height of a tall panel.
 	var upper := page_size.y - l.dock_height - l.gap
 	l.stat_columns = 1 if upper >= 860.0 else 2
