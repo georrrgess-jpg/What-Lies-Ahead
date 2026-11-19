@@ -7,7 +7,9 @@ extends MenuPage
 ## them), the mouse wheel, a drag or a pip browse the worlds; the carousel
 ## glides between them with depth (cards shrink, fan out and fade with
 ## distance, their art slides behind the frame), and the picked world's
-## accent pools under it.
+## accent pools under it. The carousel keeps to its own band under the
+## boards: the pips on top, then the card tray (a framed box that clips the
+## cards) between the two arrows; every card fits the tray's height whole.
 ##
 ## Two modes, picked with the large STORY / ENDLESS tabs in the header (or
 ## Tab / the gamepad's Y): STORY browses the worlds; ENDLESS (an EndlessCard
@@ -22,19 +24,35 @@ extends MenuPage
 signal world_changed(level: LevelData)
 
 const ENEMY_CHIPS := 7
+## The enemy chips keep to this many rows (the rest are counted on "+N MORE"),
+## so the details board leaves the carousel its band.
+const ENEMY_ROWS := 2
+## The level's name keeps to one line: its font shrinks to fit, down to this.
+const NAME_FONT := 68
+const NAME_FONT_MIN := 44
+## Lines of the level's blurb shown (the rest is cut and in its tooltip).
+const BLURB_LINES := 2
 ## Size of the level's key art on the details board.
 const ART_SIZE := Vector2(448, 252)
-## The row of position pips (clickable) sits in the gap over the cards.
-const PIP_ROW := 26.0
+## The row of position pips (clickable) along the top of the carousel band.
+const PIP_ROW := 30.0
 const PIP_STEP := 36.0
 ## Cards further than this (in cards) from the selected one are hidden.
 const CARDS_AROUND := 2.6
+## The selected card's scale in the tray, and each further card's relative
+## to it (by distance 0, 1, 2, 3).
+const CARD_SCALE := 0.74
+const DEPTH_SCALE: Array[float] = [1.0, 0.8, 0.64, 0.52]
+## Room inside the tray above and below the selected card.
+const TRAY_PAD := 9.0
+## The arrow buttons beside the tray.
+const ARROW_SIZE := Vector2(60, 120)
 ## Seconds the carousel glides to a newly picked world (a little longer for a long jump).
 const GLIDE := 0.42
 ## While an arrow is held, the worlds go by at most this often (seconds).
 const HOLD_STEP := 0.09
-## Gap between the selected card and its neighbours (canvas px).
-const CARD_GAP := 30.0
+## Gap between neighbouring cards in the tray (canvas px).
+const CARD_GAP := 24.0
 const STORY := &"story"
 ## The Endless board's short rules: [what, the gist].
 const HOW_IT_PLAYS := [["NO LAST WAVE", "EVERY 5TH A HORDE"], ["THE WRECKER", "EVERY 10TH WAVE"],
@@ -56,7 +74,10 @@ static var _glow_tex: GradientTexture2D
 ## Every card: the worlds', then the endless levels' (each `index` is its
 ## slot in its own mode's row).
 var _cards: Array[WorldCard] = []
+## The carousel band (input, pips, arrows) and its tray, which clips the cards.
 var _carousel: Control
+var _tray: Control
+var _tray_box := StyleBoxFlat.new()
 var _pips: Control
 var _pip_box := StyleBoxFlat.new()
 ## The carousel's position in worlds: fractional while it glides or is dragged.
@@ -80,6 +101,10 @@ var _blurb: Label
 var _level_tabs: HBoxContainer
 var _stats: HBoxContainer
 var _enemies: HFlowContainer
+## The "+N MORE" chip among the enemy chips (after the kinds, before the
+## bosses) and how many kinds the level's waves have.
+var _more_chip: KitChip
+var _enemy_kinds := 0
 var _lock: Control
 var _art: TextureRect
 ## In ENDLESS, the endless level's card takes the key art's place on the
@@ -290,11 +315,15 @@ func _build_info() -> Control:
 	head.add_child(_build_art())
 	_world_caption = UiKit.label("", UiKit.SIZE_LABEL, UiKit.CYAN, true)
 	text.add_child(_world_caption)
-	_level_name = UiKit.sign_label("", 68)
-	_level_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_level_name.add_theme_constant_override("line_spacing", -14)
+	_level_name = UiKit.sign_label("", NAME_FONT)
+	_level_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_level_name.mouse_filter = Control.MOUSE_FILTER_PASS
+	_level_name.resized.connect(_fit_name)
 	text.add_child(_level_name)
 	_blurb = UiKit.body("", 420)
+	_blurb.max_lines_visible = BLURB_LINES
+	_blurb.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_blurb.mouse_filter = Control.MOUSE_FILTER_PASS
 	text.add_child(_blurb)
 	text.add_child(_build_lock())
 	_level_tabs = HBoxContainer.new()
@@ -310,6 +339,7 @@ func _build_info() -> Control:
 	_enemies = HFlowContainer.new()
 	_enemies.add_theme_constant_override("h_separation", UiKit.GAP_S)
 	_enemies.add_theme_constant_override("v_separation", UiKit.GAP_S)
+	_enemies.resized.connect(_fit_enemies)
 	v.add_child(_enemies)
 	_endless_box = VBoxContainer.new()
 	_endless_box.add_theme_constant_override("separation", UiKit.GAP_S)
@@ -385,44 +415,81 @@ func _build_side() -> Control:
 	return board
 
 
+## The band under the boards: the pips, then the tray of cards between the arrows.
 func _build_carousel() -> Control:
 	_carousel = Control.new()
-	_carousel.custom_minimum_size.y = WorldCard.SIZE.y + 14
+	_carousel.custom_minimum_size.y = PIP_ROW + tray_height()
 	# Clicks, drags and the wheel; the cards only take hover.
 	_carousel.mouse_filter = Control.MOUSE_FILTER_STOP
-	_carousel.draw.connect(_draw_carousel)
 	_carousel.gui_input.connect(_on_carousel_input)
+	_carousel.resized.connect(_layout_band)
+	_tray = Control.new()
+	_tray.clip_contents = true
+	_tray.mouse_filter = Control.MOUSE_FILTER_PASS
+	_tray.draw.connect(_draw_tray)
+	_tray.resized.connect(_on_tray_resized)
+	_carousel.add_child(_tray)
+	_tray_box.bg_color = Color(UiKit.INK, 0.55)
+	_tray_box.border_color = Color(1, 1, 1, 0.1)
+	_tray_box.set_border_width_all(2)
+	_tray_box.set_corner_radius_all(18)
 	for i in GameData.worlds().size():
 		var card := WorldCard.new()
 		card.world = GameData.worlds()[i]
 		card.index = i
-		_carousel.add_child(card)
+		_tray.add_child(card)
 		_cards.append(card)
 	for i in GameData.endless_levels().size():
 		var card := EndlessCard.make(GameData.endless_levels()[i], i)
-		_carousel.add_child(card)
+		_tray.add_child(card)
 		_cards.append(card)
 	for side in [-1, 1]:
 		var arrow := UiKit.icon_button(&"icon_arrow_left" if side < 0 else &"icon_arrow_right", "Previous world" if side < 0 else "Next world")
-		arrow.custom_minimum_size = Vector2(64, 110)
-		arrow.z_index = 20
+		arrow.custom_minimum_size = ARROW_SIZE
 		arrow.pressed.connect(step_world.bind(side))
 		_carousel.add_child(arrow)
-		arrow.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT if side < 0 else Control.PRESET_CENTER_RIGHT)
-		arrow.grow_horizontal = Control.GROW_DIRECTION_END if side < 0 else Control.GROW_DIRECTION_BEGIN
-		arrow.grow_vertical = Control.GROW_DIRECTION_BOTH
 		_arrows.append(arrow)
 	_pips = Control.new()
-	_pips.z_index = 20
 	_pips.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	_pips.offset_top = -PIP_ROW + 6.0
-	_pips.offset_bottom = 6.0
+	_pips.offset_bottom = PIP_ROW
 	_pips.mouse_filter = Control.MOUSE_FILTER_STOP
 	_pips.draw.connect(_draw_pips)
 	_pips.gui_input.connect(_on_pips_input)
 	_carousel.add_child(_pips)
 	_scroll = _slot()
 	return _carousel
+
+
+## Height of the card tray: the selected card and its padding.
+static func tray_height() -> float:
+	return ceilf(WorldCard.SIZE.y * CARD_SCALE + TRAY_PAD * 2.0)
+
+
+## Half the width the five nearest cards take in the tray (with a gap at
+## each end), for a selected card `width` wide.
+func _row_half(width: float) -> float:
+	return _depth_offset(2.0, width) + DEPTH_SCALE[2] * width * 0.5 + CARD_GAP
+
+
+## The tray is centred under the pips, as wide as the five nearest cards (or
+## the band less the arrows, when narrower), with an arrow just outside each
+## end, centred on it.
+func _layout_band() -> void:
+	var band := _carousel.size
+	var room := band.x - 2.0 * (ARROW_SIZE.x + UiKit.GAP_M)
+	var w := minf(room, ceilf(2.0 * _row_half(WorldCard.SIZE.x * CARD_SCALE)))
+	_tray.position = Vector2(roundf((band.x - w) * 0.5), PIP_ROW)
+	_tray.size = Vector2(w, band.y - PIP_ROW)
+	var y := PIP_ROW + (_tray.size.y - ARROW_SIZE.y) * 0.5
+	_arrows[0].position = Vector2(_tray.position.x - UiKit.GAP_M - ARROW_SIZE.x, y)
+	_arrows[1].position = Vector2(_tray.position.x + w + UiKit.GAP_M, y)
+	for arrow in _arrows:
+		arrow.size = ARROW_SIZE
+
+
+func _on_tray_resized() -> void:
+	_place_cards(_scroll)
+	_tray.queue_redraw()
 
 
 # --- selection ----------------------------------------------------------------------
@@ -510,11 +577,14 @@ func _refresh_mode_tiles() -> void:
 func _deal_row() -> void:
 	if not is_visible_in_tree():
 		return
-	var shown: Array[Control] = []
+	var i := 0
+	# A fade only: the cards keep the size and place the tray gives them.
 	for card in _cards:
 		if card.visible:
-			shown.append(card)
-	UiFx.stagger_in(shown, 0.0, 0.05)
+			var target := card.modulate.a
+			card.modulate.a = 0.0
+			card.create_tween().tween_property(card, "modulate:a", target, 0.18).set_delay(i * 0.05)
+			i += 1
 
 
 func step_world(step: int) -> void:
@@ -584,8 +654,7 @@ func _refresh_details() -> void:
 	var unlocked := level != null and GameData.is_level_unlocked(level)
 	_world_caption.text = "WORLD %d  ·  %s" % [world_index + 1, world.display_name.to_upper()]
 	_world_caption.add_theme_color_override("font_color", world.secondary_color)
-	_level_name.text = level.display_name.to_upper() if level else "COMING SOON"
-	_blurb.text = level.blurb if level and level.blurb != "" else world.blurb
+	_set_name(level.display_name.to_upper() if level else "COMING SOON", level.blurb if level and level.blurb != "" else world.blurb)
 	_art.texture = KeyArt.texture(level)
 	_art.visible = _art.texture != null
 	(_art.material as ShaderMaterial).set_shader_parameter("saturation", 1.0 if unlocked else 0.25)
@@ -609,8 +678,7 @@ func _refresh_endless(level: LevelData) -> void:
 	selected_level = level
 	_world_caption.text = "NEW MODE  ·  ENDLESS  ·  OPEN FROM LEVEL 1" if endless_is_new() else "ENDLESS MODE  ·  OPEN FROM LEVEL 1"
 	_world_caption.add_theme_color_override("font_color", EndlessCard.EMBER)
-	_level_name.text = level.display_name.to_upper()
-	_blurb.text = level.blurb
+	_set_name(level.display_name.to_upper(), level.blurb)
 	_art.visible = false
 	_show_hero(level)
 	_level_tabs.visible = false
@@ -790,12 +858,79 @@ func _fill_enemies(level: LevelData) -> void:
 		if wave.boss != &"" and not wave.boss in bosses:
 			bosses.append(wave.boss)
 	var ids := counts.keys()
+	_enemy_kinds = ids.size()
 	for i in mini(ids.size(), ENEMY_CHIPS):
 		_enemies.add_child(_enemy_chip(ids[i], "×%d" % counts[ids[i]], false))
-	if ids.size() > ENEMY_CHIPS:
-		_enemies.add_child(UiKit.chip("+%d MORE" % (ids.size() - ENEMY_CHIPS), UiKit.AMBER, 22, false))
+	_more_chip = UiKit.chip("", UiKit.AMBER, 22, false)
+	_enemies.add_child(_more_chip)
 	for id in bosses:
 		_enemies.add_child(_enemy_chip(id, "BOSS", true))
+	_fit_enemies()
+
+
+## Shows as many enemy kinds as fit in ENEMY_ROWS rows with the bosses (the
+## others are counted on the "+N MORE" chip).
+func _fit_enemies() -> void:
+	if _more_chip == null or not is_instance_valid(_more_chip):
+		return
+	var chips := _enemies.get_children().filter(func(c: Node) -> bool: return c != _more_chip)
+	var count := mini(_enemy_kinds, ENEMY_CHIPS)
+	var kinds: Array[Control] = []
+	kinds.assign(chips.slice(0, count))
+	var bosses: Array[Control] = []
+	bosses.assign(chips.slice(count))
+	var width := _enemies.size.x
+	var shown := kinds.size()
+	while shown > 0 and width > 0.0:
+		var hidden := _enemy_kinds - shown
+		_more_chip.set_text("+%d MORE" % hidden)
+		var row: Array[Control] = kinds.slice(0, shown)
+		if hidden > 0:
+			row.append(_more_chip)
+		row.append_array(bosses)
+		if _flow_rows(row, width) <= ENEMY_ROWS:
+			break
+		shown -= 1
+	for i in kinds.size():
+		kinds[i].visible = i < shown
+	_more_chip.set_text("+%d MORE" % (_enemy_kinds - shown))
+	_more_chip.visible = shown < _enemy_kinds
+
+
+## Rows an HFlowContainer `width` wide takes for `items`.
+func _flow_rows(items: Array[Control], width: float) -> int:
+	var gap := float(UiKit.GAP_S)
+	var rows := 0
+	var x := 0.0
+	for c in items:
+		var w := c.get_combined_minimum_size().x
+		if rows == 0 or x + gap + w > width:
+			rows += 1
+			x = w
+		else:
+			x += gap + w
+	return rows
+
+
+## Sets the level's name and blurb (each in full in its tooltip).
+func _set_name(title: String, blurb: String) -> void:
+	_level_name.text = title
+	_level_name.tooltip_text = title
+	_blurb.text = blurb
+	_blurb.tooltip_text = blurb
+	_fit_name()
+
+
+## The name's font shrinks until the name fits on its line.
+func _fit_name() -> void:
+	var font := _level_name.get_theme_font("font")
+	var width := _level_name.size.x
+	if font == null or width <= 0.0:
+		return
+	var size := NAME_FONT
+	while size > NAME_FONT_MIN and font.get_string_size(_level_name.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > width:
+		size -= 2
+	_level_name.add_theme_font_size_override("font_size", size)
 
 
 ## A pill with a zombie in the enemy's shirt colour, its name and a note.
@@ -856,34 +991,53 @@ func _layout_cards(animate: bool) -> void:
 	_glide.tween_method(_place_cards, _scroll, float(at), seconds).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 
 
-## Places every card for carousel position `at` (in worlds): the nearest is
-## full size, the others shrink, drop, fan out and fade with distance, and
-## their art slides behind the frame.
+## Places every card for carousel position `at` (in worlds) in the tray: the
+## nearest is the largest, the others shrink (DEPTH_SCALE), dim, tilt a little
+## and fade out past the second; all are centred on the tray's middle line, so
+## each fits its height whole, and their art slides behind the frame. Scales
+## and offsets are blended linearly between whole positions, which keeps the
+## gap between neighbours constant while they glide.
 func _place_cards(at: float) -> void:
 	_scroll = at
-	var width := _carousel.size.x if _carousel.size.x > 0.0 else 1824.0
-	var half := WorldCard.SIZE.x * 0.5
-	var near := half + half * 0.82 + CARD_GAP
-	var far := half * 0.82 + half * 0.68 + CARD_GAP * 0.7
-	# Narrow screens pull the outer cards in so they stay on screen (with
-	# room for their tilt).
-	var fit := minf(1.0, (width * 0.5 - 40.0) / (near + far + half * 0.68))
+	if _tray == null:
+		return
+	var tray := _tray.size if _tray.size.x > 0.0 else Vector2(2.0 * _row_half(WorldCard.SIZE.x * CARD_SCALE), tray_height())
+	var width := WorldCard.SIZE.x * CARD_SCALE
+	# A narrow tray shrinks the row so the five nearest cards fit inside.
+	var fit := minf(1.0, tray.x * 0.5 / _row_half(width))
+	var mid := tray * 0.5
 	for card in _cards:
 		var d := card.index - at
 		var ad := absf(d)
 		card.visible = _in_row(card) and ad < CARDS_AROUND
 		if not card.visible:
 			continue
-		var k := 1.0 - 0.18 * minf(ad, 1.0) - 0.14 * clampf(ad - 1.0, 0.0, 1.6)
-		var x := signf(d) * (minf(ad, 1.0) * near + maxf(ad - 1.0, 0.0) * far) * fit
+		var k := _depth_scale(ad) * CARD_SCALE * fit
 		card.scale = Vector2(k, k)
-		card.position = Vector2(width * 0.5 + x - half, 2.0 + 10.0 * minf(ad, 1.0) + 8.0 * clampf(ad - 1.0, 0.0, 1.6))
-		card.rotation = clampf(d, -2.0, 2.0) * deg_to_rad(2.2)
+		card.pivot_offset = WorldCard.SIZE * 0.5
+		card.position = Vector2(mid.x + signf(d) * _depth_offset(ad, width) * fit, mid.y) - WorldCard.SIZE * 0.5
+		card.rotation = clampf(d, -2.0, 2.0) * deg_to_rad(1.4)
 		card.z_index = 10 - roundi(ad * 3.0)
-		var shade := lerpf(1.0, 0.7, minf(ad, 1.0)) - 0.12 * clampf(ad - 1.0, 0.0, 1.0)
-		card.modulate = Color(shade, shade, shade + 0.08 * minf(ad, 1.0), 1.0 - 0.8 * smoothstep(1.2, 2.2, ad) - 0.2 * smoothstep(2.2, CARDS_AROUND, ad))
+		var shade := lerpf(1.0, 0.72, minf(ad, 1.0)) - 0.12 * clampf(ad - 1.0, 0.0, 1.0)
+		card.modulate = Color(shade, shade, shade + 0.06 * minf(ad, 1.0), 1.0 - smoothstep(2.0, CARDS_AROUND, ad))
 		card.mouse_filter = Control.MOUSE_FILTER_PASS if ad < 2.1 else Control.MOUSE_FILTER_IGNORE
 		card.set_depth(d)
+
+
+## Relative scale of a card `ad` positions from the selected one.
+func _depth_scale(ad: float) -> float:
+	var n := mini(floori(ad), DEPTH_SCALE.size() - 2)
+	return lerpf(DEPTH_SCALE[n], DEPTH_SCALE[n + 1], minf(ad - n, 1.0))
+
+
+## How far the centre of a card `ad` positions from the selected one sits
+## from the tray's middle, for a selected card `width` wide.
+func _depth_offset(ad: float, width: float) -> float:
+	var n := mini(floori(ad), DEPTH_SCALE.size() - 2)
+	var x := 0.0
+	for i in n:
+		x += (DEPTH_SCALE[i] + DEPTH_SCALE[i + 1]) * width * 0.5 + CARD_GAP
+	return x + ((DEPTH_SCALE[n] + DEPTH_SCALE[n + 1]) * width * 0.5 + CARD_GAP) * minf(ad - n, 1.0)
 
 
 func _world_accent() -> Color:
@@ -903,7 +1057,7 @@ func _tint_glow(animate: bool) -> void:
 		_glow_tween.kill()
 	if not animate or not is_visible_in_tree():
 		_glow_color = target
-		_carousel.queue_redraw()
+		_tray.queue_redraw()
 		return
 	_glow_tween = create_tween()
 	_glow_tween.tween_method(_set_glow, _glow_color, target, 0.35)
@@ -911,7 +1065,7 @@ func _tint_glow(animate: bool) -> void:
 
 func _set_glow(c: Color) -> void:
 	_glow_color = c
-	_carousel.queue_redraw()
+	_tray.queue_redraw()
 
 
 # --- carousel input -----------------------------------------------------------------
@@ -950,7 +1104,7 @@ func _drag_to(dx: float) -> void:
 		return
 	if _glide and _glide.is_valid():
 		_glide.kill()
-	_place_cards(clampf(_drag_scroll - dx / (WorldCard.SIZE.x * 0.95), -0.45, _slot_count() - 0.55))
+	_place_cards(clampf(_drag_scroll - dx / _depth_offset(1.0, WorldCard.SIZE.x * CARD_SCALE), -0.45, _slot_count() - 0.55))
 
 
 func _on_pips_input(event: InputEvent) -> void:
@@ -968,7 +1122,7 @@ func _click(at: Vector2) -> void:
 	var order := _cards.filter(func(c: WorldCard) -> bool: return c.visible and _in_row(c) and c.mouse_filter != Control.MOUSE_FILTER_IGNORE)
 	order.sort_custom(func(a: WorldCard, b: WorldCard) -> bool: return absf(a.index - _scroll) < absf(b.index - _scroll))
 	for card: WorldCard in order:
-		var local := card.get_transform().affine_inverse() * at
+		var local := card.get_transform().affine_inverse() * (at - _tray.position)
 		if Rect2(Vector2.ZERO, WorldCard.SIZE).has_point(local):
 			_select_slot(card.index)
 			return
@@ -976,11 +1130,13 @@ func _click(at: Vector2) -> void:
 
 # --- drawing ------------------------------------------------------------------------
 
-## The pool of the selected world's accent under the cards.
-func _draw_carousel() -> void:
-	var mid := Vector2(_carousel.size.x * 0.5, WorldCard.SIZE.y * 0.55)
-	var pool := Vector2(WorldCard.SIZE.x * 2.6, WorldCard.SIZE.y * 1.5)
-	_carousel.draw_texture_rect(_glow_texture(), Rect2(mid - pool * 0.5, pool), false, Color(_glow_color, 0.55))
+## The tray's dark box and the pool of the selected world's accent in it,
+## under the cards.
+func _draw_tray() -> void:
+	var box := Rect2(Vector2.ZERO, _tray.size)
+	_tray.draw_style_box(_tray_box, box)
+	var pool := Vector2(WorldCard.SIZE.x * CARD_SCALE * 2.4, _tray.size.y * 1.3)
+	_tray.draw_texture_rect(_glow_texture(), Rect2(box.get_center() - pool * 0.5, pool), false, Color(_glow_color, 0.5))
 
 
 ## One pip per slot of the row on a dark pill: a world's is gold once
