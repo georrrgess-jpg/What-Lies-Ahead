@@ -142,6 +142,8 @@ def fan_hand(M):
     toward = (-0.3, -0.12, 0.95)       # before the turn: (left, back, down) after it
     parts, _elbow = support_hand(tuple(c), 0.021, 0.006, M, toward, corner=0.005, prefix="LF", finger_len=0.07,
                                 palm_len=0.1, length=0.1, thumb_len=0.06)
+    # Plain glove only: the glove shapes would stand over the sights in its rest pose.
+    parts = [ob for ob in parts if "glove_kit" not in ob]
     turn = Matrix.Translation(c) @ Matrix.Rotation(math.pi, 4, "X") @ Matrix.Translation(-c)
     for ob in parts:
         ob.matrix_world = turn @ ob.matrix_world
@@ -162,7 +164,7 @@ def build_sarsaparilla_six():
     walnut = M["dark"]
 
     grip_loc = (0, -0.032, -0.1)
-    grip_parts, G = grip("", grip_loc, M, tilt=-20, size=(0.064, 0.086, 0.172), body_bottom=-0.028, panel="pink")
+    grip_parts, G = grip("", grip_loc, M, tilt=-16, size=(0.064, 0.086, 0.172), body_bottom=-0.028, panel="pink")
     trig = [p for p in grip_parts if p.name in ("Trigger", "TriggerToe")]
     grip_parts = [p for p in grip_parts if p not in trig]
     for p in trig:
@@ -197,7 +199,7 @@ def build_sarsaparilla_six():
     for k in range(6):
         shell.append(box(f"RibVent{k}", (0.0116, 0.012, 0.0045), (0, 0.098 + k * 0.026, RAIL_TOP - 0.0058), bevel=0.0, m=walnut))
     # The bottle's straps: brass bands round it, clamped up to the barrel.
-    for k, y in enumerate((0.112, 0.162)):
+    for k, y in enumerate((0.112, 0.18)):
         shell.append(ring(f"BottleBand{k}", 0.0172, 0.0019, y, z=BOTTLE_Z, x=BOTTLE_X, m=M["steel"], segs=26))
         shell.append(box(f"BandClamp{k}", (0.008, 0.009, 0.014), (BOTTLE_X / 2, y, (BOTTLE_Z + BARREL_Z) / 2 + 0.002), bevel=0.002, m=M["steel"]))
     # Amber bottle: glass, a cream label with a cherry stripe, a red crown cap on its neck.
@@ -217,11 +219,11 @@ def build_sarsaparilla_six():
     shell += bolts("Pin", [(-0.0205, -0.056, 0.0), (0.0205, -0.056, 0.0), (-0.0225, 0.072, -0.016), (0.0225, 0.072, -0.016)],
                    M["steel"], radius=0.0042, height=0.004)
     # A brass butt cap under the grip.
-    shell.append(box("ButtCap", (0.07, 0.095, 0.012), tuple(fpt(G["frame"], 0, 0, -0.172 / 2 - 0.002)), rot=(math.radians(-20), 0, 0),
+    shell.append(box("ButtCap", (0.07, 0.095, 0.012), tuple(fpt(G["frame"], 0, 0, -0.172 / 2 - 0.002)), rot=(math.radians(-16), 0, 0),
                      bevel=0.005, m=M["steel"]))
-    lug, charm_point = charm_lug(0.013, 0.162, BOTTLE_Z + 0.004, M, out=1.0)
+    lug, charm_point = charm_lug(0.013, 0.18, BOTTLE_Z + 0.004, M, out=1.0)
     shell += lug
-    sight_rear, sight_front = sights_notch(0.0, -0.04, 0.238, RAIL_TOP, RAIL_TOP, z_line, M, gap=0.015)
+    sight_rear, sight_front = sights_notch(0.0, -0.047, 0.238, RAIL_TOP, RAIL_TOP, z_line, M, gap=0.015)
 
     # The cylinder: a brass cage of two plates, an axle hub and six bars between the rounds.
     cylinder = [
@@ -287,7 +289,7 @@ def build_sarsaparilla_six():
     fan, fan_c = fan_hand(M)
     groups = {
         "Shell": (shell, (0, 0, 0), None),
-        "IronSightRear": (sight_rear, (0, -0.04, RAIL_TOP), None),
+        "IronSightRear": (sight_rear, (0, -0.047, RAIL_TOP), None),
         "IronSightFront": (sight_front, (0, 0.238, RAIL_TOP), None),
         "Cylinder": (cylinder, CYL_C, None),
         "Cell": (cell, (BOTTLE_X, 0.14, BOTTLE_Z), None),
@@ -308,7 +310,7 @@ def build_sarsaparilla_six():
         groups[f"Bubble{k}"] = (parts, at, None)
     empties = {
         "Muzzle": ((0, 0.272, BARREL_Z), None),
-        "SightPoint": ((0, -0.04, z_line), None),
+        "SightPoint": ((0, -0.047, z_line), None),
         "SightMount": ((0, 0.02, RAIL_TOP), None),
         "EjectPoint": ((-0.04, cy, cz), None),
         "VentPoint": ((BOTTLE_X, 0.238, BOTTLE_Z), None),
