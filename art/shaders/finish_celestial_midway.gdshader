@@ -360,7 +360,7 @@ void fragment() {
 		float glint = exp(-pow((lp.z * 0.9 - lp.y * 0.5 - fract(t / 7.0) * 3.0 + 1.5) * 7.0, 2.0));
 		// The gold is lit mostly by its own studio reflection, so it stays
 		// warm gold whatever the level around it reflects.
-		ALBEDO = mix(shell_color, trim_color * 0.55, gold);
+		ALBEDO = mix(shell_color, trim_color * 0.4, gold);
 		METALLIC = mix(0.0, 0.85, gold);
 		ROUGHNESS = mix(0.09, 0.22, gold);
 		NORMAL = nb;
