@@ -104,7 +104,6 @@ var _last_view := Transform3D.IDENTITY
 ## The handle in the view's frame last frame (a paused weapon carries the chain with it).
 var _last_handle := Transform3D.IDENTITY
 var _side := Vector3.RIGHT
-var _head_basis := Basis.IDENTITY
 var _spin := 0.0
 var _spin_rate := 0.0
 var _whirl := 0.0
@@ -210,7 +209,7 @@ func part_motion(view: WeaponView, mode: MeleeMode, delta: float) -> void:
 	else:
 		chain.carry(to_view * _last_view, 0.0 if chain.calm else CARRY)
 		_drive(view, mode, anchor, delta)
-		chain.advance(delta, anchor, down, _roots())
+		chain.advance(delta, anchor, down)
 		_sounds(view, mode, delta)
 	_last_view = view.global_transform
 	_last_handle = handle_xf
@@ -227,13 +226,14 @@ func _start(anchor: Vector3) -> void:
 	lengths.append(HEAD_OFFSET)
 	chain.setup(anchor, Vector3.DOWN, lengths)
 	chain.ribbons.clear()
+	chain.ribbon_local = _ribbon_roots
 	for i in _ribbon_roots.size():
 		chain.add_ribbon(anchor, Vector3.DOWN, RIBBON_SEGS, RIBBON_SEG)
 	if _equip < 0.2:
 		chain.lay(anchor, [Vector3(0.2, 1.0, -0.3), Vector3(0.4, 1.0, -0.6), Vector3(0.6, 0.6, -1.0), Vector3(0.6, 0.0, -1.0)])
 	_last_view = _view.global_transform
 	_last_handle = _view.global_transform.affine_inverse() * _handle.global_transform
-	_head_basis = Basis.IDENTITY
+	chain.head_basis = Basis.IDENTITY
 
 
 ## False while the weapon itself is paused (stills freeze the chain with the swing).
@@ -281,15 +281,6 @@ func whirl_point(anchor: Vector3, angle: float) -> Vector3:
 	return anchor + WHIRL_CENTRE + (across * cos(angle) + deep * sin(angle)) * WHIRL_RADIUS
 
 
-## The ribbons' roots now, from the head's last frame.
-func _roots() -> Array:
-	var out := []
-	var eye := chain.p[LINKS]
-	for r in _ribbon_roots:
-		out.append(eye + _head_basis * r)
-	return out
-
-
 ## Every link, the head and the ribbons onto the rope.
 func _pose(view: WeaponView, delta: float) -> void:
 	var g := view.global_transform
@@ -304,7 +295,7 @@ func _pose(view: WeaponView, delta: float) -> void:
 	var hb := _along(chain.head() - eye, side)
 	_spin = fmod(_spin + _spin_rate * delta, 360.0)
 	hb = Basis(-hb.z, deg_to_rad(_spin)) * hb
-	_head_basis = hb
+	chain.head_basis = hb
 	_head.global_transform = g * Transform3D(hb, eye)
 	for j in _ribbon_nodes.size():
 		if j >= chain.ribbons.size():

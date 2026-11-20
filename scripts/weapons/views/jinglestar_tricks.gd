@@ -29,8 +29,8 @@ const LENGTHS: Array[float] = [3.2, 3.4, 3.2, 5.2]
 const RARE_ODDS := 15
 ## The holder's place (camera space) and turn for the tricks: the flail up
 ## beside the middle of the screen, a little closer than the hip.
-const SIDE_POS := Vector3(0.12, -0.08, -0.66)
-const SIDE_ROT := Vector3(54.0, 22.0, -8.0)
+const SIDE_POS := Vector3(0.2, -0.12, -0.64)
+const SIDE_ROT := Vector3(58.0, 16.0, -14.0)
 ## The toss: when the hand lets go and catches, how far the handle flies
 ## along its length (view units), and the point it turns about (the handle's middle).
 const TOSS_FROM := 0.7

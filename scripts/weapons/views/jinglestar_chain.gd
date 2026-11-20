@@ -46,6 +46,10 @@ var lengths := PackedFloat32Array()
 var inv_mass := PackedFloat32Array()
 ## Ribbons: each [points, previous points, segment length].
 var ribbons: Array = []
+## Each ribbon's root in the head's frame (its eye at the origin), and the head's
+## frame as last posed (the view sets both).
+var ribbon_local: Array[Vector3] = []
+var head_basis := Basis.IDENTITY
 ## Colliders: each [a, b, radius] (capsules), set by the view every frame.
 var capsules: Array = []
 ## The first point the handle's capsule applies to (the joints next to the cap are on it).
@@ -154,8 +158,8 @@ func move(xf: Transform3D) -> void:
 
 
 ## Advances by `delta` with the anchor moving to `anchor`; `down` is the
-## world's down in the view's frame. `ribbon_roots` are the ribbons' roots now.
-func advance(delta: float, anchor: Vector3, down: Vector3, ribbon_roots: Array) -> void:
+## world's down in the view's frame.
+func advance(delta: float, anchor: Vector3, down: Vector3) -> void:
 	if anchor.distance_to(_anchor) > TELEPORT:
 		hang(anchor, down)
 		return
@@ -186,7 +190,7 @@ func advance(delta: float, anchor: Vector3, down: Vector3, ribbon_roots: Array) 
 			_relax()
 			_collide()
 		_exact()
-		_ribbons(ribbon_roots, keep_ribbon, down)
+		_ribbons(keep_ribbon, down)
 	_anchor = anchor
 
 
@@ -252,14 +256,30 @@ static func _clear_of_eye(at: Vector3, r: float) -> Vector3:
 	return out
 
 
-func _ribbons(roots: Array, keep: float, down: Vector3) -> void:
+## Each ribbon's root, on the head as it is now: the head's last posed frame
+## (head_basis) turned with the head's axis since then.
+func ribbon_root(j: int) -> Vector3:
+	var n := p.size() - 1
+	var axis := p[n] - p[n - 1]
+	var then := -head_basis.z
+	var turn := Basis.IDENTITY
+	if axis.length() > 1e-6 and then.length() > 1e-6:
+		var a := then.normalized()
+		var b := axis.normalized()
+		var cross := a.cross(b)
+		if cross.length() > 1e-6:
+			turn = Basis(cross.normalized(), a.angle_to(b))
+	return p[n - 1] + turn * head_basis * ribbon_local[j]
+
+
+func _ribbons(keep: float, down: Vector3) -> void:
 	var g := down * GRAVITY * RIBBON_GRAVITY * STEP * STEP
 	for j in ribbons.size():
 		var r: Array = ribbons[j]
 		var pts: PackedVector3Array = r[0]
 		var prev: PackedVector3Array = r[1]
 		var length := float(r[2])
-		pts[0] = roots[j] if j < roots.size() else pts[0]
+		pts[0] = ribbon_root(j) if j < ribbon_local.size() else pts[0]
 		prev[0] = pts[0]
 		for k in range(1, pts.size()):
 			var v := (pts[k] - prev[k]) * keep
