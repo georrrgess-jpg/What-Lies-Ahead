@@ -18,6 +18,7 @@ extends RefCounted
 ##
 ## Finishes: flat colours ([shell, trim], params metallic/roughness), or a
 ## shader: params = {"shader": "res://art/shaders/x.gdshader", "shader_params": {...}}.
+## params.pulse: the shader reacts to kills and to "Reduce motion" (FinishPulse).
 ## The shader receives `shell_color` and `trim_color` (from `colors`), any
 ## shader_params, and is applied to both the Shell and Trim surfaces (Trim gets
 ## `is_trim = true`).
@@ -82,6 +83,7 @@ static func apply(model: Node3D, _weapon: WeaponData, loadout: Dictionary) -> vo
 	_apply_decal(model, loadout.get("decal"))
 	_apply_charm(model, loadout.get("charm"))
 	_apply_cell_animation(model, cell)
+	_apply_finish_pulse(model, _weapon, finish)
 	LavaLampoonView.dress_lamp(model, cell)
 	WeaponSights.apply(model, _weapon, loadout.get("sight"))
 
@@ -515,3 +517,18 @@ static func _apply_cell_animation(model: Node3D, cell: CosmeticItem) -> void:
 	glow.mode = String(cell.params["animate"])
 	glow.colors = cell.colors
 	model.add_child(glow)
+
+
+# --- reactive finishes ------------------------------------------------------------
+
+static func _apply_finish_pulse(model: Node3D, weapon: WeaponData, finish: CosmeticItem) -> void:
+	var old := model.find_child("FinishPulse", true, false)
+	if old:
+		old.free()
+	if finish == null or not finish.params.get("pulse", false):
+		return
+	var pulse := FinishPulse.new()
+	pulse.name = "FinishPulse"
+	pulse.weapon_id = weapon.id if weapon else &""
+	pulse.shader = shader(String(finish.params["shader"]))
+	model.add_child(pulse)

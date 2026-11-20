@@ -145,6 +145,15 @@ showpieces each have their own `finish_*.gdshader`). 23 items are for sale (29,2
 | Jackpot (finish, slot-machine reels) | Legendary | 25,000 lifetime kills |
 | Multiball (finish, pinball playfield) | Legendary | Endless wave 30 |
 
+**Update 23 Mythic.** **Celestial Midway** (`fin_celestial_midway`, Mythic, earned at **50,000
+lifetime kills**, twice Jackpot, the highest kill goal in the game; never sold): a midnight
+sky seen in depth behind the weapon's glass (a nebula, three star fields and aurora ribbons
+that slide past each other as the weapon turns), constellations that draw themselves in gold
+into carnival shapes, and pierced gold filigree trim
+(`art/shaders/finish_celestial_midway.gdshader`). It is the first finish that reacts in play:
+a kill with the weapon wearing it sends a shooting star along it (`params.pulse`,
+`scripts/cosmetics/finish_pulse.gd`), and "Reduce motion" holds its sky still.
+
 **Featured.** Four items a day are 20% off (`featured_count`, `featured_discount`).
 On the 250 rule a 20% cut is always a round number: 200, 600, 1,200, 2,400, and 2,600 to
 8,000 for the showpieces (`EconomyRules.discounted()` rounds to 50 below 1,000 and to
@@ -154,8 +163,8 @@ player did not own when the day's selection was first asked for; it is stored fo
 day, so buying a featured item does not pull another one into the discount. It changes
 at local midnight.
 
-**Mythic.** Mythic (`CosmeticItem.Rarity.MYTHIC`, above Legendary) is earned in
-Endless, with one exception sold in the shop: **Madame Fortuna**, the fortune-teller
+**Mythic.** Mythic (`CosmeticItem.Rarity.MYTHIC`, above Legendary) is earned (in
+Endless, and Celestial Midway at 50,000 lifetime kills), with one exception sold in the shop: **Madame Fortuna**, the fortune-teller
 operator, at 20,000 Arcade Tokens, twice Wind-Up Wally and the dearest item. She has no ladder
 price (the rule's floor for Mythic is 0) and stays out of the daily picks: the Shop
 shows her in its own spotlight before today's picks (`ShopCatalog.spotlight()`,
