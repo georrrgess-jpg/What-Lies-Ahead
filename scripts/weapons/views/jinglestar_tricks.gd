@@ -95,8 +95,8 @@ func poses() -> Array:
 		Trick.FINALE:
 			return [
 				[0.0, SIDE_POS + Vector3(0.04, -0.03, 0.0), SIDE_ROT + Vector3(-6.0, -8.0, 0.0)],
-				[0.15, SIDE_POS + Vector3(0.0, 0.03, -0.04), SIDE_ROT + Vector3(14.0, 0.0, 0.0)],
-				[0.6, SIDE_POS + Vector3(-0.01, 0.04, -0.05), SIDE_ROT + Vector3(16.0, -4.0, 0.0)],
+				[0.15, SIDE_POS + Vector3(-0.02, 0.0, -0.04), SIDE_ROT + Vector3(6.0, 0.0, 0.0)],
+				[0.6, SIDE_POS + Vector3(-0.03, 0.0, -0.05), SIDE_ROT + Vector3(6.0, -4.0, 0.0)],
 				[0.82, SIDE_POS + Vector3(0.0, -0.04, -0.02), SIDE_ROT + Vector3(-18.0, 0.0, 4.0)],
 				[1.0, SIDE_POS, SIDE_ROT],
 			]
@@ -167,8 +167,8 @@ func apply(v: WeaponView, delta: float) -> void:
 		Trick.FINALE:
 			var up := WeaponInspect.window(t, 0.2, 0.8) * (1.0 - WeaponInspect.window(t, 3.3, 3.8))
 			_whirl = t * lerpf(6.0, 15.0, WeaponInspect.window(t, 0.4, 1.4))
-			turn = Vector3(26.0, 0.0, -6.0) * up + Vector3(cos(_whirl), 0.0, sin(_whirl)) * 3.0 * up
-			wrist = Vector3(0.0, 0.03, 0.0) * up
+			turn = Vector3(12.0, 0.0, -6.0) * up + Vector3(cos(_whirl), 0.0, sin(_whirl)) * 3.0 * up
+			wrist = Vector3(0.0, 0.01, 0.0) * up
 			# The bow: the flail dips, the head swinging down in front.
 			var bow := WeaponInspect.hump(t, 3.7, 4.9)
 			turn += Vector3(-30.0, 0.0, 6.0) * bow
@@ -211,7 +211,7 @@ func drive(chain: JinglestarChain, anchor: Vector3) -> void:
 		Trick.FINALE:
 			var whirling := WeaponInspect.window(t, 0.3, 0.8) * (1.0 - WeaponInspect.window(t, 3.2, 3.6))
 			var tilt := deg_to_rad(24.0)
-			chain.pull_target = anchor + Vector3.UP * 0.14 + (Vector3.RIGHT * cos(_whirl) + Vector3(0.0, sin(tilt), -cos(tilt)) * sin(_whirl)) * 0.21
+			chain.pull_target = anchor + Vector3(-0.1, -0.02, -0.14) + (Vector3.RIGHT * cos(_whirl) + Vector3(0.0, sin(tilt), -cos(tilt)) * sin(_whirl)) * 0.21
 			chain.pull = 0.85 * whirling
 			spin = 1100.0 * whirling
 

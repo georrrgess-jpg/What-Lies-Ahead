@@ -169,7 +169,7 @@ static func mode_trait(w: WeaponData) -> String:
 ## What unlocks a locked weapon, in full ("Reach level 12").
 static func unlock_text(w: WeaponData) -> String:
 	if w.unlock and w.unlock.kind == Requirement.Kind.MELEE_KILLS and w.unlock.all_of.is_empty():
-		return "%s  (%s)" % [w.unlock.describe(), melee_progress(w.unlock)]
+		return "%s  ·  %s so far" % [w.unlock.describe(), Wallet.format(Progression.melee_kills())]
 	return w.unlock.describe() if w.unlock else "Locked"
 
 
