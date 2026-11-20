@@ -34,8 +34,8 @@ const FLAIL_LIGHT_KEYS := [
 ## The heavy, from the wind-up (raised high, whirling) down through the slam.
 const FLAIL_HEAVY_KEYS := [
 	[0.0, Vector3(-0.03, 0.07, -0.02), Vector3(20.0, -4.0, -10.0)],
-	[0.3, Vector3(-0.05, -0.12, -0.12), Vector3(-38.0, 8.0, 16.0)],
-	[0.52, Vector3(-0.07, -0.15, -0.05), Vector3(-42.0, 10.0, 18.0)],
+	[0.3, Vector3(-0.05, -0.07, -0.12), Vector3(-34.0, 8.0, 16.0)],
+	[0.52, Vector3(-0.07, -0.1, -0.05), Vector3(-38.0, 10.0, 18.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Contact moments (share of the light swing, of the heavy): the head crosses the middle.
