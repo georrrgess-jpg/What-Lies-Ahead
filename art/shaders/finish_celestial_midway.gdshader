@@ -348,13 +348,18 @@ void fragment() {
 	// Dither under the dark gradients so they never band.
 	float dither = (fh21(FRAGCOORD.xy + fract(t) * 17.0) - 0.5) / 255.0;
 	if (is_trim) {
-		// Pierced gold filigree; small and far it closes into solid gold.
-		float d = filigree(fplane(lp, ln));
-		float fine = 1.0 - smoothstep(0.0012, 0.0026, sqrt(fx * fy));
+		// Pierced gold filigree over the night. Small and far, the fine lattice
+		// cross-fades into the same motif three times larger with bolder lines,
+		// so the trim always reads as a gold-framed sky, never a gold slab.
+		vec2 fuv = fplane(lp, ln);
+		float d = filigree(fuv);
+		float d_big = filigree(fuv / 3.0) * 3.0;
+		float fine = 1.0 - smoothstep(0.0011, 0.0026, sqrt(fx * fy));
 		float wgold = 0.0011;
+		float wbig = max(0.004, px * 1.4);
 		float soft = max(px, 0.0002);
-		float gold = mix(1.0, smoothstep(wgold + soft, wgold - soft, d), fine);
-		float bevel = smoothstep(wgold, 0.0, d) * fine;
+		float gold = mix(smoothstep(wbig + soft, wbig - soft, d_big), smoothstep(wgold + soft, wgold - soft, d), fine);
+		float bevel = mix(smoothstep(wbig, 0.0, d_big), smoothstep(wgold, 0.0, d), fine);
 		vec3 nb = normalize(mix(NORMAL, fbump(VERTEX, NORMAL, bevel, 0.0015), gold));
 		vec3 rb = reflect(-VIEW, nb);
 		float glint = exp(-pow((lp.z * 0.9 - lp.y * 0.5 - fract(t / 7.0) * 3.0 + 1.5) * 7.0, 2.0));
