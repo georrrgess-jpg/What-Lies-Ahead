@@ -61,12 +61,15 @@ func _measure(model: Node3D, x0: float, skip: Array[Node]) -> void:
 		_add_faces(part[0], part[1], x0, lo, hi)
 
 
-## Hologram copies, decals, charms and anything in `skip` are not part of the outline.
+## Hologram copies, decals, charms, the arms and hands (Arm*: a hand only shown
+## for a move, like the Sarsaparilla Six's fanning hand, is modelled above the
+## frame) and anything in `skip` are not part of the outline.
 static func _left_out(mi: MeshInstance3D, model: Node3D, skip: Array[Node]) -> bool:
 	var n: Node = mi
 	while n and n != model:
 		var node_name := String(n.name)
-		if skip.has(n) or node_name.ends_with("Holo") or node_name.begins_with("Decal") or node_name == "WeaponCharm":
+		if skip.has(n) or node_name.ends_with("Holo") or node_name.begins_with("Decal") or node_name == "WeaponCharm" \
+				or node_name.begins_with("Arm"):
 			return true
 		n = n.get_parent()
 	return false
