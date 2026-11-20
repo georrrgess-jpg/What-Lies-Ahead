@@ -20,6 +20,9 @@ extends WeaponMode
 ## bottle move in scripts/weapons/views/sarsaparilla_six_view.gd (reads
 ## fanning, since_shot, pull_shots and is_last_call()).
 
+## The Arsenal's tags: how it fires (in place of AUTO / SEMI) and what it adds.
+const FIRE_TAG := "FAN FIRE"
+const TRAIT := "LAST CALL"
 const ROUNDS := 6
 ## Seconds between tapped shots (the data rate is the fanned one).
 const TAP_INTERVAL := 0.26

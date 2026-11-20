@@ -16,6 +16,7 @@ const ROUNDS := 6
 ## Where the cylinder sits swung out (model space) and how far it spins out and back in.
 const OUT := Vector3(-0.052, 0.006, 0.0)
 const SPIN_OUT := 360.0
+## Back in: two turns, less the angle it started from, so it stops on the first round.
 const SPIN_IN := -720.0
 ## The hammer cocked (degrees, as the view holds it at rest).
 const COCK_DEG := 30.0
@@ -66,9 +67,18 @@ func _gun(v: WeaponView, d: float) -> void:
 ## Out on the crane with a spin, held out for the loading, back in spinning
 ## down to a stop on the first round.
 func _cylinder(v: WeaponView, d: float, spent: int) -> void:
-	var keys := ReloadKeys.spin(0.1, 0.24, Vector3.BACK, SPIN_OUT, Vector3.ZERO, OUT, 1.0)
-	keys.append([0.76, OUT, Vector3.ZERO])
-	keys += ReloadKeys.spin(0.76, 0.92, Vector3.BACK, SPIN_IN, OUT, Vector3.ZERO, 1.0)
+	# It starts where the shots left it (a sixth a round), so nothing snaps.
+	var start := -60.0 * spent
+	var keys: Array = [[0.0, Vector3.ZERO, Vector3(0, 0, start), 1.0, "hold"]]
+	var out := ReloadKeys.spin(0.1, 0.24, Vector3.BACK, SPIN_OUT, Vector3.ZERO, OUT, 1.0)
+	for key in out:
+		key[2] = key[2] + Vector3(0, 0, start)
+	keys += out
+	keys.append([0.76, OUT, Vector3(0, 0, start)])
+	var back := ReloadKeys.spin(0.76, 0.92, Vector3.BACK, SPIN_IN - start, OUT, Vector3.ZERO, 1.0)
+	for key in back:
+		key[2] = key[2] + Vector3(0, 0, start)
+	keys += back
 	v.track("Cylinder", d, keys, Tween.TRANS_LINEAR)
 	# The spent rounds tumble out of the back.
 	for i in spent:

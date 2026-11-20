@@ -94,7 +94,11 @@ static func tags(w: WeaponData) -> Array[String]:
 	var out: Array[String] = []
 	if w.is_melee():
 		return _melee_tags(w)
-	if w.charge_time <= 0.0:
+	var own: Dictionary = w.mode_script.get_script_constant_map() if w.mode_script else {}
+	if own.has("FIRE_TAG"):
+		# A mode that fires its own way says so (the Sarsaparilla Six's FAN FIRE).
+		out.append(String(own["FIRE_TAG"]))
+	elif w.charge_time <= 0.0:
 		out.append("AUTO" if w.automatic or w.beam else "SEMI")
 	if w.burst_count > 1:
 		out.append("BURST ×%d" % w.burst_count)

@@ -135,11 +135,11 @@ def bottle_round(i, M, amber, cap_m, soda_m):
 def fan_hand(M):
     """The off hand that fans the hammer (ArmLFist, shown only while fanning):
     a glove laid palm down over the back of the frame, fingers draped over its
-    right side, thumb on the left, the forearm coming from the lower left.
+    right side, thumb on the left, the forearm leaving down and to the right, under the gun.
     Built as a support hand cupping a thin flat bar across the hammer spur's
     top, then turned over (palm down) about the bar. Returns (parts, centre)."""
     c = Vector(FAN_BAR)
-    toward = (-0.3, -0.12, 0.95)       # before the turn: (left, back, down) after it
+    toward = (0.45, 0.05, 0.9)         # before the turn: (right, back, down) after it
     parts, _elbow = support_hand(tuple(c), 0.021, 0.006, M, toward, corner=0.005, prefix="LF", finger_len=0.07,
                                 palm_len=0.1, length=0.1, thumb_len=0.06)
     # Plain glove only: the glove shapes would stand over the sights in its rest pose.
@@ -164,7 +164,7 @@ def build_sarsaparilla_six():
     walnut = M["dark"]
 
     grip_loc = (0, -0.032, -0.1)
-    grip_parts, G = grip("", grip_loc, M, tilt=-16, size=(0.064, 0.086, 0.172), body_bottom=-0.028, panel="pink")
+    grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.07, 0.094, 0.185), body_bottom=-0.028, panel="pink")
     trig = [p for p in grip_parts if p.name in ("Trigger", "TriggerToe")]
     grip_parts = [p for p in grip_parts if p not in trig]
     for p in trig:
@@ -219,7 +219,7 @@ def build_sarsaparilla_six():
     shell += bolts("Pin", [(-0.0205, -0.056, 0.0), (0.0205, -0.056, 0.0), (-0.0225, 0.072, -0.016), (0.0225, 0.072, -0.016)],
                    M["steel"], radius=0.0042, height=0.004)
     # A brass butt cap under the grip.
-    shell.append(box("ButtCap", (0.07, 0.095, 0.012), tuple(fpt(G["frame"], 0, 0, -0.172 / 2 - 0.002)), rot=(math.radians(-16), 0, 0),
+    shell.append(box("ButtCap", (0.076, 0.102, 0.012), tuple(fpt(G["frame"], 0, 0, -0.185 / 2 - 0.002)), rot=(math.radians(-14), 0, 0),
                      bevel=0.005, m=M["steel"]))
     lug, charm_point = charm_lug(0.013, 0.18, BOTTLE_Z + 0.004, M, out=1.0)
     shell += lug

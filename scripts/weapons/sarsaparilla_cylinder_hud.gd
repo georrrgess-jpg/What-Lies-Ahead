@@ -33,7 +33,7 @@ var _font: Font
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_font = ThemeDB.fallback_font
+	_font = UiKit.display_font()
 
 
 func _process(delta: float) -> void:
@@ -100,11 +100,15 @@ func _draw() -> void:
 			draw_arc(p, CAP * s, 0.0, TAU, 14, Color(CREAM, 0.9 * a), 1.0 * s, true)
 	if last and _font:
 		var text := "LAST CALL"
-		var fs := int(18 * s)
-		# Beside the ring, clear of the HUD's reload prompt under it.
-		var at := c + Vector2(r + CAP * s * 2.6, fs * 0.36)
-		draw_string_outline(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, int(6 * s), Color(DARK, a))
-		draw_string(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(CREAM.lerp(CHERRY, beat * 0.5), a))
+		# Beside the ring, clear of the HUD's reload prompt under it, on a dark plate.
+		var fs := int(20 * s)
+		var w := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var at := c + Vector2(r + CAP * s * 3.0, fs * 0.36)
+		var plate := Rect2(at + Vector2(-6.0 * s, -fs * 0.95), Vector2(w + 12.0 * s, fs * 1.3))
+		draw_rect(plate, Color(0.1, 0.05, 0.08, 0.82 * a))
+		draw_rect(plate, Color(CHERRY, (0.6 + 0.4 * beat) * a), false, 2.0 * s)
+		draw_string_outline(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, int(5 * s), Color(0.1, 0.05, 0.08, a))
+		draw_string(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(CREAM.lerp(Color(1.0, 0.82, 0.25), beat * 0.6), a))
 
 
 func _draw_star(p: Vector2, radius: float, color: Color) -> void:
