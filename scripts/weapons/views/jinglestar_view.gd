@@ -33,7 +33,7 @@ const FLAIL_LIGHT_KEYS := [
 ]
 ## The heavy, from the wind-up (raised high, whirling) down through the slam.
 const FLAIL_HEAVY_KEYS := [
-	[0.0, Vector3(0.02, 0.2, 0.04), Vector3(34.0, -6.0, -14.0)],
+	[0.0, Vector3(-0.03, 0.07, -0.02), Vector3(20.0, -4.0, -10.0)],
 	[0.3, Vector3(-0.05, -0.12, -0.12), Vector3(-38.0, 8.0, 16.0)],
 	[0.52, Vector3(-0.07, -0.15, -0.05), Vector3(-42.0, 10.0, 18.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
@@ -52,17 +52,17 @@ const LIGHT_PATH := [
 const LIGHT_PULL := Vector3(0.06, 0.6, 0.85)   # from, until, strength
 ## The heavy's path: up over the top and down the middle.
 const HEAVY_PATH := [
-	[0.0, Vector3(0.28, 0.36, -0.86)],
-	[0.14, Vector3(0.08, 0.42, -1.0)],
+	[0.0, Vector3(0.12, 0.3, -0.9)],
+	[0.14, Vector3(0.04, 0.38, -1.0)],
 	[HEAVY_CONTACT, Vector3(0.0, -0.2, -1.05)],
 	[0.5, Vector3(-0.06, -0.4, -0.86)],
 ]
 const HEAVY_PULL := Vector3(0.0, 0.58, 1.0)
-## The whirl: its centre above the cap (view units), radius, the plane's tilt
+## The whirl: its centre from the cap (view units: over and in front of it), radius, the plane's tilt
 ## towards the eye (degrees), and its turn rate (rad/s) from no charge to full.
-const WHIRL_RISE := 0.12
-const WHIRL_RADIUS := 0.22
-const WHIRL_TILT := 28.0
+const WHIRL_CENTRE := Vector3(-0.08, 0.04, -0.12)
+const WHIRL_RADIUS := 0.2
+const WHIRL_TILT := 38.0
 const WHIRL_SPIN := Vector2(8.0, 17.0)
 ## The hand's own little circle while it whirls (view units).
 const WHIRL_WRIST := 0.014
@@ -78,7 +78,7 @@ const RATTLE_GAP := 0.14
 const ARM_RADIUS := 0.055
 const HANDLE_RADIUS := 0.028
 const LINKS := 6
-const LINK_PITCH := 0.034
+const LINK_PITCH := 0.028
 const HEAD_OFFSET := 0.062
 const RIBBONS := 3
 const RIBBON_SEGS := 3
@@ -101,6 +101,8 @@ var _ribbon_roots: Array[Vector3] = []
 var _live := false
 var _fresh := true
 var _last_view := Transform3D.IDENTITY
+## The handle in the view's frame last frame (a paused weapon carries the chain with it).
+var _last_handle := Transform3D.IDENTITY
 var _side := Vector3.RIGHT
 var _head_basis := Basis.IDENTITY
 var _spin := 0.0
@@ -202,12 +204,16 @@ func part_motion(view: WeaponView, mode: MeleeMode, delta: float) -> void:
 		[to_view * _arm.global_position, to_view * _elbow.global_position, ARM_RADIUS],
 		[to_view * _handle.global_transform * Vector3(0.0, 0.0, 0.13), to_view * _handle.global_transform * Vector3(0.0, 0.0, -0.31), HANDLE_RADIUS],
 	]
-	if _running(view):
+	var handle_xf := to_view * _handle.global_transform
+	if not _running(view):
+		chain.move(handle_xf * _last_handle.affine_inverse())
+	else:
 		chain.carry(to_view * _last_view, 0.0 if chain.calm else CARRY)
 		_drive(view, mode, anchor, delta)
 		chain.advance(delta, anchor, down, _roots())
 		_sounds(view, mode, delta)
 	_last_view = view.global_transform
+	_last_handle = handle_xf
 	_pose(view, delta)
 
 
@@ -226,6 +232,7 @@ func _start(anchor: Vector3) -> void:
 	if _equip < 0.2:
 		chain.lay(anchor, [Vector3(0.2, 1.0, -0.3), Vector3(0.4, 1.0, -0.6), Vector3(0.6, 0.6, -1.0), Vector3(0.6, 0.0, -1.0)])
 	_last_view = _view.global_transform
+	_last_handle = _view.global_transform.affine_inverse() * _handle.global_transform
 	_head_basis = Basis.IDENTITY
 
 
@@ -271,7 +278,7 @@ func whirl_point(anchor: Vector3, angle: float) -> Vector3:
 	var tilt := deg_to_rad(WHIRL_TILT)
 	var across := Vector3.RIGHT
 	var deep := Vector3(0.0, sin(tilt), -cos(tilt))
-	return anchor + Vector3.UP * WHIRL_RISE + (across * cos(angle) + deep * sin(angle)) * WHIRL_RADIUS
+	return anchor + WHIRL_CENTRE + (across * cos(angle) + deep * sin(angle)) * WHIRL_RADIUS
 
 
 ## The ribbons' roots now, from the head's last frame.

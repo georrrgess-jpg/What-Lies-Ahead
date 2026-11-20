@@ -136,6 +136,23 @@ func carry(xf: Transform3D, share: float) -> void:
 		q[i] += moved * share
 
 
+## Moves the whole rope (and the ribbons) rigidly by `xf`, keeping its shape
+## and motion: a paused weapon's chain carried along with its handle.
+func move(xf: Transform3D) -> void:
+	for i in p.size():
+		p[i] = xf * p[i]
+		q[i] = xf * q[i]
+	for r in ribbons:
+		var pts: PackedVector3Array = r[0]
+		var prev: PackedVector3Array = r[1]
+		for k in pts.size():
+			pts[k] = xf * pts[k]
+			prev[k] = xf * prev[k]
+		r[0] = pts
+		r[1] = prev
+	_anchor = xf * _anchor
+
+
 ## Advances by `delta` with the anchor moving to `anchor`; `down` is the
 ## world's down in the view's frame. `ribbon_roots` are the ribbons' roots now.
 func advance(delta: float, anchor: Vector3, down: Vector3, ribbon_roots: Array) -> void:

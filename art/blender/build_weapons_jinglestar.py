@@ -53,7 +53,7 @@ WRAP_Y1 = 0.07
 ## The cap's eye (where the chain hangs) and the chain: LINKS links, LINK_PITCH apart.
 EYE_Y = 0.322
 LINKS = 6
-LINK_PITCH = 0.034
+LINK_PITCH = 0.028
 ## The head: its eye at the end of the chain, the ball's centre HEAD_OFFSET beyond.
 HEAD_R = 0.05
 HEAD_OFFSET = 0.062
@@ -62,6 +62,7 @@ SPIKE_LEN = 0.034
 RIBBONS = 3
 RIBBON_SEGS = 3
 RIBBON_SEG = 0.05
+RIBBON_FAN = 28.0
 
 
 def palette():
@@ -234,8 +235,6 @@ def head_parts(M, m_cream):
         parts.append(_spike(f"Spike{i}", base, d, 0.014, SPIKE_LEN, M["steel"], segs=8))
         tip = d * (HEAD_R * 0.9 + SPIKE_LEN + 0.004)
         parts.append(sphere(f"SpikeBell{i}", 0.0062, tip, m=M["steel"], segs=10, rings=6))
-        parts.append(torus(f"SpikeBellGirdle{i}", 0.0062, 0.0011, tip, m=M["dark"], major_segs=12, minor_segs=4))
-        _orient(parts[-1], tip, d)
     # A gold star boss on each flat face (+-Z), the jester's emblem.
     for s in (-1, 1):
         pts = []
@@ -325,20 +324,25 @@ def build_jinglestar():
         ob.matrix_world = Matrix.Translation((0, centre, 0)) @ ob.matrix_world
     groups["Head"] = (hp, (0, head_eye, 0), None)
 
-    # Ribbons: tied at the eye collar, laid back along the chain (-Y) in a fan.
+    # Ribbons: tied at the eye collar, laid back along the chain (-Y), fanned out
+    # RIBBON_FAN degrees so the rest layout shows the chain between them. Each
+    # segment's node is turned to its own lie (its mesh along its local -Y).
     colours = [M["shell"], M["trim"], pink]
     for i in range(RIBBONS):
         a = math.tau * i / RIBBONS + 0.4
         root = Vector((math.cos(a) * 0.012, centre - HEAD_R - 0.004, math.sin(a) * 0.012))
+        fan = math.radians(RIBBON_FAN)
+        lie = Vector((math.cos(a) * math.sin(fan), -math.cos(fan), math.sin(a) * math.sin(fan)))
+        turn = Vector((0, -1, 0)).rotation_difference(lie).to_matrix().to_4x4()
         parent = "Head"
         for k in range(RIBBON_SEGS):
             name = f"Ribbon{i}_{k}"
             last = k == RIBBON_SEGS - 1
             seg = ribbon_segment(name + "Mesh", RIBBON_SEG, 0.016 * (1.0 - 0.18 * k), colours[i], M["steel"], taper=0.82,
                                  tassel=M["steel"] if last else None, M=M)
-            pivot = root + Vector((0, -RIBBON_SEG * k, 0))
+            pivot = Matrix.Translation(root + lie * RIBBON_SEG * k) @ turn
             for ob in seg:
-                ob.matrix_world = Matrix.Translation(pivot) @ Matrix.Rotation(a, 4, "Y") @ ob.matrix_world
+                ob.matrix_world = pivot @ Matrix.Rotation(a, 4, "Y") @ ob.matrix_world
             groups[name] = (seg, pivot, parent)
             parent = name
 

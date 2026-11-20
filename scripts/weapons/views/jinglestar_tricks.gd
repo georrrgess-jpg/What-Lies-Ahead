@@ -47,6 +47,7 @@ var trick: int = Trick.FIGURE8
 var spin := 0.0
 
 var _rng := RandomNumberGenerator.new()
+var _force := -1
 var _last := -1
 var _view: WeaponView
 var _owner: Object
@@ -62,6 +63,10 @@ var _ease := 0.0
 
 func _init() -> void:
 	_rng.randomize()
+	# Dev captures (scripts/dev/inspect_strip.gd): --shot-trick=<Trick> plays that trick every time.
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--shot-trick="):
+			_force = int(arg.trim_prefix("--shot-trick="))
 
 
 func setup(view: WeaponView, owner_view: Object) -> void:
@@ -72,7 +77,9 @@ func setup(view: WeaponView, owner_view: Object) -> void:
 ## Picks the next inspect's trick; returns its length (seconds).
 func choose() -> float:
 	var rare := _view != null and _view.inspect_force_rare
-	if rare or _rng.randi_range(1, RARE_ODDS) == 1:
+	if _force >= 0:
+		trick = _force
+	elif rare or _rng.randi_range(1, RARE_ODDS) == 1:
 		trick = Trick.FINALE
 	else:
 		var pool := NORMAL.duplicate()
