@@ -7,7 +7,7 @@ extends RefCounted
 ##
 ##   godot --path . --fixed-fps 30 -- --shot=arms.png --shot-scene=level --shot-zombies=0 --shot-hud=0 --shot-run=res://scripts/dev/melee_arms_sheet.gd [--shot-sheet-weapons=a,b]
 
-const WEAPONS := "glow_blade,ticket_flipper,swirl_smasher,high_striker,ion_carbine"
+const WEAPONS := "glow_blade,ticket_flipper,swirl_smasher,high_striker,jinglestar,ion_carbine"
 ## [label, kind, at]: kind idle | light | windup | heavy | inspect; at = progress, charge or seconds.
 const CELLS := [
 	["idle", "idle", 0.0],

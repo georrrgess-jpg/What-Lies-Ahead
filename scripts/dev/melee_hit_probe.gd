@@ -18,7 +18,7 @@ extends RefCounted
 ## ahead of the player (counted as out hits when it catches one). Then the input cases a player meets: the aim
 ## tapped during a light swing, tapped while sprinting, and released at once.
 
-const WEAPONS := "glow_blade,ticket_flipper,swirl_smasher,high_striker"
+const WEAPONS := "glow_blade,ticket_flipper,swirl_smasher,high_striker,jinglestar"
 const KINDS := "lifeguard_runner,tourist_shambler,boardwalk_bruiser,alpha_bruiser,tunnel_crawler,the_wrecker"
 const MOTIONS := "still,forward,strafe,approach"
 const DISTANCES := [0.8, 1.6, 2.4, 3.0, 3.5]
