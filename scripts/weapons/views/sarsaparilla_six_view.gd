@@ -36,7 +36,7 @@ const FAN_FORWARD := Vector3(0.0, 0.012, -0.024)
 const FAN_BACK := Vector3(0.0, -0.002, 0.022)
 const GRIP_DROP := Vector3(-0.04, -0.2, 0.06)
 ## The gun's fanning stance: lower and canted (model root offset; degrees).
-const FAN_HIP := Vector3(0.03, -0.05, 0.03)
+const FAN_HIP := Vector3(0.05, -0.07, -0.08)
 const FAN_HIP_ROT := Vector3(4.0, 8.0, -14.0)
 const FAN_IN := 14.0
 const FAN_OUT := 7.0

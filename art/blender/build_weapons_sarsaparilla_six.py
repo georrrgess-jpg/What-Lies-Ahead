@@ -139,7 +139,7 @@ def fan_hand(M):
     Built as a support hand cupping a thin flat bar across the hammer spur's
     top, then turned over (palm down) about the bar. Returns (parts, centre)."""
     c = Vector(FAN_BAR)
-    toward = (-0.45, -0.25, 0.85)      # before the turn: (left, back, down) after it
+    toward = (-0.3, -0.12, 0.95)       # before the turn: (left, back, down) after it
     parts, _elbow = support_hand(tuple(c), 0.021, 0.006, M, toward, corner=0.005, prefix="LF", finger_len=0.07,
                                 palm_len=0.1, length=0.1, thumb_len=0.06)
     turn = Matrix.Translation(c) @ Matrix.Rotation(math.pi, 4, "X") @ Matrix.Translation(-c)
