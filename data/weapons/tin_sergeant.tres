@@ -1,0 +1,77 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/tin_sergeant.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/tin_sergeant_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/tin_sergeant_view.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/tin_sergeant_mode.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 35
+
+[resource]
+script = ExtResource("1")
+id = &"tin_sergeant"
+sort_order = 113
+category = "Squad Launcher"
+slot_class = "primary"
+display_name = "Tin Sergeant"
+role = "A toy-chest launcher that lobs wind-up tin soldiers, up to six out at once (one more pops the oldest). Each lands, winds up and marches on the nearest zombie by itself (a squad spreads over a pack), then pops on it, hitting everything within 2.4 m; one that hits a zombie in flight clonks it and pops at its feet. Hold aim to plant a \"Fall in!\" flag where the arc lands: the squad marches to it, rings it and guards it, and it holds 6 s after you lower the sights. Soldiers run down after 12 s and keep marching when you switch guns. Weak on a lone target, strong at holding a lane; bosses take 75%."
+unlock = SubResource("unlock")
+magazine_size = 5
+reserve_start = 40
+reserve_max = 90
+reload_time = 2.2
+emergency_recharge_interval = 1.6
+automatic = false
+fire_interval = 0.45
+damage = 90.0
+pellets = 1
+spread_degrees = 0.6
+spread_bloom = 0.0
+spread_bloom_max = 0.0
+max_range = 40.0
+falloff_start = 40.0
+falloff_end = 40.0
+falloff_min_scale = 1.0
+headshot_multiplier = 1.0
+knockback = 0.0
+ads_fov_scale = 0.86
+ads_time = 0.2
+ads_spread_scale = 0.5
+ads_depth = 0.1
+first_shot_accurate = true
+reticle_style = "chevron"
+recoil_kick = 2.0
+recoil_yaw = 0.3
+view_kick = 0.08
+shake = 0.16
+tracer_color = Color(0.95, 0.76, 0.23, 1)
+tracer_width = 0.04
+viewmodel = ExtResource("3")
+view_position = Vector3(0.25, -0.25, -0.6)
+view_rotation_degrees = Vector3(0, 5, -3)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"ts_fire"
+reload_sound = &"ts_reload"
+empty_sound = &"empty_click"
+equip_sound = &"ts_equip"
+fire_pitch_variance = 0.05
+move_speed_scale = 0.94
+equip_time = 0.38
+projectile_speed = 16.0
+projectile_gravity = 15.0
+projectile_loft = 3.0
+projectile_fuse = 3.0
+projectile_size = 0.2
+splash_radius = 2.4
+splash_edge_scale = 0.45
+splash_push = 4.0
+direct_hit_bonus = 35.0
+tracer_style = &"none"
+mode_script = ExtResource("6")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

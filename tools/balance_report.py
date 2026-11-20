@@ -41,6 +41,10 @@ shells) are approximated as extra health. Numbers are for comparison
 between weapons, not exact in-game times. The Jack Pot's boxes (scripts/weapons/jack_pot_box.gd)
 punch the zombie that sets them off for the full damage and splash the rest; bosses and the
 heaviest alphas take only BOSS_SCALE of it; its field of boxes is printed below the tables.
+The Tin Sergeant's soldiers (scripts/weapons/tin_soldier.gd) march on their own and pop on
+the zombie they reach for the full damage (DIRECT_SHARE of them also strike it in flight,
+scripts/weapons/modes/tin_sergeant_mode.gd), splashing the rest; bosses take BOSS_SCALE; its
+squad is printed below the tables.
 """
 import glob
 import math
@@ -113,6 +117,9 @@ VORTEX_POP_SHARE = 0.8
 JACKPOT = gd_consts("scripts/weapons/jack_pot_box.gd")
 # The Coin-Op: its tilt (rate climbs past TILT_DELAY), heavy glance and Free Play refunds (mode).
 COIN = gd_consts("scripts/weapons/modes/coin_op_mode.gd")
+# The Tin Sergeant: its marching soldiers and the share of them that strike in flight.
+TIN = gd_consts("scripts/weapons/tin_soldier.gd")
+TIN.update(gd_consts("scripts/weapons/modes/tin_sergeant_mode.gd"))
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
 	"capsule_height": 1.9, "mass": 1.0, "move_speed": 2.0}
 # Extra effective health from armour behaviours (helmet, riot shield, ice shell).
@@ -207,6 +214,8 @@ def mode_kind(w):
 		return "jackpot"
 	if mode.endswith("strike_zone_mode.gd"):
 		return "strike"
+	if mode.endswith("tin_sergeant_mode.gd"):
+		return "tin"
 	return ""
 
 
@@ -350,6 +359,10 @@ def pull_damage(w, e, d, head):
 		# The punch on the zombie that sets the box off; bosses are only nudged.
 		boss = e.get("mass", 1.0) >= JACKPOT["BOSS_MASS"]
 		return w["damage"] * (JACKPOT["BOSS_SCALE"] if boss else 1.0), w["fire_interval"]
+	if mode_kind(w) == "tin":
+		# The pop on the zombie the soldier marches on (some strike it in flight first).
+		boss = e.get("mass", 1.0) >= TIN["BOSS_MASS"]
+		return w["damage"] * (TIN["BOSS_SCALE"] if boss else 1.0) + w["direct_hit_bonus"] * TIN["DIRECT_SHARE"], w["fire_interval"]
 	if w["ricochet_count"] > 0:
 		# A thrown ring (RingShot) flies straight at its first target and can headshot.
 		return w["damage"] * head_mix, w["fire_interval"]
@@ -665,6 +678,14 @@ def main():
 			print(f"\n{w['display_name']} field: {int(JACKPOT['MAX_BOXES'])} boxes armed {JACKPOT['ARM_TIME']:g} s after landing, "
 				f"each {w['damage']:.0f} to the zombie that sets it off and {edge:.0f} on average to the rest within {w['splash_radius']:g} m; "
 				f"a pack of four walking into the field takes {field:.0f}; a boss {w['damage'] * JACKPOT['BOSS_SCALE']:.0f} a box")
+	for w in ws.values():
+		if mode_kind(w) == "tin":
+			edge = w["damage"] * (1 + w["splash_edge_scale"]) / 2
+			squad = int(TIN["MAX_SOLDIERS"])
+			print(f"\n{w['display_name']} squad: up to {squad} soldiers out, each winding up {TIN['WIND_TIME']:g} s after landing, "
+				f"then marching {TIN['MARCH_SPEED']:g} m/s for up to {TIN['MARCH_LIFE']:g} s; each pops for {w['damage']:.0f} on its zombie "
+				f"and {edge:.0f} on average to the rest within {w['splash_radius']:g} m; a full squad on a pack of four deals "
+				f"{squad * (w['damage'] + 3 * edge):.0f}; a boss {w['damage'] * TIN['BOSS_SCALE']:.0f} a soldier")
 	for w in ws.values():
 		if w["id"] == "coin_op":
 			k, paid, back = coin_free_play(w, es["tourist_shambler"], head)
