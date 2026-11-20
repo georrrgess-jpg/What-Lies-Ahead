@@ -168,7 +168,14 @@ static func mode_trait(w: WeaponData) -> String:
 
 ## What unlocks a locked weapon, in full ("Reach level 12").
 static func unlock_text(w: WeaponData) -> String:
+	if w.unlock and w.unlock.kind == Requirement.Kind.MELEE_KILLS and w.unlock.all_of.is_empty():
+		return "%s  ·  %s so far" % [w.unlock.describe(), Wallet.format(Progression.melee_kills())]
 	return w.unlock.describe() if w.unlock else "Locked"
+
+
+## "312 / 500 melee kills" for a MELEE_KILLS requirement.
+static func melee_progress(r: Requirement) -> String:
+	return "%s / %s melee kills" % [Wallet.format(mini(Progression.melee_kills(), r.amount)), Wallet.format(r.amount)]
 
 
 ## The same, short, for a card: "Lv 5", "Wave 10", else the full text.
@@ -179,4 +186,6 @@ static func short_unlock(w: WeaponData) -> String:
 		return "Lv %d" % w.unlock.amount
 	if w.unlock.kind == Requirement.Kind.ENDLESS_WAVE and w.unlock.all_of.is_empty():
 		return "Wave %d" % w.unlock.amount
+	if w.unlock.kind == Requirement.Kind.MELEE_KILLS and w.unlock.all_of.is_empty():
+		return melee_progress(w.unlock)
 	return w.unlock.describe()

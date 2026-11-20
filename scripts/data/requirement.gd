@@ -16,6 +16,7 @@ enum Kind {
 	CHALLENGE = 20,
 	ENDLESS_WAVE = 21,      ## best Endless wave >= amount (EndlessRecords)
 	ENDLESS_DISTRICT = 22,  ## Endless district `target` opened at least once
+	MELEE_KILLS = 23,       ## lifetime melee kills >= amount (Progression.melee_kills)
 }
 
 @export var kind: Kind = Kind.NONE
@@ -52,6 +53,8 @@ func is_met(weapon_ctx: StringName = &"") -> bool:
 			return EndlessRecords.best_wave() >= amount
 		Kind.ENDLESS_DISTRICT:
 			return EndlessRecords.has_opened(target)
+		Kind.MELEE_KILLS:
+			return Progression.melee_kills() >= amount
 	return true
 
 
@@ -80,6 +83,8 @@ func describe() -> String:
 			text = "Reach wave %d in Endless" % amount
 		Kind.ENDLESS_DISTRICT:
 			text = "Open %s in Endless" % _district_name(target)
+		Kind.MELEE_KILLS:
+			text = "Make %d melee kills" % amount
 	for r in all_of:
 		if r and not r.is_met():
 			text = (text + " and " if text != "" else "") + r.describe()

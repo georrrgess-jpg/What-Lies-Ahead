@@ -208,6 +208,7 @@ func _fill_header() -> void:
 	for key in Profile.data["levels"]:
 		clears += int(Profile.data["levels"][key].get("clears", 0))
 	_header.add_child(CareerCards.stat_tile("ZOMBIES POPPED", Wallet.format(Mastery.total_kills())))
+	_header.add_child(CareerCards.stat_tile("MELEE KILLS", Wallet.format(Progression.melee_kills())))
 	_header.add_child(CareerCards.stat_tile("LEVEL CLEARS", Wallet.format(clears)))
 	_header.add_child(CareerCards.stat_tile("RUNS", Wallet.format(int(Profile.section("progression").get("runs_played", 0)))))
 	_header.add_child(CareerCards.stat_tile("CONTRACTS", Wallet.format(ContractBoard.completed_count())))

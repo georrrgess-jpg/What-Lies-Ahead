@@ -264,6 +264,7 @@ func _on_run_started(director: Node) -> void:
 func _on_enemy_killed(enemy: Node, weapon_id: StringName, headshot: bool, _points: int) -> void:
 	if tracker:
 		tracker.on_kill(enemy, weapon_id, headshot)
+	_count_melee_kill(weapon_id)
 
 
 func _on_wave_cleared(wave_number: int, _total: int) -> void:
@@ -305,3 +306,25 @@ func _log_run(result: Dictionary) -> void:
 		runs.pop_front()
 	sec["runs"] = runs
 	sec["runs_played"] = int(sec.get("runs_played", 0)) + 1
+
+
+# --- lifetime melee kills ------------------------------------------------------------
+# Kills made with any melee-slot weapon (the quick swing with a gun included),
+# counted since update 23 in Profile.section("progression")["melee_kills"].
+# Requirement.Kind.MELEE_KILLS reads it; a weapon it unlocks is announced.
+
+## Lifetime melee kills.
+func melee_kills() -> int:
+	return int(Profile.section("progression").get("melee_kills", 0))
+
+
+func _count_melee_kill(weapon_id: StringName) -> void:
+	var w := GameData.weapon(weapon_id)
+	if w == null or w.slot_class != "melee":
+		return
+	var count := melee_kills() + 1
+	Profile.section("progression")["melee_kills"] = count
+	for other in GameData.weapons():
+		var req := other.unlock
+		if req and req.kind == Requirement.Kind.MELEE_KILLS and req.amount == count and req.all_of.is_empty():
+			UiKit.toast("%s unlocked! %s melee kills" % [other.display_name, Wallet.format(count)], other.tracer_color)
