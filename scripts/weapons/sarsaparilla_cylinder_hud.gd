@@ -6,7 +6,7 @@ extends Control
 ## a spent one a dark hollow ring; the sixth, the Last Call, is a cherry star.
 ## The next chamber to fire sits at the top, so the ring turns a sixth with
 ## every shot (eased). With one round left the star swells, pulses and
-## "LAST CALL" shows under the ring. It fades out while aiming down the
+## "LAST CALL" shows beside the ring. It fades out while aiming down the
 ## sights or during a reload and redraws only while it is shown.
 
 const AMBER := Color(1.0, 0.647, 0.227)
@@ -100,11 +100,11 @@ func _draw() -> void:
 			draw_arc(p, CAP * s, 0.0, TAU, 14, Color(CREAM, 0.9 * a), 1.0 * s, true)
 	if last and _font:
 		var text := "LAST CALL"
-		var fs := int(15 * s)
-		var w := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, fs).x
-		var at := c + Vector2(-w * 0.5, r + CAP * s * 2.0 + fs * 1.1)
-		draw_string_outline(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, int(4 * s), Color(DARK, 0.9 * a))
-		draw_string(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(CHERRY.lerp(CREAM, beat * 0.35), a))
+		var fs := int(18 * s)
+		# Beside the ring, clear of the HUD's reload prompt under it.
+		var at := c + Vector2(r + CAP * s * 2.6, fs * 0.36)
+		draw_string_outline(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, int(6 * s), Color(DARK, a))
+		draw_string(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(CREAM.lerp(CHERRY, beat * 0.5), a))
 
 
 func _draw_star(p: Vector2, radius: float, color: Color) -> void:

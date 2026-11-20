@@ -8,8 +8,9 @@ extends RefCounted
 ## Round5 with its gold star cap, is the Last Call, and its red ring (Halo5)
 ## pulses while it is next. The hammer (Hammer) is cocked at rest, falls on
 ## every shot and is thumbed back for the next tap; while the trigger is held
-## (SarsaparillaSixMode.fanning) the off hand (ArmL) leaves the grip, turns
-## palm down over the frame and slaps the hammer back for every shot. The
+## (SarsaparillaSixMode.fanning) the gun drops to a canted hip stance, the
+## cupping hand (ArmL) lets go and the fan hand (ArmLFist, palm down) comes up
+## over the frame and slaps the hammer back for every shot. The
 ## trigger (Trigger) pulls on each shot and soda spray puffs from the muzzle.
 ## Fizz bubbles (Bubble0..6) drift up through the bottle under the barrel,
 ## faster after shots.
@@ -52,7 +53,7 @@ const SPIN_END := 1.45
 const SPIN_TURNS := 2.5
 const TOSS_START := 1.6
 const TOSS_END := 2.45
-const TOSS_HEIGHT := 0.2
+const TOSS_HEIGHT := 0.15
 ## Where the gun turns over in the toss (its middle, model space).
 const TOSS_PIVOT := Vector3(0.0, 0.0, -0.06)
 const RARE_CHANCE := 1.0 / 15.0
