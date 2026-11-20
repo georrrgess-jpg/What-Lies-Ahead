@@ -3,11 +3,13 @@ extends Node3D
 ## The Tin Sergeant's "Fall in!" flag (TinSergeantMode): a red swallowtail
 ## pennant on a brass pole planted at the rally point, a gold ring on the
 ## floor marking the ground the squad guards (TinSoldier.RALLY_GUARD) and a
-## FALL IN! sign that pops up when it is planted. It springs up out of the
-## floor, waves, and sinks away over the rally's last second.
+## FALL IN! sign that pops up at its foot for a moment when it is planted
+## (low, so it never hides the zombie the flag was planted on). It springs
+## up out of the floor, waves, and sinks away over the rally's last second.
 
 const POLE_HEIGHT := 1.1
 const RISE_TIME := 0.3
+const SIGN_TIME := 0.9
 const GOLD := Color(0.95, 0.76, 0.23)
 const RED := Color(0.89, 0.27, 0.23)
 
@@ -25,23 +27,23 @@ func _ready() -> void:
 	_pole = Node3D.new()
 	add_child(_pole)
 	var stick := CylinderMesh.new()
-	stick.top_radius = 0.022
-	stick.bottom_radius = 0.026
+	stick.top_radius = 0.032
+	stick.bottom_radius = 0.038
 	stick.height = POLE_HEIGHT
 	stick.radial_segments = 10
 	_pole.add_child(_mesh(stick, _lit(GOLD, 0.8), Vector3(0.0, POLE_HEIGHT * 0.5, 0.0)))
 	var ball := SphereMesh.new()
-	ball.radius = 0.055
-	ball.height = 0.11
+	ball.radius = 0.07
+	ball.height = 0.14
 	ball.radial_segments = 12
 	ball.rings = 6
 	_pole.add_child(_mesh(ball, _lit(GOLD, 0.8), Vector3(0.0, POLE_HEIGHT + 0.03, 0.0)))
 	var flag := BoxMesh.new()
-	flag.size = Vector3(0.5, 0.3, 0.012)
+	flag.size = Vector3(0.62, 0.38, 0.014)
 	_cloth = Node3D.new()
-	_cloth.position = Vector3(0.0, POLE_HEIGHT - 0.17, 0.0)
+	_cloth.position = Vector3(0.0, POLE_HEIGHT - 0.22, 0.0)
 	_pole.add_child(_cloth)
-	_cloth.add_child(_mesh(flag, _lit(RED, 0.0, 0.35), Vector3(0.27, 0.0, 0.0)))
+	_cloth.add_child(_mesh(flag, _lit(RED, 0.0, 0.35), Vector3(0.33, 0.0, 0.0)))
 	var ring := TorusMesh.new()
 	ring.inner_radius = 0.97
 	ring.outer_radius = 1.0
@@ -59,13 +61,12 @@ func _ready() -> void:
 	_label.text = "FALL IN!"
 	_label.font = UiKit.display_font()
 	_label.font_size = 96
-	_label.pixel_size = 0.004
+	_label.pixel_size = 0.0026
 	_label.outline_size = 18
 	_label.modulate = GOLD
 	_label.outline_modulate = Color(0.12, 0.08, 0.2)
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_label.no_depth_test = true
-	_label.position = Vector3(0.0, POLE_HEIGHT + 0.45, 0.0)
+	_label.position = Vector3(0.0, 0.25, 0.0)
 	add_child(_label)
 	for node in find_children("*", "GeometryInstance3D", true, false):
 		(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -84,7 +85,7 @@ func show_at(at: Vector3, left: float, planted: bool, delta: float) -> void:
 		_sign = 0.0
 	visible = true
 	if planted:
-		_sign = 1.2
+		_sign = SIGN_TIME
 	_clock += delta
 	_up = minf(1.0, _up + delta / RISE_TIME)
 	_sign = maxf(0.0, _sign - delta)
@@ -98,7 +99,7 @@ func show_at(at: Vector3, left: float, planted: bool, delta: float) -> void:
 	_ring.scale = Vector3(spread, 1.0, spread)
 	_ring.transparency = 1.0 - fade
 	_label.visible = _sign > 0.0
-	_label.scale = Vector3.ONE * _ease_out_back(clampf((1.2 - _sign) / 0.25, 0.0, 1.0))
+	_label.scale = Vector3.ONE * _ease_out_back(clampf((SIGN_TIME - _sign) / 0.25, 0.0, 1.0))
 	_label.modulate.a = clampf(_sign / 0.3, 0.0, 1.0)
 
 
