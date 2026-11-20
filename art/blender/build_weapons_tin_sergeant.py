@@ -49,7 +49,7 @@ LAMPS = 6
 SOLDIER_H = 0.62
 # The mini soldier standing in the hatch, and where his feet are.
 MINI_H = 0.098
-MINI_FEET = (-0.018, 0.132, 0.05)
+MINI_FEET = (-0.018, 0.132, 0.04)
 # The hatch: centre on the deck, half size, how far it is open (degrees about Y).
 HATCH_C = (-0.018, 0.132, 0.11)
 HATCH_HALF = 0.027
@@ -201,7 +201,7 @@ def build_tin_sergeant():
     grip_loc = (0, -0.03, -0.115)
     grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.07, 0.092, 0.19), body_bottom=-0.02)
     z_line = RAIL_TOP + SIGHT_HEIGHT
-    fore = (0, 0.17, -0.09)
+    fore = (0, 0.2, -0.09)
     hx, hy, hz = HATCH_C
     bugle_z = 0.03
 
@@ -211,7 +211,7 @@ def build_tin_sergeant():
     shell = grip_parts + [
         # The toy chest: royal blue, a red lid over its back two thirds, a dark plinth.
         box("Chest", (0.108, chest_l, 0.13), (0, chest_c, 0.045), bevel=0.012, segs=2, m=M["shell"]),
-        box("Plinth", (0.114, chest_l + 0.006, 0.014), (0, chest_c, -0.018), bevel=0.005, m=M["dark"]),
+        box("Plinth", (0.112, chest_l + 0.006, 0.012), (0, chest_c, -0.013), bevel=0.005, m=M["dark"]),
         box("Lid", (0.114, 0.165, 0.01), (0, -0.003, DECK_Z + 0.002), bevel=0.004, m=M["trim"]),
         box("LidLip", (0.116, 0.005, 0.012), (0, 0.08, DECK_Z + 0.002), bevel=0.002, m=gold),
         box("RailRiser", (0.032, 0.15, 0.012), (0, -0.005, RAIL_TOP - 0.015), bevel=0.003, m=M["dark"]),
@@ -231,9 +231,9 @@ def build_tin_sergeant():
         ring("DrumHoop1", 0.027, 0.0045, -0.119, z=0.015, m=M["trim"], segs=28),
         ycyl("DrumHead", 0.023, 0.003, -0.121, z=0.015, m=M["dark"], segs=28, bevel=0.0),
         # The drumstick foregrip with a red knob.
-        box("ForegripMount", (0.046, 0.05, 0.014), (0, fore[1], -0.03), bevel=0.004, m=M["dark"]),
-        cyl("Foregrip", 0.021, 0.12, fore, segs=18, bevel=0.006, m=white),
-        sphere("ForegripKnob", 0.026, (0, fore[1], fore[2] - 0.068), m=M["trim"], segs=16, rings=10),
+        box("ForegripMount", (0.034, 0.04, 0.05), (0, fore[1], -0.012), bevel=0.006, m=M["dark"]),
+        cyl("Foregrip", 0.018, 0.12, fore, segs=18, bevel=0.006, m=white),
+        sphere("ForegripKnob", 0.02, (0, fore[1], fore[2] - 0.072), m=M["trim"], segs=16, rings=10),
     ]
     for k in range(8):
         a = math.tau * k / 8 + 0.2
@@ -261,8 +261,10 @@ def build_tin_sergeant():
         lamps[f"Lamp{i}"] = ([sphere(f"LampGlow{i}", 0.0058, at, scale=(1, 1, 0.75), m=lamp, segs=10, rings=6)], at)
     shell += top_rail("TopRail", -0.072, 0.062, RAIL_TOP, M, width=0.03)
     shell += bolts("Pin", [(0.054, -0.05, 0.0), (0.054, 0.14, 0.0)], M["dark"], radius=0.005, height=0.004)
-    lug, charm_point = charm_lug(-0.054, -0.055, 0.0, M)
+    # The charm hangs off the chest's front right corner, ahead of the hands.
+    lug, charm_point = charm_lug(0.064, 0.15, 0.02, M, out=1.0)
     shell += lug
+    shell.append(box("CharmLugFoot", (0.012, 0.02, 0.016), (0.058, 0.15, 0.024), bevel=0.003, m=M["dark"]))
     # Rear aperture on the lid, a brass post with a gold ball on the deck's front edge.
     sight_rear, sight_front = sights_ghost_ring(0.0, -0.07, 0.174, RAIL_TOP, DECK_Z, z_line, M)
 
@@ -332,7 +334,7 @@ def build_tin_sergeant():
     empties = {
         "Muzzle": ((0, chest_y1 + 0.185, bugle_z), None),
         "SightPoint": ((0, -0.07, z_line), None),
-        "SightMount": ((0, -0.005, RAIL_TOP), None),
+        "SightMount": ((0, 0.008, RAIL_TOP), None),
         "EjectPoint": ((hx, hy, DECK_Z + 0.03), None),
         "VentPoint": ((kx - 0.03, ky, kz), None),
         "CharmPoint": (charm_point, None),

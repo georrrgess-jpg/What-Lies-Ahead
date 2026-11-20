@@ -100,15 +100,16 @@ def ts_wind():
     d = 0.6
     out = _ratchet(0.5, 12, 30, 0.9)
     out = np.concatenate([out, silence(d - 0.5)])
-    place(out, _tin(1568, 0.25, 0.4), 0.48, 1.0)
+    place(out, _tin(1568, 0.25, 0.22), 0.48, 1.0)
     return filt(out, low=9000)
 
 
 def ts_tick():
     """One marching step: a bright tin tick."""
     out = silence(0.07)
-    place(out, click(0.008, 3000, 0.5), 0.0, 1.0)
-    place(out, _tin(1320, 0.05, 0.5), 0.0, 1.0)
+    place(out, click(0.008, 3000, 0.8), 0.0, 1.0)
+    place(out, band(noise(0.03), 2200, 1400) * env(0.03, 0.0005, 0.02, power=2.0) * 0.5, 0.0, 1.0)
+    place(out, tone(760, 0.04) * env(0.04, 0.0005, 0.025, power=2.4) * 0.3, 0.0, 1.0)
     return filt(out, low=9500)
 
 
@@ -151,7 +152,7 @@ def ts_equip():
     place(out, clunk(280, 0.06, 0.6), 0.0, 1.0)
     for i in range(2):
         place(out, click(0.014, 2800, 0.4), 0.08 + i * 0.06, 1.0)
-    place(out, _bugle(G4 * 2, 0.14, 0.35), 0.24, 1.0)
+    place(out, _bugle(G4, 0.14, 0.4), 0.24, 1.0)
     return filt(out, low=7000)
 
 
