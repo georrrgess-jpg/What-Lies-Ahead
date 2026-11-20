@@ -105,6 +105,11 @@ WEAPONS.append("tin_sergeant")
 JOINTS["tin_sergeant"] = ([("Soldier", "Shell"), ("SoldierArm", "Soldier"), ("SoldierArm", "Shell"), ("CellHolo", "Shell"), ("CellHolo", "Soldier"),
                            ("CellHolo", "SoldierArm"), ("Hatch", "Shell"), ("Key", "Shell"), ("Flag", "Shell"), ("Cell", "Shell")]
                           + [(f"Lamp{i}", "Shell") for i in range(6)])
+# The cylinder swings out on its crane past the frame; the rounds ride in it, caps and soda in them; the hammer on its pin.
+WEAPONS.append("sarsaparilla_six")
+JOINTS["sarsaparilla_six"] = ([("Cylinder", "Shell"), ("Hammer", "Shell"), ("Trigger", "Shell"), ("Halo5", "Cylinder"), ("Halo5", "Round5")]
+                              + [(f"{p}{i}", q) for i in range(6) for p in ("Round", "Cap", "Soda") for q in ("Cylinder", "Shell")]
+                              + [(f"{p}{i}", f"Round{i}") for i in range(6) for p in ("Cap", "Soda")] + [(f"Cap{i}", f"Soda{i}") for i in range(6)])
 
 
 def world_tree(ob, matrix=None):

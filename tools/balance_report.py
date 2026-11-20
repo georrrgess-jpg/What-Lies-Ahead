@@ -120,6 +120,8 @@ COIN = gd_consts("scripts/weapons/modes/coin_op_mode.gd")
 # The Tin Sergeant: its marching soldiers and the share of them that strike in flight.
 TIN = gd_consts("scripts/weapons/tin_soldier.gd")
 TIN.update(gd_consts("scripts/weapons/modes/tin_sergeant_mode.gd"))
+# The Sarsaparilla Six: tap or fan the hammer; the shot that empties the cylinder is the Last Call.
+SARSA = gd_consts("scripts/weapons/modes/sarsaparilla_six_mode.gd")
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
 	"capsule_height": 1.9, "mass": 1.0, "move_speed": 2.0}
 # Extra effective health from armour behaviours (helmet, riot shield, ice shell).
@@ -382,6 +384,9 @@ def pull_damage(w, e, d, head):
 		# Tokens hit like ray shots at the tilting rate; heavies and alphas take HEAVY_SCALE.
 		glance = COIN["HEAVY_SCALE"] if e.get("heavy", False) or e.get("mass", 1.0) >= 3.0 else 1.0
 		return w["damage"] * scale * head_mix * glance, coin_cycle(w)
+	if w["id"] == "sarsaparilla_six":
+		# Fanned from the hip: a cylinder in FAN_DELAY + 5 intervals, one in six a Last Call.
+		return w["damage"] * scale * head_mix * sarsa_mix(), sarsa_cycle(w, True)
 	if w["projectile_speed"] > 0.0:
 		dmg = w["damage"] + w["direct_hit_bonus"]
 		return dmg, w["fire_interval"]
@@ -443,6 +448,18 @@ def coin_free_play(w, e, head):
 		refunded += pay * COIN["PAYOUT_ROUNDS"]
 		mag = min(w["magazine_size"], mag + pay * COIN["PAYOUT_ROUNDS"])
 	return kills, paid, refunded
+
+
+def sarsa_mix():
+	"""Sarsaparilla Six: average damage scale of a round over a cylinder (one Last Call in six)."""
+	return (SARSA["ROUNDS"] - 1 + SARSA["LAST_CALL_SCALE"]) / SARSA["ROUNDS"]
+
+
+def sarsa_cycle(w, fan):
+	"""Sarsaparilla Six: average seconds per round over a cylinder, fanned or tapped."""
+	if fan:
+		return (SARSA["FAN_DELAY"] + (SARSA["ROUNDS"] - 1) * w["fire_interval"]) / SARSA["ROUNDS"]
+	return SARSA["TAP_INTERVAL"]
 
 
 def vortex_spin():
@@ -693,6 +710,16 @@ def main():
 			print(f"\n{w['display_name']} Free Play: a magazine held down averages {1.0 / coin_cycle(w):.1f} tokens a second (tilts after "
 				f"{COIN['TILT_DELAY']:g} s); on a stream of tourists it drops {k} with {head * 100:.0f}% headshots ({paid:.1f} payouts, "
 				f"+{back:.0f} rounds) against {k0} with body shots only; heavies and alphas take {COIN['HEAVY_SCALE'] * 100:.0f}%")
+	for w in ws.values():
+		if w["id"] == "sarsaparilla_six":
+			mix = 1.0 + head * (w["headshot_multiplier"] - 1.0)
+			per = w["damage"] * mix * sarsa_mix() * SARSA["ROUNDS"]
+			tap = per / (SARSA["ROUNDS"] * sarsa_cycle(w, False) + w["reload_time"])
+			burst = SARSA["FAN_DELAY"] + (SARSA["ROUNDS"] - 1) * w["fire_interval"]
+			print(f"\n{w['display_name']}: a fanned cylinder is {per:.0f} damage in {burst:.2f} s ({per / burst:.0f} DPS burst, spread up to "
+				f"+{SARSA['FAN_SPREAD_MAX']:g} deg); tapped {tap:.0f} DPS sustained; the Last Call does x{SARSA['LAST_CALL_SCALE']:g} "
+				f"({w['damage'] * SARSA['LAST_CALL_SCALE']:.0f}, {w['damage'] * SARSA['LAST_CALL_SCALE'] * w['headshot_multiplier']:.0f} on the head) "
+				f"and pops {SARSA['POP_DAMAGE']:.0f} on every zombie within {SARSA['POP_RADIUS']:g} m of the hit")
 	tags = gd_consts("scripts/weapons/markdown_marker_tags.gd")
 	own = {"Marker tags": tags["TAG_BONUS"] * tags["MAX_TAGS"], "Ground Control mark": MARK["DAMAGE_BONUS"] - 1.0,
 		"Dunk Tank soak": SOAK["DAMAGE_BONUS"] - 1.0}
