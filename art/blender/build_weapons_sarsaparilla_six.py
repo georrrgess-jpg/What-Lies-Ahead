@@ -145,6 +145,8 @@ def fan_hand(M):
     # Plain glove only: the glove shapes would stand over the sights in its rest pose.
     parts = [ob for ob in parts if "glove_kit" not in ob]
     turn = Matrix.Translation(c) @ Matrix.Rotation(math.pi, 4, "X") @ Matrix.Translation(-c)
+    # Parts placed by location (spheres, boxes) only have their world matrix after an update.
+    bpy.context.view_layer.update()
     for ob in parts:
         ob.matrix_world = turn @ ob.matrix_world
     return parts, tuple(c)
