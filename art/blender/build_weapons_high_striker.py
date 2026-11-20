@@ -4,8 +4,8 @@ target on each face, on a long handle whose top half is painted as the
 strongman's scale (green to red, with ticks); a puck rides up the scale to
 ring a little brass bell at the top.
 
-Melee contract (melee_kit.py): origin at the centre of the right fist on
-the handle, the handle along +Y with the head at its far end. The head's
+Melee contract (melee_kit.py): origin at the centre of the lower hand's grip
+on the handle, the handle along +Y with the head at its far end. The head's
 axis is Z: its faces strike towards -Z (a slam) and +Z.
 
   Handle  the handle, grip wrap, knob and the scale (static, pivot at the
@@ -15,13 +15,21 @@ axis is Z: its faces strike towards -Z (a slam) and +Z.
           slides along +Y from PUCK_Y0 to PUCK_Y1 (local Y in Blender,
           -Z in Godot) to ring the bell
   Bell    child of Handle, pivot on its bracket: shakes when rung
-  ArmR    the right hand at the bottom of the grip (ElbowR), articulated
-          (hand_kit.py: ArmRHand, ArmRIndex1..3, ..., ArmRThumb1..3, ArmRGrip)
-  ArmL    the left hand under the top of the grip (ElbowL), the same nodes
+  ArmL    the left hand at the bottom of the grip, by the knob (ElbowL),
+          articulated (hand_kit.py: ArmLHand, ArmLIndex1..3, ..., ArmLThumb1..3,
+          ArmLGrip)
+  ArmR    the right hand up the grip (ElbowR), the same nodes
 
-Grip anchors (children of Handle): GripLower (the right hand, at the
-origin) and GripUpper (the left hand, GRIP_L up the shaft); Y along the
-handle towards the head, Z towards the palm.
+A right-handed sledge stance: the left hand at the knob, the right GRIP_U up
+the shaft, both thumbs towards the head and turned a little towards the
+player so they read against the handle; each forearm runs down out of the
+frame on its own side (the right one outside the left hand), at about 130
+degrees to the handle, so the solver's wrist tilt leaves a small, natural
+bend.
+
+Grip anchors (children of Handle): GripLower (the left hand, at the origin)
+and GripUpper (the right hand); Y along the handle towards the head, Z
+towards the palm.
 
 Empties: Muzzle (the centre of the striking face), BladeTip and SwingPoint
 (the far and near edges of the head: the swing trail), BellPoint (in the bell's mouth, for the DING flash), CharmPoint (a
@@ -47,7 +55,8 @@ SCALE_Y1 = 0.645
 PUCK_Y0 = 0.315
 PUCK_Y1 = 0.64
 BELL_Y = 0.685
-GRIP_L = 0.2
+## The right hand's grip, up the shaft from the left (the origin): a hand's width apart.
+GRIP_U = 0.2
 SCALE_COLOURS = ["#3fd16a", "#a8e03a", "#ffd23f", "#ff9a2e", "#ff3b4f"]
 
 
@@ -150,13 +159,13 @@ def build_high_striker():
     lug, charm_point = melee_lug(-HANDLE_R - 0.003, KNOB_Y + 0.008, 0.0, M)
     handle += lug
 
-    # Articulated hands closed round the grip wrap by the grip solver (hand_kit.py): the right
-    # hand at the bottom of the grip (GripLower, the origin), the left under the top (GripUpper).
-    # The left forearm runs down and back beside the right one (towards the bottom right of the
-    # screen), not off to the left: crossing to the left it lay across the frame in the wind-up.
+    # Articulated hands closed round the grip wrap (and its stitching) by the grip solver
+    # (hand_kit.py). The forearm directions are the hold's (high_striker.tres) "down and out of
+    # the frame" turned into the model: the left straight down past the knob, the right down
+    # and out to the right, clear of the left hand.
     shaft = [cylinder_sdf((0, 0, 0), (0, 1, 0), HANDLE_R + 0.0035 + 0.0012)]
-    lower = grip_hand("R", (0, 0, 0), (0, 1, 0), (0.3, -0.6, -0.5), M, shaft)
-    upper = grip_hand("L", (0, GRIP_L, 0), (0, 1, 0), (0.17, -0.41, -0.72), M, shaft)
+    lower = grip_hand("L", (0, 0, 0), (0, 1, 0), (0.014, -0.636, -0.771), M, shaft, roll=-15.0)
+    upper = grip_hand("R", (0, GRIP_U, 0), (0, 1, 0), (0.74, -0.578, -0.344), M, shaft, roll=-15.0)
     groups = {
         "Handle": (handle, (0, 0, 0), None),
         "Head": (head, (0, HEAD_Y, 0), "Handle"),

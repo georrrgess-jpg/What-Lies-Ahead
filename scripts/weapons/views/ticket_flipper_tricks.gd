@@ -25,8 +25,8 @@ extends RefCounted
 ##           swings past them (shape_hand, looking LEAD seconds ahead).
 ##   pn      the fan's pinch (0-1): the knife's spin centre is carried to the
 ##           point between the thumb and index fingertips, so it turns in them
-##   ax      the helix's axle (0-1): the spin centre rides the index finger's
-##           middle joint, so the knife rolls round the finger
+##   ax      the helix's axle (0-1): the spin centre rides the crooked index
+##           finger's tip, so the knife rolls round the finger
 ## Cues fire once as the clock passes them (sounds, a camera kick, sparkles).
 ## The latch swings out whenever the knife is not open and clicks home.
 ##
@@ -42,9 +42,10 @@ const NORMAL: Array[int] = [Trick.BASIC, Trick.AERIAL, Trick.FAN, Trick.HELIX, T
 const LENGTHS: Array[float] = [3.0, 3.0, 3.0, 3.2, 3.2, 5.8]
 ## One inspect in this many is the JACKPOT.
 const RARE_EVERY := 15
-## The knife side on to the eye, the fist low right (camera space; see WeaponInspect.POSES).
-const SIDE_POS := Vector3(0.015, -0.07, -0.45)
-const SIDE_ROT := Vector3(4.0, 68.0, 6.0)
+## The knife side on to the eye, the fist low right (camera space; see WeaponInspect.POSES),
+## its point tipped up to the left so the forearm runs out of the lower right corner.
+const SIDE_POS := Vector3(0.015, -0.055, -0.45)
+const SIDE_ROT := Vector3(38.0, 68.0, 6.0)
 ## The latch's turn when it is swung out (Latch.x).
 const LATCH_OUT := -150.0
 ## Out to the finger side of the fist, clear of the fingers (view units).
@@ -589,7 +590,7 @@ func _pose_hand(t: float) -> void:
 
 ## Where the knife's spin centre `centre` (model space) goes once the hand
 ## holds it: carried into the thumb-index pinch (pn) or onto the index
-## finger's middle joint (ax).
+## finger's crook (ax).
 func _held_centre(v: WeaponView, t: float, centre: Vector3) -> Vector3:
 	var to_model := v.model.global_transform.affine_inverse()
 	var pinch := _value("pn", t, 0.0)
@@ -598,7 +599,7 @@ func _held_centre(v: WeaponView, t: float, centre: Vector3) -> Vector3:
 		centre = centre.lerp(at, pinch)
 	var axle := _value("ax", t, 0.0)
 	if axle > 0.0:
-		centre = centre.lerp(to_model * _rig.bone(&"R", &"Index", 2).global_position, axle)
+		centre = centre.lerp(to_model * _rig.fingertip(&"R", &"Index"), axle)
 	return centre
 
 
