@@ -261,7 +261,7 @@ def _palm(prefix, W, ts, M, stagger=0.0):
 # ---------------------------------------------------------------------------
 
 def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, contact_y=None,
-              thumb_dir=(0.2, -0.86, -0.46), thumb_flex=None, finger_flex=None, extra_obstacles=()):
+              thumb_dir=(0.2, -0.86, -0.46), thumb_flex=None, finger_flex=None, extra_obstacles=(), scale=1.0):
     """An articulated hand closed round a handle by the grip solver.
 
     side      "R" or "L"
@@ -279,6 +279,10 @@ def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, conta
     thumb_dir the thumb's lie before it curls, in hand space (x towards the thumb's
               side, y along the palm, z the back of the hand)
     thumb_flex / finger_flex: fixed flex angles (None = solve)
+    scale     the hand's size against the handle (1 = the kit's chunky glove; about
+              0.8 is a human hand on a tool handle). The hand is solved and built at
+              the kit's size round the handle enlarged by 1/scale, then shrunk onto
+              the real handle about `centre`; the forearm keeps the kit's size.
     Returns dict(groups=..., empties=..., anchor=Matrix): groups and empties in
     finish() form (parents before children), anchor = the grip anchor's matrix
     (Y along the handle towards the thumbs, Z towards the palm).
@@ -303,6 +307,9 @@ def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, conta
     th = math.radians(tilt)
     yh = (yh * math.cos(th) + a * math.sin(th)).normalized()
     xh = yh.cross(n).normalized()
+    if scale != 1.0:
+        handle = [_enlarged(sdf, c, scale) for sdf in handle]
+        extra_obstacles = [_enlarged(sdf, c, scale) for sdf in extra_obstacles]
     obstacles = list(handle) + list(extra_obstacles)
     # The fingers close square round the handle however the palm lies on it:
     # each knuckle turns (splay) so its hinge runs along the handle, and the
@@ -383,15 +390,42 @@ def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, conta
         parent = key
     tips[P + "ThumbTip"] = (thumb[-1][0] @ Matrix.Translation((0, THUMB_LEN[-1], 0)), parent)
     report.append("Thumb " + "/".join(f"{fl:.0f}" for _w, fl in thumb))
-    wrist = _p(W, 0, 0, 0)
+    anchor = _frame_matrix(c, a.cross(n), a, n)
+    empties = {P + "Grip": (anchor, P + "Hand"),
+               P + "PalmPoint": (W @ Matrix.Translation((0, 0.05, PALM_Z[0])), P + "Hand"), **tips}
+    if scale != 1.0:
+        _shrink(groups, empties, c, scale)
+    wrist = c + (_p(W, 0, 0, 0) - c) * scale
     arm_parts, elbow = _forearm(P, wrist, wrist + f, M)
     groups[P] = (arm_parts, c, None)
-    anchor = _frame_matrix(c, a.cross(n), a, n)
-    empties = {"Elbow" + side: (elbow, P), P + "Grip": (anchor, P + "Hand"),
-               P + "PalmPoint": (W @ Matrix.Translation((0, 0.05, PALM_Z[0])), P + "Hand"), **tips}
+    empties["Elbow" + side] = (elbow, P)
     bend = math.degrees(f.angle(-yh))
     print(f"[hand] {P}: tilt {tilt:.0f}, wrist bend {bend:.0f}, stand-off {_score * 1000:.1f} mm; flex " + ", ".join(report))
     return dict(groups=groups, empties=empties, anchor=anchor)
+
+
+def _enlarged(sdf, c, scale):
+    """The shape `sdf` grown by 1/scale about c (distances grow with it)."""
+    return lambda p: sdf(c + (p - c) * scale) / scale
+
+
+def _shrink(groups, empties, c, scale):
+    """Scales a built hand by `scale` about c: every part's mesh, and every node
+    and empty position (node turns are kept, so the rig's joints stay rigid)."""
+    S = Matrix.Translation(c) @ Matrix.Scale(scale, 4) @ Matrix.Translation(-c)
+
+    def moved(m):
+        if isinstance(m, Matrix):
+            out = m.to_3x3().normalized().to_4x4()
+            out.translation = c + (m.translation - c) * scale
+            return out
+        return c + (Vector(m) - c) * scale
+    for key, (parts, pivot, parent) in list(groups.items()):
+        for ob in parts:
+            ob.matrix_world = S @ ob.matrix_world
+        groups[key] = (parts, moved(pivot), parent)
+    for key, (loc, parent) in list(empties.items()):
+        empties[key] = (moved(loc), parent)
 
 
 def add_hand(groups, empties, built, anchor_name, anchor_parent):

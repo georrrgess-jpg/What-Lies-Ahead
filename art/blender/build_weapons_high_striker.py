@@ -45,6 +45,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from melee_kit import *  # noqa: F401,F403
 
 HANDLE_R = 0.021
+## The gloved hands at a human size against the 42 mm shaft (hand_kit grip_hand scale).
+HAND_SCALE = 0.8
 KNOB_Y = -0.095
 HEAD_Y = 0.83
 HEAD_R = 0.078
@@ -164,8 +166,14 @@ def build_high_striker():
     # the frame" turned into the model: the left straight down past the knob, the right down
     # and out to the right, clear of the left hand.
     shaft = [cylinder_sdf((0, 0, 0), (0, 1, 0), HANDLE_R + 0.0035 + 0.0012)]
-    lower = grip_hand("L", (0, 0, 0), (0, 1, 0), (0.014, -0.636, -0.771), M, shaft, roll=-15.0)
-    upper = grip_hand("R", (0, GRIP_U, 0), (0, 1, 0), (0.74, -0.578, -0.344), M, shaft, roll=-15.0)
+    # Human-sized hands (HAND_SCALE). The lower (left) hand's forearm runs down along the
+    # handle, a little right and towards the camera, so the back of the hand and its knuckles
+    # face the player (and the arm stays out of the frame through the swings) and
+    # the fingers wrap round the far side, as on a real axe or sledge grip; the upper (right)
+    # hand comes in from the right, turned 50 degrees over the top (roll) so its back faces
+    # the player too and its fingers curl under the shaft.
+    lower = grip_hand("L", (0, 0, 0), (0, 1, 0), (0.154, -0.964, 0.218), M, shaft, scale=HAND_SCALE)
+    upper = grip_hand("R", (0, GRIP_U, 0), (0, 1, 0), (0.74, -0.578, -0.344), M, shaft, roll=50.0, scale=HAND_SCALE)
     groups = {
         "Handle": (handle, (0, 0, 0), None),
         "Head": (head, (0, HEAD_Y, 0), "Handle"),
