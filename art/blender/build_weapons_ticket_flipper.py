@@ -25,7 +25,9 @@ thumb lies along the right-hand top edge), so flips go over the top.
             handle. Shut relative to the blade at HandleB.x -180 (with Blade.x 180)
   Latch     child of HandleA, pivot on its pin at the butt (axis X): the
             gold T-latch that clips over HandleB's butt; turn it -150 to free B
-  ArmR      the fist round both handles (ElbowR)
+  ArmR      the articulated hand round both handles (hand_kit.py: ArmRHand,
+            ArmRIndex1..3 ... ArmRThumb1..3, ArmRGrip; ElbowR), its grip on
+            GripMain (an empty on HandleA)
   Cell      not a separate node: the neon edge, the washers and the latch
             star's heart use the "Cell" material (tinted by an equipped cell)
 
@@ -63,6 +65,14 @@ BLADE_TIP_Y = 0.236
 ## Everything but the fist is drawn at real size and then scaled up by this
 ## much, so the knife reads in the big first-person glove.
 SCALE = 1.25
+## The hand on the bar (hand_kit.grip_hand): the forearm's way from the wrist,
+## the knuckle line's lean, the palm's turn round the bar and where along the
+## palm the bar lies (tuned for this flat section, not the round shafts' defaults).
+FOREARM = (0.12, -0.9, 0.1)
+GRIP_TILT = 18.0
+GRIP_ROLL = -6.0
+GRIP_CONTACT = 0.058
+BAR_CORNER = 0.006
 
 
 def palette():
@@ -298,23 +308,25 @@ def build_ticket_flipper():
     for ob in list(source_collection().objects):
         ob.matrix_world = up @ ob.matrix_world
     charm_point = tuple(Vector(charm_point) * k)
-    bar = (HALF_T * k, BAR_B * k, 0.007)
-    arm_r, elbow_r = fist("R", (0, 0, 0), (0, 1, 0), (1, 0, 0), bar, M, (0.24, -0.62, -0.5), -0.056, 0.058,
-                          palm_s=(3.82, 0.08), finger_len=0.066, wrist=(0.15, 0.035, 0.046))
+    # The articulated hand (hand_kit.grip_hand) closed round the closed-up handles: a
+    # tall, flat bar (the liners' flats left and right, the spacers top and bottom), not a
+    # round shaft, so the solver curls each finger onto its rounded-rectangle section.
+    bar = box_sdf((0, (PIV_Y + BUTT_Y) / 2 * k, 0), (1, 0, 0), (0, 1, 0),
+                  (HALF_T * k + 0.0008, (PIV_Y - BUTT_Y) / 2 * k, BAR_B * k), corner=BAR_CORNER)
+    hand_r = grip_hand("R", (0, 0, 0), (0, 1, 0), FOREARM, M, [bar], tilt=GRIP_TILT, roll=GRIP_ROLL, contact_y=GRIP_CONTACT)
     groups = {
         "HandleA": (handle_a, (0, PIV_Y * k, PIN_P * k), None),
         "Blade": (blade, (0, PIV_Y * k, PIN_P * k), "HandleA"),
         "HandleB": (handle_b, (0, PIV_Y * k, -PIN_P * k), "Blade"),
         "Latch": (latch, tuple(Vector(latch_pivot) * k), "HandleA"),
-        "ArmR": (arm_r, (0, 0, 0), None),
     }
     empties = {
         "Muzzle": ((0, BLADE_TIP_Y * k, 0.0016 * k), "Blade"),
         "BladeTip": ((0, BLADE_TIP_Y * k, 0.0016 * k), "Blade"),
         "SwingPoint": ((0, 0.155 * k, -0.012 * k), "Blade"),
         "CharmPoint": (charm_point, "HandleA"),
-        "ElbowR": (elbow_r, "ArmR"),
     }
+    add_hand(groups, empties, hand_r, "GripMain", "HandleA")
     finish("ticket_flipper", groups, empties)
 
 

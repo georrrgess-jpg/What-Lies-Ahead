@@ -17,6 +17,16 @@ extends RefCounted
 ##           (a in 0..180, bw in a-180..0), so the handles and the blade
 ##           swing over the top of the bar and never cut through each other;
 ##           whole turns are made by the knife (kr), as a real balisong does.
+##   hf, hi, ht   the hand (HandRig curls: 1 the solved grip on the bar, 0
+##           open): hf the four fingers, hi the index finger (hf when not
+##           keyed), ht the thumb. The hand opens before the knife leaves it
+##           and closes on it as it lands; on top of the keys, the fingertips
+##           and the thumb give way a beat before the bite handle or the blade
+##           swings past them (shape_hand, looking LEAD seconds ahead).
+##   pn      the fan's pinch (0-1): the knife's spin centre is carried to the
+##           point between the thumb and index fingertips, so it turns in them
+##   ax      the helix's axle (0-1): the spin centre rides the crooked index
+##           finger's tip, so the knife rolls round the finger
 ## Cues fire once as the clock passes them (sounds, a camera kick, sparkles).
 ## The latch swings out whenever the knife is not open and clicks home.
 ##
@@ -32,9 +42,10 @@ const NORMAL: Array[int] = [Trick.BASIC, Trick.AERIAL, Trick.FAN, Trick.HELIX, T
 const LENGTHS: Array[float] = [3.0, 3.0, 3.0, 3.2, 3.2, 5.8]
 ## One inspect in this many is the JACKPOT.
 const RARE_EVERY := 15
-## The knife side on to the eye, the fist low right (camera space; see WeaponInspect.POSES).
-const SIDE_POS := Vector3(0.015, -0.07, -0.45)
-const SIDE_ROT := Vector3(4.0, 68.0, 6.0)
+## The knife side on to the eye, the fist low right (camera space; see WeaponInspect.POSES),
+## its point tipped up to the left so the forearm runs out of the lower right corner.
+const SIDE_POS := Vector3(0.015, -0.055, -0.45)
+const SIDE_ROT := Vector3(38.0, 68.0, 6.0)
 ## The latch's turn when it is swung out (Latch.x).
 const LATCH_OUT := -150.0
 ## Out to the finger side of the fist, clear of the fingers (view units).
@@ -54,6 +65,11 @@ const DN := 5  # falling: accelerating like a drop
 ## The smear: samples kept and the tip speed (view units a second) that lights it fully.
 const SMEAR_SAMPLES := 8
 const SMEAR_FULL := 2.6
+## The hand: how far ahead (seconds) the fingers see a part coming, and the
+## curls a finger and the thumb give way to while the bite handle or the blade swings past.
+const LEAD := 0.09
+const LOOSE_FINGERS := 0.45
+const LOOSE_THUMB := 0.05
 const CONFETTI: Array[Color] = [Color(1.0, 0.25, 0.42), Color(1.0, 0.86, 0.3), Color(0.25, 0.94, 1.0), Color(1.0, 0.97, 0.9)]
 const SPARKLE: Array[Color] = [Color(1.0, 0.95, 0.6), Color(1.0, 1.0, 1.0), Color(0.4, 1.0, 1.0)]
 
@@ -83,6 +99,7 @@ var _prev_t := 0.0
 ## The knife's places in the model (from the rest transforms).
 var _pin := Vector3.ZERO
 var _butt := Vector3.ZERO
+var _rig: HandRig
 
 
 func _init() -> void:
@@ -152,6 +169,9 @@ func start(v: WeaponView) -> void:
 	_clack_b = _half(0.0)
 	_latch_out = 0.0
 	_build_smear(v)
+	_rig = HandRig.of(v.model) if v.model else null
+	if _rig and not _rig.has_hand(&"R"):
+		_rig = null
 
 
 ## Every frame the inspect plays, `t` seconds in.
@@ -165,11 +185,14 @@ func play(v: WeaponView, t: float) -> void:
 	var turn := Basis.from_euler((_sample("kr", t) as Vector3) * (PI / 180.0))
 	var knife := Transform3D(Basis.IDENTITY, (_sample("kp", t) as Vector3) + kc) * Transform3D(turn, Vector3.ZERO) \
 		* Transform3D(Basis.IDENTITY, -kc + (_sample("ko", t) as Vector3))
+	var a: float = _sample("a", t)
+	var bw: float = _sample("bw", t)
+	if _rig:
+		_pose_hand(t)
+		knife.origin += _held_centre(v, t, knife * kc) - knife * kc
 	var handle_a := v.part("HandleA")
 	if handle_a:
 		handle_a.transform = knife * v.rest_transform("HandleA")
-	var a: float = _sample("a", t)
-	var bw: float = _sample("bw", t)
 	_pose_parts(v, a, bw)
 	_sounds(v, a, bw)
 	_fire_cues(v, t)
@@ -187,6 +210,9 @@ func stop(v: WeaponView) -> void:
 		# Open, latch home: where the view's own flips take over (also on a cancel).
 		_latch_out = 0.0
 		_pose_parts(v, 0.0, 0.0)
+	if _rig:
+		_rig.set_pose(&"R", HandRig.Pose.GRIP, 0.12)
+		_rig = null
 	if _smear:
 		_smear.queue_free()
 		_smear = null
@@ -254,6 +280,9 @@ func _aerial() -> Dictionary:
 		"ko": [[0.0, Vector3.ZERO]],
 		"a": [[0.0, 0.0], [2.0, 0.0], [2.2, 180.0, O], [2.42, 0.0, O]],
 		"bw": [[0.0, 0.0], [0.7, 0.0], [1.05, -130.0, S], [1.42, 0.0, I]],
+		# The hand opens as the wrist flicks (before the knife leaves it) and closes on the safe handle as it lands.
+		"hf": [[0.0, 1.0], [0.48, 1.0], [0.6, 0.0, O], [1.48, 0.0], [1.58, 1.0, O]],
+		"ht": [[0.0, 1.0], [0.46, 1.0], [0.58, 0.0, O], [1.49, 0.0], [1.6, 1.0, O]],
 	}
 
 
@@ -280,6 +309,12 @@ func _fan() -> Dictionary:
 		"ko": [[0.0, Vector3.ZERO]],
 		"a": [[0.0, 0.0], [0.12, 0.0], [0.32, 180.0, O], [2.4, 180.0], [2.58, 0.0, O]],
 		"bw": [[0.0, 0.0]],
+		# Middle, ring and pinky open off the bar before it slides; the thumb and index pinch it at its balance
+		# point and it spins in the pinch, then they let it back into the palm and the hand closes.
+		"hf": [[0.0, 1.0], [0.36, 1.0], [0.48, 0.1, O], [2.2, 0.1], [2.36, 1.0, S]],
+		"hi": [[0.0, 1.0], [0.36, 1.0], [0.5, 0.45, O], [2.2, 0.45], [2.36, 1.0, S]],
+		"ht": [[0.0, 1.0], [0.36, 1.0], [0.5, 0.45, O], [2.2, 0.45], [2.36, 1.0, S]],
+		"pn": [[0.0, 0.0], [0.42, 0.0], [0.66, 1.0, S], [2.05, 1.0], [2.26, 0.0, S]],
 	}
 
 
@@ -303,6 +338,11 @@ func _helix() -> Dictionary:
 		"ko": [[0.0, Vector3.ZERO]],
 		"a": [[0.0, 0.0]],
 		"bw": [[0.0, 0.0], [0.7, 0.0], [1.05, -125.0, S], [1.45, 0.0, S], [1.85, -125.0, S], [2.25, 0.0, S]],
+		# The index finger stays crooked as the axle; the others and the thumb open off it while it rolls.
+		"hf": [[0.0, 1.0], [0.26, 1.0], [0.38, 0.05, O], [2.44, 0.05], [2.62, 1.0, S]],
+		"hi": [[0.0, 1.0], [0.26, 1.0], [0.4, 0.7, O], [2.44, 0.7], [2.62, 1.0, S]],
+		"ht": [[0.0, 1.0], [0.26, 1.0], [0.38, 0.1, O], [2.44, 0.1], [2.62, 1.0, S]],
+		"ax": [[0.0, 0.0], [0.46, 0.0], [0.66, 1.0, S], [2.3, 1.0], [2.5, 0.0, S]],
 	}
 
 
@@ -324,6 +364,9 @@ func _zen() -> Dictionary:
 		"ko": [[0.0, Vector3.ZERO], [0.42, Vector3.ZERO], [0.56, lifted, O], [0.72, out, S], [1.72, out], [1.84, lifted, S], [1.98, Vector3.ZERO, I]],
 		"a": [[0.0, 0.0], [2.2, 0.0], [2.4, 180.0, O], [2.6, 0.0, O]],
 		"bw": [[0.0, 0.0], [0.85, 0.0], [1.2, -150.0, S], [1.6, 0.0, S]],
+		# The hand opens to let it pop out, stays a loose curl it rolls round, and closes as it sinks back.
+		"hf": [[0.0, 1.0], [0.32, 1.0], [0.44, 0.0, O], [0.8, 0.35, S], [1.7, 0.35], [1.84, 0.0, S], [1.92, 0.0], [2.02, 1.0, O]],
+		"ht": [[0.0, 1.0], [0.32, 1.0], [0.44, 0.0, O], [1.92, 0.0], [2.02, 1.0, O]],
 	}
 
 
@@ -354,6 +397,14 @@ func _jackpot() -> Dictionary:
 		"ko": [[0.0, Vector3.ZERO], [3.7, Vector3.ZERO], [3.72, up], [3.8, out, S], [4.5, out], [4.6, lifted, S], [4.7, Vector3.ZERO, I]],
 		"a": [[0.0, 0.0], [4.72, 0.0], [4.84, 180.0, O], [4.97, 0.0, O]],
 		"bw": [[0.0, 0.0], [0.7, 0.0], [1.3, -150.0, S], [2.0, 0.0, I], [3.85, 0.0], [4.1, -150.0, S], [4.4, 0.0, S]],
+		# Opened for the toss, closed on the catch; pinched for the fan; a loose curl for the roll; closed for the snap.
+		"hf": [[0.0, 1.0], [0.44, 1.0], [0.56, 0.0, O], [2.08, 0.0], [2.17, 1.0, O], [2.26, 1.0], [2.36, 0.1, O], [3.56, 0.1],
+			[3.7, 0.0, S], [3.9, 0.35, S], [4.5, 0.35], [4.6, 0.0, S], [4.64, 0.0], [4.74, 1.0, O]],
+		"hi": [[0.0, 1.0], [0.44, 1.0], [0.56, 0.0, O], [2.08, 0.0], [2.17, 1.0, O], [2.26, 1.0], [2.38, 0.45, O], [3.56, 0.45],
+			[3.7, 0.0, S], [3.9, 0.35, S], [4.5, 0.35], [4.6, 0.0, S], [4.64, 0.0], [4.74, 1.0, O]],
+		"ht": [[0.0, 1.0], [0.42, 1.0], [0.54, 0.0, O], [2.08, 0.0], [2.18, 1.0, O], [2.26, 1.0], [2.38, 0.45, O], [3.56, 0.45],
+			[3.7, 0.0, S], [4.64, 0.0], [4.74, 1.0, O]],
+		"pn": [[0.0, 0.0], [2.3, 0.0], [2.5, 1.0, S], [3.32, 1.0], [3.5, 0.0, S]],
 	}
 
 
@@ -520,7 +571,53 @@ func _update_smear(v: WeaponView, t: float) -> void:
 	_smear_mesh.surface_end()
 
 
+# --- the hand ------------------------------------------------------------------------
+
+## The fingers and the thumb for the trick now: the keyed curls, eased off
+## further wherever the bite handle or the blade is about to swing past.
+func _pose_hand(t: float) -> void:
+	var shape := Vector2.ONE
+	for k in 4:
+		var ahead := t + LEAD * k / 3.0
+		shape = shape.min(shape_hand(_sample("a", ahead), _sample("bw", ahead)))
+	var fingers := minf(_value("hf", t, 1.0), shape.x)
+	var index := minf(_value("hi", t, fingers), shape.x)
+	_rig.set_curl(&"R", &"Index", index)
+	for finger in [&"Middle", &"Ring", &"Pinky"]:
+		_rig.set_curl(&"R", finger, fingers)
+	_rig.set_curl(&"R", &"Thumb", minf(_value("ht", t, 1.0), shape.y))
+
+
+## Where the knife's spin centre `centre` (model space) goes once the hand
+## holds it: carried into the thumb-index pinch (pn) or onto the index
+## finger's crook (ax).
+func _held_centre(v: WeaponView, t: float, centre: Vector3) -> Vector3:
+	var to_model := v.model.global_transform.affine_inverse()
+	var pinch := _value("pn", t, 0.0)
+	if pinch > 0.0:
+		var at := to_model * _rig.fingertip(&"R", &"Index").lerp(_rig.fingertip(&"R", &"Thumb"), 0.5)
+		centre = centre.lerp(at, pinch)
+	var axle := _value("ax", t, 0.0)
+	if axle > 0.0:
+		centre = centre.lerp(to_model * _rig.fingertip(&"R", &"Index"), axle)
+	return centre
+
+
+## The curls (fingers, thumb) the knife's shape leaves room for: the bite
+## handle swung off the bar (bw) frees the fingertips and the thumb over the
+## top; the blade swinging over the top (a between open and shut) lifts the thumb.
+static func shape_hand(a: float, bw: float) -> Vector2:
+	var bite := clampf((absf(_wrap(bw)) - 4.0) / 18.0, 0.0, 1.0)
+	var swing := clampf((minf(absf(_wrap(a)), absf(_wrap(a - 180.0))) - 4.0) / 18.0, 0.0, 1.0)
+	return Vector2(lerpf(1.0, LOOSE_FINGERS, bite), lerpf(1.0, LOOSE_THUMB, maxf(bite, swing)))
+
+
 # --- helpers -------------------------------------------------------------------------
+
+## A track that a trick may leave out: `fallback` when it does.
+func _value(track: String, t: float, fallback: float) -> float:
+	return float(_sample(track, t)) if _tracks.has(track) else fallback
+
 
 ## A track's value at `t`: each stretch eased by the ease on its end key.
 func _sample(track: String, t: float) -> Variant:
