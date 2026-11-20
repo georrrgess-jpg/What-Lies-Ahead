@@ -128,7 +128,8 @@ def measure(path, loop):
 
 
 WEAPON_PACKS = ("weapons", "guns_new1", "guns_new2", "guns8", "guns8b", "ground_control", "hubcap", "jack_pot",
-                "lava_lampoon", "markdown_marker", "popcorn_popper", "ripsaw", "strike_zone", "t_minus_six", "yoyo_loco")
+                "lava_lampoon", "markdown_marker", "popcorn_popper", "ripsaw", "strike_zone", "t_minus_six", "yoyo_loco",
+                "tin_sergeant")
 CORE_WEAPON = ("pistol_fire", "carbine_fire", "scatter_fire", "pistol_reload", "carbine_reload", "scatter_reload",
                "empty_click")
 

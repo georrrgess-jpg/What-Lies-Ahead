@@ -669,6 +669,9 @@ func _do_fight(delta: float) -> void:
 		_release("fire")
 	elif paints and w.mode.has_method("bot_hold") and w.mode.bot_hold(target):
 		_press("fire")
+	# A weapon whose rounds fight on by themselves (the Tin Sergeant's squad) says when to hold fire.
+	elif w.mode != null and w.mode.has_method("bot_hold_fire") and w.mode.bot_hold_fire(nearest):
+		_release("fire")
 	elif aligned and in_range and not w.is_reloading():
 		if w.current.automatic or w.current.beam:
 			_press("fire")

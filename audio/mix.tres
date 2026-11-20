@@ -394,7 +394,11 @@ sound_category = Dictionary[StringName, StringName]({
 &"jingle_heavy": &"weapon",
 &"jingle_hit": &"impact",
 &"jingle_slam": &"impact",
-&"jingle_encore": &"impact"
+&"jingle_encore": &"impact",
+&"ts_": &"handling",
+&"ts_fire": &"weapon",
+&"ts_pop": &"impact",
+&"ts_land": &"impact"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,
@@ -605,5 +609,9 @@ sound_trim_db = Dictionary[StringName, float]({
 &"jingle_whoosh": -3.5,
 &"jingle_heavy": -3.0,
 &"jingle_whirl": -6.0,
-&"jingle_rattle": -3.0
+&"jingle_rattle": -3.0,
+&"ts_fall_in": -3.0,
+&"ts_pop": -2.0,
+&"ts_wind": 3.0,
+&"ts_tick": 4.0
 })
