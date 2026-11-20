@@ -21,11 +21,14 @@ axis is Z: its faces strike towards -Z (a slam) and +Z.
   ArmR    the right hand up the grip (ElbowR), the same nodes
 
 A right-handed sledge stance: the left hand at the knob, the right GRIP_U up
-the shaft, both thumbs towards the head and turned a little towards the
-player so they read against the handle; each forearm runs down out of the
-frame on its own side (the right one outside the left hand), at about 130
+the shaft, both thumbs towards the head. Each forearm runs from its wrist
+back towards the player, to where that arm's elbow is (left of and below the
+camera for the left arm, right of and below it for the right), at about 135
 degrees to the handle, so the solver's wrist tilt leaves a small, natural
-bend.
+bend. The player sees what they would see holding a bat: each thumb across
+the near side of the shaft and the fingertips coming round from the far
+side. In play ArmAim (scripts/weapons/views/arm_aim.gd) keeps both forearms
+aimed at those elbows through every swing.
 
 Grip anchors (children of Handle): GripLower (the left hand, at the origin)
 and GripUpper (the right hand); Y along the handle towards the head, Z
@@ -47,6 +50,13 @@ from melee_kit import *  # noqa: F401,F403
 HANDLE_R = 0.021
 ## The gloved hands at a human size against the 42 mm shaft (hand_kit grip_hand scale).
 HAND_SCALE = 0.8
+## A firm grip: the fingers press this share of their radius into the handle.
+GRIP_SQUEEZE = 0.3
+## The thumb's lie before it wraps (hand space): across the near side of the handle,
+## leaning towards the head, as on a bat or club.
+THUMB_LIE = (1.0, -0.8, -0.4)
+## The thumb at a human length (the kit's is a long cartoon thumb).
+THUMB_LEN_SCALE = 0.78
 KNOB_Y = -0.095
 HEAD_Y = 0.83
 HEAD_R = 0.078
@@ -58,7 +68,7 @@ PUCK_Y0 = 0.315
 PUCK_Y1 = 0.64
 BELL_Y = 0.685
 ## The right hand's grip, up the shaft from the left (the origin): a hand's width apart.
-GRIP_U = 0.2
+GRIP_U = 0.16
 SCALE_COLOURS = ["#3fd16a", "#a8e03a", "#ffd23f", "#ff9a2e", "#ff3b4f"]
 
 
@@ -161,19 +171,18 @@ def build_high_striker():
     lug, charm_point = melee_lug(-HANDLE_R - 0.003, KNOB_Y + 0.008, 0.0, M)
     handle += lug
 
-    # Articulated hands closed round the grip wrap (and its stitching) by the grip solver
-    # (hand_kit.py). The forearm directions are the hold's (high_striker.tres) "down and out of
-    # the frame" turned into the model: the left straight down past the knob, the right down
-    # and out to the right, clear of the left hand.
+    # Articulated hands closed round the grip wrap by the grip solver (hand_kit.py), at a human
+    # size (HAND_SCALE). Each forearm runs from its wrist to where that arm's elbow is for a
+    # player holding the mallet in front of them (the hold in high_striker.tres: 0.30, -0.30,
+    # -0.68 at 66, 2, -10 degrees; elbows at 0.0, -0.6, 0.0 and 0.58, -0.55, 0.05 in view
+    # space, x right, y up, z towards the camera), turned into the model: both come back
+    # towards the camera, the left down and to the left, the right down and to the right.
+    # The palm then lies on the side of the shaft its forearm puts it on (no roll): the player
+    # sees each thumb wrap the near side and the fingertips come round from the far side, as
+    # when holding a bat upright, and the backs of the hands face outwards.
     shaft = [cylinder_sdf((0, 0, 0), (0, 1, 0), HANDLE_R + 0.0035 + 0.0012)]
-    # Human-sized hands (HAND_SCALE). The lower (left) hand's forearm runs down along the
-    # handle, a little right and towards the camera, so the back of the hand and its knuckles
-    # face the player (and the arm stays out of the frame through the swings) and
-    # the fingers wrap round the far side, as on a real axe or sledge grip; the upper (right)
-    # hand comes in from the right, turned 50 degrees over the top (roll) so its back faces
-    # the player too and its fingers curl under the shaft.
-    lower = grip_hand("L", (0, 0, 0), (0, 1, 0), (0.154, -0.964, 0.218), M, shaft, scale=HAND_SCALE)
-    upper = grip_hand("R", (0, GRIP_U, 0), (0, 1, 0), (0.74, -0.578, -0.344), M, shaft, roll=50.0, scale=HAND_SCALE)
+    lower = grip_hand("L", (0, 0, 0), (0, 1, 0), (-0.504, -0.681, 0.531), M, shaft, scale=HAND_SCALE, squeeze=GRIP_SQUEEZE, thumb_wrap=True, thumb_dir=THUMB_LIE, thumb_len=THUMB_LEN_SCALE)
+    upper = grip_hand("R", (0, GRIP_U, 0), (0, 1, 0), (0.162, -0.739, 0.654), M, shaft, scale=HAND_SCALE, squeeze=GRIP_SQUEEZE, thumb_wrap=True, thumb_dir=THUMB_LIE, thumb_len=THUMB_LEN_SCALE)
     groups = {
         "Handle": (handle, (0, 0, 0), None),
         "Head": (head, (0, HEAD_Y, 0), "Handle"),

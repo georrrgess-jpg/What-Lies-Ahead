@@ -155,16 +155,18 @@ def _curl(W0, length, r0, r1, obstacles, max_flex, t0=0.12):
     return max_flex
 
 
-def _chain(W_parent, offset, lengths, radii, max_flex, obstacles, flex=None, first_t0=0.12, splay=0.0):
+def _chain(W_parent, offset, lengths, radii, max_flex, obstacles, flex=None, first_t0=0.12, splay=0.0, tip_only=False):
     """Solves a three-phalanx chain (the knuckle first turned `splay` degrees
-    about the back-of-hand axis). Returns [(matrix, flex), ...]."""
+    about the back-of-hand axis). Returns [(matrix, flex), ...]. With
+    `tip_only` each phalanx closes until its far end touches (its joints ride
+    the surface, its middle pressing in a little): an even curve round the handle."""
     out = []
     W = W_parent @ Matrix.Translation(Vector(offset)) @ Matrix.Rotation(math.radians(splay), 4, "Z")
     for j, L in enumerate(lengths):
         if flex is not None and flex[j] is not None:
             th = flex[j]
         else:
-            th = _curl(W, L, radii[j], radii[j + 1], obstacles, max_flex[j], first_t0 if j == 0 else 0.12)
+            th = _curl(W, L, radii[j], radii[j + 1], obstacles, max_flex[j], 1.0 if tip_only else (first_t0 if j == 0 else 0.12))
         Wj = W @ _rx(-th)
         out.append((Wj, th))
         W = Wj @ Matrix.Translation(Vector((0.0, L, 0.0)))
@@ -261,7 +263,7 @@ def _palm(prefix, W, ts, M, stagger=0.0):
 # ---------------------------------------------------------------------------
 
 def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, contact_y=None,
-              thumb_dir=(0.2, -0.86, -0.46), thumb_flex=None, finger_flex=None, extra_obstacles=(), scale=1.0):
+              thumb_dir=(0.2, -0.86, -0.46), thumb_flex=None, finger_flex=None, extra_obstacles=(), scale=1.0, squeeze=0.0, thumb_wrap=False, thumb_len=1.0):
     """An articulated hand closed round a handle by the grip solver.
 
     side      "R" or "L"
@@ -282,7 +284,12 @@ def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, conta
     scale     the hand's size against the handle (1 = the kit's chunky glove; about
               0.8 is a human hand on a tool handle). The hand is solved and built at
               the kit's size round the handle enlarged by 1/scale, then shrunk onto
-              the real handle about `centre`; the forearm keeps the kit's size.
+              the real handle about `centre`, forearm and cuff with it.
+    thumb_len the thumb's length against the kit's (its three segments)
+    thumb_wrap  the thumb curves evenly round the handle, each joint riding its
+              surface (a pole or club grip), instead of lying on it straight
+    squeeze   how far the fingers and thumb press into the handle, as a share of
+              their radius (0 = they only touch): a firm grip wraps further round.
     Returns dict(groups=..., empties=..., anchor=Matrix): groups and empties in
     finish() form (parents before children), anchor = the grip anchor's matrix
     (Y along the handle towards the thumbs, Z towards the palm).
@@ -311,6 +318,9 @@ def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, conta
         handle = [_enlarged(sdf, c, scale) for sdf in handle]
         extra_obstacles = [_enlarged(sdf, c, scale) for sdf in extra_obstacles]
     obstacles = list(handle) + list(extra_obstacles)
+    # What the fingers and thumb close on: the handle, sunk by the squeeze.
+    press = squeeze * FINGER_R
+    soft = [(lambda p, sdf=sdf: sdf(p) + press) for sdf in obstacles] if press else obstacles
     # The fingers close square round the handle however the palm lies on it:
     # each knuckle turns (splay) so its hinge runs along the handle, and the
     # knuckles stagger along the palm (index furthest out on a tilted hand)
@@ -337,7 +347,7 @@ def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, conta
             radii = [r * t for t in TAPER]
             fixed = finger_flex.get(f_name) if finger_flex else None
             x = ts * across * PITCH
-            chain = _chain(W, (x, ky + x * stagger, KNUCKLE_Z), lens, radii, MAX_FLEX, obstacles, fixed, first_t0=0.3, splay=splay)
+            chain = _chain(W, (x, ky + x * stagger, KNUCKLE_Z), lens, radii, MAX_FLEX, soft, fixed, first_t0=0.3, splay=splay)
             fingers[f_name] = (chain, lens, radii)
             for j, (Wj, _th) in enumerate(chain):
                 # Worst stand-off along the phalanx (0 where it rests on the handle).
@@ -367,7 +377,9 @@ def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, conta
         chain, lens, radii = fingers[f_name]
         for j, (Wj, _th) in enumerate(chain):
             finger_caps.append(capsule_sdf(_p(Wj, 0, 0, 0), _p(Wj, 0, lens[j], 0), radii[j]))
-    thumb = _chain(W_tb, (0, 0, 0), THUMB_LEN, THUMB_R, THUMB_FLEX, obstacles + finger_caps, thumb_flex, first_t0=0.45)
+    thumb_lens = tuple(l * thumb_len for l in THUMB_LEN)
+    thumb = _chain(W_tb, (0, 0, 0), thumb_lens, THUMB_R, THUMB_FLEX, (obstacles if thumb_wrap else soft) + finger_caps, thumb_flex, first_t0=0.45,
+                   tip_only=thumb_wrap)
 
     groups[P] = ([], c, None)
     groups[P + "Hand"] = (hand_parts, W, P)
@@ -386,19 +398,19 @@ def grip_hand(side, centre, axis, forearm, M, handle, tilt=None, roll=0.0, conta
     parent = P + "ThumbBase"
     for j, (Wj, flex) in enumerate(thumb):
         key = f"{P}Thumb{j + 1}"
-        groups[key] = (_phalanx(key, Wj, THUMB_LEN[j], THUMB_R[j], THUMB_R[j + 1], M, j + 1, thumb=True), Wj, parent)
+        groups[key] = (_phalanx(key, Wj, thumb_lens[j], THUMB_R[j], THUMB_R[j + 1], M, j + 1, thumb=True), Wj, parent)
         parent = key
-    tips[P + "ThumbTip"] = (thumb[-1][0] @ Matrix.Translation((0, THUMB_LEN[-1], 0)), parent)
+    tips[P + "ThumbTip"] = (thumb[-1][0] @ Matrix.Translation((0, thumb_lens[-1], 0)), parent)
     report.append("Thumb " + "/".join(f"{fl:.0f}" for _w, fl in thumb))
     anchor = _frame_matrix(c, a.cross(n), a, n)
     empties = {P + "Grip": (anchor, P + "Hand"),
                P + "PalmPoint": (W @ Matrix.Translation((0, 0.05, PALM_Z[0])), P + "Hand"), **tips}
-    if scale != 1.0:
-        _shrink(groups, empties, c, scale)
-    wrist = c + (_p(W, 0, 0, 0) - c) * scale
+    wrist = _p(W, 0, 0, 0)
     arm_parts, elbow = _forearm(P, wrist, wrist + f, M)
     groups[P] = (arm_parts, c, None)
     empties["Elbow" + side] = (elbow, P)
+    if scale != 1.0:
+        _shrink(groups, empties, c, scale)
     bend = math.degrees(f.angle(-yh))
     print(f"[hand] {P}: tilt {tilt:.0f}, wrist bend {bend:.0f}, stand-off {_score * 1000:.1f} mm; flex " + ", ".join(report))
     return dict(groups=groups, empties=empties, anchor=anchor)
@@ -413,6 +425,8 @@ def _shrink(groups, empties, c, scale):
     """Scales a built hand by `scale` about c: every part's mesh, and every node
     and empty position (node turns are kept, so the rig's joints stay rigid)."""
     S = Matrix.Translation(c) @ Matrix.Scale(scale, 4) @ Matrix.Translation(-c)
+    # Parts placed by location (spheres, boxes) only have their world matrix after an update.
+    bpy.context.view_layer.update()
 
     def moved(m):
         if isinstance(m, Matrix):

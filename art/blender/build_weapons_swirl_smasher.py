@@ -29,6 +29,15 @@ from melee_kit import *  # noqa: F401,F403
 from weapon_kit import _finish_part  # noqa: E402
 
 STICK_R = 0.02
+## The gloved hand at a human size against the stick (hand_kit grip_hand scale).
+HAND_SCALE = 0.8
+## A firm grip: the fingers press this share of their radius into the handle.
+GRIP_SQUEEZE = 0.3
+## The thumb's lie before it wraps (hand space): across the near side of the handle,
+## leaning towards the head, as on a bat or club.
+THUMB_LIE = (1.0, -0.8, -0.4)
+## The thumb at a human length (the kit's is a long cartoon thumb).
+THUMB_LEN_SCALE = 0.78
 STICK_Y0 = -0.085
 STICK_Y1 = 0.5
 CANDY_R = 0.2
@@ -152,22 +161,26 @@ def build_swirl_smasher():
     lug, charm_point = melee_lug(-STICK_R - 0.002, STICK_Y0 + 0.004, 0.0, M)
     stick += lug
 
-    bar = (STICK_R + 0.003, STICK_R + 0.003, STICK_R + 0.0025)
-    arm_r, elbow_r = fist("R", (0, 0, 0), (0, 1, 0), (1, 0, 0), bar, M, (0.26, -0.6, -0.5), -0.056, 0.058,
-                          palm_s=(3.6, 0.075), finger_len=0.09, thumb="wrap", wrist=(0.2, 0.035, 0.046))
+    # The articulated hand closed round the taped grip by the grip solver (hand_kit.py), at a
+    # human size. Its forearm runs from the wrist to where the right elbow is for a player
+    # holding the club in front of them (the hold in swirl_smasher.tres: 0.34, -0.27, -0.62 at
+    # 62, 14, -18 degrees; elbow at 0.68, -0.42, -0.08 in view space), turned into the model:
+    # back towards the camera, down and to the right. The player sees the thumb wrap the
+    # near side of the stick and the fingertips come round from the far side.
+    grip = [cylinder_sdf((0, 0, 0), (0, 1, 0), STICK_R + 0.0028 + 0.0012)]
+    hand = grip_hand("R", (0, 0, 0), (0, 1, 0), (0.070, -0.636, 0.768), M, grip, scale=HAND_SCALE, squeeze=GRIP_SQUEEZE, thumb_wrap=True, thumb_dir=THUMB_LIE, thumb_len=THUMB_LEN_SCALE)
     groups = {
         "Stick": (stick, (0, 0, 0), None),
         "Candy": (candy, (0, CANDY_Y, 0), "Stick"),
         "Bow": (bow, (0, by, 0), "Stick"),
-        "ArmR": (arm_r, (0, 0, 0), None),
     }
     empties = {
         "Muzzle": ((0, CANDY_Y + CANDY_R, 0), "Candy"),
         "BladeTip": ((0, CANDY_Y + CANDY_R, 0), "Candy"),
         "SwingPoint": ((0, CANDY_Y - CANDY_R * 0.4, 0), "Candy"),
         "CharmPoint": (charm_point, "Stick"),
-        "ElbowR": (elbow_r, "ArmR"),
     }
+    add_hand(groups, empties, hand, "GripMain", "Stick")
     finish("swirl_smasher", groups, empties)
 
 

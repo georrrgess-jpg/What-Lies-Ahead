@@ -29,6 +29,7 @@ var _bow: Node3D
 var _spin := 0.0
 var _speed := 0.0
 var _fling := 0.0
+var _arms := ArmAim.new()
 
 
 func setup(view: WeaponView) -> void:
@@ -39,6 +40,7 @@ func setup(view: WeaponView) -> void:
 	_bow = view.part("Bow")
 	_spin = 0.0
 	_speed = 0.0
+	_arms.setup(view)
 
 
 func light_keys() -> Array:
@@ -75,3 +77,4 @@ func part_motion(view: WeaponView, mode: MeleeMode, delta: float) -> void:
 	if _bow:
 		var sway := sin(_time * TAU * FLUTTER_HZ) * FLUTTER + _fling * sin(_time * 19.0)
 		_bow.transform = view.rest_transform("Bow") * Transform3D(Basis.from_euler(Vector3(0.0, deg_to_rad(sway * 0.4), deg_to_rad(sway))), Vector3.ZERO)
+	_arms.update(view, delta)

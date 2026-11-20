@@ -88,7 +88,9 @@ func _measure(shot: Node, player: Player, label: String, frames: int, action: Ca
 			var rel := handle.global_basis.orthonormalized().inverse() * palm.global_basis.orthonormalized()
 			if last.has(side):
 				var q := Quaternion(last[side]).inverse() * Quaternion(rel)
-				turn[side] = maxf(turn[side], rad_to_deg(q.normalized().get_angle()))
+				# The shorter way round (a quaternion and its negative are the same turn).
+				var angle := rad_to_deg(q.normalized().get_angle())
+				turn[side] = maxf(turn[side], minf(angle, 360.0 - angle))
 			last[side] = rel
 	for side in nodes:
 		print("[contact] %s %s max_gap=%.2fmm max_turn=%.2fdeg/frame frames=%d head_moved=%.2fm" % [label, side, gap[side], turn[side], n, travel])
