@@ -98,6 +98,13 @@ CELLS["ticket_ripper"] = ["Cell", "RollHolo"]
 HOLDS["ticket_ripper"] = [("ArmL", "Rib3")]
 JOINTS["ticket_ripper"] = ([("Roll", "Shell"), ("RollHolo", "Shell"), ("RollHolo", "Roll"), ("DrumDoor", "Shell"), ("Rib0", "Shell")]
                            + [(f"Rib{i + 1}", f"Rib{i}") for i in range(3)] + [(f"Pip{i}", "DrumDoor") for i in range(15)])
+# Update 23: the Tin Sergeant. The soldier stands in the hatch's well (his arm at his shoulder,
+# the hologram one on his spot), the hatch lies open on its hinge pins, the key turns in its boss,
+# the pennant lies along the lid, the lamps sit in their sockets.
+WEAPONS.append("tin_sergeant")
+JOINTS["tin_sergeant"] = ([("Soldier", "Shell"), ("SoldierArm", "Soldier"), ("SoldierArm", "Shell"), ("CellHolo", "Shell"), ("CellHolo", "Soldier"),
+                           ("CellHolo", "SoldierArm"), ("Hatch", "Shell"), ("Key", "Shell"), ("Flag", "Shell"), ("Cell", "Shell")]
+                          + [(f"Lamp{i}", "Shell") for i in range(6)])
 
 
 def world_tree(ob, matrix=None):

@@ -24,6 +24,8 @@ const MASK_WORLD := 1
 ## Share of shots that strike a zombie in flight (the Arsenal's DPS).
 const DIRECT_SHARE := 0.4
 const FALL_IN_SOUND := &"ts_fall_in"
+## The bot keeps firing whatever the squad when a zombie is this close (m).
+const BOT_CLOSE := 7.0
 
 var _flag: TinRallyFlag
 var _trace := 0.0
@@ -64,6 +66,12 @@ func soldiers_out() -> int:
 ## True while the squad has a flag to fall in on.
 func rallying() -> bool:
 	return TinSoldier.rally_of(controller) != Vector3.INF
+
+
+## The playtest bot (scripts/dev/dev_driver.gd) holds fire while a full
+## squad is out and nothing is close: the soldiers do the work.
+func bot_hold_fire(nearest: float) -> bool:
+	return soldiers_out() >= TinSoldier.MAX_SOLDIERS - 1 and nearest > BOT_CLOSE
 
 
 func dispose() -> void:

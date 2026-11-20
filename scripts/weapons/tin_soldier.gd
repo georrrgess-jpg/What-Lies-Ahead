@@ -4,14 +4,15 @@ extends Node3D
 ##
 ## It is lobbed on the WeaponData's launch velocity, tumbling (the aim arc
 ## preview shows where it lands). A soldier that strikes a zombie in flight
-## hits it for direct_hit_bonus and drops at its feet. On the floor it hops
+## clonks it for direct_hit_bonus and pops on it at once. On the floor it hops
 ## upright and winds itself up for WIND_TIME (the key on its back spins, the
 ## ratchet clicks), then marches: stiff legs, a swinging arm, the key slowly
 ## unwinding. It marches on the nearest zombie (one already chased by another
 ## soldier counts SHARE_PENALTY metres further, so a squad spreads over a
 ## pack) and pops when it reaches it, or when any zombie walks into it: the
 ## blast hits every zombie within splash_radius (splash_edge_scale at the
-## rim; bosses and the heaviest alphas take BOSS_SCALE). The player is never
+## rim; bosses and the heaviest alphas take BOSS_SCALE), and light zombies
+## near its middle are left seeing stars (Dazzle) for STUN. The player is never
 ## hurt: only zombies are hit (WeaponController.melee_hit).
 ##
 ## "Fall in!" (TinSergeantMode, aiming): while a rally point is set the squad
@@ -36,10 +37,10 @@ const MASK_WORLD := 1
 const MODEL: PackedScene = preload("res://art/models/tin_soldier.glb")
 const MAX_SOLDIERS := 6
 const SETTLE_TIME := 0.22
-const WIND_TIME := 0.55
+const WIND_TIME := 0.45
 const MARCH_LIFE := 12.0
 const RUN_DOWN := 1.6
-const MARCH_SPEED := 3.3
+const MARCH_SPEED := 3.8
 const TURN_RATE := 10.0
 ## Steps a second at full speed (two steps to a stride).
 const STEP_RATE := 3.6
@@ -69,7 +70,11 @@ const FORM_RADIUS := 1.1
 const RALLY_GUARD := 4.5
 const RALLY_KEEP := 6.0
 const BOSS_MASS := 5.0
-const BOSS_SCALE := 0.75
+const BOSS_SCALE := 0.85
+## Light zombies in the inner part of a pop (1 - distance / radius at least
+## STUN_INNER) see stars for STUN seconds.
+const STUN_INNER := 0.4
+const STUN := 0.9
 const POP_TIME := 0.34
 const SEPARATION := 0.45
 const TICK_GAP_MS := 70
@@ -290,7 +295,7 @@ func _fly(delta: float) -> void:
 
 
 ## Struck a zombie in flight: a clonk on the head, then it drops at its feet
-## (and, wound, pops on it straight away).
+## and pops on it straight away.
 func _direct(z: Zombie, at: Vector3) -> void:
 	var dir := velocity.normalized()
 	if weapon.direct_hit_bonus > 0.0 and is_instance_valid(controller):
@@ -299,7 +304,10 @@ func _direct(z: Zombie, at: Vector3) -> void:
 	target = z
 	var back := (global_position - z.global_position).slide(Vector3.UP)
 	back = back.normalized() if back.length() > 0.05 else -dir.slide(Vector3.UP).normalized()
-	_land_at(z.global_position + back * (0.4 + z.data.capsule_radius * z.data.body_scale))
+	var ground := _floor_below(z.global_position + back * (0.3 + z.data.capsule_radius * z.data.body_scale) + Vector3.UP * 0.5, 5.0)
+	if ground != Vector3.INF:
+		global_position = ground
+	pop_now()
 
 
 ## Lands on the floor below `at`, then hops upright and winds up.
@@ -534,7 +542,9 @@ func _blast() -> void:
 		var away := (z.global_position - global_position).slide(Vector3.UP)
 		away = away.normalized() if away.length() > 0.05 else -global_transform.basis.z
 		var chest := z.global_position + Vector3.UP * 1.0 * z.data.body_scale
-		controller.melee_hit(weapon, z, chest - away * 0.3, away, dmg, weapon.splash_push * k)
+		var killed := controller.melee_hit(weapon, z, chest - away * 0.3, away, dmg, weapon.splash_push * k)
+		if not killed and k >= STUN_INNER and not z.data.heavy and z.rank != Zombie.RANK_BOSS:
+			Dazzle.of(z).apply(STUN)
 
 
 ## Hidden and parked for the next launch.
