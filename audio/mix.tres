@@ -388,7 +388,10 @@ sound_category = Dictionary[StringName, StringName]({
 &"hstrk_whoosh": &"weapon",
 &"hstrk_thud": &"impact",
 &"hstrk_slam": &"impact",
-&"hstrk_ding": &"confirm"
+&"hstrk_ding": &"confirm",
+&"ssx_": &"handling",
+&"ssx_fire": &"weapon",
+&"ssx_last_call": &"impact"
 })
 sound_trim_db = Dictionary[StringName, float]({
 &"carbine_fire": 1.0,

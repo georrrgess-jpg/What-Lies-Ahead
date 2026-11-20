@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+[ext_resource type="PackedScene" path="res://art/models/sarsaparilla_six.glb" id="3"]
+[ext_resource type="Script" path="res://scripts/weapons/reloads/sarsaparilla_six_reload.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/weapons/views/sarsaparilla_six_view.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/weapons/modes/sarsaparilla_six_mode.gd" id="6"]
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("2")
+kind = 1
+amount = 29
+
+[resource]
+script = ExtResource("1")
+id = &"sarsaparilla_six"
+sort_order = 103
+category = "Soda-Pop Revolver"
+slot_class = "secondary"
+display_name = "Sarsaparilla Six"
+role = "Gold Rush Gulch six-shooter loaded with soda-bottle rounds. Tap for an accurate shot about four times a second; hold the trigger and the off hand fans the hammer, emptying the cylinder in under a second while the spread climbs with every shot. The sixth round is the Last Call: it fizzes out with 60% more damage, a hard shove and a soda pop that splashes the zombies round the hit. Count your shots (the cylinder ring under the crosshair helps): six rounds and a speed-loader reload make it a burst sidearm, not a hose."
+unlock = SubResource("unlock")
+magazine_size = 6
+reserve_start = 48
+reserve_max = 72
+reload_time = 1.8
+emergency_recharge_interval = 1.5
+automatic = true
+fire_interval = 0.11
+damage = 46.0
+pellets = 1
+spread_degrees = 0.25
+spread_bloom = 0.25
+spread_bloom_max = 1.0
+spread_recovery = 5.0
+max_range = 45.0
+falloff_start = 16.0
+falloff_end = 32.0
+falloff_min_scale = 0.6
+headshot_multiplier = 2.0
+knockback = 1.2
+ads_fov_scale = 0.82
+ads_time = 0.14
+ads_spread_scale = 0.35
+ads_depth = 0.1
+first_shot_accurate = false
+reticle_style = "circle"
+recoil_kick = 1.5
+recoil_yaw = 0.35
+view_kick = 0.045
+shake = 0.1
+tracer_color = Color(1, 0.647, 0.227, 1)
+tracer_width = 0.035
+viewmodel = ExtResource("3")
+view_position = Vector3(0.21, -0.185, -0.5)
+view_rotation_degrees = Vector3(2, 10, -4)
+reload_script = ExtResource("4")
+view_script = ExtResource("5")
+fire_sound = &"ssx_fire"
+reload_sound = &"ssx_reload"
+empty_sound = &"empty_click"
+equip_sound = &"ssx_equip"
+fire_pitch_variance = 0.05
+move_speed_scale = 1.0
+equip_time = 0.26
+mode_script = ExtResource("6")
+rank_xp = PackedInt32Array(600, 1500, 3000, 5000, 7500)

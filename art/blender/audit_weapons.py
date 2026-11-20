@@ -98,6 +98,11 @@ CELLS["ticket_ripper"] = ["Cell", "RollHolo"]
 HOLDS["ticket_ripper"] = [("ArmL", "Rib3")]
 JOINTS["ticket_ripper"] = ([("Roll", "Shell"), ("RollHolo", "Shell"), ("RollHolo", "Roll"), ("DrumDoor", "Shell"), ("Rib0", "Shell")]
                            + [(f"Rib{i + 1}", f"Rib{i}") for i in range(3)] + [(f"Pip{i}", "DrumDoor") for i in range(15)])
+# The cylinder swings out on its crane past the frame; the rounds ride in it, caps and soda in them; the hammer on its pin.
+WEAPONS.append("sarsaparilla_six")
+JOINTS["sarsaparilla_six"] = ([("Cylinder", "Shell"), ("Hammer", "Shell"), ("Trigger", "Shell"), ("Halo5", "Cylinder"), ("Halo5", "Round5")]
+                              + [(f"{p}{i}", q) for i in range(6) for p in ("Round", "Cap", "Soda") for q in ("Cylinder", "Shell")]
+                              + [(f"{p}{i}", f"Round{i}") for i in range(6) for p in ("Cap", "Soda")] + [(f"Cap{i}", f"Soda{i}") for i in range(6)])
 
 
 def world_tree(ob, matrix=None):
