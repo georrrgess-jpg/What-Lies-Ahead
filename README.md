@@ -121,7 +121,7 @@ fullscreen.
 - **Checkpoint.** Clearing wave 3 reaches the checkpoint: lose on wave 4 or later and the
   results screen offers **Continue** from wave 4 (full health, some tickets, 75% rewards).
 - **Two weapons.** You carry a primary and a secondary, each picked from its own section
-  in the **Arsenal** (17 primaries, 12 secondaries; a slot only takes its own class). Each
+  in the **Arsenal** (18 primaries, 13 secondaries; a slot only takes its own class). Each
   keeps its own ammo for the whole run. Switching cancels a reload.
 - **The loadout station** (each world has its own, with a tall beacon; a waypoint points
   to it during breaks) sells an energy top-up for both weapons, one heal per break (a
@@ -246,6 +246,7 @@ sub and a longer tail, fast autos stay tight and sit under the big single shots
 | Ground Control | Primary | Crowd marking | Player level 28 | Charge-and-release radar pings: a tap sends a small fast ring, three charge steps grow it to a huge slow ring that knocks the crowd back; rings pass through every zombie in them and bounce once off a wall, and every zombie they touch is outlined through walls for 4 s and takes +15% from every weapon; an overcharge (dish turns pink) releases a wide feedback blast, held too long the gun stalls |
 | Riptide Harpoon | Primary | Heavy control | Player level 30 | Charged harpoon on a line: a full charge skewers four in a row and reels them toward you, staggering even Bruisers (+30% to heavies); best at mid range |
 | Rail Lancer | Primary | Anti-heavy | Player level 34 | Charge shot; a full charge pierces a line and a full-charge headshot drops a Bruiser |
+| Tin Sergeant | Primary | Marching squad | Player level 35 | Toy-chest launcher that lobs wind-up tin soldiers (up to six out; one more pops the oldest): each lands, winds up and marches on the nearest zombie by itself, then pops for 120 (less out to 2.6 m, light zombies see stars); a direct hit pops at once; hold aim to plant a "Fall in!" flag the squad rings and guards (6 s after the sights drop); soldiers run down after 12 s; bosses take 85% |
 | Strike Zone | Primary | Lane bowler | Player level 38 | Bowling-ball launcher (two balls): hold to wind up a faster, harder roll; the ball drops with a thud that bowls over anything within 1.8 m, then rolls along the floor (aimed up at a ledge or at a zombie behind a low wall it is lobbed), follows slopes and bounces off one wall, bowling over every zombie in its lane (knocked flat for about a second, scattering like pins; heavies only stagger and a boss stops the ball dead); five in one roll is a STRIKE (DOUBLE!, TURKEY! on back-to-back rolls) and the ball comes straight back; after 3 s it sinks into a hologram gutter |
 | Teacup Twister | Primary | Crowd gathering | Player level 43 | Lobs a spinning teacup that opens a whirl where it lands: the crowd within 7 m is dragged into a spinning cluster (no attacks while it spins, and not caught again for 2 s after a pop), takes spin damage, then the cup pops and flings it out; Bruisers, Yetis, alphas and bosses are only slowed and keep swinging, and a cup landed on one rides with it |
 | Road Rager | Primary | Boomerang sweeper | Endless wave 10 | A hot-rod pitching machine: the spinning hubcap hits every zombie out and back; hip throws loop wide, aimed throws go straight out and back; a caught hubcap goes back in the magazine (a catch mid-reload cuts it short), and four hits in one throw turn it gold (+50%) |
@@ -253,6 +254,7 @@ sub and a longer tail, fast autos stay tight and sit under the big single shots
 | Ticket Flipper | Melee | Lunge | Level 17 | Prize-ticket butterfly knife that flips open on the draw and fidgets shut and open at rest; +20% move, sprint and slide speed while held; light slash 36 (0.45 s, two zombies in a 2.3 m cone); hold AIM (it flips faster as it charges) and release to lunge forward up to 11 m/s into a heavy slash up to 105; heavies, alphas and bosses take 55% |
 | Swirl Smasher | Melee | Sugar shards | Level 25 | Giant rainbow swirl lollipop club; wide sweeps of 68 (0.75 s, up to four zombies in a 2.7 m, 65-degree cone, strong knockback); hold AIM (the candy spins up) and release for a smash up to 150 that cracks the candy: sugar shards slow every zombie within 3.2 m for up to 2.6 s and deal 18 to the others; heavies, alphas and bosses take 60% |
 | High Striker | Melee | Ground slam | Level 39 | The strongman mallet; very slow (90% move speed): a light swing of 105 every 1.0 s hits up to three zombies in 2.9 m; hold AIM to haul it overhead (the puck creeps up the scale) and release to slam the ground, up to 240 on a direct hit, while the puck rings the bell and the shock stuns (interrupts, slows 1.6 s) and hurts every zombie within 4.2 m; heavies, alphas and bosses take 60% |
+| Jester's Jinglestar | Melee | Encore | 500 melee kills | Court jester's flail: a star-ball bell on a simulated gold chain; figure-eight swings of 60 (0.68 s, three zombies, 2.85 m, 58°); hold AIM to whirl it overhead, release to slam up to 160; ENCORE: hits within 1.6 s stack 4 steps (7% faster each), and at full every hit rings a 3 m jingle shockwave (24); a miss or a pause resets it; heavies, alphas and bosses take 55% |
 | Pulse Pistol | Secondary | Precision | Start | Three body shots or two headshots drop a tourist; a rested shot flies dead centre |
 | Comet Hand Cannon | Secondary | Mid-range burst | Player level 2 | Three-round burst that knocks standard zombies out of their swing |
 | Dunk Tank | Secondary | Soak and push | Player level 7 | Full-auto water jet (under 24 m) that pierces one zombie and pushes; soaked zombies are slowed and take +25% damage from every weapon for 3 s |
@@ -263,6 +265,7 @@ sub and a longer tail, fast autos stay tight and sit under the big single shots
 | Coin-Op | Secondary | Streak sustain | Player level 22 | Full-auto arcade token machine pistol (12 a second, strong only up close): every third kill and every headshot kill pays a Free Play token, 4 rounds straight back in the magazine; held past a second it tilts (up to 15 a second, wider spray, TILT lamp and rattle); tokens glance off heavies and alphas (85%); the reload slaps the coin return and breaks a hologram token roll into the slot |
 | Ring Toss | Secondary | Ricochet | Player level 26 | Throws a glowing hoop that ricochets through up to three zombies (each ricochet 65% of the last; the first hit, all a lone boss takes, is full damage) and flies back to be caught; a headshot "Ringer" does double damage and refunds the hoop |
 | Yo-Yo Loco | Secondary | Precision and grind | Player level 27 | Snaps a yo-yo out on a glowing string (15 m) and zips it back: one zombie per throw, headshots double (one drops a tourist), the round trip sets the pace; hold the trigger through a hit for a Sleeper that grinds that zombie harder and harder (up to 300 a second) and slows it, at a round of string wear per 0.55 s; aimed, it Walks the Dog along the floor, tripping every zombie it passes (a small hit and a slow, light ones stumble) |
+| Sarsaparilla Six | Secondary | Fan the hammer | Player level 29 | Soda-pop six-shooter: tap for accurate shots (46, x2 head, ~4/s) or hold to fan the cylinder empty in 0.7 s with rising spread; the sixth round is the Last Call (x1.6, a shove and a 16 soda pop within 2.2 m); a cylinder ring under the crosshair counts the rounds; speed-loader reload |
 | T-Minus Six | Secondary | Lock-on swarm | Player level 32 | Six-rocket pod: hold aim and the radar paints the zombie nearest the crosshair every 0.33 s (one lock per rocket, spread over a pack, one spare on a zombie already painted to drop); the trigger launches the swarm, corkscrewing onto the painted heads (46 a rocket, x1.6 on heads, less on heavies, small splash); unpainted it dumb-fires one straight rocket; faster reload with rockets left |
 | Balloon Darter | Secondary | Tag and pop | Player level 37 | Quick darts tie a balloon onto each zombie they hit (up to four); 0.9 s after the first dart the bunch pops for 28 a balloon and splashes its neighbours, setting off their balloons in a chain |
 
@@ -342,13 +345,15 @@ flash cone (`Dazzle`) and the Balloon Darter's balloons (`BalloonBunch`).
   Madame Fortuna after about eighteen. Four items a day are featured at 20% off (always a round number). Every item
   has a 3D preview and a confirm step. Station prices in tickets are multiples of 25 and
   rise world by world.
-- **Locker**: 512 cosmetics in eleven categories: 19 operators (characters that also set
+- **Locker**: 513 cosmetics in eleven categories: 19 operators (characters that also set
   your first-person arms; the Mythic **Madame Fortuna** wears an animated aura of a floor
   sigil, a crystal ball, orbiting fortune cards and sparkles wherever she is shown),
-  129 weapon finishes (including 27 animated shaders: marquee bulbs, data rain, lightning,
+  130 weapon finishes (including 28 animated shaders: marquee bulbs, data rain, lightning,
   aurora, warp speed, liquid mercury, stained glass, Insert Coin's arcade screen, Kintsugi's
   gold seams, a Koi Pond, ticking Clockwork, Hot Rod flames, Holo Tiger foil, a Treasure Map
-  that draws itself, a flickering Ghost Train, Jackpot reels, a Multiball pinball table…), 26 sights
+  that draws itself, a flickering Ghost Train, Jackpot reels, a Multiball pinball table, and the **Mythic** **Celestial Midway** (50,000
+  lifetime kills): a night sky in layers behind the glass, self-drawing gold constellations,
+  pierced gold filigree, and a shooting star across it on every kill…), 26 sights
   (Mission Control's radar reticle sweeps), 45 energy cells (with moving patterns: bubbles,
   lava, slosh, warp, a pixel chomper, circling koi…), 35 decals, 34 charms (a Ferris wheel,
   a UFO, a teacup, a pinwheel and a disco ball that spin), 28 gloves (with real shapes:
