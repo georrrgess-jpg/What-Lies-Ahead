@@ -28,6 +28,11 @@ uniform float motion = 1.0;
 // 1 at a kill, easing back to 0 (FinishPulse); the seed varies its path.
 uniform float pulse = 0.0;
 uniform float pulse_seed = 0.0;
+// The shooting star's path in world space (FinishPulse: across the weapon's
+// bounds, back to muzzle, following the weapon), and the weapon's side axis.
+uniform vec3 pulse_from = vec3(0.0, 0.05, 0.3);
+uniform vec3 pulse_to = vec3(0.0, 0.08, -0.5);
+uniform vec3 pulse_side = vec3(1.0, 0.0, 0.0);
 // Screen footprint (m per pixel) over which the fine sky gives way to the
 // bold one: first person is about 0.0006, the Arsenal stand 0.003.
 uniform vec2 detail_fade = vec2(0.0014, 0.0034);
@@ -35,6 +40,7 @@ uniform vec2 detail_fade = vec2(0.0014, 0.0034);
 varying vec3 lp;
 varying vec3 ln;
 varying vec3 lv;
+varying vec3 wp;
 
 // The six constellations, as segments (a.xy, b.xy) in a -1..1 box, in the
 // order they are drawn. SHAPE_START / SHAPE_COUNT index into SEGS.
@@ -70,6 +76,7 @@ const int SHAPE_COUNT[6] = { 11, 9, 7, 8, 7, 5 };
 void vertex() {
 	lp = print_xform(VERTEX);
 	ln = NORMAL;
+	wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	lv = (inverse(MODEL_MATRIX) * vec4(CAMERA_POSITION_WORLD, 1.0)).xyz - VERTEX;
 }
 
@@ -251,21 +258,35 @@ vec3 constellations(vec2 s, float t, float px, float flare) {
 }
 
 // A shooting star crossing the weapon after a kill (`k`: 1 at the kill, then
-// down to 0): a white-gold head with a pink-violet tail, back to muzzle.
+// down to 0): a white-gold head with a tail cooling through pink to violet,
+// shedding sparks, along pulse_from -> pulse_to. `p` is the world position;
+// the path is measured across the weapon's side (pulse_side left out), so it
+// reads as one comet over every face it crosses.
 vec3 shooting_star(vec3 p, float k, float px) {
 	if (k <= 0.0) {
 		return vec3(0.0);
 	}
-	float head_z = 0.55 - (1.0 - k) * 1.6;
-	float slope = 0.06 + pulse_seed * 0.08;
-	float y0 = 0.03 - pulse_seed * 0.06;
-	float dz = p.z - head_z;
-	float dy = p.y - y0 - slope * dz;
-	float w = max(0.0016, px * 1.2);
-	float tail = step(0.0, dz) * exp(-dz / 0.16) * exp(-dy * dy / (w * w * (1.0 + dz * 40.0)));
-	float head = exp(-(dz * dz + dy * dy) / (w * w * 4.0));
-	vec3 trail = mix(pink, violet * 1.5, smoothstep(0.0, 0.2, dz));
-	return (trail * tail * 1.4 + vec3(1.0, 0.95, 0.85) * head * 4.0) * smoothstep(0.0, 0.15, k);
+	vec3 dir = normalize(pulse_to - pulse_from);
+	vec3 rel = p - mix(pulse_from, pulse_to, 1.0 - k);
+	rel -= pulse_side * dot(rel, pulse_side);
+	// Distance behind the head (along the way it came) and across the path.
+	float dz = -dot(rel, dir);
+	float dy = length(rel + dir * dz);
+	float w = max(0.0022, px * 1.3);
+	float behind_head = step(0.0, dz);
+	// Ahead of the head nothing; `along` keeps every exponent finite there.
+	float along = max(dz, 0.0);
+	float tail = behind_head * exp(-along / 0.16) * exp(-dy * dy / (w * w * (1.0 + along * 60.0)));
+	float r2 = dz * dz + dy * dy;
+	float head = exp(-r2 / (w * w * 3.0));
+	float halo = exp(-sqrt(r2) / 0.012);
+	// Sparks shed along the tail, twinkling out.
+	float spark_id = floor(along / 0.012);
+	vec2 sh = fh22(vec2(spark_id, floor(pulse_seed * 97.0)));
+	float spark = behind_head * step(0.55, sh.x) * exp(-pow((along - (spark_id + 0.5) * 0.012) / w, 2.0) - pow((dy - (sh.y - 0.5) * 0.012) / w, 2.0)) * exp(-along / 0.1);
+	vec3 white = vec3(1.0, 0.95, 0.85);
+	vec3 trail = mix(mix(white, pink, smoothstep(0.0, 0.05, along)), violet * 1.5, smoothstep(0.05, 0.22, along));
+	return (trail * tail * 3.0 + white * (head * 5.0 + halo * 0.35) + star_gold * spark * 2.5) * smoothstep(0.0, 0.12, k);
 }
 
 // The gold filigree in face coordinates `uv` (m): gold rules between rows of
@@ -323,7 +344,7 @@ void fragment() {
 	// Seen small: a few big steady stars keep the sky sparkling.
 	sky += stars(lp, n, 0.05, 0.0032, 0.45, px, t, star_gold, false) * bold;
 	vec3 shapes = constellations(vec2(q_near.z, q_near.y), t, px, flare) * side;
-	vec3 streak = shooting_star(lp, pulse, px);
+	vec3 streak = shooting_star(wp, pulse, max(length(dFdx(wp)), length(dFdy(wp))));
 	// Dither under the dark gradients so they never band.
 	float dither = (fh21(FRAGCOORD.xy + fract(t) * 17.0) - 0.5) / 255.0;
 	if (is_trim) {
