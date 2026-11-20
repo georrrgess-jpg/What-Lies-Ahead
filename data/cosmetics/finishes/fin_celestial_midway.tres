@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 50000
+
+[resource]
+script = ExtResource("1")
+id = &"fin_celestial_midway"
+display_name = "Celestial Midway"
+description = "A window onto the midnight sky over the fair, carried inside the weapon: a violet nebula drifts far back, stars twinkle at three depths and slide past each other as you move, aurora ribbons sway in teal and pink, and gold constellations draw themselves into a Ferris wheel, a balloon, a crown, a rocket, a teacup and a wishing star. Pierced gold filigree frames the night, and every kill sends a shooting star across it. Earned by the few who reach 50,000 kills."
+slot = &"weapon_finish"
+rarity = 5
+requirement = SubResource("req")
+colors = PackedColorArray(0.03, 0.02, 0.08, 1, 1, 0.77, 0.36, 1)
+params = {
+"shader": "res://art/shaders/finish_celestial_midway.gdshader",
+"pulse": true
+}
+sort_order = 2401
