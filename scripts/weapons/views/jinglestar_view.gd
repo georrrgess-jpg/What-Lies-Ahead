@@ -34,13 +34,13 @@ const FLAIL_LIGHT_KEYS := [
 ## The heavy, from the wind-up (raised high, whirling) down through the slam.
 const FLAIL_HEAVY_KEYS := [
 	[0.0, Vector3(-0.03, 0.07, -0.02), Vector3(20.0, -4.0, -10.0)],
-	[0.3, Vector3(-0.05, -0.07, -0.12), Vector3(-34.0, 8.0, 16.0)],
-	[0.52, Vector3(-0.07, -0.1, -0.05), Vector3(-38.0, 10.0, 18.0)],
+	[0.2, Vector3(-0.05, -0.07, -0.12), Vector3(-34.0, 8.0, 16.0)],
+	[0.42, Vector3(-0.07, -0.1, -0.05), Vector3(-38.0, 10.0, 18.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Contact moments (share of the light swing, of the heavy): the head crosses the middle.
 const LIGHT_CONTACT := 0.38
-const HEAVY_CONTACT := 0.3
+const HEAVY_CONTACT := 0.2
 ## The head's path through a light swing (view space, right to left; x
 ## mirrored on the other side): [t, point]; and the pull's rise and fall.
 const LIGHT_PATH := [
@@ -53,11 +53,11 @@ const LIGHT_PULL := Vector3(0.06, 0.6, 0.85)   # from, until, strength
 ## The heavy's path: up over the top and down the middle.
 const HEAVY_PATH := [
 	[0.0, Vector3(0.12, 0.3, -0.9)],
-	[0.14, Vector3(0.04, 0.38, -1.0)],
+	[0.09, Vector3(0.04, 0.38, -1.0)],
 	[HEAVY_CONTACT, Vector3(0.0, -0.2, -1.05)],
-	[0.5, Vector3(-0.06, -0.4, -0.86)],
+	[0.4, Vector3(-0.06, -0.4, -0.86)],
 ]
-const HEAVY_PULL := Vector3(0.0, 0.58, 1.0)
+const HEAVY_PULL := Vector3(0.0, 0.48, 1.0)
 ## The whirl: its centre from the cap (view units: over and in front of it), radius, the plane's tilt
 ## towards the eye (degrees), and its turn rate (rad/s) from no charge to full.
 const WHIRL_CENTRE := Vector3(-0.08, 0.04, -0.12)
