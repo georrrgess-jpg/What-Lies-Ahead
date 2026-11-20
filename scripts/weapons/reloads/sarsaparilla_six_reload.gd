@@ -56,9 +56,9 @@ func play(v: WeaponView, d: float) -> void:
 ## The revolver rolls over to its left side and tips up for the loading,
 ## dips for the push and the flick, then swings back with a small settle.
 func _gun(v: WeaponView, d: float) -> void:
-	v.track("Root", d, [[0.12, Vector3(-0.025, 0.03, 0.01), Vector3(14, -8, 34)], [0.3, Vector3(-0.03, 0.035, 0.01), Vector3(16, -10, 38)],
-		[0.46, Vector3(-0.03, 0.028, 0.01), Vector3(13, -10, 36)], [0.56, Vector3(-0.03, 0.036, 0.01), Vector3(18, -9, 38)],
-		[0.76, Vector3(-0.03, 0.034, 0.01), Vector3(16, -9, 36)], [0.86, Vector3(0.006, -0.006, 0.0), Vector3(-5, 2, -6)],
+	v.track("Root", d, [[0.12, Vector3(-0.07, 0.05, 0.03), Vector3(6, 34, 12)], [0.3, Vector3(-0.075, 0.055, 0.03), Vector3(8, 38, 14)],
+		[0.46, Vector3(-0.075, 0.048, 0.03), Vector3(6, 36, 12)], [0.56, Vector3(-0.075, 0.056, 0.03), Vector3(10, 37, 14)],
+		[0.76, Vector3(-0.07, 0.054, 0.03), Vector3(8, 36, 12)], [0.86, Vector3(0.006, -0.006, 0.0), Vector3(-5, -3, -6)],
 		[0.94, Vector3(0.0, 0.004, 0.0), Vector3(3, 0, 2)], [1.0, Vector3.ZERO, Vector3.ZERO]])
 	v.glow_ramp(0.04, 0.16, d, 1.0, 0.35)
 
