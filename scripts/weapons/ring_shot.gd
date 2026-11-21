@@ -12,9 +12,9 @@ extends Node3D
 ##          it (WeaponView.weapon_event &"catch" / &"catch_ringer")
 ##
 ## Damage goes through WeaponController.ring_hit, so hit confirms, statuses
-## and kills count like any shot. A headshot is a "ringer": it flashes gold,
-## and with ringer_refund the ring comes home loaded (the round goes back in
-## the magazine). The ring trails a ribbon so its path is easy to follow.
+## and kills count like any shot. A headshot is a "ringer": it flashes gold
+## and the catch throws gold sparks. The ring trails a ribbon so its path is
+## easy to follow.
 
 const MASK_WORLD := 1
 const MASK_ENEMIES := 4
@@ -269,11 +269,8 @@ func _go_back() -> void:
 
 
 func _caught() -> void:
-	var refund := ringer and weapon.ringer_refund
-	if refund:
-		controller.return_round(weapon)
-	Sfx.play(weapon.catch_sound, -4.0 if refund else -7.0, 1.12 if refund else 1.0)
-	controller.player.view.weapon_event(weapon, &"catch_ringer" if refund else &"catch")
+	Sfx.play(weapon.catch_sound, -4.0 if ringer else -7.0, 1.12 if ringer else 1.0)
+	controller.player.view.weapon_event(weapon, &"catch_ringer" if ringer else &"catch")
 	queue_free()
 
 

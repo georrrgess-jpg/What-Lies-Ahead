@@ -935,7 +935,7 @@ func ring_hit(data: WeaponData, z: Zombie, point: Vector3, dir: Vector3, dmg: fl
 	return result[1]
 
 
-## A ring came home loaded (a ringer): its round goes back in the magazine.
+## A round came back to the gun: it goes back in the magazine.
 func return_round(data: WeaponData) -> void:
 	var state: Dictionary = _ammo.get(data.id, {})
 	if state.is_empty() or int(state["mag"]) >= data.magazine_size:

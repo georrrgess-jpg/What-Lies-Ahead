@@ -220,8 +220,6 @@ extends Resource
 @export var ricochet_range := 9.0
 ## Damage multiplier for each zombie the ring has already struck.
 @export var ricochet_falloff := 0.8
-## A headshot ("ringer") sends the ring home loaded: it goes back in the magazine.
-@export var ringer_refund := false
 @export var ricochet_sound: StringName
 @export var catch_sound: StringName
 

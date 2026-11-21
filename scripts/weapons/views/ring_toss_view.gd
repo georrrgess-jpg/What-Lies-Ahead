@@ -5,7 +5,7 @@ extends RefCounted
 ## cradle, and a fresh one rises out of the stack. When a thrown ring comes
 ## home (RingShot -> WeaponView.weapon_event) the catch hooks clamp, the gun
 ## dips and twists with the catch and sparks fly; a ringer catch (a headshot
-## ring that came home loaded) throws gold.
+## ring) throws gold.
 
 const STACK := 4
 ## Seconds: the hoop leaves the cradle, then the next one rises into it.
