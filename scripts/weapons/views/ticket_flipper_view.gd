@@ -38,16 +38,17 @@ const TEASE_TIME := 0.7
 const TEASE_ANGLE := -125.0
 ## The wind-up's flip (shut and open again) at its start.
 const WINDUP_FLIP_TIME := 0.3
-## The swings turn about the forearm below the wrist (from the grip, view units),
-## so the arm stays low while the knife sweeps the frame.
-const ELBOW := Vector3(0.1, -0.38, 0.1)
+## The swings turn about the elbow (from the grip, view units: down the forearm,
+## which runs to the lower right and back towards the player), so the arm
+## stays low while the knife sweeps the frame.
+const ELBOW := Vector3(0.25, -0.12, 0.22)
 ## Light slash, right to left (mirrored every other swing): cocked out to the
 ## right, whipped flat across the middle, followed through low left.
 const FLIP_LIGHT_KEYS := [
 	[0.0, Vector3.ZERO, Vector3.ZERO],
 	[0.14, Vector3(0.04, 0.03, 0.02), Vector3(3.0, -8.0, -8.0)],
-	[0.36, Vector3(-0.08, 0.0, -0.05), Vector3(-5.0, 12.0, 12.0)],
-	[0.6, Vector3(-0.12, -0.04, -0.02), Vector3(-9.0, 16.0, 16.0)],
+	[0.36, Vector3(-0.08, 0.035, -0.05), Vector3(-5.0, 12.0, 12.0)],
+	[0.6, Vector3(-0.12, 0.015, -0.02), Vector3(-9.0, 16.0, 16.0)],
 	[1.0, Vector3.ZERO, Vector3.ZERO],
 ]
 ## Heavy: from the wind-up (drawn back by the cheek, point on the target) the

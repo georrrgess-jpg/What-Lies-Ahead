@@ -62,16 +62,23 @@ PIN_P = 0.0028
 ## Blade: half thickness, the point.
 BLADE_HALF = 0.0025
 BLADE_TIP_Y = 0.236
-## Everything but the fist is drawn at real size and then scaled up by this
-## much, so the knife reads in the big first-person glove.
-SCALE = 1.25
-## The hand on the bar (hand_kit.grip_hand): the forearm's way from the wrist,
-## the knuckle line's lean, the palm's turn round the bar and where along the
-## palm the bar lies (tuned for this flat section, not the round shafts' defaults).
-FOREARM = (0.12, -0.9, 0.1)
-GRIP_TILT = 18.0
-GRIP_ROLL = -6.0
-GRIP_CONTACT = 0.058
+## Everything but the hand is drawn at real size and scaled by this (1 = real size:
+## a big balisong against the human-sized hand).
+SCALE = 1.0
+## The hand on the bar (hand_kit.grip_hand), at a human size. The forearm leaves the
+## wrist in the blade's plane, 132 degrees from the blade towards the spine: the palm
+## then lies on the far flat of the handles, the fingers wrap round the edge side with
+## their tips on the near flat, and the thumb comes over the spine side to lie along
+## the near flat towards the pivot (a hammer grip on a knife; the hold in
+## ticket_flipper.tres turns the near flat and the thumb to the player).
+FOREARM = (0.0, -0.669, 0.743)
+HAND_SCALE = 0.8
+GRIP_SQUEEZE = 0.3
+GRIP_CONTACT = None
+THUMB_LIE = (1.7, -0.7, -0.4)
+## The hand sits this far below the middle of the handles (towards the butt), as a knife is held.
+GRIP_DROP = 0.016
+THUMB_LEN_SCALE = 0.78
 BAR_CORNER = 0.006
 
 
@@ -313,7 +320,8 @@ def build_ticket_flipper():
     # round shaft, so the solver curls each finger onto its rounded-rectangle section.
     bar = box_sdf((0, (PIV_Y + BUTT_Y) / 2 * k, 0), (1, 0, 0), (0, 1, 0),
                   (HALF_T * k + 0.0008, (PIV_Y - BUTT_Y) / 2 * k, BAR_B * k), corner=BAR_CORNER)
-    hand_r = grip_hand("R", (0, 0, 0), (0, 1, 0), FOREARM, M, [bar], tilt=GRIP_TILT, roll=GRIP_ROLL, contact_y=GRIP_CONTACT)
+    hand_r = grip_hand("R", (0, -GRIP_DROP, 0), (0, 1, 0), FOREARM, M, [bar], contact_y=GRIP_CONTACT, scale=HAND_SCALE,
+                       squeeze=GRIP_SQUEEZE, thumb_wrap=True, thumb_dir=THUMB_LIE, thumb_len=THUMB_LEN_SCALE)
     groups = {
         "HandleA": (handle_a, (0, PIV_Y * k, PIN_P * k), None),
         "Blade": (blade, (0, PIV_Y * k, PIN_P * k), "HandleA"),
