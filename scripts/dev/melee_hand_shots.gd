@@ -7,17 +7,21 @@ extends RefCounted
 ##
 ##   godot --path . --fixed-fps 30 -- --shot=/tmp/k.png --shot-weapon=ticket_flipper --shot-zombies=0 --shot-hud=0
 ##       --shot-run=res://scripts/dev/melee_hand_shots.gd [--shot-sets=stills,equip,tricks] [--shot-tricks=0,1,5]
-##       [--shot-step=0.1] [--shot-from=0] [--shot-to=99]
+##       [--shot-step=0.1] [--shot-from=0] [--shot-to=99] [--shot-cell=1]
 ##
 ## Trick ids: TicketFlipperTricks.Trick for the flipper, 0-2 (toss, twirl,
 ## snap) for the Glow Blade. --shot-from/--shot-to keep a strip to that window
-## of each trick (seconds), for close looks at a release or a catch.
+## of each trick (seconds), for close looks at a release or a catch; --shot-cell
+## scales the strips' cells (2: 800 x 600 each, with a window to match).
 
 const COLUMNS := 6
 const CELL := Vector2i(400, 300)
 ## The part of the screen the knife is held in (fractions of the frame).
 const CROP := Rect2(0.3, 0.2, 0.7, 0.8)
 const STILL_CROP := Rect2(0.35, 0.25, 0.65, 0.75)
+
+## The strips' cell size (CELL times --shot-cell).
+var _cell := CELL
 
 
 func run(shot: Node, director: RunDirector) -> void:
@@ -49,6 +53,7 @@ func run(shot: Node, director: RunDirector) -> void:
 
 
 func _tricks(shot: Node, view: WeaponView) -> void:
+	_cell = Vector2i(Vector2(CELL) * float(shot._arg("cell", "1")))
 	var driver: Object = view.get("_view_driver")
 	var flipper: TicketFlipperTricks = driver.get("_tricks") if driver.get("_tricks") is TicketFlipperTricks else null
 	var step := float(shot._arg("step", "0.1"))
@@ -82,15 +87,15 @@ func _frame(shot: Node, crop: Rect2, cell := true) -> Image:
 	var size := Vector2(full.get_size())
 	var img := full.get_region(Rect2i(Vector2i(crop.position * size), Vector2i(crop.size * size)))
 	if cell:
-		img.resize(CELL.x, CELL.y, Image.INTERPOLATE_BILINEAR)
+		img.resize(_cell.x, _cell.y, Image.INTERPOLATE_BILINEAR)
 	return img
 
 
 func _sheet(frames: Array[Image]) -> Image:
 	var rows := ceili(frames.size() / float(COLUMNS))
-	var sheet := Image.create(CELL.x * COLUMNS, CELL.y * rows, false, frames[0].get_format())
+	var sheet := Image.create(_cell.x * COLUMNS, _cell.y * rows, false, frames[0].get_format())
 	for i in frames.size():
-		sheet.blit_rect(frames[i], Rect2i(Vector2i.ZERO, CELL), Vector2i(i % COLUMNS * CELL.x, i / COLUMNS * CELL.y))
+		sheet.blit_rect(frames[i], Rect2i(Vector2i.ZERO, _cell), Vector2i(i % COLUMNS * _cell.x, i / COLUMNS * _cell.y))
 	return sheet
 
 

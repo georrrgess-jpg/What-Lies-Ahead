@@ -30,7 +30,7 @@ extends RefCounted
 ## Cues fire once as the clock passes them (sounds, a camera kick, sparkles).
 ## The latch swings out whenever the knife is not open and clicks home.
 ##
-## The model's axes: x across the bar (the fingers wrap its -x side), y up,
+## The model's axes: x across the bar (the palm on its +x flat, the fingertips on -x), y up,
 ## -z along the blade. Positions are built from the parts' rest transforms,
 ## so a new model with the same parts and pins keeps every trick in the hand.
 
@@ -42,19 +42,23 @@ const NORMAL: Array[int] = [Trick.BASIC, Trick.AERIAL, Trick.FAN, Trick.HELIX, T
 const LENGTHS: Array[float] = [3.0, 3.0, 3.0, 3.2, 3.2, 5.8]
 ## One inspect in this many is the JACKPOT.
 const RARE_EVERY := 15
-## The knife side on to the eye, the fist low right (camera space; see WeaponInspect.POSES),
-## its point tipped up to the left so the forearm runs out of the lower right corner.
-const SIDE_POS := Vector3(0.015, -0.055, -0.45)
-const SIDE_ROT := Vector3(38.0, 68.0, 6.0)
+## The knife held up in front of the eye (camera space; see WeaponInspect.POSES): its
+## near flat and the thumb turned to the player, the point tipped a little to the
+## left and away, so the forearm (132 degrees from the blade, on the spine's side)
+## runs out of the lower right corner as it does in the hold.
+const SIDE_POS := Vector3(0.03, -0.07, -0.4)
+const SIDE_ROT := Vector3(70.9, 50.6, -6.0)
 ## The latch's turn when it is swung out (Latch.x).
 const LATCH_OUT := -150.0
 ## Out to the finger side of the fist, clear of the fingers (view units).
-const SIDE_X := -0.072
+const SIDE_X := -0.058
 ## The roll round the hand: its radius and how far forward of the fist it rides.
-const ROLL_R := 0.088
-const ROLL_FWD := -0.13
+const ROLL_R := 0.066
+const ROLL_FWD := -0.1
 ## How far ahead of the grip the fan spins (view units, -z).
-const FAN_FWD := -0.06
+const FAN_FWD := -0.048
+## How far the knife lifts to clear the fist before it slides out beside it (view units).
+const LIFT := 0.056
 ## Eases for the stretch ending at a key.
 const L := 0   # linear (a knife spinning free)
 const S := 1   # ease in and out
@@ -291,7 +295,7 @@ func _aerial() -> Dictionary:
 ## back into the fist and flicks open.
 func _fan() -> Dictionary:
 	var centre := _pin.lerp(_butt, 0.5)
-	var up := Vector3(0.0, 0.07, 0.0)
+	var up := Vector3(0.0, LIFT, 0.0)
 	var side := Vector3(SIDE_X, 0.0, 0.0)
 	# It spins a little ahead of the knuckles, so the disc it sweeps clears the fist.
 	var spin := side + Vector3(0.0, 0.01, FAN_FWD)
@@ -322,8 +326,8 @@ func _fan() -> Dictionary:
 ## splitting into a butterfly each turn as it winds up and back down, then
 ## settles into the fist.
 func _helix() -> Dictionary:
-	var finger := Vector3(0.0, -0.03, _pin.z + 0.035)
-	var up := Vector3(0.0, 0.07, 0.0)
+	var finger := Vector3(0.0, -0.024, _pin.z + 0.028)
+	var up := Vector3(0.0, LIFT, 0.0)
 	var side := Vector3(SIDE_X, 0.0, 0.0)
 	return {
 		"wp": [[0.0, Vector3.ZERO], [0.35, Vector3(0.0, -0.01, 0.0)], [0.6, Vector3(0.0, 0.006, 0.0)], [1.1, Vector3(0.0, 0.02, 0.0)],
@@ -376,7 +380,7 @@ func _zen() -> Dictionary:
 ## sparkle, a burst of ticket confetti and a JACKPOT! sign.
 func _jackpot() -> Dictionary:
 	var centre := _pin.lerp(_butt, 0.3)
-	var up := Vector3(0.0, 0.07, 0.0)
+	var up := Vector3(0.0, LIFT, 0.0)
 	var side := Vector3(SIDE_X, 0.0, 0.0)
 	var lifted := Vector3(0.0, ROLL_R, 0.0)
 	var out := Vector3(0.0, ROLL_R, ROLL_FWD)
