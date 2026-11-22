@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_popcorn_stripe"
+display_name = "Popcorn Stripe"
+description = "Midnight-show popcorn box: wide red and cream stripes split by gold pinlines."
+slot = &"weapon_finish"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(0.7843, 0.06275, 0.1804, 1, 0.6431, 0.05098, 0.1451, 1)
+params = {
+"shader": "res://art/shaders/finish_s2_pattern.gdshader",
+"shader_params": {
+"pattern": 0,
+"color_b": Color(1, 0.9451, 0.8392, 1),
+"color_c": Color(1, 0.7608, 0.2902, 1),
+"roughness": 0.35
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2700

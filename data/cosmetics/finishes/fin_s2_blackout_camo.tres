@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_blackout_camo"
+display_name = "Blackout Camo"
+description = "Pixel camo for the dark: black, violet and plum, with the odd neon pixel lit."
+slot = &"weapon_finish"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.03922, 0.03529, 0.05098, 1, 0.03137, 0.02745, 0.03922, 1)
+params = {
+"shader": "res://art/shaders/finish_s2_pattern.gdshader",
+"shader_params": {
+"pattern": 17,
+"color_b": Color(0.1647, 0.102, 0.2392, 1),
+"color_c": Color(0.2941, 0.1647, 0.4, 1),
+"color_d": Color(0.7686, 0.4196, 1, 1)
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2717

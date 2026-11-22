@@ -78,20 +78,30 @@ func _fresh_profile() -> void:
 # --- Prize Prints (the full checks: tools/print_probe.gd) -----------------------------
 
 func _prints() -> void:
-	var s = load("res://data/prints/series_1.tres")
 	var rules = wallet.rules
-	_check("prints: a capsule costs a multiple of %d Sparks, at least a common" % rules.price_step,
-		s.capsule_price % rules.price_step == 0 and s.capsule_price >= rules.prices[0], str(s.capsule_price))
-	var rising := true
-	for i in range(1, 4):
-		rising = rising and s.token_value[i] > s.token_value[i - 1] and s.counter_price[i] > s.counter_price[i - 1]
-		rising = rising and s.counter_price[i] > s.token_value[i] * 3
-	_check("prints: tokens and Token Counter prices rise with rarity; a print costs more than 3 recycled", rising)
-	var only_finishes := true
-	for fid in s.finishes:
-		var it = cosmetics.item(fid)
-		only_finishes = only_finishes and it != null and it.slot == &"weapon_finish" and int(it.rarity) <= 3
-	_check("prints: the series holds weapon finishes only (no mastery camos)", only_finishes)
+	var all: Array = load("res://scripts/economy/prints/prize_prints.gd").all_series()
+	for s in all:
+		_check("prints: series %d: a capsule costs a multiple of %d Sparks, at least a common" % [s.number, rules.price_step],
+			s.capsule_price % rules.price_step == 0 and s.capsule_price >= rules.prices[0], str(s.capsule_price))
+		var rising := true
+		for i in range(1, 4):
+			rising = rising and s.token_value[i] > s.token_value[i - 1] and s.counter_price[i] > s.counter_price[i - 1]
+			rising = rising and s.counter_price[i] > s.token_value[i] * 3
+		_check("prints: series %d: tokens and Token Counter prices rise with rarity; a print costs more than 3 recycled" % s.number, rising)
+		var only_finishes := true
+		for fid in s.finishes:
+			var it = cosmetics.item(fid)
+			only_finishes = only_finishes and it != null and it.slot == &"weapon_finish" and int(it.rarity) <= 3
+		_check("prints: series %d holds weapon finishes only (no mastery camos)" % s.number, only_finishes)
+		if s.exclusive:
+			# Capsule-only: never sold, never a reward, so no price, and a
+			# GRANTED (kind 6) requirement nothing grants; the first print grants
+			# the item itself.
+			var exclusive := true
+			for fid in s.finishes:
+				var it = cosmetics.item(fid)
+				exclusive = exclusive and it.price == 0 and it.requirement != null and it.requirement.kind == 6 and not it.requirement.is_met()
+			_check("prints: series %d (%d finishes) is capsule-only: no price, no reward" % [s.number, s.finishes.size()], exclusive)
 
 
 # --- rules -------------------------------------------------------------------------

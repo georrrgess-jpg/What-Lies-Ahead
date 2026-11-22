@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_lobby_terrazzo"
+display_name = "Lobby Terrazzo"
+description = "The polished floor of the picture house: chips of colour and pearl set in cream."
+slot = &"weapon_finish"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.9373, 0.902, 0.8471, 1, 0.7647, 0.7373, 0.6941, 1)
+params = {
+"shader": "res://art/shaders/finish_s2_pattern.gdshader",
+"shader_params": {
+"pattern": 16,
+"color_b": Color(0.1137, 0.1059, 0.1647, 1),
+"color_c": Color(0.8392, 0.2196, 0.3098, 1),
+"color_d": Color(0.3098, 0.702, 0.7843, 1)
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2716

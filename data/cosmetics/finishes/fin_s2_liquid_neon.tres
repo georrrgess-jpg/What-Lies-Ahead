@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_liquid_neon"
+display_name = "Liquid Neon"
+description = "Black glass full of neon that flows like poured liquid, pink to violet to cyan. Kills make it flare."
+slot = &"weapon_finish"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.2471, 0.6431, 1, 0.2471, 0.8784, 1, 1)
+params = {
+"pulse": true,
+"shader": "res://art/shaders/finish_s2_liquid_neon.gdshader",
+"shader_params": {
+"color_b": Color(0.5451, 0.302, 1, 1)
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2719

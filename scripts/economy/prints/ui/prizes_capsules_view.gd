@@ -3,6 +3,9 @@ extends HBoxContainer
 ## The CAPSULES tab: the Prize Capsule machine alone, big and centred under a
 ## spotlight, with the luck meter and what earns capsules on its left, and
 ## the capsules held, OPEN CAPSULE, OPEN 5, BUY and the odds on its right.
+## Over the machine, one tab per series picks which series capsules open
+## (PrizePrints.select_series); the machine is painted for it and a line
+## under the tabs says what the series is and how much of it is collected.
 
 const SIDE_WIDTH := 430.0
 const SPOT := """shader_type canvas_item;
@@ -16,6 +19,8 @@ void fragment() {
 
 var _page: PrizesPage
 var _machine: CapsuleMachine
+var _series_tabs: KitTabs
+var _series_line: Label
 var _count: Label
 var _count_note: Label
 var _open: SignButton
@@ -76,9 +81,25 @@ func _build_luck() -> Control:
 
 
 func _build_machine() -> Control:
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.custom_minimum_size.x = 520
+	col.add_theme_constant_override("separation", UiKit.GAP_XS)
+	_series_tabs = KitTabs.make(20, true)
+	_series_tabs.add_theme_constant_override("separation", UiKit.GAP_XS)
+	for s in PrizePrints.all_series():
+		var tab := _series_tabs.add_tab(s.id, "SERIES %d  ·  %s" % [s.number, s.display_name.to_upper()])
+		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tab.tooltip_text = s.tagline
+	_series_tabs.tab_changed.connect(_on_series_picked)
+	col.add_child(_series_tabs)
+	_series_line = UiKit.label("", UiKit.SIZE_SMALL, UiKit.MUTED)
+	_series_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_series_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	col.add_child(_series_line)
 	var stage := Control.new()
-	stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	stage.custom_minimum_size.x = 520
+	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(stage)
 	var spot := ColorRect.new()
 	spot.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	spot.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -90,10 +111,17 @@ func _build_machine() -> Control:
 	stage.add_child(spot)
 	_machine = CapsuleMachine.new()
 	_machine.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_machine.series_text = "SERIES %d" % PrizePrints.series().number
-	_machine.series_name = PrizePrints.series().display_name.to_upper()
 	stage.add_child(_machine)
-	return stage
+	return col
+
+
+func _on_series_picked(id: StringName) -> void:
+	if _page.busy:
+		_series_tabs.select(PrizePrints.series().id)
+		return
+	PrizePrints.select_series(id)
+	refresh()
+	UiFx.pulse(_machine)
 
 
 func _build_actions() -> Control:
@@ -158,6 +186,10 @@ func _build_actions() -> Control:
 
 func refresh() -> void:
 	var s := PrizePrints.series()
+	_series_tabs.select(s.id)
+	_machine.dress(s)
+	var got := PrizePrints.collected(s)
+	_series_line.text = "%s  ·  %d of %d finishes collected" % [s.tagline, got.x, got.y]
 	var n := PrizePrints.capsules()
 	_machine.capsule_count = n
 	_count.text = "x%d" % n

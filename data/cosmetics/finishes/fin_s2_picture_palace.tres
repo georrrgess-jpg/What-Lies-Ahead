@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_picture_palace"
+display_name = "Picture Palace"
+description = "An art-deco cinema lobby: rows of gold fans with rays and rings on black lacquer."
+slot = &"weapon_finish"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.04314, 0.03922, 0.04706, 1, 0.03529, 0.03137, 0.03529, 1)
+params = {
+"shader": "res://art/shaders/finish_s2_pattern.gdshader",
+"shader_params": {
+"pattern": 7,
+"color_b": Color(0.1647, 0.1333, 0.08627, 1),
+"color_c": Color(0.949, 0.7608, 0.3529, 1)
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2707

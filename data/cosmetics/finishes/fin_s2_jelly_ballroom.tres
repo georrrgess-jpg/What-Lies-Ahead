@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_jelly_ballroom"
+display_name = "Jelly Ballroom"
+description = "A night aquarium: glowing jellyfish pulse their way up through rippling water."
+slot = &"weapon_finish"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.007843, 0.06275, 0.1608, 1, 0.3529, 0.251, 0.149, 1)
+params = {
+"pulse": true,
+"shader": "res://art/shaders/finish_s2_jellyfish.gdshader",
+"shader_params": {
+"color_b": Color(1, 0.4, 0.749, 1),
+"color_c": Color(0.6, 0.4, 1, 1),
+"color_d": Color(0.302, 0.949, 1, 1)
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2724

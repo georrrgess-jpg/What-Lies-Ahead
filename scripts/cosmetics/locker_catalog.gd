@@ -144,8 +144,11 @@ static func unlock_text(it: CosmeticItem) -> String:
 	return it.requirement.describe()
 
 
-## The requirement in a few characters for an item card: "Lv 5", "Rank 3".
+## The requirement in a few characters for an item card: "Lv 5", "Rank 3"
+## (params.unlock_short overrides it).
 static func unlock_short(it: CosmeticItem) -> String:
+	if it.params.has("unlock_short"):
+		return String(it.params["unlock_short"])
 	var r := it.requirement
 	if r == null:
 		return ""

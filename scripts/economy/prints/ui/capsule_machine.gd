@@ -24,9 +24,11 @@ const DESIGN := Vector2(440, 560)
 ## Where the chute is, in the design space.
 const CHUTE := Rect2(250, 444, 110, 80)
 
-## The sign: "SERIES 1" over the series name.
+## The sign: "SERIES 1" over the series name (dress() sets them).
 var series_text := "SERIES 1"
 var series_name := ""
+## The capsules in the globe (dress() sets them from the series).
+var capsule_colors: Array = CAPSULE_COLORS.duplicate()
 ## How many capsules the player has (drawn in the coin window).
 var capsule_count := 0
 ## 0-1: how hard the globe churns (the crank sets it).
@@ -66,6 +68,22 @@ func _init() -> void:
 		for k in 17:
 			var a := PI + PI * k / 16.0
 			_half.append(Vector2(cos(a), sin(a)))
+
+
+## Paints the machine for a series: its sign, body colours and capsules.
+func dress(s: PrintSeries) -> void:
+	series_text = "SERIES %d" % s.number
+	series_name = s.display_name.to_upper()
+	var paint := s.machine_colors
+	if paint.size() >= 3:
+		_body_box.bg_color = paint[0]
+		_body_box.border_color = paint[1]
+		_plate_box.bg_color = paint[2]
+		_foot_box.bg_color = paint[1].darkened(0.25)
+		_foot_box.border_color = paint[1].darkened(0.45)
+	if not s.capsule_colors.is_empty():
+		capsule_colors = Array(s.capsule_colors)
+	queue_redraw()
 
 
 static func _flat(fill: Color, border: Color, radius: int, width: int) -> StyleBoxFlat:
@@ -212,7 +230,7 @@ func _draw_capsules(c: Vector2, r: float) -> void:
 		var p := c + rest.rotated(spin * 0.3) * (1.0 - churn * 0.2) + toss + bob
 		if p.distance_to(c) > r - cr:
 			p = c + (p - c).normalized() * (r - cr)
-		_capsule(p, cr, CAPSULE_COLORS[i % CAPSULE_COLORS.size()], s.y * TAU * 0.3 + spin + sin(_time + s.x * 5.0) * 0.1)
+		_capsule(p, cr, capsule_colors[i % capsule_colors.size()], s.y * TAU * 0.3 + spin + sin(_time + s.x * 5.0) * 0.1)
 
 
 ## One two-tone capsule: a coloured top half, a cream bottom, a seam and a

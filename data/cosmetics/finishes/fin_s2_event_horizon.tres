@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_event_horizon"
+display_name = "Event Horizon"
+description = "Chase print. Black holes in a deep starfield, each with a swirling accretion disc lensed over the top. Kills flare the discs."
+slot = &"weapon_finish"
+rarity = 3
+requirement = SubResource("req")
+colors = PackedColorArray(1, 0.502, 0.1216, 1, 0.07843, 0.07059, 0.1098, 1)
+params = {
+"pulse": true,
+"shader": "res://art/shaders/finish_s2_event_horizon.gdshader",
+"shader_params": {
+"color_b": Color(0.549, 0.251, 1, 1),
+"color_c": Color(1, 0.949, 0.851, 1)
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2728

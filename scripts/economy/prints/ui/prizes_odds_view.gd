@@ -2,13 +2,14 @@ class_name PrizesOddsView
 extends ScrollContainer
 ## The ODDS & INFO tab: three columns of panels. The published odds per
 ## capsule (with bars) and the luck meter; what a print rolls (rare prints,
-## shine grades, serials); how capsules are earned, repeats and Capsule Credits, and
-## every finish of the series with how many of its prints are held.
+## shine grades, serials); how capsules are earned, and every finish of the
+## series picked on the CAPSULES tab with how many of its prints are held
+## (chase prints marked).
 
 const COLUMN := 520.0
 
 var _page: PrizesPage
-var _series: GridContainer
+var _series_box: VBoxContainer
 
 
 func _init(page: PrizesPage) -> void:
@@ -41,11 +42,8 @@ func _init(page: PrizesPage) -> void:
 			"%d per milestone" % s.capsules_per_milestone, "Buy with Arcade Tokens: %s each (no real money)" % Wallet.format(s.capsule_price)]:
 		earn.append(UiKit.label("·  " + line, UiKit.SIZE_SMALL, UiKit.CREAM))
 	c.add_child(_panel("EARN CAPSULES", "", earn))
-	_series = GridContainer.new()
-	_series.columns = 2
-	_series.add_theme_constant_override("h_separation", UiKit.GAP_L)
-	_series.add_theme_constant_override("v_separation", 0)
-	c.add_child(_panel("SERIES %d  ·  %s" % [s.number, s.display_name.to_upper()], "%d finishes" % s.finishes.size(), [_series]))
+	_series_box = VBoxContainer.new()
+	c.add_child(_series_box)
 
 
 func _column(parent: Control) -> VBoxContainer:
@@ -98,12 +96,22 @@ func _row(caption: String, value: String, color: Color) -> Control:
 
 
 func refresh() -> void:
-	for c in _series.get_children():
+	for c in _series_box.get_children():
 		c.queue_free()
+	var s := PrizePrints.series()
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", UiKit.GAP_L)
+	grid.add_theme_constant_override("v_separation", 0)
 	var by := PrizePrints.by_rarity()
 	for r in range(3, -1, -1):
 		for fid in by.get(r, []):
 			var fin := Cosmetics.item(fid)
 			var held := PrizePrints.prints_of(fid).size()
-			var text := "%s  %s" % [fin.display_name, ("×%d" % held) if held > 0 else "-"]
-			_series.add_child(UiKit.label(text, UiKit.SIZE_SMALL, PrizesPage.rarity_color(r) if held > 0 else Color(PrizesPage.rarity_color(r), 0.5), held > 0))
+			var text := "%s%s  %s" % ["CHASE  " if fid in s.chase else "", fin.display_name, ("×%d" % held) if held > 0 else "-"]
+			grid.add_child(UiKit.label(text, UiKit.SIZE_SMALL, PrizesPage.rarity_color(r) if held > 0 else Color(PrizesPage.rarity_color(r), 0.5), held > 0))
+	var rows: Array = [grid]
+	if s.exclusive:
+		rows.push_front(UiKit.body("Capsule-only: these finishes are never sold. Your first print of one adds its plain finish to the Locker.", COLUMN - 40.0, UiKit.SIZE_SMALL, UiKit.CREAM))
+	var got := PrizePrints.collected(s)
+	_series_box.add_child(_panel("SERIES %d  ·  %s" % [s.number, s.display_name.to_upper()], "%d of %d collected" % [got.x, got.y], rows))

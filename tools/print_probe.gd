@@ -13,6 +13,11 @@ extends SceneTree
 ##              (no prints section) loads with nothing
 ##   actions    equip / take off, favourites, recycle, trade-up, Token Counter,
 ##              buying capsules, the run settlement (paid once)
+##   multi      the series together: each finish in one series, shared rules,
+##              picking a series (saved; an unknown pick falls back to the
+##              newest), capsules open the picked series only, an exclusive
+##              series unlocks the plain finish with its first print, trade-ups
+##              mint from the majority series, chase prints, Reduce motion
 ##
 ## Script mode compiles this file before the autoloads exist, so it only uses
 ## untyped references to game classes. It never touches the real save.
@@ -50,6 +55,7 @@ func _run() -> void:
 	_minting()
 	_saves()
 	_actions()
+	_multi()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SCRATCH))
 	print("[prints] %s" % ("ALL PASSED" if _failed == 0 else "%d FAILED" % _failed))
 	quit(1 if _failed > 0 else 0)
@@ -73,23 +79,27 @@ func _near(count: int, n: int, p: float, sigmas := 4.0) -> bool:
 
 
 func _series() -> void:
-	var s = Prints.series()
-	var by: Dictionary = Prints.by_rarity()
+	for s in Prints.all_series():
+		_one_series(s)
+
+
+func _one_series(s) -> void:
+	var by: Dictionary = Prints.by_rarity(s)
 	var sizes := []
 	for r in 4:
 		sizes.append((by.get(r, []) as Array).size())
 	var odds_sum := 0.0
 	for o in s.odds:
 		odds_sum += o
-	_check("series: %d finishes, by rarity %s" % [s.finishes.size(), str(sizes)], s.finishes.size() >= 30 and not sizes.has(0))
-	_check("series: odds add up to 1", absf(odds_sum - 1.0) < 0.0001, "%.4f" % odds_sum)
+	_check("series %d: %d finishes, by rarity %s" % [s.number, s.finishes.size(), str(sizes)], s.finishes.size() >= 30 and not sizes.has(0))
+	_check("series %d: odds add up to 1" % s.number, absf(odds_sum - 1.0) < 0.0001, "%.4f" % odds_sum)
 	var shaders := true
 	for f in s.finishes:
 		var it = cosmetics.item(f)
 		if it == null or not String(it.params.get("shader", "")).contains("/finish_") or it.slot != &"weapon_finish":
 			shaders = false
 			print("[prints]       not a finish_* shader finish: %s" % f)
-	_check("series: every finish wears the print layer (finish_* shader)", shaders)
+	_check("series %d: every finish wears the print layer (finish_* shader)" % s.number, shaders)
 
 
 func _odds() -> void:
@@ -272,3 +282,85 @@ func _actions() -> void:
 	Prints.set_auto_recycle(true)
 	_check("actions: grade names", Look.grade_name({"shine": 0.1}) == "Factory" and Look.grade_name({"shine": 0.7}) == "Polished" and Look.grade_name({"shine": 0.95}) == "Mint")
 	_check("actions: serial stamps", Look.serial_text(7) == "#007" and Look.serial_tag(1) == "FIRST EDITION" and Look.serial_tag(77) == "LUCKY 7s" and Look.serial_tag(50) == "")
+
+
+func _multi() -> void:
+	_fresh_profile()
+	var all: Array = Prints.all_series()
+	var newest = all[all.size() - 1]
+	var owner := {}
+	var twice := []
+	var numbered := true
+	for i in all.size():
+		numbered = numbered and all[i].number == i + 1
+		for f in all[i].finishes:
+			if owner.has(f):
+				twice.append(f)
+			owner[f] = all[i].id
+	_check("multi: %d series, numbered in order, each finish in one series" % all.size(), all.size() >= 2 and numbered and twice.is_empty(), str(twice))
+	var same := true
+	for s in all:
+		for key in ["capsule_price", "odds", "epic_pity", "legendary_pity", "glitter_chance", "holo_chance", "misprint_chance",
+				"polished_at", "mint_at", "low_serial", "token_value", "counter_price", "trade_up_count", "capsules_per_alpha",
+				"capsules_per_bounty", "capsules_daily_clear", "contracts_per_capsule", "capsules_per_milestone"]:
+			if s.get(key) != all[0].get(key):
+				same = false
+				print("[prints]       %s differs in %s" % [key, s.id])
+	_check("multi: every series shares the capsule rules (one capsule count, luck meter and Credit balance)", same)
+	_check("multi: a fresh profile opens the newest series", Prints.series() == newest)
+	Prints.select_series(all[0].id)
+	profile.save_profile()
+	profile.load_profile()
+	_check("multi: the picked series is saved", Prints.series() == all[0])
+	profile.section("prints")["series"] = "series_404"
+	_check("multi: an unknown pick falls back to the newest", Prints.series() == newest)
+	for s in all:
+		Prints.select_series(s.id)
+		var stray := 0
+		for i in 300:
+			if not (StringName(String(Prints.roll_capsule()["print"]["f"])) in s.finishes):
+				stray += 1
+		_check("multi: 300 capsules of series %d drop only its finishes" % s.number, stray == 0, "%d strays" % stray)
+	# Exclusive series: capsule-only, the first print unlocks the plain finish.
+	_fresh_profile()
+	for s in all:
+		var locked := true
+		for f in s.finishes:
+			var it = cosmetics.item(f)
+			if s.exclusive and (cosmetics.is_owned_anywhere(it) or cosmetics.is_for_sale(it) or it.price != 0):
+				locked = false
+		if s.exclusive:
+			_check("multi: series %d finishes are capsule-only (not owned, never for sale)" % s.number, locked)
+	var ex = null
+	for s in all:
+		if s.exclusive:
+			ex = s
+	if ex:
+		Prints.select_series(ex.id)
+		var res: Dictionary = Prints.roll_capsule()
+		var fin = Prints.finish_of(res["print"])
+		_check("multi: the first print of an exclusive finish unlocks its plain finish", bool(res["unlocked"]) and cosmetics.is_owned(fin))
+		var again: Dictionary = Prints._mint(fin.id, "capsule")
+		_check("multi: a repeat unlocks nothing new", not bool(again["unlocked"]))
+		var chase_ok: bool = not ex.chase.is_empty()
+		for f in ex.chase:
+			chase_ok = chase_ok and f in ex.finishes and int(cosmetics.item(f).rarity) == 3 and Prints.is_chase(f)
+		_check("multi: series %d names %d chase prints, all Legendary" % [ex.number, ex.chase.size()], chase_ok)
+		var still := true
+		for f in ex.finishes:
+			var it = cosmetics.item(f)
+			if int(it.rarity) >= 2 and not bool(it.params.get("pulse", false)):
+				still = false
+				print("[prints]       animated but not held still by Reduce motion: %s" % f)
+		_check("multi: every Epic and Legendary of series %d follows Reduce motion (params.pulse)" % ex.number, still)
+	var plain: Dictionary = Prints._mint(all[0].finishes[0], "capsule")
+	_check("multi: a print of a Shop series unlocks nothing", not bool(plain["unlocked"]))
+	# Trade-up: the majority series.
+	_fresh_profile()
+	var picked := []
+	for i in 5:
+		var s = all[0] if i < 3 else all[1]
+		var f: StringName = Prints.by_rarity(s)[0][i % 2]
+		picked.append(Prints._mint(f, "counter")["print"])
+	var up: Dictionary = Prints.trade_up(picked)
+	_check("multi: 3 prints of series 1 and 2 of series 2 trade up into series 1", not up.is_empty() and Prints.series_of_print(up["print"]) == all[0])

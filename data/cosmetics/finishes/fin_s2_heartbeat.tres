@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_heartbeat"
+display_name = "Heartbeat"
+description = "A bedside monitor: EKG traces drawn by a running sweep. Every kill races the heart red."
+slot = &"weapon_finish"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.2549, 1, 0.451, 1, 0.1608, 0.1765, 0.2, 1)
+params = {
+"pulse": true,
+"shader": "res://art/shaders/finish_s2_heartbeat.gdshader",
+"shader_params": {
+"color_b": Color(0.2549, 0.851, 1, 1),
+"color_c": Color(1, 0.3529, 0.6471, 1),
+"color_d": Color(1, 0.1216, 0.1647, 1)
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2721
