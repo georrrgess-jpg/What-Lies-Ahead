@@ -84,7 +84,10 @@ district areas) 252 walkers, 0 stuck, all arrived within 58 s; the bot (`--autop
 --level=endless_studio --weapon=ion_carbine --difficulty=standard --aim-error=2.5`, a level-40
 profile) was still alive on wave 35 at the 1500 s cap, gates on waves 7, 10, 16 and 19, bench
 tiers on 5, 12 and 21; 895 spawns, none within 14 m, 5.7% in view, closest 15.5 m, 31 m of
-route, no wave longer than 72 s (nothing stuck).
+route, no wave longer than 72 s (nothing stuck). `tools/perf_probe.gd --only=load,crowd`
+(rendered, llvmpipe, a loaded machine, so read the CPU columns side by side only): crowd of 14
+at the player spawn, Starlot Studios 1648 draws, 757k primitives, 1584 ms; Ashfall City 1443
+draws, 1087k primitives, 1909 ms.
 
 ## Records and unlocks
 

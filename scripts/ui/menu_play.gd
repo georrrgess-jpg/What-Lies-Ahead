@@ -696,7 +696,9 @@ func _refresh_endless(level: LevelData) -> void:
 	_art.visible = false
 	_show_hero(level)
 	_fill_map_tabs(level)
-	_lock_text.text = lock_note
+	# The caption names the goal: the lock row shows the progress (short, so
+	# the board keeps its width).
+	_lock_text.text = EndlessCard.lock_progress(level, true)
 	_lock.visible = lock_note != ""
 	var unlocked := GameData.is_level_unlocked(level)
 	_deploy.disabled = not unlocked

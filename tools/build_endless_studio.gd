@@ -336,6 +336,11 @@ func _lot_blocks() -> void:
 	print("build_endless_studio: %d blocks" % count)
 
 
+## True inside a district (not a passage or an alley: their walls stay plain).
+func _faces_district(p: Vector2) -> bool:
+	return [FRONT, WEST, STAGE, MONSTER, PREMIERE].any(func(r: Rect2) -> bool: return r.has_point(p))
+
+
 func _is_floor(p: Vector2) -> bool:
 	for r in _walk:
 		if r.has_point(p):
@@ -415,7 +420,7 @@ func _face_dressing(r: Rect2, h: float, kind: int) -> void:
 		for k in n:
 			var t := (k + 0.5) * length / n
 			var p := start + along * t
-			if not _is_floor(p + out * 0.6):
+			if not _faces_district(p + out * 0.6):
 				continue
 			var at := Vector3(p.x + out.x * 0.12, 0, p.y + out.y * 0.12)
 			match kind:
@@ -435,9 +440,7 @@ func _storefront(at: Vector3, yaw: float, out: Vector3, k: int) -> void:
 	_part(dressing, Vector3(4.0, 2.2, 0.06), at + Vector3(0, 1.7, 0) + out * 0.02, glass, Vector3(0, yaw, 0))
 	_part(dressing, Vector3(4.4, 0.25, 0.12), at + Vector3(0, 0.55, 0) + out * 0.05, _mat("deco_gold", Color(0.95, 0.72, 0.3), 0.3, Color(0.5, 0.35, 0.1), 0.4), Vector3(0, yaw, 0))
 	var stripes := [_mat("awning_red", Color(0.7, 0.1, 0.15), 0.8), _mat("awning_teal", Color(0.1, 0.45, 0.5), 0.8), _mat("awning_cream", Color(0.92, 0.88, 0.78), 0.8)]
-	# Tilted down and out: about the face's own axis (local X), outward = local +Z or -Z.
-	var tilt := deg_to_rad(18.0) * signf((Basis(Vector3.UP, yaw) * Vector3(0, 0, 1)).dot(out))
-	_part(dressing, Vector3(4.4, 0.08, 1.4), at + Vector3(0, 3.25, 0) + out * 0.65, stripes[k % 3], Vector3(tilt, yaw, 0))
+	_part(dressing, Vector3(4.4, 0.12, 1.2), at + Vector3(0, 3.25, 0) + out * 0.6, stripes[k % 3], Vector3(0, yaw, 0))
 	for row in 2:
 		for col in [-1.0, 1.0]:
 			var lit := (k + row + int(col)) % 3 == 0

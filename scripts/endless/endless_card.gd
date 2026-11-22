@@ -56,13 +56,15 @@ func refresh() -> void:
 
 
 ## What still locks endless `endless_level`, with the progress toward a wave
-## goal ("BEST WAVE 22 / 30"); "" when it is open.
-static func lock_progress(endless_level: LevelData) -> String:
+## goal ("REACH WAVE 30 · BEST WAVE 22 / 30"; `short`: the progress alone);
+## "" when it is open.
+static func lock_progress(endless_level: LevelData, short := false) -> String:
 	var req := endless_level.requirement
 	if req == null or req.is_met():
 		return ""
 	if req.kind == Requirement.Kind.ENDLESS_WAVE:
-		return "REACH WAVE %d  ·  BEST WAVE %d / %d" % [req.amount, mini(EndlessRecords.best_wave(), req.amount), req.amount]
+		var progress := "BEST WAVE %d / %d" % [mini(EndlessRecords.best_wave(), req.amount), req.amount]
+		return progress if short else "REACH WAVE %d  ·  %s" % [req.amount, progress]
 	return req.describe().to_upper()
 
 
