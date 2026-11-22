@@ -201,10 +201,11 @@ def build_claw_grabber():
     bezel.rotation_euler = rad(90, 18, 0)
     shell.append(bezel)
     # Purple marquee stripes and the chrome screws on the cabinet flanks.
-    for side in (-1, 1):
+    # (left flank only: the right one is the charm's side, kept flat under the lug)
+    for side in (-1,):
         shell.append(box(f"FlankStripe{side}", (0.0012, BASE_Y1 - BASE_Y0 - 0.02, 0.004), (side * (CAB_X + 0.0004), base_cy + 0.01, 0.012),
                          bevel=0.0, m=M["trim"]))
-    shell += screws("CabScrew", [(-CAB_X - 0.0005, 0.075, -0.018), (CAB_X + 0.0005, 0.075, -0.018), (CAB_X + 0.0005, -0.062, -0.018)], chrome)
+    shell += screws("CabScrew", [(-CAB_X - 0.0005, 0.075, -0.018), (CAB_X + 0.0005, -0.062, -0.018)], chrome)
     # The marquee bulbs: dim sockets down both sides of the header (the lit ones are their own nodes).
     lit = []
     for k in range(2 * BULBS):
@@ -221,9 +222,9 @@ def build_claw_grabber():
                                    (0.0, 0.066, 0.007)]):
         m = plush[k % len(plush)]
         shell += prize(f"Prize{k}", (x, y, z_floor + r * 0.9 + (0.004 if k % 3 == 1 else 0.0)), r, m, plush[(k + 2) % len(plush)])
-    lug, charm_point = charm_lug(CAB_X, 0.048, -0.014, M, out=1.0)
+    lug, charm_point = charm_lug(CAB_X, 0.048, 0.05, M, out=1.0)
     shell += lug
-    sight_rear, sight_front = sights_notch(0.0, CASE_Y0 + 0.004, CASE_Y1 - 0.004, RAIL_TOP, RAIL_TOP, z_line, M, gap=0.015)
+    sight_rear, sight_front = sights_notch(0.0, CASE_Y0 + 0.004, CASE_Y1 + 0.002, RAIL_TOP, RAIL_TOP, z_line, M, gap=0.015)
 
     # The big claw on its cable at the muzzle.
     hub, prongs, pivots = claw_parts("Big", CLAW_SCALE, chrome, M["trim"], M["cell"])
@@ -272,14 +273,14 @@ def build_claw_grabber():
         ob.location = (ob.location[0] + token_c[0], ob.location[1] + token_c[1], ob.location[2] + token_c[2])
 
     cell = [box("CreditScreen", (0.032, 0.002, 0.012), (0, BASE_Y0 - 0.0028, 0.004), bevel=0.0006, m=M["cell"])]
-    decal = [side_emblem("Emblem", star_outline(0.011, 0.005), CAB_X + 0.0003, -0.028, -0.008, M["decal"], depth=0.004)]
+    decal = [side_emblem("Emblem", star_outline(0.011, 0.005), CAB_X + 0.0003, -0.05, -0.008, M["decal"], depth=0.004)]
     arm_r, elbow_r = firing_hand(G, M, (0.42, -0.5, -0.36))
     arm_l, elbow_l = cup_hand(G, M, (-0.55, -0.32, -0.32))
     groups = {
         "Shell": (shell, (0, 0, 0), None),
         "Glass": (case_glass_parts, (0, 0, 0), None),
         "IronSightRear": (sight_rear, (0, CASE_Y0 + 0.004, RAIL_TOP), None),
-        "IronSightFront": (sight_front, (0, CASE_Y1 - 0.004, RAIL_TOP), None),
+        "IronSightFront": (sight_front, (0, CASE_Y1 + 0.002, RAIL_TOP), None),
         "Claw": (hub, claw_c, None),
         "Spool": (spool, (0, BASE_Y1 + 0.022, CHUTE_Z), None),
         "Joystick": (joystick, (jx, jy, jz), None),

@@ -11,10 +11,10 @@ extends RefCounted
 ## reload sound (clw_reload), timed for WeaponData.reload_time.
 
 ## Where the token starts in the hand and lines up outside the slot (model space, from its rest in the slot).
-const TOKEN_HAND := Vector3(-0.025, -0.05, 0.02)
+const TOKEN_HAND := Vector3(-0.05, -0.04, 0.03)
 const TOKEN_LINE := Vector3(-0.016, 0.0, 0.0)
 ## How far the claw is reeled up into the chute (model +Z is toward the player).
-const CLAW_UP := Vector3(0.0, 0.0, 0.026)
+const CLAW_UP := Vector3(0.0, 0.0, 0.012)
 const PRONG_OPEN := -26.0
 const SPARKS := [Color(0.22, 0.94, 1.0), Color(1.0, 0.31, 0.64), Color(1.0, 0.96, 0.88)]
 const GOLD := [Color(1.0, 0.82, 0.25), Color(1.0, 0.96, 0.88)]
