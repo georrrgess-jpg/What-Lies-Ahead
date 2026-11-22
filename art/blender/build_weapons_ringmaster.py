@@ -21,11 +21,11 @@ scripts/weapons/reloads/ringmaster_reload.gd:
   Handle      the brass charging handle on the left flank (pivot at its
               root; it racks back along -Y)
   Hat         the top-hat flash hider (pivot on the bore at the brim)
-  Tassel      the gold tassel on the sling's front swivel (pivot at the
-              swivel; it sways)
-  Spot        the little brass spotlight on the handguard's nose (its lens
-              glows through the Main Event)
-  Cell        the gold glow strips and the spotlight lens
+  Tassel      the gold tassel on the sling swivel left of the receiver,
+              behind the grip (pivot at the swivel; it sways)
+  Spot        the little brass spotlight under the barrel's front, its lens
+              glowing (it sweeps through the Main Event)
+  Cell        the gold glow strips
 
     python art/blender/build_weapons_ringmaster.py
 """
@@ -38,14 +38,14 @@ from weapon_kit import *  # noqa: F401,F403
 from weapon_kit import _finish_part  # noqa: E402
 
 ## The drum: axle (y, z), casing radius, half width across X.
-DRUM_Y = 0.158
+DRUM_Y = 0.162
 DRUM_Z = -0.08
-DRUM_R = 0.063
+DRUM_R = 0.06
 DRUM_HALF = 0.03
 ## The three rings on each face: (inner, outer) radius.
-RING_OUTER = (0.045, 0.0595)
-RING_MID = (0.028, 0.042)
-RING_HUB = (0.0, 0.025)
+RING_OUTER = (0.043, 0.0565)
+RING_MID = (0.027, 0.04)
+RING_HUB = (0.0, 0.024)
 BULBS_OUTER = 12
 BULBS_MID = 8
 BORE_Z = 0.034
@@ -53,8 +53,8 @@ RAIL_TOP = 0.098
 HANDGUARD_TOP = 0.072
 ## The charging handle's root on the left flank.
 HANDLE = (-0.04, 0.085, 0.05)
-## The sling's front swivel (left of the handguard) and the top hat's brim.
-SWIVEL = (-0.034, 0.335, 0.0)
+## The sling's swivel (left of the receiver, behind the grip) and the top hat's brim.
+SWIVEL = (-0.036, -0.14, 0.0)
 HAT_Y = 0.43
 
 
@@ -139,8 +139,8 @@ def build_ringmaster():
     velvet = mat("Velvet", "#5a0a1c", rough=0.85)
     hat_black = mat("HatSilk", "#141018", rough=0.32, metal=0.1)
     grip_loc = (0, -0.036, -0.11)
-    grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.066, 0.088, 0.182), body_bottom=-0.012, guard_len=0.088)
-    fore = (0, 0.3, -0.052)
+    grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.066, 0.088, 0.182), body_bottom=-0.012)
+    fore = (0, 0.335, -0.052)
     dy, dz = DRUM_Y, DRUM_Z
     z_line = RAIL_TOP + SIGHT_HEIGHT
 
@@ -156,13 +156,13 @@ def build_ringmaster():
         box("MagWell", (0.05, 0.05, 0.02), (0, dy, -0.018), bevel=0.005, m=brass),
         box("MagWellLip", (0.054, 0.054, 0.005), (0, dy, -0.027), bevel=0.002, m=gold),
         # The handguard: crimson, ringed with gold bands, brass vents with star cut-outs.
-        loft("Handguard", [(0.165, 0.03, 0.036, 0.036, 0.014), (0.2, 0.031, 0.037, 0.036, 0.015), (0.33, 0.029, 0.035, 0.036, 0.014),
-                           (0.35, 0.025, 0.03, 0.036, 0.012)], M["shell"]),
+        loft("Handguard", [(0.165, 0.03, 0.036, 0.036, 0.014), (0.2, 0.031, 0.037, 0.036, 0.015), (0.345, 0.029, 0.035, 0.036, 0.014),
+                           (0.365, 0.025, 0.03, 0.036, 0.012)], M["shell"]),
         ring("GuardBand0", 0.0345, 0.0035, 0.2, z=0.036, m=gold, segs=28),
-        ring("GuardBand1", 0.0335, 0.0035, 0.322, z=0.036, m=gold, segs=28),
+        ring("GuardBand1", 0.0335, 0.0035, 0.338, z=0.036, m=gold, segs=28),
         # The barrel out of the handguard, a brass collar and the top hat.
-        ycyl("Barrel", 0.0125, 0.09, 0.385, z=BORE_Z, m=M["dark"], segs=18),
-        ring("BarrelCollar", 0.0145, 0.004, 0.36, z=BORE_Z, m=brass, segs=18),
+        ycyl("Barrel", 0.0125, 0.08, 0.39, z=BORE_Z, m=M["dark"], segs=18),
+        ring("BarrelCollar", 0.0145, 0.004, 0.372, z=BORE_Z, m=brass, segs=18),
         # Vertical foregrip: a gold-capped cane handle.
         box("ForegripMount", (0.04, 0.05, 0.026), (0, fore[1], -0.002), bevel=0.007, m=M["dark"]),
         cyl("Foregrip", 0.019, 0.1, fore, segs=20, bevel=0.006, m=M["dark"]),
@@ -190,9 +190,10 @@ def build_ringmaster():
     shell += top_rail("TopRail", -0.105, 0.055, RAIL_TOP, M, width=0.028)
     sight_rear, sight_front = sights_ghost_ring(0.0, -0.11, 0.31, RAIL_TOP, HANDGUARD_TOP, z_line, M, radius=0.016)
     shell += bolts("Pin", [(-0.037, -0.11, 0.0), (0.037, 0.11, 0.0), (-0.037, 0.11, 0.0)], brass, radius=0.0045, height=0.004)
-    # The charm lug on the stock's right flank, behind the hands.
-    lug, charm_point = charm_lug(0.032, -0.18, 0.0, M, out=1.0)
+    # The charm lug on the stock's left flank near the butt, on a foot out of the stock.
+    lug, charm_point = charm_lug(-0.031, -0.275, 0.03, M, out=-1.0)
     shell += lug
+    shell.append(box("CharmLugFoot", (0.01, 0.022, 0.016), (-0.028, -0.275, 0.034), bevel=0.003, m=M["dark"]))
 
     # The drum: crimson casing between brass rims, a feed neck up into the well.
     drum = [
@@ -288,17 +289,17 @@ def build_ringmaster():
                                                 (sx_ - 0.004 + math.cos(a) * 0.0065, sy_ - 0.006 + math.sin(a) * 0.0065, sz_ - 0.072)],
                            0.0012, m=gold, segs=4, radius_end=0.0008))
 
-    # The spotlight on the handguard's nose: a brass can with a glowing lens.
-    spot_at = (0.0, 0.336, -0.006)
+    # The spotlight under the barrel's front: a brass can with a glowing lens.
+    spot_at = (0.0, 0.395, 0.0)
     spot = [ycyl("SpotCan", 0.011, 0.026, spot_at[1], z=spot_at[2], m=brass, segs=18, bevel=0.002),
             ring("SpotRim", 0.011, 0.0022, spot_at[1] + 0.013, z=spot_at[2], m=gold, segs=18),
-            box("SpotYoke", (0.02, 0.012, 0.012), (0, spot_at[1] - 0.004, spot_at[2] + 0.012), bevel=0.003, m=M["dark"])]
-    cell = [ycyl("SpotLens", 0.0088, 0.003, spot_at[1] + 0.0135, z=spot_at[2], m=M["cell"], segs=18, bevel=0.0),
-            box("CellStripL", (0.004, 0.11, 0.006), (-0.0368, 0.0, 0.0), bevel=0.001, m=M["cell"]),
+            box("SpotYoke", (0.014, 0.012, 0.016), (0, spot_at[1] - 0.004, spot_at[2] + 0.016), bevel=0.003, m=M["dark"]),
+            ycyl("SpotLens", 0.0088, 0.003, spot_at[1] + 0.0135, z=spot_at[2], m=M["cell"], segs=18, bevel=0.0)]
+    cell = [box("CellStripL", (0.004, 0.11, 0.006), (-0.0368, 0.0, 0.0), bevel=0.001, m=M["cell"]),
             box("CellStripR", (0.004, 0.11, 0.006), (0.0368, 0.0, 0.0), bevel=0.001, m=M["cell"])]
 
     emblem = star_outline(0.016, 0.007)
-    decal = [side_emblem("Emblem", emblem, -0.0385, -0.215, 0.02, M["decal"])]
+    decal = [side_emblem("Emblem", emblem, -0.0315, -0.18, 0.016, M["decal"])]
     arm_r, elbow_r = firing_hand(G, M, (0.17, -0.62, -0.44))
     arm_l, elbow_l = vertical_hand(fore, 0.019, 0.019, 0.1, M, (-0.3, -0.1, -0.62))
     drum_c = (0, dy, dz)

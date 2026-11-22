@@ -8,7 +8,7 @@ extends RefCounted
 ## ring's eight (BulbM0..7) count the drum's rounds; once the meter is full
 ## the outer bulbs chase like a marquee, and through the Main Event every
 ## bulb chases. The gold tassel (Tassel) swings with the shots and the walk;
-## the spotlight on the handguard's nose (Spot) sweeps through the Main Event.
+## the spotlight under the barrel's front (Spot) sweeps through the Main Event.
 ##
 ## Inspect: the rifle swings its drum face to you and the rings spin up
 ## counter-rotating, bulbs chasing; it swings across to its right flank,
@@ -147,7 +147,7 @@ func _swing_tassel(v: WeaponView, delta: float, live: bool) -> void:
 	_tassel.transform = rest * Transform3D(Basis.from_euler(Vector3(deg_to_rad(_swing.y), 0.0, deg_to_rad(_swing.x))), Vector3.ZERO)
 
 
-## The little spotlight on the nose sweeps side to side through the Main Event.
+## The little spotlight under the barrel sweeps side to side through the Main Event.
 func _pose_spot(v: WeaponView, live: bool) -> void:
 	if _spot == null:
 		return

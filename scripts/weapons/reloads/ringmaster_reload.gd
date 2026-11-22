@@ -18,16 +18,18 @@ const ROOT_ROT := Vector3(-8.0, 30.0, 22.0)
 ## The support hand (offsets from its rest on the foregrip, model space):
 ## on the drum's latch (also where it holds the fresh drum seated), down where
 ## it fetches the fresh one, on the charging handle, and its flourish.
-const HAND_LATCH := Vector3(-0.075, 0.022, 0.1)
-const HAND_LOW := Vector3(-0.07, -0.2, 0.11)
-const HAND_RACK := Vector3(-0.1, 0.11, 0.2)
+const HAND_LATCH := Vector3(-0.092, 0.022, 0.135)
+const HAND_LOW := Vector3(-0.08, -0.2, 0.145)
+const HAND_RACK := Vector3(-0.1, 0.11, 0.235)
 const RACK_PULL := 0.042
+## How far below the foregrip the hand slides off it and comes back from.
+const GRIP_DROP := 0.12
 const HAND_FLICK := Vector3(-0.09, 0.03, 0.12)
 const HAND_ROT_LATCH := Vector3(0.0, 0.0, 8.0)
 const HAND_ROT_RACK := Vector3(0.0, 0.0, 10.0)
 ## The spent drum's fall and tumble.
-const FALL := Vector3(-0.05, -0.32, 0.03)
-const TUMBLE := Vector3(-210.0, 30.0, 50.0)
+const FALL := Vector3(0.015, -0.36, -0.02)
+const TUMBLE := Vector3(-210.0, 0.0, 0.0)
 ## The fresh drum's tilt as it comes in, and how fast the rings spin it up.
 const HOLO_TILT := Vector3(-18.0, 0.0, 10.0)
 const RING_SPIN := [540.0, -810.0, 1080.0]
@@ -95,11 +97,11 @@ func _pose_drums(s: float) -> void:
 	var v := _v
 	var drum := v.part("Drum")
 	if drum and s < SNAP_AT:
-		var u := clampf((s - OUT_AT) / 0.2, 0.0, 1.0)
+		var u := clampf((s - OUT_AT) / 0.15, 0.0, 1.0)
 		var kick := _e(OUT_AT, OUT_AT + 0.04, s)
-		var off := Vector3(-0.012, -0.012, 0.0) * kick + FALL * u * u
+		var off := Vector3(0.0, -0.012, 0.0) * kick + FALL * u * u
 		_place(drum, v.rest_transform("Drum"), off, TUMBLE * u * u)
-		drum.visible = s < OUT_AT + 0.2
+		drum.visible = s < OUT_AT + 0.15
 	var holo := v.part("DrumHolo")
 	if holo == null:
 		return
@@ -153,23 +155,27 @@ func _pose_handle(s: float) -> void:
 ## The support hand's path: latch, down for the fresh drum, up to seat it,
 ## back to the handle, the rack, the flick and home to the foregrip.
 func _hand_pos(s: float) -> Vector3:
-	var to_latch := _e(0.04, 0.13, s)
-	var down := _e(0.18, 0.3, s) * (1.0 - _e(0.34, 0.5, s))
+	var down := _e(0.22, 0.32, s) * (1.0 - _e(0.36, 0.5, s))
 	var slap := _slap(s)
 	var to_rack := _e(0.6, 0.69, s)
 	var pull := _e(0.7, 0.77, s) * (1.0 - _e(RACK_AT, RACK_AT + 0.02, s))
 	var flick := WeaponInspect.hump(s, RACK_AT, 0.9)
-	var home := _e(0.84, 0.96, s)
-	var p := HAND_LATCH * to_latch
+	# Down off the foregrip first, out to the left, then back to the latch;
+	# home again below the foregrip, in from the left, and up onto it last.
+	var p := HAND_LATCH * Vector3(_e(0.03, 0.09, s), _e(0.06, 0.13, s), _e(0.05, 0.13, s))
+	p.y -= GRIP_DROP * _e(0.0, 0.04, s) * (1.0 - _e(0.06, 0.13, s))
 	p = p.lerp(HAND_LOW, down)
 	p += Vector3(0.0, -0.014, 0.0) * (1.0 - slap) * _e(0.4, 0.5, s)
 	p = p.lerp(HAND_RACK, to_rack) + Vector3(0.0, 0.0, RACK_PULL) * pull
 	p += HAND_FLICK * flick
-	return p.lerp(Vector3.ZERO, home)
+	var home_yz := _e(0.84, 0.91, s)
+	var home_x := _e(0.88, 0.94, s)
+	var rise := _e(0.94, 0.99, s)
+	return Vector3(lerpf(p.x, 0.0, home_x), lerpf(p.y, -GRIP_DROP * (1.0 - rise), home_yz), lerpf(p.z, 0.0, home_yz))
 
 
 func _hand_rot(s: float) -> Vector3:
-	var latch := _e(0.04, 0.13, s) * (1.0 - _e(0.6, 0.69, s))
+	var latch := _e(0.02, 0.09, s) * (1.0 - _e(0.6, 0.69, s))
 	var rack := _e(0.6, 0.69, s)
 	var flick := WeaponInspect.hump(s, RACK_AT, 0.9)
 	var home := _e(0.84, 0.96, s)

@@ -122,6 +122,8 @@ JOINTS["ringmaster"] = ([("Drum", "Shell"), ("DrumHolo", "Shell"), ("DrumHolo", 
                         + [("RingOuter", "RingMid"), ("RingMid", "RingHub")]
                         + [(f"BulbO{i}", q) for i in range(12) for q in ("RingOuter", "Drum", "DrumHolo")]
                         + [(f"BulbM{i}", q) for i in range(8) for q in ("RingMid", "Drum", "DrumHolo")])
+# The support hand pinches the charging handle's ball while it racks it.
+HOLDS["ringmaster"] = [("ArmL", "Handle")]
 
 
 def world_tree(ob, matrix=None):
