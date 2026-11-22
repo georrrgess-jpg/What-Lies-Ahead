@@ -236,10 +236,10 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 
 | | Casual | Standard | Hard | Last Ride |
 |---|---|---|---|---|
-| Enemy health | 80% | 108% | 128% | 160% |
-| Alpha health | 70% | 105% | 112% | 135% |
-| Enemy damage | 60% | 110% | 120% | 145% |
-| Enemy speed | 95% | 103% | 108% | 114% |
+| Enemy health | 80% | 108% | 128% | 150% |
+| Alpha health | 70% | 105% | 112% | 125% |
+| Enemy damage | 60% | 110% | 120% | 138% |
+| Enemy speed | 95% | 103% | 108% | 112% |
 | Crowd cap | 80% | 106% | 112% | 130% |
 | Spawn interval | 120% | 95% | 90% | 80% |
 | Special-attack cooldowns | 145% | 92% | 82% | 65% |
