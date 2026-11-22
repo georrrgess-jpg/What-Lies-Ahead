@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_zigzag"
+display_name = "Zigzag"
+description = "A bold zigzag in pink and gold racing to the target."
+slot = &"tracer"
+rarity = 1
+price = 750
+colors = PackedColorArray(1.0000, 0.2471, 0.6235, 1, 1.0000, 0.8235, 0.2275, 1)
+params = {
+"style": "zigzag"
+}
+sort_order = 8321

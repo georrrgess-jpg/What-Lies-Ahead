@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_plasma_globe"
+display_name = "Plasma Globe"
+description = "A glass ball of living lightning on a dark stage, tendrils reaching for the glass."
+slot = &"banner"
+rarity = 3
+price = 3000
+colors = PackedColorArray(0.7686, 0.3608, 1.0000, 1, 0.2275, 0.1843, 0.4157, 1, 0.1647, 0.0784, 0.3137, 1)
+params = {
+"style": 47
+}
+sort_order = 9346

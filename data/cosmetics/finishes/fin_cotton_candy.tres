@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 20
+target = &"combo_artist"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_cotton_candy"
+display_name = "Cotton Candy Cloud"
+description = "Pink and blue floss folding through each other, drifting slowly, sugar sparkling in it. Earned with the Combo Artist milestone."
+slot = &"weapon_finish"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(1.0000, 0.6510, 0.8471, 1, 0.7882, 0.5412, 0.7529, 1)
+params = {
+"shader": "res://art/shaders/finish_gear.gdshader",
+"shader_params": {
+"pattern": 4,
+"color_b": Color(0.6235, 0.8471, 1.0000, 1),
+"color_c": Color(1.0000, 1.0000, 1.0000, 1),
+"color_d": Color(0.8000, 0.8000, 0.8000, 1)
+},
+"pulse": true
+}
+sort_order = 2454

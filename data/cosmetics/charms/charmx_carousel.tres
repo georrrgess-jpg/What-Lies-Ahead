@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"charmx_carousel"
+display_name = "Merry-Go-Round"
+description = "A tiny carousel: a red canopy rimmed with bulbs, and four painted horses going round and round."
+slot = &"weapon_charm"
+rarity = 2
+price = 2500
+params = {
+"charm": "Carousel",
+"spin": 70
+}
+sort_order = 5320

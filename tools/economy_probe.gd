@@ -9,6 +9,9 @@ extends SceneTree
 ##   buying     Cosmetics.can_buy / buy on a fresh profile
 ##   featured   the daily selection: deterministic, mixed, discounted, stable
 ##   contracts  three at a time, completion and roll-over
+##   gear       the update 24 cosmetics: shop items on the price rule, earned ones
+##              never sold nor owned by a new or a level-50 profile, every look
+##              known to its renderer
 ##   migration  old saves (tools/fixtures/economy/*.json, written in the old
 ##              format) keep everything the pre-economy game said they owned
 ##              (*.expected.json, produced by that version of the game)
@@ -20,6 +23,29 @@ const FIXTURES := "res://tools/fixtures/economy"
 const SCRATCH := "user://economy_probe.json"
 ## The dearest shop items that must each have their own price.
 const TOP_DISTINCT := 15
+## The update 24 gear cosmetics: bought in the Shop, and earned (never sold).
+const GEAR_SHOP := [
+	&"fin_fizzy_pop", &"fin_firefly_meadow", &"fin_hypno_spin", &"fin_carnival_glass", &"fin_prize_plush", &"fin_card_shark",
+	&"fin_bumper_car", &"fin_popcorn_box", &"fin_strongman",
+	&"sightx_royal_crown", &"sightx_firefly_jar", &"sightx_saturn_ring", &"sightx_hypnotist", &"sightx_admit_one",
+	&"sightx_bone_sight", &"sightx_pro_circuit", &"sightx_thunderclap", &"sightx_lock_on",
+	&"charmx_carousel", &"charmx_paper_lantern", &"charmx_fortune_cookie", &"charmx_lollipop", &"charmx_pretzel",
+	&"charmx_corn_dog", &"charmx_eight_ball", &"charmx_top_hat", &"charmx_squeaky_horn",
+	&"kfx_magic_trick", &"kfx_gumballs", &"kfx_fireflies", &"kfx_card_burst", &"kfx_ring_toss", &"kfx_soda_fizz",
+	&"tracer_film_reel", &"tracer_zigzag", &"tracer_synthwave", &"tracer_star_chain", &"tracer_firefly_trail", &"tracer_bunting",
+	&"glove_lovestruck", &"glove_strongman", &"glove_argyle", &"glove_card_shark", &"glove_firefly", &"glove_big_top",
+	&"banner_big_top", &"banner_firefly_field", &"banner_soda_fizz", &"banner_card_shark", &"banner_bumper_cars",
+	&"banner_plasma_globe", &"banner_lantern_festival",
+	&"title_sideshow_superstar", &"title_card_shark", &"title_fizz_whiz", &"title_lights_camera_carnage",
+	&"title_firefly_catcher", &"title_hat_trick",
+	&"decalx_big_top", &"decalx_ace_of_spades", &"decalx_bottle_cap", &"decalx_firefly_jar", &"decalx_magic_hat",
+	&"cellx_firefly", &"cellx_hypno", &"cellx_atomic", &"cellx_cotton_candy",
+]
+const GEAR_EARNED := [
+	&"fin_plasma_globe", &"fin_cotton_candy", &"fin_gallery_wood", &"sightx_lucky_horseshoe", &"charmx_barbell",
+	&"banner_carousel", &"title_strongman", &"title_plasma_brain", &"title_center_ring", &"title_big_top_legend",
+	&"decalx_lucky_horseshoe",
+]
 
 var _failed := 0
 var Shop
@@ -56,6 +82,7 @@ func _run() -> void:
 	_featured()
 	_contracts()
 	_prints()
+	_gear()
 	_migration()
 	_moved_rewards()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SCRATCH))
@@ -347,3 +374,58 @@ func _moved_rewards() -> void:
 		var owned := kept.all(func(id) -> bool: return cosmetics.is_owned_anywhere(cosmetics.item(id)))
 		_check("moved: batch %s keeps a level-30 save's %d earned items, once" % [batch, expect.size()],
 			kept.size() == expect.size() and owned and moved.apply(items).is_empty(), "%s vs %s" % [kept, expect])
+
+
+# --- update 24 gear ----------------------------------------------------------
+
+func _gear() -> void:
+	var rules = wallet.rules
+	var bad_shop := []
+	for id in GEAR_SHOP:
+		var it = cosmetics.item(id)
+		if it == null or it.price <= 0 or it.requirement != null or not rules.is_clean_price(it.price) or it.price < rules.price_for(it.rarity):
+			bad_shop.append(id)
+	_check("gear: %d update 24 items sell in the Shop on the price rule, with no requirement" % GEAR_SHOP.size(), bad_shop.is_empty(), str(bad_shop))
+	_fresh_profile()
+	var bad_earned := []
+	for id in GEAR_EARNED:
+		var it = cosmetics.item(id)
+		if it == null or it.price != 0 or it.requirement == null or it.requirement.kind == 1 or cosmetics.is_for_sale(it) \
+				or cosmetics.is_owned_anywhere(it):
+			bad_earned.append(id)
+	_check("gear: %d update 24 items are earned (never sold, no level), not owned by a new profile" % GEAR_EARNED.size(), bad_earned.is_empty(), str(bad_earned))
+	progression.add_xp(progression.xp_for_level(progression.MAX_LEVEL))
+	var leaked := GEAR_EARNED.filter(func(id) -> bool: return cosmetics.is_owned_anywhere(cosmetics.item(id)))
+	_check("gear: reaching level %d alone unlocks none of them" % progression.MAX_LEVEL, leaked.is_empty(), str(leaked))
+	_fresh_profile()
+	_check("gear: every look is known to its renderer", _gear_unknown_looks().is_empty(), str(_gear_unknown_looks()))
+
+
+## Update 24 items whose look (finish pattern, optic and reticle, charm model,
+## kill effect, tracer style, glove pattern, banner style, decal art, cell
+## pattern) the renderer does not know.
+func _gear_unknown_looks() -> Array:
+	var sights = load("res://scripts/weapons/sights/weapon_sights.gd")
+	var looks = load("res://scripts/player/weapon_cosmetics.gd")
+	var tracers = load("res://scripts/cosmetics/tracer_styles.gd")
+	var effects = load("res://scripts/cosmetics/kill_effects.gd")
+	var banners = load("res://scripts/cosmetics/banner_view.gd")
+	var charms: Node = (load("res://art/models/cosmetic_charms.glb") as PackedScene).instantiate()
+	var unknown := []
+	for id in GEAR_SHOP + GEAR_EARNED:
+		var it = cosmetics.item(id)
+		var ok := true
+		match String(it.slot):
+			"weapon_finish": ok = ResourceLoader.exists(String(it.params.get("shader", ""))) and int(it.params["shader_params"]["pattern"]) <= 11
+			"weapon_sight": ok = sights.OPTICS.has(String(it.params["optic"])) and sights.PATTERNS.has(String(it.params["reticle"]))
+			"weapon_charm": ok = charms.find_child("Charm_" + String(it.params["charm"]), true, false) != null
+			"kill_effect": ok = String(it.params["effect"]) in effects.EFFECTS
+			"tracer": ok = tracers.PATTERNS.has(String(it.params["style"]))
+			"gloves": ok = looks.PATTERNS.has(String(it.params["pattern"]))
+			"banner": ok = int(it.params["style"]) >= banners.GEAR_FIRST
+			"weapon_decal": ok = ResourceLoader.exists(String(it.params["art"]))
+			"weapon_cell": ok = looks.CELL_FX.has(String(it.params["fx"]))
+		if not ok:
+			unknown.append(id)
+	charms.free()
+	return unknown

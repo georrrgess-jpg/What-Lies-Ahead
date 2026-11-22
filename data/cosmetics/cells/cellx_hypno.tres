@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_hypno"
+display_name = "Hypno Cell"
+description = "A spiral turning round and round in the middle of the cell. Pairs with the Hypno Spin finish."
+slot = &"weapon_cell"
+rarity = 2
+price = 1500
+colors = PackedColorArray(1.0000, 0.2471, 0.6235, 1, 1.0000, 1.0000, 1.0000, 1)
+params = {
+"fx": "hypno"
+}
+sort_order = 3331

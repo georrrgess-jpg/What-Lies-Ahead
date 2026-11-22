@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_argyle"
+display_name = "Argyle Gent"
+description = "Navy and teal argyle knit with a thin gold overcheck."
+slot = &"gloves"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.1647, 0.1647, 0.4157, 1, 0.0706, 0.7098, 0.6431, 1, 0.8784, 0.6902, 0.2902, 1, 0.1647, 0.1647, 0.4157, 1, 0.0706, 0.7098, 0.6431, 1, 0.8784, 0.6902, 0.2902, 1)
+params = {
+"pattern": "argyle",
+"pattern_on": ["Glove", "Sleeve"]
+}
+sort_order = 6342

@@ -22,7 +22,9 @@ Optics: Reflex (open hoop), Holo (boxy hood), Tube (short tube), Prism
 hood), Brass (vintage 1.4x), Burst (star bezel), Ranger (twin-window box),
 Frost (iced tube), Porthole (bolted brass ring), Arcade (mini cabinet), Idol (temple
 idol face), Magma (lava-rock ring), TenPin (ring on two bowling pins), Radar (tube
-with a radar dish) and Hazard (striped hood with a police light bar). scripts/weapons/sights/weapon_sights.gd
+with a radar dish), Hazard (striped hood with a police light bar), and update 24's
+Horseshoe (a lucky brass horseshoe hoop), Crown (a jewelled gold crown bezel), Jar
+(a firefly jar with a screw lid) and Saturn (a ringed-planet bezel). scripts/weapons/sights/weapon_sights.gd
 fits them to weapons; data/cosmetics/sights/*.tres are the items using them.
 
     python art/blender/build_sights.py
@@ -680,6 +682,92 @@ def hazard(m):
     return optic("Hazard", body, (0.03, 0.022), (0, y, axis), (0, -0.21, axis), m)
 
 
+# --- update 24 -------------------------------------------------------------
+
+def horseshoe(m):
+    """A lucky brass horseshoe standing open side up round the window, nail heads round it, a clover on top."""
+    axis = 0.046
+    y = -0.01
+    body = [
+        box("ShoeBase", (0.05, 0.08, 0.016), (0, 0.008, 0.008), bevel=0.005, m=m["body"]),
+        box("ShoeNeck", (0.022, 0.02, 0.012), (0, y, 0.018), bevel=0.004, m=m["body"]),
+        torus("ShoeHoop", 0.032, 0.0055, (0, y, axis), rot=rad(90, 0, 0), m=m["brass"], major_segs=36, minor_segs=8,
+              arc=math.radians(290), start=math.radians(-55)),
+        torus("ShoeGroove", 0.032, 0.0018, (0, y - 0.0052, axis), rot=rad(90, 0, 0), m=m["steel"], major_segs=36, minor_segs=4,
+              arc=math.radians(270), start=math.radians(-45)),
+    ]
+    for side in (-1, 1):
+        a = math.radians(90 + side * 145)
+        body.append(box(f"ShoeCalk{side}", (0.012, 0.012, 0.008), (math.cos(a) * 0.032, y, axis + math.sin(a) * 0.032), bevel=0.003, m=m["brass"]))
+    for i in range(7):
+        a = math.radians(-35 + i * 45)
+        body.append(sphere(f"ShoeNail{i}", 0.0022, (math.cos(a) * 0.032, y - 0.0058, axis + math.sin(a) * 0.032), m=m["steel"], segs=8, rings=5))
+    for k in range(4):
+        a = math.radians(45 + 90 * k)
+        body.append(sphere(f"ShoeLeaf{k}", 0.0055, (math.cos(a) * 0.006, y, axis + 0.05 + math.sin(a) * 0.006),
+                           scale=(1.0, 0.45, 1.0), m=m["jade"], segs=10, rings=6))
+    body.append(cyl("ShoeStem", 0.0012, 0.01, (0.002, y, axis + 0.04), segs=6, bevel=0.0, m=m["jade"]))
+    body += clamp_bolts("ShoeBolt", (0.004, 0.03), 0.058, 0.008, m["steel"])
+    return optic("Horseshoe", body, (0.0255, 0.0255), (0, y - 0.004, axis), (0, -0.21, axis), m)
+
+
+def crown(m):
+    """A gold crown bezel: a band round the window with five jewelled points and pearls."""
+    axis = 0.046
+    y = -0.01
+    body = [
+        box("CrownBase", (0.05, 0.08, 0.016), (0, 0.008, 0.008), bevel=0.005, m=m["body"]),
+        box("CrownNeck", (0.022, 0.02, 0.012), (0, y, 0.018), bevel=0.004, m=m["body"]),
+        torus("CrownBand", 0.031, 0.0045, (0, y, axis), rot=rad(90, 0, 0), m=m["brass"], major_segs=36, minor_segs=6),
+        torus("CrownVelvet", 0.0265, 0.0022, (0, y + 0.002, axis), rot=rad(90, 0, 0), m=m["vein"], major_segs=32, minor_segs=4),
+    ]
+    jewels = (m["vein"], m["jade"], m["siren_blue"], m["jade"], m["vein"])
+    for i in range(5):
+        a = math.radians(30 + 30 * i)
+        root = (math.cos(a) * 0.033, y, axis + math.sin(a) * 0.033)
+        tip = (math.cos(a) * 0.05, y, axis + math.sin(a) * 0.05)
+        body.append(tube(f"CrownPoint{i}", [root, tip], 0.0034, m=m["brass"], segs=8))
+        body.append(sphere(f"CrownPearl{i}", 0.0033, tip, m=m["white"], segs=8, rings=5))
+        body.append(sphere(f"CrownJewel{i}", 0.0028, (root[0], y - 0.0045, root[2]), m=jewels[i], segs=8, rings=5))
+    body += clamp_bolts("CrownBolt", (0.004, 0.03), 0.058, 0.008, m["steel"])
+    return optic("Crown", body, (0.0255, 0.0255), (0, y - 0.004, axis), (0, -0.21, axis), m)
+
+
+def jar(m):
+    """A firefly jar on its side: a glass tube with a screw lid at the front, glowing bugs inside, a wire bail."""
+    axis = 0.05
+    profile = [(-0.032, 0.03), (-0.026, 0.031), (0.022, 0.031), (0.026, 0.028), (0.032, 0.028)]
+    body = [
+        box("JarBase", (0.042, 0.06, 0.016), (0, 0, 0.008), bevel=0.005, m=m["body"]),
+        box("JarSaddle", (0.028, 0.03, 0.012), (0, 0, 0.019), bevel=0.004, m=m["body"]),
+        lathe("JarGlass", profile, axis, m["ice"], 0.027, 0.025, segs=24, inner_wall=True),
+        torus("JarLidA", 0.0305, 0.0038, (0, 0.03, axis), rot=rad(90, 0, 0), m=m["brass"], major_segs=24, minor_segs=6),
+        torus("JarLidB", 0.0305, 0.0038, (0, 0.036, axis), rot=rad(90, 0, 0), m=m["brass"], major_segs=24, minor_segs=6),
+        torus("JarRim", 0.0312, 0.0026, (0, -0.031, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=24, minor_segs=5),
+    ]
+    for i, (dx, dy, dz) in enumerate(((0.018, -0.01, 0.022), (-0.02, 0.012, 0.018), (0.024, 0.016, -0.014), (-0.016, -0.018, -0.02))):
+        body.append(sphere(f"JarBug{i}", 0.0024, (dx, dy, axis + dz), m=m["marquee"], segs=8, rings=5))
+    body += clamp_bolts("JarBolt", (-0.018, 0.018), 0.05, 0.009, m["steel"])
+    return optic("Jar", body, (0.0262, 0.0262), (0, -0.012, axis), (0, -0.2, axis), m)
+
+
+def saturn(m):
+    """A ringed planet: a round bezel tilted inside a wide flat ring, a little moon riding the ring."""
+    axis = 0.046
+    y = -0.01
+    body = [
+        box("SaturnBase", (0.05, 0.08, 0.016), (0, 0.008, 0.008), bevel=0.005, m=m["body"]),
+        box("SaturnNeck", (0.022, 0.02, 0.012), (0, y, 0.018), bevel=0.004, m=m["body"]),
+        torus("SaturnBezel", 0.03, 0.0052, (0, y, axis), rot=rad(90, 0, 0), m=m["accent"], major_segs=36, minor_segs=8),
+        torus("SaturnBand", 0.03, 0.0022, (0, y - 0.005, axis), rot=rad(90, 0, 0), m=m["white"], major_segs=36, minor_segs=4),
+        torus("SaturnRing", 0.047, 0.0028, (0, y + 0.004, axis), rot=rad(90, 18, 0), m=m["brass"],
+              major_segs=40, minor_segs=4),
+        sphere("SaturnMoon", 0.0055, (0.046, y + 0.004, axis + 0.016), m=m["stone"], segs=10, rings=6),
+    ]
+    body += clamp_bolts("SaturnBolt", (0.004, 0.03), 0.058, 0.008, m["steel"])
+    return optic("Saturn", body, (0.0255, 0.0255), (0, y - 0.004, axis), (0, -0.21, axis), m)
+
+
 def check_clear_axis(objects):
     """The middle of every window must be free of housing: no vertex inside 60% of the lens."""
     dg = bpy.context.evaluated_depsgraph_get()
@@ -705,7 +793,7 @@ def build_sights():
     m = sight_mats()
     exports = []
     for build in (reflex, holo, tube_dot, prism_scope, scope, periscope, gem, gallery, zombie_eye, hex_hood, brass_scope, starburst,
-                  rangefinder, frost, porthole, arcade, idol, magma, ten_pin, radar, hazard):
+                  rangefinder, frost, porthole, arcade, idol, magma, ten_pin, radar, hazard, horseshoe, crown, jar, saturn):
         exports += build(m)
     bpy.context.view_layer.update()
     check_clear_axis(exports)

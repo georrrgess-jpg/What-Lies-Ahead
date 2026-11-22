@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_ring_toss"
+display_name = "Hoopla"
+description = "Hoops fly out in a ring, spinning flat, and clatter to the floor."
+slot = &"kill_effect"
+rarity = 1
+price = 1000
+params = {
+"effect": "ring_toss"
+}
+sort_order = 7324

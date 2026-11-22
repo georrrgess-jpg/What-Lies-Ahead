@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_firefly"
+display_name = "Firefly Mitts"
+description = "Dusk-blue mitts speckled with glowing firefly stars."
+slot = &"gloves"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.0824, 0.1647, 0.2902, 1, 0.1843, 0.4784, 0.2275, 1, 0.1843, 0.4784, 0.2275, 1, 0.0549, 0.1098, 0.1882, 1, 0.8392, 1.0000, 0.3529, 1)
+params = {
+"pattern": "stars",
+"pattern_on": ["Glove", "Sleeve"],
+"glow": 2.2
+}
+sort_order = 6344

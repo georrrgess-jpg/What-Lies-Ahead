@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"charmx_paper_lantern"
+display_name = "Paper Lantern"
+description = "A round red paper lantern with gold caps and a tassel, glowing warm from inside."
+slot = &"weapon_charm"
+rarity = 1
+price = 750
+params = {
+"charm": "PaperLantern"
+}
+sort_order = 5321

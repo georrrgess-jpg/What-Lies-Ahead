@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_royal_crown"
+display_name = "Royal Crown"
+description = "A jewelled gold crown round the glass, and a crown over the point of aim."
+slot = &"weapon_sight"
+rarity = 2
+price = 2000
+colors = PackedColorArray(1.0000, 0.8235, 0.2275, 1, 0.5412, 0.1647, 0.2902, 1)
+params = {
+"optic": "Crown",
+"reticle": "crown"
+}
+sort_order = 6301

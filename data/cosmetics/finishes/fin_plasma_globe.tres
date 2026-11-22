@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 21
+amount = 40
+
+[resource]
+script = ExtResource("1")
+id = &"fin_plasma_globe"
+display_name = "Plasma Globe"
+description = "Dark glass full of living lightning: violet tendrils wander from the core, branch and flicker, brighter with every kill, on a polished brass base. Reach Endless wave 40."
+slot = &"weapon_finish"
+rarity = 3
+requirement = SubResource("req")
+colors = PackedColorArray(0.0706, 0.0392, 0.1490, 1, 0.4784, 0.3529, 0.1647, 1)
+params = {
+"shader": "res://art/shaders/finish_gear.gdshader",
+"shader_params": {
+"pattern": 2,
+"color_b": Color(0.7686, 0.3608, 1.0000, 1),
+"color_c": Color(1.0000, 0.8392, 1.0000, 1),
+"color_d": Color(0.8784, 0.6902, 0.2902, 1)
+},
+"pulse": true
+}
+sort_order = 2451

@@ -5,6 +5,7 @@ shader_type spatial;
 //   0 solid  1 stripes  2 camo  3 checker  4 polka dots  5 knit  6 tiger
 //   7 neon lines  8 scales  9 flames  10 stars  11 pixels  12 circuit traces
 //   13 bones (12 and 13 are drawn on the face of each surface's main axis)
+//   update 24: 14 hearts  15 leopard  16 argyle  17 card suits (box mapped too)
 uniform vec3 base_color : source_color = vec3(0.17, 0.16, 0.21);
 uniform vec3 accent_color : source_color = vec3(1.0, 0.25, 0.62);
 uniform vec3 third_color : source_color = vec3(1.0, 1.0, 1.0);
@@ -120,6 +121,52 @@ vec2 pattern_mask(vec3 p, vec3 nrm) {
 		f = mat2(vec2(cos(a), sin(a)), vec2(-sin(a), cos(a))) * f;
 		float bone = step(bone_sdf(f), 0.0) * step(0.3, hash31(vec3(i, 9.0)));
 		return vec2(bone, bone * step(0.85, hash31(vec3(i, 4.0))));
+	} else if (pattern == 14) {
+		// Little hearts in rows, every other one in the third colour.
+		vec2 g = box_uv(p, nrm) * 22.0;
+		vec2 i = floor(g);
+		vec2 f = (fract(g) - 0.5) * vec2(1.0, -1.0) * 2.4 + vec2(0.0, 0.55);
+		f.x = abs(f.x);
+		float d = f.y + f.x > 1.0 ? length(f - vec2(0.25, 0.75)) - 0.35355 : sqrt(min(dot(f - vec2(0.0, 1.0), f - vec2(0.0, 1.0)), dot(f - 0.5 * max(f.x + f.y, 0.0), f - 0.5 * max(f.x + f.y, 0.0)))) * sign(f.x - f.y);
+		float heart = step(d, 0.0);
+		float alt = mod(i.x + i.y, 2.0);
+		return vec2(heart * (1.0 - alt), heart * alt);
+	} else if (pattern == 15) {
+		// Leopard: broken rosettes, dark rims round warm centres.
+		vec3 c = p * 28.0;
+		float n = vnoise(c) * 0.7 + vnoise(c * 2.3) * 0.3;
+		float spot = smoothstep(0.62, 0.66, n);
+		float core = smoothstep(0.72, 0.76, n);
+		return vec2(spot - core, core);
+	} else if (pattern == 16) {
+		// Argyle: diamonds in two colours with a thin diagonal overcheck.
+		vec2 g = box_uv(p, nrm) * vec2(16.0, 11.0);
+		vec2 f = fract(g) - 0.5;
+		float dia = step(abs(f.x) + abs(f.y), 0.5);
+		float alt = mod(floor(g.x) + floor(g.y), 2.0);
+		float line = step(abs(fract(g.x + g.y) - 0.5), 0.04) + step(abs(fract(g.x - g.y) - 0.5), 0.04);
+		return vec2(dia * (1.0 - alt), clamp(line, 0.0, 1.0));
+	} else if (pattern == 17) {
+		// Card suits: pips of hearts and diamonds (accent), spades and clubs (third).
+		vec2 g = box_uv(p, nrm) * 18.0;
+		vec2 i = floor(g);
+		vec2 f = (fract(g) - 0.5) * 2.6;
+		float k = mod(i.x + i.y * 2.0, 4.0);
+		float d;
+		if (k < 0.5) {
+			d = abs(f.x) * 0.9 + abs(f.y) * 0.62 - 0.42;
+		} else if (k < 1.5) {
+			d = min(length(f - vec2(0.0, 0.2)) - 0.24, min(length(f - vec2(-0.24, -0.14)) - 0.24, length(f - vec2(0.24, -0.14)) - 0.24));
+		} else if (k < 2.5) {
+			d = min(length(f - vec2(-0.2, 0.1)) - 0.24, length(f - vec2(0.2, 0.1)) - 0.24);
+			d = min(d, abs(f.x) * 0.9 + max(-f.y, 0.0) - 0.42);
+		} else {
+			d = min(length(f - vec2(-0.2, -0.1)) - 0.24, length(f - vec2(0.2, -0.1)) - 0.24);
+			d = min(d, abs(f.x) * 0.9 + max(f.y, 0.0) - 0.42);
+		}
+		float pip = step(d, 0.0);
+		float red = step(mod(k, 2.0), 0.5);
+		return vec2(pip * red, pip * (1.0 - red));
 	}
 	return vec2(0.0);
 }

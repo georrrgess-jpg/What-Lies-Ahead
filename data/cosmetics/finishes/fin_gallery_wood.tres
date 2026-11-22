@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 4
+amount = 11000
+
+[resource]
+script = ExtResource("1")
+id = &"fin_gallery_wood"
+display_name = "Gallery Wood"
+description = "Varnished gallery wood with brass rivets and little bullseye targets stencilled along the sides. Earned at 11,000 lifetime kills."
+slot = &"weapon_finish"
+rarity = 1
+requirement = SubResource("req")
+colors = PackedColorArray(0.8157, 0.5412, 0.2667, 1, 0.7843, 0.5020, 0.2275, 1)
+params = {
+"shader": "res://art/shaders/finish_gear.gdshader",
+"shader_params": {
+"pattern": 9,
+"color_b": Color(0.6039, 0.3294, 0.1412, 1),
+"color_c": Color(0.8784, 0.6588, 0.2275, 1),
+"color_d": Color(0.9098, 0.1490, 0.2275, 1)
+}
+}
+sort_order = 2459

@@ -7,7 +7,8 @@ extends RefCounted
 
 const EFFECTS := ["confetti", "pixel", "neon_ring", "bubbles", "snow", "starburst", "coins", "firework", "hearts",
 	"balloon", "disco", "jackpot", "voxel", "ghost", "snow_globe", "black_hole", "tickets", "pinata",
-	"party_popper", "popcorn", "scuffle", "brain_freeze", "strike", "ko", "balloon_lift", "thunder", "rainbow", "ufo"]
+	"party_popper", "popcorn", "scuffle", "brain_freeze", "strike", "ko", "balloon_lift", "thunder", "rainbow", "ufo",
+	"magic_trick", "gumballs", "fireflies", "card_burst", "ring_toss", "soda_fizz"]
 
 const DEFAULT_COLORS := {
 	"pixel": [Color(0.3, 1.0, 0.45), Color(0.25, 0.85, 1.0), Color(1.0, 0.3, 0.75), Color(1.0, 0.9, 0.2)],
@@ -38,6 +39,12 @@ const DEFAULT_COLORS := {
 	"rainbow": [Color(1.0, 0.25, 0.3), Color(1.0, 0.6, 0.15), Color(1.0, 0.92, 0.25), Color(0.4, 0.9, 0.35), Color(0.25, 0.65, 1.0),
 		Color(0.6, 0.35, 0.95)],
 	"ufo": [Color(0.45, 1.0, 0.6), Color(0.3, 1.0, 1.0), Color(1.0, 0.4, 0.75)],
+	"magic_trick": [Color(1.0, 0.85, 0.3), Color.WHITE, Color(0.75, 0.55, 1.0)],
+	"gumballs": [Color(1.0, 0.3, 0.45), Color(0.3, 0.8, 1.0), Color(1.0, 0.85, 0.25), Color(0.5, 1.0, 0.45), Color(0.85, 0.5, 1.0)],
+	"fireflies": [Color(0.85, 1.0, 0.35), Color(1.0, 0.9, 0.45)],
+	"card_burst": [Color.WHITE, Color(1.0, 0.25, 0.35), Color(1.0, 0.85, 0.3)],
+	"ring_toss": [Color(1.0, 0.3, 0.5), Color(1.0, 0.85, 0.25), Color(0.3, 0.85, 1.0), Color(0.55, 1.0, 0.45)],
+	"soda_fizz": [Color(1.0, 0.55, 0.2), Color(1.0, 0.95, 0.85), Color(0.95, 0.35, 0.3)],
 }
 
 
@@ -83,6 +90,12 @@ static func play(parent: Node, at: Vector3, item: CosmeticItem, with_sound := tr
 		"thunder": _thunder(parent, at, cols)
 		"rainbow": _rainbow(parent, at, cols)
 		"ufo": _ufo(parent, at, cols)
+		"magic_trick": _magic_trick(parent, at, cols)
+		"gumballs": _gumballs(parent, at, cols)
+		"fireflies": _fireflies(parent, at, cols)
+		"card_burst": _card_burst(parent, at, cols)
+		"ring_toss": _ring_toss(parent, at, cols)
+		"soda_fizz": _soda_fizz(parent, at, cols)
 		_:
 			Fx.kill_burst(parent, at)
 			return
@@ -548,3 +561,81 @@ static func _flash(parent: Node, at: Vector3, mesh: Mesh, color: Color, from: fl
 	tw.tween_property(flash, "scale", Vector3.ONE * to, time).set_ease(Tween.EASE_OUT)
 	tw.tween_property(flash, "transparency", 1.0, time)
 	tw.chain().tween_callback(flash.queue_free)
+
+
+# --- update 24 ----------------------------------------------------------------
+
+## Ta-da: a top hat pops up in a puff of smoke, then gold stars and sparkles
+## burst out of it.
+static func _magic_trick(parent: Node, at: Vector3, cols: Array) -> void:
+	var face := _to_camera(parent, at)
+	FxSwarm.spawn(parent, at + Vector3.DOWN * 0.3, FxProps.top_hat(), [Color.WHITE], {"count": 1, "shape": "up", "spread": 0.0,
+		"speed": Vector2(2.6, 2.6), "drag": 5.0, "gravity": Vector3.ZERO, "life": Vector2(0.75, 0.75), "size": Vector2(0.8, 0.8),
+		"spin": 0.0, "sway": 0.18, "sway_hz": 3.0, "spin_axis": face, "grow": 0.12, "pop": true})
+	FxSwarm.spawn(parent, at, FxProps.puff(), [Color(0.95, 0.93, 1.0), Color(0.85, 0.82, 0.95)], {"count": 9, "box": Vector3(0.8, 0.6, 0.5),
+		"speed": Vector2(0.3, 0.9), "life": Vector2(0.45, 0.6), "size": Vector2(0.35, 0.55), "gravity": Vector3(0, 0.6, 0), "drag": 3.0,
+		"wobble": 1.0, "grow": 0.12, "pop": true})
+	FxSwarm.spawn(parent, at + Vector3.UP * 0.35, FxShapes.star(), cols, {"count": 14, "shape": "up", "spread": 55.0,
+		"speed": Vector2(3.5, 6.0), "life": Vector2(0.45, 0.7), "size": Vector2(0.12, 0.2), "gravity": Vector3(0, -4.0, 0), "drag": 2.5,
+		"spin": 8.0, "delay": 0.25})
+	FxSwarm.spawn(parent, at + Vector3.UP * 0.35, FxShapes.cube(), [Color.WHITE, cols[0]], {"count": 18, "shape": "up", "spread": 70.0,
+		"speed": Vector2(1.5, 4.0), "life": Vector2(0.3, 0.6), "size": Vector2(0.03, 0.05), "gravity": Vector3(0, -2.0, 0), "drag": 2.0,
+		"blink": 9.0, "delay": 0.25})
+	_glow(parent, at + Vector3.UP * 0.35, FxShapes.glow_ball(), cols[0], 0.3, 1.6, 0.18, 0.25)
+
+
+## A gumball machine bursts: shiny gumballs fly out and bounce on the floor.
+static func _gumballs(parent: Node, at: Vector3, cols: Array) -> void:
+	FxSwarm.spawn(parent, at, FxShapes.ball(), cols, {"count": 20, "shape": "up", "spread": 65.0, "speed": Vector2(3.0, 6.5),
+		"life": Vector2(0.9, 1.3), "size": Vector2(0.14, 0.2), "gravity": Vector3(0, -13.0, 0), "drag": 0.6, "bounce": -1.0,
+		"stagger": 0.08, "grow": 0.05})
+	FxSwarm.spawn(parent, at, FxShapes.glow_ball(), [Color(1.0, 1.0, 1.0, 0.5)], {"count": 1, "speed": Vector2.ZERO,
+		"life": Vector2(0.18, 0.18), "size": Vector2(0.6, 0.6), "gravity": Vector3.ZERO, "expand": 2.2, "fade": true})
+	_ring(parent, at + Vector3.DOWN * 0.5, Vector3.UP, cols[0], 0.0)
+
+
+## The body scatters into fireflies that drift up, swirling and blinking.
+static func _fireflies(parent: Node, at: Vector3, cols: Array) -> void:
+	FxSwarm.spawn(parent, at, FxShapes.glow_ball(), cols, {"count": 26, "box": Vector3(0.7, 1.2, 0.7), "speed": Vector2(0.3, 1.0),
+		"life": Vector2(1.2, 1.9), "size": Vector2(0.12, 0.18), "gravity": Vector3(0, 0.7, 0), "drag": 1.5, "wobble": 0.8,
+		"orbit": 1.2, "blink": 2.5, "grow": 0.2, "stagger": 0.25})
+	FxSwarm.spawn(parent, at, FxShapes.glow_ball(), [Color(cols[0], 0.5)], {"count": 12, "box": Vector3(0.6, 1.0, 0.6),
+		"speed": Vector2(0.2, 0.6), "life": Vector2(1.0, 1.5), "size": Vector2(0.36, 0.5), "gravity": Vector3(0, 0.6, 0), "drag": 1.5,
+		"orbit": 1.2, "blink": 2.5, "grow": 0.2, "stagger": 0.25, "fade": true})
+	_glow(parent, at, FxShapes.glow_ball(), cols[0], 0.4, 1.4, 0.3, 0.0)
+
+
+## A deck explodes: playing cards fan out, flipping end over end.
+static func _card_burst(parent: Node, at: Vector3, cols: Array) -> void:
+	var face := _to_camera(parent, at)
+	FxSwarm.spawn(parent, at, FxProps.card(), [Color.WHITE], {"count": 14, "shape": "ring", "speed": Vector2(3.0, 5.0),
+		"life": Vector2(0.65, 0.9), "size": Vector2(0.34, 0.4), "gravity": Vector3(0, -3.5, 0), "drag": 2.2, "spin": 11.0,
+		"face": face, "stagger": 0.06, "grow": 0.06})
+	FxSwarm.spawn(parent, at, FxShapes.star(), cols.slice(1), {"count": 8, "speed": Vector2(4.0, 6.0), "life": Vector2(0.25, 0.4),
+		"size": Vector2(0.1, 0.15), "gravity": Vector3.ZERO, "drag": 3.0, "spin": 9.0})
+	_flash(parent, at, FxShapes.quad(), cols[1 % cols.size()], 0.4, 2.4, 0.22, FxShapes.star_flash_material(cols[2 % cols.size()]))
+
+
+## Ring toss: hoops fly out in a ring, spinning flat, and clatter to the floor.
+static func _ring_toss(parent: Node, at: Vector3, cols: Array) -> void:
+	FxSwarm.spawn(parent, at, FxProps.hoop(), cols, {"count": 8, "shape": "ring", "speed": Vector2(3.5, 4.5),
+		"life": Vector2(0.9, 1.1), "size": Vector2(0.34, 0.4), "gravity": Vector3(0, -9.0, 0), "drag": 1.2, "spin": 9.0,
+		"spin_axis": Vector3.UP, "bounce": -0.9, "grow": 0.06})
+	FxSwarm.spawn(parent, at + Vector3.UP * 0.2, FxProps.hoop(), [cols[1 % cols.size()]], {"count": 1, "shape": "up", "spread": 0.0,
+		"speed": Vector2(4.0, 4.0), "life": Vector2(0.7, 0.7), "size": Vector2(0.6, 0.6), "gravity": Vector3(0, -10.0, 0), "drag": 0.5,
+		"spin": 12.0, "spin_axis": Vector3.UP, "steady": true, "grow": 0.1, "pop": true})
+	_ring(parent, at, Vector3.UP, cols[0], 0.0)
+	_ring(parent, at, Vector3.UP, cols[2 % cols.size()], 0.08)
+
+
+## A shaken soda: a geyser of fizz shoots up, foam puffs spill over and drops rain down.
+static func _soda_fizz(parent: Node, at: Vector3, cols: Array) -> void:
+	FxSwarm.spawn(parent, at, FxShapes.bubble(), [cols[1 % cols.size()], cols[0]], {"count": 22, "shape": "up", "spread": 18.0,
+		"speed": Vector2(4.0, 8.0), "life": Vector2(0.6, 1.0), "size": Vector2(0.08, 0.18), "gravity": Vector3(0, -3.0, 0), "drag": 1.6,
+		"wobble": 0.5, "pop": true, "grow": 0.1, "stagger": 0.2})
+	FxSwarm.spawn(parent, at + Vector3.UP * 0.2, FxProps.puff(), [Color(1.0, 0.97, 0.9), Color(1.0, 0.92, 0.8)], {"count": 8,
+		"shape": "up", "spread": 40.0, "speed": Vector2(1.0, 2.5), "life": Vector2(0.45, 0.65), "size": Vector2(0.25, 0.4),
+		"gravity": Vector3(0, -1.5, 0), "drag": 2.5, "grow": 0.15, "pop": true})
+	FxSwarm.spawn(parent, at, FxShapes.ball(), cols, {"count": 18, "shape": "up", "spread": 35.0, "speed": Vector2(5.0, 8.5),
+		"life": Vector2(0.7, 1.0), "size": Vector2(0.04, 0.07), "gravity": Vector3(0, -14.0, 0), "drag": 0.4, "stagger": 0.2})
+	_glow(parent, at, FxShapes.glow_ball(), cols[0], 0.3, 1.5, 0.16, 0.0)

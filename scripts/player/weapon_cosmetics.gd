@@ -61,11 +61,13 @@ const CELL_FX := {
 	"caustics": 8, "slosh": 9, "warp": 10, "plasma": 11, "snow": 12, "chase": 13, "pixels": 14,
 	"arcs": 15, "curtains": 16,
 	"arcade": 17, "kintsugi": 18, "koi": 19,
+	"fireflies": 20, "hypno": 21, "orbit": 22, "cotton": 23,
 }
 const DECAL_ART_SHADER := "res://art/shaders/decal_art.gdshader"
 const PATTERNS := {
 	"solid": 0, "stripes": 1, "camo": 2, "checker": 3, "dots": 4, "knit": 5, "tiger": 6,
 	"neon": 7, "scales": 8, "flames": 9, "stars": 10, "pixels": 11, "circuit": 12, "bones": 13,
+	"hearts": 14, "leopard": 15, "argyle": 16, "suits": 17,
 }
 
 static var _shaders := {}

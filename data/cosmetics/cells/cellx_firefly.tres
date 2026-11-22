@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_firefly"
+display_name = "Firefly Cell"
+description = "Fireflies drifting about a dusk-green glow, blinking on and off. Pairs with the Firefly Meadow finish."
+slot = &"weapon_cell"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.2275, 0.6039, 0.3529, 1, 0.9098, 1.0000, 0.4157, 1)
+params = {
+"fx": "fireflies"
+}
+sort_order = 3330

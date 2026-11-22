@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_hypno_spin"
+display_name = "Hypno Spin"
+description = "Op-art spirals turning one way and the next along the weapon, each round a glowing eye. Look into it."
+slot = &"weapon_finish"
+rarity = 2
+price = 2500
+colors = PackedColorArray(0.9569, 0.9451, 0.9176, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"shader": "res://art/shaders/finish_gear.gdshader",
+"shader_params": {
+"pattern": 3,
+"color_b": Color(0.1098, 0.0941, 0.1882, 1),
+"color_c": Color(1.0000, 0.2471, 0.6235, 1),
+"color_d": Color(0.8000, 0.8000, 0.8000, 1)
+},
+"pulse": true
+}
+sort_order = 2453

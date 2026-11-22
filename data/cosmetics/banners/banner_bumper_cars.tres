@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_bumper_cars"
+display_name = "Bumper Cars"
+description = "Two bumper cars bouncing off each other, sparks from the grid ceiling."
+slot = &"banner"
+rarity = 2
+price = 1500
+colors = PackedColorArray(1.0000, 0.2471, 0.6235, 1, 0.2471, 0.9569, 1.0000, 1, 0.1647, 0.1216, 0.3137, 1)
+params = {
+"style": 46
+}
+sort_order = 9345

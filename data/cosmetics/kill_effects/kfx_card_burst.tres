@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_card_burst"
+display_name = "Fifty-Two Pickup"
+description = "A deck explodes: playing cards fan out, flipping end over end."
+slot = &"kill_effect"
+rarity = 2
+price = 2000
+params = {
+"effect": "card_burst"
+}
+sort_order = 7323

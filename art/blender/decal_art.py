@@ -560,6 +560,103 @@ def outline_rocket_pop():
     pts += [(-0.6, -0.85), (-0.12, -0.85)]
     return pts
 
+# --- update 24 stickers -------------------------------------------------------
+
+def draw_big_top(c):
+    """A striped circus tent under a starry night, its pennant flying."""
+    c.gradient([(40, 20, 90), (120, 40, 140)], -1.0, 1.0)
+    for i, (x, z) in enumerate(((-0.6, 0.7), (0.55, 0.62), (-0.2, 0.85), (0.75, 0.25), (-0.8, 0.2))):
+        c.circle(x, z, 0.03 + 0.015 * (i % 2), fill=(255, 240, 180))
+    c.rect(-1.0, -1.0, 1.0, -0.62, fill=(60, 30, 70))
+    for i in range(6):
+        x0 = -0.7 + i * 0.233
+        col = (232, 38, 58) if i % 2 == 0 else WHITE
+        c.poly([(x0, -0.62), (x0 + 0.233, -0.62), (x0 + 0.233, -0.05), (x0, -0.05)], fill=col)
+    for i in range(6):
+        col = (232, 38, 58) if i % 2 == 0 else WHITE
+        xa, xb = -0.8 + i * 0.267, -0.8 + (i + 1) * 0.267
+        c.poly([(xa, -0.05), (xb, -0.05), (0.0, 0.55)], fill=col, outline=INK, width=0.015)
+    for i in range(7):
+        c.circle(-0.7 + i * 0.233, -0.05, 0.07, fill=(255, 210, 60), outline=INK, width=0.015)
+    c.rect(-0.16, -0.62, 0.16, -0.25, fill=INK, radius=0.12)
+    c.line([(0.0, 0.55), (0.0, 0.85)], INK, 0.03)
+    c.poly([(0.0, 0.85), (0.32, 0.77), (0.0, 0.68)], fill=(255, 210, 60), outline=INK, width=0.015)
+    c.line([(-0.7, -0.62), (0.7, -0.62)], INK, 0.03)
+
+
+def draw_ace_of_spades(c):
+    """The ace of spades, slightly tilted, with gold corners."""
+    c.fill((24, 110, 70))
+    c.dots((30, 130, 85), 0.1, 0.03)
+    c.rect(-0.58, -0.82, 0.58, 0.82, fill=WHITE, outline=INK, width=0.04, radius=0.12)
+    c.rect(-0.48, -0.72, 0.48, 0.72, outline=(212, 160, 58), width=0.02, radius=0.08)
+    c.circle(-0.18, 0.02, 0.24, fill=INK)
+    c.circle(0.18, 0.02, 0.24, fill=INK)
+    c.poly([(-0.4, 0.04), (0.0, 0.5), (0.4, 0.04), (0.0, -0.12)], fill=INK)
+    c.poly([(-0.16, -0.42), (0.16, -0.42), (0.04, -0.06), (-0.04, -0.06)], fill=INK)
+    c.text("A", -0.36, 0.56, 0.26, (232, 38, 58))
+    c.text("A", 0.36, -0.56, 0.26, (232, 38, 58), rotate=180)
+
+
+def draw_bottle_cap(c):
+    """A crimped soda bottle cap: a star and FIZZ! on enamel red."""
+    c.fill((200, 30, 50))
+    c.circle(0.0, 0.0, 0.78, fill=(232, 38, 58), outline=WHITE, width=0.05)
+    c.circle(0.0, 0.0, 0.62, outline=(255, 210, 60), width=0.03)
+    c.poly(burst(5, 0.42, 0.18, 90), fill=WHITE, outline=INK, width=0.02)
+    c.text("FIZZ!", 0.0, -0.42, 0.26, (255, 210, 60), stroke=INK, stroke_width=0.025)
+    for i in range(5):
+        a = math.radians(20 + i * 30)
+        c.circle(math.cos(a) * 0.5, math.sin(a) * 0.5 - 0.02, 0.025, fill=(255, 235, 235))
+
+
+def draw_firefly_jar(c):
+    """A glass jar of fireflies glowing on a dusk-blue field."""
+    c.gradient([(20, 30, 70), (40, 80, 120)], -1.0, 1.0)
+
+    def bugs(cv):
+        for x, z, r in ((-0.18, 0.1, 0.07), (0.2, -0.15, 0.06), (0.05, 0.32, 0.05), (-0.22, -0.32, 0.055), (0.24, 0.24, 0.045)):
+            cv.circle(x, z, r, fill=(230, 255, 110))
+    c.glow(bugs, 0.1)
+    c.rect(-0.45, -0.72, 0.45, 0.5, outline=(190, 235, 255), width=0.05, radius=0.16)
+    c.rect(-0.38, 0.5, 0.38, 0.72, fill=(212, 160, 58), outline=INK, width=0.025, radius=0.04)
+    for i in range(4):
+        c.line([(-0.36, 0.55 + i * 0.045), (0.36, 0.55 + i * 0.045)], (150, 110, 40), 0.01)
+    c.line([(-0.3, -0.5), (-0.3, 0.3)], (255, 255, 255), 0.03)
+
+
+def draw_magic_hat(c):
+    """A top hat with a wand, stars spilling out, a rabbit peeking over the brim."""
+    c.fill((110, 50, 170))
+    for x, z, r in ((-0.6, 0.6, 0.1), (0.6, 0.7, 0.08), (0.7, 0.1, 0.06), (-0.75, 0.0, 0.07)):
+        c.poly([(x + bx, z + bz) for bx, bz in burst(5, r, r * 0.45, 90 + x * 40)], fill=(255, 210, 60), outline=INK, width=0.012)
+    c.ellipse(-0.08, 0.55, 0.08, 0.26, fill=WHITE, outline=INK, width=0.02)
+    c.ellipse(0.12, 0.5, 0.08, 0.24, fill=WHITE, outline=INK, width=0.02)
+    c.ellipse(-0.08, 0.55, 0.035, 0.18, fill=(255, 160, 200))
+    c.ellipse(0.12, 0.5, 0.035, 0.16, fill=(255, 160, 200))
+    c.rect(-0.42, -0.62, 0.42, 0.28, fill=(36, 28, 52), outline=INK, width=0.03, radius=0.04)
+    c.rect(-0.43, -0.5, 0.43, -0.32, fill=(232, 38, 58))
+    c.ellipse(0.0, -0.66, 0.72, 0.12, fill=(36, 28, 52), outline=INK, width=0.03)
+    c.line([(0.38, -0.2), (0.82, 0.32)], INK, 0.07)
+    c.line([(0.72, 0.2), (0.82, 0.32)], WHITE, 0.07)
+
+
+def draw_horseshoe(c):
+    """A lucky golden horseshoe with nail holes and a four-leaf clover."""
+    c.fill((30, 120, 80))
+    c.arc(0.0, 0.08, 0.56, -40, 220, INK, 0.36)
+    c.arc(0.0, 0.08, 0.56, -38, 218, (255, 200, 60), 0.28)
+    c.arc(0.0, 0.08, 0.5, -30, 210, (255, 235, 150), 0.04)
+    for i in range(7):
+        a = math.radians(-25 + i * 38)
+        c.circle(math.cos(a) * 0.56, 0.08 + math.sin(a) * 0.56, 0.035, fill=INK)
+    for k in range(4):
+        a = math.radians(45 + 90 * k)
+        c.circle(math.cos(a) * 0.12, -0.32 + math.sin(a) * 0.12, 0.12, fill=(90, 220, 110), outline=INK, width=0.02)
+    c.line([(0.04, -0.4), (0.12, -0.7)], (90, 220, 110), 0.04)
+    c.circle(0.0, -0.32, 0.04, fill=(60, 170, 80))
+
+
 ART_STICKERS = {
     "PierPass": (circle_pts(1.0, 56), draw_pier_pass),
     "SkylineTag": (radial(lambda a: 0.86 + 0.09 * math.sin(5 * a + 0.4) + 0.05 * math.sin(11 * a)), draw_skyline_tag),
@@ -579,6 +676,12 @@ ART_STICKERS = {
     "Champion": (radial(lambda a: 0.92 + 0.07 * math.cos(16 * a), 96), draw_champion),
     "Strike": (circle_pts(0.98, 56), draw_strike),
     "CloseEncounter": ([(math.cos(math.tau * i / 56) * 0.86, math.sin(math.tau * i / 56)) for i in range(56)], draw_close_encounter),
+    "BigTop": (rounded_rect(0.94, 0.94, 0.3), draw_big_top),
+    "AceOfSpades": (rounded_rect(0.66, 0.9, 0.16), draw_ace_of_spades),
+    "BottleCap": (radial(lambda a: 0.9 + 0.08 * math.cos(21 * a), 126), draw_bottle_cap),
+    "FireflyJar": (circle_pts(0.98, 56), draw_firefly_jar),
+    "MagicHat": (rounded_rect(0.94, 0.94, 0.4), draw_magic_hat),
+    "Horseshoe": (circle_pts(0.98, 56), draw_horseshoe),
 }
 
 

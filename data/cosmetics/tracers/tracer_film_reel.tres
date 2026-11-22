@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_film_reel"
+display_name = "Film Reel"
+description = "Each shot is a strip of film, sprocket holes and all, its frames rolling past."
+slot = &"tracer"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.1098, 0.0941, 0.1882, 1, 1.0000, 0.8118, 0.4157, 1)
+params = {
+"style": "film"
+}
+sort_order = 8320

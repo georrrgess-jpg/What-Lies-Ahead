@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_prize_plush"
+display_name = "Prize Plush"
+description = "The fuzzy fur of a claw-machine plushie, panels joined by stitched seams, a ribbed satin label on the trim."
+slot = &"weapon_finish"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.4784, 0.8157, 1.0000, 1, 1.0000, 0.4784, 0.7216, 1)
+params = {
+"shader": "res://art/shaders/finish_gear.gdshader",
+"shader_params": {
+"pattern": 5,
+"color_b": Color(1.0000, 0.4784, 0.7216, 1),
+"color_c": Color(1.0000, 0.9569, 0.8784, 1),
+"color_d": Color(0.8000, 0.8000, 0.8000, 1)
+}
+}
+sort_order = 2456

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_admit_one"
+display_name = "Admit One"
+description = "A prize ticket with notched ends framed in the window, a dot in the middle."
+slot = &"weapon_sight"
+rarity = 1
+price = 750
+colors = PackedColorArray(1.0000, 0.4784, 0.2275, 1, 0.9098, 0.1490, 0.2275, 1)
+params = {
+"optic": "Holo",
+"reticle": "ticket"
+}
+sort_order = 6305

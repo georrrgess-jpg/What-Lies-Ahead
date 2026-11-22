@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_card_shark"
+display_name = "Card Shark"
+description = "Dealer's white gloves printed with card suits, red and black."
+slot = &"gloves"
+rarity = 2
+price = 1500
+colors = PackedColorArray(0.9843, 0.9686, 0.9333, 1, 0.1216, 0.4784, 0.2902, 1, 0.1216, 0.4784, 0.2902, 1, 0.1216, 0.4784, 0.2902, 1, 0.9098, 0.1490, 0.2275, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"pattern": "suits",
+"pattern_on": ["Glove"]
+}
+sort_order = 6343

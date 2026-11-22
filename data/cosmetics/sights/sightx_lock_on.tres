@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_lock_on"
+display_name = "Lock-On"
+description = "Four brackets breathe in and out round the dot, always ready to lock on."
+slot = &"weapon_sight"
+rarity = 1
+price = 1250
+colors = PackedColorArray(1.0000, 0.2275, 0.2902, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"optic": "Holo",
+"reticle": "brackets"
+}
+sort_order = 6309

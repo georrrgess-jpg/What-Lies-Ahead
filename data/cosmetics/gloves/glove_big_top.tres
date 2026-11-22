@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"glove_big_top"
+display_name = "Big Top"
+description = "Red and cream circus stripes with gold cuffs."
+slot = &"gloves"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.9098, 0.1490, 0.2275, 1, 1.0000, 0.8118, 0.2275, 1, 1.0000, 0.8118, 0.2275, 1, 0.9098, 0.1490, 0.2275, 1, 1.0000, 0.9412, 0.8314, 1, 1.0000, 0.8118, 0.2275, 1)
+params = {
+"pattern": "stripes",
+"pattern_on": ["Glove", "Sleeve"]
+}
+sort_order = 6345

@@ -67,7 +67,7 @@ void vertex() {
 	float width_m = length(MODEL_MATRIX[0].xyz);
 	// The pattern opens up over the first metres so it never fills the screen.
 	VERTEX.xy *= 0.12 + 0.88 * smoothstep(0.0, 6.0, v_along);
-	if (style == 0 || style == 5) {
+	if (style == 0 || style == 5 || style == 11) {
 		float twist = (style == 0 ? 1.2 : 0.3) * v_along + seed * 6.28;
 		float c = cos(twist);
 		float s = sin(twist);
@@ -76,6 +76,10 @@ void vertex() {
 	} else if (style == 2) {
 		// Flat at the muzzle, full height from about 6 m out.
 		VERTEX.y += heartbeat(v_along) * clamp((v_along - 1.0) / 5.0, 0.0, 1.0) / max(width_m, 0.001);
+		v_shade = 1.0;
+	} else if (style == 13) {
+		// Synthwave: a sine wave that rolls along the shot, flat at the muzzle.
+		VERTEX.y += sin(v_along * 2.2 - TIME * 18.0 + seed * 6.28) * 0.22 * clamp((v_along - 1.0) / 5.0, 0.0, 1.0) / max(width_m, 0.001);
 		v_shade = 1.0;
 	} else if (style == 9 || style == 10) {
 		// The seam jags in both directions across the shot; the koi swims
@@ -176,6 +180,65 @@ void fragment() {
 		col = mix(color_b.rgb * 0.55, color_a.rgb, smoothstep(1.0, 0.35, au));
 		col = mix(col, vec3(1.0, 0.97, 0.85), smoothstep(0.35, 0.0, au) * (0.35 + glow * 0.25) + hot * 0.7);
 		alpha = smoothstep(1.0, 0.55, au);
+	} else if (style == 11) {
+		// Film strip: sprocket holes along both edges, tinted frames between
+		// thin frame lines, rolling along the shot.
+		float x = mod(v_along - t * 6.0, 0.6);
+		float edge = smoothstep(0.62, 0.66, au);
+		vec2 hole = vec2(mod(v_along - t * 6.0, 0.15) - 0.075, au - 0.81);
+		float sprocket = step(abs(hole.x), 0.03) * step(abs(hole.y), 0.08);
+		float frame_line = step(x, 0.04);
+		col = mix(color_b.rgb * (0.85 + 0.15 * sin(v_along * 3.0)), color_a.rgb * 0.18, max(edge, frame_line));
+		col = mix(col, vec3(1.0), smoothstep(0.5, 0.0, au) * 0.25 * (1.0 - frame_line));
+		alpha = 1.0 - sprocket * edge;
+		col *= FRONT_FACING ? v_shade : v_shade * 0.8;
+	} else if (style == 12) {
+		// Zigzag: a bold zigzag band, its segments in the two colours, racing on.
+		float a = (v_along - t * 20.0) / 0.5;
+		float tri = abs(fract(a) - 0.5) * 4.0 - 1.0;
+		float d = abs(u - tri * 0.62);
+		float on = smoothstep(0.32, 0.22, d);
+		col = mix(color_a.rgb, color_b.rgb, step(0.5, fract(a * 0.5)));
+		col = mix(col, vec3(1.0), smoothstep(0.12, 0.0, d) * 0.4);
+		alpha = on;
+	} else if (style == 13) {
+		// Synthwave: a hot core in colour b, glowing out to colour a.
+		float core = smoothstep(0.35, 0.0, au);
+		col = mix(color_a.rgb, mix(color_b.rgb, vec3(1.0), 0.4), core);
+		alpha = smoothstep(1.0, 0.3, au);
+	} else if (style == 14) {
+		// A chain of five-pointed stars spinning as they race to the target.
+		float a = (v_along - t * 26.0) / 0.42;
+		float id = floor(a);
+		vec2 sp = vec2((fract(a) - 0.5) * 0.42, u * 0.21);
+		float ang = atan(sp.y, sp.x) + t * 9.0 + id;
+		float rr = length(sp);
+		float star = smoothstep(0.004, -0.004, rr - 0.13 * (0.6 + 0.4 * cos(5.0 * ang)));
+		col = mix(color_a.rgb, color_b.rgb, step(0.5, fract(id * 0.5)));
+		col = mix(col, vec3(1.0), smoothstep(0.06, 0.0, rr) * 0.6);
+		alpha = max(star, smoothstep(0.15, 0.0, au) * 0.35);
+	} else if (style == 15) {
+		// Fireflies: a faint thread with glowing motes that blink along it.
+		float a = v_along / 0.35;
+		float id = floor(a);
+		float off = (shot_hash(id) - 0.5) * 1.1;
+		float blink = 0.35 + 0.65 * smoothstep(0.2, 1.0, sin(t * (6.0 + shot_hash(id + 3.0) * 8.0) + id));
+		vec2 q = vec2((fract(a) - 0.5) * 2.2, u - off);
+		float mote = exp(-dot(q, q) * 14.0) * blink * step(0.35, shot_hash(id + 7.0));
+		col = mix(color_a.rgb, mix(color_b.rgb, vec3(1.0), 0.5), smoothstep(0.3, 1.0, mote));
+		alpha = max(mote, smoothstep(0.08, 0.0, au) * 0.4);
+	} else if (style == 16) {
+		// Bunting: a string with pennants in alternating colours hanging off it.
+		float a = (v_along - t * 4.0) / 0.4;
+		float id = floor(a);
+		float f = fract(a);
+		float string_line = smoothstep(0.08, 0.0, abs(u - 0.7));
+		float depth = clamp((0.7 - u) / 1.5, 0.0, 1.0);
+		float flag = step(abs(f - 0.5), 0.42 * (1.0 - depth)) * step(u, 0.7) * step(-0.8, u);
+		vec3 fc = mix(color_a.rgb, color_b.rgb, step(0.5, fract(id * 0.5)));
+		fc = mix(fc, vec3(1.0), step(0.66, fract(id / 3.0)) * 0.85);
+		col = mix(vec3(0.95, 0.92, 0.85), fc * (0.85 + 0.15 * depth), flag);
+		alpha = max(flag, string_line);
 	} else {
 		// A koi: scales in orange and white patches, a darker line down its back.
 		float patch = step(0.0, sin(v_along * 1.1 + seed * 6.28) + sin(v_along * 2.7 + seed * 3.0) * 0.6);
