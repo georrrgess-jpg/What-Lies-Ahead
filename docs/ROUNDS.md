@@ -262,12 +262,12 @@ result (`difficulty`, `difficulty_label`).
 
 **Last Ride** is the skill tier: every lever turned past Hard and nothing to
 lean on (no relief, no healing, no checkpoint continue), for double XP and Arcade Tokens.
-Tuned with the bot (level-40 profile): at the bot's precise aim (1.2 degrees) it
-clears Prize Pier with ~80 health left and wins about half of its Lava Lagoon runs
-with a strong weapon (the rest fall at the finale), while at an average aim (2.5
-degrees) it dies even on Prize Pier; Hard at precise aim clears Lava Lagoon with
-~40 health left. Endless (`ENDLESS_TABLE`: health 125%, damage 130%, pace up to
-1.4) at average aim reaches about wave 10 (Hard ~22, Standard ~26).
+Tuned with the bot (level-40 profile), raised in update 24: at the bot's precise
+aim (1.2 degrees) with the Ion Carbine it clears Prize Pier about two runs in three
+with 10-30 health at its lowest (it used to clear with ~80 left), and falls with
+weaker weapons; Hard at precise aim still clears Prize Pier and Standard clears Lava
+Lagoon with ~30 health left. Endless (`ENDLESS_TABLE`: Last Ride health 150%,
+damage 155%, pace up to 1.55; Hard health 122%) is harder at every tier too.
 
 `Difficulty.effects(id)` returns the headline changes as short lines for a
 menu; `Difficulty.color(id)` is the tier's accent.
