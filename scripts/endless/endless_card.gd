@@ -89,7 +89,9 @@ func _draw() -> void:
 	draw_rect(Rect2(r.position.x, ground - 8.0, r.size.x, 8.0), Color(EMBER, 0.6))
 
 
-## The frame, then the Endless emblem in the corner.
+## The frame, then the Endless emblem in the corner (a locked map's
+## padlock sits there instead).
 func _draw_frame() -> void:
 	super()
-	EndlessEmblem.paint(_frame, Vector2(size.x - 58, 58), 42.0)
+	if _unlocked:
+		EndlessEmblem.paint(_frame, Vector2(size.x - 58, 58), 42.0)

@@ -570,16 +570,17 @@ func _refresh_mode_tiles() -> void:
 		else:
 			var cleared := worlds.filter(func(w: WorldData) -> bool: return WorldCard.world_stars(w) >= 3).size()
 			tile.set_note("%d WORLDS  ·  %d CLEARED" % [worlds.size(), cleared])
-	if _browse_prompt:
-		_browse_prompt.visible = mode == STORY
-		(_deploy_prompt.get_child(1) as Label).text = "Start" if mode == ENDLESS else "Deploy"
 	var browse := _slot_count() > 1
+	if _browse_prompt:
+		_browse_prompt.visible = mode == STORY or browse
+		(_browse_prompt.get_child(1).get_child(1) as Label).text = "Browse maps" if mode == ENDLESS else "Browse worlds"
+		(_deploy_prompt.get_child(1) as Label).text = "Start" if mode == ENDLESS else "Deploy"
 	for arrow in _arrows:
 		arrow.visible = browse
 	if _pips:
 		_pips.visible = browse
-		# A lone endless level needs no row: its card sits on the board.
-		_carousel.visible = mode == STORY or browse
+		# The endless maps are tabs over the board (its card is on it).
+		_carousel.visible = mode == STORY
 
 
 ## The cards of a newly shown row deal in.
@@ -694,7 +695,7 @@ func _refresh_endless(level: LevelData) -> void:
 	_set_name(level.display_name.to_upper(), level.blurb)
 	_art.visible = false
 	_show_hero(level)
-	_level_tabs.visible = false
+	_fill_map_tabs(level)
 	_lock_text.text = lock_note
 	_lock.visible = lock_note != ""
 	var unlocked := GameData.is_level_unlocked(level)
@@ -818,6 +819,25 @@ func _reward_chip(e: Dictionary) -> Control:
 	v.add_child(UiKit.label(String(e["name"]).to_upper(), 20, color.lerp(Color.WHITE, 0.35) if met else UiKit.CREAM, true))
 	v.add_child(UiKit.label(String(e["kind"]), 16, color if met else UiKit.MUTED))
 	return card
+
+
+## The Endless maps as tabs over the board (with more than one); a locked
+## map's tab names the wave that opens it.
+func _fill_map_tabs(level: LevelData) -> void:
+	_clear(_level_tabs)
+	var levels := GameData.endless_levels()
+	_level_tabs.visible = levels.size() > 1
+	if not _level_tabs.visible:
+		return
+	var group := ButtonGroup.new()
+	for i in levels.size():
+		var l := levels[i]
+		var req := l.requirement
+		var note := "  ·  WAVE %d" % req.amount if req and not req.is_met() and req.kind == Requirement.Kind.ENDLESS_WAVE else ""
+		var tab := UiKit.toggle_button(l.display_name.to_upper() + note, group, 22)
+		tab.set_pressed_no_signal(l == level)
+		tab.pressed.connect(_select_slot.bind(i))
+		_level_tabs.add_child(tab)
 
 
 func _fill_level_tabs(world: WorldData, level: LevelData) -> void:

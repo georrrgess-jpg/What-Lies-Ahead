@@ -79,6 +79,14 @@ const LOT_ENTRANCES := [
 	[&"premiere", Vector3(101.0, 0, -38.0), 90.0, Rect2(96.0, -40.0, 10.0, 4.0)],
 ]
 
+## Western Street's buildings: [model, x, the street edge z, yaw]; the
+## kit's fronts are +Z, so the north row faces south (yaw 0).
+const WEST_FACADES := [
+	["gulch_hotel", -72.75, -10.0, 0.0], ["gulch_saloon", -52.75, -10.0, 0.0], ["gulch_bank", -40.0, -10.0, 0.0],
+	["gulch_livery", -82.5, 10.0, 180.0], ["gulch_store", -64.25, 10.0, 180.0], ["gulch_assay", -53.75, 10.0, 180.0],
+	["gulch_sheriff", -39.75, 10.0, 180.0],
+]
+
 ## [kind, district, position, yaw].
 const LOT_FEATURES := [
 	[&"trap_fire", &"western_street", Vector3(-62.0, 0, 0.0), 0.0],
@@ -99,6 +107,8 @@ var _cyls := {}
 var _kits := {}
 ## Walkable floor: the districts, passages and alleys.
 var _walk: Array[Rect2] = []
+## Ground the blocks leave to a model with its own collider (the facades).
+var _no_block: Array[Rect2] = []
 
 
 func _initialize() -> void:
@@ -124,6 +134,8 @@ func _initialize() -> void:
 		_walk.append(p)
 	for e in LOT_ENTRANCES:
 		_walk.append(e[3])
+	for b in WEST_FACADES:
+		_no_block.append(_facade_rect(b[0], Vector3(b[1], 0, b[2]), b[3]))
 	_lot_ground()
 	_lot_blocks()
 	_lot_front()
@@ -293,7 +305,7 @@ func _lot_blocks() -> void:
 	for j in nz:
 		for i in nx:
 			var p := Vector2(BOUNDS.position.x + (i + 0.5) * CELL, BOUNDS.position.y + (j + 0.5) * CELL)
-			grid[j * nx + i] = -1 if _is_floor(p) else _block_style(p)
+			grid[j * nx + i] = -1 if _is_floor(p) or _no_block.any(func(r: Rect2) -> bool: return r.has_point(p)) else _block_style(p)
 	# Greedy rectangles: run along x, then grow down z while the row matches.
 	var used := PackedByteArray()
 	used.resize(nx * nz)
@@ -353,12 +365,16 @@ func _block_style(p: Vector2) -> int:
 	return best + band * 10
 
 
-func _block_box(parent: Node3D, box_name: String, r: Rect2, style: int) -> void:
-	var kind := style % 10
-	var band := floori(style / 10.0)
+## A block's height from its style (district and storey band).
+func _style_height(style: int) -> float:
 	var heights := [12.0, 7.0, STAGE_ROOF, 9.0, 12.0]
 	var steps := [2.5, 0.0, 0.0, 2.0, 3.5]
-	var h: float = heights[kind] + steps[kind] * band
+	return heights[style % 10] + steps[style % 10] * floori(style / 10.0)
+
+
+func _block_box(parent: Node3D, box_name: String, r: Rect2, style: int) -> void:
+	var kind := style % 10
+	var h := _style_height(style)
 	var materials := [
 		_surface("stage_stucco", ["city_concrete"], Color(0.92, 0.84, 0.7), 0.12, 0.85),
 		_surface("west_backs", ["gulch_boards"], Color(0.45, 0.32, 0.24), 0.2, 0.9),
@@ -475,6 +491,7 @@ func _lot_front() -> void:
 	_sign(Vector3(22.05, 6.2, 0.0), -90.0, "SOUNDSTAGE 7", Color(0.55, 0.85, 1.0))
 	_sign(Vector3(0.0, 6.2, -22.05), 0.0, "MONSTER LOT", Color(0.55, 1.0, 0.7))
 	_lot_markings()
+	_billboard(Vector3(9.0, _style_height(_block_style(Vector2(9.0, -24.0))), -22.6))
 	_wardrobe(lot, Vector3(-13.5, 0, 14.5), 90.0)
 	for at in [Vector3(-6.5, 0, -10.5), Vector3(-1.5, 0, -3.5), Vector3(-7.5, 0, -2.0)]:
 		_kit(dressing, "dune_cone", "Cone%d" % _part_id, at, at.x * 17.0, Vector3.ZERO)
@@ -487,6 +504,24 @@ func _lot_front() -> void:
 		_kit(dressing, "palm", "GatePalmE%d" % int(z), Vector3(8.2, 0, z), z * 11.0, Vector3.ZERO)
 		_post(lot, "GatePalmWPost%d" % int(z), 0.4, 3.0, Vector3(-8.2, 0, z))
 		_post(lot, "GatePalmEPost%d" % int(z), 0.4, 3.0, Vector3(8.2, 0, z))
+
+
+## A billboard on Stage 4's roof over the lot: the studio's next picture,
+## lit by two lamps on its catwalk.
+func _billboard(base: Vector3) -> void:
+	var t := _node(dressing, "Billboard", base)
+	var steel := _mat("escape_steel", Color(0.22, 0.22, 0.25), 0.5)
+	for x in [-4.0, 0.0, 4.0]:
+		_part(t, Vector3(0.3, 3.0, 0.3), Vector3(x, 1.5, -0.6), steel)
+	_part(t, Vector3(11.0, 4.6, 0.3), Vector3(0, 5.3, 0), _mat("board_back", Color(0.12, 0.06, 0.16), 0.6))
+	_part(t, Vector3(11.4, 0.3, 0.6), Vector3(0, 3.0, 0.2), steel)
+	_part(t, Vector3(10.4, 0.35, 0.05), Vector3(0, 7.2, 0.17), _mat("board_band", Color(0.95, 0.72, 0.3), 0.4, Color(0.6, 0.4, 0.1), 0.8))
+	var title := _label(dressing, "BillboardTitle", "WHAT LIES AHEAD", base + Vector3(0, 5.6, 0.2), 0.0, 230, Color(0.95, 0.25, 0.3))
+	title.outline_modulate = Color(0.05, 0.0, 0.05)
+	_label(dressing, "BillboardLine", "COMING SOON  ·  A STARLOT PICTURE", base + Vector3(0, 4.1, 0.2), 0.0, 90, Color(1.0, 0.9, 0.7))
+	for x in [-3.5, 3.5]:
+		_part(t, Vector3(0.5, 0.4, 0.6), Vector3(x, 3.4, 1.0), _mat("grip_black", Color(0.08, 0.08, 0.09), 0.5))
+	_omni(fx, "BillboardLamp", base + Vector3(0, 4.0, 2.4), Color(1.0, 0.85, 0.65), 1.6, 9.0)
 
 
 ## Paint on the lot's asphalt: a dashed yellow lane round the middle and
@@ -874,13 +909,8 @@ func _lot_western() -> void:
 	var w := Node3D.new()
 	w.name = "Western"
 	geo.add_child(w)
-	# The kit's fronts face -Z: the north row turns round to face the street.
-	var north := [["gulch_hotel", -72.75], ["gulch_saloon", -52.75], ["gulch_bank", -40.0]]
-	var south := [["gulch_livery", -82.5], ["gulch_store", -64.25], ["gulch_assay", -53.75], ["gulch_sheriff", -39.75]]
-	for b in north:
-		_facade(w, b[0], Vector3(b[1], 0, -10.0), 180.0)
-	for b in south:
-		_facade(w, b[0], Vector3(b[1], 0, 10.0), 0.0)
+	for b in WEST_FACADES:
+		_facade(w, b[0], Vector3(b[1], 0, b[2]), b[3])
 	_backdrop("DesertFlat", Vector3(-80.0, 0, 0.0), 90.0, 12.0, 9.0, 0)
 	# Props down the street: a wagon, hay, barrels, troughs, hitching rails.
 	_solid_kit(w, "gulch_wagon", "Wagon", Vector3(-58.0, 0, 3.5), 80.0, Vector3(2.2, 2.6, 5.5))
@@ -903,7 +933,31 @@ func _lot_western() -> void:
 	_light_stand(w, "WestFill", Vector3(-66.0, 0, 6.5), 30.0, Color(1.0, 0.55, 0.3), true, 4.5)
 	_omni(fx, "DesertFlatWash", Vector3(-74.0, 6.0, 0.0), Color(1.0, 0.55, 0.3), 1.3, 13.0)
 	_dolly_track(w, Vector3(-44.0, 0, -2.0), 90.0, 10.0)
+	# A lighting truss slung across the street between the false fronts.
+	var truss := _mat("truss_alu", Color(0.7, 0.72, 0.76), 0.3)
+	_part(dressing, Vector3(0.4, 0.4, 22.0), Vector3(-56.0, 9.0, 0.0), truss)
+	_part(dressing, Vector3(0.06, 0.06, 22.0), Vector3(-56.0, 9.45, 0.2), truss)
+	for z in [-5.0, 0.0, 5.0]:
+		var lamp := _node(dressing, "StreetLamp%d" % int(z), Vector3(-56.0, 8.4, z))
+		lamp.rotation.x = deg_to_rad(-90.0)
+		_part(lamp, Vector3(0.6, 0.6, 0.7), Vector3.ZERO, _mat("grip_black", Color(0.08, 0.08, 0.09), 0.5))
+		_part(lamp, Vector3(0.5, 0.5, 0.04), Vector3(0, 0, 0.37), _mat("lens_ffb070", Color(1.0, 0.69, 0.44), 0.2, Color(1.0, 0.69, 0.44), 4.0))
+	_omni(fx, "StreetTrussLight", Vector3(-56.0, 6.0, 0.0), Color(1.0, 0.7, 0.45), 1.3, 12.0)
 	_chair(w, "WestChair", Vector3(-36.5, 0, 5.0), 250.0, "DIRECTOR")
+
+
+## The model's origin that puts its front (the porch, its +Z face) on the
+## street edge `front`.
+func _facade_origin(aabb: AABB, front: Vector3, yaw: float) -> Vector3:
+	return front - Basis(Vector3.UP, deg_to_rad(yaw)) * Vector3(0, 0, aabb.end.z)
+
+
+## A facade's footprint on the ground (the blocks leave it to the model).
+func _facade_rect(model: String, front: Vector3, yaw: float) -> Rect2:
+	var aabb := _model_aabb(model)
+	var xf := Transform3D(Basis(Vector3.UP, deg_to_rad(yaw)), _facade_origin(aabb, front, yaw))
+	var box := xf * aabb
+	return Rect2(box.position.x, box.position.z, box.size.x, box.size.z)
 
 
 ## A false-front building from the Gold Rush kit: collides over its whole
@@ -911,17 +965,16 @@ func _lot_western() -> void:
 func _facade(parent: Node3D, model: String, front: Vector3, yaw: float) -> void:
 	var aabb := _model_aabb(model)
 	var b := Basis(Vector3.UP, deg_to_rad(yaw))
-	# The model's front (its -Z face) on the street edge.
-	var origin := front - b * Vector3(0, 0, aabb.position.z)
+	var origin := _facade_origin(aabb, front, yaw)
 	_kit(dressing, model, "Facade_" + model, origin, yaw, Vector3(10, 8, 10))
 	var body := _collider(parent, "Facade_%sCollision" % model, aabb.size, origin + b * aabb.get_center())
 	body.rotation.y = deg_to_rad(yaw)
 	var timber := _mat("brace_timber", Color(0.5, 0.36, 0.22), 0.9)
-	var back := origin + b * Vector3(0, 0, aabb.end.z - 0.6)
+	var back := origin + b * Vector3(0, 0, aabb.position.z + 0.6)
 	for k in 3:
 		var x := (k - 1) * aabb.size.x * 0.35
 		_part(dressing, Vector3(0.2, aabb.size.y + 2.5, 0.2), back + b * Vector3(x, 0, 0) + Vector3(0, (aabb.size.y + 2.5) * 0.5, 0), timber, Vector3(0, deg_to_rad(yaw), 0))
-		_part(dressing, Vector3(0.16, aabb.size.y * 0.9, 0.16), back + b * Vector3(x, 0, -2.0) + Vector3(0, aabb.size.y * 0.55, 0), timber, Vector3(deg_to_rad(-22.0), deg_to_rad(yaw), 0))
+		_part(dressing, Vector3(0.16, aabb.size.y * 0.9, 0.16), back + b * Vector3(x, 0, 2.0) + Vector3(0, aabb.size.y * 0.55, 0), timber, Vector3(deg_to_rad(-22.0), deg_to_rad(yaw), 0))
 
 
 ## A painted flat on a timber frame: the painting faces `yaw`, braces and
@@ -1200,24 +1253,39 @@ func _lot_monster() -> void:
 	_omni(fx, "GraveGlowW", Vector3(-12.0, 3.0, -70.0), Color(0.4, 0.75, 0.6), 0.8, 12.0)
 	_omni(fx, "GraveGlowE", Vector3(12.0, 3.0, -64.0), Color(0.4, 0.75, 0.6), 0.8, 12.0)
 	_chair(m, "MonsterChair", Vector3(19.0, 0, -46.5), 200.0, "MONSTER")
+	# Rubber bats on wires round the castle's towers.
+	for b in [Vector3(-9.0, 13.0, -88.0), Vector3(-6.5, 15.0, -87.0), Vector3(8.0, 12.5, -87.5), Vector3(11.0, 14.5, -88.5), Vector3(2.0, 18.5, -89.0)]:
+		var bat := MeshInstance3D.new()
+		bat.name = "Bat%d" % int(b.x * 10.0)
+		bat.mesh = _kit_mesh_of("fright_kit", "Bat")
+		bat.position = b
+		bat.rotation.y = b.x * 0.4
+		bat.scale = Vector3.ONE * 1.6
+		dressing.add_child(bat)
+		_part(dressing, Vector3(0.02, 4.0, 0.02), b + Vector3(0, 2.0, 0), _mat("wire", Color(0.1, 0.1, 0.1), 0.5))
 
 
 ## A mesh from a multi-part kit (fright_kit) with a box collider.
 func _kit_piece(parent: Node3D, kit: String, mesh_name: String, prop_name: String, pos: Vector3, yaw: float, size: Vector3) -> void:
+	var mi := MeshInstance3D.new()
+	mi.name = prop_name
+	mi.mesh = _kit_mesh_of(kit, mesh_name)
+	mi.position = pos
+	mi.rotation.y = deg_to_rad(yaw)
+	dressing.add_child(mi)
+	var c := _collider(parent, prop_name + "Collision", size, pos + Vector3(0, size.y * 0.5, 0))
+	c.rotation.y = deg_to_rad(yaw)
+
+
+## The named mesh of a multi-part kit .glb (cached).
+func _kit_mesh_of(kit: String, mesh_name: String) -> Mesh:
 	var key := kit + "/" + mesh_name
 	if not _kits.has(key):
 		var source: Node3D = (load(MODELS + kit + ".glb") as PackedScene).instantiate()
 		for n in source.find_children("*", "MeshInstance3D", true, false):
 			_kits[kit + "/" + String(n.name)] = (n as MeshInstance3D).mesh
 		source.free()
-	var mi := MeshInstance3D.new()
-	mi.name = prop_name
-	mi.mesh = _kits[key]
-	mi.position = pos
-	mi.rotation.y = deg_to_rad(yaw)
-	dressing.add_child(mi)
-	var c := _collider(parent, prop_name + "Collision", size, pos + Vector3(0, size.y * 0.5, 0))
-	c.rotation.y = deg_to_rad(yaw)
+	return _kits[key]
 
 
 func _mist(pos: Vector3, size: float) -> void:
