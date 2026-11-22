@@ -122,6 +122,8 @@ TIN = gd_consts("scripts/weapons/tin_soldier.gd")
 TIN.update(gd_consts("scripts/weapons/modes/tin_sergeant_mode.gd"))
 # The Sarsaparilla Six: tap or fan the hammer; the shot that empties the cylinder is the Last Call.
 SARSA = gd_consts("scripts/weapons/modes/sarsaparilla_six_mode.gd")
+# The Ringmaster: its everyday rate, Spotlight meter and the Main Event (rate, pierce, confetti pops).
+RING = gd_consts("scripts/weapons/modes/ringmaster_mode.gd")
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
 	"capsule_height": 1.9, "mass": 1.0, "move_speed": 2.0}
 # Extra effective health from armour behaviours (helmet, riot shield, ice shell).
@@ -384,6 +386,9 @@ def pull_damage(w, e, d, head):
 		# Tokens hit like ray shots at the tilting rate; heavies and alphas take HEAVY_SCALE.
 		glance = COIN["HEAVY_SCALE"] if e.get("heavy", False) or e.get("mass", 1.0) >= 3.0 else 1.0
 		return w["damage"] * scale * head_mix * glance, coin_cycle(w)
+	if w["id"] == "ringmaster":
+		# The everyday rate (BASE_INTERVAL); the data rate is the Main Event's.
+		return w["damage"] * scale * head_mix, RING["BASE_INTERVAL"]
 	if w["id"] == "sarsaparilla_six":
 		# Fanned from the hip: a cylinder in FAN_DELAY + 5 intervals, one in six a Last Call.
 		return w["damage"] * scale * head_mix * sarsa_mix(), sarsa_cycle(w, True)
@@ -710,6 +715,16 @@ def main():
 			print(f"\n{w['display_name']} Free Play: a magazine held down averages {1.0 / coin_cycle(w):.1f} tokens a second (tilts after "
 				f"{COIN['TILT_DELAY']:g} s); on a stream of tourists it drops {k} with {head * 100:.0f}% headshots ({paid:.1f} payouts, "
 				f"+{back:.0f} rounds) against {k0} with body shots only; heavies and alphas take {COIN['HEAVY_SCALE'] * 100:.0f}%")
+	for w in ws.values():
+		if w["id"] == "ringmaster":
+			mix = 1.0 + head * (w["headshot_multiplier"] - 1.0)
+			base = w["damage"] * mix / RING["BASE_INTERVAL"]
+			live = w["damage"] * mix / w["fire_interval"]
+			kills = 1.0 / RING["FILL_KILL"]
+			print(f"\n{w['display_name']} Main Event: {kills:.0f} kills (headshot kills count double) fill the Spotlight; for "
+				f"{RING['EVENT_TIME']:g} s the rate climbs from {1.0 / RING['BASE_INTERVAL']:.1f} to {1.0 / w['fire_interval']:.1f} a second "
+				f"({base:.0f} -> {live:.0f} DPS on one target before reloads), every round passes through {RING['EVENT_PIERCE']} more zombie "
+				f"(x{w['pierce_falloff']:g}) and every kill pops {RING['POP_DAMAGE']:g} within {RING['POP_RADIUS']:g} m (heavies half), chaining")
 	for w in ws.values():
 		if w["id"] == "sarsaparilla_six":
 			mix = 1.0 + head * (w["headshot_multiplier"] - 1.0)

@@ -111,6 +111,18 @@ JOINTS["sarsaparilla_six"] = ([("Cylinder", "Shell"), ("Hammer", "Shell"), ("Tri
                               + [(f"{p}{i}", q) for i in range(6) for p in ("Round", "Cap", "Soda") for q in ("Cylinder", "Shell")]
                               + [(f"{p}{i}", f"Round{i}") for i in range(6) for p in ("Cap", "Soda")] + [(f"Cap{i}", f"Soda{i}") for i in range(6)])
 
+# Update 24: the Ringmaster. The drum's neck seats in the magazine well, its three rings turn on the axle
+# (their bulbs in their sockets), the hologram drum prints on the drum's spot, the handle rides in its slot,
+# the top hat sits on the barrel, the tassel hangs from its swivel, the spotlight sits on the nose.
+WEAPONS.append("ringmaster")
+CELLS["ringmaster"] = ["Cell", "DrumHolo"]
+JOINTS["ringmaster"] = ([("Drum", "Shell"), ("DrumHolo", "Shell"), ("DrumHolo", "Drum"), ("Handle", "Shell"), ("Hat", "Shell"),
+                         ("Tassel", "Shell"), ("Spot", "Shell"), ("Spot", "Cell"), ("Cell", "Shell")]
+                        + [(r, q) for r in ("RingOuter", "RingMid", "RingHub") for q in ("Drum", "DrumHolo")]
+                        + [("RingOuter", "RingMid"), ("RingMid", "RingHub")]
+                        + [(f"BulbO{i}", q) for i in range(12) for q in ("RingOuter", "Drum", "DrumHolo")]
+                        + [(f"BulbM{i}", q) for i in range(8) for q in ("RingMid", "Drum", "DrumHolo")])
+
 
 def world_tree(ob, matrix=None):
     mw = matrix if matrix is not None else ob.matrix_world

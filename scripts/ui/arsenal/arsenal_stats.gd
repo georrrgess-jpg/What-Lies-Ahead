@@ -172,6 +172,8 @@ static func mode_trait(w: WeaponData) -> String:
 
 ## What unlocks a locked weapon, in full ("Reach level 12").
 static func unlock_text(w: WeaponData) -> String:
+	if w.unlock and w.unlock.kind == Requirement.Kind.NONE and not w.unlock.all_of.is_empty():
+		return "all of\n" + "\n".join(steps_progress(w.unlock))
 	if w.unlock and w.unlock.kind == Requirement.Kind.MELEE_KILLS and w.unlock.all_of.is_empty():
 		return "%s  ·  %s so far" % [w.unlock.describe(), Wallet.format(Progression.melee_kills())]
 	return w.unlock.describe() if w.unlock else "Locked"
@@ -192,4 +194,26 @@ static func short_unlock(w: WeaponData) -> String:
 		return "Wave %d" % w.unlock.amount
 	if w.unlock.kind == Requirement.Kind.MELEE_KILLS and w.unlock.all_of.is_empty():
 		return melee_progress(w.unlock)
+	if w.unlock.kind == Requirement.Kind.NONE and not w.unlock.all_of.is_empty():
+		var met := w.unlock.all_of.filter(func(r: Requirement) -> bool: return r != null and r.is_met()).size()
+		return "%d of %d done" % [met, w.unlock.all_of.size()]
 	return w.unlock.describe()
+
+
+## One line per condition of a several-part unlock (the Ringmaster's), with
+## its progress: "Player level 37 / 50", "Kills 4,210 / 15,000", "Done: ...".
+static func steps_progress(r: Requirement) -> PackedStringArray:
+	var out := PackedStringArray()
+	for step in r.all_of:
+		if step == null:
+			continue
+		var line := step.describe()
+		match step.kind:
+			Requirement.Kind.PLAYER_LEVEL:
+				line = "Player level %d / %d" % [mini(Progression.level(), step.amount), step.amount]
+			Requirement.Kind.TOTAL_KILLS:
+				line = "Kills %s / %s" % [Wallet.format(mini(Mastery.total_kills(), step.amount)), Wallet.format(step.amount)]
+			Requirement.Kind.ENDLESS_WAVE:
+				line = "Best Endless wave %d / %d" % [mini(EndlessRecords.best_wave(), step.amount), step.amount]
+		out.append(("Done: " + line) if step.is_met() else line)
+	return out
