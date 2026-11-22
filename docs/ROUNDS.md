@@ -236,18 +236,18 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 
 | | Casual | Standard | Hard | Last Ride |
 |---|---|---|---|---|
-| Enemy health | 80% | 100% | 114% | 130% |
-| Alpha health | 70% | 100% | 100% | 110% |
-| Enemy damage | 60% | 100% | 108% | 120% |
-| Enemy speed | 95% | 100% | 105% | 108% |
-| Crowd cap | 80% | 100% | 105% | 115% |
-| Spawn interval | 120% | 100% | 95% | 90% |
-| Special-attack cooldowns | 145% | 100% | 90% | 80% |
-| Pace bounds (min-max) | 0.55-1.0 | 0.7-1.35 | 0.85-1.4 | 0.9-1.45 |
-| Spawn pause for a player in trouble | 6 s per wave | 3.5 s | none | none |
+| Enemy health | 80% | 108% | 128% | 160% |
+| Alpha health | 70% | 105% | 112% | 135% |
+| Enemy damage | 60% | 110% | 120% | 145% |
+| Enemy speed | 95% | 103% | 108% | 114% |
+| Crowd cap | 80% | 106% | 112% | 130% |
+| Spawn interval | 120% | 95% | 90% | 80% |
+| Special-attack cooldowns | 145% | 92% | 82% | 65% |
+| Pace bounds (min-max) | 0.55-1.0 | 0.75-1.4 | 0.9-1.45 | 1.0-1.6 |
+| Spawn pause for a player in trouble | 6 s per wave | 2.5 s | none | none |
 | Health back at every wave clear | +20 | - | - | - |
 | Ticket income | +25% (paid at the wave clear) | - | - | - |
-| Rewards (`reward_scale()`: account XP, Arcade Tokens) | 80% | 100% | 130% | 200% |
+| Rewards (`reward_scale()`: account XP, Arcade Tokens) | 80% | 100% | 140% | 250% |
 | Continue from a checkpoint | yes | yes | yes | no |
 | Unlocks at | - | - | - | player level 20 |
 

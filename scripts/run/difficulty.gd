@@ -14,7 +14,7 @@ const DESCRIPTIONS := {
 	&"casual": "Zombies hit softer and go down faster. Pays a little less.",
 	&"standard": "The intended challenge.",
 	&"hard": "Tougher, meaner hordes. Pays more.",
-	&"last_ride": "The final ride: no healing, no checkpoints, no mercy. Pays double.",
+	&"last_ride": "The final ride: brutal hordes, no healing, no checkpoints, no mercy. Pays 2.5x.",
 }
 const COLORS := {
 	&"casual": Color(0.45, 0.95, 0.6),
@@ -49,26 +49,26 @@ const TABLE := {
 		"wave_heal": 20.0, "tickets": 1.25, "reward": 0.8, "checkpoints": 1.0,
 	},
 	&"standard": {
-		"health": 1.0, "boss_health": 1.0, "damage": 1.0, "speed": 1.0,
-		"max_alive": 1.0, "interval": 1.0, "specials": 1.0,
-		"pace_min": 0.7, "pace_max": 1.35, "relief": 3.5,
+		"health": 1.08, "boss_health": 1.05, "damage": 1.1, "speed": 1.03,
+		"max_alive": 1.06, "interval": 0.95, "specials": 0.92,
+		"pace_min": 0.75, "pace_max": 1.4, "relief": 2.5,
 		"wave_heal": 0.0, "tickets": 1.0, "reward": 1.0, "checkpoints": 1.0,
 	},
 	&"hard": {
-		"health": 1.14, "boss_health": 1.0, "damage": 1.08, "speed": 1.05,
-		"max_alive": 1.05, "interval": 0.95, "specials": 0.9,
-		"pace_min": 0.85, "pace_max": 1.4, "relief": 0.0,
-		"wave_heal": 0.0, "tickets": 1.0, "reward": 1.3, "checkpoints": 1.0,
+		"health": 1.28, "boss_health": 1.12, "damage": 1.2, "speed": 1.08,
+		"max_alive": 1.12, "interval": 0.9, "specials": 0.82,
+		"pace_min": 0.9, "pace_max": 1.45, "relief": 0.0,
+		"wave_heal": 0.0, "tickets": 1.0, "reward": 1.4, "checkpoints": 1.0,
 	},
 	# Skill, not grind: every zombie is tougher, faster and hits harder, the
 	# crowd is bigger and arrives sooner, specials come often, the pacing
 	# director only ever presses and never grants relief, and a fallen run is
-	# over. Twice Standard's XP and Sparks.
+	# over. Two and a half times Standard's XP and Arcade Tokens.
 	&"last_ride": {
-		"health": 1.3, "boss_health": 1.1, "damage": 1.2, "speed": 1.08,
-		"max_alive": 1.15, "interval": 0.9, "specials": 0.8,
-		"pace_min": 0.9, "pace_max": 1.45, "relief": 0.0,
-		"wave_heal": 0.0, "tickets": 1.0, "reward": 2.0, "checkpoints": 0.0,
+		"health": 1.6, "boss_health": 1.35, "damage": 1.45, "speed": 1.14,
+		"max_alive": 1.3, "interval": 0.8, "specials": 0.65,
+		"pace_min": 1.0, "pace_max": 1.6, "relief": 0.0,
+		"wave_heal": 0.0, "tickets": 1.0, "reward": 2.5, "checkpoints": 0.0,
 	},
 }
 
@@ -131,8 +131,8 @@ static func effects(id: StringName) -> PackedStringArray:
 ## multiplier, so Hard keeps a little relief there (it stays clearly harder
 ## than Standard: about wave 18-22 against the mid-20s for the same player).
 const ENDLESS_TABLE := {
-	&"hard": {"health": 1.1, "relief": 1.0, "pace_max": 1.35},
-	&"last_ride": {"health": 1.25, "damage": 1.3, "pace_max": 1.4},
+	&"hard": {"health": 1.22, "relief": 1.0, "pace_max": 1.4},
+	&"last_ride": {"health": 1.5, "damage": 1.55, "pace_max": 1.55},
 }
 
 

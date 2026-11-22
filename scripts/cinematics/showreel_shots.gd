@@ -950,7 +950,7 @@ func _last_ride(st: CineStage) -> void:
 	st.light(cam + Vector3(-1, 2, 0), UiKit.RED, 3.0, 14.0)
 	st.flare_at(func(): return st.head(z) + Vector3(0.3, 0, 0), UiKit.RED, 0.4, 0.3, 0.2)
 	st.at(0.0, st.overlay.card.bind(Difficulty.LABELS[&"last_ride"], "The hardest difficulty", Vector2(0.5, 0.26), 1.4, UiKit.RED, 160))
-	st.at(0.6, st.overlay.tag.bind("No healing  ·  no checkpoints  ·  double XP", "%s, %s" % [_enemy_name(LAST_RIDE_ALPHA), _epithet(LAST_RIDE_ALPHA).to_lower()], UiKit.RED))
+	st.at(0.6, st.overlay.tag.bind("No healing  ·  no checkpoints  ·  2.5x XP", "%s, %s" % [_enemy_name(LAST_RIDE_ALPHA), _epithet(LAST_RIDE_ALPHA).to_lower()], UiKit.RED))
 
 
 # --- make it yours (46-50) ---------------------------------------------------------
