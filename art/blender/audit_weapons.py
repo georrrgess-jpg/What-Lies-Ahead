@@ -111,6 +111,18 @@ JOINTS["sarsaparilla_six"] = ([("Cylinder", "Shell"), ("Hammer", "Shell"), ("Tri
                               + [(f"{p}{i}", q) for i in range(6) for p in ("Round", "Cap", "Soda") for q in ("Cylinder", "Shell")]
                               + [(f"{p}{i}", f"Round{i}") for i in range(6) for p in ("Cap", "Soda")] + [(f"Cap{i}", f"Soda{i}") for i in range(6)])
 
+# Update 24: the Bullseye Longbow. Its limbs and riser stand far above the eye line beside it
+# (a bow is upright), so only a tube round the sight line (SIGHT_TUBE metres) must be clear.
+# The limb segments chain on their joints, the string halves meet at the nock and lie in the
+# tips' grooves, the arrow lies on the shelf with its nock on the string.
+WEAPONS.append("bullseye_bow")
+SIGHT_TUBE = {"bullseye_bow": 0.03}
+HOLDS["bullseye_bow"] = [("ArmR", "StringT"), ("ArmR", "StringB"), ("ArmR", "Arrow")]
+JOINTS["bullseye_bow"] = ([("LimbT0", "Shell"), ("LimbB0", "Shell"), ("StringT", "StringB"), ("StringT", "LimbT4"), ("StringB", "LimbB4"),
+                           ("Arrow", "StringT"), ("Arrow", "StringB"), ("Arrow", "Shell"), ("CellHolo", "Arrow"), ("CellHolo", "Shell"),
+                           ("CellHolo", "StringT"), ("CellHolo", "StringB"), ("Cell", "Shell")]
+                          + [(f"Limb{s}{i}", f"Limb{s}{i + 1}") for s in "TB" for i in range(4)])
+
 
 def world_tree(ob, matrix=None):
     mw = matrix if matrix is not None else ob.matrix_world
@@ -181,6 +193,9 @@ def audit(name, poses, verbose=True):
             if near:
                 bad("sight", f"{k} stands on the optic's place on the rail")
             continue
+        tube = SIGHT_TUBE.get(name)
+        if tube:
+            top = max([v.z for v in verts if abs(v.x - eye.x) < tube and v.z < eye.z + tube and v.y > eye.y] or [-1.0])
         if top > eye.z - 0.002:
             bad("sight", f"{k} rises {top - eye.z + 0.002:.4f} above the eye line (z {top:.4f} vs {eye.z:.4f})")
         over = [v for v in verts if abs(v.y - mount.y) < RAIL_FLAT / 2 and abs(v.x - mount.x) < 0.03 and v.z > mount.z + 0.0005]
