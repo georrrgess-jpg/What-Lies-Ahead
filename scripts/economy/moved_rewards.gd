@@ -1,7 +1,7 @@
 class_name MovedRewards
 extends RefCounted
 ## One-time carry-over for level rewards that moved to the Shop (updates 12,
-## 13, 16, 20 and 23: new guns and melee weapons took their levels). A save that had already reached the
+## 13, 16, 20, 23 and 24: new guns and melee weapons took their levels). A save that had already reached the
 ## level keeps the item it earned there (granted "cosmetic:<id>"); everyone
 ## else buys it in the Shop. "moved_rewards" in the progression section
 ## records the batches applied, so each runs once per profile.
@@ -17,6 +17,8 @@ const BATCHES := {
 	"u20": {&"decal_paw": 17, &"banner_marquee": 25, &"title_grand_prize": 39},
 	# Update 23: Sarsaparilla Six (29) and Tin Sergeant (35).
 	"u23": {&"finish_arcade_night": 29, &"charm_crown": 35},
+	# Update 24: Bullseye Longbow (41).
+	"u24": {&"finish_harlequin_tea": 41},
 }
 
 
