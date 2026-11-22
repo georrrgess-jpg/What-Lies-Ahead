@@ -10,7 +10,8 @@ extends WeaponMode
 ##             crosshair (BullseyeRingHud) and the arrowhead glints. Loosed
 ##             inside it the arrow is a Bullseye: BULLSEYE_SCALE damage,
 ##             faster, and it passes through BULLSEYE_PIERCE zombies before
-##             it pins the next one (a short stagger)
+##             it pins the next one (a short stagger); a plain arrow at full
+##             draw passes through FULL_PIERCE
 ##   fatigue   held past the window the bow arm tires: the aim trembles and
 ##             the spread grows (spread_bonus, up to TREMBLE_MAX degrees;
 ##             half that aimed), and after HOLD_MAX seconds at full draw the
@@ -29,7 +30,9 @@ const TRAIT := "BULLSEYE"
 const BULLSEYE_WINDOW := 0.26
 const BULLSEYE_WINDOW_AIMED := 0.36
 const BULLSEYE_SCALE := 1.4
-const BULLSEYE_PIERCE := 2
+const BULLSEYE_PIERCE := 3
+## A plain arrow loosed at full draw passes through this many zombies first.
+const FULL_PIERCE := 1
 ## Extra flight speed of a Bullseye, and of a part drawn arrow at the least
 ## draw (shares of WeaponData.projectile_speed).
 const BULLSEYE_SPEED := 1.15
@@ -100,7 +103,8 @@ func launch(from: Vector3, dir: Vector3, scale: float) -> bool:
 		scale *= BULLSEYE_SCALE
 		bullseyes += 1
 		Sfx.play(BULLSEYE_SOUND, -3.0)
-	BowArrow.launch(controller, data, from, dir * speed, scale, BULLSEYE_PIERCE if bullseye else 0, bullseye)
+	var pierce := BULLSEYE_PIERCE if bullseye else (FULL_PIERCE if power >= 0.999 else 0)
+	BowArrow.launch(controller, data, from, dir * speed, scale, pierce, bullseye)
 	var view := controller.player.view
 	if view:
 		view.weapon_event(data, BULLSEYE_EVENT if bullseye else LOOSE_EVENT)
