@@ -93,9 +93,11 @@ func _build_machine() -> Control:
 		tab.tooltip_text = s.tagline
 	_series_tabs.tab_changed.connect(_on_series_picked)
 	col.add_child(_series_tabs)
-	_series_line = UiKit.label("", UiKit.SIZE_SMALL, UiKit.MUTED)
+	_series_line = UiKit.label("", UiKit.SIZE_SMALL, UiKit.CREAM)
 	_series_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_series_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_series_line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_series_line.add_theme_constant_override("outline_size", 8)
+	_series_line.add_theme_color_override("font_outline_color", UiKit.INK)
 	col.add_child(_series_line)
 	var stage := Control.new()
 	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -189,7 +191,8 @@ func refresh() -> void:
 	_series_tabs.select(s.id)
 	_machine.dress(s)
 	var got := PrizePrints.collected(s)
-	_series_line.text = "%s  ·  %d of %d finishes collected" % [s.tagline, got.x, got.y]
+	_series_line.text = "%s  ·  %d / %d collected" % [s.tagline, got.x, got.y]
+	_series_line.tooltip_text = _series_line.text
 	var n := PrizePrints.capsules()
 	_machine.capsule_count = n
 	_count.text = "x%d" % n
