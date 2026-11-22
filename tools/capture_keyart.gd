@@ -26,8 +26,9 @@ extends SceneTree
 const OUT_DIR := "res://art/keyart/"
 ## Levels framed wider than the menu's lens (a tall subject from close by):
 ## Ashfall City looks up the Broadcast Tower plaza at the broken skyscraper
-## and the radio mast.
-const FOV := {"endless_city": 72.0}
+## and the radio mast; Starlot Studios looks up the red carpet at the
+## Starlot Grand's marquee.
+const FOV := {"endless_city": 72.0, "endless_studio": 64.0}
 
 var _only: Array[String] = []
 var _size := Vector2i(960, 540)

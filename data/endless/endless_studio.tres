@@ -1,0 +1,92 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/endless_rules.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/data/endless_district.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/data/wave_set.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="5"]
+
+[sub_resource type="Resource" id="d_front"]
+script = ExtResource("3")
+id = &"front_lot"
+display_name = "Front Lot"
+blurb = "The studio's front lot under the water tower: trailers, a camera crane and the last working loadout station."
+price = 0
+enemies = Array[StringName]([])
+accent_color = Color(1, 0.78, 0.35, 1)
+
+[sub_resource type="Resource" id="d_western"]
+script = ExtResource("3")
+id = &"western_street"
+display_name = "Western Street"
+blurb = "False-front saloons down a dirt street and a painted desert at the end of it. The cowpokes never got their cue to stop."
+price = 600
+enemies = Array[StringName]([&"gulch_cowpoke"])
+accent_color = Color(1, 0.55, 0.25, 1)
+
+[sub_resource type="Resource" id="d_stage"]
+script = ExtResource("3")
+id = &"soundstage"
+display_name = "Soundstage 7"
+blurb = "A starship bridge set under the lighting grid, a green screen and a warp-speed viewscreen. The space cadets are still in costume."
+price = 1000
+enemies = Array[StringName]([&"dune_space_cadet"])
+accent_color = Color(0.4, 0.85, 1, 1)
+
+[sub_resource type="Resource" id="d_monster"]
+script = ExtResource("3")
+id = &"monster_lot"
+display_name = "Monster Lot"
+blurb = "A castle front, a graveyard in machine fog and a moon on a crane. The pumpkin heads were extras. Were."
+price = 1400
+enemies = Array[StringName]([&"fright_pumpkin_head"])
+accent_color = Color(0.45, 1, 0.6, 1)
+
+[sub_resource type="Resource" id="d_premiere"]
+script = ExtResource("3")
+id = &"premiere"
+display_name = "Premiere Boulevard"
+blurb = "The red carpet up to the Starlot Grand's marquee, searchlights sweeping the sky. Whatever wrecked the premiere waits here."
+price = 1800
+enemies = Array[StringName]([&"toy_plush_brute"])
+accent_color = Color(1, 0.3, 0.4, 1)
+
+[sub_resource type="Resource" id="economy"]
+script = ExtResource("4")
+prep_seconds = 15.0
+break_seconds = 20.0
+starting_tickets = 150
+
+[sub_resource type="Resource" id="rules"]
+script = ExtResource("2")
+districts = Array[ExtResource("3")]([SubResource("d_front"), SubResource("d_western"), SubResource("d_stage"), SubResource("d_monster"), SubResource("d_premiere")])
+base_enemies = Array[StringName]([&"city_shambler", &"city_runner", &"city_bruiser"])
+boss_id = &"the_wrecker"
+boss_every = 10
+economy = SubResource("economy")
+
+[sub_resource type="Resource" id="unlock"]
+script = ExtResource("5")
+kind = 21
+amount = 30
+
+[resource]
+script = ExtResource("1")
+id = &"endless_studio"
+display_name = "Starlot Studios"
+blurb = "Endless. A haunted movie backlot at night. Hold the front lot under the water tower, then buy your way onto the sets."
+scene_path = "res://scenes/levels/endless_studio.tscn"
+requires_level = &""
+requirement = SubResource("unlock")
+sort_order = 1
+music = &"studio_endless_loop"
+music_final = &"studio_endless_final"
+ambience = &"studio_ambience"
+music_volume_db = -7.0
+ambience_volume_db = -10.0
+accent_color = Color(1, 0.72, 0.3, 1)
+menu_camera_from = Vector3(56, 2.4, -31)
+menu_camera_to = Vector3(56, 9, -84)
+heal_item_name = "Craft-services coffee"
+loading_tips = PackedStringArray("Every set you open widens the lot and wakes its stage doors: open one when you can hold more ground, not just because you can afford it.", "Pay at either gate of Premiere Boulevard (the Monster Lot's east gate or Soundstage 7's north door) and both open.", "Western Street's painted desert is only a flat: there is room to circle behind it, past the scaffolding.", "Inside Soundstage 7 the bridge set's walls split the floor into lanes. Use them to break a crowd's line.", "The fog in the Monster Lot hides the graves' edges: keep to the cobbled path when you back up.", "Fire and shock traps cost a few tickets to arm. Lead the crowd through them.", "Every few waves a supply crate drops onto an open set: ammo, a heal and tickets.", "Every tenth wave the Wrecker crashes the premiere. The red carpet is the widest ground to fight it on.", "The Upgrade Bench beside the loadout station (and another on Premiere Boulevard) upgrades the weapon in hand for the run.", "Now and then a fallen zombie drops a power-up. It blinks before it goes, so grab it quick.", "The wave after the Wrecker is a breather: a few slow zombies. Spend it at the bench and the gates.")
+endless = SubResource("rules")

@@ -28,7 +28,8 @@ static func make(endless_level: LevelData, slot: int) -> EndlessCard:
 	var w := WorldData.new()
 	w.id = endless_level.id
 	w.display_name = endless_level.display_name
-	w.tagline = "Waves without end. Buy your way through the city."
+	w.tagline = "Waves without end. Buy your way through the gates."
+	w.requirement = endless_level.requirement
 	w.levels = [endless_level]
 	w.accent_color = endless_level.accent_color
 	w.secondary_color = UiKit.AMBER
@@ -42,13 +43,29 @@ func _init() -> void:
 	_sky.set_color(1, SKY_LOW)
 
 
-## Best wave in place of the stars.
+## Best wave in place of the stars; a locked map shows how close it is.
 func refresh() -> void:
 	super()
 	_stars.visible = false
 	var best := EndlessRecords.best_wave()
+	if not _unlocked:
+		_status.text = lock_progress(level)
+		return
 	_status.text = "BEST WAVE %d" % best if best > 0 else "OPEN FROM LEVEL 1"
 	_status.add_theme_color_override("font_color", UiKit.AMBER if best > 0 else Color.WHITE)
+
+
+## What still locks endless `endless_level`, with the progress toward a wave
+## goal ("REACH WAVE 30 · BEST WAVE 22 / 30"; `short`: the progress alone);
+## "" when it is open.
+static func lock_progress(endless_level: LevelData, short := false) -> String:
+	var req := endless_level.requirement
+	if req == null or req.is_met():
+		return ""
+	if req.kind == Requirement.Kind.ENDLESS_WAVE:
+		var progress := "BEST WAVE %d / %d" % [mini(EndlessRecords.best_wave(), req.amount), req.amount]
+		return progress if short else "REACH WAVE %d  ·  %s" % [req.amount, progress]
+	return req.describe().to_upper()
 
 
 func _draw() -> void:
@@ -74,7 +91,9 @@ func _draw() -> void:
 	draw_rect(Rect2(r.position.x, ground - 8.0, r.size.x, 8.0), Color(EMBER, 0.6))
 
 
-## The frame, then the Endless emblem in the corner.
+## The frame, then the Endless emblem in the corner (a locked map's
+## padlock sits there instead).
 func _draw_frame() -> void:
 	super()
-	EndlessEmblem.paint(_frame, Vector2(size.x - 58, 58), 42.0)
+	if _unlocked:
+		EndlessEmblem.paint(_frame, Vector2(size.x - 58, 58), 42.0)

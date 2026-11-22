@@ -208,7 +208,7 @@ func header_extra() -> Control:
 			tile.pressed.connect(select_mode.bind(tile.mode))
 			row.add_child(tile)
 		UiKit.tooltip(_mode_tiles[0], "The worlds, one level after another  (Tab)")
-		UiKit.tooltip(_mode_tiles[1], "Survive waves without end in Ashfall City  (Tab)")
+		UiKit.tooltip(_mode_tiles[1], "Survive waves without end on the Endless maps  (Tab)")
 	row.add_child(UiKit.filler())
 	var prompts := VBoxContainer.new()
 	prompts.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -570,16 +570,17 @@ func _refresh_mode_tiles() -> void:
 		else:
 			var cleared := worlds.filter(func(w: WorldData) -> bool: return WorldCard.world_stars(w) >= 3).size()
 			tile.set_note("%d WORLDS  ·  %d CLEARED" % [worlds.size(), cleared])
-	if _browse_prompt:
-		_browse_prompt.visible = mode == STORY
-		(_deploy_prompt.get_child(1) as Label).text = "Start" if mode == ENDLESS else "Deploy"
 	var browse := _slot_count() > 1
+	if _browse_prompt:
+		_browse_prompt.visible = mode == STORY or browse
+		(_browse_prompt.get_child(1).get_child(1) as Label).text = "Browse maps" if mode == ENDLESS else "Browse worlds"
+		(_deploy_prompt.get_child(1) as Label).text = "Start" if mode == ENDLESS else "Deploy"
 	for arrow in _arrows:
 		arrow.visible = browse
 	if _pips:
 		_pips.visible = browse
-		# A lone endless level needs no row: its card sits on the board.
-		_carousel.visible = mode == STORY or browse
+		# The endless maps are tabs over the board (its card is on it).
+		_carousel.visible = mode == STORY
 
 
 ## The cards of a newly shown row deal in.
@@ -685,16 +686,24 @@ func _refresh_details() -> void:
 ## The Endless board: records, districts and the reward track.
 func _refresh_endless(level: LevelData) -> void:
 	selected_level = level
-	_world_caption.text = "NEW MODE  ·  ENDLESS  ·  OPEN FROM LEVEL 1" if endless_is_new() else "ENDLESS MODE  ·  OPEN FROM LEVEL 1"
+	var lock_note := EndlessCard.lock_progress(level)
+	if lock_note != "":
+		var req := level.requirement
+		_world_caption.text = "ENDLESS MODE  ·  %s" % ("UNLOCKS AT WAVE %d" % req.amount if req.kind == Requirement.Kind.ENDLESS_WAVE else req.describe().to_upper())
+	else:
+		_world_caption.text = "NEW MODE  ·  ENDLESS  ·  OPEN FROM LEVEL 1" if endless_is_new() else "ENDLESS MODE  ·  OPEN FROM LEVEL 1"
 	_world_caption.add_theme_color_override("font_color", EndlessCard.EMBER)
 	_set_name(level.display_name.to_upper(), level.blurb)
 	_art.visible = false
 	_show_hero(level)
-	_level_tabs.visible = false
-	_lock.visible = false
+	_fill_map_tabs(level)
+	# The caption names the goal: the lock row shows the progress (short, so
+	# the board keeps its width).
+	_lock_text.text = EndlessCard.lock_progress(level, true)
+	_lock.visible = lock_note != ""
 	var unlocked := GameData.is_level_unlocked(level)
 	_deploy.disabled = not unlocked
-	_deploy.text = "START" if unlocked else "COMING SOON"
+	_deploy.text = "START" if unlocked else ("LOCKED" if lock_note != "" else "COMING SOON")
 	_clear(_stats)
 	_best_value = null
 	_star_row = null
@@ -732,7 +741,7 @@ func _show_hero(level: LevelData) -> void:
 ## The districts (with their prices) and the reward track.
 func _fill_endless(rules: EndlessRules) -> void:
 	_clear(_endless_box)
-	_endless_box.add_child(UiKit.section("THE CITY", "pay tickets at a gate to open a district"))
+	_endless_box.add_child(UiKit.section("DISTRICTS", "pay tickets at a gate to open a district"))
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", UiKit.GAP_S)
 	row.add_theme_constant_override("v_separation", UiKit.GAP_S)
@@ -813,6 +822,25 @@ func _reward_chip(e: Dictionary) -> Control:
 	v.add_child(UiKit.label(String(e["name"]).to_upper(), 20, color.lerp(Color.WHITE, 0.35) if met else UiKit.CREAM, true))
 	v.add_child(UiKit.label(String(e["kind"]), 16, color if met else UiKit.MUTED))
 	return card
+
+
+## The Endless maps as tabs over the board (with more than one); a locked
+## map's tab names the wave that opens it.
+func _fill_map_tabs(level: LevelData) -> void:
+	_clear(_level_tabs)
+	var levels := GameData.endless_levels()
+	_level_tabs.visible = levels.size() > 1
+	if not _level_tabs.visible:
+		return
+	var group := ButtonGroup.new()
+	for i in levels.size():
+		var l := levels[i]
+		var req := l.requirement
+		var note := "  ·  WAVE %d" % req.amount if req and not req.is_met() and req.kind == Requirement.Kind.ENDLESS_WAVE else ""
+		var tab := UiKit.toggle_button(l.display_name.to_upper() + note, group, 22)
+		tab.set_pressed_no_signal(l == level)
+		tab.pressed.connect(_select_slot.bind(i))
+		_level_tabs.add_child(tab)
 
 
 func _fill_level_tabs(world: WorldData, level: LevelData) -> void:

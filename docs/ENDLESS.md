@@ -38,6 +38,57 @@ Tower (48, 0, -46) at yaw 90. The generator bakes each bench's footprint
 
 Boss: `the_wrecker`, every `boss_every` (10) waves.
 
+## Starlot Studios (the second map, update 24)
+
+**Starlot Studios** (`data/endless/endless_studio.tres`, `scenes/levels/endless_studio.tscn`,
+generator `tools/build_endless_studio.gd`, level script
+`scripts/run/endless_studio_environment.gd`): a haunted Hollywood movie backlot at night,
+the studio's water tower over the front lot, searchlights sweeping the sky, the STARLOT sign on
+the hills. Unlocked by `LevelData.requirement` = `ENDLESS_WAVE` 30 (the best wave on any
+Endless map): the ENDLESS board has a tab per map ("STARLOT STUDIOS · WAVE 30" while locked);
+the locked map's card wears the padlock and "REACH WAVE 30 · BEST WAVE 22 / 30", the board
+says the same and START reads LOCKED.
+`EndlessRewards` lists the map on the reward track (and in the results when a run earns it).
+Same rules, enemies' base pool, boss (`the_wrecker`), prices and records as the city (records
+are shared: one best wave for Endless).
+
+| District id | Name | Price | Adds | The set |
+| --- | --- | --- | --- | --- |
+| `front_lot` | Front Lot (start: loadout station) | 0 | `city_shambler`, `city_runner`, `city_bruiser` | x -22..22, z -22..22: the water tower (walk between its legs), trailers, a camera crane, director's chairs, stages 1, 3, 4 and 7 round it, the main gate (south) the zombies pour through |
+| `western_street` | Western Street | 600 | `gulch_cowpoke` | x -90..-34, z -10..10: Gold Rush false fronts braced from behind, a painted desert flat (`studio_backdrop.gdshader` scene 0) with its scaffolding and sandbagged jacks; the player can circle behind it |
+| `soundstage` | Soundstage 7 | 1000 | `dune_space_cadet` | x 34..78, z -18..18 under a roof: a starship bridge set (consoles, captain's chair, reactor columns, a warp viewscreen, scene 1), a green screen, the lighting grid with coloured beams |
+| `monster_lot` | Monster Lot | 1400 | `fright_pumpkin_head` | x -26..26, z -90..-44: a castle front (the north entrance is its arch), a graveyard in machine fog, a moon on a crane, painted hills (scene 2), a storm machine that flashes and thunders |
+| `premiere` | Premiere Boulevard | 1800 | `toy_plush_brute`; the boss's ground | x 36..96, z -86..-30: the red carpet up to the Starlot Grand (chasing-bulb marquee `studio_marquee.gdshader`, a STARLOT blade sign), bleachers, a step-and-repeat with paparazzi flashes, limousines, searchlight trailers, shop fronts |
+
+Gates: `Gate_western_street` (x -28), `Gate_soundstage` (x 28), `Gate_monster_lot` (z -33),
+`Gate_premiere` (the Monster Lot's east passage, x 31) and `Gate_premiere2` (Soundstage 7's
+north door, z -24). 21 entrances (5 in the front lot, 4 per other district): alleys between
+the stages, stage doors, the main gate's street, the castle arch. Benches: the front lot
+(9, 0, 10) facing +Z and Premiere Boulevard (39.5, 0, -50) at yaw 90; traps: fire in Western
+Street and the Monster Lot, shock in Soundstage 7 and on the boulevard.
+
+How it is built: everything that is not floor (a district, a passage or an alley) inside the
+map's bounds is filled with solid blocks (1 m cells merged into boxes; their height and look
+come from the district they face: cream stages with ribs and a red band, Soundstage 7's dark
+acoustic walls, the boulevard's deco plaster with shop windows and awnings), so there are no
+holes and no way out; the navmesh is baked with every gate shut and keeps one island per
+district. Static dressing is merged in 16 m squares (each stays inside the renderer's
+per-object light limit); floors are 16 m tiles for the same reason. Its sounds:
+`studio_endless_loop` (a 120 BPM monster-movie swing: walking bass, brushes, vibraphone, muted
+brass and a theremin), `studio_endless_final` (boss waves) and `studio_ambience`
+(tools/audio_packs/studio.py); the gate, trap and wave cues are the mode's own.
+
+Verified (update 24): `tools/spawn_probe.gd endless_studio` 0 bad of 21 entrances;
+`tools/stuck_probe.gd --level=endless_studio` (every gate open, targets the middles of the
+district areas) 252 walkers, 0 stuck, all arrived within 58 s; the bot (`--autoplay=endless
+--level=endless_studio --weapon=ion_carbine --difficulty=standard --aim-error=2.5`, a level-40
+profile) was still alive on wave 35 at the 1500 s cap, gates on waves 7, 10, 16 and 19, bench
+tiers on 5, 12 and 21; 895 spawns, none within 14 m, 5.7% in view, closest 15.5 m, 31 m of
+route, no wave longer than 72 s (nothing stuck). `tools/perf_probe.gd --only=load,crowd`
+(rendered, llvmpipe, a loaded machine, so read the CPU columns side by side only): crowd of 14
+at the player spawn, Starlot Studios 1648 draws, 757k primitives, 1584 ms; Ashfall City 1443
+draws, 1087k primitives, 1909 ms.
+
 ## Records and unlocks
 
 `EndlessRecords` (profile section `"endless"`): `best_wave`, `best_score`, `best_by_difficulty`,
@@ -185,9 +236,9 @@ draining bar per timed power-up under the district chip.
 and ENDLESS (Tab or the gamepad's Y switch them; ENDLESS wears a NEW badge until the player has
 started an Endless run, `MenuPlay.endless_is_new()`); the profile's `"menu"` section keeps
 `mode`, `world` and `endless` (a save from before kept Endless as slot `worlds.size()` of
-`world` and opens in ENDLESS). STORY shows the world carousel alone; ENDLESS shows the city's board
-with its `EndlessCard` in the key art's place (the carousel only comes back with a second
-endless level). The home screen has an ENDLESS tile beside the story goal (key art, emblem,
+`world` and opens in ENDLESS). STORY shows the world carousel alone; ENDLESS shows the chosen
+map's board with its `EndlessCard` in the key art's place and, with two maps, a tab per map over
+it (A/D browse them; a locked map's tab says the wave that opens it). The home screen has an ENDLESS tile beside the story goal (key art, emblem,
 NEW MODE or the best wave). The mode's emblem (`EndlessEmblem`: an infinity sign over the
 burning skyline, the broken skyscraper and the radio mast, in an ember ring) is drawn in code
 and reads down to a pip; the key art `art/keyart/endless_city.jpg` (tools/capture_keyart.gd,
