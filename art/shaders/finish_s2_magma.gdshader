@@ -3,7 +3,7 @@ shader_type spatial;
 // river of lava. Lava (shell_color red to color_b orange to color_c yellow)
 // glows through the cracks between plates and flows along the weapon; the
 // plate edges smoulder and embers wink out of the seams. A kill boils the
-// lava up white-hot. The trim is forged iron with a red-hot rim.
+// lava up white-hot. The trim is a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 
@@ -44,7 +44,6 @@ void fragment() {
 	float edge = smoothstep(0.3, 0.05, crack) * (1.0 - seam);
 	vec2 eid = floor(uv * 240.0);
 	float ember = step(0.996, fh21(eid + floor(t * 2.0))) * smoothstep(0.25, 0.0, crack);
-	vec3 r = reflect(-VIEW, NORMAL);
 	ALBEDO = mix(basalt, lava * 0.5, seam);
 	METALLIC = 0.0;
 	ROUGHNESS = mix(0.85, 0.4, seam);

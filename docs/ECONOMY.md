@@ -417,8 +417,22 @@ A **print** is one numbered, rolled copy of a weapon finish that drops from a **
 Capsule**. Two prints of one finish are never the same, and a print is its own
 collectible: it neither grants nor removes the plain finish (the Shop still sells it,
 the reward tracks still give it), and owning the plain finish never stops it dropping.
-Code: `scripts/economy/prints/`; data: `data/prints/series_1.tres` (`PrintSeries`); page:
-the **Prizes** tab (`data/ui/prizes.tres`, order 52, between the Locker and the Shop).
+Code: `scripts/economy/prints/`; data: `data/prints/series_<n>.tres` (`PrintSeries`, listed
+in `PrizePrints.SERIES_PATHS`); page: the **Prizes** tab (`data/ui/prizes.tres`, order 52,
+between the Locker and the Shop).
+
+**Series.** Two series are out: **Series 1 "Boardwalk"** (36 finishes that the Shop and
+the reward tracks also give) and **Series 2 "Midnight Marquee"** (32 capsule-only
+finishes, below). Every series shares the capsule rules: one capsule count, one luck
+meter (it counts every capsule, whichever series it opens), one Capsule Credit balance,
+and the same odds, prices and earnings (the probes check that the numbers match). The
+player picks the series a capsule opens with the series tabs over the machine on the
+CAPSULES tab (`PrizePrints.select_series`, saved as `series` in the prints section; a
+save without one, or with an unknown id, opens the newest series). The machine is
+painted for the series (`machine_colors`, `capsule_colors`), ODDS & INFO lists the picked
+series' contents and the Credit Counter shelves the picked series. A trade-up mints from
+the series most of its five prints came from (a tie goes to the newer). A print always
+reads its own series (`PrizePrints.series_of(finish)`): the hero card names it.
 
 **What a print rolls** (`PrintRoll`, all independent):
 
@@ -448,6 +462,26 @@ real rates are about 58 / 26 / 12.5 / 4%. Series 1 "Boardwalk" holds 36 finishes
 Quicksilver, Solar Flare, Thunderhead); level-track showpieces and mastery camos are left
 out.
 
+**Series 2 "Midnight Marquee"** (`data/prints/series_2.tres`, ids `fin_s2_*`): the fair
+after midnight, 32 finishes made as one set, **capsule-only** (`exclusive`): never sold,
+never a reward (price 0, a `GRANTED` requirement nothing grants, `params.unlock_text` /
+`unlock_short` say "Capsule" in the Locker). The first print of a finish also unlocks its
+plain finish in the Locker (the reveal says PLAIN FINISH UNLOCKED); repeats do not.
+
+| Rarity | Finishes | Look |
+| --- | --- | --- |
+| Common (7) | Popcorn Stripe, Velvet Rope, Film Reel, Diner Checker, Usher's Houndstooth, Moon Polka, Starlit Pinstripe | bold painted patterns (`finish_s2_pattern.gdshader`, patterns 0-6) |
+| Rare (12) | Picture Palace, Marquee Sunburst, Neon Zebra, Sequin Gown, Fortune Teller, Jukebox, Glow Leopard, High Roller, Pop Halftone, Lobby Terrazzo, Blackout Camo, Neon Argyle | patterns 7-18; Sequin Gown's sequins glint as it turns, Jukebox's bubbles rise |
+| Epic (9) | Liquid Neon, Ticket Storm, Heartbeat, Magma Run, Overclock, Jelly Ballroom, Hypnotist, Firefly Field, Neon Rain | animated, one shader each (`finish_s2_<name>.gdshader`) |
+| Legendary (4, the **chase prints**) | Event Horizon, Phoenix, Opening Night, Outrun | animated showpieces; a kill with the weapon makes each one react (discs flare, the fire roars, the flashbulbs pop, the grid flashes) |
+
+The chase prints are listed in the series' `chase`: the hero card says CHASE PRINT and
+ODDS & INFO marks them. Every animated Series 2 finish has `params.pulse`, so
+`FinishPulse` holds it on a still frame with Settings "Reduce motion" and drives its
+kill reaction (`motion` and `pulse` in `art/shaders/finish_s2.gdshaderinc`). Each is one
+pass with no textures (value noise, a 3x3 Voronoi at most, small fixed loops), and the
+print layer (`PRINT_LAYER`) reads on all of them: Glitter, Holo and Misprint included.
+
 **Repeats, Capsule Credits, the Credit Counter.** A drop of a finish already held is a
 repeat. With *auto-recycle repeats* on (the default, a toggle on the collection), a plain
 repeat (Factory or Polished, no rare print, serial above #010) becomes Capsule Credits at
@@ -476,9 +510,10 @@ finish. Equipping a plain finish in the Locker takes the print off (the plain on
 again). In the Locker a finish with prints shows a stack chip ("x3 PRINTS") and a button
 over the case that opens those prints on the Prizes page.
 
-**The page.** Five tabs: **CAPSULES** (the machine alone, big under a spotlight: the luck
-meter and what earns capsules on its left; the capsules held, OPEN CAPSULE, OPEN 5, BUY
-and the odds on its right), **COLLECTION** (every print in a wide grid, filtered by
+**The page.** Five tabs: **CAPSULES** (the machine alone, big under a spotlight, with a
+tab per series over it and a line on the picked series and how much of it is collected:
+the luck meter and what earns capsules on its left; the capsules held, OPEN CAPSULE,
+OPEN 5, BUY and the odds on its right), **COLLECTION** (every print in a wide grid, filtered by
 rarity, grade and rare prints, five sorts, auto-recycle, and the inspect view
 `PrintInspect`: wear, keep, recycle), **TRADE-UP**, **TOKEN COUNTER** and **ODDS & INFO**.
 Code: `ui/prizes_page.gd` (tabs, the overlays, opening) and one `ui/prizes_*_view.gd`
@@ -510,14 +545,16 @@ hero card). The first click, Enter or Esc jumps to the result; Esc closes. Sound
 | --- | --- |
 | `capsules()`, `tokens()`, `opened()`, `luck()` | `luck()`: `Vector2i(capsules to a guaranteed Epic, to a Legendary)` |
 | `add_capsules(n)`, `can_buy_capsule()`, `buy_capsule()` | |
-| `open_capsule()` | `{}` without a capsule, else `{ print, repeat, recycled, tokens, rarity, lucky }` |
+| `open_capsule()` | `{}` without a capsule, else `{ print, repeat, recycled, tokens, rarity, unlocked, lucky, series }` |
 | `held()`, `get_print(id)`, `prints_of(finish_id)`, `holds(finish_id)`, `finish_of(p)`, `rarity(p)`, `grade(p)`, `is_notable(p)` | |
 | `equip(p, weapon_id)`, `take_off(weapon_id)`, `equipped(weapon_id)`, `worn_on(p)`, `fits(p, weapon_id)` | |
 | `set_favourite(p, on)`, `mark_seen(p)`, `new_count()`, `recycle(p)`, `can_recycle(p)`, `token_value(p)` | |
 | `trade_up_problem(picked)`, `trade_up(picked)`, `trade_up_candidates(rarity)` | |
 | `counter_shelf()`, `counter_price(fid)`, `counter_sold(fid)`, `buy_at_counter(fid)` | |
 | `settle(result)` | `{ total, lines: [[label, n]], capsules }`, once per run |
-| `set_auto_recycle(on)`, `series()`, `by_rarity()` | |
+| `set_auto_recycle(on)`, `series()`, `by_rarity(series = picked)` | `series()`: the series capsules open now |
+| `all_series()`, `series_by_id(id)`, `select_series(id)`, `series_of(finish_id)`, `series_of_print(p)` | |
+| `is_chase(finish_id)`, `collected(series)`, `trade_up_series(picked)` | `collected`: `Vector2i(finishes held, finishes)` |
 
 `PrintLook`: `grade_name / grade_color / variant_name / variant_color / variant_odds /
 serial_text ("#007") / serial_tag / minted_text / title / score / uniforms(p)`.
@@ -525,7 +562,8 @@ Signal: `Cosmetics.prints_changed`. Every change saves the profile.
 
 **Save.** `Profile.section("prints")`, schema `v: 1`: `next_id, serials {finish: last},
 list [prints], equipped {weapon: print id}, capsules, tokens, since_epic, since_legendary,
-opened, minted, contracts, daily, auto_recycle, counter {day, sold}, earned`.
+opened, minted, contracts, daily, auto_recycle, counter {day, sold}, earned`, and `series`
+(the picked series id; missing = the newest).
 `PrizePrints._migrate` fills what is missing, so a save from before prints loads with
 none (checked by the probe).
 
@@ -533,8 +571,11 @@ none (checked by the probe).
 capsules against the published odds, the luck meter (longest runs without an Epic 9 and
 without a Legendary 39), 10,000 rolls of rare prints and grades, 10,000 capsules minted
 into a profile (serials in order per finish, ids unique, only plain repeats recycled),
-the save round trip and an old save, and every action (equip, favourites, recycle,
-trade-up, counter, buying, the run settlement). Stills: `tools/print_sheet.gd` (prints on
+the save round trip and an old save, every action (equip, favourites, recycle,
+trade-up, counter, buying, the run settlement), and the series together (each finish in
+one series, shared rules, the pick saved and falling back to the newest, capsules of a
+series drop only its finishes, the capsule-only unlock, majority trade-ups, chase prints
+and Reduce motion). Locker stills of a series: `scripts/dev/prints_locker_tour.gd`. Stills: `tools/print_sheet.gd` (prints on
 weapons), `tools/prizes_shots.gd` (every tab; the opening of each rarity, OPEN 5 and
 Prize Fusion, frame by frame; `--shot-only=tabs` for other window sizes).
 
@@ -563,7 +604,8 @@ The first sessions run high because the early milestones pay 2 each.
 | A contract or milestone | `data/progression/contracts/`, `data/progression/challenges/` |
 | What a level gives | the `PLAYER_LEVEL` requirement of a cosmetic (price 0), or a weapon's `unlock` |
 | Whether an item is sold | its `price` (0 = earned through its `requirement`) |
-| Prize Capsules: odds, luck meter, rare prints, grades, capsule price and earnings, tokens, the counter, the series | `data/prints/series_1.tres` |
+| Prize Capsules: odds, luck meter, rare prints, grades, capsule price and earnings, tokens, the counter, the series | `data/prints/series_<n>.tres` (the capsule rules match in every series) |
+| A new print series | a `PrintSeries` in `data/prints/`, its path in `PrizePrints.SERIES_PATHS` |
 
 After a change run the model, and the probe (`tools/economy_probe.gd`) for the rules it
 checks. Do not edit `scripts/economy/legacy_unlocks.gd`: it records the rules old saves

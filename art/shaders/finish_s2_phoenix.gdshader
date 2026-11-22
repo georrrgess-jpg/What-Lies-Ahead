@@ -4,8 +4,7 @@ shader_type spatial;
 // player as if it flies, rolling from shell_color crimson through color_b
 // orange to color_c gold and a white-hot root, over a charred black coat
 // etched with golden feather barbs; embers rise off it. A kill makes the
-// fire roar up white-gold. The trim is gold leaf engraved with feathers,
-// lit by the flames.
+// fire roar up white-gold. The trim is a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 

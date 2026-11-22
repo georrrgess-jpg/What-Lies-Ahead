@@ -63,7 +63,6 @@ void fragment() {
 	col = mix(col, far.rgb * 0.55 + sky * 0.3, far.a);
 	vec4 near = tickets(uv, 0.05, 1.6, t, 2.0);
 	col = mix(col, near.rgb, near.a);
-	vec3 r = reflect(-VIEW, NORMAL);
 	ALBEDO = col;
 	METALLIC = 0.0;
 	ROUGHNESS = mix(0.18, 0.45, near.a);

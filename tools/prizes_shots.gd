@@ -10,6 +10,7 @@ extends RefCounted
 ## Saves <shot>_<name>.png. Options:
 ##   --shot-only=tabs       just the five tabs (for checking other window sizes)
 ##   --shot-rarity=0..3     open only that rarity (default: all four, Common to Legendary)
+##   --shot-series=<id>     the series the capsules open (default: the newest)
 
 ## How each rarity's staged print looks: shine, rare print, serial.
 const STAGED := [[0.42, "", 23], [0.74, "", 4], [0.93, "glitter", 1], [0.962, "holo", 7]]
@@ -24,6 +25,8 @@ func run(shot: Node, menu: Node) -> void:
 	_shot = shot
 	_base = String(shot.path).get_basename()
 	var page := menu.page("prizes") as PrizesPage
+	if _arg("series", "") != "":
+		PrizePrints.select_series(StringName(_arg("series", "")))
 	_stage_collection()
 	page.refresh()
 	await _frames(40)

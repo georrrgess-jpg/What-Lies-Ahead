@@ -2,7 +2,7 @@ shader_type spatial;
 // Series 2 Epic "Liquid Neon": glossy black glass with tubes of neon that
 // flow like poured liquid, the lines bending and drifting along the weapon
 // and shifting from shell_color pink through color_b violet to trim_color
-// cyan. A kill makes every tube flare. The trim is dark chrome lit by them.
+// cyan. A kill makes every tube flare. The trim is a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 
@@ -35,7 +35,6 @@ void fragment() {
 	vec3 neon = hue < 0.33 ? mix(shell_color, color_b, hue * 3.0)
 		: (hue < 0.66 ? mix(color_b, trim_color, (hue - 0.33) * 3.0) : mix(trim_color, shell_color, (hue - 0.66) * 3.0));
 	float flare = 1.0 + pulse * 1.6;
-	vec3 r = reflect(-VIEW, NORMAL);
 	float fres = ffres(NORMAL, VIEW, 3.0);
 	ALBEDO = mix(vec3(0.015, 0.012, 0.03), neon * 0.6, core);
 	METALLIC = 0.0;

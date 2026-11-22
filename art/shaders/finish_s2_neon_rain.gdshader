@@ -3,7 +3,7 @@ shader_type spatial;
 // window. Big soft bokeh of neon signs (color_b pink, color_c cyan, color_d
 // amber) drift and pulse behind dark glass, while raindrops bead, run down
 // it and leave streaks that brighten the lights behind them. A kill flashes
-// the signs. The trim is wet black chrome.
+// the signs. The trim is a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 
@@ -63,7 +63,6 @@ void fragment() {
 	float wet = max(max(drop, trail), bead);
 	vec2 refr = vec2(fx, fy - 0.5) * 0.01 * drop + (fract(bq) - 0.5) * 0.004 * bead;
 	vec3 lights = bokeh(uv + refr, t) * (1.0 + pulse * 1.4);
-	vec3 r = reflect(-VIEW, NORMAL);
 	ALBEDO = shell_color + lights * 0.15;
 	METALLIC = 0.0;
 	ROUGHNESS = mix(0.2, 0.04, wet);

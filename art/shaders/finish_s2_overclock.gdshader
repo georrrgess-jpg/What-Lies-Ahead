@@ -2,7 +2,7 @@ shader_type spatial;
 // Series 2 Epic "Overclock": a circuit board in shell_color green-black with
 // gold traces, solder pads and black chips. Packets of light race along the
 // traces (color_b cyan, some color_c magenta), and the chips' status lights
-// blink. A kill overclocks it: every trace lights at once. Trim: gold.
+// blink. A kill overclocks it: every trace lights at once. Trim: a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 

@@ -3,7 +3,7 @@ shader_type spatial;
 // with rippling caustics and drifting motes, and glowing jellyfish rising
 // through it, bells pulsing as they swim and tentacles trailing and waving
 // behind them (color_b pink, color_c violet, color_d cyan). A kill makes them
-// all flash. The trim is the tank's dark bronze frame catching the glow.
+// all flash. The trim is a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 
@@ -68,7 +68,6 @@ void fragment() {
 	float mote = step(0.993, fh21(floor((uv + vec2(0.0, t * 0.004)) * 500.0)));
 	vec4 far = jellies(uv, 0.05, t * 0.7, 1.0);
 	vec4 near = jellies(uv, 0.085, t, 2.0);
-	vec3 r = reflect(-VIEW, NORMAL);
 	float flash = 1.0 + pulse * 1.5;
 	vec3 col = mix(water, water + far.rgb * 0.3, far.a);
 	col = mix(col, near.rgb * 0.35 + col * 0.5, near.a);

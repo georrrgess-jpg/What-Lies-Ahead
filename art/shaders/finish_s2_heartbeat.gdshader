@@ -3,7 +3,7 @@ shader_type spatial;
 // with a faint grid, and rows of EKG traces in shell_color green, color_b
 // cyan and color_c pink are drawn by a bright sweep that runs along it, the
 // line fading behind. A kill races the heart: the traces spike taller and
-// flash red (color_d). The trim is grey monitor plastic with a scan line.
+// flash red (color_d). The trim wears it a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 
@@ -62,7 +62,6 @@ void fragment() {
 	float grid = max(s2_lines(uv.x / 0.01, 0.04), s2_lines(uv.y / 0.01, 0.04)) * 0.5
 		+ max(s2_lines(uv.x / 0.05, 0.012), s2_lines(uv.y / 0.05, 0.012));
 	vec3 glass = vec3(0.012, 0.035, 0.025) + shell_color * grid * 0.12;
-	vec3 r = reflect(-VIEW, NORMAL);
 	ALBEDO = mix(glass, ink * 0.3, line);
 	METALLIC = 0.0;
 	ROUGHNESS = 0.06;

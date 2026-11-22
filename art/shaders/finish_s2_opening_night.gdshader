@@ -4,7 +4,7 @@ shader_type spatial;
 // band; two searchlight beams sweep across them, lighting pools that slide
 // over the folds, gold stars of fame shine in them, and press flashbulbs pop
 // here and there. A kill is the red-carpet moment: a burst of flashbulbs.
-// The trim is polished gold with a marquee row of chasing bulbs.
+// The trim is a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 

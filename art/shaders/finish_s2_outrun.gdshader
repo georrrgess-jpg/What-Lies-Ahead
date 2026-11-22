@@ -5,7 +5,7 @@ shader_type spatial;
 // through it and a ridge of wireframe mountains; below, a neon grid floor
 // (trim_color cyan) racing towards the muzzle in perspective, with a scatter
 // of stars overhead. The scene repeats along the weapon. A kill flashes the
-// grid and swells the sun. The trim is chrome reflecting the sunset.
+// grid and swells the sun. The trim is a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 
@@ -28,7 +28,6 @@ void vertex() {
 void fragment() {
 	float t = s2_time(TIME, 1.0);
 	vec2 uv = fplane(lp, ln);
-	vec3 r = reflect(-VIEW, NORMAL);
 	float ci = floor(uv.x / span + 0.5);
 	float x = uv.x - ci * span;
 	float h = uv.y - horizon;

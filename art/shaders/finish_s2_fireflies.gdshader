@@ -2,8 +2,8 @@ shader_type spatial;
 // Series 2 Epic "Firefly Field": a midsummer midnight. Layered silhouettes
 // of grass and leaves in shell_color over a deep color_b dusk, and fireflies
 // drifting on lazy loops, each glowing up and fading on its own rhythm
-// (color_c, with a warmer core). A kill wakes them all at once. Trim: dark
-// bronze lit by them.
+// (color_c, with a warmer core). A kill wakes them all at once. The trim
+// is a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 
@@ -53,7 +53,6 @@ void fragment() {
 	col = mix(col, shell_color, blades);
 	float g = flies(uv, 0.022, t, 1.0) + flies(uv, 0.04, t * 0.8, 2.0) * 0.8;
 	vec3 fly = mix(color_c, vec3(1.0, 0.95, 0.6), clamp(g - 0.8, 0.0, 1.0));
-	vec3 r = reflect(-VIEW, NORMAL);
 	ALBEDO = col + fly * min(g, 1.0) * 0.3;
 	METALLIC = 0.0;
 	ROUGHNESS = 0.55;

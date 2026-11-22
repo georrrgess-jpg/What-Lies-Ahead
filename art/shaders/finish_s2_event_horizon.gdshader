@@ -5,7 +5,7 @@ shader_type spatial;
 // violet, brighter on its approaching side; the far side of the disc is
 // lensed up over the hole as a glowing arc, a thin photon ring circles the
 // black core and the stars behind bend round it. A kill flares the discs
-// and sends a shock ring out. The trim is dark gunmetal with a violet sheen.
+// and sends a shock ring out. The trim wears it a shade deeper.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 
@@ -74,7 +74,6 @@ void fragment() {
 	col = mix(col, disc + col * 0.3, ring * max(front, 1.0 - shadow));
 	col *= 1.0 - shadow * (1.0 - front * ring);
 	col += mix(color_c, color_b, 0.4) * shock * 2.0;
-	vec3 r = reflect(-VIEW, NORMAL);
 	ALBEDO = col * 0.25;
 	METALLIC = 0.0;
 	ROUGHNESS = 0.08;

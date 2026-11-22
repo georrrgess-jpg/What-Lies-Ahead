@@ -2,7 +2,7 @@ shader_type spatial;
 // Series 2 Epic "Hypnotist": op-art spirals in shell_color black and color_b
 // white wind along the weapon, neighbours turning opposite ways, a violet
 // (color_c) glow breathing at each eye. A kill spins them faster for a
-// moment. The trim is black lacquer with thin white rings.
+// moment. The trim turns in negative.
 #include "res://art/shaders/finish_common.gdshaderinc"
 #include "res://art/shaders/finish_s2.gdshaderinc"
 
@@ -40,7 +40,6 @@ void fragment() {
 	float breathe = 0.5 + 0.5 * sin(t * 2.0 + ci);
 	float eye = exp(-d * d / (0.0004 + 0.0003 * breathe));
 	vec3 col = mix(shell_color, color_b, stripe);
-	vec3 r = reflect(-VIEW, NORMAL);
 	ALBEDO = mix(col, color_c, eye * 0.7);
 	METALLIC = 0.0;
 	ROUGHNESS = 0.12;
