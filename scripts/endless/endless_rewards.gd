@@ -59,8 +59,11 @@ static func _add(item: Resource, req: Requirement, display: String, kind: String
 		entry["goal"] = "WAVE %d" % req.amount
 		waves.append(entry)
 	else:
+		# Another map's district rewards are that map's track.
 		var d := rules.district(req.target)
-		entry["goal"] = "OPEN %s" % (d.display_name.to_upper() if d else String(req.target).to_upper())
+		if d == null:
+			return
+		entry["goal"] = "OPEN %s" % d.display_name.to_upper()
 		districts.append(entry)
 
 

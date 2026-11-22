@@ -688,7 +688,8 @@ func _refresh_endless(level: LevelData) -> void:
 	selected_level = level
 	var lock_note := EndlessCard.lock_progress(level)
 	if lock_note != "":
-		_world_caption.text = "ENDLESS MODE  ·  %s" % level.requirement.describe().to_upper()
+		var req := level.requirement
+		_world_caption.text = "ENDLESS MODE  ·  %s" % ("UNLOCKS AT WAVE %d" % req.amount if req.kind == Requirement.Kind.ENDLESS_WAVE else req.describe().to_upper())
 	else:
 		_world_caption.text = "NEW MODE  ·  ENDLESS  ·  OPEN FROM LEVEL 1" if endless_is_new() else "ENDLESS MODE  ·  OPEN FROM LEVEL 1"
 	_world_caption.add_theme_color_override("font_color", EndlessCard.EMBER)

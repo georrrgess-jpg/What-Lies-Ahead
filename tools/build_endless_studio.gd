@@ -521,9 +521,10 @@ func _billboard(base: Vector3) -> void:
 	_part(t, Vector3(10.4, 0.35, 0.05), Vector3(0, 7.2, 0.17), _mat("board_band", Color(0.95, 0.72, 0.3), 0.4, Color(0.6, 0.4, 0.1), 0.8))
 	var title := _label(dressing, "BillboardTitle", "WHAT LIES AHEAD", base + Vector3(0, 5.6, 0.2), 0.0, 230, Color(0.95, 0.25, 0.3))
 	title.outline_modulate = Color(0.05, 0.0, 0.05)
-	_label(dressing, "BillboardLine", "COMING SOON  ·  A STARLOT PICTURE", base + Vector3(0, 4.1, 0.2), 0.0, 90, Color(1.0, 0.9, 0.7))
-	for x in [-3.5, 3.5]:
-		_part(t, Vector3(0.5, 0.4, 0.6), Vector3(x, 3.4, 1.0), _mat("grip_black", Color(0.08, 0.08, 0.09), 0.5))
+	_label(dressing, "BillboardLine", "COMING SOON  ·  A STARLOT PICTURE", base + Vector3(0, 4.25, 0.2), 0.0, 90, Color(1.0, 0.9, 0.7))
+	# The lamps sit on the catwalk's front edge, under the board's lettering.
+	for x in [-4.6, 4.6]:
+		_part(t, Vector3(0.5, 0.4, 0.6), Vector3(x, 3.35, 0.4), _mat("grip_black", Color(0.08, 0.08, 0.09), 0.5))
 	_omni(fx, "BillboardLamp", base + Vector3(0, 4.0, 2.4), Color(1.0, 0.85, 0.65), 1.6, 9.0)
 
 
@@ -1537,8 +1538,8 @@ func _star_mesh(r: float, material: Material) -> ArrayMesh:
 		pts.append(Vector3(cos(a) * rr, 0, sin(a) * rr))
 	for k in 10:
 		st.add_vertex(Vector3.ZERO)
-		st.add_vertex(pts[(k + 1) % 10])
 		st.add_vertex(pts[k])
+		st.add_vertex(pts[(k + 1) % 10])
 	st.set_material(material)
 	return st.commit()
 
