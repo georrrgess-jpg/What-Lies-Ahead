@@ -66,8 +66,8 @@ const TABLE := {
 	# over. Two and a half times Standard's XP and Arcade Tokens.
 	&"last_ride": {
 		"health": 1.5, "boss_health": 1.25, "damage": 1.38, "speed": 1.12,
-		"max_alive": 1.3, "interval": 0.8, "specials": 0.65,
-		"pace_min": 1.0, "pace_max": 1.6, "relief": 0.0,
+		"max_alive": 1.22, "interval": 0.85, "specials": 0.72,
+		"pace_min": 0.95, "pace_max": 1.5, "relief": 0.0,
 		"wave_heal": 0.0, "tickets": 1.0, "reward": 2.5, "checkpoints": 0.0,
 	},
 }

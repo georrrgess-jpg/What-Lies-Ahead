@@ -240,10 +240,10 @@ Pace moves 0.2 per second, so a wave breathes instead of switching.
 | Alpha health | 70% | 105% | 112% | 125% |
 | Enemy damage | 60% | 110% | 120% | 138% |
 | Enemy speed | 95% | 103% | 108% | 112% |
-| Crowd cap | 80% | 106% | 112% | 130% |
-| Spawn interval | 120% | 95% | 90% | 80% |
-| Special-attack cooldowns | 145% | 92% | 82% | 65% |
-| Pace bounds (min-max) | 0.55-1.0 | 0.75-1.4 | 0.9-1.45 | 1.0-1.6 |
+| Crowd cap | 80% | 106% | 112% | 122% |
+| Spawn interval | 120% | 95% | 90% | 85% |
+| Special-attack cooldowns | 145% | 92% | 82% | 72% |
+| Pace bounds (min-max) | 0.55-1.0 | 0.75-1.4 | 0.9-1.45 | 0.95-1.5 |
 | Spawn pause for a player in trouble | 6 s per wave | 2.5 s | none | none |
 | Health back at every wave clear | +20 | - | - | - |
 | Ticket income | +25% (paid at the wave clear) | - | - | - |
