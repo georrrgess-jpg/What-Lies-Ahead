@@ -135,6 +135,16 @@ JOINTS["bullseye_bow"] = ([("LimbT0", "Shell"), ("LimbB0", "Shell"), ("StringT",
                            ("Arrow", "StringT"), ("Arrow", "StringB"), ("Arrow", "Shell"), ("CellHolo", "Arrow"), ("CellHolo", "Shell"),
                            ("CellHolo", "StringT"), ("CellHolo", "StringB"), ("Cell", "Shell")]
                           + [(f"Limb{s}{i}", f"Limb{s}{i + 1}") for s in "TB" for i in range(4)])
+# Update 24: the Claw Grabber. The claw hangs on its cable at the chute's mouth, its prongs on its hub;
+# the spool turns in the chute's root, the joystick in its boot, the button in its bezel; the mini
+# crane rides its gantry over the prizes inside the glass, the lit bulbs sit on the dim ones, the
+# token rests in the coin slot. It has no hologram part (the token is a real one).
+WEAPONS.append("claw_grabber")
+CELLS["claw_grabber"] = ["Cell", "Token"]
+JOINTS["claw_grabber"] = ([("Claw", "Shell"), ("Spool", "Shell"), ("Joystick", "Shell"), ("Button", "Shell"), ("MiniClaw", "Shell"),
+                           ("MiniClaw", "Glass"), ("Glass", "Shell"), ("Token", "Shell"), ("Cell", "Shell"), ("Trigger", "Shell")]
+                          + [(f"Prong{i}", q) for i in range(3) for q in ("Claw", "Shell")]
+                          + [(f"Lit{k}", q) for k in range(14) for q in ("Shell", "Glass")])
 
 
 def world_tree(ob, matrix=None):

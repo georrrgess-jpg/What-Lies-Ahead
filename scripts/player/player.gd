@@ -347,7 +347,9 @@ func _physics_process(delta: float) -> void:
 		return
 	_update_slide(can_act, on_floor)
 	_update_dash(can_act, wish)
-	if _dash_left > 0.0:
+	if _reel_left > 0.0:
+		_reel_move(delta, can_act)
+	elif _dash_left > 0.0:
 		_dash_move(delta, on_floor)
 	elif sliding:
 		_slide_move(delta, can_act, on_floor, wish)
@@ -658,6 +660,77 @@ func _end_dash() -> void:
 	var flat := Vector2(velocity.x, velocity.z).limit_length(slide_max_speed * slide_jump_keep)
 	velocity.x = flat.x
 	velocity.z = flat.y
+
+
+# --- reeled in by a weapon (the Claw Grabber's grapple) ---------------------------
+
+## A reel in progress: seconds left, where it ends (feet), its speed and how
+## long it has been held up (by a zombie or a wall it grazes).
+var _reel_left := 0.0
+var _reel_to := Vector3.ZERO
+var _reel_speed := 0.0
+var _reel_stuck := 0.0
+var _reel_age := 0.0
+## A reel ends this close (m, flat) to its end, or after being held up this long (s).
+const REEL_ARRIVE := 0.45
+const REEL_STUCK := 0.12
+## The little hop a reel starts with (m/s up), so it clears kerbs and seams.
+const REEL_HOP := 2.6
+
+
+## Pulls the player along the floor toward `point` (feet) at `speed` m/s for
+## at most `seconds` (the Claw Grabber's grapple). The body moves with
+## move_and_slide like any other step, so it never passes through scenery,
+## zombies or the invisible player-only walls; the caller picks a point the
+## player can reach (scripts/weapons/claw_grabber_reel.gd). Returns false when
+## the player cannot be reeled right now.
+func reel_to(point: Vector3, speed: float, seconds: float) -> bool:
+	if not alive or not controls_enabled or _traverse.is_active():
+		return false
+	if sliding:
+		_end_slide()
+	_dash_left = 0.0
+	_reel_to = point
+	_reel_speed = speed
+	_reel_left = seconds
+	_reel_stuck = 0.0
+	_reel_age = 0.0
+	velocity.y = maxf(velocity.y, REEL_HOP)
+	var flat := Vector3(point.x - global_position.x, 0.0, point.z - global_position.z)
+	if flat.length() > 0.05:
+		head.dash_kick(global_basis.inverse() * flat.normalized())
+	return true
+
+
+func is_reeling() -> bool:
+	return _reel_left > 0.0
+
+
+## Ends a reel; what carries on is no faster than a sprint.
+func stop_reel() -> void:
+	if _reel_left <= 0.0:
+		return
+	_reel_left = 0.0
+	var flat := Vector2(velocity.x, velocity.z).limit_length(sprint_speed)
+	velocity.x = flat.x
+	velocity.y = minf(velocity.y, 0.0)
+	velocity.z = flat.y
+
+
+func _reel_move(delta: float, can_act: bool) -> void:
+	_reel_left = maxf(0.0, _reel_left - delta)
+	_reel_age += delta
+	var flat := Vector3(_reel_to.x - global_position.x, 0.0, _reel_to.z - global_position.z)
+	var moved := Vector2(get_real_velocity().x, get_real_velocity().z).length()
+	# The last tick's real motion: held up by a wall or a zombie, the reel lets go.
+	_reel_stuck = _reel_stuck + delta if _reel_age > 0.05 and moved < _reel_speed * 0.3 else 0.0
+	if not can_act or flat.length() <= REEL_ARRIVE or _reel_left <= 0.0 or _reel_stuck >= REEL_STUCK:
+		stop_reel()
+		return
+	# Eases in over the last metre so it lands on the spot instead of overshooting it.
+	var speed := _reel_speed * clampf(flat.length(), 0.35, 1.0)
+	velocity.x = flat.normalized().x * speed
+	velocity.z = flat.normalized().z * speed
 
 
 # --- running and the air ----------------------------------------------------------

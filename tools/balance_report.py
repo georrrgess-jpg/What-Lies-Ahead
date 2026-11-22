@@ -127,6 +127,11 @@ RING = gd_consts("scripts/weapons/modes/ringmaster_mode.gd")
 # The Bullseye Longbow: every arrow fully drawn, BOW_BULLSEYE_SHARE of them loosed in the Bullseye window.
 BOW = gd_consts("scripts/weapons/modes/bullseye_bow_mode.gd")
 BOW_BULLSEYE_SHARE = 0.5
+# The Claw Grabber: its claw's flight (shot), grapple (mode, reel) and the Prized mark (prize).
+CLAW = gd_consts("scripts/weapons/claw_grabber_shot.gd")
+CLAW.update(gd_consts("scripts/weapons/modes/claw_grabber_mode.gd"))
+CLAW_REEL = gd_consts("scripts/weapons/claw_grabber_reel.gd")
+CLAW_PRIZE = gd_consts("scripts/weapons/claw_prize.gd")
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
 	"capsule_height": 1.9, "mass": 1.0, "move_speed": 2.0}
 # Extra effective health from armour behaviours (helmet, riot shield, ice shell).
@@ -223,6 +228,8 @@ def mode_kind(w):
 		return "strike"
 	if mode.endswith("tin_sergeant_mode.gd"):
 		return "tin"
+	if mode.endswith("claw_grabber_mode.gd"):
+		return "claw"
 	return ""
 
 
@@ -362,6 +369,11 @@ def pull_damage(w, e, d, head):
 		if d > w["max_range"]:
 			return 0.0, w["fire_interval"]
 		return w["damage"] * head_mix, max(w["fire_interval"], yoyo_trip(d))
+	if mode_kind(w) == "claw":
+		# One hit a shot (headshots and falloff count), paced by the claw's round trip.
+		if d > w["max_range"]:
+			return 0.0, w["fire_interval"]
+		return w["damage"] * scale * head_mix, max(w["fire_interval"], claw_trip(d))
 	if mode_kind(w) == "jackpot":
 		# The punch on the zombie that sets the box off; bosses are only nudged.
 		boss = e.get("mass", 1.0) >= JACKPOT["BOSS_MASS"]
@@ -628,6 +640,16 @@ def yoyo_trip(d):
 	return out + (math.sqrt(YOYO["BACK_START"] ** 2 + 2.0 * a * d) - YOYO["BACK_START"]) / a
 
 
+def claw_trip(d):
+	"""Seconds for a Claw Grabber shot at a target d metres away: out, and home (ClawGrabberShot.round_trip)."""
+	out = d / CLAW["OUT_SPEED"]
+	accel = (CLAW["BACK_START"] + CLAW["BACK_TOP"]) * 0.5 * CLAW["BACK_ACCEL"]
+	if d > accel:
+		return out + CLAW["BACK_ACCEL"] + (d - accel) / CLAW["BACK_TOP"]
+	a = (CLAW["BACK_TOP"] - CLAW["BACK_START"]) / CLAW["BACK_ACCEL"]
+	return out + (math.sqrt(CLAW["BACK_START"] ** 2 + 2.0 * a * d) - CLAW["BACK_START"]) / a
+
+
 def yoyo_sleeper(w, seconds):
 	"""Yo-Yo Loco Sleeper on one zombie for `seconds` after the hit: (damage of
 	the hit and the grind, rounds of string wear)."""
@@ -742,13 +764,23 @@ def main():
 				f"+{SARSA['FAN_SPREAD_MAX']:g} deg); tapped {tap:.0f} DPS sustained; the Last Call does x{SARSA['LAST_CALL_SCALE']:g} "
 				f"({w['damage'] * SARSA['LAST_CALL_SCALE']:.0f}, {w['damage'] * SARSA['LAST_CALL_SCALE'] * w['headshot_multiplier']:.0f} on the head) "
 				f"and pops {SARSA['POP_DAMAGE']:.0f} on every zombie within {SARSA['POP_RADIUS']:g} m of the hit")
+	for w in ws.values():
+		if w["id"] == "claw_grabber":
+			stun = gd_consts("scripts/weapons/strike_zone_topple.gd")
+			down = stun["FALL_TIME"] + stun["LIE_TIME"] + stun["RISE_TIME"]
+			print(f"\n{w['display_name']}: a shot hits for {w['damage']:.0f} ({w['damage'] * w['headshot_multiplier']:.0f} on the head), "
+				f"{claw_trip(8.0):.2f} s round trip at 8 m; a light zombie is yanked to the feet at {CLAW_PRIZE['YANK_SPEED']:g} m/s and "
+				f"bowled over for {down:.2f} s (dazed {CLAW_PRIZE['DAZE_TIME']:g} s when it cannot be), and it is Prized: "
+				f"+{CLAW_PRIZE['PRIZE_BONUS'] * 100:.0f}% damage taken for {CLAW_PRIZE['PRIZE_TIME']:g} s (in the mark-down stack); "
+				f"lifts nothing of mass {CLAW['LIFT_MASS']:g}+; grapple up to {CLAW_REEL['RANGE']:g} m at {CLAW['REEL_SPEED']:g} m/s, "
+				f"every {CLAW['GRAPPLE_COOLDOWN']:g} s")
 	tags = gd_consts("scripts/weapons/markdown_marker_tags.gd")
 	own = {"Marker tags": tags["TAG_BONUS"] * tags["MAX_TAGS"], "Ground Control mark": MARK["DAMAGE_BONUS"] - 1.0,
-		"Dunk Tank soak": SOAK["DAMAGE_BONUS"] - 1.0}
+		"Dunk Tank soak": SOAK["DAMAGE_BONUS"] - 1.0, "Claw Grabber Prized": CLAW_PRIZE["PRIZE_BONUS"]}
 	raw = sum(own.values())
 	print("\nMark-down stack (they add up, capped; the cap is lower on heavies and bosses): "
 		+ ", ".join(f"{k} +{v * 100:.0f}%" for k, v in own.items())
-		+ f"; all three +{raw * 100:.0f}% -> +{min(raw, STACK['CAP']) * 100:.0f}% on a zombie,"
+		+ f"; all four +{raw * 100:.0f}% -> +{min(raw, STACK['CAP']) * 100:.0f}% on a zombie,"
 		f" +{min(raw, STACK['HEAVY_CAP']) * 100:.0f}% on a heavy or boss")
 
 
