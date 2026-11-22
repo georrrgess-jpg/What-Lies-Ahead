@@ -4,7 +4,7 @@ extends RefCounted
 ## reload saved as one sheet <shot> plus full-size frames <shot>_<name>.png.
 ## Run with --fixed-fps 30 so the timings hold whatever the render speed:
 ##
-##   godot --path . --fixed-fps 30 -- --shot=bow.png --shot-weapon=bullseye_bow --shot-run=res://scripts/dev/bow_probe.gd [--shot-ads=1]
+##   godot --path . --fixed-fps 30 -- --shot=bow.png --shot-weapon=bullseye_bow --shot-run=res://scripts/dev/bow_probe.gd [--shot-ads=1] [--shot-fov=100]
 
 const COLUMNS := 4
 const CELL := Vector2i(480, 270)
@@ -16,6 +16,11 @@ func run(shot: Node, director: RunDirector) -> void:
 	var frames: Array[Image] = []
 	var names: Array[String] = []
 	var aim: bool = shot._arg("ads", "0") == "1"
+	# --shot-fov=<degrees>: the field of view setting (60..100) for this capture.
+	var fov := float(shot._arg("fov", "0"))
+	if fov > 0.0:
+		Profile.data["settings"]["fov"] = fov
+		player._apply_settings()
 	if aim:
 		Input.action_press(&"aim")
 	await shot._wait(50)
@@ -89,8 +94,7 @@ func run(shot: Node, director: RunDirector) -> void:
 		sheet.blit_rect(img, Rect2i(Vector2i.ZERO, CELL), Vector2i(i % COLUMNS * CELL.x, i / COLUMNS * CELL.y))
 	sheet.save_png(shot.path)
 	for i in frames.size():
-		if names[i] in ["idle", "half", "full", "loose", "nock45", "nock72", "tired", "ads_full", "stuck", "inspect11", "inspect21"]:
-			frames[i].save_png(shot.path.get_basename() + "_" + names[i] + ".png")
+		frames[i].save_png(shot.path.get_basename() + "_" + names[i] + ".png")
 	print("[bow] saved %s (%d frames)" % [shot.path, frames.size()])
 
 

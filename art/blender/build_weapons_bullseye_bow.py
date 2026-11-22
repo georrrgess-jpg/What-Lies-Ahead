@@ -57,6 +57,23 @@ SIGHT_X = -0.05
 SIGHT_Z = 0.072
 SIGHT_BAR_Z = 0.046
 MOUNT_Y = 0.005
+## The bow arm: wrist to elbow (the bow is held out straight from the left
+## shoulder), how far the palm is turned behind the grip and the knuckles lean.
+BOW_ARM = (-0.33, -0.94, -0.06)
+BOW_ROLL = -32.0
+BOW_TILT = 22.0
+BOW_SQUEEZE = 0.15
+## The bow hand's thumb before it settles on the riser (weapon space): forward past its right side.
+BOW_THUMB = (0.62, 0.78, -0.08)
+## The drawing arm: wrist to elbow at full draw (in line with the arrow, the
+## elbow a little out and up), and the hook (hand space, kit size).
+DRAW_ARM = (0.14, -0.98, 0.1)
+HOOK_Y = 0.114
+HOOK_Z = -0.030
+HOOK_DROP = 0.043
+## The drawing hand's thumb (weapon space): folded down across the palm.
+DRAW_THUMB = (-0.72, 0.42, -0.55)
+HOOK_FLEX = {"Index": (12.0, 78.0, 55.0), "Middle": (12.0, 78.0, 55.0), "Ring": (12.0, 80.0, 55.0), "Pinky": (70.0, 92.0, 60.0)}
 
 
 def palette():
@@ -337,6 +354,24 @@ def string_half(name, start, end, glow, serving):
     return parts, piv
 
 
+def hand_dir(side, axis, forearm, roll, tilt, world):
+    """A weapon-space direction in grip_hand's hand space (x towards the thumb's
+    side, y along the palm, z the back of the hand), for its thumb_dir."""
+    s = 1.0 if side == "R" else -1.0
+    a = Vector(axis).normalized()
+    f = Vector(forearm).normalized()
+    yh = -(f - a * a.dot(f)).normalized()
+    n = (yh.cross(a) * s).normalized()
+    if roll:
+        R = Matrix.Rotation(math.radians(roll) * s, 3, a)
+        n, yh = (R @ n).normalized(), (R @ yh).normalized()
+    th = math.radians(tilt)
+    yh = (yh * math.cos(th) + a * math.sin(th)).normalized()
+    xh = yh.cross(n).normalized()
+    w = Vector(world).normalized()
+    return (-s * w.dot(xh), w.dot(yh), w.dot(n))
+
+
 def build_bullseye_bow():
     reset_scene()
     palette()
@@ -387,16 +422,33 @@ def build_bullseye_bow():
     lug, charm_point = charm_lug(SIGHT_X - 0.007, 0.07, SIGHT_BAR_Z - 0.002, M, out=-1.0)
     groups["Shell"][0].extend(lug)
 
-    # The bow hand round the grip: the forearm runs back to the left elbow, the thumb up.
+    # The bow hand: an archer's grip. The palm sits behind the grip (the bow
+    # presses into the pad of the thumb), the knuckles lean about 35 degrees off
+    # the riser, the fingers close loosely round its left side and the thumb
+    # lies forward along its right side. The forearm runs straight back to the
+    # left shoulder (the bow arm is held out straight).
     grip = [box_sdf((0.0, -0.011, -0.067), (1, 0, 0), (0, 1, 0), (0.0182, 0.0298, 0.06), corner=0.014)]
-    hand_l = grip_hand("L", (0.0, -0.011, -0.07), (0, 0.06, 1), (-0.34, -0.9, -0.28), M, grip, scale=HAND_SCALE, squeeze=GRIP_SQUEEZE,
-                       thumb_dir=(0.45, 0.75, -0.45), thumb_wrap=True, thumb_len=0.8)
-    # The drawing hand: three fingers hooked round the string about the nock (index
-    # above the arrow), palm turned to the face, the forearm back to the right elbow.
-    hook_c = (0.0, string_y - 0.0185, ARROW_Z - 0.012)
-    hook = [cylinder_sdf(hook_c, (0, 0, 1), 0.0165)]
-    hand_r = grip_hand("R", hook_c, (0, 0, 1), (0.62, -0.74, -0.25), M, hook, scale=HAND_SCALE, squeeze=0.0,
-                       finger_flex={"Pinky": (72.0, 88.0, 60.0)}, thumb_dir=(0.35, -0.2, -0.9), thumb_flex=(18.0, 22.0, 14.0), thumb_len=0.8)
+    hand_l = grip_hand("L", (0.0, -0.011, -0.07), (0, 0.06, 1), BOW_ARM, M, grip, scale=HAND_SCALE, squeeze=BOW_SQUEEZE,
+                       roll=BOW_ROLL, tilt=BOW_TILT, thumb_dir=hand_dir("L", (0, 0.06, 1), BOW_ARM, BOW_ROLL, BOW_TILT, BOW_THUMB), thumb_len=0.85)
+    # The drawing hand: a three-under hook. The back of the hand is flat and in
+    # line with the forearm, which runs back along the arrow to the right elbow
+    # (a little out and up); the index, middle and ring fingers hook the string
+    # just under the nock (the string in their last joint), the little finger
+    # is tucked and the thumb folded down along the palm.
+    f = Vector(DRAW_ARM).normalized()
+    up = Vector((0.0, 0.0, 1.0))
+    back = (f - up * up.dot(f)).normalized()
+    dorsal = (-back).cross(up).normalized()
+    # Hand space (kit size): the string lies HOOK_Y along the hand from the
+    # wrist and HOOK_Z under the knuckles; the hand's middle line runs
+    # HOOK_DROP under the arrow so the index finger sits just under the nock.
+    plane_z = -0.0155 - 0.0016
+    string_at = Vector((0.0, string_y, ARROW_Z - HOOK_DROP))
+    hook_c = string_at - dorsal * ((HOOK_Z - plane_z) * HAND_SCALE)
+    hook = [lambda p, c=hook_c, n=dorsal: (p - c).dot(n)]
+    hand_r = grip_hand("R", tuple(hook_c), (0, 0, 1), DRAW_ARM, M, hook, scale=HAND_SCALE, squeeze=0.0, tilt=0.0, contact_y=HOOK_Y,
+                       finger_flex=HOOK_FLEX, thumb_dir=hand_dir("R", (0, 0, 1), DRAW_ARM, 0.0, 0.0, DRAW_THUMB), thumb_flex=(8.0, 30.0, 30.0),
+                       thumb_len=0.8)
     empties = {
         "Muzzle": (tip, "Arrow"),
         "SightPoint": ((SIGHT_X, -0.058, SIGHT_Z), None),
