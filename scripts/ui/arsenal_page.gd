@@ -239,6 +239,9 @@ func _equip_selected() -> void:
 	if _weapon == null:
 		return
 	var button := _details.equip_button()
+	if not GameData.is_weapon_unlocked(_weapon) and _weapon.token_price > 0:
+		_buy_selected(button)
+		return
 	if not GameData.is_weapon_unlocked(_weapon) or Loadout.slot_of(_weapon.id) >= 0:
 		UiFx.deny(button)
 		return
@@ -251,6 +254,30 @@ func _equip_selected() -> void:
 	# EQUIP just went quiet (EQUIPPED): the focus goes back to the card.
 	if had_focus:
 		_dock.card(_weapon.id).grab_focus()
+
+
+## Buys the previewed locked weapon outright for its token price (the
+## Ringmaster's other way in): asks, spends, grants "weapon:<id>" (the same
+## grant a kept weapon has, see GameData.is_weapon_unlocked) and celebrates.
+func _buy_selected(button: Control) -> void:
+	var w := _weapon
+	var price := w.token_price
+	if not Wallet.can_afford(price):
+		UiSound.deny()
+		UiFx.deny(button)
+		UiKit.toast("%s more %s needed. %s" % [Wallet.format(price - Wallet.balance()), Wallet.CURRENCY_SHORT, PurchaseFlow.EARN_HINT], UiKit.RED, &"icon_spark", 5.0)
+		return
+	var text := "%s for %s %s, without waiting for its unlock.\nYou keep %s." % [w.display_name, Wallet.format(price), Wallet.CURRENCY_SHORT, Wallet.format(Wallet.balance() - price)]
+	UiKit.confirm(PurchaseFlow._host(self), "BUY %s?" % w.display_name.to_upper(), text, "BUY", func():
+		if GameData.is_weapon_unlocked(w) or not Wallet.spend(price, StringName("weapon:" + String(w.id))):
+			UiSound.deny()
+			return
+		Unlocks.grant(StringName("weapon:" + String(w.id)))
+		Profile.save_profile()
+		UiSound.purchase()
+		UiKit.toast("%s is yours. Equip it here." % w.display_name, Wallet.COLOR, &"icon_spark")
+		PurchaseFlow.burst(self)
+		_refresh_states())
 
 
 # --- keys and pad ------------------------------------------------------------------------

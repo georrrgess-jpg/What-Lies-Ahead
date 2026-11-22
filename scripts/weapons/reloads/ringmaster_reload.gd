@@ -18,8 +18,8 @@ const ROOT_ROT := Vector3(-8.0, 30.0, 22.0)
 ## The support hand (offsets from its rest on the foregrip, model space):
 ## on the drum's latch (also where it holds the fresh drum seated), down where
 ## it fetches the fresh one, on the charging handle, and its flourish.
-const HAND_LATCH := Vector3(-0.092, 0.022, 0.135)
-const HAND_LOW := Vector3(-0.08, -0.2, 0.145)
+const HAND_LATCH := Vector3(-0.092, 0.018, 0.113)
+const HAND_LOW := Vector3(-0.08, -0.2, 0.123)
 const HAND_RACK := Vector3(-0.1, 0.11, 0.235)
 const RACK_PULL := 0.042
 ## How far below the foregrip the hand slides off it and comes back from.

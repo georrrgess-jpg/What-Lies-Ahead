@@ -15,6 +15,9 @@ extends Resource
 @export var category := ""
 ## Unlock condition (null = available from the start).
 @export var unlock: Requirement
+## Arcade Tokens that buy the weapon outright while `unlock` is not met yet
+## (the Arsenal's BUY button; 0 = it can only be earned).
+@export var token_price := 0
 ## Which loadout slot this weapon belongs to: &"primary" (rifles, shotguns,
 ## launchers, beams), &"secondary" (pistols and other sidearms) or &"melee"
 ## (knives and clubs: see the Melee group). The Arsenal lists the classes

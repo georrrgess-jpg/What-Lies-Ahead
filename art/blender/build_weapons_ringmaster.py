@@ -37,9 +37,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from weapon_kit import *  # noqa: F401,F403
 from weapon_kit import _finish_part  # noqa: E402
 
-## The drum: axle (y, z), casing radius, half width across X.
-DRUM_Y = 0.162
-DRUM_Z = -0.08
+## The drum: axle (y, z), casing radius, half width across X. It sits forward
+## of the trigger guard's front bow with about 7 mm of air between them.
+DRUM_Y = 0.184
+DRUM_Z = -0.084
 DRUM_R = 0.06
 DRUM_HALF = 0.03
 ## The three rings on each face: (inner, outer) radius.

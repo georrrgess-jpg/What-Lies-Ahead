@@ -7,7 +7,8 @@ extends KitPanel
 ##
 ## The button says what pressing it does: EQUIP PRIMARY / EQUIP SECONDARY,
 ## or, disabled, EQUIPPED or LOCKED · what unlocks it (the full requirement
-## is also written above it).
+## is also written above it); a locked weapon with a token price instead
+## offers BUY · <price> TOKENS.
 
 signal equip_pressed
 
@@ -169,15 +170,22 @@ func refresh_action(w: WeaponData) -> void:
 	var unlocked := GameData.is_weapon_unlocked(w)
 	_note.visible = not unlocked
 	_note.text = "Unlock: %s" % ArsenalStats.unlock_text(w) if not unlocked else ""
-	if not unlocked:
+	var for_sale := not unlocked and w.token_price > 0
+	if for_sale:
+		_note.text += "\nor buy it now for %s %s" % [Wallet.format(w.token_price), Wallet.CURRENCY]
+		_equip.text = "BUY  ·  %s %s" % [Wallet.format(w.token_price), Wallet.CURRENCY_SHORT.to_upper()]
+	elif not unlocked:
 		_equip.text = "LOCKED  ·  %s" % ArsenalStats.short_unlock(w).to_upper()
 	elif Loadout.slot_of(w.id) >= 0:
 		_equip.text = "EQUIPPED"
 	else:
 		_equip.text = "EQUIP %s" % String(Loadout.SLOT_NAMES[Loadout.slot_for(w)]).to_upper()
-	_equip.disabled = not unlocked or Loadout.slot_of(w.id) >= 0
+	_equip.disabled = (not unlocked and not for_sale) or Loadout.slot_of(w.id) >= 0
 	_equip.focus_mode = Control.FOCUS_NONE if _equip.disabled else Control.FOCUS_ALL
-	_equip.tooltip_text = _note.text if not unlocked else "Equip it (F, pad Y)"
+	if for_sale:
+		_equip.tooltip_text = "Buy it now (F, pad Y): %s" % _note.text
+	else:
+		_equip.tooltip_text = _note.text if not unlocked else "Equip it (F, pad Y)"
 	_fit_button()
 
 
