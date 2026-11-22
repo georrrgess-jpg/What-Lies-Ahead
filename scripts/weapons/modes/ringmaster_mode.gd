@@ -21,8 +21,8 @@ extends WeaponMode
 const TRAIT := "MAIN EVENT"
 ## Seconds between rounds outside the Main Event (13.5 a second).
 const BASE_INTERVAL := 0.074
-## Meter per kill (a headshot kill counts twice) and per headshot hit.
-const FILL_KILL := 1.0 / 16.0
+## Kills that fill the meter (a headshot kill counts twice), and the meter per headshot hit.
+const KILLS_TO_FILL := 18
 const FILL_HEAD := 0.01
 ## Seconds of aiming that call the Main Event, its length, its pierce.
 const CALL_HOLD := 0.3
@@ -32,7 +32,7 @@ const EVENT_PIERCE := 1
 const SPIN_UP := 0.45
 ## Confetti pops: damage at the centre, radius, edge and heavy scale, and the
 ## most that go off in one physics frame (the rest wait for the next).
-const POP_DAMAGE := 30.0
+const POP_DAMAGE := 26.0
 const POP_RADIUS := 2.6
 const POP_EDGE := 0.5
 const POP_HEAVY := 0.5
@@ -223,14 +223,14 @@ func _on_kill(enemy: Node, weapon_id: StringName, headshot: bool, _points: int) 
 		if z:
 			_pops.append(z.global_position + Vector3.UP * 1.0 * z.data.body_scale)
 		return
-	_fill(FILL_KILL * (2.0 if headshot else 1.0))
+	_fill((2.0 if headshot else 1.0) / KILLS_TO_FILL)
 
 
 ## A confetti pop at `at`: the burst, a party-popper bang and damage round it.
 func _pop(at: Vector3) -> void:
 	since_pop = 0.0
 	var level := controller.player.get_parent()
-	WeaponFx.burst(level, at, Vector3.UP, CONFETTI, 26, 5.0, 0.9, 0.045, 160.0, Vector3(0, -6.0, 0))
+	WeaponFx.burst(level, at, Vector3.UP, CONFETTI, 14, 4.5, 0.7, 0.04, 160.0, Vector3(0, -7.0, 0))
 	WeaponFx.flash(level, at, SPOTLIGHT, 0.8, 0.12)
 	Sfx.play_at(POP_SOUND, at, -2.0, randf_range(0.94, 1.08))
 	var space := controller.player.get_world_3d().direct_space_state

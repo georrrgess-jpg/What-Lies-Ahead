@@ -720,10 +720,10 @@ def main():
 			mix = 1.0 + head * (w["headshot_multiplier"] - 1.0)
 			base = w["damage"] * mix / RING["BASE_INTERVAL"]
 			live = w["damage"] * mix / w["fire_interval"]
-			kills = 1.0 / RING["FILL_KILL"]
+			kills = RING["KILLS_TO_FILL"]
 			print(f"\n{w['display_name']} Main Event: {kills:.0f} kills (headshot kills count double) fill the Spotlight; for "
 				f"{RING['EVENT_TIME']:g} s the rate climbs from {1.0 / RING['BASE_INTERVAL']:.1f} to {1.0 / w['fire_interval']:.1f} a second "
-				f"({base:.0f} -> {live:.0f} DPS on one target before reloads), every round passes through {RING['EVENT_PIERCE']} more zombie "
+				f"({base:.0f} -> {live:.0f} DPS on one target before reloads), every round passes through {int(RING['EVENT_PIERCE'])} more zombie "
 				f"(x{w['pierce_falloff']:g}) and every kill pops {RING['POP_DAMAGE']:g} within {RING['POP_RADIUS']:g} m (heavies half), chaining")
 	for w in ws.values():
 		if w["id"] == "sarsaparilla_six":

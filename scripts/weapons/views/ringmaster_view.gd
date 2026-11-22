@@ -35,7 +35,7 @@ const TASSEL_KICK := 9.0
 const INSPECT_LENGTH := 3.6
 const CURTAIN_CHANCE := 1.0 / 15.0
 const CONFETTI := [Color(1.0, 0.84, 0.25), Color(0.93, 0.16, 0.3), Color(1.0, 0.97, 0.88), Color(0.35, 0.78, 1.0), Color(1.0, 0.45, 0.75)]
-const BEAM_COLOR := Color(1.0, 0.93, 0.7, 0.16)
+const BEAM_COLOR := Color(1.0, 0.93, 0.7, 0.26)
 const INSPECT_POSES := [
 	[0.0, Vector3(0.14, -0.14, -0.64), Vector3(2.0, 10.0, -6.0)],
 	[0.14, Vector3(0.05, -0.08, -0.58), Vector3(8.0, -58.0, 12.0)],

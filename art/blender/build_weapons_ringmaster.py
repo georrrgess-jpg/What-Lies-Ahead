@@ -38,14 +38,14 @@ from weapon_kit import *  # noqa: F401,F403
 from weapon_kit import _finish_part  # noqa: E402
 
 ## The drum: axle (y, z), casing radius, half width across X.
-DRUM_Y = 0.128
-DRUM_Z = -0.074
-DRUM_R = 0.066
+DRUM_Y = 0.158
+DRUM_Z = -0.08
+DRUM_R = 0.063
 DRUM_HALF = 0.03
 ## The three rings on each face: (inner, outer) radius.
-RING_OUTER = (0.047, 0.0625)
-RING_MID = (0.029, 0.044)
-RING_HUB = (0.0, 0.026)
+RING_OUTER = (0.045, 0.0595)
+RING_MID = (0.028, 0.042)
+RING_HUB = (0.0, 0.025)
 BULBS_OUTER = 12
 BULBS_MID = 8
 BORE_Z = 0.034
@@ -54,7 +54,7 @@ HANDGUARD_TOP = 0.072
 ## The charging handle's root on the left flank.
 HANDLE = (-0.04, 0.085, 0.05)
 ## The sling's front swivel (left of the handguard) and the top hat's brim.
-SWIVEL = (-0.034, 0.3, 0.0)
+SWIVEL = (-0.034, 0.335, 0.0)
 HAT_Y = 0.43
 
 
@@ -140,7 +140,7 @@ def build_ringmaster():
     hat_black = mat("HatSilk", "#141018", rough=0.32, metal=0.1)
     grip_loc = (0, -0.036, -0.11)
     grip_parts, G = grip("", grip_loc, M, tilt=-14, size=(0.066, 0.088, 0.182), body_bottom=-0.012, guard_len=0.088)
-    fore = (0, 0.272, -0.052)
+    fore = (0, 0.3, -0.052)
     dy, dz = DRUM_Y, DRUM_Z
     z_line = RAIL_TOP + SIGHT_HEIGHT
 
@@ -153,8 +153,8 @@ def build_ringmaster():
         box("Belly", (0.062, 0.2, 0.014), (0, 0.02, -0.008), bevel=0.005, m=M["dark"]),
         box("RailRiser", (0.03, 0.2, 0.014), (0, -0.01, RAIL_TOP - 0.016), bevel=0.003, m=M["dark"]),
         # The magazine well: a brass collar the drum's neck seats in.
-        box("MagWell", (0.07, 0.05, 0.02), (0, dy, -0.018), bevel=0.005, m=brass),
-        box("MagWellLip", (0.074, 0.054, 0.005), (0, dy, -0.027), bevel=0.002, m=gold),
+        box("MagWell", (0.05, 0.05, 0.02), (0, dy, -0.018), bevel=0.005, m=brass),
+        box("MagWellLip", (0.054, 0.054, 0.005), (0, dy, -0.027), bevel=0.002, m=gold),
         # The handguard: crimson, ringed with gold bands, brass vents with star cut-outs.
         loft("Handguard", [(0.165, 0.03, 0.036, 0.036, 0.014), (0.2, 0.031, 0.037, 0.036, 0.015), (0.33, 0.029, 0.035, 0.036, 0.014),
                            (0.35, 0.025, 0.03, 0.036, 0.012)], M["shell"]),

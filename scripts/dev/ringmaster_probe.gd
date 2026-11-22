@@ -5,12 +5,15 @@ extends RefCounted
 ##   idle     the meter empty (outer bulbs dark, middle bulbs = the drum's rounds)
 ##   ready    the meter full: the chip says HOLD AIM, the outer bulbs chase
 ##   live     the Main Event, firing on the staged zombies: spotlight beams
-##   reload   a sheet of the drum swap, RELOAD_FRAMES evenly through it
+##   reload   a sheet of the drum swap at RELOAD_FRAMES of the way through it
+##   inspect  a sheet of the inspect, a frame every INSPECT_STEP seconds
+##   curtain  the same for the rare Curtain Call inspect
 ## Run with the reference zombies staged:
 ##
 ##   godot --path . --fixed-fps 30 -- --shot=rm.png --shot-weapon=ringmaster --shot-zombies=1 --shot-run=res://scripts/dev/ringmaster_probe.gd
 
 const RELOAD_FRAMES := [0.06, 0.14, 0.2, 0.3, 0.42, 0.5, 0.57, 0.64, 0.72, 0.78, 0.86, 0.96]
+const INSPECT_STEP := 0.3
 const COLUMNS := 4
 const CELL := Vector2i(640, 400)
 ## The part of the screen the weapon is held in (fractions of the frame).
@@ -52,19 +55,49 @@ func run(shot: Node, director: RunDirector) -> void:
 		print("[ringmaster] reload did not start")
 		return
 	var d := w.current.reload_time
-	var started := Time.get_ticks_msec()
+	# Game time (run with --fixed-fps 30: every frame is 1/30 s however slow the render).
+	var ticks := 0
 	var frames: Array[Image] = []
 	for k in RELOAD_FRAMES:
-		while (Time.get_ticks_msec() - started) / 1000.0 < k * d:
+		while ticks / 30.0 < k * d:
+			await shot.get_tree().process_frame
+			ticks += 1
+		await RenderingServer.frame_post_draw
+		frames.append(_crop(shot))
+	_sheet(frames, _path(shot, "reload"))
+	print("[ringmaster] saved the reload strip (%d frames over %.2f s)" % [frames.size(), d])
+	if w.is_reloading():
+		w._finish_reload()
+	await shot._wait(40)
+	await _inspect_sheet(shot, player.view, false, "inspect")
+	await shot._wait(30)
+	await _inspect_sheet(shot, player.view, true, "curtain")
+
+
+## The inspect, a frame every INSPECT_STEP seconds of its clock, as one sheet.
+func _inspect_sheet(shot: Node, view: WeaponView, rare: bool, label: String) -> void:
+	view.inspect_force_rare = rare
+	if not view.inspect():
+		print("[ringmaster] the %s did not start" % label)
+		return
+	var frames: Array[Image] = []
+	var t := 0.1
+	while view.is_inspecting() and frames.size() < 12:
+		while view.is_inspecting() and view._inspect.clock < t:
 			await shot.get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		frames.append(_crop(shot))
+		t += INSPECT_STEP
+	_sheet(frames, _path(shot, label))
+	print("[ringmaster] saved the %s strip (%d frames)" % [label, frames.size()])
+
+
+func _sheet(frames: Array[Image], path: String) -> void:
 	var rows := ceili(frames.size() / float(COLUMNS))
 	var sheet := Image.create(CELL.x * COLUMNS, CELL.y * rows, false, frames[0].get_format())
 	for i in frames.size():
 		sheet.blit_rect(frames[i], Rect2i(Vector2i.ZERO, CELL), Vector2i(i % COLUMNS * CELL.x, i / COLUMNS * CELL.y))
-	sheet.save_png(_path(shot, "reload"))
-	print("[ringmaster] saved the reload strip (%d frames over %.2f s)" % [frames.size(), d])
+	sheet.save_png(path)
 
 
 func _dead(director: RunDirector) -> int:

@@ -13,18 +13,18 @@ extends RefCounted
 ## smootherstep curves, so moves blend with no stops between keys (render a
 ## strip with tools/weapon_sheet.gd --mode=reload).
 
-const ROOT_POS := Vector3(-0.03, 0.035, 0.02)
-const ROOT_ROT := Vector3(-6.0, 24.0, 14.0)
+const ROOT_POS := Vector3(-0.05, 0.05, 0.03)
+const ROOT_ROT := Vector3(-8.0, 30.0, 22.0)
 ## The support hand (offsets from its rest on the foregrip, model space):
 ## on the drum's latch (also where it holds the fresh drum seated), down where
 ## it fetches the fresh one, on the charging handle, and its flourish.
-const HAND_LATCH := Vector3(-0.012, -0.036, 0.075)
-const HAND_LOW := Vector3(-0.05, -0.2, 0.09)
-const HAND_RACK := Vector3(-0.055, 0.1, 0.185)
+const HAND_LATCH := Vector3(-0.075, 0.022, 0.1)
+const HAND_LOW := Vector3(-0.07, -0.2, 0.11)
+const HAND_RACK := Vector3(-0.1, 0.11, 0.2)
 const RACK_PULL := 0.042
 const HAND_FLICK := Vector3(-0.09, 0.03, 0.12)
-const HAND_ROT_LATCH := Vector3(0.0, 0.0, -14.0)
-const HAND_ROT_RACK := Vector3(0.0, -20.0, 28.0)
+const HAND_ROT_LATCH := Vector3(0.0, 0.0, 8.0)
+const HAND_ROT_RACK := Vector3(0.0, 0.0, 10.0)
 ## The spent drum's fall and tumble.
 const FALL := Vector3(-0.05, -0.32, 0.03)
 const TUMBLE := Vector3(-210.0, 30.0, 50.0)
