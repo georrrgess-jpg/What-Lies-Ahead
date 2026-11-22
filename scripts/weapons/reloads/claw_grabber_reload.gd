@@ -11,7 +11,7 @@ extends RefCounted
 ## reload sound (clw_reload), timed for WeaponData.reload_time.
 
 ## Where the token starts in the hand and lines up outside the slot (model space, from its rest in the slot).
-const TOKEN_HAND := Vector3(-0.07, -0.06, 0.03)
+const TOKEN_HAND := Vector3(-0.025, -0.05, 0.02)
 const TOKEN_LINE := Vector3(-0.016, 0.0, 0.0)
 ## How far the claw is reeled up into the chute (model +Z is toward the player).
 const CLAW_UP := Vector3(0.0, 0.0, 0.026)
@@ -48,9 +48,9 @@ func _gun(v: WeaponView, d: float) -> void:
 ## The off hand lets go, comes up beside the coin door with the token, pushes
 ## it in, and takes the grip again.
 func _hand(v: WeaponView, d: float) -> void:
-	v.track("ArmL", d, [[0.06, Vector3.ZERO, Vector3.ZERO], [0.18, Vector3(-0.1, -0.03, 0.06), Vector3(0, 0, -12)],
-		[0.28, Vector3(-0.09, 0.04, 0.04), Vector3(-10, 0, -20)], [0.38, Vector3(-0.06, 0.07, 0.03), Vector3(-14, -6, -24)],
-		[0.44, Vector3(-0.05, 0.072, 0.03), Vector3(-14, -6, -24)], [0.52, Vector3(-0.09, 0.02, 0.05), Vector3(-6, 0, -12)],
+	v.track("ArmL", d, [[0.06, Vector3.ZERO, Vector3.ZERO], [0.18, Vector3(-0.09, -0.02, 0.05), Vector3(0, 0, -10)],
+		[0.28, Vector3(-0.085, 0.045, 0.03), Vector3(-8, 0, -16)], [0.38, Vector3(-0.075, 0.09, 0.018), Vector3(-12, -4, -20)],
+		[0.44, Vector3(-0.07, 0.095, 0.016), Vector3(-12, -4, -20)], [0.52, Vector3(-0.09, 0.03, 0.05), Vector3(-6, 0, -12)],
 		[0.66, Vector3(-0.02, -0.01, 0.01), Vector3(0, 0, -4)], [0.74, Vector3.ZERO, Vector3.ZERO]])
 
 

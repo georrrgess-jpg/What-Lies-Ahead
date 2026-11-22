@@ -12,8 +12,9 @@ extends RefCounted
 ## dipping now and then; the CREDIT display (Cell) glows by the credits left.
 ## Inspect: the gun turns to show its left flank, the thumb works the joystick
 ## (the mini crane follows it), dips the crane on a prize and the lights win a
-## round; one time in RARE_CHANCE the mini crane actually lifts a prize, the
-## bulbs go wild and a jackpot jingle plays.
+## round, then the gun tips muzzle up to admire the claw as its prongs flex;
+## one time in RARE_CHANCE the mini crane wins: the bulbs go wild, confetti
+## pops in the case and a jackpot jingle plays.
 
 const BULBS := 14
 ## Chase speed (bulbs a second) at rest, while the claw is out, in a win.
@@ -41,8 +42,8 @@ const INSPECT_POSES := [
 	[0.0, Vector3(0.14, -0.14, -0.62), Vector3(2.0, 14.0, -4.0)],
 	[0.12, Vector3(0.05, -0.1, -0.5), Vector3(10.0, 42.0, 18.0)],
 	[0.5, Vector3(0.05, -0.1, -0.5), Vector3(12.0, 46.0, 20.0)],
-	[0.6, Vector3(0.08, -0.12, -0.52), Vector3(-6.0, -18.0, -10.0)],
-	[0.84, Vector3(0.08, -0.12, -0.52), Vector3(-4.0, -20.0, -8.0)],
+	[0.62, Vector3(0.07, -0.08, -0.5), Vector3(26.0, 10.0, 12.0)],
+	[0.86, Vector3(0.07, -0.08, -0.5), Vector3(30.0, 8.0, 14.0)],
 	[1.0, Vector3(0.14, -0.15, -0.62), Vector3(4.0, 6.0, 0.0)],
 ]
 const SPARKS := [Color(0.22, 0.94, 1.0), Color(1.0, 0.31, 0.64), Color(1.0, 0.96, 0.88)]
@@ -255,9 +256,8 @@ func inspect_start(v: WeaponView) -> void:
 
 
 ## The thumb works the joystick (the crane follows), the crane drops on a
-## prize, closes, rises: the prize slips (or, rarely, comes up with it and
-## the lights win), and the gun turns to look down the claw, its prongs
-## flexing open and shut.
+## prize and rises (rarely winning it: the lights go wild), and the gun tips
+## muzzle up while the big claw's prongs flex open and shut.
 func inspect(v: WeaponView, t: float) -> void:
 	var steer := 0.0
 	if t > 0.5 and t < 1.6:
