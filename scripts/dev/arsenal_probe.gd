@@ -611,7 +611,8 @@ func _check_long_text() -> void:
 
 
 ## Locked weapons: dimmed card with a padlock, the requirement in the tooltip
-## and the details, a disabled LOCKED button that does not equip.
+## and the details, a disabled LOCKED button that does not equip (or, for a
+## weapon with a token price, a BUY button that refuses when it is too dear).
 func _check_locked() -> void:
 	var locked: Array[WeaponData] = []
 	for w in GameData.weapons():
@@ -625,7 +626,11 @@ func _check_locked() -> void:
 		await _select(w)
 		var button := _page.details().equip_button()
 		var card := _page.dock().card(w.id)
-		var ok := button.disabled and button.text.begins_with("LOCKED") and card.tooltip_text.contains("Locked:")
+		# A weapon with a token price offers BUY instead (the Ringmaster); this
+		# profile cannot afford it, so F only refuses and equips nothing.
+		var for_sale := w.token_price > 0
+		var ok := (not button.disabled and button.text.begins_with("BUY")) if for_sale else (button.disabled and button.text.begins_with("LOCKED"))
+		ok = ok and card.tooltip_text.contains("Locked:")
 		ok = ok and (_page.details().find_child("UnlockNote", true, false) as Label).text.contains(ArsenalStats.unlock_text(w))
 		await _key(KEY_F)
 		ok = ok and Loadout.slots() == held
