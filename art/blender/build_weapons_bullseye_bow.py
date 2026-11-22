@@ -53,7 +53,7 @@ SEGMENTS = (0.0, 0.2, 0.41, 0.61, 0.8, 1.0)
 STRING_U = 0.9
 STRING_R = 0.0021
 ## The pin sight on its bar, left of the arrow: x of the eye line and its height.
-SIGHT_X = -0.026
+SIGHT_X = -0.05
 SIGHT_Z = 0.072
 SIGHT_BAR_Z = 0.046
 MOUNT_Y = 0.005
@@ -266,7 +266,7 @@ def sight(M, brass, walnut):
     a peep at its back (IronSightRear) and a round pin guard with a glowing pin
     at its front (IronSightFront). The eye line runs SIGHT_X, SIGHT_Z along +Y."""
     bar = [
-        obox("SightArm", (0.044, 0.016, 0.008), (-0.007, 0.012, SIGHT_BAR_Z), (1, 0, 0), (0, 1, 0), bevel=0.002, m=brass),
+        obox("SightArm", (0.068, 0.016, 0.008), (-0.019, 0.012, SIGHT_BAR_Z), (1, 0, 0), (0, 1, 0), bevel=0.002, m=brass),
         obox("SightBar", (0.014, 0.17, 0.008), (SIGHT_X, 0.035, SIGHT_BAR_Z), (1, 0, 0), (0, 1, 0), bevel=0.002, m=brass),
         obox("SightRail", (0.012, 0.1, 0.004), (SIGHT_X, MOUNT_Y, SIGHT_BAR_Z + 0.006), (1, 0, 0), (0, 1, 0), bevel=0.001, m=walnut),
         xcyl("SightKnob", 0.0046, 0.008, (SIGHT_X - 0.011, 0.1, SIGHT_BAR_Z), m=brass, segs=12, bevel=0.001),
