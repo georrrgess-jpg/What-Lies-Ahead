@@ -1,7 +1,8 @@
 class_name DamageStack
 extends EnemyBehaviour
 ## The damage a zombie takes extra while weapons have marked it: the Dunk Tank's
-## soak, the Markdown Marker's tags and Ground Control's radar mark. Their bonuses
+## soak, the Markdown Marker's tags, Ground Control's radar mark and the Claw
+## Grabber's Prized mark. Their bonuses
 ## add up (they do not multiply) and the sum is capped, lower on heavies, so
 ## stacking all of them cannot melt a boss. Each status asks for the stack once
 ## (DamageStack.ensure); it is the last behaviour in line, so armour still sees
@@ -25,7 +26,7 @@ static func ensure(z: Zombie) -> void:
 
 ## The combined extra damage `z` takes right now (0.3 = +30%), cap applied.
 static func bonus(z: Zombie) -> float:
-	var sum := Soak.damage_scale(z) + PriceTags.damage_scale(z) + GroundControlMark.damage_scale(z) - 3.0
+	var sum := Soak.damage_scale(z) + PriceTags.damage_scale(z) + GroundControlMark.damage_scale(z) + ClawPrize.damage_scale(z) - 4.0
 	return minf(sum, HEAVY_CAP if z.data.heavy else CAP)
 
 
