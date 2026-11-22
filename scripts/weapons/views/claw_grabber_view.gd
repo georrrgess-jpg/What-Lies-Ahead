@@ -58,6 +58,9 @@ var _mini: Node3D
 var _token: Node3D
 var _cell: Node3D
 var _muzzle: Node3D
+## The GRAB button's own lit material: bright while the grapple is ready.
+var _button_mat: StandardMaterial3D
+var _button_glow := 1.0
 var _clock := 0.0
 var _chase := 0.0
 var _flash := 0.0
@@ -66,7 +69,6 @@ var _since_catch := 10.0
 var _spool_angle := 0.0
 var _spool_speed := 0.0
 var _joy_kick := Vector2.ZERO
-var _was_out := false
 ## Inspect state.
 var _inspecting := false
 var _rare := false
@@ -92,6 +94,11 @@ func setup(v: WeaponView) -> void:
 	_muzzle = v.model.find_child("Muzzle", true, false) as Node3D
 	if _token:
 		_token.visible = false
+	var cap := _button as MeshInstance3D
+	if cap and cap.get_active_material(0) is StandardMaterial3D:
+		_button_mat = (cap.get_active_material(0) as StandardMaterial3D).duplicate()
+		_button_glow = _button_mat.emission_energy_multiplier
+		cap.set_surface_override_material(0, _button_mat)
 
 
 func fired(v: WeaponView) -> void:
@@ -126,12 +133,11 @@ func update(v: WeaponView, delta: float) -> void:
 		_token.visible = false
 	if not v.is_reloading() and not _inspecting:
 		_pose_claw(v, out)
-		_pose_mini(v, delta)
+		_pose_mini(v)
 	var woken := _woken(v)
 	_pose_lights(out or woken, delta)
 	_pose_spool(v, out or woken, delta)
 	_pose_controls(v, delta)
-	_was_out = out
 
 
 ## Hidden while it flies; home, it kicks back into the chute with a clack of its prongs.
@@ -194,10 +200,16 @@ func _pose_controls(v: WeaponView, delta: float) -> void:
 	if _button:
 		var press := 1.0 - clampf(_since_shot / 0.12, 0.0, 1.0)
 		_button.transform = v.rest_transform("Button").translated(Vector3(BUTTON_PRESS * press, -BUTTON_PRESS * press, 0.0))
+	if _button_mat:
+		# Dark while the grapple recharges, lit (and pulsing gently) when it is ready.
+		var mode := _mode(v)
+		var charge := mode.grapple_charge() if mode else 1.0
+		var pulse := 1.0 if Settings.reduce_motion() else 0.85 + 0.15 * sin(_clock * 5.0)
+		_button_mat.emission_energy_multiplier = _button_glow * (pulse if charge >= 1.0 else 0.08 + 0.25 * charge)
 
 
 ## The little crane roams its gantry and dips for a prize now and then.
-func _pose_mini(v: WeaponView, _delta: float) -> void:
+func _pose_mini(v: WeaponView) -> void:
 	if _mini == null:
 		return
 	var roam := sin(_clock * 0.55) * 0.6 + sin(_clock * 1.3) * 0.4

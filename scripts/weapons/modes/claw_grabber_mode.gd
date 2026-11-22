@@ -14,7 +14,8 @@ extends WeaponMode
 ##             mobility, at most ClawGrabberReel.RANGE metres, only to a spot
 ##             the player could walk to, never through scenery or past the
 ##             level's edge (ClawGrabberReel). Then it cools down for
-##             GRAPPLE_COOLDOWN (the HUD gauge refills)
+##             GRAPPLE_COOLDOWN (the GRAB button on the gun lights up again
+##             and chimes when it is ready)
 ##
 ## The magazine is credits: a shot's round is spent when the claw comes home
 ## (so the gun never reloads with the claw out); an empty machine takes a
@@ -31,6 +32,7 @@ const TAP_HITS := 0.8
 ## View events.
 const GRAB_EVENT := &"grab"
 const REEL_EVENT := &"reel"
+const READY_SOUND := &"clw_ready"
 
 var shot: ClawGrabberShot
 ## Seconds since the last grab (the view's lights flash on a grab).
@@ -40,7 +42,10 @@ var _cooldown := 0.0
 
 
 func trigger(spinning: bool, delta: float) -> bool:
-	_cooldown = maxf(0.0, _cooldown - delta)
+	if _cooldown > 0.0:
+		_cooldown = maxf(0.0, _cooldown - delta)
+		if _cooldown <= 0.0:
+			Sfx.play(READY_SOUND, -8.0)
 	since_grab += delta
 	if not spinning:
 		_held_since_shot = false
@@ -96,8 +101,8 @@ func grappled() -> void:
 		controller.player.view.weapon_event(data, REEL_EVENT)
 
 
-## The grapple's readiness for the HUD gauge (1 = ready).
-func gauge() -> float:
+## The grapple's readiness, 0-1 (1 = ready): the GRAB button on the gun lights by it.
+func grapple_charge() -> float:
 	return 1.0 - _cooldown / GRAPPLE_COOLDOWN
 
 

@@ -262,7 +262,8 @@ func _latch() -> void:
 		return
 	if mode.holding() and mode.grapple_ready() and _start_reel():
 		return
-	if is_instance_valid(target):
+	# Off a heavy, or a grapple that is not ready or has nowhere safe to go: it slips.
+	if is_instance_valid(target) or mode.holding():
 		_slip()
 	_turn_back()
 
@@ -302,7 +303,7 @@ func _reel() -> void:
 
 
 ## The claw slides off a zombie too big to lift (a real claw machine's
-## favourite trick): sparks, a squeal and a stagger.
+## favourite trick), or off a grip it cannot reel the player to: sparks and a squeal.
 func _slip() -> void:
 	Sfx.play_at(SLIP_SOUND, global_position, -3.0, randf_range(0.95, 1.05))
 	WeaponFx.burst(get_parent(), global_position, Vector3.UP, SPARKS, 8, 2.5, 0.3, 0.03, 90.0)

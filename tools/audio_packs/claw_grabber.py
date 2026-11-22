@@ -6,7 +6,7 @@ clank is the claw gripping scenery, the slip the claw scraping off something
 too heavy with a sour falling squeal; the reel is the winch dragging the
 player in (a motor whine climbing over a ratchet); home is the claw clicking
 into the chute; prize_win a little jackpot arpeggio over ticket rattle when a
-Prized zombie dies; servo the claw machine's motor; jackpot the rare inspect's
+Prized zombie dies; ready the grapple recharged; servo the claw machine's motor; jackpot the rare inspect's
 win fanfare. The reload (2.2 s) is a token clinking into the slot and
 rattling down, the marquee waking with a chime run, the winch reeling the
 claw up and lowering it on a servo whirr, the prongs snapping shut and the
@@ -140,6 +140,14 @@ def clw_jackpot():
     return filt(out, low=9500)
 
 
+def clw_ready():
+    """The grapple is ready again: a soft two-note arcade chime."""
+    out = silence(0.3)
+    place(out, _ding(1568, 0.16, 0.22), 0.0, 1.0)
+    place(out, _ding(2093, 0.2, 0.2), 0.07, 1.0)
+    return filt(out, low=9000)
+
+
 def clw_equip():
     """Drawn: the coin mech rattles, the marquee chimes on, the claw servo twitches."""
     out = silence(0.45)
@@ -175,7 +183,7 @@ def clw_reload():
 
 
 SOUNDS = [clw_fire, clw_grab, clw_clank, clw_slip, clw_reel, clw_home, clw_prize_win, clw_servo, clw_jackpot,
-          clw_equip, clw_reload]
+          clw_ready, clw_equip, clw_reload]
 
 VARIANTS = [(clw_fire, (0.95, 1.05)), (clw_grab, (0.97, 1.03)), (clw_clank, (0.92, 1.08))]
 

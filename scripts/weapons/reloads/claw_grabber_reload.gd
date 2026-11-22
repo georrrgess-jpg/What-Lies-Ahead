@@ -38,10 +38,10 @@ func play(v: WeaponView, d: float) -> void:
 ## Turned to show the left flank and the coin slot, tipped up a little; back
 ## with a settle once the claw is armed.
 func _gun(v: WeaponView, d: float) -> void:
-	v.track("Root", d, [[0.12, Vector3(-0.02, 0.04, 0.01), Vector3(4, -30, -16)], [0.3, Vector3(-0.024, 0.044, 0.01), Vector3(6, -34, -18)],
-		[0.42, Vector3(-0.022, 0.04, 0.01), Vector3(5, -33, -17)], [0.45, Vector3(-0.022, 0.034, 0.012), Vector3(2, -32, -16)],
-		[0.54, Vector3(-0.012, 0.03, 0.005), Vector3(6, -14, -8)], [0.72, Vector3(-0.006, 0.026, 0.0), Vector3(10, -6, -2)],
-		[0.84, Vector3(0.0, -0.004, 0.0), Vector3(-4, 2, 2)], [0.93, Vector3(0.0, 0.003, 0.0), Vector3(2, 0, 0)],
+	v.track("Root", d, [[0.12, Vector3(-0.03, 0.04, 0.01), Vector3(6, 30, 14)], [0.3, Vector3(-0.034, 0.044, 0.01), Vector3(8, 34, 16)],
+		[0.42, Vector3(-0.032, 0.04, 0.01), Vector3(7, 33, 15)], [0.45, Vector3(-0.032, 0.034, 0.012), Vector3(4, 32, 14)],
+		[0.54, Vector3(-0.016, 0.03, 0.005), Vector3(8, 14, 6)], [0.72, Vector3(-0.006, 0.026, 0.0), Vector3(10, 6, 2)],
+		[0.84, Vector3(0.0, -0.004, 0.0), Vector3(-4, -2, -2)], [0.93, Vector3(0.0, 0.003, 0.0), Vector3(2, 0, 0)],
 		[1.0, Vector3.ZERO, Vector3.ZERO]])
 
 

@@ -53,7 +53,9 @@ RAIL_TOP = HEAD_Z1
 CHUTE_Z = -0.003
 CHUTE_R = 0.0175
 CHUTE_Y1 = 0.142
-CLAW_Y = 0.156
+CLAW_Y = 0.163
+## The viewmodel claw's size (claw_parts scale).
+CLAW_SCALE = 1.5
 BULBS = 7
 
 
@@ -130,8 +132,8 @@ def build_claw_grabber():
     dark = M["dark"]
     gold = mat("TokenGold", "#ffc93c", rough=0.22, metal=0.8)
     case_glass = glass("CaseGlass", "#bfeaff", 0.22)
-    bulb_dim = mat("BulbDim", "#7a5a2e", rough=0.4)
-    bulb_lit = mat("BulbLit", "#ffd96a", rough=0.3, emit=3.2)
+    bulb_dim = mat("BulbDim", "#a07a40", rough=0.35)
+    bulb_lit = mat("BulbLit", "#fff0a0", rough=0.3, emit=4.5)
     button_m = mat("GrabButton", "#ff3fa0", rough=0.3, emit=1.6)
     knob_m = mat("KnobRed", "#ff3048", rough=0.25)
     slot_m = mat("SlotGlow", "#ff5a3c", rough=0.4, emit=2.4)
@@ -210,8 +212,8 @@ def build_claw_grabber():
         i = k % BULBS
         y = CASE_Y0 + 0.006 + i * (case_len - 0.012) / (BULBS - 1)
         p = (side * (CAB_X + 0.0016), y, (CASE_Z1 + HEAD_Z1) / 2 + 0.0008)
-        shell.append(sphere(f"BulbDim{k}", 0.0032, p, scale=(0.6, 1, 1), m=bulb_dim, segs=10, rings=6))
-        lit.append(([sphere(f"BulbLit{k}", 0.0036, p, scale=(0.7, 1, 1), m=bulb_lit, segs=10, rings=6)], p))
+        shell.append(sphere(f"BulbDim{k}", 0.0042, p, scale=(0.6, 1, 1), m=bulb_dim, segs=10, rings=6))
+        lit.append(([sphere(f"BulbLit{k}", 0.0048, p, scale=(0.7, 1, 1), m=bulb_lit, segs=10, rings=6)], p))
     # The prizes heaped on the case floor.
     z_floor = BASE_Z1 + 0.003
     for k, (x, y, r) in enumerate([(-0.012, -0.04, 0.0082), (0.011, -0.03, 0.0078), (-0.004, -0.016, 0.0086), (0.012, 0.0, 0.0074),
@@ -224,7 +226,7 @@ def build_claw_grabber():
     sight_rear, sight_front = sights_notch(0.0, CASE_Y0 + 0.004, CASE_Y1 - 0.004, RAIL_TOP, RAIL_TOP, z_line, M, gap=0.015)
 
     # The big claw on its cable at the muzzle.
-    hub, prongs, pivots = claw_parts("Big", 1.0, chrome, M["trim"], M["cell"])
+    hub, prongs, pivots = claw_parts("Big", CLAW_SCALE, chrome, M["trim"], M["cell"])
     for ob in hub + [p for ps in prongs for p in ps]:
         ob.location = (ob.location[0], ob.location[1] + CLAW_Y, ob.location[2] + CHUTE_Z)
     claw_c = (0, CLAW_Y, CHUTE_Z)
@@ -336,7 +338,7 @@ def finish_clear(name, groups, empties):
 
 
 def build_flying_claw():
-    """The claw in flight (ClawGrabberShot): CLAW_SCALE times the viewmodel's,
+    """The claw in flight (ClawGrabberShot): claw_parts at 4.2 times its base size,
     hub at the origin, prongs open along +Y (Godot -Z)."""
     reset_scene()
     chrome = mat("ClawChrome", "#e4e8f2", rough=0.14, metal=0.92)
