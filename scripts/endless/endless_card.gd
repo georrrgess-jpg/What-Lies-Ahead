@@ -28,7 +28,8 @@ static func make(endless_level: LevelData, slot: int) -> EndlessCard:
 	var w := WorldData.new()
 	w.id = endless_level.id
 	w.display_name = endless_level.display_name
-	w.tagline = "Waves without end. Buy your way through the city."
+	w.tagline = "Waves without end. Buy your way through the gates."
+	w.requirement = endless_level.requirement
 	w.levels = [endless_level]
 	w.accent_color = endless_level.accent_color
 	w.secondary_color = UiKit.AMBER
@@ -42,13 +43,27 @@ func _init() -> void:
 	_sky.set_color(1, SKY_LOW)
 
 
-## Best wave in place of the stars.
+## Best wave in place of the stars; a locked map shows how close it is.
 func refresh() -> void:
 	super()
 	_stars.visible = false
 	var best := EndlessRecords.best_wave()
+	if not _unlocked:
+		_status.text = lock_progress(level)
+		return
 	_status.text = "BEST WAVE %d" % best if best > 0 else "OPEN FROM LEVEL 1"
 	_status.add_theme_color_override("font_color", UiKit.AMBER if best > 0 else Color.WHITE)
+
+
+## What still locks endless `endless_level`, with the progress toward a wave
+## goal ("BEST WAVE 22 / 30"); "" when it is open.
+static func lock_progress(endless_level: LevelData) -> String:
+	var req := endless_level.requirement
+	if req == null or req.is_met():
+		return ""
+	if req.kind == Requirement.Kind.ENDLESS_WAVE:
+		return "REACH WAVE %d  ·  BEST WAVE %d / %d" % [req.amount, mini(EndlessRecords.best_wave(), req.amount), req.amount]
+	return req.describe().to_upper()
 
 
 func _draw() -> void:

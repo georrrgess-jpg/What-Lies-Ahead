@@ -1,11 +1,12 @@
 class_name EndlessRewards
 extends RefCounted
 ## What Endless unlocks, read from the catalog (never hard-coded): every
-## cosmetic and weapon whose requirement is ENDLESS_WAVE or ENDLESS_DISTRICT.
+## cosmetic, weapon and Endless map whose requirement is ENDLESS_WAVE or
+## ENDLESS_DISTRICT.
 ## The Play page shows them as a reward track and the results screen lists
 ## the ones a run just earned.
 ##
-## An entry: {"item": CosmeticItem or WeaponData, "name", "kind" ("Weapon",
+## An entry: {"item": CosmeticItem, WeaponData or LevelData, "name", "kind" ("Weapon",
 ## "Camo", ...), "color" (rarity), "wave" (0 for a district reward),
 ## "district" (id, &"" for a wave reward), "goal" ("WAVE 10", "OPEN METRO
 ## LINE"), "met" (bool)}.
@@ -18,6 +19,8 @@ static func track(rules: EndlessRules) -> Array:
 	var districts: Array = []
 	for w in GameData.weapons():
 		_add(w, w.unlock, w.display_name, "Weapon", CosmeticItem.rarity_color(CosmeticItem.Rarity.LEGENDARY), rules, waves, districts)
+	for level in GameData.endless_levels():
+		_add(level, level.requirement, level.display_name, "Endless map", level.accent_color, rules, waves, districts)
 	for it in GameData.cosmetics():
 		var kind := "%s %s" % [CosmeticItem.rarity_name(it.rarity), _slot_name(it)]
 		_add(it, it.requirement, it.display_name, kind, CosmeticItem.rarity_color(it.rarity), rules, waves, districts)

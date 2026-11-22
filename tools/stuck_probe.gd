@@ -27,6 +27,7 @@ const MIN_MOVE := 0.5
 const ARRIVE := 1.6
 const SMALL := 3.0
 ## Probe targets beside the player spawn: the districts' middles (snapped to the navmesh).
+## Ashfall City's; another map uses the middles of its district areas' boxes.
 const TARGETS := [Vector3(-54.0, 0, 0.0), Vector3(-50.0, 0, -18.0), Vector3(45.0, 0, 0.0), Vector3(62.0, 0, 3.0),
 	Vector3(84.0, 0, -2.0), Vector3(10.0, -6.0, -34.0), Vector3(70.0, 0, -45.0), Vector3(15.0, 0, 15.0)]
 
@@ -37,6 +38,7 @@ var _walkers: Array[Dictionary] = []
 var _stuck: Array[Dictionary] = []
 var _time := 0.0
 var _started := false
+var _city := true
 
 
 func _initialize() -> void:
@@ -44,6 +46,7 @@ func _initialize() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--level="):
 			id = arg.get_slice("=", 1)
+			_city = id == "endless_city"
 		elif arg.begins_with("--seconds="):
 			_seconds = float(arg.get_slice("=", 1))
 	var packed := load("res://scenes/levels/%s.tscn" % id) as PackedScene
@@ -87,7 +90,14 @@ func _spawn_walkers() -> void:
 	var goals: Array[Vector3] = []
 	for node in get_nodes_in_group("player_spawn"):
 		goals.append(NavigationServer3D.map_get_closest_point(map, (node as Node3D).global_position))
-	for t in TARGETS:
+	var targets: Array = TARGETS
+	if not _city:
+		targets = []
+		for area in get_nodes_in_group("endless_district_area"):
+			for box in (area as Node).get_children():
+				if box is CollisionShape3D:
+					targets.append(Vector3((box as Node3D).global_position.x, 0, (box as Node3D).global_position.z))
+	for t in targets:
 		goals.append(NavigationServer3D.map_get_closest_point(map, t))
 	var k := 0
 	for sp in get_nodes_in_group("enemy_spawn"):

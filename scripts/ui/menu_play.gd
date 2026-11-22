@@ -208,7 +208,7 @@ func header_extra() -> Control:
 			tile.pressed.connect(select_mode.bind(tile.mode))
 			row.add_child(tile)
 		UiKit.tooltip(_mode_tiles[0], "The worlds, one level after another  (Tab)")
-		UiKit.tooltip(_mode_tiles[1], "Survive waves without end in Ashfall City  (Tab)")
+		UiKit.tooltip(_mode_tiles[1], "Survive waves without end on the Endless maps  (Tab)")
 	row.add_child(UiKit.filler())
 	var prompts := VBoxContainer.new()
 	prompts.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -685,16 +685,21 @@ func _refresh_details() -> void:
 ## The Endless board: records, districts and the reward track.
 func _refresh_endless(level: LevelData) -> void:
 	selected_level = level
-	_world_caption.text = "NEW MODE  ·  ENDLESS  ·  OPEN FROM LEVEL 1" if endless_is_new() else "ENDLESS MODE  ·  OPEN FROM LEVEL 1"
+	var lock_note := EndlessCard.lock_progress(level)
+	if lock_note != "":
+		_world_caption.text = "ENDLESS MODE  ·  %s" % level.requirement.describe().to_upper()
+	else:
+		_world_caption.text = "NEW MODE  ·  ENDLESS  ·  OPEN FROM LEVEL 1" if endless_is_new() else "ENDLESS MODE  ·  OPEN FROM LEVEL 1"
 	_world_caption.add_theme_color_override("font_color", EndlessCard.EMBER)
 	_set_name(level.display_name.to_upper(), level.blurb)
 	_art.visible = false
 	_show_hero(level)
 	_level_tabs.visible = false
-	_lock.visible = false
+	_lock_text.text = lock_note
+	_lock.visible = lock_note != ""
 	var unlocked := GameData.is_level_unlocked(level)
 	_deploy.disabled = not unlocked
-	_deploy.text = "START" if unlocked else "COMING SOON"
+	_deploy.text = "START" if unlocked else ("LOCKED" if lock_note != "" else "COMING SOON")
 	_clear(_stats)
 	_best_value = null
 	_star_row = null
@@ -732,7 +737,7 @@ func _show_hero(level: LevelData) -> void:
 ## The districts (with their prices) and the reward track.
 func _fill_endless(rules: EndlessRules) -> void:
 	_clear(_endless_box)
-	_endless_box.add_child(UiKit.section("THE CITY", "pay tickets at a gate to open a district"))
+	_endless_box.add_child(UiKit.section("DISTRICTS", "pay tickets at a gate to open a district"))
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", UiKit.GAP_S)
 	row.add_theme_constant_override("v_separation", UiKit.GAP_S)
