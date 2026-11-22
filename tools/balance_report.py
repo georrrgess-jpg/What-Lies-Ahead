@@ -124,6 +124,9 @@ TIN.update(gd_consts("scripts/weapons/modes/tin_sergeant_mode.gd"))
 SARSA = gd_consts("scripts/weapons/modes/sarsaparilla_six_mode.gd")
 # The Ringmaster: its everyday rate, Spotlight meter and the Main Event (rate, pierce, confetti pops).
 RING = gd_consts("scripts/weapons/modes/ringmaster_mode.gd")
+# The Bullseye Longbow: every arrow fully drawn, BOW_BULLSEYE_SHARE of them loosed in the Bullseye window.
+BOW = gd_consts("scripts/weapons/modes/bullseye_bow_mode.gd")
+BOW_BULLSEYE_SHARE = 0.5
 ENEMY_DEFAULTS = {"max_health": 100.0, "body_scale": 1.0, "capsule_radius": 0.45,
 	"capsule_height": 1.9, "mass": 1.0, "move_speed": 2.0}
 # Extra effective health from armour behaviours (helmet, riot shield, ice shell).
@@ -392,6 +395,10 @@ def pull_damage(w, e, d, head):
 	if w["id"] == "sarsaparilla_six":
 		# Fanned from the hip: a cylinder in FAN_DELAY + 5 intervals, one in six a Last Call.
 		return w["damage"] * scale * head_mix * sarsa_mix(), sarsa_cycle(w, True)
+	if w.get("mode_script_path", "").endswith("bullseye_bow_mode.gd"):
+		# A full draw (headshots count), half of them Bullseyes; the draw and the nock pace it.
+		bullseye = 1.0 + BOW_BULLSEYE_SHARE * (BOW["BULLSEYE_SCALE"] - 1.0)
+		return w["damage"] * scale * head_mix * bullseye, w["fire_interval"] + w["charge_time"]
 	if w["projectile_speed"] > 0.0:
 		dmg = w["damage"] + w["direct_hit_bonus"]
 		return dmg, w["fire_interval"]
