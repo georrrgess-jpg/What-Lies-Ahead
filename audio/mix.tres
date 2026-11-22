@@ -621,5 +621,7 @@ sound_trim_db = Dictionary[StringName, float]({
 &"ts_fall_in": -3.0,
 &"ts_pop": -2.0,
 &"ts_wind": 3.0,
-&"ts_tick": 4.0
+&"ts_tick": 4.0,
+&"bb_ready": -8.0,
+&"bb_reach": -6.0
 })

@@ -141,7 +141,7 @@ def bb_letdown():
     """The arm gives out: the string eases forward with a falling creak."""
     d = 0.5
     out = _creak(d, 60, 22, 0.8, seed=7) * env(d, 0.02, d, power=1.3)
-    return filt(out, low=4500)
+    return filt(out, low=4500, high=160)
 
 
 @punched(CUE)

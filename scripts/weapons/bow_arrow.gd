@@ -365,9 +365,9 @@ func _settle() -> void:
 		return
 	_stuck.append(self)
 	while _stuck.size() > MAX_STUCK:
-		var old: BowArrow = _stuck.pop_front()
+		var old: Variant = _stuck.pop_front()
 		if is_instance_valid(old) and old != self:
-			old.queue_free()
+			(old as BowArrow).queue_free()
 
 
 func _exit_tree() -> void:

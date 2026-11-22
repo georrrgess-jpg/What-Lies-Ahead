@@ -267,7 +267,7 @@ clear XP follow `Difficulty.reward_scale()`.
 
 Every level pays Arcade Tokens and gives exactly one thing. Weapons: Comet Hand Cannon 2, Arc
 Coil 4, Bumper Lobber 6, Frostbite Cryo Beam 9, ... Rail Lancer 34, Balloon Darter 37,
-Teacup Twister 43 (the full list is in the README). Every fifth level is a
+Bullseye Longbow 41, Teacup Twister 43 (the full list is in the README). Every fifth level is a
 showpiece: Pixel Burst (kill effect) 5, Chrome Cherry 10, Midway Maestro (operator) 15,
 Lifeguard 20, Marquee 25, Prize Gold (animated finish) 30, Champion's Crown 35, and at
 40 the Arcade Champion operator with the Boardwalk Legend finish and title, Teacup Ride
@@ -275,7 +275,8 @@ Lifeguard 20, Marquee 25, Prize Gold (animated finish) 30, Champion's Crown 35, 
 title. The full track is printed by the model.
 
 **Levels 41-50** (update 12). The curve is unchanged, so levels 1-40 cost exactly what
-they did. One reward per level: 41 Harlequin Tea (finish), 42 Peppermint Tea Cell, 43
+they did. One reward per level: 41 the Bullseye Longbow (update 24; Harlequin Tea, the finish
+41 gave until then, moved to the Shop at 1,500), 42 Peppermint Tea Cell, 43
 Teacup Twister (moved from 12; 12 gave the Midway Regular title until update 16, when the Ticket Ripper took level 12
 and the title moved to the Shop at 750), 44 Spinning Teacup
 (charm with a spinning cup), 45 Teacup Ride (animated finish, `finish_teacups.gdshader`),
