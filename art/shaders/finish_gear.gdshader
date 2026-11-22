@@ -227,7 +227,7 @@ vec3 hypno(vec3 ground, vec3 p, vec3 n, float t, inout float h, inout float roug
 	float a = atan(q.y, q.x);
 	float spiral = fract(rr * 2.2 - a / 6.28318 * 2.0 * dir + t * 0.7 * dir);
 	float band = smoothstep(0.45, 0.5, spiral) * smoothstep(1.0, 0.95, spiral);
-	vec3 col = mix(ground, color_b, band);
+	vec3 col = mix(ground, is_trim ? shell_color : color_b, band);
 	float eye = g_fill(rr - 0.16 - pulse * 0.1, 0.03);
 	col = mix(col, color_c, eye);
 	h = band * 0.2;
@@ -363,8 +363,8 @@ vec3 popcorn(vec3 ground, vec2 uv, inout float h, inout float rough, inout float
 // Shooting gallery: varnished wood with grain, brass rivets in rows and
 // little bullseye targets stencilled along the sides.
 vec3 gallery(vec3 ground, vec2 uv, vec3 r, inout float h, inout float rough, inout float metal, inout vec3 emit) {
-	float grain = fnoise2(vec2(uv.x * 30.0, uv.y * 400.0) + fnoise2(uv * 40.0) * 3.0);
-	float rings = 0.5 + 0.5 * sin(grain * 18.0);
+	float grain = fnoise2(vec2(uv.x * 7.0, uv.y * 70.0) + fnoise2(uv * vec2(9.0, 30.0)) * 2.0);
+	float rings = 0.5 + 0.5 * sin(grain * 11.0 + uv.y * 30.0);
 	vec3 col = mix(ground, color_b, rings * 0.55);
 	float plank = smoothstep(0.012, 0.0, abs(fract(uv.y * 16.0) - 0.5) - 0.48);
 	col = mix(col, color_b * 0.5, plank);
@@ -375,7 +375,7 @@ vec3 gallery(vec3 ground, vec2 uv, vec3 r, inout float h, inout float rough, ino
 	vec2 tg = uv * vec2(7.0, 7.0);
 	vec2 tid = floor(tg);
 	vec2 tf = fract(tg) - 0.5;
-	float on = step(0.6, fh21(tid + 0.7)) * (is_trim ? 0.0 : 1.0);
+	float on = step(0.45, fh21(tid + 0.7)) * (is_trim ? 0.0 : 1.0);
 	float tr = length(tf);
 	float target = g_fill(tr - 0.28, 0.01) * on;
 	float band = step(0.5, fract(tr * 10.0));
@@ -394,17 +394,21 @@ vec3 carnival(vec3 ground, vec2 uv, vec3 n, vec3 view, vec3 r, inout float h, in
 	vec2 dg = fract(uv * vec2(40.0, 40.0)) - 0.5;
 	float dimple = smoothstep(0.36, 0.0, length(dg));
 	float pressed = is_trim ? dimple : rib;
-	float facing = dot(n, view);
-	vec3 sheen = fhue(facing * 1.4 + pressed * 0.25 + uv.x * 3.0);
-	sheen = mix(sheen, color_b, 0.35);
-	vec3 col = mix(ground, ground * 0.6, pressed * 0.4);
-	col = mix(col, sheen, 0.45 * (1.0 - facing * 0.5));
-	col = mix(col, color_c, smoothstep(0.85, 1.0, pressed) * 0.3);
-	col += fstudio(r, ground) * 0.25;
+	float facing = clamp(dot(n, view), 0.0, 1.0);
+	// The oily sheen: a rainbow that slides with the viewing angle and the
+	// pressing, strongest at grazing angles, over a deep marigold base.
+	float s1 = 0.5 + 0.5 * sin(facing * 7.0 + pressed * 2.0 + uv.x * 18.0 + uv.y * 25.0);
+	float s2 = smoothstep(0.6, 1.0, sin(facing * 4.0 - uv.x * 11.0) * 0.5 + 0.5);
+	vec3 sheen = mix(mix(color_b, vec3(0.1, 0.75, 0.62), s1), color_c, s2 * 0.6);
+	float k = 0.22 + 0.45 * (1.0 - facing);
+	vec3 col = mix(ground, ground * 0.55, pressed * 0.5);
+	col = mix(col, sheen * 0.9, k);
+	col = mix(col, color_c, smoothstep(0.9, 1.0, pressed) * 0.25);
+	col += fstudio(r, ground) * 0.2;
 	h = pressed;
-	rough = 0.08;
-	metal = 0.45;
-	emit = sheen * 0.04;
+	rough = 0.06;
+	metal = 0.5;
+	emit = sheen * 0.06;
 	return col;
 }
 

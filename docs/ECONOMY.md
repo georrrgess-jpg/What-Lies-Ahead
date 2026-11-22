@@ -100,7 +100,8 @@ among the picks. An item is in the shop when its
 `CosmeticItem.price` is above 0; it is owned once bought. A `requirement` on a priced
 item only gates the purchase (sights that open at a mastery rank).
 
-For sale (264 items, 407,250 Arcade Tokens, sights included and Madame Fortuna's 20,000; 239 items and
+For sale (336 items, 497,000 Arcade Tokens, sights included and Madame Fortuna's 20,000; 269 items and
+416,250 Arcade Tokens before the update 24 gear; 239 items and
 376,500 Arcade Tokens before the update 16 skins and the two rewards the new guns moved to the Shop; 206 items
 and 315,000 Arcade Tokens before the update 13 cosmetics and the Mythic operator; 277,350 before the
 price rule):
@@ -153,6 +154,59 @@ into carnival shapes, and pierced gold filigree trim
 (`art/shaders/finish_celestial_midway.gdshader`). It is the first finish that reacts in play:
 a kill with the weapon wearing it sends a shooting star along it (`params.pulse`,
 `scripts/cosmetics/finish_pulse.gd`), and "Reduce motion" holds its sky still.
+
+**Update 24 gear** (78 cosmetics outside the prints: 67 for sale, 80,750 Arcade Tokens; 11 earned).
+No level reward moved and no level gives anything new: the earned ones use lifetime kills, melee
+kills, Endless waves and milestones (an extra reward on four milestones that already had one).
+Looks: `art/shaders/finish_gear.gdshader` (12 patterns; 0-4 animated, held still by "Reduce motion"
+and flaring on kills through `params.pulse`), reticles 25-34 in `sight_reticle.gdshaderinc` (spiral,
+sonar, orbit and brackets move) on four new optics in `art/blender/build_sights.py` (Horseshoe, Crown,
+Jar, Saturn), ten charms in `build_cosmetics.py`, six printed stickers in `decal_art.py`, kill effects
+in `kill_effects.gd` (props in `fx_props.gd`, sounds `tools/audio_packs/gear.py`), tracer styles 11-16
+in `tracer_pattern.gdshader`, glove patterns 14-17 in `skin_glove.gdshader`, banner styles 41-48 in
+`art/shaders/skin_banner_gear.gdshader` and cell patterns 20-23 in `cell_fx.gdshaderinc`.
+`tools/economy_probe.gd` (`gear`) checks the lists below.
+
+| Item | Rarity | How |
+| --- | --- | --- |
+| Fizzy Pop (finish, animated: rising bubbles, foam head, fizz surges on kills) | Legendary | Shop: 4,250 |
+| Plasma Globe (finish, animated: wandering lightning in dark glass, brass base) | Legendary | Endless wave 40 (with the Plasma Brain title) |
+| Firefly Meadow, Hypno Spin (finishes, animated) | Epic | Shop: 2,500 |
+| Cotton Candy Cloud (finish, animated floss) | Epic | the Combo Artist milestone |
+| Carnival Glass (finish, a sheen that shifts with the view) | Epic | Shop: 2,000 |
+| Prize Plush, Card Shark (finishes) | Rare | Shop: 750 |
+| Bumper Car (finish, glinting metal flake) | Rare | Shop: 1,000 |
+| Gallery Wood (finish) | Rare | 11,000 lifetime kills |
+| Popcorn Box, Strongman (finishes) | Common | Shop: 250 |
+| Royal Crown; Firefly Jar, Saturn Ring (sights, animated reticles) | Epic | Shop: 2,000; 2,500 |
+| Hypnotist, Lock-On (animated reticles); Admit One, Bone Sight, Thunderclap | Rare | Shop: 1,000, 1,250; 750 |
+| Pro Circuit (sight) | Common | Shop: 250 |
+| Lucky Horseshoe (sight) | Rare | the Headhunter milestone |
+| Merry-Go-Round (charm, the horses go round); Magician's Hat | Epic | Shop: 2,500; 1,500 |
+| Paper Lantern, Fortune Cookie, Lucky Eight, Squeaky Horn (charms) | Rare | Shop: 750 |
+| Swirl Pop, Pretzel, Corn Dog (charms) | Common | Shop: 250 |
+| Strongman's Barbell (charm) | Rare | 500 melee kills |
+| Ta-Da! (kill effect) | Legendary | Shop: 3,750 |
+| Gumball Burst; Firefly Release, Fifty-Two Pickup (kill effects) | Epic | Shop: 1,500; 2,000 |
+| Hoopla, Shaken Soda (kill effects) | Rare | Shop: 1,000 |
+| Film Reel, Firefly Trail; Synthwave (tracers) | Epic | Shop: 1,500; 2,000 |
+| Zigzag, Bunting; Star Chain (tracers) | Rare | Shop: 750; 1,000 |
+| Card Shark, Firefly Mitts (gloves) | Epic | Shop: 1,500 |
+| Lovestruck, Strongman, Argyle Gent (gloves) | Rare | Shop: 750 |
+| Big Top (gloves) | Common | Shop: 250 |
+| Plasma Globe (banner) | Legendary | Shop: 3,000 |
+| Big Top, Card Shark, Bumper Cars; Lantern Festival (banners) | Epic | Shop: 1,500; 2,000 |
+| Firefly Field, Pop the Cap (banners) | Rare | Shop: 750 |
+| Carousel (banner) | Epic | 30,000 lifetime kills |
+| Lights, Camera, Carnage (title) | Epic | Shop: 1,500 |
+| Sideshow Superstar, Card Shark, Firefly Catcher (titles) | Rare | Shop: 750 |
+| Fizz Whiz, Hat Trick (titles) | Common | Shop: 250 |
+| Strongman; Center Ring; Plasma Brain; Big Top Legend (titles) | Rare; Epic; Legendary; Legendary | 1,500 melee kills; the Well-Rounded milestone; Endless wave 40; 40,000 lifetime kills |
+| Ace of Spades, Firefly Jar, Magic Hat (decals) | Rare | Shop: 750 |
+| Big Top, Bottle Cap (decals) | Common | Shop: 250 |
+| Lucky Horseshoe (decal) | Rare | the Spotless Shift milestone |
+| Hypno Cell, Atomic Orbit (cells) | Epic | Shop: 1,500 |
+| Firefly Cell; Candy Floss Cell (cells) | Rare | Shop: 750; 1,000 |
 
 **Featured.** Four items a day are 20% off (`featured_count`, `featured_discount`).
 On the 250 rule a 20% cut is always a round number: 200, 600, 1,200, 2,400, and 2,600 to
