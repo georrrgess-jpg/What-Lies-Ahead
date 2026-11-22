@@ -69,8 +69,6 @@ func _init() -> void:
 	_fx.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_fx)
 	_machine = CapsuleMachine.new()
-	_machine.series_text = "SERIES %d" % PrizePrints.series().number
-	_machine.series_name = PrizePrints.series().display_name.to_upper()
 	add_child(_machine)
 	_build_multi()
 	_hero = PrintHero.new()
@@ -168,6 +166,7 @@ func play(res: Dictionary, weapon: WeaponData, can_open_more: bool) -> void:
 ## Shared start: the overlay, the machine at full size, nothing else.
 func _begin() -> void:
 	visible = true
+	_machine.dress(PrizePrints.series())
 	_burst_done = false
 	_fx.clear()
 	_fx.centre = size * Vector2(0.5, 0.46)

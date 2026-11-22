@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="PrintSeries" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/economy/prints/print_series.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"series_2"
+number = 2
+display_name = "Midnight Marquee"
+tagline = "Neon, velvet and the late show. Capsule-only finishes."
+machine_colors = PackedColorArray(0.1765, 0.1216, 0.4392, 1, 0.0902, 0.0588, 0.2588, 1, 0.0627, 0.0392, 0.1882, 1)
+capsule_colors = PackedColorArray(1, 0.2471, 0.6431, 1, 0.2471, 0.8784, 1, 1, 0.5451, 0.302, 1, 1, 1, 0.7608, 0.2902, 1, 0.749, 1, 0.302, 1, 1, 0.2784, 0.3412, 1)
+exclusive = true
+chase = Array[StringName]([&"fin_s2_event_horizon", &"fin_s2_phoenix", &"fin_s2_opening_night", &"fin_s2_outrun"])
+finishes = Array[StringName]([&"fin_s2_popcorn_stripe", &"fin_s2_velvet_rope", &"fin_s2_film_reel", &"fin_s2_diner_checker", &"fin_s2_usher_houndstooth", &"fin_s2_moon_polka", &"fin_s2_starlit_pinstripe", &"fin_s2_picture_palace", &"fin_s2_marquee_sunburst", &"fin_s2_neon_zebra", &"fin_s2_sequin_gown", &"fin_s2_fortune_teller", &"fin_s2_jukebox", &"fin_s2_glow_leopard", &"fin_s2_high_roller", &"fin_s2_pop_halftone", &"fin_s2_lobby_terrazzo", &"fin_s2_blackout_camo", &"fin_s2_neon_argyle", &"fin_s2_liquid_neon", &"fin_s2_ticket_storm", &"fin_s2_heartbeat", &"fin_s2_magma_run", &"fin_s2_overclock", &"fin_s2_jelly_ballroom", &"fin_s2_hypnotist", &"fin_s2_firefly_field", &"fin_s2_neon_rain", &"fin_s2_event_horizon", &"fin_s2_phoenix", &"fin_s2_opening_night", &"fin_s2_outrun"])
+odds = PackedFloat32Array(0.62, 0.27, 0.09, 0.02)
+epic_pity = 10
+legendary_pity = 40
+glitter_chance = 0.05
+holo_chance = 0.02
+misprint_chance = 0.01
+polished_at = 0.6
+mint_at = 0.9
+low_serial = 10
+capsule_price = 500
+token_value = PackedInt32Array(1, 3, 8, 25)
+counter_price = PackedInt32Array(6, 18, 60, 200)
+trade_up_count = 5
+capsules_per_alpha = 1
+capsules_per_bounty = 1
+capsules_daily_clear = 1
+contracts_per_capsule = 3
+capsules_per_milestone = 1

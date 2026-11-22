@@ -8,6 +8,17 @@ extends Resource
 @export var id: StringName = &"series_1"
 @export var number := 1
 @export var display_name := ""
+## One line about the series on the Prizes page.
+@export var tagline := ""
+## The machine's paint for this series: body, body shade, sign plate.
+@export var machine_colors := PackedColorArray([Color("e8417e"), Color("a8205a"), Color("8f1d3f")])
+## The capsules tumbling in the machine's globe.
+@export var capsule_colors := PackedColorArray([Color("8fe3ff"), Color("ff6fb5"), Color("ffd35c"), Color("b98cff"), Color("7dffa8"), Color("ff9a5c")])
+## True when the finishes exist only as prints (no Shop, no rewards): the
+## first print of one also unlocks its plain finish.
+@export var exclusive := false
+## The series' named chase prints (shown with a CHASE tag).
+@export var chase: Array[StringName] = []
 ## Finish ids in the capsules (weapon_finish items with a finish_* shader, so
 ## every one wears the print layer).
 @export var finishes: Array[StringName] = []

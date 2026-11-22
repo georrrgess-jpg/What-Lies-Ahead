@@ -172,13 +172,15 @@ func setup(res: Dictionary, weapon: WeaponData, hero_style: Style, fx: RevealFx,
 	var holo := style == Style.HOLOGRAM
 	_header.text = "PRIZE FUSION COMPLETE" if holo else ("YOU GOT" if String(p.get("src", "")) != "counter" else "FRESH FROM THE COUNTER")
 	_header.add_theme_color_override("font_color", UiKit.CYAN)
-	_rarity_chip.set_text(PrintLook.rarity_name(p).to_upper() + "  ·  PRIZE PRINT")
+	var chase := fin != null and PrizePrints.is_chase(fin.id)
+	_rarity_chip.set_text(PrintLook.rarity_name(p).to_upper() + ("  ·  CHASE PRINT" if chase else "  ·  PRIZE PRINT"))
 	_rarity_chip.set_color(col)
 	_title.text = fin.display_name.to_upper() if fin else ""
 	_title.add_theme_color_override("font_color", col.lerp(Color.WHITE, 0.45))
 	var fits := "any weapon" if String(p.get("w", "")) == "" else GameData.weapon(StringName(String(p["w"]))).display_name
-	_subtitle.text = "Series %d %s  ·  pattern %d  ·  minted %s  ·  fits %s" % [PrizePrints.series().number,
-		PrizePrints.series().display_name, int(p["seed"]), PrintLook.minted_text(p), fits]
+	var from := PrizePrints.series_of_print(p)
+	_subtitle.text = "Series %d %s  ·  pattern %d  ·  minted %s  ·  fits %s" % [from.number,
+		from.display_name, int(p["seed"]), PrintLook.minted_text(p), fits]
 	var glow := _glow.material as ShaderMaterial
 	glow.set_shader_parameter("tint", UiKit.CYAN.lerp(col, 0.35) if holo else col)
 	glow.set_shader_parameter("grid", 1.0 if holo else 0.0)
@@ -194,7 +196,7 @@ func setup(res: Dictionary, weapon: WeaponData, hero_style: Style, fx: RevealFx,
 
 func _fill_traits(p: Dictionary) -> void:
 	var g := PrizePrints.grade(p)
-	var s := PrizePrints.series()
+	var s := PrizePrints.series_of_print(p)
 	var share: int = [roundi(s.polished_at * 100.0), roundi((s.mint_at - s.polished_at) * 100.0), roundi((1.0 - s.mint_at) * 100.0)][g]
 	_grade.set_value(PrintLook.GRADES[g].to_upper(), PrintLook.GRADE_COLORS[g], "shine %.3f  ·  %d%% of prints" % [float(p["shine"]), share])
 	_grade.set_meter(float(p["shine"]), PrintLook.GRADE_COLORS[g])
@@ -225,6 +227,8 @@ func _fill_outcome() -> void:
 	elif bool(result.get("repeat", false)):
 		text = "REPEAT  ·  A KEEPER, ADDED TO YOUR STACK"
 		col = UiKit.CYAN
+	if bool(result.get("unlocked", false)):
+		text += "  ·  PLAIN FINISH UNLOCKED"
 	if bool(result.get("lucky", false)):
 		text += "  ·  LUCK METER PAID OUT"
 	_outcome.text = text

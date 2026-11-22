@@ -4,7 +4,8 @@ extends VBoxContainer
 ## held (PrizePrints "tokens" in code) and when the shelf changes on a
 ## signboard, today's four finishes (one per rarity) as big cards with their
 ## credit price, and how repeats become credits. Every buy is a fresh print with its own rolls, revealed like a
-## capsule.
+## capsule. The shelf is the series picked on the CAPSULES tab (named on the
+## clock line).
 
 const CARD := Vector2(300, 330)
 
@@ -67,7 +68,8 @@ func refresh() -> void:
 		c.queue_free()
 	_tokens.text = "%d CREDITS" % PrizePrints.tokens()
 	var minutes := ceili(ShopCatalog.seconds_to_rotation() / 60.0)
-	_clock.text = "NEW SHELF IN %d H %02d MIN" % [minutes / 60, minutes % 60]
+	var s := PrizePrints.series()
+	_clock.text = "SERIES %d %s SHELF  ·  NEW IN %d H %02d MIN" % [s.number, s.display_name.to_upper(), minutes / 60, minutes % 60]
 	var weapon := _page.default_weapon()
 	for fid in PrizePrints.counter_shelf():
 		_shelf.add_child(_offer(fid, weapon))

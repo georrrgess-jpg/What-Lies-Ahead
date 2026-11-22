@@ -15,12 +15,18 @@ extends RefCounted
 ## State lives in Profile.section("prints") (schema SCHEMA, see _migrate).
 ## Changes emit Cosmetics.prints_changed; call sites need not save, every
 ## change here saves the profile.
+##
+## Several series (SERIES_PATHS, oldest first) share one capsule count, one
+## luck meter and one Credit balance: the player picks the series a capsule
+## opens (select_series; saved as "series", the newest by default). series()
+## is that selected series; series_of() is the series a finish belongs to.
 
 const SCHEMA := 1
-const SERIES_PATH := "res://data/prints/series_1.tres"
+const SERIES_PATHS := ["res://data/prints/series_1.tres", "res://data/prints/series_2.tres"]
 
 static var rng := RandomNumberGenerator.new()
-static var _series: PrintSeries
+static var _all: Array[PrintSeries] = []
+## Finish ids by rarity, per series id: { series id: { rarity: [ids] } }.
 static var _by_rarity := {}
 ## True while this class itself announces an equip change (see _announce).
 static var _equipping := false
@@ -29,28 +35,89 @@ static var _run_lines: Array = []
 static var _run_settled := false
 
 
-static func series() -> PrintSeries:
-	if _series == null:
-		_series = load(SERIES_PATH) as PrintSeries
+## Every series, oldest first.
+static func all_series() -> Array[PrintSeries]:
+	if _all.is_empty():
+		for path in SERIES_PATHS:
+			_all.append(load(path) as PrintSeries)
 		rng.randomize()
-	return _series
+	return _all
 
 
-## Finish ids of the series by rarity: { rarity: [ids] }.
-static func by_rarity() -> Dictionary:
-	if _by_rarity.is_empty():
-		for fid in series().finishes:
+## The series capsules open now (the player's pick, else the newest).
+static func series() -> PrintSeries:
+	var list := all_series()
+	var picked := StringName(String(Profile.section("prints").get("series", "")))
+	for s in list:
+		if s.id == picked:
+			return s
+	return list[list.size() - 1]
+
+
+static func series_by_id(series_id: StringName) -> PrintSeries:
+	for s in all_series():
+		if s.id == series_id:
+			return s
+	return null
+
+
+## Makes `series_id` the series capsules open. Saves.
+static func select_series(series_id: StringName) -> void:
+	if series_by_id(series_id) == null or series().id == series_id:
+		return
+	_sec()["series"] = String(series_id)
+	_changed()
+
+
+## The series a finish (or a print, by its finish) belongs to; the first
+## series when it is in none.
+static func series_of(finish_id: StringName) -> PrintSeries:
+	for s in all_series():
+		if finish_id in s.finishes:
+			return s
+	return all_series()[0]
+
+
+static func series_of_print(p: Dictionary) -> PrintSeries:
+	return series_of(StringName(String(p.get("f", ""))))
+
+
+## Finish ids of a series (default: the selected one) by rarity: { rarity: [ids] }.
+static func by_rarity(of: PrintSeries = null) -> Dictionary:
+	var s := of if of else series()
+	if not _by_rarity.has(s.id):
+		var table := {}
+		for fid in s.finishes:
 			var it := Cosmetics.item(fid)
 			if it:
 				var r := mini(int(it.rarity), PrintRoll.LEGENDARY)
-				if not _by_rarity.has(r):
-					_by_rarity[r] = []
-				(_by_rarity[r] as Array).append(fid)
-	return _by_rarity
+				if not table.has(r):
+					table[r] = []
+				(table[r] as Array).append(fid)
+		_by_rarity[s.id] = table
+	return _by_rarity[s.id]
 
 
+## True when the finish drops from any series.
 static func in_series(finish_id: StringName) -> bool:
-	return finish_id in series().finishes
+	for s in all_series():
+		if finish_id in s.finishes:
+			return true
+	return false
+
+
+## True for a series' named chase print.
+static func is_chase(finish_id: StringName) -> bool:
+	return finish_id in series_of(finish_id).chase
+
+
+## Prints held and finishes collected of a series: Vector2i(finishes held, finishes).
+static func collected(of: PrintSeries) -> Vector2i:
+	var n := 0
+	for fid in of.finishes:
+		if holds(fid):
+			n += 1
+	return Vector2i(n, of.finishes.size())
 
 
 # --- state ------------------------------------------------------------------------
@@ -169,7 +236,7 @@ static func rarity(p: Dictionary) -> int:
 
 
 static func grade(p: Dictionary) -> int:
-	return PrintRoll.grade(float(p.get("shine", 0.0)), series())
+	return PrintRoll.grade(float(p.get("shine", 0.0)), series_of_print(p))
 
 
 ## Worth keeping even as a repeat: Mint, a rare print, or a low serial.
@@ -277,13 +344,15 @@ static func roll_capsule() -> Dictionary:
 	s["opened"] = opened() + 1
 	var result := _mint(PrintRoll.finish(rng, by_rarity(), r), "capsule")
 	result["lucky"] = lucky
+	result["series"] = series().id
 	return result
 
 
 ## Makes a new print of `finish_id` with fresh rolls and the next serial.
 ## A plain repeat from a capsule becomes Capsule Credits ("tokens" in code and
-## saves) when auto-recycle is on.
-## Returns { "print", "repeat", "recycled", "tokens", "rarity" }.
+## saves) when auto-recycle is on. The first print of a finish from an
+## exclusive series also unlocks its plain finish ("unlocked").
+## Returns { "print", "repeat", "recycled", "tokens", "rarity", "unlocked" }.
 static func _mint(finish_id: StringName, src: String) -> Dictionary:
 	var s := _sec()
 	var serials: Dictionary = s["serials"]
@@ -294,11 +363,15 @@ static func _mint(finish_id: StringName, src: String) -> Dictionary:
 		"id": "p%d" % int(s["next_id"]), "f": String(finish_id), "w": String(fin.weapon_id) if fin else "",
 		"serial": serial, "minted": int(Time.get_unix_time_from_system()), "fav": false, "new": true, "src": src,
 	}
-	p.merge(PrintRoll.attributes(rng, series()))
+	var from := series_of(finish_id)
+	p.merge(PrintRoll.attributes(rng, from))
 	s["next_id"] = int(s["next_id"]) + 1
 	s["minted"] = int(s["minted"]) + 1
 	var repeat := holds(finish_id)
-	var result := {"print": p, "repeat": repeat, "recycled": false, "tokens": 0, "rarity": rarity(p)}
+	var result := {"print": p, "repeat": repeat, "recycled": false, "tokens": 0, "rarity": rarity(p), "unlocked": false}
+	if from.exclusive and fin and not Cosmetics.is_owned(fin):
+		Cosmetics.grant(fin)
+		result["unlocked"] = true
 	if repeat and src == "capsule" and auto_recycle() and not is_notable(p):
 		result["recycled"] = true
 		result["tokens"] = token_value(p)
@@ -309,7 +382,7 @@ static func _mint(finish_id: StringName, src: String) -> Dictionary:
 
 
 static func token_value(p: Dictionary) -> int:
-	return series().token_value[rarity(p)]
+	return series_of_print(p).token_value[rarity(p)]
 
 
 static func can_recycle(p: Dictionary) -> bool:
@@ -353,17 +426,32 @@ static func trade_up_problem(picked: Array) -> String:
 	return ""
 
 
-## Five prints of one rarity in, one fresh print of the next rarity out.
+## Five prints of one rarity in, one fresh print of the next rarity out, from
+## the series most of the five came from (trade_up_series).
 ## Returns the _mint result, or {} if trade_up_problem() objects.
 static func trade_up(picked: Array) -> Dictionary:
 	if trade_up_problem(picked) != "":
 		return {}
 	var r := rarity(picked[0]) + 1
+	var from := trade_up_series(picked)
 	for p in picked:
 		held().erase(p)
-	var result := _mint(PrintRoll.finish(rng, by_rarity(), r), "tradeup")
+	var result := _mint(PrintRoll.finish(rng, by_rarity(from), r), "tradeup")
 	_changed()
 	return result
+
+
+## The series a trade-up of `picked` mints from: the one most of them are
+## from (a tie goes to the newer series).
+static func trade_up_series(picked: Array) -> PrintSeries:
+	var best: PrintSeries = null
+	var best_n := 0
+	for s in all_series():
+		var n := picked.filter(func(p): return series_of_print(p) == s).size()
+		if n >= best_n and n > 0:
+			best = s
+			best_n = n
+	return best if best else series()
 
 
 ## Prints that may go into a trade-up of rarity `r`.
@@ -373,7 +461,7 @@ static func trade_up_candidates(r: int) -> Array:
 
 # --- the Token Counter --------------------------------------------------------------
 
-## Today's shelf: one finish per rarity, the same all day.
+## Today's shelf of the selected series: one finish per rarity, the same all day.
 static func counter_shelf() -> Array[StringName]:
 	var out: Array[StringName] = []
 	var pick := RandomNumberGenerator.new()
@@ -387,7 +475,7 @@ static func counter_shelf() -> Array[StringName]:
 
 static func counter_price(finish_id: StringName) -> int:
 	var fin := Cosmetics.item(finish_id)
-	return series().counter_price[mini(int(fin.rarity), PrintRoll.LEGENDARY)] if fin else 0
+	return series_of(finish_id).counter_price[mini(int(fin.rarity), PrintRoll.LEGENDARY)] if fin else 0
 
 
 ## Bought from today's shelf already (each once a day).

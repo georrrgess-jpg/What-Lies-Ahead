@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_ticket_storm"
+display_name = "Ticket Storm"
+description = "Prize tickets tumble down a midnight sky in two layers. A kill blows a gust through them."
+slot = &"weapon_finish"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.05098, 0.05882, 0.2, 1, 1, 0.7608, 0.2902, 1)
+params = {
+"pulse": true,
+"shader": "res://art/shaders/finish_s2_ticket_storm.gdshader",
+"shader_params": {
+"color_b": Color(1, 0.2784, 0.3412, 1),
+"color_c": Color(1, 0.8471, 0.302, 1),
+"color_d": Color(0.4157, 0.8471, 1, 1)
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2720

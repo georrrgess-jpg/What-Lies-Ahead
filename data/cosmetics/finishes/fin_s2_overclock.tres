@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_overclock"
+display_name = "Overclock"
+description = "A circuit board with packets of light racing down its gold traces. A kill lights every trace."
+slot = &"weapon_finish"
+rarity = 2
+requirement = SubResource("req")
+colors = PackedColorArray(0.01961, 0.1373, 0.102, 1, 1, 0.7608, 0.2902, 1)
+params = {
+"pulse": true,
+"shader": "res://art/shaders/finish_s2_overclock.gdshader",
+"shader_params": {
+"color_b": Color(0.2, 0.949, 1, 1),
+"color_c": Color(1, 0.302, 0.902, 1)
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2723

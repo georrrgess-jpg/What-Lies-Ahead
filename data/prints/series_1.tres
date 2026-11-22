@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = &"series_1"
 number = 1
 display_name = "Boardwalk"
+tagline = "Boardwalk stripes, camo and showpieces. Also in the Shop."
 finishes = Array[StringName]([&"fin_lumberjack", &"fin_night_racer", &"fin_ring_toss", &"fin_test_flight", &"fin_diving_bell", &"fin_flight_suit", &"fin_ticket_roll", &"fin_alpine_fleck", &"fin_arcade_carpet", &"fin_big_top", &"fin_candy_apple", &"fin_carbon_neon", &"fin_dune_tiger", &"fin_fair_isle", &"fin_harlequin", &"fin_heat_shield", &"fin_lodge_tartan", &"fin_night_splinter", &"fin_reef_camo", &"fin_snow_globe", &"fin_spray_tag", &"fin_abalone", &"fin_aurora", &"fin_bass_drop", &"fin_bioluminescence", &"fin_cathedral", &"fin_data_rain", &"fin_heat_vision", &"fin_kaleidoscope", &"fin_lava_lamp", &"fin_sonar", &"fin_warp", &"fin_marquee", &"fin_quicksilver", &"fin_solar_flare", &"fin_thunderhead"])
 odds = PackedFloat32Array(0.62, 0.27, 0.09, 0.02)
 epic_pity = 10

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/requirement.gd" id="2"]
+
+[sub_resource type="Resource" id="req"]
+script = ExtResource("2")
+kind = 6
+target = &"prints_series_2"
+
+[resource]
+script = ExtResource("1")
+id = &"fin_s2_usher_houndstooth"
+display_name = "Usher's Houndstooth"
+description = "The usher's jacket: black and gold houndstooth with polished gold trim."
+slot = &"weapon_finish"
+rarity = 0
+requirement = SubResource("req")
+colors = PackedColorArray(0.08235, 0.07451, 0.102, 1, 0.06667, 0.05882, 0.08235, 1)
+params = {
+"shader": "res://art/shaders/finish_s2_pattern.gdshader",
+"shader_params": {
+"pattern": 4,
+"color_b": Color(0.9098, 0.7529, 0.4157, 1),
+"roughness": 0.55
+},
+"unlock_short": "Capsule",
+"unlock_text": "Prize Capsules only (Series 2, Midnight Marquee). Your first print of it adds this plain finish too."
+}
+sort_order = 2704
