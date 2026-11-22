@@ -597,10 +597,10 @@ static func _gumballs(parent: Node, at: Vector3, cols: Array) -> void:
 ## The body scatters into fireflies that drift up, swirling and blinking.
 static func _fireflies(parent: Node, at: Vector3, cols: Array) -> void:
 	FxSwarm.spawn(parent, at, FxShapes.glow_ball(), cols, {"count": 26, "box": Vector3(0.7, 1.2, 0.7), "speed": Vector2(0.3, 1.0),
-		"life": Vector2(1.2, 1.9), "size": Vector2(0.08, 0.13), "gravity": Vector3(0, 0.7, 0), "drag": 1.5, "wobble": 0.8,
+		"life": Vector2(1.2, 1.9), "size": Vector2(0.12, 0.18), "gravity": Vector3(0, 0.7, 0), "drag": 1.5, "wobble": 0.8,
 		"orbit": 1.2, "blink": 2.5, "grow": 0.2, "stagger": 0.25})
-	FxSwarm.spawn(parent, at, FxShapes.glow_ball(), [Color(cols[0], 0.35)], {"count": 10, "box": Vector3(0.6, 1.0, 0.6),
-		"speed": Vector2(0.2, 0.6), "life": Vector2(1.0, 1.5), "size": Vector2(0.26, 0.36), "gravity": Vector3(0, 0.6, 0), "drag": 1.5,
+	FxSwarm.spawn(parent, at, FxShapes.glow_ball(), [Color(cols[0], 0.5)], {"count": 12, "box": Vector3(0.6, 1.0, 0.6),
+		"speed": Vector2(0.2, 0.6), "life": Vector2(1.0, 1.5), "size": Vector2(0.36, 0.5), "gravity": Vector3(0, 0.6, 0), "drag": 1.5,
 		"orbit": 1.2, "blink": 2.5, "grow": 0.2, "stagger": 0.25, "fade": true})
 	_glow(parent, at, FxShapes.glow_ball(), cols[0], 0.4, 1.4, 0.3, 0.0)
 

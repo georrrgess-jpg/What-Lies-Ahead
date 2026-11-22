@@ -961,9 +961,10 @@ def charm_paper_lantern(m):
 def charm_fortune_cookie(m):
     """A folded fortune cookie with its paper slip poking out."""
     p = "Fortune"
-    c = (0, 0, -0.04)
+    c = (0, 0, -0.032)
     parts = hanger(p, m)
     parts += [
+        torus(p + "Loop", 0.003, 0.0009, (0, 0, -0.0215), rot=rad(90, 0, 0), m=m["ring"], major_segs=10, minor_segs=4),
         sphere(p + "LeafL", 0.012, (-0.007, 0, c[2]), scale=(1.0, 0.75, 0.62), rot=(0, math.radians(28), 0), m=m["cookie"], segs=16, rings=10),
         sphere(p + "LeafR", 0.012, (0.007, 0, c[2]), scale=(1.0, 0.75, 0.62), rot=(0, math.radians(-28), 0), m=m["cookie"], segs=16, rings=10),
         sphere(p + "Fold", 0.0062, (0, -0.002, c[2] + 0.005), scale=(1.0, 1.2, 0.8), m=m["waffle"], segs=12, rings=8),
@@ -1025,7 +1026,7 @@ def charm_dumbbell(m):
     c = (0, 0, -0.036)
     parts = hanger(p, m, drop=0.018)
     parts += [
-        cyl(p + "Strap", 0.0011, 0.01, (0, 0, -0.024), segs=6, bevel=0.0, m=m["silver"]),
+        cyl(p + "Strap", 0.0011, 0.017, (0, 0, -0.0265), segs=6, bevel=0.0, m=m["silver"]),
         cyl(p + "Bar", 0.0016, 0.042, c, rot=rad(0, 90, 0), segs=10, bevel=0.0, m=m["silver"]),
     ]
     for side in (-1, 1):
@@ -1062,6 +1063,7 @@ def charm_top_hat(m):
         cyl(p + "Crown", 0.0105, 0.03, (0, 0, -0.048), segs=24, bevel=0.0012, m=m["felt"]),
         cyl(p + "Band", 0.0108, 0.0055, (0, 0, -0.059), segs=24, bevel=0.0005, m=m["red"]),
         sphere(p + "Star", 0.0018, (0.006, -0.0105, -0.059), m=m["gold"], segs=8, rings=5),
+        cyl(p + "Cord", 0.0008, 0.016, (0, 0, -0.028), segs=6, bevel=0.0, m=m["ring"]),
     ]
     for side in (-1, 1):
         parts += [

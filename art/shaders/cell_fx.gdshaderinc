@@ -267,7 +267,7 @@ vec4 cell_fx(int fx, vec2 p, vec2 span, float t, vec3 a, vec3 b) {
 					span.y * (0.15 + 0.7 * fract(fi * 0.382 + 0.4)) + cos(t * (0.4 + fi * 0.09) + fi * 1.3) * 0.12);
 			float blink = smoothstep(0.3, 1.0, sin(t * (1.5 + fi * 0.37) + fi * 4.1));
 			float d = length(p - c);
-			glow = max(glow, (exp(-d * 22.0) + cfx_fill(d - 0.03, 0.02)) * blink);
+			glow = max(glow, (exp(-d * 11.0) + cfx_fill(d - 0.07, 0.03)) * max(blink, 0.25));
 		}
 		return vec4(mix(b, vec3(1.0), clamp(glow - 0.6, 0.0, 1.0)), clamp(glow, 0.0, 1.0));
 	} else if (fx == 21) {
@@ -280,16 +280,16 @@ vec4 cell_fx(int fx, vec2 p, vec2 span, float t, vec3 a, vec3 b) {
 	} else if (fx == 22) {
 		// Orbit: two electrons circling a bright nucleus on tilted rings.
 		vec2 q = p - span * 0.5;
-		float glow = cfx_fill(length(q) - 0.07, 0.03);
+		float glow = cfx_fill(length(q) - 0.11, 0.03);
 		for (int i = 0; i < 2; i++) {
 			float fi = float(i);
 			float tilt = fi * 1.5708 + 0.6;
 			vec2 axis = vec2(cos(tilt), sin(tilt));
 			vec2 local = vec2(dot(q, axis), dot(q, vec2(-axis.y, axis.x)) * 2.4);
-			float ring = cfx_fill(abs(length(local) - 0.34) - 0.012, 0.03) * 0.6;
+			float ring = cfx_fill(abs(length(local) - 0.34) - 0.025, 0.03) * 0.75;
 			float a = t * (2.2 + fi * 0.7) + fi * 3.0;
 			vec2 e = axis * cos(a) * 0.34 + vec2(-axis.y, axis.x) * sin(a) * 0.34 / 2.4;
-			glow = max(glow, max(ring, cfx_fill(length(q - e) - 0.05, 0.03)));
+			glow = max(glow, max(ring, cfx_fill(length(q - e) - 0.09, 0.03)));
 		}
 		return vec4(mix(b, vec3(1.0), clamp(glow - 0.5, 0.0, 1.0)), glow);
 	} else if (fx == 23) {
