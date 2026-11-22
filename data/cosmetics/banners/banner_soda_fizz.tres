@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_soda_fizz"
+display_name = "Pop the Cap"
+description = "A glass of soda full of rising bubbles, a bottle cap turning on the right."
+slot = &"banner"
+rarity = 1
+price = 750
+colors = PackedColorArray(1.0000, 0.4784, 0.1216, 1, 1.0000, 0.9451, 0.7843, 1, 0.9098, 0.1490, 0.2275, 1)
+params = {
+"style": 43
+}
+sort_order = 9342

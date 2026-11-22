@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"decalx_bottle_cap"
+display_name = "Bottle Cap"
+description = "A crimped soda cap: a white star and FIZZ! on enamel red."
+slot = &"weapon_decal"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.9098, 0.1490, 0.2275, 1, 1.0000, 1.0000, 1.0000, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"emblem": "BottleCap",
+"art": "res://art/textures/decals/decal_bottlecap.png"
+}
+sort_order = 4332

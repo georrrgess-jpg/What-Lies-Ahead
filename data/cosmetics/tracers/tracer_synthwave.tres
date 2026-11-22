@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_synthwave"
+display_name = "Synthwave"
+description = "A glowing magenta wave rolling along the shot with a hot cyan core."
+slot = &"tracer"
+rarity = 2
+price = 2000
+colors = PackedColorArray(1.0000, 0.2471, 0.8157, 1, 0.2471, 0.9569, 1.0000, 1)
+params = {
+"style": "synthwave"
+}
+sort_order = 8322

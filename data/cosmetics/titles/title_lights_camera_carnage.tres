@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"title_lights_camera_carnage"
+display_name = "Lights, Camera, Carnage"
+description = "Ready for the close-up."
+slot = &"title"
+rarity = 2
+price = 1500
+sort_order = 10353

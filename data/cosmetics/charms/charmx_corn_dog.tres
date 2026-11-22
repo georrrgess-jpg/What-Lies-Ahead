@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"charmx_corn_dog"
+display_name = "Corn Dog"
+description = "Golden batter on a stick with a zigzag of mustard. Midway cuisine."
+slot = &"weapon_charm"
+rarity = 0
+price = 250
+params = {
+"charm": "CornDog"
+}
+sort_order = 5325

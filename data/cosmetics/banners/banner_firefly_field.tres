@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_firefly_field"
+display_name = "Firefly Field"
+description = "Rolling hills at dusk under a low moon, fireflies drifting and blinking."
+slot = &"banner"
+rarity = 1
+price = 750
+colors = PackedColorArray(1.0000, 0.5412, 0.3529, 1, 0.8392, 1.0000, 0.3529, 1, 0.1216, 0.1843, 0.4157, 1)
+params = {
+"style": 42
+}
+sort_order = 9341

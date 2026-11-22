@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_pro_circuit"
+display_name = "Pro Circuit"
+description = "A clean tactical cross with a gap round the dot and a T below. No frills."
+slot = &"weapon_sight"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.2471, 0.9569, 1.0000, 1, 0.1647, 0.1647, 0.2275, 1)
+params = {
+"optic": "Reflex",
+"reticle": "tactical"
+}
+sort_order = 6307

@@ -9,6 +9,8 @@ const CELL_ICON_SHADER := "res://art/shaders/cell_icon.gdshader"
 const PROP_EFFECTS := ["balloon", "disco", "jackpot", "voxel", "ghost", "snow_globe", "black_hole", "tickets", "pinata"]
 ## The update-13 kill effects (drawn by _draw_party_effect).
 const PARTY_EFFECTS := ["party_popper", "popcorn", "scuffle", "brain_freeze", "strike", "ko", "balloon_lift", "thunder", "rainbow", "ufo"]
+## The update-24 kill effects (drawn by _draw_u24_effect).
+const U24_EFFECTS := ["magic_trick", "gumballs", "fireflies", "card_burst", "ring_toss", "soda_fizz"]
 const PATTERN_TRACERS :=["ribbon", "morse", "heartbeat", "fence", "bubbles", "neon", "tickets", "chevrons", "candy"]
 
 var item: CosmeticItem
@@ -90,6 +92,9 @@ func _draw_kill_effect() -> void:
 	if effect in PARTY_EFFECTS:
 		_draw_party_effect(effect, cols, mid, r)
 		return
+	if effect in U24_EFFECTS:
+		_draw_u24_effect(effect, cols, mid, r)
+		return
 	draw_circle(mid, r * 0.35, Color(cols[0], 0.35))
 	draw_circle(mid, r * 0.18, Color(1, 1, 1, 0.8))
 	if effect == "neon_ring":
@@ -125,6 +130,8 @@ func _draw_tracer() -> void:
 		_draw_pattern_tracer(style, c0, c1, y, x0, x1)
 		return
 	if _draw_set_tracer(style, c0, c1, y, x0, x1):
+		return
+	if _draw_u24_tracer(style, c0, c1, y, x0, x1):
 		return
 	var pts := PackedVector2Array()
 	match style:
@@ -511,3 +518,108 @@ func _draw_set_tracer(style: String, c0: Color, c1: Color, y: float, x0: float, 
 		_:
 			return false
 	return true
+
+
+## The update-24 pattern tracers (film, zigzag, synthwave, stars, fireflies,
+## bunting). False for any other style.
+func _draw_u24_tracer(style: String, c0: Color, c1: Color, y: float, x0: float, x1: float) -> bool:
+	var h := size.y
+	match style:
+		"film":
+			draw_rect(Rect2(x0, y - h * 0.15, x1 - x0, h * 0.3), c0.darkened(0.75))
+			var fw := (x1 - x0) / 4.0
+			for i in 4:
+				draw_rect(Rect2(x0 + fw * i + 3.0, y - h * 0.08, fw - 6.0, h * 0.16), c1.lerp(c0, float(i % 2) * 0.3))
+			var n := int((x1 - x0) / (h * 0.07))
+			for i in n:
+				for side in [-1.0, 1.0]:
+					draw_rect(Rect2(x0 + i * h * 0.07 + h * 0.015, y + side * h * 0.115 - h * 0.015, h * 0.03, h * 0.03), Color(1, 1, 1, 0.85))
+		"zigzag":
+			var pts := PackedVector2Array()
+			for i in 11:
+				pts.append(Vector2(lerpf(x0, x1, i / 10.0), y + (h * 0.12 if i % 2 else -h * 0.12)))
+			for i in 10:
+				draw_line(pts[i], pts[i + 1], c0 if i % 2 == 0 else c1, h * 0.08, true)
+		"synthwave":
+			var pts := PackedVector2Array()
+			for i in 41:
+				var t := i / 40.0
+				pts.append(Vector2(lerpf(x0, x1, t), y + sin(t * TAU * 2.0) * h * 0.14 * minf(1.0, t * 4.0)))
+			draw_polyline(pts, Color(c0, 0.35), 12.0, true)
+			draw_polyline(pts, c0, 5.0, true)
+			draw_polyline(pts, c1.lerp(Color.WHITE, 0.5), 2.0, true)
+		"stars":
+			draw_line(Vector2(x0, y), Vector2(x1, y), Color(c0, 0.35), 3.0)
+			for i in 6:
+				_star(Vector2(lerpf(x0, x1, (i + 0.5) / 6.0), y), h * 0.09, c0 if i % 2 == 0 else c1)
+		"fireflies":
+			draw_line(Vector2(x0, y), Vector2(x1, y), Color(c0, 0.3), 2.0)
+			for i in 8:
+				var p := Vector2(lerpf(x0, x1, (i + 0.5) / 8.0), y + sin(i * 2.3) * h * 0.12)
+				draw_circle(p, h * 0.07, Color(c0, 0.25))
+				draw_circle(p, h * 0.03, c1.lerp(Color.WHITE, 0.5))
+		"bunting":
+			var top := y - h * 0.1
+			draw_line(Vector2(x0, top), Vector2(x1, top), Color(0.95, 0.92, 0.85), 2.0)
+			var fw := (x1 - x0) / 7.0
+			for i in 7:
+				var fx := x0 + fw * i
+				var col: Color = [c0, c1, Color.WHITE][i % 3]
+				draw_colored_polygon(PackedVector2Array([Vector2(fx + 2.0, top), Vector2(fx + fw - 2.0, top), Vector2(fx + fw * 0.5, top + h * 0.26)]), col)
+		_:
+			return false
+	return true
+
+
+## One picture of an update-24 kill effect's main prop.
+func _draw_u24_effect(effect: String, cols: Array, mid: Vector2, r: float) -> void:
+	var c0: Color = cols[0]
+	var c1: Color = cols[1 % cols.size()]
+	match effect:
+		"magic_trick":
+			var felt := Color(0.16, 0.13, 0.22)
+			for i in 6:
+				var a := -PI * 0.5 + (i - 2.5) * 0.4
+				_star(mid + Vector2(cos(a), sin(a)) * r * 0.95, r * 0.16, c0 if i % 2 == 0 else c1)
+			draw_rect(Rect2(mid + Vector2(-r * 0.36, -r * 0.2), Vector2(r * 0.72, r * 0.72)), felt)
+			draw_rect(Rect2(mid + Vector2(-r * 0.37, r * 0.3), Vector2(r * 0.74, r * 0.14)), Color(0.9, 0.15, 0.25))
+			draw_rect(Rect2(mid + Vector2(-r * 0.62, r * 0.5), Vector2(r * 1.24, r * 0.12)), felt)
+		"gumballs":
+			for i in 7:
+				var a := TAU * i / 7.0 + 0.4
+				var p := mid + Vector2(cos(a), sin(a)) * r * (0.35 + 0.45 * float(i % 2))
+				var c: Color = cols[i % cols.size()]
+				draw_circle(p, r * 0.22, c)
+				draw_circle(p + Vector2(-r * 0.07, -r * 0.07), r * 0.06, Color(1, 1, 1, 0.8))
+		"fireflies":
+			for i in 9:
+				var a := TAU * i / 9.0 + float(i) * 0.7
+				var p := mid + Vector2(cos(a), sin(a)) * r * (0.2 + 0.1 * float(i % 4)) * 3.0
+				draw_circle(p, r * 0.2, Color(c0, 0.22))
+				draw_circle(p, r * 0.08, c1.lerp(Color.WHITE, 0.4))
+		"card_burst":
+			for i in 5:
+				var a := (i - 2) * 0.35
+				var xf := Transform2D(a, mid + Vector2(0.0, r * 0.4))
+				draw_set_transform_matrix(xf)
+				draw_rect(Rect2(Vector2(-r * 0.3, -r * 1.15), Vector2(r * 0.6, r * 0.86)), Color.WHITE)
+				draw_rect(Rect2(Vector2(-r * 0.3, -r * 1.15), Vector2(r * 0.6, r * 0.86)), Color(0.12, 0.08, 0.18), false, 2.0)
+				var pip := Vector2(0.0, -r * 0.72)
+				var ink := c1 if i % 2 == 0 else Color(0.12, 0.08, 0.18)
+				draw_colored_polygon(PackedVector2Array([pip + Vector2(0, -r * 0.14), pip + Vector2(r * 0.1, 0), pip + Vector2(0, r * 0.14), pip + Vector2(-r * 0.1, 0)]), ink)
+			draw_set_transform_matrix(Transform2D.IDENTITY)
+		"ring_toss":
+			for i in 5:
+				var a := TAU * i / 5.0 - PI * 0.5
+				var p := mid + Vector2(cos(a), sin(a)) * r * 0.62
+				var c: Color = cols[i % cols.size()]
+				draw_set_transform(p, 0.0, Vector2(1.0, 0.45))
+				draw_arc(Vector2.ZERO, r * 0.32, 0.0, TAU, 28, c, r * 0.1, true)
+			draw_set_transform_matrix(Transform2D.IDENTITY)
+		"soda_fizz":
+			for i in 10:
+				var p := mid + Vector2(sin(i * 2.1) * r * 0.35, -r * 0.9 + i * r * 0.17)
+				draw_arc(p, r * (0.06 + 0.03 * float(i % 3)), 0.0, TAU, 16, c1, 2.0, true)
+			draw_rect(Rect2(mid + Vector2(-r * 0.28, r * 0.3), Vector2(r * 0.56, r * 0.65)), c0)
+			draw_rect(Rect2(mid + Vector2(-r * 0.28, r * 0.48), Vector2(r * 0.56, r * 0.14)), c1)
+			draw_circle(mid + Vector2(0.0, r * 0.2), r * 0.3, Color(1.0, 0.97, 0.9))

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_magic_trick"
+display_name = "Ta-Da!"
+description = "A top hat pops up in a puff of smoke and gold stars burst out of it. The zombie has vanished."
+slot = &"kill_effect"
+rarity = 3
+price = 3750
+params = {
+"effect": "magic_trick"
+}
+sort_order = 7320

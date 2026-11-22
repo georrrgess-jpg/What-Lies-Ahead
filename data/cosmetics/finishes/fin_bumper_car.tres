@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_bumper_car"
+display_name = "Bumper Car"
+description = "Deep candy paint packed with metal flake that glints as the weapon turns, a black rubber bumper with hazard chevrons on the trim."
+slot = &"weapon_finish"
+rarity = 1
+price = 1000
+colors = PackedColorArray(0.9098, 0.1490, 0.2275, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"shader": "res://art/shaders/finish_gear.gdshader",
+"shader_params": {
+"pattern": 7,
+"color_b": Color(0.4157, 0.0392, 0.1647, 1),
+"color_c": Color(1.0000, 0.8235, 0.1216, 1),
+"color_d": Color(1.0000, 0.8392, 0.6275, 1)
+}
+}
+sort_order = 2458

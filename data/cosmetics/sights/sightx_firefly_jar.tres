@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_firefly_jar"
+display_name = "Firefly Jar"
+description = "A glass jar of fireflies on its side, screw lid forward; a soft ping spreads from the dot like a firefly's glow."
+slot = &"weapon_sight"
+rarity = 2
+price = 2500
+colors = PackedColorArray(0.8392, 1.0000, 0.3529, 1, 0.1647, 0.2902, 0.4784, 1)
+params = {
+"optic": "Jar",
+"reticle": "sonar"
+}
+sort_order = 6302

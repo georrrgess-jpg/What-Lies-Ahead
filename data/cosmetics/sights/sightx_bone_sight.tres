@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_bone_sight"
+display_name = "Bone Sight"
+description = "A short tube and a little skull for a reticle: eye sockets either side of the shot."
+slot = &"weapon_sight"
+rarity = 1
+price = 750
+colors = PackedColorArray(0.9569, 0.9451, 0.9176, 1, 0.1098, 0.0941, 0.1882, 1)
+params = {
+"optic": "Tube",
+"reticle": "skull"
+}
+sort_order = 6306

@@ -11,7 +11,10 @@
 // 4 star, 5 heart, 6 pixel, 7 horseshoe, 8 scope cross, 9 periscope,
 // 10 diamond, 11 marquee, 12 slit, 13 hex, 14 post, 15 burst, 16 ranger,
 // 17 snowflake, 18 quarters, 19 invader, 20 sun, 21 flame, 22 strike,
-// 23 radar (its sweep turns with TIME), 24 hazard.
+// 23 radar (its sweep turns with TIME), 24 hazard; update 24: 25 clover,
+// 26 crown, 27 spiral (turns), 28 sonar (a ping spreads), 29 orbit (two
+// moons circle), 30 brackets (breathe in and out), 31 ticket, 32 skull,
+// 33 tactical, 34 bolt.
 
 float sr_fill(float d, vec2 aa) {
 	return clamp(0.5 - (d - aa.y) / aa.x, 0.0, 1.0);
@@ -264,6 +267,117 @@ float sr_hazard(vec2 p, vec2 aa) {
 	return max(c, sr_disc(p, 0.09, aa));
 }
 
+// --- update 24 ---------------------------------------------------------------
+
+// A four-leaf clover: four heart-shaped leaves round a dot, a little stem.
+float sr_clover(vec2 p, vec2 aa) {
+	vec2 q = sr_fold(sr_rot(p, 0.785398), 4.0);
+	float d = sr_heart((q - vec2(0.0, 0.08)) * 1.45) / 1.45;
+	float c = sr_fill(abs(d) - sr_width(0.07, aa) * 0.5, aa);
+	c = max(c, sr_seg(p, vec2(0.08, -0.12), vec2(0.42, -0.98), 0.07, aa));
+	return max(c, sr_disc(p, 0.1, aa));
+}
+
+// A crown over the point of aim: a band and three points tipped with beads.
+float sr_crown(vec2 p, vec2 aa) {
+	vec2 q = vec2(abs(p.x), p.y);
+	float c = sr_seg(q, vec2(0.0, 0.42), vec2(0.62, 0.42), 0.07, aa);
+	c = max(c, sr_seg(q, vec2(0.62, 0.42), vec2(0.78, 1.05), 0.07, aa));
+	c = max(c, sr_seg(q, vec2(0.78, 1.05), vec2(0.36, 0.72), 0.07, aa));
+	c = max(c, sr_seg(q, vec2(0.36, 0.72), vec2(0.0, 1.2), 0.07, aa));
+	c = max(c, sr_disc(q - vec2(0.78, 1.17), 0.08, aa));
+	c = max(c, sr_disc(p - vec2(0.0, 1.32), 0.08, aa));
+	c = max(c, sr_seg(q, vec2(0.0, -0.4), vec2(0.0, -1.0), 0.06, aa));
+	return max(c, sr_disc(p, 0.11, aa));
+}
+
+// Three spiral arms turning slowly round a dot (TIME).
+float sr_spiral(vec2 p, vec2 aa) {
+	float r = length(p);
+	float a = atan(p.y, p.x) + TIME * 1.3;
+	float k = r * 4.0 - a * 3.0 / 6.2831853;
+	float arm = abs(fract(k) - 0.5) / 4.0 * max(r, 0.2);
+	float c = sr_fill(arm - sr_width(0.05, aa) * 0.5, aa) * step(0.28, r) * smoothstep(1.15, 0.95, r);
+	c = max(c, sr_ring(p, 1.12, 0.05, aa));
+	return max(c, sr_disc(p, 0.11, aa));
+}
+
+// Sonar: a fixed ring and dot, and a ping that spreads out and fades (TIME).
+float sr_sonar(vec2 p, vec2 aa) {
+	float k = fract(TIME * 0.8);
+	float c = sr_ring(p, 0.55, 0.07, aa);
+	c = max(c, sr_ring(p, 0.55 + k * 0.75, 0.06, aa) * (1.0 - k));
+	vec2 q = abs(p);
+	q = q.x > q.y ? q : q.yx;
+	c = max(c, sr_seg(q, vec2(1.0, 0.0), vec2(1.4, 0.0), 0.07, aa));
+	return max(c, sr_disc(p, 0.11, aa));
+}
+
+// Orbit: a planet dot in a ring, two moons going round it (TIME).
+float sr_orbit(vec2 p, vec2 aa) {
+	float c = sr_ring(p, 0.8, 0.04, aa) * 0.8;
+	float a = TIME * 1.6;
+	c = max(c, sr_disc(p - vec2(cos(a), sin(a)) * 0.8, 0.11, aa));
+	c = max(c, sr_disc(p + vec2(cos(a), sin(a)) * 0.8, 0.08, aa));
+	c = max(c, sr_ring(p, 0.3, 0.06, aa));
+	return max(c, sr_disc(p, 0.1, aa));
+}
+
+// Four corner brackets that breathe in and out round a dot (TIME).
+float sr_brackets(vec2 p, vec2 aa) {
+	float s = 0.85 + 0.12 * sin(TIME * 3.0);
+	vec2 q = abs(p);
+	float c = sr_seg(q, vec2(s, s), vec2(s - 0.42, s), 0.08, aa);
+	c = max(c, sr_seg(q, vec2(s, s), vec2(s, s - 0.42), 0.08, aa));
+	return max(c, sr_disc(p, 0.12, aa));
+}
+
+// A prize ticket with notched ends round the point of aim, a dot on it.
+float sr_ticket(vec2 p, vec2 aa) {
+	vec2 q = abs(p);
+	vec2 d = q - vec2(1.1, 0.62);
+	float box = max(d.x, d.y);
+	float notch = 0.26 - length(q - vec2(1.1, 0.0));
+	float sd = max(box, notch);
+	float c = sr_fill(abs(sd) - sr_width(0.06, aa) * 0.5, aa);
+	c = max(c, sr_seg(p, vec2(0.62, -0.42), vec2(0.62, 0.42), 0.035, aa) * 0.7);
+	return max(c, sr_disc(p, 0.12, aa));
+}
+
+// A little skull: the dome, two eye sockets either side of the point of aim,
+// the jaw and teeth below.
+float sr_skull(vec2 p, vec2 aa) {
+	float dome = length(p - vec2(0.0, 0.18)) - 0.9;
+	float jaw = max(abs(p.x) - 0.48, abs(p.y + 0.78) - 0.2);
+	float sd = min(dome, jaw);
+	sd = max(sd, -(p.y + 1.0));
+	float c = sr_fill(abs(sd) - sr_width(0.06, aa) * 0.5, aa);
+	vec2 q = vec2(abs(p.x), p.y);
+	c = max(c, sr_ring(q - vec2(0.42, 0.12), 0.2, 0.06, aa));
+	c = max(c, sr_seg(q, vec2(0.16, -0.58), vec2(0.16, -0.96), 0.04, aa));
+	return max(c, sr_disc(p, 0.1, aa));
+}
+
+// A tactical cross: four bars with a gap, a T at the end of the lower bar.
+float sr_tactical(vec2 p, vec2 aa) {
+	vec2 q = abs(p);
+	float c = sr_seg(q, vec2(0.32, 0.0), vec2(1.15, 0.0), 0.07, aa);
+	c = max(c, sr_seg(p, vec2(0.0, 0.32), vec2(0.0, 1.15), 0.07, aa));
+	c = max(c, sr_seg(p, vec2(0.0, -0.32), vec2(0.0, -1.3), 0.07, aa));
+	c = max(c, sr_seg(q, vec2(0.0, -1.3), vec2(0.22, -1.3), 0.07, aa) * step(p.y, 0.0));
+	return max(c, sr_disc(p, 0.08, aa));
+}
+
+// A lightning bolt either side of the point of aim, a dot between.
+float sr_bolt(vec2 p, vec2 aa) {
+	vec2 q = vec2(abs(p.x), p.y * sign(p.x + 1e-5));
+	float c = sr_seg(q, vec2(0.35, 0.55), vec2(0.65, 0.05), 0.08, aa);
+	c = max(c, sr_seg(q, vec2(0.65, 0.05), vec2(0.5, 0.05), 0.08, aa));
+	c = max(c, sr_seg(q, vec2(0.5, 0.05), vec2(0.82, -0.55), 0.08, aa));
+	c = max(c, sr_ring(p, 1.05, 0.04, aa) * 0.7);
+	return max(c, sr_disc(p, 0.11, aa));
+}
+
 float sight_reticle(vec2 p, int pattern, vec2 aa) {
 	float c = 0.0;
 	if (pattern == 1) {
@@ -338,6 +452,26 @@ float sight_reticle(vec2 p, int pattern, vec2 aa) {
 		c = sr_radar(p, aa);
 	} else if (pattern == 24) {
 		c = sr_hazard(p, aa);
+	} else if (pattern == 25) {
+		c = sr_clover(p, aa);
+	} else if (pattern == 26) {
+		c = sr_crown(p, aa);
+	} else if (pattern == 27) {
+		c = sr_spiral(p, aa);
+	} else if (pattern == 28) {
+		c = sr_sonar(p, aa);
+	} else if (pattern == 29) {
+		c = sr_orbit(p, aa);
+	} else if (pattern == 30) {
+		c = sr_brackets(p, aa);
+	} else if (pattern == 31) {
+		c = sr_ticket(p, aa);
+	} else if (pattern == 32) {
+		c = sr_skull(p, aa);
+	} else if (pattern == 33) {
+		c = sr_tactical(p, aa);
+	} else if (pattern == 34) {
+		c = sr_bolt(p, aa);
 	} else {
 		c = sr_disc(p, 0.2, aa);
 	}

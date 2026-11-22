@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"charmx_pretzel"
+display_name = "Pretzel"
+description = "A glossy twisted pretzel with crystals of salt."
+slot = &"weapon_charm"
+rarity = 0
+price = 250
+params = {
+"charm": "Pretzel"
+}
+sort_order = 5324

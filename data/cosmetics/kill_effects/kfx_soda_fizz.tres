@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kfx_soda_fizz"
+display_name = "Shaken Soda"
+description = "A geyser of fizz shoots up, foam spills over and drops rain down."
+slot = &"kill_effect"
+rarity = 1
+price = 1000
+params = {
+"effect": "soda_fizz"
+}
+sort_order = 7325

@@ -22,6 +22,12 @@ extends RefCounted
 ##   pixels     chunky 8-bit blocks marching to the target (Insert Coin)
 ##   gold_seam  a jagged seam of molten gold with a white-hot pulse (Kintsugi)
 ##   koi        a koi swimming to the target, side to side (Koi Pond)
+##   film       a strip of film with sprocket holes, its frames rolling past
+##   zigzag     a bold two-colour zigzag racing to the target
+##   synthwave  a glowing sine wave that rolls along the shot
+##   stars      a chain of spinning five-pointed stars
+##   fireflies  a faint thread with motes that blink along it
+##   bunting    carnival pennants on a string
 ## params.flakes = true swaps sparkle glitter for snowflakes.
 ##
 ## The coloured ribbons are drawn with normal (mix) blending: added light
@@ -44,6 +50,12 @@ const PATTERNS := {
 	"pixels": [8, "cross", 7.5, 0.24, 0.05, true],
 	"gold_seam": [9, "cross", 2.4, 0.3, 0.06, false],
 	"koi": [10, "cross", 4.5, 0.26, 0.06, false],
+	"film": [11, "strip", 6.0, 0.26, 0.06, false],
+	"zigzag": [12, "cross", 6.0, 0.2, 0.04, false],
+	"synthwave": [13, "cross", 2.4, 0.24, 0.05, false],
+	"stars": [14, "cross", 7.0, 0.22, 0.05, true],
+	"fireflies": [15, "cross", 5.0, 0.4, 0.06, false],
+	"bunting": [16, "cross", 6.5, 0.3, 0.08, false],
 }
 ## Segments along the shared unit meshes (the heartbeat bends along them).
 const UNIT_SEGMENTS := 400

@@ -295,3 +295,47 @@ static func _strip(st: SurfaceTool, a: Vector2, b: Vector2, width: float, col: C
 	for i in [0, 1, 2, 0, 2, 3]:
 		var p: Vector2 = corners[i]
 		st.add_vertex(Vector3(p.x, p.y, 0.0))
+
+
+# --- update 24 ----------------------------------------------------------------
+
+## A playing card facing +Z: a white card with a red-and-black rim and a big
+## red diamond pip on both faces.
+static func card() -> Mesh:
+	if _meshes.has("card"):
+		return _meshes["card"]
+	var st := FxShapes._colored_tool()
+	var body := BoxMesh.new()
+	body.size = Vector3(0.62, 0.88, 0.03)
+	FxShapes._part(st, body, Transform3D(), BRIGHT)
+	var rim := BoxMesh.new()
+	rim.size = Vector3(0.52, 0.78, 0.034)
+	FxShapes._part(st, rim, Transform3D(), Color(0.12, 0.08, 0.18))
+	var inner := BoxMesh.new()
+	inner.size = Vector3(0.48, 0.74, 0.038)
+	FxShapes._part(st, inner, Transform3D(), BRIGHT)
+	var pip := BoxMesh.new()
+	pip.size = Vector3(0.24, 0.24, 0.042)
+	FxShapes._part(st, pip, Transform3D(Basis(Vector3.BACK, PI * 0.25).scaled(Vector3(0.85, 1.25, 1.0)), Vector3.ZERO), Color(0.92, 0.12, 0.25))
+	return _cache("card", st.commit(), FxShapes.glow_material())
+
+
+## A magician's top hat, crown up (+Y): black felt, a red band, a wide brim.
+static func top_hat() -> Mesh:
+	if _meshes.has("top_hat"):
+		return _meshes["top_hat"]
+	var st := FxShapes._colored_tool()
+	var felt := Color(0.16, 0.13, 0.22)
+	FxShapes._part(st, FxShapes._cylinder_prim(0.3, 0.3, 0.6), Transform3D(Basis(), Vector3(0, 0.3, 0)), felt)
+	FxShapes._part(st, FxShapes._cylinder_prim(0.31, 0.31, 0.12), Transform3D(Basis(), Vector3(0, 0.1, 0)), Color(0.9, 0.15, 0.25))
+	FxShapes._part(st, FxShapes._cylinder_prim(0.52, 0.52, 0.05), Transform3D(Basis(), Vector3(0, 0.0, 0)), felt)
+	return _cache("top_hat", st.commit(), FxShapes.glow_material())
+
+
+## A ring-toss hoop (lying flat in XZ), white so each instance takes its colour.
+static func hoop() -> Mesh:
+	if _meshes.has("hoop"):
+		return _meshes["hoop"]
+	var st := FxShapes._colored_tool()
+	FxShapes._part(st, _torus(0.4, 0.5), Transform3D(), BRIGHT)
+	return _cache("hoop", st.commit(), FxShapes.glow_material())

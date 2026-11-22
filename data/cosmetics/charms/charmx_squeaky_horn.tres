@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"charmx_squeaky_horn"
+display_name = "Squeaky Horn"
+description = "A clown's bike horn: a red rubber bulb on a brass bell. Honk."
+slot = &"weapon_charm"
+rarity = 1
+price = 750
+params = {
+"charm": "SqueakyHorn"
+}
+sort_order = 5329

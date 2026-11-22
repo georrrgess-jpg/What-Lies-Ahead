@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_thunderclap"
+display_name = "Thunderclap"
+description = "A star bezel with lightning bolts either side of the point of aim."
+slot = &"weapon_sight"
+rarity = 1
+price = 750
+colors = PackedColorArray(1.0000, 0.8863, 0.2275, 1, 0.2275, 0.4157, 0.8784, 1)
+params = {
+"optic": "Burst",
+"reticle": "bolt"
+}
+sort_order = 6308

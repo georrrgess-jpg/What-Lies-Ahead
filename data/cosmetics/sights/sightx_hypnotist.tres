@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"sightx_hypnotist"
+display_name = "Hypnotist"
+description = "Three spiral arms turn slowly round the dot. You are getting very accurate."
+slot = &"weapon_sight"
+rarity = 1
+price = 1000
+colors = PackedColorArray(1.0000, 0.3098, 0.8157, 1, 0.4157, 0.1647, 0.6902, 1)
+params = {
+"optic": "Reflex",
+"reticle": "spiral"
+}
+sort_order = 6304

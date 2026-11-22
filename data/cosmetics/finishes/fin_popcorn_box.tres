@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_popcorn_box"
+display_name = "Popcorn Box"
+description = "Red and cream popcorn-box stripes, buttery kernels spilling over the trim."
+slot = &"weapon_finish"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.9098, 0.1490, 0.2275, 1, 1.0000, 0.9412, 0.8314, 1)
+params = {
+"shader": "res://art/shaders/finish_gear.gdshader",
+"shader_params": {
+"pattern": 8,
+"color_b": Color(1.0000, 0.9569, 0.8784, 1),
+"color_c": Color(1.0000, 0.8118, 0.2275, 1),
+"color_d": Color(0.8000, 0.8000, 0.8000, 1)
+}
+}
+sort_order = 2460

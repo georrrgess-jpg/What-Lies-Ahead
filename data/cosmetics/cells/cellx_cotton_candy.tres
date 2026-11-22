@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"cellx_cotton_candy"
+display_name = "Candy Floss Cell"
+description = "Pink and blue floss folding into each other."
+slot = &"weapon_cell"
+rarity = 1
+price = 1000
+colors = PackedColorArray(1.0000, 0.5412, 0.8157, 1, 0.5412, 0.8471, 1.0000, 1)
+params = {
+"fx": "cotton"
+}
+sort_order = 3333

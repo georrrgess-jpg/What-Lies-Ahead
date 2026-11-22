@@ -11,7 +11,8 @@
 // Patterns (WeaponCosmetics.CELL_FX): 1 bubbles, 2 lava, 3 stripes,
 // 4 rainbow, 5 siren, 6 scan, 7 sparkle, 8 caustics, 9 slosh, 10 warp,
 // 11 plasma, 12 snow, 13 chase, 14 pixels, 15 arcs, 16 curtains,
-// 17 arcade, 18 kintsugi, 19 koi.
+// 17 arcade, 18 kintsugi, 19 koi; update 24: 20 fireflies, 21 hypno,
+// 22 orbit, 23 cotton candy.
 
 float cfx_hash(vec2 q) {
 	return fract(sin(dot(q, vec2(127.1, 311.7))) * 43758.5453);
@@ -47,7 +48,7 @@ float cell_fx_dim(int fx) {
 	if (fx == 17 || fx == 18) {
 		return 0.85;
 	}
-	return (fx == 1 || fx == 6 || fx == 7 || fx == 8 || fx == 10 || fx == 12 || fx == 13 || fx == 15) ? 0.55 : 0.0;
+	return (fx == 1 || fx == 6 || fx == 7 || fx == 8 || fx == 10 || fx == 12 || fx == 13 || fx == 15 || fx == 20 || fx == 22) ? 0.55 : 0.0;
 }
 
 // Arcade: a pixel chomper eats its way along a row of pellets, a ghost on
@@ -257,6 +258,47 @@ vec4 cell_fx(int fx, vec2 p, vec2 span, float t, vec3 a, vec3 b) {
 		return cfx_kintsugi(p, t, b);
 	} else if (fx == 19) {
 		return cfx_koi(p, span, t, b);
+	} else if (fx == 20) {
+		// Fireflies: soft motes drifting about the cell, blinking on and off.
+		float glow = 0.0;
+		for (int i = 0; i < 6; i++) {
+			float fi = float(i);
+			vec2 c = vec2(span.x * (0.15 + 0.7 * fract(fi * 0.618 + 0.2)) + sin(t * (0.5 + fi * 0.11) + fi * 2.3) * 0.12,
+					span.y * (0.15 + 0.7 * fract(fi * 0.382 + 0.4)) + cos(t * (0.4 + fi * 0.09) + fi * 1.3) * 0.12);
+			float blink = smoothstep(0.3, 1.0, sin(t * (1.5 + fi * 0.37) + fi * 4.1));
+			float d = length(p - c);
+			glow = max(glow, (exp(-d * 22.0) + cfx_fill(d - 0.03, 0.02)) * blink);
+		}
+		return vec4(mix(b, vec3(1.0), clamp(glow - 0.6, 0.0, 1.0)), clamp(glow, 0.0, 1.0));
+	} else if (fx == 21) {
+		// Hypno: a spiral turning round the cell's middle.
+		vec2 q = p - span * 0.5;
+		float r = length(q);
+		float s = fract(r * 9.0 - atan(q.y, q.x) / 6.2831853 * 2.0 + t * 1.2);
+		float band = cfx_fill(abs(s - 0.5) - 0.2, 0.06);
+		return vec4(mix(b, vec3(1.0), band * 0.2), band * 0.9);
+	} else if (fx == 22) {
+		// Orbit: two electrons circling a bright nucleus on tilted rings.
+		vec2 q = p - span * 0.5;
+		float glow = cfx_fill(length(q) - 0.07, 0.03);
+		for (int i = 0; i < 2; i++) {
+			float fi = float(i);
+			float tilt = fi * 1.5708 + 0.6;
+			vec2 axis = vec2(cos(tilt), sin(tilt));
+			vec2 local = vec2(dot(q, axis), dot(q, vec2(-axis.y, axis.x)) * 2.4);
+			float ring = cfx_fill(abs(length(local) - 0.34) - 0.012, 0.03) * 0.6;
+			float a = t * (2.2 + fi * 0.7) + fi * 3.0;
+			vec2 e = axis * cos(a) * 0.34 + vec2(-axis.y, axis.x) * sin(a) * 0.34 / 2.4;
+			glow = max(glow, max(ring, cfx_fill(length(q - e) - 0.05, 0.03)));
+		}
+		return vec4(mix(b, vec3(1.0), clamp(glow - 0.5, 0.0, 1.0)), glow);
+	} else if (fx == 23) {
+		// Cotton candy: two pastel floss colours folding into each other.
+		vec2 q = p * 3.0 + vec2(sin(t * 0.4), cos(t * 0.33));
+		float n = sin(q.x * 2.1 + sin(q.y * 1.7 + t * 0.6) * 1.5) * 0.5 + 0.5;
+		float k = smoothstep(0.35, 0.65, n);
+		vec3 c = mix(b, mix(a, vec3(1.0), 0.45), k);
+		return vec4(c, 0.75);
 	}
 	return vec4(0.0);
 }

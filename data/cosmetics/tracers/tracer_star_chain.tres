@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"tracer_star_chain"
+display_name = "Star Chain"
+description = "A chain of spinning stars streaming to the target."
+slot = &"tracer"
+rarity = 1
+price = 1000
+colors = PackedColorArray(1.0000, 0.8235, 0.2275, 1, 1.0000, 1.0000, 1.0000, 1)
+params = {
+"style": "stars"
+}
+sort_order = 8323

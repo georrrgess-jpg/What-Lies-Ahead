@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CosmeticItem" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cosmetic_item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"fin_strongman"
+display_name = "Strongman"
+description = "The strongman's leopard leotard: bold rosettes on a warm gold coat."
+slot = &"weapon_finish"
+rarity = 0
+price = 250
+colors = PackedColorArray(0.9098, 0.6588, 0.2902, 1, 0.4784, 0.2902, 0.1020, 1)
+params = {
+"shader": "res://art/shaders/finish_gear.gdshader",
+"shader_params": {
+"pattern": 11,
+"color_b": Color(0.1647, 0.1020, 0.0627, 1),
+"color_c": Color(0.6588, 0.3765, 0.1647, 1),
+"color_d": Color(0.8000, 0.8000, 0.8000, 1)
+}
+}
+sort_order = 2461
