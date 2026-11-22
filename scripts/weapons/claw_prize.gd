@@ -29,7 +29,7 @@ const DAZE_TIME := 1.3
 ## Drag speed (m/s) toward the player, and the flat gap (m, past both
 ## capsules) at which it is dropped.
 const YANK_SPEED := 17.0
-const DROP_GAP := 0.75
+const DROP_GAP := 1.6
 ## The longest a carry lasts (s), and how long it may be held up by a wall.
 const CARRY_MAX := 1.4
 const CARRY_STUCK := 0.12

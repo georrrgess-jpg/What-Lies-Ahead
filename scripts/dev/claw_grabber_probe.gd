@@ -160,7 +160,7 @@ func _grab_test() -> void:
 	var prized := prize != null and prize.is_prized()
 	var bonus := DamageStack.bonus(z)
 	var on_nav := _on_navmesh(z.global_position)
-	var ok := nearest < 2.6 and downed and prized and on_nav and hp - z.health > 1.0
+	var ok := nearest < 3.2 and downed and prized and on_nav and hp - z.health > 1.0
 	print("[claw] grab: dealt %.0f, pulled from %.1f m to %.2f m, bowled over %s, Prized %s (+%.0f%%), on navmesh %s -> %s" % [
 		hp - z.health, at.distance_to(_start), nearest, downed, prized, bonus * 100.0, on_nav, "ok" if ok else "FAIL"])
 	if not ok:
