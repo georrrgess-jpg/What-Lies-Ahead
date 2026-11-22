@@ -15,7 +15,6 @@ func run(shot: Node, director: Node) -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--shot-") and a.contains("="):
 			args[a.get_slice("=", 0).trim_prefix("--shot-")] = a.substr(a.find("=") + 1)
-	var base := String(args.get("", ""))
 	var path: String = shot.get("path")
 	var frames := int(args.get("frames", "60"))
 	if args.get("open", "0") == "1":
@@ -25,7 +24,7 @@ func run(shot: Node, director: Node) -> void:
 	cam.fov = float(args.get("fov", "70"))
 	director.get_parent().add_child(cam)
 	cam.make_current()
-	for entry in String(args.get("tour-cams", base)).split(";", false):
+	for entry in String(args.get("tour-cams", "")).split(";", false):
 		var cam_name := entry.get_slice(":", 0)
 		var parts := entry.get_slice(":", 1).split(">")
 		cam.look_at_from_position(_vec(parts[0]), _vec(parts[1]))

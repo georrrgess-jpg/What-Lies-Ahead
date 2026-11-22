@@ -45,8 +45,9 @@ generator `tools/build_endless_studio.gd`, level script
 `scripts/run/endless_studio_environment.gd`): a haunted Hollywood movie backlot at night,
 the studio's water tower over the front lot, searchlights sweeping the sky, the STARLOT sign on
 the hills. Unlocked by `LevelData.requirement` = `ENDLESS_WAVE` 30 (the best wave on any
-Endless map): the Play page's ENDLESS row then has two cards; a locked card wears the padlock
-and "REACH WAVE 30 · BEST WAVE 22 / 30", the board says the same and START reads LOCKED.
+Endless map): the ENDLESS board has a tab per map ("STARLOT STUDIOS · WAVE 30" while locked);
+the locked map's card wears the padlock and "REACH WAVE 30 · BEST WAVE 22 / 30", the board
+says the same and START reads LOCKED.
 `EndlessRewards` lists the map on the reward track (and in the results when a run earns it).
 Same rules, enemies' base pool, boss (`the_wrecker`), prices and records as the city (records
 are shared: one best wave for Endless).
@@ -72,7 +73,18 @@ come from the district they face: cream stages with ribs and a red band, Soundst
 acoustic walls, the boulevard's deco plaster with shop windows and awnings), so there are no
 holes and no way out; the navmesh is baked with every gate shut and keeps one island per
 district. Static dressing is merged in 16 m squares (each stays inside the renderer's
-per-object light limit); floors are 16 m tiles for the same reason.
+per-object light limit); floors are 16 m tiles for the same reason. Its sounds:
+`studio_endless_loop` (a 120 BPM monster-movie swing: walking bass, brushes, vibraphone, muted
+brass and a theremin), `studio_endless_final` (boss waves) and `studio_ambience`
+(tools/audio_packs/studio.py); the gate, trap and wave cues are the mode's own.
+
+Verified (update 24): `tools/spawn_probe.gd endless_studio` 0 bad of 21 entrances;
+`tools/stuck_probe.gd --level=endless_studio` (every gate open, targets the middles of the
+district areas) 252 walkers, 0 stuck, all arrived within 58 s; the bot (`--autoplay=endless
+--level=endless_studio --weapon=ion_carbine --difficulty=standard --aim-error=2.5`, a level-40
+profile) was still alive on wave 35 at the 1500 s cap, gates on waves 7, 10, 16 and 19, bench
+tiers on 5, 12 and 21; 895 spawns, none within 14 m, 5.7% in view, closest 15.5 m, 31 m of
+route, no wave longer than 72 s (nothing stuck).
 
 ## Records and unlocks
 
@@ -221,9 +233,9 @@ draining bar per timed power-up under the district chip.
 and ENDLESS (Tab or the gamepad's Y switch them; ENDLESS wears a NEW badge until the player has
 started an Endless run, `MenuPlay.endless_is_new()`); the profile's `"menu"` section keeps
 `mode`, `world` and `endless` (a save from before kept Endless as slot `worlds.size()` of
-`world` and opens in ENDLESS). STORY shows the world carousel alone; ENDLESS shows the city's board
-with its `EndlessCard` in the key art's place (the carousel only comes back with a second
-endless level). The home screen has an ENDLESS tile beside the story goal (key art, emblem,
+`world` and opens in ENDLESS). STORY shows the world carousel alone; ENDLESS shows the chosen
+map's board with its `EndlessCard` in the key art's place and, with two maps, a tab per map over
+it (A/D browse them; a locked map's tab says the wave that opens it). The home screen has an ENDLESS tile beside the story goal (key art, emblem,
 NEW MODE or the best wave). The mode's emblem (`EndlessEmblem`: an infinity sign over the
 burning skyline, the broken skyscraper and the radio mast, in an ember ring) is drawn in code
 and reads down to a pip; the key art `art/keyart/endless_city.jpg` (tools/capture_keyart.gd,
