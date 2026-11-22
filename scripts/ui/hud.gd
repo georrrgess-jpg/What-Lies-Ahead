@@ -568,7 +568,8 @@ func _update_weapon_status() -> void:
 		code = 2 if w.current.uses_heat() else 1
 	elif w.is_emergency_recharging():
 		code = 3 if w.magazine() > 0 else 4
-	elif w.magazine() <= maxi(1, w.current.magazine_size / 4) and w.reserve() > 0:
+	# A one-shot weapon (the Longbow's single nocked arrow) is only low when empty.
+	elif w.magazine() <= (0 if w.current.magazine_size <= 1 else maxi(1, w.current.magazine_size / 4)) and w.reserve() > 0:
 		code = 5
 	if code != _status_code:
 		_status_code = code
