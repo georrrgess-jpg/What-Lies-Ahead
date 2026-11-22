@@ -2,8 +2,10 @@
 archery-gallery recurve. A lacquered cherry-red riser and limbs with ivory and
 red target-ring inlays, brass limb bolts and tips, a glowing gold string, and
 a nocked arrow with red and cream feathers, a neon nock and a brass bullseye
-point. The left hand holds the grip, the right hand hooks the string round
-the arrow's nock (hand_kit grip_hand, human sized).
+point. The left hand holds the grip the way an archer does (palm behind it,
+thumb forward), the right hand hooks the string under the arrow's nock with
+three fingers, its back flat and in line with the forearm (hand_kit
+grip_hand, human sized).
 
 Axes (Blender): the arrow along +Y (the barrel), the bow upright along Z,
 the bow's plane at x = 0 (a centre-shot riser: above the arrow shelf the
@@ -56,6 +58,8 @@ STRING_R = 0.0021
 SIGHT_X = -0.05
 SIGHT_Z = 0.072
 SIGHT_BAR_Z = 0.046
+## The aperture ring's radius.
+PIN_RING = 0.021
 MOUNT_Y = 0.005
 ## The bow arm: wrist to elbow (the bow is held out straight from the left
 ## shoulder), how far the palm is turned behind the grip and the knuckles lean.
@@ -280,25 +284,28 @@ def riser(M, lacquer, ivory, walnut, brass, gold, red):
 
 def sight(M, brass, walnut):
     """The pin sight: a brass bar from the riser's left face across the window,
-    a peep at its back (IronSightRear) and a round pin guard with a glowing pin
-    at its front (IronSightFront). The eye line runs SIGHT_X, SIGHT_Z along +Y."""
+    a low block at its back (IronSightRear) and an open aperture ring with a
+    glowing pin at its front (IronSightFront). The eye line runs SIGHT_X,
+    SIGHT_Z along +Y."""
     bar = [
         obox("SightArm", (0.068, 0.016, 0.008), (-0.019, 0.012, SIGHT_BAR_Z), (1, 0, 0), (0, 1, 0), bevel=0.002, m=brass),
         obox("SightBar", (0.014, 0.17, 0.008), (SIGHT_X, 0.035, SIGHT_BAR_Z), (1, 0, 0), (0, 1, 0), bevel=0.002, m=brass),
         obox("SightRail", (0.012, 0.1, 0.004), (SIGHT_X, MOUNT_Y, SIGHT_BAR_Z + 0.006), (1, 0, 0), (0, 1, 0), bevel=0.001, m=walnut),
         xcyl("SightKnob", 0.0046, 0.008, (SIGHT_X - 0.011, 0.1, SIGHT_BAR_Z), m=brass, segs=12, bevel=0.001),
     ]
+    # A recurve's sight: one open aperture ring out on the bar with a pin whose
+    # glowing bead is the point of aim (the eye looks through the ring; the
+    # string is the rear reference, so the back of the bar only carries a low
+    # block). The ring is wide enough to leave the target clear round the bead.
     rear = [
-        obox("PeepPost", (0.006, 0.006, SIGHT_Z - SIGHT_BAR_Z - 0.012), (SIGHT_X, -0.058, (SIGHT_Z + SIGHT_BAR_Z) / 2 - 0.006 + 0.002),
-             (1, 0, 0), (0, 1, 0), bevel=0.0015, m=brass),
-        torus("PeepRing", 0.0075, 0.0022, (SIGHT_X, -0.058, SIGHT_Z), rot=rad(90, 0, 0), m=walnut, major_segs=18, minor_segs=6),
         obox("PeepFoot", (0.012, 0.014, 0.006), (SIGHT_X, -0.058, SIGHT_BAR_Z + 0.004), (1, 0, 0), (0, 1, 0), bevel=0.0015, m=brass),
     ]
     front = [
-        torus("PinGuard", 0.0135, 0.0026, (SIGHT_X, 0.105, SIGHT_Z), rot=rad(90, 0, 0), m=brass, major_segs=24, minor_segs=6),
-        obox("PinStem", (0.0024, 0.0024, 0.0115), (SIGHT_X, 0.105, SIGHT_Z - 0.0085), (1, 0, 0), (0, 1, 0), bevel=0.0, m=brass),
+        torus("PinGuard", PIN_RING, 0.0022, (SIGHT_X, 0.105, SIGHT_Z), rot=rad(90, 0, 0), m=brass, major_segs=32, minor_segs=6),
+        obox("PinStem", (0.002, 0.002, PIN_RING - 0.0053), (SIGHT_X, 0.105, SIGHT_Z - 0.0053 - (PIN_RING - 0.0053) / 2), (1, 0, 0), (0, 1, 0),
+             bevel=0.0, m=brass),
         sphere("PinDot", 0.0027, (SIGHT_X, 0.105, SIGHT_Z - 0.0026), m=M["cell"], segs=10, rings=6),
-        obox("PinGuardFoot", (0.008, 0.01, 0.012), (SIGHT_X, 0.105, SIGHT_BAR_Z + 0.008), (1, 0, 0), (0, 1, 0), bevel=0.0015, m=brass),
+        obox("PinGuardFoot", (0.008, 0.01, 0.007), (SIGHT_X, 0.105, SIGHT_BAR_Z + 0.0045), (1, 0, 0), (0, 1, 0), bevel=0.0015, m=brass),
     ]
     return bar, rear, front
 
