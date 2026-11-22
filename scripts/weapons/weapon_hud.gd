@@ -36,6 +36,7 @@ var _last_digits := -1.0
 var _melee_key := ""
 var _melee_pad := false
 var _drawn := false
+var _chip_back := StyleBoxFlat.new()
 
 
 func _ready() -> void:
@@ -87,7 +88,7 @@ func _needs_redraw() -> bool:
 		_last_pips = pips
 	if w.mode and w.mode.gauge() >= 0.0:
 		var g := w.mode.gauge()
-		changed = changed or g != _last_gauge
+		changed = changed or g != _last_gauge or (w.mode.has_method(&"chip") and g >= 1.0)
 		_last_gauge = g
 	return changed or (w.lock_target != null and is_instance_valid(w.lock_target))
 
@@ -165,6 +166,9 @@ func _draw_gauge(fill: float, data: WeaponData) -> void:
 	_heat_fill.bg_color = col
 	for i in int(ceil(fill * HEAT_SEGMENTS - 0.01)):
 		draw_style_box(_heat_fill, Rect2(bar.position.x, bar.end.y - (i + 1) * step + 2.0, bar.size.x, step - 4.0))
+	if player.weapons.mode and player.weapons.mode.has_method(&"chip"):
+		_draw_chip(player.weapons.mode.chip(), bar, data)
+		return
 	if _melee_key == "" or _melee_pad != GamepadInput.in_use:
 		_melee_pad = GamepadInput.in_use
 		_melee_key = KeyGlyph.action_key(WeaponController.MELEE_ACTION, Loadout.key_hint(WeaponController.MELEE_ACTION))
@@ -172,6 +176,30 @@ func _draw_gauge(fill: float, data: WeaponData) -> void:
 	var at := Vector2(bar.position.x - 20.0, bar.end.y + 24.0)
 	draw_string_outline(font, at, _melee_key, HORIZONTAL_ALIGNMENT_CENTER, bar.size.x + 40.0, 16, 5, Color(UiKit.INK, 0.85))
 	draw_string(font, at, _melee_key, HORIZONTAL_ALIGNMENT_CENTER, bar.size.x + 40.0, 16, col)
+
+
+## A mode's own chip (WeaponMode.chip: the Ringmaster's Spotlight) beside its
+## gauge: {text, fill 0-1, ready, live}; it pulses while ready or live.
+func _draw_chip(chip: Dictionary, bar: Rect2, data: WeaponData) -> void:
+	var font := get_theme_default_font()
+	var text := String(chip.get("text", ""))
+	var size_px := 17
+	var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px).x + 28.0
+	var rect := Rect2(bar.position.x - 14.0 - width, bar.get_center().y - 22.0, width, 44.0)
+	var hot := bool(chip.get("ready", false)) or bool(chip.get("live", false))
+	var pulse := 0.5 + 0.5 * sin(_time * (12.0 if bool(chip.get("live", false)) else 6.0))
+	var col := data.tracer_color.lerp(Color.WHITE, 0.2 + 0.5 * pulse if hot else 0.0)
+	_chip_back.bg_color = Color(UiKit.INK, 0.82)
+	_chip_back.set_corner_radius_all(10)
+	_chip_back.set_border_width_all(2 if hot else 1)
+	_chip_back.border_color = Color(col, 0.9 if hot else 0.45)
+	draw_style_box(_chip_back, rect)
+	var at := Vector2(rect.position.x + 14.0, rect.position.y + 22.0)
+	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px, 5, Color(UiKit.INK, 0.85))
+	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px, col)
+	var track := Rect2(rect.position.x + 14.0, rect.end.y - 13.0, rect.size.x - 28.0, 5.0)
+	draw_rect(track, Color(1, 1, 1, 0.14))
+	draw_rect(Rect2(track.position, Vector2(track.size.x * clampf(float(chip.get("fill", 0.0)), 0.0, 1.0), track.size.y)), col)
 
 
 ## The column just left of the ammo counter that the heat and mode gauges fill.
