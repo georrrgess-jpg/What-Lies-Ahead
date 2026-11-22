@@ -9,7 +9,8 @@ through. Clearing a level unlocks the next world. The zombies hoard the arcade's
 pop one and you bank its token, and Tokens buy the best skins, sights, cells, gloves and more in
 the **Shop**. New players start in **Boot Camp**, a short, skippable tutorial.
 **Endless** mode (open from player level 1) is a run that never stops, in a burnt-out
-city you buy your way through gate by gate (see [Endless](#endless-ashfall-city)).
+city you buy your way through gate by gate (see [Endless](#endless-ashfall-city)) and, once you
+reach wave 30, **Starlot Studios**, a haunted movie backlot (see [Starlot Studios](#endless-starlot-studios)).
 
 | # | World | Level | Setting | New enemies |
 | --- | --- | --- | --- | --- |
@@ -221,6 +222,18 @@ the rarity above Legendary, shown with an animated red-gold treatment. Rules, sc
 and the balance table: [docs/ENDLESS.md](docs/ENDLESS.md). The city has its own industrial
 arcade theme (a heavier variant on boss waves), ruined-city ambience and its own sounds
 for gates, traps, drops and a new best.
+
+## Endless: Starlot Studios
+
+Unlocked at Endless wave 30, on either map (the ENDLESS board has a tab per map and shows
+your progress). A Hollywood backlot at night: searchlights, the studio water tower over the
+**Front Lot**. Open **Western Street** (false-front saloons and a painted desert you can
+walk behind, 600 tickets), **Soundstage 7** (a starship bridge set under the lighting grid,
+1,000), the **Monster Lot** (a castle front, a foggy graveyard, a moon hung from a crane,
+1,400) and **Premiere Boulevard** (the red carpet up to the Starlot Grand's marquee; the
+Wrecker's ground, 1,800). Each district adds its extras in costume: cowpokes, space cadets,
+pumpkin heads and plush brutes. Same rules, benches, traps and records as Ashfall City,
+with its own monster-movie swing theme. (Generator: `tools/build_endless_studio.gd`.)
 
 ## Weapons
 
