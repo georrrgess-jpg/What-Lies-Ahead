@@ -17,8 +17,8 @@ const BATCHES := {
 	"u20": {&"decal_paw": 17, &"banner_marquee": 25, &"title_grand_prize": 39},
 	# Update 23: Sarsaparilla Six (29) and Tin Sergeant (35).
 	"u23": {&"finish_arcade_night": 29, &"charm_crown": 35},
-	# Update 24: Bullseye Longbow (41).
-	"u24": {&"finish_harlequin_tea": 41},
+	# Update 24: Claw Grabber (33) and Bullseye Longbow (41).
+	"u24": {&"title_sunset_survivor": 33, &"finish_harlequin_tea": 41},
 }
 
 
