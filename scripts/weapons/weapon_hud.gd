@@ -36,6 +36,7 @@ var _last_digits := -1.0
 var _melee_key := ""
 var _melee_pad := false
 var _drawn := false
+var _chip_back := StyleBoxFlat.new()
 
 
 func _ready() -> void:
@@ -188,12 +189,11 @@ func _draw_chip(chip: Dictionary, bar: Rect2, data: WeaponData) -> void:
 	var hot := bool(chip.get("ready", false)) or bool(chip.get("live", false))
 	var pulse := 0.5 + 0.5 * sin(_time * (12.0 if bool(chip.get("live", false)) else 6.0))
 	var col := data.tracer_color.lerp(Color.WHITE, 0.2 + 0.5 * pulse if hot else 0.0)
-	var back := StyleBoxFlat.new()
-	back.bg_color = Color(UiKit.INK, 0.82)
-	back.set_corner_radius_all(10)
-	back.set_border_width_all(2 if hot else 1)
-	back.border_color = Color(col, 0.9 if hot else 0.45)
-	draw_style_box(back, rect)
+	_chip_back.bg_color = Color(UiKit.INK, 0.82)
+	_chip_back.set_corner_radius_all(10)
+	_chip_back.set_border_width_all(2 if hot else 1)
+	_chip_back.border_color = Color(col, 0.9 if hot else 0.45)
+	draw_style_box(_chip_back, rect)
 	var at := Vector2(rect.position.x + 14.0, rect.position.y + 22.0)
 	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px, 5, Color(UiKit.INK, 0.85))
 	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size_px, col)
