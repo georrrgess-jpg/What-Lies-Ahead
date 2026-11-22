@@ -244,12 +244,12 @@ vec3 bumper_cars(vec2 uv, vec2 p, float t, float ar, float fx, float aa) {
 	col = mix(col, color_c * 1.3, step(0.47, max(grid.x, grid.y)) * step(p.y, 0.3) * 0.6);
 	vec2 cg = p * 6.0;
 	float check = mod(floor(cg.x) + floor(cg.y), 2.0);
-	col = mix(col, mix(INK, color_c * 0.5, check), step(0.7, p.y));
+	col = mix(col, mix(color_c * 0.55, color_c * 1.1, check), step(0.78, p.y));
 	float hit = abs(sin(t * 1.4));
 	for (int i = 0; i < 2; i++) {
 		float side = float(i) * 2.0 - 1.0;
 		float x = fx + side * (0.12 + 0.35 * hit);
-		vec2 q = p - vec2(x, 0.68);
+		vec2 q = (p - vec2(x, 0.66)) / 1.35;
 		q.x *= -side;
 		float body = sd_round_box(q, vec2(0.2, 0.08), 0.07);
 		float seat = sd_round_box(q - vec2(-0.05, -0.1), vec2(0.06, 0.06), 0.03);
@@ -259,10 +259,10 @@ vec3 bumper_cars(vec2 uv, vec2 p, float t, float ar, float fx, float aa) {
 		col = mix(col, cc * 0.75, fill(seat, aa));
 		col = mix(col, cc, fill(body, aa));
 		col = mix(col, CREAM, fill(sd_round_box(q - vec2(0.08, -0.02), vec2(0.06, 0.015), 0.01), aa) * 0.7);
-		float pole = sd_segment(p, vec2(x - side * 0.08, 0.0), vec2(x - side * 0.08, 0.58)) - 0.006;
+		float pole = sd_segment(p, vec2(x - side * 0.1, 0.0), vec2(x - side * 0.1, 0.52)) - 0.006;
 		col = mix(col, CREAM * 0.8, fill(pole, aa));
 		float spark = step(0.6, hash(vec2(floor(t * 12.0), float(i))));
-		col += CREAM * spark * exp(-length(p - vec2(x - side * 0.08, 0.02)) * 18.0) * 1.4;
+		col += CREAM * spark * exp(-length(p - vec2(x - side * 0.1, 0.02)) * 18.0) * 1.4;
 	}
 	float flash = smoothstep(0.15, 0.0, hit);
 	col = mix(col, CREAM, fill(sd_star(p - vec2(fx, 0.62), 0.07 + 0.08 * flash, 8.0, 3.0), aa) * flash);
