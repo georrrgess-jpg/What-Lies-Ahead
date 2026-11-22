@@ -57,11 +57,11 @@ const SPIN_START := 1.55
 const SPIN_END := 2.45
 const INSPECT_POSES := [
 	[0.0, Vector3(0.0, -0.06, -0.72), Vector3(0.0, 0.0, 0.0)],
-	[0.16, Vector3(-0.02, 0.0, -0.78), Vector3(4.0, 58.0, 12.0)],
-	[0.42, Vector3(-0.02, 0.0, -0.78), Vector3(2.0, 64.0, 10.0)],
-	[0.5, Vector3(0.0, -0.02, -0.82), Vector3(0.0, 20.0, 4.0)],
-	[0.76, Vector3(0.0, -0.02, -0.82), Vector3(0.0, 16.0, 2.0)],
-	[0.86, Vector3(0.02, -0.04, -0.76), Vector3(-6.0, 34.0, -4.0)],
+	[0.16, Vector3(-0.02, 0.0, -0.8), Vector3(6.0, 36.0, 16.0)],
+	[0.42, Vector3(-0.02, 0.0, -0.8), Vector3(4.0, 40.0, 14.0)],
+	[0.5, Vector3(0.0, -0.02, -0.82), Vector3(0.0, 18.0, 4.0)],
+	[0.76, Vector3(0.0, -0.02, -0.82), Vector3(0.0, 14.0, 2.0)],
+	[0.86, Vector3(0.02, -0.04, -0.76), Vector3(-6.0, 26.0, -4.0)],
 	[1.0, Vector3(0.0, -0.06, -0.72), Vector3(0.0, 4.0, 0.0)],
 ]
 const GOLD := [Color(1.0, 0.86, 0.36), Color(1.0, 0.98, 0.88), Color(1.0, 0.6, 0.2)]
@@ -78,6 +78,8 @@ var _arrow: Node3D
 var _arrow_rest := Transform3D.IDENTITY
 var _hand: Node3D
 var _hand_rest := Transform3D.IDENTITY
+var _bow_hand: Node3D
+var _bow_hand_rest := Transform3D.IDENTITY
 var _nock := Vector3.ZERO
 ## The string's half length (nock to groove) and its rest direction.
 var _half := 0.6
@@ -123,6 +125,8 @@ func setup(v: WeaponView) -> void:
 	_arrow_rest = v.rest_transform("Arrow")
 	_hand = v.part("ArmR")
 	_hand_rest = v.rest_transform("ArmR")
+	_bow_hand = v.part("ArmL")
+	_bow_hand_rest = v.rest_transform("ArmL")
 	var nock := v.model.find_child("Nock", true, false) as Node3D
 	_nock = nock.position if nock else _arrow_rest.origin
 	_half = _in_model(v, _tip_top).distance_to(_nock) if _tip_top else 0.6
@@ -331,8 +335,12 @@ func inspect(v: WeaponView, t: float) -> void:
 	if t >= SPIN_START and t <= SPIN_END + 0.05:
 		var u := smoothstep(SPIN_START, SPIN_END, t)
 		var grip := Vector3(0.0, -0.07, 0.01)
-		v.model.transform = Transform3D(Basis.IDENTITY, grip) * Transform3D(Basis(Vector3.UP, u * TAU), Vector3.ZERO) \
+		var spin := Transform3D(Basis.IDENTITY, grip) * Transform3D(Basis(Vector3.UP, u * TAU), Vector3.ZERO) \
 			* Transform3D(Basis.IDENTITY, -grip)
+		v.model.transform = spin
+		# The bow turns in the loosened bow hand: the hand and its arm stay put.
+		if _bow_hand:
+			_bow_hand.transform = spin.affine_inverse() * _bow_hand_rest
 		if not _spun:
 			_spun = true
 			Sfx.play(&"bb_spin", -8.0)
@@ -343,6 +351,8 @@ func inspect_end(v: WeaponView) -> void:
 	_pluck = 0.0
 	_pluck_speed = 0.0
 	v.model.transform = Transform3D.IDENTITY
+	if _bow_hand:
+		_bow_hand.transform = _bow_hand_rest
 	if _rig:
 		_rig.set_pose(&"R", HandRig.Pose.GRIP, 0.12)
 

@@ -46,6 +46,41 @@ func run(shot: Node, director: RunDirector) -> void:
 		await _grab(shot, frames, names, "nock%02d" % int(k * 100))
 	if aim:
 		Input.action_release(&"aim")
+	await _until(shot, func() -> bool: return not w.is_reloading())
+	await shot._wait(10)
+	# Aimed: the sight up at full draw.
+	Input.action_press(&"aim")
+	Input.action_press(&"fire")
+	await _until(shot, func() -> bool: return w.charge_progress() >= 1.0 and player.aim_blend >= 0.99)
+	await _grab(shot, frames, names, "ads_full")
+	Input.action_release(&"fire")
+	Input.action_release(&"aim")
+	await _until(shot, func() -> bool: return w.is_reloading())
+	await _until(shot, func() -> bool: return not w.is_reloading())
+	# A Bullseye at the nearest zombie's head: in flight, then stuck.
+	var target := _nearest(player)
+	if target:
+		var eye := player.camera.global_position
+		var to := target.global_position + Vector3.UP * 1.55 * target.data.body_scale - eye
+		player.set_look(atan2(-to.x, -to.z), atan2(to.y, Vector2(to.x, to.z).length()) + 0.004)
+		await shot._wait(12)
+		Input.action_press(&"fire")
+		await _until(shot, func() -> bool: return w.charge_progress() >= 1.0)
+		await shot.get_tree().physics_frame
+		Input.action_release(&"fire")
+		for i in 3:
+			await shot.get_tree().physics_frame
+		await _grab(shot, frames, names, "flight")
+		await shot._wait(20)
+		await _grab(shot, frames, names, "stuck")
+	# The inspect: the pluck and the spin.
+	await _until(shot, func() -> bool: return not w.is_reloading())
+	await shot._wait(15)
+	var view := player.view
+	if view.inspect():
+		for t in [0.5, 1.0, 1.1, 1.8, 2.1, 2.9]:
+			await _until(shot, func() -> bool: return not view.is_inspecting() or view._inspect.clock >= t)
+			await _grab(shot, frames, names, "inspect%02d" % int(t * 10))
 	var rows := ceili(frames.size() / float(COLUMNS))
 	var sheet := Image.create(CELL.x * COLUMNS, CELL.y * rows, false, frames[0].get_format())
 	for i in frames.size():
@@ -54,7 +89,7 @@ func run(shot: Node, director: RunDirector) -> void:
 		sheet.blit_rect(img, Rect2i(Vector2i.ZERO, CELL), Vector2i(i % COLUMNS * CELL.x, i / COLUMNS * CELL.y))
 	sheet.save_png(shot.path)
 	for i in frames.size():
-		if names[i] in ["idle", "full", "loose", "nock45", "nock72", "tired"]:
+		if names[i] in ["idle", "half", "full", "loose", "nock45", "nock72", "tired", "ads_full", "stuck", "inspect11", "inspect21"]:
 			frames[i].save_png(shot.path.get_basename() + "_" + names[i] + ".png")
 	print("[bow] saved %s (%d frames)" % [shot.path, frames.size()])
 
@@ -72,3 +107,16 @@ func _until(shot: Node, done: Callable) -> void:
 			return
 		await shot.get_tree().physics_frame
 	print("[bow] timed out waiting")
+
+
+func _nearest(player: Player) -> Zombie:
+	var best: Zombie = null
+	var best_d := 1e9
+	for node in player.get_tree().get_nodes_in_group("zombies"):
+		var z := node as Zombie
+		if z and not z.is_dead():
+			var d := z.global_position.distance_to(player.global_position)
+			if d < best_d:
+				best = z
+				best_d = d
+	return best
