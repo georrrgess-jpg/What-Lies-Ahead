@@ -61,7 +61,7 @@ breakdown and the contracts.
 **A weapon bought outright.** A weapon whose `WeaponData.token_price` is above 0 can be
 bought in the Arsenal while it is still locked (BUY · <price> TOKENS on its button; the
 save keeps it as the grant `weapon:<id>`, like a kept weapon). Only the **Ringmaster** has
-one: **20,000 Arcade Tokens**, the other way in besides level 50 + 15,000 kills + Endless
+one: **50,000 Arcade Tokens**, the other way in besides level 50 + 15,000 kills + Endless
 wave 25. It is far above every cosmetic price on purpose: the best gun in the game.
 
 **The price rule.** Every price is a multiple of 250 Arcade Tokens (`EconomyRules.price_step`)
