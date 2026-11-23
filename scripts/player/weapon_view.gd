@@ -218,6 +218,10 @@ func _build_model(weapon: WeaponData) -> void:
 	# "Root" tilts the whole weapon (and both hands) during reloads.
 	_rest["Root"] = {"node": model, "transform": model.transform}
 	_build_flash()
+	# Hologram copies (a reload's ghost drum, cell or capsules) only show while
+	# a reload builds them: hidden from the start, wherever they are parented.
+	for node in model.find_children("*Holo", "Node3D", true, false):
+		(node as Node3D).visible = false
 	WeaponCosmetics.apply(model, weapon, Cosmetics.weapon_loadout(weapon.id))
 	_setup_reload_materials()
 	_view_driver = weapon.view_script.new() if weapon.view_script else null

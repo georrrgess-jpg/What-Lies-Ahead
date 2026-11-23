@@ -518,6 +518,12 @@ def ttk(w, e, d, head):
 	if mode_kind(w) == "marker":
 		return marker_sim(w, hp, d, head, bool(e.get("heavy", False)))
 	dmg, cycle = pull_damage(w, e, d, head)
+	# WeaponData.heavy_damage_scale / boss_damage_scale (WeaponController.target_scale):
+	# the alpha column stands in for a boss.
+	if e["id"].startswith("alpha"):
+		dmg *= float(w.get("boss_damage_scale", 1.0))
+	elif e.get("heavy", False):
+		dmg *= float(w.get("heavy_damage_scale", 1.0))
 	if dmg <= 0.0:
 		return math.inf, math.inf
 	if w["beam"] and w["status_effect"] == "chill":

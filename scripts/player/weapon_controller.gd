@@ -836,7 +836,7 @@ func _apply_hits(hits: Dictionary, data: WeaponData) -> Array:
 		var zombie: Zombie = entry["zombie"]
 		if not is_instance_valid(zombie) or zombie.is_dead():
 			continue
-		var scale := StatusEffects.damage_scale(zombie) * damage_multiplier
+		var scale := StatusEffects.damage_scale(zombie) * damage_multiplier * target_scale(data, zombie)
 		var dmg := float(entry["damage"]) * scale
 		# A blast that hit both head and body: armour sees each part separately.
 		var heads := int(entry["heads"])
@@ -848,6 +848,14 @@ func _apply_hits(hits: Dictionary, data: WeaponData) -> Array:
 		any_kill = any_kill or killed
 		any_head = any_head or bool(entry["head"])
 	return [any_hit, any_kill, any_head]
+
+
+## `data`'s damage share against `z`: boss_damage_scale on a boss,
+## heavy_damage_scale on any other heavy, else 1.
+static func target_scale(data: WeaponData, z: Zombie) -> float:
+	if z.rank == Zombie.RANK_BOSS:
+		return data.boss_damage_scale
+	return data.heavy_damage_scale if z.data.heavy else 1.0
 
 
 ## One ray-style hit of `data` on `z` for a shot a weapon mode flies itself

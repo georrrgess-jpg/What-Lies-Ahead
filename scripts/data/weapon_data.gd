@@ -54,6 +54,11 @@ extends Resource
 ## Damage multiplier at and beyond falloff_end.
 @export var falloff_min_scale := 0.6
 @export var headshot_multiplier := 1.6
+## Damage against heavies (brutes and the like) and against bosses (a finale
+## alpha, an Endless boss), as shares of the usual damage. A boss uses only
+## boss_damage_scale.
+@export var heavy_damage_scale := 1.0
+@export var boss_damage_scale := 1.0
 ## Knockback per pellet that hits, in m/s. Big pushes stagger zombies out of their windup.
 @export var knockback := 0.6
 
