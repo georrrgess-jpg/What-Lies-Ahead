@@ -543,9 +543,14 @@ func _fallen_slab(parent: Node3D, slab_name: String, pos: Vector3, size: Vector3
 		var sc := _rng.randf_range(1.2, 2.6)
 		var shade := _rng.randf_range(0.45, 0.7)
 		_instance("chunk", Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled_local(Vector3(sc, sc, sc)), p), Color(shade, shade * 0.96, shade * 0.92))
-	var height := size.z * sin(deg_to_rad(tilt)) + size.y
-	_collider(holder, "Collision", Vector3(size.x, height, size.z * cos(deg_to_rad(tilt)) + size.y * 0.5), Vector3(0, height * 0.5, 0))
-	_player_block(holder, "Cap", Vector3(size.x, 3.0, size.z), Vector3(0, height + 1.5, 0))
+	# The collider lies with the slab (a box round the tilted slab blocked the
+	# air over its low end), and a player-only cap lies on its face so the
+	# player cannot climb the ramp it makes (the zombies could not follow).
+	var lie := Transform3D(Basis(Vector3.RIGHT, deg_to_rad(tilt)), mi.position)
+	var body := _collider(holder, "Collision", Vector3(size.x, size.y, size.z), Vector3.ZERO)
+	body.transform = lie
+	var cap := _player_block(holder, "Cap", Vector3(size.x, 3.0, size.z), Vector3.ZERO)
+	cap.transform = lie * Transform3D(Basis.IDENTITY, Vector3(0, size.y * 0.5 + 1.5, 0))
 
 
 ## A slab of facade torn off a building (one merged mesh): a chunky concrete
@@ -746,8 +751,11 @@ func _build_metro() -> void:
 	_solid_kit(m, "city_barrier_jersey", "PlatformBarrierA", Vector3(-6.0, METRO_Y, -35.5), 0.0, Vector3(3.0, 1.0, 0.7))
 	_solid_kit(m, "city_barrier_jersey", "PlatformBarrierB", Vector3(26.0, METRO_Y, -30.5), 0.0, Vector3(3.0, 1.0, 0.7))
 	_solid_kit(m, "city_debris", "PlatformDebris", Vector3(30.0, METRO_Y, -35.8), 0.0, Vector3(2.0, 0.5, 1.6))
-	# Platform edge: a hazard stripe and a player-only wall (no jumping on the tracks).
+	# Platform edge: a hazard stripe, a safety railing along the lip and a
+	# player-only wall behind it (no jumping on the tracks): what stops the
+	# player is drawn.
 	_visual_box(dressing, "EdgeStripe", Vector3(len_x + 8.0, 0.03, 0.5), Vector3((x0 + x1) * 0.5 - 4.0, METRO_Y + 0.015, PLATFORM_EDGE_Z + 0.3), _surface("hazard", ["dune_hazard"], Color.WHITE, 1.0, 0.7))
+	_platform_rail(x0 - 8.0, x1 + 2.0, PLATFORM_EDGE_Z - 0.05)
 	_player_wall(_player_walls(), "PlatformEdge", Vector3(x0 - 8.0, METRO_Y, PLATFORM_EDGE_Z - 0.2), Vector3(x1 + 2.0, METRO_Y, PLATFORM_EDGE_Z - 0.2), 6.0)
 	# Emergency lamps (orange, a few red) along the ceiling.
 	for k in 6:
@@ -885,6 +893,44 @@ const SERVICE_DOORS: Array[float] = [-12.0, 21.5, 33.0]
 const SERVICE_DOOR_WIDTH := 4.0
 
 
+## A yellow safety railing along the platform's lip from x `xa` to `xb` at
+## `z`: posts every 2.5 m and two rails (visual; the PlatformEdge wall stops
+## the player at it).
+func _platform_rail(xa: float, xb: float, z: float) -> void:
+	var paint := _mat("rail_paint", Color(0.95, 0.72, 0.1), 0.45)
+	var dark := _mat("rail_foot", Color(0.16, 0.14, 0.12), 0.8)
+	var length := xb - xa
+	var posts := int(ceil(length / 2.5))
+	for k in posts + 1:
+		var x := xa + length * k / posts
+		_visual_box(dressing, "RailPost%d" % k, Vector3(0.08, 1.1, 0.08), Vector3(x, METRO_Y + 0.55, z), paint)
+		_visual_box(dressing, "RailFoot%d" % k, Vector3(0.2, 0.05, 0.16), Vector3(x, METRO_Y + 0.025, z), dark)
+	for h: float in [0.6, 1.08]:
+		_visual_box(dressing, "Rail%d" % int(h * 100), Vector3(length, 0.06, 0.06), Vector3((xa + xb) * 0.5, METRO_Y + h, z), paint)
+
+
+## A police cordon across a Metro opening the player may not enter (the
+## zombies still come through): torn tape from `a` to `b`, a barrier just
+## inside (`out` points away from the hall) and a hanging sign, like the
+## street's alley mouths.
+func _metro_cordon(a: Vector3, b: Vector3, out: Vector3, seed: int) -> void:
+	_tape_line(a, b, absi(seed))
+	var along := (b - a).normalized()
+	var yaw := rad_to_deg(atan2(-out.z, out.x))
+	var width := a.distance_to(b)
+	var count := 1 if width < 6.0 else 2
+	for i in count:
+		var at := a.lerp(b, (i + 0.5) / count) + out * 1.1
+		_kit(dressing, "city_police_barrier", "MetroCordon%d_%d" % [absi(seed), i], at, yaw, Vector3(2.8, 1.1, 0.5))
+	var mid := (a + b) * 0.5
+	var board := mid + Vector3(0, 0.55, 0) - out * 0.06
+	var sign_board := _visual_box(dressing, "MetroCordonSign%d" % absi(seed), Vector3(1.3, 0.42, 0.04), board, _mat("cordon_sign", Color(0.95, 0.75, 0.12), 0.6))
+	sign_board.rotation.y = atan2(-along.z, along.x)
+	var face := -out
+	_label(dressing, "MetroCordonText%d" % absi(seed), "NO ENTRY", board + Vector3(0, 0.0, 0) + face * 0.03, rad_to_deg(atan2(face.x, face.z)), 52,
+		Color(0.08, 0.06, 0.05)).outline_size = 0
+
+
 ## The hall's south wall: the opening of the stairs from the square and the
 ## service doors, each into a small dark room the zombies come out of.
 func _hall_south_wall(parent: Node3D, material: Material) -> void:
@@ -907,6 +953,7 @@ func _hall_south_wall(parent: Node3D, material: Material) -> void:
 		_box(parent, room + "Back", Vector3(SERVICE_DOOR_WIDTH + 1.0, 5.4, 0.5), Vector3(x, y, z + depth - 0.25), dark)
 		_box(parent, room + "Ceiling", Vector3(SERVICE_DOOR_WIDTH + 1.0, 0.6, depth), Vector3(x, HALL_CEILING + 0.3, z + depth * 0.5 - 0.5), dark)
 		_player_wall(_player_walls(), room, Vector3(x - half, METRO_Y, z + 0.3), Vector3(x + half, METRO_Y, z + 0.3), 6.0)
+		_metro_cordon(Vector3(x - half, METRO_Y, z + 0.3), Vector3(x + half, METRO_Y, z + 0.3), Vector3(0, 0, 1), int(x))
 		_omni(fx, room + "Glow", Vector3(x, METRO_Y + 2.5, z + 3.0), Color(1.0, 0.3, 0.15), 0.8, 5.0)
 
 
@@ -937,6 +984,7 @@ func _hall_end_walls(parent: Node3D, material: Material) -> void:
 	_box(parent, "WestCollapse", Vector3(1.0, 5.4, zs - zn), Vector3(xw - 0.5, y, (zn + zs) * 0.5), material)
 	_solid_kit(parent, "city_rubble_a", "WestRubble", Vector3(xw + 1.8, METRO_Y, -36.4), 90.0, Vector3(3.0, 1.1, 2.4))
 	_player_wall(_player_walls(), "WestTunnel", Vector3(HALL.position.x - 2.0, METRO_Y, PLATFORM_EDGE_Z), Vector3(HALL.position.x - 2.0, METRO_Y, zs), 6.0)
+	_metro_cordon(Vector3(HALL.position.x - 2.0, METRO_Y, PLATFORM_EDGE_Z + 0.3), Vector3(HALL.position.x - 2.0, METRO_Y, zs - 0.3), Vector3(-1, 0, 0), 7)
 	# East: wall at x 40 with the exit opening (z -35..-29).
 	var xe := HALL.end.x + 0.5
 	_box(parent, "EastWallS", Vector3(1.0, 5.4, zs - EXIT_Z.y), Vector3(xe, y, (EXIT_Z.y + zs) * 0.5), material)
@@ -3195,6 +3243,8 @@ func _collider(parent: Node3D, collider_name: String, size: Vector3, pos: Vector
 ## is the collider's height.
 func _solid_kit(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw: float, size: Vector3) -> StaticBody3D:
 	_kit(parent, model, prop_name, pos, yaw, size)
+	if FITTED_KITS.any(func(p: String) -> bool: return model.begins_with(p)) and ResourceLoader.exists(MODELS + model + ".glb"):
+		return _fitted_collider(parent, model, prop_name, pos, yaw)
 	var aabb := _model_aabb(model)
 	var box_size := size
 	var offset := Vector3(0, size.y * 0.5, 0)
@@ -3206,6 +3256,134 @@ func _solid_kit(parent: Node3D, model: String, prop_name: String, pos: Vector3, 
 	body.rotation.y = deg_to_rad(yaw)
 	body.set_meta("top", offset.y + box_size.y * 0.5)
 	return body
+
+
+## Kits whose bounds are mostly air (a rubble mound, a billboard on two
+## legs): a box round them blocks the way where nothing is drawn, so their
+## colliders follow the drawn shape (_fitted_collider).
+const FITTED_KITS := ["city_rubble", "city_billboard"]
+## The fitted collider's grid: column width and layer height (m). A surface
+## on the ground no taller than FIT_STEP is stepped over (the player's 0.3 m
+## step) and gets no box.
+const FIT_CELL := 0.3
+const FIT_LAYER := 0.25
+const FIT_STEP := 0.3
+## The lowest drawn part of a column rests on the ground (a mound's surface
+## seen from above) when it starts no higher than this; higher, it floats
+## (a billboard's board, 6 m up on its legs).
+const FIT_GROUND := 1.5
+
+
+## A body for kit `model` at `pos` (turned `yaw` degrees) whose boxes follow
+## what is drawn. The model's triangles are sampled into FIT_CELL columns,
+## each cut into FIT_LAYER layers. In a column the lowest run of drawn layers,
+## when it starts under FIT_GROUND, is a surface resting on the ground (a
+## mound, a leg): solid from the ground to its top unless that is under
+## FIT_STEP; every other run (rebar over the mound, the board up on the legs)
+## is solid over its own span. Neighbouring
+## columns with the same span merge into one box. Meta "top": the tallest.
+func _fitted_collider(parent: Node3D, model: String, prop_name: String, pos: Vector3, yaw: float) -> StaticBody3D:
+	var layers := {}
+	for tri in _model_triangles(model):
+		var a: Vector3 = tri[0]
+		var b: Vector3 = tri[1]
+		var c: Vector3 = tri[2]
+		var n := maxi(1, int(ceil(maxf(a.distance_to(b), maxf(b.distance_to(c), c.distance_to(a))) / (FIT_CELL * 0.4))))
+		for i in n + 1:
+			for j in n + 1 - i:
+				var p := a + (b - a) * (float(i) / n) + (c - a) * (float(j) / n)
+				if p.y < 0.0:
+					continue
+				var key := Vector2i(floori(p.x / FIT_CELL), floori(p.z / FIT_CELL))
+				if not layers.has(key):
+					layers[key] = {}
+				layers[key][floori(p.y / FIT_LAYER)] = true
+	# Each distinct span -> the cells that have it.
+	var by_span := {}
+	for key in layers:
+		var drawn: Array = layers[key].keys()
+		drawn.sort()
+		# Runs of consecutive drawn layers, bottom up.
+		var runs: Array[Vector2i] = []
+		var start: int = drawn[0]
+		var prev: int = drawn[0]
+		for idx in range(1, drawn.size()):
+			if drawn[idx] != prev + 1:
+				runs.append(Vector2i(start, prev))
+				start = drawn[idx]
+			prev = drawn[idx]
+		runs.append(Vector2i(start, prev))
+		for r in runs.size():
+			var span := Vector2(runs[r].x * FIT_LAYER, (runs[r].y + 1) * FIT_LAYER)
+			if r == 0 and span.x <= FIT_GROUND:
+				span.x = 0.0
+			if span.y <= FIT_STEP:
+				continue
+			if not by_span.has(span):
+				by_span[span] = {}
+			by_span[span][key] = true
+	var body := StaticBody3D.new()
+	body.name = prop_name + "Collision"
+	body.position = pos
+	body.rotation.y = deg_to_rad(yaw)
+	parent.add_child(body)
+	var top := 0.0
+	var k := 0
+	for span: Vector2 in by_span:
+		var cells: Dictionary = by_span[span]
+		var keys := cells.keys()
+		keys.sort_custom(func(p: Vector2i, q: Vector2i) -> bool: return p.y < q.y or (p.y == q.y and p.x < q.x))
+		var used := {}
+		# Greedy: a run along x, grown over the following rows while they match.
+		for key: Vector2i in keys:
+			if used.has(key):
+				continue
+			var x1 := key.x
+			while cells.has(Vector2i(x1 + 1, key.y)) and not used.has(Vector2i(x1 + 1, key.y)):
+				x1 += 1
+			var z1 := key.y
+			while true:
+				var row_ok := true
+				for x in range(key.x, x1 + 1):
+					var q := Vector2i(x, z1 + 1)
+					if not cells.has(q) or used.has(q):
+						row_ok = false
+						break
+				if not row_ok:
+					break
+				z1 += 1
+			for z in range(key.y, z1 + 1):
+				for x in range(key.x, x1 + 1):
+					used[Vector2i(x, z)] = true
+			var shape := CollisionShape3D.new()
+			shape.name = "CollisionShape3D" if k == 0 else "CollisionShape3D%d" % k
+			var box := BoxShape3D.new()
+			box.size = Vector3((x1 - key.x + 1) * FIT_CELL, span.y - span.x, (z1 - key.y + 1) * FIT_CELL)
+			shape.shape = box
+			shape.position = Vector3((key.x + x1 + 1) * 0.5 * FIT_CELL, (span.x + span.y) * 0.5, (key.y + z1 + 1) * 0.5 * FIT_CELL)
+			body.add_child(shape)
+			top = maxf(top, span.y)
+			k += 1
+	body.set_meta("top", top)
+	return body
+
+
+## Every triangle of art/models/<model>.glb in the model's space: [[a, b, c], ...].
+func _model_triangles(model: String) -> Array:
+	var out := []
+	var source: Node3D = (load(MODELS + model + ".glb") as PackedScene).instantiate()
+	for mi in source.find_children("*", "MeshInstance3D", true, false):
+		var inst := mi as MeshInstance3D
+		var xf := Transform3D()
+		var n: Node = inst
+		while n != source:
+			xf = (n as Node3D).transform * xf
+			n = n.get_parent()
+		var faces := inst.mesh.get_faces()
+		for i in range(0, faces.size(), 3):
+			out.append([xf * faces[i], xf * faces[i + 1], xf * faces[i + 2]])
+	source.free()
+	return out
 
 
 ## Instances art/models/<model>.glb, or a stand-in box of `placeholder_size`
